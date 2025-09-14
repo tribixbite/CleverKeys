@@ -4,6 +4,8 @@ import android.content.SharedPreferences
 import android.graphics.PointF
 import android.inputmethodservice.InputMethodService
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputConnection
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -30,6 +32,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     private var predictionService: SwipePredictionService? = null
     private var suggestionBar: SuggestionBar? = null
     private var neuralConfig: NeuralConfig? = null
+    private var keyEventHandler: KeyEventHandler? = null
     
     // Configuration and state
     private var config: Config? = null
@@ -40,6 +43,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         logD("CleverKeys service starting...")
         
         initializeConfiguration()
+        initializeKeyEventHandler()
         initializeNeuralComponents()
     }
     
@@ -65,6 +69,25 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         neuralConfig = NeuralConfig(prefs)
         
         logD("Configuration initialized")
+    }
+    
+    /**
+     * Initialize key event handler
+     */
+    private fun initializeKeyEventHandler() {
+        keyEventHandler = KeyEventHandler(object : KeyEventHandler.IReceiver {
+            override fun getInputConnection(): InputConnection? = currentInputConnection
+            override fun getCurrentInputEditorInfo(): EditorInfo? = currentInputEditorInfo
+            override fun performVibration() {
+                // TODO: Implement vibration
+            }
+            override fun commitText(text: String) {
+                currentInputConnection?.commitText(text, 1)
+            }
+            override fun performAction(action: Int) {
+                currentInputConnection?.performEditorAction(action)
+            }
+        })
     }
     
     /**
