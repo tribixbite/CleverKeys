@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:2:1-36:12
-INJECTED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:2:1-36:12
-INJECTED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:2:1-36:12
-INJECTED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:2:1-36:12
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:2:1-40:12
+INJECTED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:2:1-40:12
+INJECTED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:2:1-40:12
+INJECTED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:2:1-40:12
 MERGED from [androidx.window:window:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/79daf06fbd2609896b829c5e11bf8b9f/transformed/window-1.3.0/AndroidManifest.xml:17:1-31:12
 MERGED from [androidx.window:window-java:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/741ce0e5370e0b94997c168dbc2b4b7d/transformed/window-java-1.3.0/AndroidManifest.xml:17:1-21:12
 MERGED from [androidx.activity:activity-ktx:1.8.2] /data/data/com.termux/files/home/.gradle/caches/transforms-4/f38c2b185a7217a351e8edf15db3c4db/transformed/activity-ktx-1.8.2/AndroidManifest.xml:2:1-7:12
@@ -46,9 +46,25 @@ uses-permission#android.permission.RECEIVE_BOOT_COMPLETED
 ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:4:3-78
 	android:name
 		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:4:20-76
+uses-permission#android.permission.RECORD_AUDIO
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:5:3-68
+	android:name
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:5:20-66
+uses-permission#android.permission.INTERNET
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:6:3-64
+	android:name
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:6:20-62
+uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:7:3-78
+	android:name
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:7:20-76
+uses-permission#android.permission.READ_EXTERNAL_STORAGE
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:8:3-77
+	android:name
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:8:20-75
 application
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:6:3-28:17
-INJECTED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:6:3-28:17
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:10:3-32:17
+INJECTED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:10:3-32:17
 MERGED from [androidx.window:window:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/79daf06fbd2609896b829c5e11bf8b9f/transformed/window-1.3.0/AndroidManifest.xml:22:5-29:19
 MERGED from [androidx.window:window:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/79daf06fbd2609896b829c5e11bf8b9f/transformed/window-1.3.0/AndroidManifest.xml:22:5-29:19
 MERGED from [androidx.core:core:1.16.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/f947dd21c454b08d814ea374b3c4738e/transformed/core-1.16.0/AndroidManifest.xml:28:5-89
@@ -64,91 +80,91 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /data/data/
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.16.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/f947dd21c454b08d814ea374b3c4738e/transformed/core-1.16.0/AndroidManifest.xml:28:18-86
 	android:label
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:6:16-48
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:10:16-48
 	android:hardwareAccelerated
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:6:111-146
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:10:111-146
 	android:icon
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:6:76-110
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:10:76-110
 	android:allowBackup
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:6:49-75
-service#juloo.keyboard2.Keyboard2
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:7:5-12:15
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:10:49-75
+service#juloo.keyboard2.CleverKeysService
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:5-16:15
 	android:label
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:7:55-87
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:63-95
 	android:exported
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:7:146-169
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:154-177
 	android:permission
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:7:88-145
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:96-153
 	android:directBootAware
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:7:170-200
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:178-208
 	android:name
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:7:14-54
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:14-62
 intent-filter#action:name:android.view.InputMethod
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:8:7-10:23
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:12:7-14:23
 action#android.view.InputMethod
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:9:9-58
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:13:9-58
 	android:name
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:9:17-56
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:13:17-56
 meta-data#android.view.im
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:7-81
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:15:7-81
 	android:resource
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:49-79
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:15:49-79
 	android:name
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:18-48
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:15:18-48
 activity#juloo.keyboard2.SettingsActivity
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:14:5-18:16
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:18:5-22:16
 	android:label
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:14:98-130
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:18:98-130
 	android:exported
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:14:168-191
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:18:168-191
 	android:icon
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:14:63-97
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:18:63-97
 	android:theme
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:14:131-167
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:18:131-167
 	android:directBootAware
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:14:192-222
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:18:192-222
 	android:name
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:14:15-62
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:18:15-62
 intent-filter#action:name:android.intent.action.MAIN
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:15:7-17:23
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:19:7-21:23
 action#android.intent.action.MAIN
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:16:9-60
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:20:9-60
 	android:name
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:16:17-58
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:20:17-58
 activity#juloo.keyboard2.LauncherActivity
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:20:5-25:16
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:24:5-29:16
 	android:exported
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:20:130-153
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:24:130-153
 	android:icon
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:20:63-97
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:24:63-97
 	android:theme
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:20:98-129
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:24:98-129
 	android:directBootAware
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:20:154-184
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:24:154-184
 	android:name
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:20:15-62
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:24:15-62
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:21:7-24:23
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:25:7-28:23
 category#android.intent.category.LAUNCHER
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:23:9-68
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:27:9-68
 	android:name
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:23:19-66
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:27:19-66
 activity#juloo.keyboard2.SwipeCalibrationActivity
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:27:5-218
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:31:5-218
 	android:label
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:27:71-123
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:31:71-123
 	android:exported
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:27:161-185
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:31:161-185
 	android:theme
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:27:124-160
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:31:124-160
 	android:directBootAware
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:27:186-216
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:31:186-216
 	android:name
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:27:15-70
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:31:15-70
 queries
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:31:3-35:13
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:35:3-39:13
 intent#action:name:android.view.InputMethod
-ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:32:5-34:14
+ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:36:5-38:14
 uses-sdk
 INJECTED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml

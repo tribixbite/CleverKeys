@@ -123,7 +123,7 @@ tasks.register('buildKeyboardFont') {
   println "\nBuilding assets/special_font.ttf"
   mkdir "$buildDir"
   exec {
-    workingDir "$projectDir/srcs/special_font"
+    workingDir "$projectDir/src/main/special_font"
     def svgFiles = workingDir.listFiles().findAll {
       it.isFile() && it.name.endsWith(".svg")
     }
@@ -166,14 +166,14 @@ tasks.register('checkKeyboardLayouts') {
 }
 
 tasks.register('compileComposeSequences') {
-  def out = "srcs/juloo.keyboard2/ComposeKeyData.java"
+  def out = "src/main/java/juloo/keyboard2/ComposeKeyData.java"
   println "\nGenerating ${out}"
   exec {
-    def sequences = new File(projectDir, "srcs/compose").listFiles().findAll {
+    def sequences = new File(projectDir, "src/main/compose").listFiles().findAll {
       !it.name.endsWith(".py") && !it.name.endsWith(".md")
     }
     workingDir = projectDir
-    commandLine("python", "srcs/compose/compile.py", *sequences)
+    commandLine("python", "src/main/compose/compile.py", *sequences)
     standardOutput = new FileOutputStream("${projectDir}/${out}")
   }
 }
@@ -220,7 +220,7 @@ tasks.register('initDebugKeystore') {
 tasks.register('copyRawQwertyUS')
 {
   copy {
-    from "srcs/layouts/latn_qwerty_us.xml"
+    from "src/main/layouts/latn_qwerty_us.xml"
     into "build/generated-resources/raw"
   }
 }
@@ -228,7 +228,7 @@ tasks.register('copyRawQwertyUS')
 tasks.register('copyLayoutDefinitions')
 {
   copy {
-    from "srcs/layouts"
+    from "src/main/layouts"
     include "*.xml"
     into "build/generated-resources/xml"
   }

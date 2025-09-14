@@ -1,19 +1,15 @@
 [
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_uz.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_uz.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_uz.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_et.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_et.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_et.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_ga.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_ga.xml"
-    },
-    {
-        "merged": "juloo.keyboard2-debug-26:/xml_settings.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/settings.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_ga.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/drawable-hdpi_ic_launcher_foreground.png.flat",
@@ -21,15 +17,15 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_da.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_da.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_da.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_fr_ch.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwertz_fr_ch.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_fr_ch.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_us.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_us.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_us.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/mipmap-xxxhdpi_ic_launcher.png.flat",
@@ -45,11 +41,11 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_grek_qwerty.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/grek_qwerty.xml"
+        "source": "juloo.keyboard2-build-21:/xml/grek_qwerty.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_jp.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_jp.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_jp.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/mipmap-anydpi-v26_ic_launcher.xml.flat",
@@ -61,11 +57,11 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_georgian_mes.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/georgian_mes.xml"
+        "source": "juloo.keyboard2-build-21:/xml/georgian_mes.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_vi.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_vi.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_vi.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/drawable-xhdpi_ic_launcher_foreground.png.flat",
@@ -77,47 +73,43 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_cz_multifunctional.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwertz_cz_multifunctional.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_cz_multifunctional.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_arab_pc_ir.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/arab_pc_ir.xml"
+        "source": "juloo.keyboard2-build-21:/xml/arab_pc_ir.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_cyrl_jcuken_uk.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/cyrl_jcuken_uk.xml"
-    },
-    {
-        "merged": "juloo.keyboard2-debug-26:/xml_numeric.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/numeric.xml"
+        "source": "juloo.keyboard2-build-21:/xml/cyrl_jcuken_uk.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_no.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_no.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_no.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_hu.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_hu.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_hu.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_es.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_es.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_es.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_br.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_br.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_br.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_lt.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_lt.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_lt.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_sr.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_sr.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_sr.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_urdu_phonetic_ur.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/urdu_phonetic_ur.xml"
+        "source": "juloo.keyboard2-build-21:/xml/urdu_phonetic_ur.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/drawable_doc_key_u.xml.flat",
@@ -129,19 +121,19 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_bqn.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_bqn.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_bqn.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_cyrl_jcuken_ru.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/cyrl_jcuken_ru.xml"
+        "source": "juloo.keyboard2-build-21:/xml/cyrl_jcuken_ru.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_cz.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_cz.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_cz.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_azerty_be.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_azerty_be.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_azerty_be.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/drawable_doc_key_g.xml.flat",
@@ -153,7 +145,7 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_sq.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwertz_sq.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_sq.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/layout_pref_listgroup_item_widget.xml.flat",
@@ -161,15 +153,15 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_de.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwertz_de.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_de.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_gb.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_gb.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_gb.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_tly.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_tly.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_tly.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/layout_clipboard_pin_entry.xml.flat",
@@ -177,15 +169,15 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_hebr_1_il.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/hebr_1_il.xml"
+        "source": "juloo.keyboard2-build-21:/xml/hebr_1_il.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_arab_pc.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/arab_pc.xml"
+        "source": "juloo.keyboard2-build-21:/xml/arab_pc.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwertz.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/drawable_doc_anim_circle.xml.flat",
@@ -201,7 +193,7 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_armenian_ph_am.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/armenian_ph_am.xml"
+        "source": "juloo.keyboard2-build-21:/xml/armenian_ph_am.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/drawable_ic_clipboard_paste.xml.flat",
@@ -209,87 +201,83 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_neo2.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_neo2.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_neo2.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_haw.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_haw.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_haw.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_sinhala_phonetic.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/sinhala_phonetic.xml"
+        "source": "juloo.keyboard2-build-21:/xml/sinhala_phonetic.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_pl.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_pl.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_pl.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_hang_dubeolsik_kr.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/hang_dubeolsik_kr.xml"
+        "source": "juloo.keyboard2-build-21:/xml/hang_dubeolsik_kr.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_cyrl_lynyertdz_mk.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/cyrl_lynyertdz_mk.xml"
+        "source": "juloo.keyboard2-build-21:/xml/cyrl_lynyertdz_mk.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_az.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_az.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_az.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_workman_us.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_workman_us.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_workman_us.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_kk.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_kk.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_kk.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_georgian_qwerty.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/georgian_qwerty.xml"
+        "source": "juloo.keyboard2-build-21:/xml/georgian_qwerty.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_dvorak.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_dvorak.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_dvorak.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_is.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_is.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_is.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_beng_national.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/beng_national.xml"
+        "source": "juloo.keyboard2-build-21:/xml/beng_national.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_bepo_fr.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_bepo_fr.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_bepo_fr.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_ro.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_ro.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_ro.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_sk.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwertz_sk.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_sk.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_cyrl_jcuken_as.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/cyrl_jcuken_as.xml"
+        "source": "juloo.keyboard2-build-21:/xml/cyrl_jcuken_as.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_shaw_imperial_en.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/shaw_imperial_en.xml"
+        "source": "juloo.keyboard2-build-21:/xml/shaw_imperial_en.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_arab_hamvaj_tly.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/arab_hamvaj_tly.xml"
+        "source": "juloo.keyboard2-build-21:/xml/arab_hamvaj_tly.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/layout_launcher_activity.xml.flat",
         "source": "juloo.keyboard2-cleverkeys-27:/layout/launcher_activity.xml"
-    },
-    {
-        "merged": "juloo.keyboard2-debug-26:/xml_numpad.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/numpad.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/drawable_doc_anim_round_trip.xml.flat",
@@ -297,27 +285,27 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_cz.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwertz_cz.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_cz.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_tr.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_tr.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_tr.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_mt.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_mt.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_mt.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_arab_alt.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/arab_alt.xml"
+        "source": "juloo.keyboard2-build-21:/xml/arab_alt.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_cyrl_fcuzhen_mn.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/cyrl_fcuzhen_mn.xml"
+        "source": "juloo.keyboard2-build-21:/xml/cyrl_fcuzhen_mn.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_se.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_se.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_se.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/drawable_doc_anim_swipe.xml.flat",
@@ -325,15 +313,15 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_cyrl_jcuken_kk.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/cyrl_jcuken_kk.xml"
+        "source": "juloo.keyboard2-build-21:/xml/cyrl_jcuken_kk.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_lv.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_lv.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_lv.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_beng_provat.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/beng_provat.xml"
+        "source": "juloo.keyboard2-build-21:/xml/beng_provat.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/layout_clipboard_pane.xml.flat",
@@ -345,11 +333,11 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_arab_pc_ckb_fa.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/arab_pc_ckb_fa.xml"
+        "source": "juloo.keyboard2-build-21:/xml/arab_pc_ckb_fa.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_cyrl_yxukeng_os.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/cyrl_yxukeng_os.xml"
+        "source": "juloo.keyboard2-build-21:/xml/cyrl_yxukeng_os.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_clipboard_bottom_row.xml.flat",
@@ -357,23 +345,19 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_deva_inscript.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/deva_inscript.xml"
+        "source": "juloo.keyboard2-build-21:/xml/deva_inscript.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_bone.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_bone.xml"
-    },
-    {
-        "merged": "juloo.keyboard2-debug-26:/xml_greekmath.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/greekmath.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_bone.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_cyrl_yqukeng_tj.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/cyrl_yqukeng_tj.xml"
+        "source": "juloo.keyboard2-build-21:/xml/cyrl_yqukeng_tj.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_deva_alt.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/deva_alt.xml"
+        "source": "juloo.keyboard2-build-21:/xml/deva_alt.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/raw_version_info.txt.flat",
@@ -385,19 +369,15 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_cyrl_ueishsht.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/cyrl_ueishsht.xml"
+        "source": "juloo.keyboard2-build-21:/xml/cyrl_ueishsht.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/layout_pref_layouts_add_btn.xml.flat",
         "source": "juloo.keyboard2-cleverkeys-27:/layout/pref_layouts_add_btn.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_number_row_no_symbols.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/number_row_no_symbols.xml"
-    },
-    {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_hu.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwertz_hu.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_hu.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/drawable-xxxhdpi_ic_launcher_foreground.png.flat",
@@ -409,11 +389,11 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_cyrl_yaverti.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/cyrl_yaverti.xml"
+        "source": "juloo.keyboard2-build-21:/xml/cyrl_yaverti.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_sk.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_sk.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_sk.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/drawable-anydpi-v24_ic_launcher_foreground.xml.flat",
@@ -421,7 +401,7 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_tamil_default.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/tamil_default.xml"
+        "source": "juloo.keyboard2-build-21:/xml/tamil_default.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/layout_clipboard_history_entry.xml.flat",
@@ -441,7 +421,7 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_kann_kannada.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/kann_kannada.xml"
+        "source": "juloo.keyboard2-build-21:/xml/kann_kannada.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/layout_dialog_edit_text.xml.flat",
@@ -453,23 +433,19 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_deva_phonetic_in.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/deva_phonetic_in.xml"
-    },
-    {
-        "merged": "juloo.keyboard2-debug-26:/xml_pin.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/pin.xml"
+        "source": "juloo.keyboard2-build-21:/xml/deva_phonetic_in.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_colemak.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_colemak.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_colemak.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_apl.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_apl.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_apl.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_arab_pc_ckb.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/arab_pc_ckb.xml"
+        "source": "juloo.keyboard2-build-21:/xml/arab_pc_ckb.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/layout_pref_listgroup_add_btn.xml.flat",
@@ -477,7 +453,7 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_cyrl_lynyertz_sr.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/cyrl_lynyertz_sr.xml"
+        "source": "juloo.keyboard2-build-21:/xml/cyrl_lynyertz_sr.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/layout_emoji_pane.xml.flat",
@@ -489,7 +465,7 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_hebr_2_il.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/hebr_2_il.xml"
+        "source": "juloo.keyboard2-build-21:/xml/hebr_2_il.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_emoji_bottom_row.xml.flat",
@@ -505,7 +481,7 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_cz_diacritics.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwertz_cz_diacritics.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_cz_diacritics.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/mipmap-mdpi_ic_launcher.png.flat",
@@ -513,22 +489,26 @@
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_azerty_fr.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_azerty_fr.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_azerty_fr.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_arab_pc_hindu.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/arab_pc_hindu.xml"
+        "source": "juloo.keyboard2-build-21:/xml/arab_pc_hindu.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/xml_guj_phonetic_in.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/guj_phonetic_in.xml"
+        "source": "juloo.keyboard2-build-21:/xml/guj_phonetic_in.xml"
     },
     {
         "merged": "juloo.keyboard2-debug-26:/drawable-ldpi_ic_launcher_foreground.png.flat",
         "source": "juloo.keyboard2-pngs-22:/drawable-ldpi/ic_launcher_foreground.png"
     },
     {
+        "merged": "juloo.keyboard2-debug-26:/raw_latn_qwerty_us.xml.flat",
+        "source": "juloo.keyboard2-build-21:/raw/latn_qwerty_us.xml"
+    },
+    {
         "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_cy.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/latn_qwerty_cy.xml"
+        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_cy.xml"
     }
 ]
