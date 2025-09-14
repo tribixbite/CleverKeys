@@ -21,7 +21,6 @@ Generated version info:  ()
 > Task :generateDebugResources
 > Task :packageDebugResources
 > Task :createDebugCompatibleScreenManifests
-> Task :mergeDebugResources
 > Task :extractDeepLinksDebug FROM-CACHE
 > Task :processDebugMainManifest FROM-CACHE
 > Task :processDebugManifest FROM-CACHE
@@ -30,14 +29,15 @@ Generated version info:  ()
 > Task :mergeDebugShaders
 > Task :compileDebugShaders NO-SOURCE
 > Task :generateDebugAssets UP-TO-DATE
+> Task :mergeDebugResources
 > Task :mergeDebugAssets
 > Task :compressDebugAssets FROM-CACHE
 > Task :parseDebugLocalResources
-> Task :desugarDebugFileDependencies FROM-CACHE
-> Task :mergeDebugJniLibFolders
 > Task :checkDebugDuplicateClasses
+> Task :desugarDebugFileDependencies FROM-CACHE
 > Task :mergeExtDexDebug FROM-CACHE
 > Task :mergeLibDexDebug FROM-CACHE
+> Task :mergeDebugJniLibFolders
 > Task :validateSigningDebug
 > Task :writeDebugAppMetadata
 > Task :writeDebugSigningConfigVersions
@@ -48,7 +48,7 @@ Unable to strip the following libraries, packaging them as they are: libonnxrunt
 
 > Task :processDebugResources
 
-> Task :compileDebugKotlin FAILED
+> Task :compileDebugKotlin
 e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/NeuralSwipeEngine.kt:67:35 Suspend function 'predict' should be called only from a coroutine or another suspend function
 e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/OnnxSwipePredictorImpl.kt:429:17 Unresolved reference: addQNN
 e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/OnnxSwipePredictorImpl.kt:433:21 Unresolved reference: addXNNPACK
@@ -229,6 +229,8 @@ public inline fun ShortArray.isNotEmpty(): Boolean defined in kotlin.collections
 public inline fun <T> Collection<TypeVariable(T)>.isNotEmpty(): Boolean defined in kotlin.collections
 public inline fun <K, V> Map<out TypeVariable(K), TypeVariable(V)>.isNotEmpty(): Boolean defined in kotlin.collections
 
+> Task :compileDebugKotlin FAILED
+
 FAILURE: Build failed with an exception.
 
 * What went wrong:
@@ -242,5 +244,5 @@ Execution failed for task ':compileDebugKotlin'.
 > Run with --scan to get full insights.
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 44s
+BUILD FAILED in 33s
 30 actionable tasks: 20 executed, 10 from cache

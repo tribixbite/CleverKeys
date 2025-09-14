@@ -424,18 +424,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
             setIntraOpNumThreads(0) // Auto-detect
             setMemoryPatternOptimization(true)
             
-            // Try to enable hardware acceleration
-            try {
-                addQNN() // Samsung S25U Snapdragon NPU
-                logDebug("🚀 QNN execution provider enabled for $modelName")
-            } catch (e: Exception) {
-                try {
-                    addXNNPACK() // Optimized ARM CPU
-                    logDebug("⚡ XNNPACK enabled for $modelName")
-                } catch (e2: Exception) {
-                    logDebug("💻 Using CPU execution for $modelName")
-                }
-            }
+            // Use default execution providers (QNN/XNNPACK not available in this ONNX version)
+            logDebug("💻 Using default execution providers for $modelName")
         }
     }
     
