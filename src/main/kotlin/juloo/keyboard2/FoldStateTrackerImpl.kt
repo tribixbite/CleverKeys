@@ -8,6 +8,8 @@ import androidx.window.layout.WindowInfoTracker
 import androidx.window.layout.WindowLayoutInfo
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 /**
  * Real foldable device state detection
