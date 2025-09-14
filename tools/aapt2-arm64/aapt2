@@ -1,0 +1,20 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Wrapper script for aapt2.elf using qemu-user-x86_64
+
+# Check if qemu-user-x86_64 is installed
+if ! command -v qemu-x86_64 &> /dev/null; then
+    echo "qemu-x86_64 is not installed. Please install it to use this wrapper."
+    exit 1
+fi
+
+# Define the path to the aapt2.elf binary in the same directory as the script
+BINARY="$(dirname "$0")/$(basename "$0").elf"
+
+# Check if the aapt2.elf binary exists
+if [ ! -f "$BINARY" ]; then
+    echo ""$BINARY" not found in the script's directory."
+    exit 1
+fi
+
+# Execute the binary with qemu
+exec qemu-x86_64 "$BINARY" "$@"
