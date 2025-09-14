@@ -1,0 +1,101 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.7/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Configure project :
+WARNING: The option setting 'android.aapt2FromMavenOverride=/data/data/com.termux/files/home/git/Unexpected-Keyboard/tools/aapt2-arm64/aapt2' is experimental.
+
+> Task :copyLayoutDefinitions UP-TO-DATE
+> Task :copyRawQwertyUS UP-TO-DATE
+
+> Task :generateVersionInfo
+Generated version info:  ()
+
+> Task :initDebugKeystore UP-TO-DATE
+> Task :preBuild
+> Task :preDebugBuild
+> Task :mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :checkKotlinGradlePluginConfigurationErrors
+> Task :checkDebugAarMetadata
+> Task :generateDebugResValues FROM-CACHE
+> Task :mapDebugSourceSetPaths
+> Task :generateDebugResources
+> Task :packageDebugResources
+> Task :createDebugCompatibleScreenManifests
+> Task :extractDeepLinksDebug FROM-CACHE
+> Task :processDebugMainManifest FROM-CACHE
+> Task :processDebugManifest FROM-CACHE
+> Task :processDebugManifestForPackage FROM-CACHE
+> Task :javaPreCompileDebug FROM-CACHE
+> Task :mergeDebugShaders
+> Task :compileDebugShaders NO-SOURCE
+> Task :generateDebugAssets UP-TO-DATE
+> Task :mergeDebugAssets
+> Task :compressDebugAssets FROM-CACHE
+> Task :parseDebugLocalResources
+> Task :mergeDebugResources
+> Task :checkDebugDuplicateClasses
+> Task :desugarDebugFileDependencies FROM-CACHE
+> Task :mergeExtDexDebug FROM-CACHE
+> Task :mergeLibDexDebug FROM-CACHE
+> Task :mergeDebugJniLibFolders
+> Task :validateSigningDebug
+> Task :writeDebugAppMetadata
+> Task :writeDebugSigningConfigVersions
+> Task :mergeDebugNativeLibs
+
+> Task :stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libonnxruntime.so, libonnxruntime4j_jni.so.
+
+> Task :processDebugResources
+
+> Task :compileDebugKotlin FAILED
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:135:17 Unresolved reference. None of the following candidates is applicable because of receiver type mismatch: 
+public val LifecycleOwner.lifecycleScope: LifecycleCoroutineScope defined in androidx.lifecycle
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:136:21 Suspend function 'testPredictionSystem' should be called only from a coroutine or another suspend function
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:209:50 Unresolved reference: withContext
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:209:62 Unresolved reference: Dispatchers
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:213:17 Unresolved reference: PointF
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:214:17 Unresolved reference: PointF
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:215:17 Unresolved reference: PointF
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:216:17 Unresolved reference: PointF
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:217:17 Unresolved reference: PointF
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:220:58 Cannot infer a type for this parameter. Please specify it explicitly.
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:220:65 Cannot infer a type for this parameter. Please specify it explicitly.
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:228:30 Suspension functions can be called only within coroutine body
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:229:43 Suspension functions can be called only within coroutine body
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:231:17 Unresolved reference: withContext
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:231:29 Unresolved reference: Dispatchers
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:245:17 Unresolved reference: withContext
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:245:29 Unresolved reference: Dispatchers
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:252:13 Unresolved reference: withContext
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:252:25 Unresolved reference: Dispatchers
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysView.kt:261:9 Unresolved reference: suggestionBar
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysView.kt:268:9 Unresolved reference: suggestionBar
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/KeyValue.kt:19:28 'char' hides member of supertype 'KeyValue' and needs 'override' modifier
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/KeyValue.kt:26:29 'eventCode' hides member of supertype 'KeyValue' and needs 'override' modifier
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/KeyValue.kt:33:30 'string' hides member of supertype 'KeyValue' and needs 'override' modifier
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeCalibrationActivity.kt:105:26 Suspend function 'initialize' should be called only from a coroutine or another suspend function
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeCalibrationActivity.kt:128:40 Function invocation 'isUnfolded()' expected
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeCalibrationActivity.kt:132:25 Function invocation 'isUnfolded()' expected
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeCalibrationActivity.kt:487:13 Val cannot be reassigned
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeCalibrationActivity.kt:487:19 The integer literal does not conform to the expected type Float
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeCalibrationActivity.kt:811:14 Class is not allowed here
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeInput.kt:62:25 Type mismatch: inferred type is Double but Nothing was expected
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipePredictionService.kt:105:17 Unresolved reference: abs
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Theme.kt:16:41 Unresolved reference: DARK_GRAY
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 25s
+30 actionable tasks: 20 executed, 10 from cache
