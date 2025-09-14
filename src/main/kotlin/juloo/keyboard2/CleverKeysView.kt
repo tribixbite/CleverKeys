@@ -258,14 +258,16 @@ class CleverKeysView(
      * Update suggestion bar
      */
     fun updateSuggestions(words: List<String>) {
-        suggestionBar?.setSuggestions(words)
+        // TODO: Connect to actual suggestion bar
+        logD("Would update suggestions: $words")
     }
     
     /**
      * Clear suggestions
      */
     fun clearSuggestions() {
-        suggestionBar?.clearSuggestions()
+        // TODO: Connect to actual suggestion bar
+        logD("Would clear suggestions")
     }
     
     /**

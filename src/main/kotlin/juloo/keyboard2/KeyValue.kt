@@ -49,9 +49,9 @@ sealed class KeyValue {
     }
     
     // Compatibility properties for Java interop
-    val char: Char get() = (this as? CharKey)?.char ?: '\u0000'
-    val eventCode: Int get() = (this as? EventKey)?.eventCode ?: 0
-    val string: String get() = (this as? StringKey)?.string ?: ""
+    open val char: Char get() = (this as? CharKey)?.char ?: '\u0000'
+    open val eventCode: Int get() = (this as? EventKey)?.eventCode ?: 0
+    open val string: String get() = (this as? StringKey)?.string ?: ""
     
     companion object {
         /**
