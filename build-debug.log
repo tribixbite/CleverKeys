@@ -15,12 +15,11 @@ Generated version info:  ()
 > Task :preDebugBuild
 > Task :mergeDebugNativeDebugMetadata NO-SOURCE
 > Task :checkKotlinGradlePluginConfigurationErrors
-> Task :checkDebugAarMetadata
 > Task :generateDebugResValues FROM-CACHE
+> Task :checkDebugAarMetadata
 > Task :mapDebugSourceSetPaths
 > Task :generateDebugResources
 > Task :packageDebugResources
-> Task :mergeDebugResources
 > Task :createDebugCompatibleScreenManifests
 > Task :extractDeepLinksDebug FROM-CACHE
 > Task :processDebugMainManifest FROM-CACHE
@@ -33,6 +32,7 @@ Generated version info:  ()
 > Task :mergeDebugAssets
 > Task :compressDebugAssets FROM-CACHE
 > Task :parseDebugLocalResources
+> Task :mergeDebugResources
 > Task :checkDebugDuplicateClasses
 > Task :desugarDebugFileDependencies FROM-CACHE
 > Task :mergeExtDexDebug FROM-CACHE
@@ -48,25 +48,44 @@ Unable to strip the following libraries, packaging them as they are: libonnxrunt
 
 > Task :processDebugResources
 
-> Task :compileDebugKotlin FAILED
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/KeyValue.kt:19:28 'char' hides member of supertype 'KeyValue' and needs 'override' modifier
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/KeyValue.kt:26:29 'eventCode' hides member of supertype 'KeyValue' and needs 'override' modifier
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/KeyValue.kt:33:30 'string' hides member of supertype 'KeyValue' and needs 'override' modifier
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeCalibrationActivity.kt:489:13 Val cannot be reassigned
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeCalibrationActivity.kt:489:19 The integer literal does not conform to the expected type Float
+> Task :compileDebugKotlin
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:135:17 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysView.kt:79:13 Variable 'layout' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysView.kt:251:30 Parameter 'keyLabel' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Config.kt:17:5 Parameter 'foldableUnfolded' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Extensions.kt:18:1 Expected performance impact from inlining is insignificant. Inlining works best for functions with parameters of functional types
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Extensions.kt:19:1 Expected performance impact from inlining is insignificant. Inlining works best for functions with parameters of functional types
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Extensions.kt:21:1 Expected performance impact from inlining is insignificant. Inlining works best for functions with parameters of functional types
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/LayoutModifier.kt:9:14 Parameter 'config' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/LayoutModifier.kt:9:30 Parameter 'resources' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/OnnxSwipePredictor.kt:81:19 Parameter 'config' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Pointers.kt:85:40 Parameter 'context' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Pointers.kt:86:42 Parameter 'listener' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/PredictionRepository.kt:121:36 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/PredictionRepository.kt:132:14 This declaration is in a preview state and can be changed in a backwards-incompatible manner with a best-effort migration. Its usage should be marked with '@kotlinx.coroutines.FlowPreview' or '@OptIn(kotlinx.coroutines.FlowPreview::class)' if you accept the drawback of relying on preview API
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/PredictionRepository.kt:151:36 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SuggestionBar.kt:29:35 Parameter 'index' is never used, could be renamed to _
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeCalibrationActivity.kt:610:23 Unnecessary safe call on a non-null receiver of type TextView
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeInput.kt:19:20 Unnecessary safe call on a non-null receiver of type KeyboardData.Key
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipePredictionService.kt:102:14 This declaration is in a preview state and can be changed in a backwards-incompatible manner with a best-effort migration. Its usage should be marked with '@kotlinx.coroutines.FlowPreview' or '@OptIn(kotlinx.coroutines.FlowPreview::class)' if you accept the drawback of relying on preview API
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipePredictionService.kt:108:14 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipePredictionService.kt:167:32 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/CustomExtraKeysPreference.kt:15:13 Parameter 'prefs' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/ExtraKeysPreference.kt:15:24 Parameter 'prefs' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/LayoutsPreference.kt:46:23 Parameter 'customLayout' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/LayoutsPreference.kt:55:31 Parameter 'resources' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/LayoutsPreference.kt:55:53 Parameter 'prefs' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/LayoutsPreference.kt:62:29 Parameter 'editor' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/LayoutsPreference.kt:62:63 Parameter 'layouts' is never used
 
-FAILURE: Build failed with an exception.
+> Task :compileDebugJavaWithJavac NO-SOURCE
+> Task :processDebugJavaRes
+> Task :mergeDebugJavaResource
+> Task :dexBuilderDebug
+> Task :mergeProjectDexDebug
+> Task :packageDebug
+> Task :createDebugApkListingFileRedirect
+> Task :assembleDebug
 
-* What went wrong:
-Execution failed for task ':compileDebugKotlin'.
-> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
-   > Compilation error. See log for more details
-
-* Try:
-> Run with --stacktrace option to get the stack trace.
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
-> Get more help at https://help.gradle.org.
-
-BUILD FAILED in 19s
-30 actionable tasks: 20 executed, 10 from cache
+BUILD SUCCESSFUL in 31s
+36 actionable tasks: 26 executed, 10 from cache

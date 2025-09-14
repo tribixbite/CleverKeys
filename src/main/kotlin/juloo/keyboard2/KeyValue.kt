@@ -16,21 +16,21 @@ sealed class KeyValue {
     /**
      * Character key
      */
-    data class CharKey(val char: Char) : KeyValue() {
+    data class CharKey(override val char: Char) : KeyValue() {
         override val kind = Kind.Char
     }
     
     /**
      * Event key (special keys like backspace, enter)
      */
-    data class EventKey(val eventCode: Int) : KeyValue() {
+    data class EventKey(override val eventCode: Int) : KeyValue() {
         override val kind = Kind.Event
     }
     
     /**
      * String key (multiple characters)
      */
-    data class StringKey(val string: String) : KeyValue() {
+    data class StringKey(override val string: String) : KeyValue() {
         override val kind = Kind.String
     }
     

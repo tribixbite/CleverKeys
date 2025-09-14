@@ -486,7 +486,7 @@ class SwipeCalibrationActivity : Activity() {
         addView(label)
         
         val slider = SeekBar(this@SwipeCalibrationActivity).apply {
-            max = 1000 // Fine granularity
+            this.max = 1000 // Fine granularity
             progress = ((currentValue - min) * 1000 / (max - min)).toInt()
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
