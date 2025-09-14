@@ -1,0 +1,207 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="juloo.keyboard2.debug"
+4    android:hardwareAccelerated="false"
+5    android:versionCode="50"
+6    android:versionName="1.32.1" >
+7
+8    <uses-sdk
+9        android:minSdkVersion="21"
+10        android:targetSdkVersion="35" />
+11
+12    <uses-permission android:name="android.permission.VIBRATE" />
+12-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:3:3-63
+12-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:3:20-61
+13    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+13-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:4:3-78
+13-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:4:20-76
+14
+15    <!-- To query enabled input methods for voice IME detection -->
+16    <queries>
+16-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:31:3-35:13
+17        <intent>
+17-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:32:5-34:14
+18            <action android:name="android.view.InputMethod" />
+18-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:9:9-58
+18-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:9:17-56
+19        </intent>
+20    </queries>
+21
+22    <permission
+22-->[androidx.core:core:1.16.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/f947dd21c454b08d814ea374b3c4738e/transformed/core-1.16.0/AndroidManifest.xml:22:5-24:47
+23        android:name="juloo.keyboard2.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+23-->[androidx.core:core:1.16.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/f947dd21c454b08d814ea374b3c4738e/transformed/core-1.16.0/AndroidManifest.xml:23:9-81
+24        android:protectionLevel="signature" />
+24-->[androidx.core:core:1.16.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/f947dd21c454b08d814ea374b3c4738e/transformed/core-1.16.0/AndroidManifest.xml:24:9-44
+25
+26    <uses-permission android:name="juloo.keyboard2.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+26-->[androidx.core:core:1.16.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/f947dd21c454b08d814ea374b3c4738e/transformed/core-1.16.0/AndroidManifest.xml:26:5-97
+26-->[androidx.core:core:1.16.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/f947dd21c454b08d814ea374b3c4738e/transformed/core-1.16.0/AndroidManifest.xml:26:22-94
+27
+28    <application
+28-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:6:3-28:17
+29        android:allowBackup="true"
+29-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:6:49-75
+30        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+30-->[androidx.core:core:1.16.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/f947dd21c454b08d814ea374b3c4738e/transformed/core-1.16.0/AndroidManifest.xml:28:18-86
+31        android:debuggable="true"
+32        android:extractNativeLibs="true"
+33        android:hardwareAccelerated="false"
+33-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:6:111-146
+34        android:icon="@mipmap/ic_launcher"
+34-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:6:76-110
+35        android:label="@string/app_name" >
+35-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:6:16-48
+36        <service
+36-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:7:5-12:15
+37            android:name="juloo.keyboard2.Keyboard2"
+37-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:7:14-54
+38            android:directBootAware="true"
+38-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:7:170-200
+39            android:exported="true"
+39-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:7:146-169
+40            android:label="@string/app_name"
+40-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:7:55-87
+41            android:permission="android.permission.BIND_INPUT_METHOD" >
+41-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:7:88-145
+42            <intent-filter>
+42-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:8:7-10:23
+43                <action android:name="android.view.InputMethod" />
+43-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:9:9-58
+43-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:9:17-56
+44            </intent-filter>
+45
+46            <meta-data
+46-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:7-81
+47                android:name="android.view.im"
+47-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:18-48
+48                android:resource="@xml/method" />
+48-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:49-79
+49        </service>
+50
+51        <activity
+51-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:14:5-18:16
+52            android:name="juloo.keyboard2.SettingsActivity"
+52-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:14:15-62
+53            android:directBootAware="true"
+53-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:14:192-222
+54            android:exported="true"
+54-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:14:168-191
+55            android:icon="@mipmap/ic_launcher"
+55-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:14:63-97
+56            android:label="@string/app_name"
+56-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:14:98-130
+57            android:theme="@style/settingsTheme" >
+57-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:14:131-167
+58            <intent-filter>
+58-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:15:7-17:23
+59                <action android:name="android.intent.action.MAIN" />
+59-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:16:9-60
+59-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:16:17-58
+60            </intent-filter>
+61        </activity>
+62        <activity
+62-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:20:5-25:16
+63            android:name="juloo.keyboard2.LauncherActivity"
+63-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:20:15-62
+64            android:directBootAware="true"
+64-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:20:154-184
+65            android:exported="true"
+65-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:20:130-153
+66            android:icon="@mipmap/ic_launcher"
+66-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:20:63-97
+67            android:theme="@style/appTheme" >
+67-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:20:98-129
+68            <intent-filter>
+68-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:21:7-24:23
+69                <action android:name="android.intent.action.MAIN" />
+69-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:16:9-60
+69-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:16:17-58
+70
+71                <category android:name="android.intent.category.LAUNCHER" />
+71-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:23:9-68
+71-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:23:19-66
+72            </intent-filter>
+73        </activity>
+74        <activity
+74-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:27:5-218
+75            android:name="juloo.keyboard2.SwipeCalibrationActivity"
+75-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:27:15-70
+76            android:directBootAware="true"
+76-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:27:186-216
+77            android:exported="false"
+77-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:27:161-185
+78            android:label="@string/pref_swipe_calibration_title"
+78-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:27:71-123
+79            android:theme="@style/settingsTheme" />
+79-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:27:124-160
+80
+81        <uses-library
+81-->[androidx.window:window:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/79daf06fbd2609896b829c5e11bf8b9f/transformed/window-1.3.0/AndroidManifest.xml:23:9-25:40
+82            android:name="androidx.window.extensions"
+82-->[androidx.window:window:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/79daf06fbd2609896b829c5e11bf8b9f/transformed/window-1.3.0/AndroidManifest.xml:24:13-54
+83            android:required="false" />
+83-->[androidx.window:window:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/79daf06fbd2609896b829c5e11bf8b9f/transformed/window-1.3.0/AndroidManifest.xml:25:13-37
+84        <uses-library
+84-->[androidx.window:window:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/79daf06fbd2609896b829c5e11bf8b9f/transformed/window-1.3.0/AndroidManifest.xml:26:9-28:40
+85            android:name="androidx.window.sidecar"
+85-->[androidx.window:window:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/79daf06fbd2609896b829c5e11bf8b9f/transformed/window-1.3.0/AndroidManifest.xml:27:13-51
+86            android:required="false" />
+86-->[androidx.window:window:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/79daf06fbd2609896b829c5e11bf8b9f/transformed/window-1.3.0/AndroidManifest.xml:28:13-37
+87
+88        <provider
+88-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:24:9-32:20
+89            android:name="androidx.startup.InitializationProvider"
+89-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:25:13-67
+90            android:authorities="juloo.keyboard2.debug.androidx-startup"
+90-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:26:13-68
+91            android:exported="false" >
+91-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:27:13-37
+92            <meta-data
+92-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:29:13-31:52
+93                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+93-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:30:17-85
+94                android:value="androidx.startup" />
+94-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:31:17-49
+95        </provider>
+96
+97        <receiver
+97-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:34:9-52:20
+98            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+98-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:35:13-76
+99            android:directBootAware="false"
+99-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:36:13-44
+100            android:enabled="true"
+100-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:37:13-35
+101            android:exported="true"
+101-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:38:13-36
+102            android:permission="android.permission.DUMP" >
+102-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:39:13-57
+103            <intent-filter>
+103-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:40:13-42:29
+104                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+104-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:41:17-91
+104-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:41:25-88
+105            </intent-filter>
+106            <intent-filter>
+106-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:43:13-45:29
+107                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+107-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:44:17-85
+107-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:44:25-82
+108            </intent-filter>
+109            <intent-filter>
+109-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:46:13-48:29
+110                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+110-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:47:17-88
+110-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:47:25-85
+111            </intent-filter>
+112            <intent-filter>
+112-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:49:13-51:29
+113                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+113-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:50:17-95
+113-->[androidx.profileinstaller:profileinstaller:1.3.0] /data/data/com.termux/files/home/.gradle/caches/transforms-4/161ec17430ab34cd5f846a497b005a20/transformed/profileinstaller-1.3.0/AndroidManifest.xml:50:25-92
+114            </intent-filter>
+115        </receiver>
+116    </application>
+117
+118</manifest>
