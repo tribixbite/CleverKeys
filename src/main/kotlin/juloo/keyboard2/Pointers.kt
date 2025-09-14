@@ -77,20 +77,6 @@ class Pointers(
         fun onPointerSwipe(pointerId: Int, direction: Int)
     }
     
-    /**
-     * Enhanced swipe gesture recognizer stub
-     */
-    class EnhancedSwipeGestureRecognizer {
-        fun getCurrentGesturePointCount(): Int = 0
-        fun initializePredictionSystem(context: android.content.Context) {}
-        fun setOnSwipePredictionListener(listener: OnSwipePredictionListener) {}
-        
-        interface OnSwipePredictionListener {
-            fun onSwipePredictionUpdate(predictions: List<String>)
-            fun onSwipePredictionComplete(finalPredictions: List<String>)
-            fun onSwipePredictionCleared()
-        }
-    }
     
     override fun handleMessage(msg: Message): Boolean {
         // Handle long press messages

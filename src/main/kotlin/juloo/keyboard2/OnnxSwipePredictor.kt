@@ -27,37 +27,21 @@ class OnnxSwipePredictor private constructor(private val context: Context) {
     /**
      * Initialize ONNX models
      */
-    fun initialize(): Boolean {
-        return try {
-            logD("Loading ONNX models...")
-            // TODO: Implement actual ONNX model loading
-            isModelLoaded = true
-            logD("ONNX models loaded successfully")
-            true
-        } catch (e: Exception) {
-            logE("Failed to load ONNX models", e)
-            false
+    suspend fun initialize(): Boolean {
+        return realPredictor.initialize().also {
+            isModelLoaded = it
         }
     }
     
     /**
      * Predict words from swipe input
      */
-    fun predict(input: SwipeInput): PredictionResult {
-        if (!isModelLoaded) {
-            logE("Models not loaded")
-            return PredictionResult.empty
-        }
-        
-        logD("Neural prediction for swipe with ${input.coordinates.size} points")
-        
-        // TODO: Implement actual neural prediction
-        // For now, return mock results based on key sequence
-        val mockWords = generateMockPredictions(input.keySequence)
-        val mockScores = (1..mockWords.size).map { 1000 - it * 100 }
-        
-        return PredictionResult(mockWords, mockScores)
+    suspend fun predict(input: SwipeInput): PredictionResult {
+        return realPredictor.predict(input)
     }
+    
+    // Delegate to real implementation
+    private val realPredictor by lazy { OnnxSwipePredictorImpl.getInstance(context) }
     
     private fun generateMockPredictions(keySequence: String): List<String> {
         // Simple mock implementation for testing
@@ -79,21 +63,21 @@ class OnnxSwipePredictor private constructor(private val context: Context) {
      * Set configuration
      */
     fun setConfig(config: Config) {
-        logD("Configuration updated")
+        realPredictor.setConfig(config)
     }
     
     /**
      * Set keyboard dimensions
      */
     fun setKeyboardDimensions(width: Int, height: Int) {
-        logD("Keyboard dimensions set: ${width}x${height}")
+        realPredictor.setKeyboardDimensions(width, height)
     }
     
     /**
      * Set real key positions
      */
     fun setRealKeyPositions(keyPositions: Map<Char, PointF>) {
-        logD("Key positions updated: ${keyPositions.size} keys")
+        realPredictor.setRealKeyPositions(keyPositions)
     }
     
     /**
@@ -101,13 +85,14 @@ class OnnxSwipePredictor private constructor(private val context: Context) {
      */
     fun setDebugLogger(logger: ((String) -> Unit)?) {
         debugLogger = logger
+        realPredictor.setDebugLogger(logger)
     }
     
     /**
      * Cleanup resources
      */
     fun cleanup() {
-        logD("Cleaning up ONNX predictor")
+        realPredictor.cleanup()
         isModelLoaded = false
     }
 }

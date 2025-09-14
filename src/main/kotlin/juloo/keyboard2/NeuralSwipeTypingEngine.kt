@@ -61,7 +61,7 @@ class NeuralSwipeTypingEngine(
         logD("Input: keySeq=${input.keySequence}, pathLen=${input.pathLength}, duration=${input.duration}")
         
         return try {
-            predictor.predict(input)
+            runBlocking { predictor.predict(input) }
         } catch (e: Exception) {
             logE("Neural prediction failed", e)
             debugLogger?.invoke("💥 Prediction failed: ${e.message}")
