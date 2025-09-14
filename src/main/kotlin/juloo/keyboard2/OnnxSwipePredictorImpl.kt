@@ -498,79 +498,256 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
 }
 
 /**
- * Simplified trajectory processor
+ * Complete trajectory processor matching Java implementation
  */
 class SwipeTrajectoryProcessor {
+    
+    companion object {
+        private const val TAG = "SwipeTrajectoryProcessor"
+        private const val MAX_TRAJECTORY_POINTS = 150
+        private const val SMOOTHING_WINDOW = 3
+    }
+    
+    private var keyboardWidth = 1080
+    private var keyboardHeight = 400
+    private var realKeyPositions = mapOf<Char, PointF>()
     
     data class TrajectoryFeatures(
         val coordinates: List<PointF>,
         val velocities: List<Float>,
+        val accelerations: List<Float>,
         val nearestKeys: List<Int>,
-        val actualLength: Int
+        val actualLength: Int,
+        val normalizedCoordinates: List<PointF>
     )
     
     fun extractFeatures(coordinates: List<PointF>, timestamps: List<Long>): TrajectoryFeatures {
-        val velocities = coordinates.zipWithNext { p1, p2 ->
-            val dx = p2.x - p1.x
-            val dy = p2.y - p1.y
-            kotlin.math.sqrt(dx * dx + dy * dy)
-        }
+        // Smooth trajectory to reduce noise
+        val smoothedCoords = smoothTrajectory(coordinates)
         
-        val nearestKeys = coordinates.map { point ->
-            // Simple key detection - would need actual keyboard layout
-            when {
-                point.x < 300 -> 1 // 'a' region
-                point.x < 600 -> 2 // 's' region  
-                else -> 3 // 'd' region
-            }
-        }
+        // Calculate velocities (first derivative)
+        val velocities = calculateVelocities(smoothedCoords, timestamps)
+        
+        // Calculate accelerations (second derivative)
+        val accelerations = calculateAccelerations(velocities, timestamps)
+        
+        // Normalize coordinates to [0, 1] range
+        val normalizedCoords = normalizeCoordinates(smoothedCoords)
+        
+        // Detect nearest keys for each point
+        val nearestKeys = detectNearestKeys(smoothedCoords)
+        
+        // Pad or truncate to MAX_TRAJECTORY_POINTS
+        val finalCoords = padOrTruncate(normalizedCoords, MAX_TRAJECTORY_POINTS)
+        val finalVelocities = padOrTruncate(velocities, MAX_TRAJECTORY_POINTS)
+        val finalAccelerations = padOrTruncate(accelerations, MAX_TRAJECTORY_POINTS)
+        val finalNearestKeys = padOrTruncate(nearestKeys, MAX_TRAJECTORY_POINTS, 0)
         
         return TrajectoryFeatures(
-            coordinates = coordinates,
-            velocities = velocities,
-            nearestKeys = nearestKeys,
-            actualLength = coordinates.size
+            coordinates = finalCoords,
+            velocities = finalVelocities,
+            accelerations = finalAccelerations,
+            nearestKeys = finalNearestKeys,
+            actualLength = coordinates.size.coerceAtMost(MAX_TRAJECTORY_POINTS),
+            normalizedCoordinates = finalCoords
         )
     }
     
+    /**
+     * Smooth trajectory using moving average
+     */
+    private fun smoothTrajectory(coordinates: List<PointF>): List<PointF> {
+        if (coordinates.size <= SMOOTHING_WINDOW) return coordinates
+        
+        return coordinates.windowed(SMOOTHING_WINDOW, partialWindows = true) { window ->
+            PointF(
+                window.map { it.x }.average().toFloat(),
+                window.map { it.y }.average().toFloat()
+            )
+        }
+    }
+    
+    /**
+     * Calculate velocity profile
+     */
+    private fun calculateVelocities(coordinates: List<PointF>, timestamps: List<Long>): List<Float> {
+        if (coordinates.size < 2 || timestamps.size < 2) return listOf(0f)
+        
+        return coordinates.zip(timestamps).zipWithNext { (p1, t1), (p2, t2) ->
+            val dx = p2.x - p1.x
+            val dy = p2.y - p1.y
+            val distance = kotlin.math.sqrt(dx * dx + dy * dy)
+            val timeDelta = (t2 - t1) / 1000f // Convert to seconds
+            
+            if (timeDelta > 0) distance / timeDelta else 0f
+        }
+    }
+    
+    /**
+     * Calculate acceleration profile
+     */
+    private fun calculateAccelerations(velocities: List<Float>, timestamps: List<Long>): List<Float> {
+        if (velocities.size < 2 || timestamps.size < 2) return listOf(0f)
+        
+        return velocities.zipWithNext().zip(timestamps.zipWithNext()) { (v1, v2), (t1, t2) ->
+            val velocityDelta = v2 - v1
+            val timeDelta = (t2 - t1) / 1000f
+            
+            if (timeDelta > 0) velocityDelta / timeDelta else 0f
+        }
+    }
+    
+    /**
+     * Normalize coordinates to [0, 1] range
+     */
+    private fun normalizeCoordinates(coordinates: List<PointF>): List<PointF> {
+        return coordinates.map { point ->
+            PointF(
+                (point.x / keyboardWidth).coerceIn(0f, 1f),
+                (point.y / keyboardHeight).coerceIn(0f, 1f)
+            )
+        }
+    }
+    
+    /**
+     * Detect nearest key for each coordinate
+     */
+    private fun detectNearestKeys(coordinates: List<PointF>): List<Int> {
+        return coordinates.map { point ->
+            if (realKeyPositions.isEmpty()) {
+                // Fallback: Simple grid-based detection
+                val col = (point.x / (keyboardWidth / 10f)).toInt().coerceIn(0, 9)
+                val row = (point.y / (keyboardHeight / 4f)).toInt().coerceIn(0, 3)
+                row * 10 + col
+            } else {
+                // Find nearest actual key
+                realKeyPositions.minByOrNull { (_, keyPos) ->
+                    val dx = point.x - keyPos.x
+                    val dy = point.y - keyPos.y
+                    dx * dx + dy * dy
+                }?.key?.code ?: 0
+            }
+        }
+    }
+    
+    /**
+     * Pad or truncate list to target size
+     */
+    private fun <T> padOrTruncate(list: List<T>, targetSize: Int, paddingValue: T? = null): List<T> {
+        return when {
+            list.size == targetSize -> list
+            list.size > targetSize -> list.take(targetSize)
+            else -> {
+                val padding = paddingValue ?: list.lastOrNull()
+                if (padding != null) {
+                    list + List(targetSize - list.size) { padding }
+                } else list
+            }
+        }
+    }
+    
     fun setKeyboardDimensions(width: Int, height: Int) {
-        // Set keyboard dimensions for coordinate normalization
+        keyboardWidth = width
+        keyboardHeight = height
+        logD("Keyboard dimensions set: ${width}x${height}")
     }
     
     fun setRealKeyPositions(keyPositions: Map<Char, PointF>) {
-        // Set real key positions for nearest key detection
+        realKeyPositions = keyPositions
+        logD("Real key positions updated: ${keyPositions.size} keys")
     }
 }
 
 /**
- * Simple tokenizer
+ * Complete tokenizer matching Java implementation
  */
 class SwipeTokenizer {
+    
+    companion object {
+        private const val TAG = "SwipeTokenizer"
+        private const val VOCAB_SIZE = 30
+    }
+    
+    // Character to token mapping
+    private val charToToken = mutableMapOf<Char, Int>()
+    private val tokenToChar = mutableMapOf<Int, Char>()
+    
     fun initialize() {
-        // Initialize tokenizer
+        // Initialize character mappings
+        charToToken.clear()
+        tokenToChar.clear()
+        
+        // Special tokens
+        tokenToChar[0] = '\u0000' // PAD
+        tokenToChar[1] = '\u0001' // UNK  
+        tokenToChar[2] = '\u0002' // SOS
+        tokenToChar[3] = '\u0003' // EOS
+        
+        // Character tokens (4-29 for a-z)
+        ('a'..'z').forEachIndexed { index, char ->
+            val tokenId = index + 4
+            charToToken[char] = tokenId
+            tokenToChar[tokenId] = char
+        }
+        
+        logD("Tokenizer initialized with ${charToToken.size} character mappings")
+    }
+    
+    fun charToToken(char: Char): Int {
+        return charToToken[char.lowercaseChar()] ?: 1 // UNK token
+    }
+    
+    fun tokenToChar(token: Int): Char {
+        return tokenToChar[token] ?: '?'
     }
     
     fun tokensToWord(tokens: List<Long>): String {
         return tokens.mapNotNull { token ->
-            when (token.toInt()) {
-                in 4..29 -> ('a' + (token.toInt() - 4)).toString()
-                else -> null
-            }
+            val char = tokenToChar(token.toInt())
+            if (char.isLetter()) char.toString() else null
         }.joinToString("")
     }
+    
+    fun wordToTokens(word: String): List<Long> {
+        val tokens = mutableListOf<Long>()
+        tokens.add(2L) // SOS token
+        
+        word.lowercase().forEach { char ->
+            tokens.add(charToToken(char).toLong())
+        }
+        
+        tokens.add(3L) // EOS token
+        return tokens
+    }
+    
+    fun isValidToken(token: Int): Boolean {
+        return token in 0 until VOCAB_SIZE
+    }
+    
+    val vocabularySize: Int get() = VOCAB_SIZE
 }
 
 /**
- * Optimized vocabulary stub
+ * Use complete optimized vocabulary implementation
  */
-class OptimizedVocabulary(private val context: Context) {
+class OptimizedVocabulary(context: Context) {
+    private val impl = OptimizedVocabularyImpl(context)
     
-    fun loadVocabulary(): Boolean = true
-    fun isLoaded(): Boolean = true
-    fun getStats(): VocabStats = VocabStats(10000)
+    suspend fun loadVocabulary(): Boolean = impl.loadVocabulary()
+    fun isLoaded(): Boolean = impl.isLoaded()
+    fun getStats(): VocabStats = impl.getStats().let { stats ->
+        VocabStats(stats.totalWords)
+    }
     
     fun filterPredictions(candidates: List<CandidateWord>, stats: SwipeStats): List<FilteredPrediction> {
-        return candidates.map { FilteredPrediction(it.word, it.confidence) }
+        val implCandidates = candidates.map { 
+            OptimizedVocabularyImpl.CandidateWord(it.word, it.confidence) 
+        }
+        val implStats = OptimizedVocabularyImpl.SwipeStats(stats.pathLength, stats.duration, stats.straightnessRatio)
+        
+        return impl.filterPredictions(implCandidates, implStats).map {
+            FilteredPrediction(it.word, it.score)
+        }
     }
     
     data class VocabStats(val totalWords: Int)
