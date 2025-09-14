@@ -468,7 +468,7 @@ class BenchmarkSuite(private val context: Context) {
             appendLine("📊 Overall Performance:")
             appendLine("   Score: ${suite.overallScore.toInt()}")
             appendLine("   Success Rate: ${(suite.results.count { it.averageTimeMs > 0 } * 100 / suite.results.size)}%")
-            appendLine("   Total Duration: ${suite.totalDurationMs}ms")
+            appendLine("   Total Duration: ${suite.results.sumOf { it.totalTimeMs }}ms")
             appendLine()
             
             // Comparison with Java

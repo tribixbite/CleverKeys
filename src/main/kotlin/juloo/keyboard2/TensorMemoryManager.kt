@@ -113,7 +113,7 @@ class TensorMemoryManager(private val ortEnvironment: OrtEnvironment) {
         // Copy data to managed array
         System.arraycopy(data, 0, managedData, 0, data.size)
         
-        val tensor = OnnxTensor.createTensor(ortEnvironment, managedData, shape)
+        val tensor = OnnxTensor.createTensor(ortEnvironment, java.nio.FloatBuffer.wrap(managedData), shape)
         trackTensor(tensor, "FloatArray", shape, sizeBytes)
         
         totalTensorsCreated++

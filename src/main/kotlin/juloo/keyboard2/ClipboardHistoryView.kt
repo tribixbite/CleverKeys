@@ -2,6 +2,7 @@ package juloo.keyboard2
 
 import android.content.Context
 import android.graphics.Color
+import android.view.View
 import android.widget.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -67,7 +68,7 @@ class ClipboardHistoryView(context: Context) : LinearLayout(context) {
             text = "Clear All"
             setOnClickListener { 
                 clipboardService.clearHistory()
-                toast("Clipboard history cleared")
+                context.toast("Clipboard history cleared")
             }
             layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
         })
