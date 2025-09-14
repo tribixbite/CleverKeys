@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string-array name="pref_show_number_row_values">
+    <item>no_number_row</item>
+    <item>no_symbols</item>
+    <item>symbols</item>
+  </string-array>
+  <string-array name="pref_show_number_row_entries">
+    <item>@string/pref_show_number_row_no_number_row</item>
+    <item>@string/pref_show_number_row_no_symbols</item>
+    <item>@string/pref_show_number_row_symbols</item>
+  </string-array>
+  <string-array name="pref_show_numpad_values">
+    <item>never</item>
+    <item>landscape</item>
+    <item>always</item>
+  </string-array>
+  <string-array name="pref_show_numpad_entries">
+    <item>@string/pref_show_numpad_never</item>
+    <item>@string/pref_show_numpad_landscape</item>
+    <item>@string/pref_show_numpad_always</item>
+  </string-array>
+  <string-array name="pref_numpad_layout_values">
+    <item>high_first</item>
+    <item>low_first</item>
+  </string-array>
+  <string-array name="pref_numpad_layout_entries">
+    <item>@string/pref_numpad_layout_e_high_first</item>
+    <item>@string/pref_numpad_layout_e_low_first</item>
+  </string-array>
+  <string-array name="pref_theme_entries">
+    <item>@string/pref_theme_e_system</item>
+    <item>@string/pref_theme_e_dark</item>
+    <item>@string/pref_theme_e_light</item>
+    <item>@string/pref_theme_e_black</item>
+    <item>@string/pref_theme_e_altblack</item>
+    <item>@string/pref_theme_e_white</item>
+    <item>@string/pref_theme_e_epaper</item>
+    <item>@string/pref_theme_e_desert</item>
+    <item>@string/pref_theme_e_jungle</item>
+    <item>@string/pref_theme_e_monet</item>
+    <item>@string/pref_theme_e_monetlight</item>
+    <item>@string/pref_theme_e_monetdark</item>
+    <item>@string/pref_theme_e_rosepine</item>
+  </string-array>
+  <string-array name="pref_theme_values">
+    <item>system</item>
+    <item>dark</item>
+    <item>light</item>
+    <item>black</item>
+    <item>altblack</item>
+    <item>white</item>
+    <item>epaper</item>
+    <item>desert</item>
+    <item>jungle</item>
+    <item>monet</item>
+    <item>monetlight</item>
+    <item>monetdark</item>
+    <item>rosepine</item>
+  </string-array>
+  <string-array name="pref_swipe_dist_entries">
+    <item>@string/pref_swipe_dist_e_very_short</item>
+    <item>@string/pref_swipe_dist_e_short</item>
+    <item>@string/pref_swipe_dist_e_default</item>
+    <item>@string/pref_swipe_dist_e_far</item>
+    <item>@string/pref_swipe_dist_e_very_far</item>
+  </string-array>
+  <string-array name="pref_swipe_dist_values">
+    <item>5</item>
+    <item>7.5</item>
+    <item>15</item>
+    <item>25</item>
+    <item>35</item>
+  </string-array>
+  <string-array name="pref_circle_sensitivity_entries">
+    <item>@string/pref_circle_sensitivity_e_high</item>
+    <item>@string/pref_circle_sensitivity_e_medium</item>
+    <item>@string/pref_circle_sensitivity_e_low</item>
+    <item>@string/pref_circle_sensitivity_e_disabled</item>
+  </string-array>
+  <string-array name="pref_circle_sensitivity_values">
+    <item>2</item>
+    <item>3</item>
+    <item>4</item>
+    <item>12</item>
+  </string-array>
+  <string-array name="pref_number_entry_entries">
+    <item>@string/pref_number_entry_layout_pin</item>
+    <item>@string/pref_number_entry_layout_number</item>
+    <item>@string/pref_number_entry_layout_normal</item>
+  </string-array>
+  <string-array name="pref_number_entry_values">
+    <item>pin</item>
+    <item>number</item>
+    <item>normal</item>
+  </string-array>
+  <string-array name="pref_slider_sensitivity_entries">
+    <item>@string/pref_slider_sensitivity_slow</item>
+    <item>@string/pref_slider_sensitivity_medium</item>
+    <item>@string/pref_slider_sensitivity_fast</item>
+  </string-array>
+  <string-array name="pref_slider_sensitivity_values">
+    <item>60</item>
+    <item>30</item>
+    <item>15</item>
+  </string-array>
+  <string-array name="pref_clipboard_history_limit_entries">
+    <item>Unlimited</item>
+    <item>3 items</item>
+    <item>6 items</item>
+    <item>10 items</item>
+    <item>15 items</item>
+    <item>20 items</item>
+    <item>50 items</item>
+    <item>100 items</item>
+  </string-array>
+  <string-array name="pref_clipboard_history_limit_values">
+    <item>0</item>
+    <item>3</item>
+    <item>6</item>
+    <item>10</item>
+    <item>15</item>
+    <item>20</item>
+    <item>50</item>
+    <item>100</item>
+  </string-array>
+</resources>
