@@ -33,6 +33,9 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     private var suggestionBar: SuggestionBar? = null
     private var neuralConfig: NeuralConfig? = null
     private var keyEventHandler: KeyEventHandler? = null
+    private var predictionPipeline: NeuralPredictionPipeline? = null
+    private var performanceProfiler: PerformanceProfiler? = null
+    private var configManager: ConfigurationManager? = null
     
     // Configuration and state
     private var config: Config? = null
@@ -44,7 +47,9 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         
         initializeConfiguration()
         initializeKeyEventHandler()
+        initializePerformanceProfiler()
         initializeNeuralComponents()
+        initializePredictionPipeline()
     }
     
     override fun onDestroy() {
@@ -55,6 +60,9 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         serviceScope.cancel()
         predictionService?.shutdown()
         neuralEngine?.cleanup()
+        predictionPipeline?.cleanup()
+        performanceProfiler?.cleanup()
+        configManager?.cleanup()
     }
     
     /**
@@ -68,7 +76,27 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         config = Config.globalConfig()
         neuralConfig = NeuralConfig(prefs)
         
+        // Initialize configuration manager
+        configManager = ConfigurationManager(this).also { manager ->
+            serviceScope.launch {
+                manager.initialize()
+                
+                // Monitor configuration changes
+                manager.getConfigChangesFlow().collect { change ->
+                    handleConfigurationChange(change)
+                }
+            }
+        }
+        
         logD("Configuration initialized")
+    }
+    
+    /**
+     * Initialize performance profiler
+     */
+    private fun initializePerformanceProfiler() {
+        performanceProfiler = PerformanceProfiler(this)
+        logD("Performance profiler initialized")
     }
     
     /**
@@ -121,6 +149,26 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     }
     
     /**
+     * Initialize complete prediction pipeline
+     */
+    private fun initializePredictionPipeline() {
+        predictionPipeline = NeuralPredictionPipeline(this).also { pipeline ->
+            serviceScope.launch {
+                try {
+                    val success = pipeline.initialize()
+                    if (success) {
+                        logD("Neural prediction pipeline initialized successfully")
+                    } else {
+                        logE("Neural prediction pipeline initialization failed")
+                    }
+                } catch (e: Exception) {
+                    logE("Failed to initialize prediction pipeline", e)
+                }
+            }
+        }
+    }
+    
+    /**
      * Create keyboard view with modern Kotlin patterns
      */
     override fun onCreateInputView(): View? {
@@ -135,41 +183,123 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     }
     
     /**
-     * Handle swipe gesture completion
+     * Handle swipe gesture completion with complete pipeline integration
      */
     private fun handleSwipeGesture(swipeData: SwipeGestureData) {
-        val predictionService = this.predictionService ?: return
-        val suggestionBar = this.suggestionBar ?: return
+        val pipeline = this.predictionPipeline ?: return
+        val profiler = this.performanceProfiler ?: return
         
         logD("🎯 Gesture completion: ${swipeData.path.size} points")
         
-        // Create SwipeInput exactly like calibration (unified approach)
-        val swipeInput = SwipeInput(
-            coordinates = swipeData.path,
-            timestamps = swipeData.timestamps,
-            touchedKeys = emptyList() // Empty like calibration for consistency
-        )
-        
-        // Request prediction with coroutines
+        // Process through complete neural prediction pipeline
         serviceScope.launch {
             try {
-                val result = predictionService.requestPrediction(swipeInput).await()
+                val pipelineResult = profiler.measureOperation("complete_gesture_processing") {
+                    pipeline.processGesture(
+                        points = swipeData.path,
+                        timestamps = swipeData.timestamps,
+                        context = getCurrentTextContext()
+                    )
+                }
                 
                 // Update UI on main thread
                 withContext(Dispatchers.Main) {
-                    suggestionBar.setSuggestions(result.words.take(5))
-                    logD("Displayed ${result.size} predictions")
+                    updateSuggestionsFromPipeline(pipelineResult)
+                    logPipelineResult(pipelineResult)
                 }
                 
             } catch (e: CancellationException) {
-                logD("Prediction cancelled by new gesture")
+                logD("Gesture processing cancelled by new gesture")
             } catch (e: Exception) {
-                logE("Prediction failed", e)
-                withContext(Dispatchers.Main) {
-                    suggestionBar.clearSuggestions()
+                logE("Pipeline processing failed", e)
+                handlePredictionError(e)
+            }
+        }
+    }
+    
+    /**
+     * Update suggestions from pipeline result
+     */
+    private fun updateSuggestionsFromPipeline(result: NeuralPredictionPipeline.PipelineResult) {
+        keyboardView?.updateSuggestions(result.predictions.words.take(5))
+        
+        logD("🧠 ${result.source} prediction: ${result.predictions.size} words in ${result.processingTimeMs}ms")
+        logD("   Gesture: ${result.gestureInfo.type} (${result.gestureInfo.confidence} confidence)")
+        logD("   Classification: ${result.swipeClassification.quality} (${result.swipeClassification.confidence})")
+    }
+    
+    /**
+     * Log detailed pipeline result
+     */
+    private fun logPipelineResult(result: NeuralPredictionPipeline.PipelineResult) {
+        val details = buildString {
+            appendLine("📊 Pipeline Result Details:")
+            appendLine("   Source: ${result.source}")
+            appendLine("   Processing Time: ${result.processingTimeMs}ms")
+            appendLine("   Gesture Type: ${result.gestureInfo.type}")
+            appendLine("   Gesture Confidence: ${result.gestureInfo.confidence}")
+            appendLine("   Swipe Quality: ${result.swipeClassification.quality}")
+            appendLine("   Predictions: ${result.predictions.words.take(3)}")
+        }
+        logD(details)
+    }
+    
+    /**
+     * Get current text context for context-aware predictions
+     */
+    private fun getCurrentTextContext(): List<String> {
+        return try {
+            val inputConnection = currentInputConnection ?: return emptyList()
+            val textBefore = inputConnection.getTextBeforeCursor(100, 0)?.toString() ?: ""
+            
+            // Extract last few words for context
+            textBefore.split("\\s+".toRegex())
+                .filter { it.isNotBlank() }
+                .takeLast(3)
+        } catch (e: Exception) {
+            logE("Failed to get text context", e)
+            emptyList()
+        }
+    }
+    
+    /**
+     * Handle prediction errors with user feedback
+     */
+    private fun handlePredictionError(error: Throwable) {
+        serviceScope.launch(Dispatchers.Main) {
+            when (error) {
+                is ErrorHandling.CleverKeysException.NeuralEngineException -> {
+                    // Show neural-specific error
+                    showErrorToast("Neural prediction temporarily unavailable")
+                    // Fall back to traditional prediction
+                    fallbackToTraditionalPrediction()
+                }
+                is ErrorHandling.CleverKeysException.GestureRecognitionException -> {
+                    // Gesture recognition failed
+                    showErrorToast("Gesture not recognized")
+                }
+                else -> {
+                    // Generic error
+                    showErrorToast("Prediction error occurred")
                 }
             }
         }
+    }
+    
+    /**
+     * Fallback to traditional prediction
+     */
+    private fun fallbackToTraditionalPrediction() {
+        // TODO: Implement traditional prediction fallback
+        logD("Falling back to traditional prediction")
+    }
+    
+    /**
+     * Show error toast to user
+     */
+    private fun showErrorToast(message: String) {
+        // TODO: Implement user-visible error feedback
+        logE("User error: $message")
     }
     
     /**
@@ -208,22 +338,95 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     }
     
     /**
-     * Configuration change handling
+     * Configuration change handling with reactive propagation
      */
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-        when (key) {
+        serviceScope.launch {
+            handleConfigurationChange(ConfigurationManager.ConfigChange(
+                key = key ?: "",
+                oldValue = null,
+                newValue = sharedPreferences?.all?.get(key),
+                source = "system"
+            ))
+        }
+    }
+    
+    /**
+     * Handle configuration changes with component updates
+     */
+    private suspend fun handleConfigurationChange(change: ConfigurationManager.ConfigChange) {
+        when (change.key) {
             "neural_beam_width", "neural_max_length", "neural_confidence_threshold" -> {
                 // Update neural configuration
                 neuralEngine?.setConfig(config ?: return)
-                logD("Neural configuration updated for key: $key")
+                predictionPipeline?.let { pipeline ->
+                    // Reinitialize pipeline with new settings
+                    pipeline.cleanup()
+                    pipeline.initialize()
+                }
+                logD("Neural configuration updated for key: ${change.key}")
             }
+            
             "swipe_typing_enabled" -> {
                 // Reinitialize neural components if needed
                 if (config?.swipe_typing_enabled == true && neuralEngine == null) {
                     initializeNeuralComponents()
+                    initializePredictionPipeline()
+                }
+            }
+            
+            "theme" -> {
+                // Update theme across all components
+                withContext(Dispatchers.Main) {
+                    keyboardView?.updateTheme()
+                    updateUITheme()
+                }
+            }
+            
+            "keyboard_height", "keyboard_height_landscape" -> {
+                // Update keyboard dimensions
+                withContext(Dispatchers.Main) {
+                    keyboardView?.requestLayout()
+                }
+            }
+            
+            "performance_monitoring" -> {
+                // Toggle performance monitoring
+                val enabled = change.newValue as? Boolean ?: false
+                if (enabled) {
+                    startPerformanceMonitoring()
+                } else {
+                    stopPerformanceMonitoring()
                 }
             }
         }
+    }
+    
+    /**
+     * Update UI theme
+     */
+    private fun updateUITheme() {
+        // TODO: Propagate theme changes to active UI components
+        logD("UI theme updated")
+    }
+    
+    /**
+     * Start performance monitoring
+     */
+    private fun startPerformanceMonitoring() {
+        performanceProfiler?.startMonitoring { metric ->
+            if (metric.durationMs > 1000) { // Log slow operations
+                logW("Slow operation detected: ${metric.operation} took ${metric.durationMs}ms")
+            }
+        }
+    }
+    
+    /**
+     * Stop performance monitoring
+     */
+    private fun stopPerformanceMonitoring() {
+        // TODO: Stop performance monitoring
+        logD("Performance monitoring stopped")
     }
     
     /**
