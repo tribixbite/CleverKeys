@@ -564,7 +564,7 @@ class SwipeCalibrationActivity : Activity() {
             try {
                 logD("🔥 About to call neural prediction")
                 val (result, predTime) = measureTimeNanos {
-                    neuralEngine.predict(swipeInput)
+                    neuralEngine.predictAsync(swipeInput)
                 }
                 logD("🔥 Neural prediction completed")
                 
