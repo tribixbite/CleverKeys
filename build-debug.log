@@ -21,6 +21,7 @@ Generated version info:  ()
 > Task :generateDebugResources
 > Task :packageDebugResources
 > Task :createDebugCompatibleScreenManifests
+> Task :mergeDebugResources
 > Task :extractDeepLinksDebug FROM-CACHE
 > Task :processDebugMainManifest FROM-CACHE
 > Task :processDebugManifest FROM-CACHE
@@ -32,12 +33,11 @@ Generated version info:  ()
 > Task :mergeDebugAssets
 > Task :compressDebugAssets FROM-CACHE
 > Task :parseDebugLocalResources
-> Task :mergeDebugResources
-> Task :checkDebugDuplicateClasses
 > Task :desugarDebugFileDependencies FROM-CACHE
+> Task :mergeDebugJniLibFolders
+> Task :checkDebugDuplicateClasses
 > Task :mergeExtDexDebug FROM-CACHE
 > Task :mergeLibDexDebug FROM-CACHE
-> Task :mergeDebugJniLibFolders
 > Task :validateSigningDebug
 > Task :writeDebugAppMetadata
 > Task :writeDebugSigningConfigVersions
@@ -48,27 +48,7 @@ Unable to strip the following libraries, packaging them as they are: libonnxrunt
 
 > Task :processDebugResources
 
-> Task :compileDebugKotlin
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/BenchmarkSuite.kt:471:52 Unresolved reference: totalDurationMs
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysView.kt:278:27 Too many arguments for private final fun updatePaintColors(): Unit defined in juloo.keyboard2.CleverKeysView
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ClipboardHistoryView.kt:70:17 Unresolved reference. None of the following candidates is applicable because of receiver type mismatch: 
-public fun Context.toast(message: String, length: Int = ...): Unit defined in juloo.keyboard2 in file Extensions.kt
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ClipboardHistoryView.kt:114:85 Unresolved reference: View
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ConfigurationManager.kt:228:50 None of the following functions can be called with the arguments supplied: 
-public fun CharSequence.endsWith(char: Char, ignoreCase: Boolean = ...): Boolean defined in kotlin.text
-public fun CharSequence.endsWith(suffix: CharSequence, ignoreCase: Boolean = ...): Boolean defined in kotlin.text
-public fun String.endsWith(suffix: String, ignoreCase: Boolean = ...): Boolean defined in kotlin.text
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/FoldStateTrackerImpl.kt:94:16 Unresolved reference. None of the following candidates is applicable because of receiver type mismatch: 
-public val CoroutineContext.isActive: Boolean defined in kotlinx.coroutines
-public val CoroutineScope.isActive: Boolean defined in kotlinx.coroutines
-public val FlowCollector<*>.isActive: Boolean defined in kotlinx.coroutines.flow
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/FoldStateTrackerImpl.kt:170:65 Unresolved reference: pow
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/FoldStateTrackerImpl.kt:171:66 Unresolved reference: pow
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/FoldStateTrackerImpl.kt:209:65 Unresolved reference: pow
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/FoldStateTrackerImpl.kt:210:66 Unresolved reference: pow
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/LauncherActivity.kt:115:21 Unresolved reference: PointF
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/LauncherActivity.kt:116:21 Unresolved reference: PointF
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/LauncherActivity.kt:117:21 Unresolved reference: PointF
+> Task :compileDebugKotlin FAILED
 e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/NeuralSwipeEngine.kt:67:35 Suspend function 'predict' should be called only from a coroutine or another suspend function
 e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/OnnxSwipePredictorImpl.kt:429:17 Unresolved reference: addQNN
 e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/OnnxSwipePredictorImpl.kt:433:21 Unresolved reference: addXNNPACK
@@ -248,17 +228,6 @@ public inline fun LongArray.isNotEmpty(): Boolean defined in kotlin.collections
 public inline fun ShortArray.isNotEmpty(): Boolean defined in kotlin.collections
 public inline fun <T> Collection<TypeVariable(T)>.isNotEmpty(): Boolean defined in kotlin.collections
 public inline fun <K, V> Map<out TypeVariable(K), TypeVariable(V)>.isNotEmpty(): Boolean defined in kotlin.collections
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/TensorMemoryManager.kt:116:33 None of the following functions can be called with the arguments supplied: 
-public/*package*/ open fun createTensor(p0: OrtEnvironment!, p1: OrtAllocator!, p2: Any!): OnnxTensor! defined in ai.onnxruntime.OnnxTensor
-public open fun createTensor(p0: OrtEnvironment!, p1: ByteBuffer!, p2: LongArray!): OnnxTensor! defined in ai.onnxruntime.OnnxTensor
-public open fun createTensor(p0: OrtEnvironment!, p1: DoubleBuffer!, p2: LongArray!): OnnxTensor! defined in ai.onnxruntime.OnnxTensor
-public open fun createTensor(p0: OrtEnvironment!, p1: FloatBuffer!, p2: LongArray!): OnnxTensor! defined in ai.onnxruntime.OnnxTensor
-public open fun createTensor(p0: OrtEnvironment!, p1: IntBuffer!, p2: LongArray!): OnnxTensor! defined in ai.onnxruntime.OnnxTensor
-public open fun createTensor(p0: OrtEnvironment!, p1: LongBuffer!, p2: LongArray!): OnnxTensor! defined in ai.onnxruntime.OnnxTensor
-public open fun createTensor(p0: OrtEnvironment!, p1: ShortBuffer!, p2: LongArray!): OnnxTensor! defined in ai.onnxruntime.OnnxTensor
-public open fun createTensor(p0: OrtEnvironment!, p1: Array<(out) String!>!, p2: LongArray!): OnnxTensor! defined in ai.onnxruntime.OnnxTensor
-
-> Task :compileDebugKotlin FAILED
 
 FAILURE: Build failed with an exception.
 
@@ -273,5 +242,5 @@ Execution failed for task ':compileDebugKotlin'.
 > Run with --scan to get full insights.
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 34s
+BUILD FAILED in 44s
 30 actionable tasks: 20 executed, 10 from cache

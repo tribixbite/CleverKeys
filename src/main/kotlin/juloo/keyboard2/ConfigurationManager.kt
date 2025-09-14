@@ -225,7 +225,7 @@ class ConfigurationManager(private val context: Context) {
         return try {
             when {
                 key.endsWith("_enabled") -> prefs.getBoolean(key, false)
-                key.startsWith("neural_") && key.endsWith("_width", "_length") -> prefs.getInt(key, 0)
+                key.startsWith("neural_") && (key.endsWith("_width") || key.endsWith("_length")) -> prefs.getInt(key, 0)
                 key.contains("threshold") || key.contains("confidence") -> prefs.getFloat(key, 0f)
                 else -> prefs.getString(key, "")
             }

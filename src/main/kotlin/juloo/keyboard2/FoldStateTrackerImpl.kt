@@ -93,7 +93,7 @@ class FoldStateTrackerImpl(private val context: Context) {
         val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
         val display = displayManager.getDisplay(Display.DEFAULT_DISPLAY)
         
-        while (isActive) {
+        while (scope.isActive) {
             try {
                 val metrics = android.util.DisplayMetrics()
                 display.getRealMetrics(metrics)
