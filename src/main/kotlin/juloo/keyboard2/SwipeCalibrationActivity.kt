@@ -101,15 +101,17 @@ class SwipeCalibrationActivity : Activity() {
         neuralEngine = NeuralSwipeTypingEngine(this, Config.globalConfig())
         neuralEngine.setDebugLogger { message -> logToResults(message) }
         
-        try {
-            neuralEngine.initialize()
-            logD("Neural engine initialized successfully")
-            logToResults("✅ Neural engine initialized successfully")
-        } catch (e: Exception) {
-            logE("Failed to initialize neural engine", e)
-            logToResults("❌ Neural engine initialization failed: ${e.message}")
-            showErrorDialog("Neural models failed to load. Error: ${e.message}")
-            return
+        uiScope.launch {
+            try {
+                neuralEngine.initialize()
+                logD("Neural engine initialized successfully")
+                logToResults("✅ Neural engine initialized successfully")
+            } catch (e: Exception) {
+                logE("Failed to initialize neural engine", e)
+                logToResults("❌ Neural engine initialization failed: ${e.message}")
+                showErrorDialog("Neural models failed to load. Error: ${e.message}")
+                return@launch
+            }
         }
     }
     
@@ -125,11 +127,11 @@ class SwipeCalibrationActivity : Activity() {
                          android.content.res.Configuration.ORIENTATION_LANDSCAPE
         
         val keyboardHeightPref = when {
-            isLandscape && foldTracker.isUnfolded -> 
+            isLandscape && foldTracker.isUnfolded() -> 
                 prefs.getInt("keyboard_height_landscape_unfolded", 50)
             isLandscape -> 
                 prefs.getInt("keyboard_height_landscape", 50)
-            foldTracker.isUnfolded -> 
+            foldTracker.isUnfolded() -> 
                 prefs.getInt("keyboard_height_unfolded", 35)
             else -> 
                 prefs.getInt("keyboard_height", 35)
@@ -805,41 +807,42 @@ class SwipeCalibrationActivity : Activity() {
             invalidate()
         }
         
-        /**
-         * Key button with modern Kotlin implementation
-         */
-        data class KeyButton(
-            val label: String,
-            val x: Float,
-            val y: Float,
-            val width: Float,
-            val height: Float
-        ) {
-            fun draw(canvas: Canvas, keyPaint: Paint, borderPaint: Paint, textPaint: Paint) {
-                val rect = RectF(x, y, x + width, y + height)
-                val cornerRadius = minOf(width, height) * 0.15f
-                
-                // Draw key background and border
-                canvas.drawRoundRect(rect, cornerRadius, cornerRadius, keyPaint)
-                canvas.drawRoundRect(rect, cornerRadius, cornerRadius, borderPaint)
-                
-                // Draw text with proper symbol mapping
-                val displayLabel = when (label) {
-                    "space" -> " "
-                    "shift" -> "⇧"
-                    "backspace" -> "⌫"
-                    "enter" -> "↵"
-                    "?123" -> "?123"
-                    else -> label.uppercase()
-                }
-                
-                val textY = y + (height - textPaint.ascent() - textPaint.descent()) / 2f
-                canvas.drawText(displayLabel, x + width / 2, textY, textPaint)
+    }
+    
+    /**
+     * Key button with modern Kotlin implementation
+     */
+    data class KeyButton(
+        val label: String,
+        val x: Float,
+        val y: Float,
+        val width: Float,
+        val height: Float
+    ) {
+        fun draw(canvas: Canvas, keyPaint: Paint, borderPaint: Paint, textPaint: Paint) {
+            val rect = RectF(x, y, x + width, y + height)
+            val cornerRadius = minOf(width, height) * 0.15f
+            
+            // Draw key background and border
+            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, keyPaint)
+            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, borderPaint)
+            
+            // Draw text with proper symbol mapping
+            val displayLabel = when (label) {
+                "space" -> " "
+                "shift" -> "⇧"
+                "backspace" -> "⌫"
+                "enter" -> "↵"
+                "?123" -> "?123"
+                else -> label.uppercase()
             }
             
-            fun contains(px: Float, py: Float): Boolean {
-                return px in x..(x + width) && py in y..(y + height)
-            }
+            val textY = y + (height - textPaint.ascent() - textPaint.descent()) / 2f
+            canvas.drawText(displayLabel, x + width / 2, textY, textPaint)
+        }
+        
+        fun contains(px: Float, py: Float): Boolean {
+            return px in x..(x + width) && py in y..(y + height)
         }
     }
 }

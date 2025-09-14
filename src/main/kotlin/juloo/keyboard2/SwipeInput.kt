@@ -56,10 +56,10 @@ data class SwipeInput(
             
             val angleDiff = abs(angle2 - angle1).let { diff ->
                 if (diff > PI) 2 * PI - diff else diff
-            }
+            }.toFloat()
             
             // Count as direction change if angle difference > 45 degrees
-            angleDiff > PI / 4
+            angleDiff > (PI / 4).toFloat()
         }
     }
     

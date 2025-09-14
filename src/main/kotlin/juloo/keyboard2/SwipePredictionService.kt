@@ -3,6 +3,7 @@ package juloo.keyboard2
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import kotlin.math.abs
 
 /**
  * Modern swipe prediction service using Kotlin coroutines

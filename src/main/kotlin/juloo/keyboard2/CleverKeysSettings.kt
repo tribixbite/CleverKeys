@@ -1,10 +1,10 @@
 package juloo.keyboard2
 
 import android.app.Activity
+import android.graphics.PointF
 import android.os.Bundle
 import android.widget.*
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 /**
  * Modern Kotlin settings activity with reactive configuration
@@ -132,7 +132,7 @@ class CleverKeysSettings : Activity() {
         addView(Button(this@CleverKeysSettings).apply {
             text = "🧪 Test Predictions"
             setOnClickListener {
-                lifecycleScope.launch {
+                GlobalScope.launch {
                     testPredictionSystem()
                 }
             }
@@ -217,7 +217,7 @@ class CleverKeysSettings : Activity() {
                 PointF(300f, 200f)
             )
             
-            val testTimestamps = testPoints.mapIndexed { index, _ ->
+            val testTimestamps = testPoints.mapIndexed { index: Int, _: PointF ->
                 System.currentTimeMillis() + index * 100L
             }
             
