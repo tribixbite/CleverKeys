@@ -271,6 +271,16 @@ class CleverKeysView(
     }
     
     /**
+     * Update theme for all UI components
+     */
+    fun updateTheme() {
+        val theme = Theme.get_current()
+        updatePaintColors(theme)
+        invalidate()
+        logD("Theme updated for keyboard view")
+    }
+    
+    /**
      * Keyboard key representation
      */
     data class KeyboardKey(
