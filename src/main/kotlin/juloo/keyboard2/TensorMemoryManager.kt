@@ -165,7 +165,7 @@ class TensorMemoryManager(private val ortEnvironment: OrtEnvironment) {
     /**
      * Track active tensor for cleanup
      */
-    private fun trackTensor(tensor: OnnxTensor, type: String, shape: LongArray, sizeBytes: Long) {
+    fun trackTensor(tensor: OnnxTensor, type: String, shape: LongArray, sizeBytes: Long) {
         val id = tensorIdCounter.incrementAndGet()
         val info = TensorInfo(id, type, shape, sizeBytes, System.currentTimeMillis(), tensor)
         activeTensors[id] = info

@@ -197,19 +197,23 @@ class ConfigurationManager(private val context: Context) {
             // Emit configuration change event
             configChanges.emit(ConfigChange(key, null, newValue, "user"))
             
-            // Handle specific configuration changes
+            // Handle specific configuration changes with actual propagation
             when (key) {
                 "neural_beam_width", "neural_max_length", "neural_confidence_threshold" -> {
-                    // Notify neural engine of configuration change
-                    notifyNeuralConfigChange()
+                    // Propagate neural configuration changes to active engine
+                    notifyNeuralConfigChange(key, newValue)
                 }
                 "theme" -> {
-                    // Apply theme changes
+                    // Propagate theme changes to all UI components
                     notifyThemeChange()
                 }
                 "keyboard_height", "keyboard_height_landscape" -> {
-                    // Update keyboard dimensions
-                    notifyLayoutChange()
+                    // Propagate layout changes to keyboard views
+                    notifyLayoutChange(key, newValue)
+                }
+                "swipe_typing_enabled" -> {
+                    // Propagate neural prediction state changes
+                    notifyNeuralStateChange(newValue as? Boolean ?: false)
                 }
             }
             
@@ -234,28 +238,124 @@ class ConfigurationManager(private val context: Context) {
         }
     }
     
+    // Component registry for propagation
+    private val neuralEngineInstances = mutableListOf<NeuralSwipeEngine>()
+    private val keyboardViewInstances = mutableListOf<CleverKeysView>()
+    private val uiComponentInstances = mutableListOf<android.view.View>()
+
+    /**
+     * Register neural engine for configuration updates
+     */
+    fun registerNeuralEngine(engine: NeuralSwipeEngine) {
+        neuralEngineInstances.add(engine)
+    }
+
+    /**
+     * Register keyboard view for configuration updates
+     */
+    fun registerKeyboardView(view: CleverKeysView) {
+        keyboardViewInstances.add(view)
+    }
+
+    /**
+     * Register UI component for theme updates
+     */
+    fun registerUIComponent(view: android.view.View) {
+        uiComponentInstances.add(view)
+    }
+
     /**
      * Notify neural engine of configuration changes
      */
-    private suspend fun notifyNeuralConfigChange() {
-        logD("Neural configuration changed - updating engine")
-        // Would notify active neural engine instances
+    private suspend fun notifyNeuralConfigChange(key: String, newValue: Any?) {
+        logD("Neural configuration changed: $key = $newValue")
+
+        neuralEngineInstances.forEach { engine ->
+            try {
+                // Update engine configuration
+                val config = Config.globalConfig()
+                engine.setConfig(config)
+                logD("Updated neural engine configuration for $key")
+            } catch (e: Exception) {
+                logE("Failed to update neural engine configuration", e)
+            }
+        }
     }
-    
+
     /**
-     * Notify theme change
+     * Notify theme change to all UI components
      */
     private suspend fun notifyThemeChange() {
-        logD("Theme configuration changed - updating UI")
-        // Would notify active UI components
+        logD("Theme configuration changed - updating all UI components")
+
+        val theme = Theme.get_current()
+
+        // Update keyboard views
+        keyboardViewInstances.forEach { view ->
+            try {
+                view.updateTheme()
+                logD("Updated keyboard view theme")
+            } catch (e: Exception) {
+                logE("Failed to update keyboard view theme", e)
+            }
+        }
+
+        // Update all registered UI components
+        uiComponentInstances.forEach { view ->
+            try {
+                Theme.initialize(context).applyThemeToView(view, theme)
+                logD("Updated UI component theme")
+            } catch (e: Exception) {
+                logE("Failed to update UI component theme", e)
+            }
+        }
     }
-    
+
     /**
-     * Notify layout change
+     * Notify layout change to keyboard views
      */
-    private suspend fun notifyLayoutChange() {
-        logD("Layout configuration changed - updating keyboard")
-        // Would notify active keyboard views
+    private suspend fun notifyLayoutChange(key: String, newValue: Any?) {
+        logD("Layout configuration changed: $key = $newValue")
+
+        keyboardViewInstances.forEach { view ->
+            try {
+                view.requestLayout()
+                logD("Updated keyboard view layout for $key")
+            } catch (e: Exception) {
+                logE("Failed to update keyboard view layout", e)
+            }
+        }
+    }
+
+    /**
+     * Notify neural prediction state change
+     */
+    private suspend fun notifyNeuralStateChange(enabled: Boolean) {
+        logD("Neural prediction state changed: $enabled")
+
+        if (enabled) {
+            // Initialize neural engines if not already done
+            neuralEngineInstances.forEach { engine ->
+                try {
+                    if (!engine.isReady) {
+                        engine.initialize()
+                        logD("Initialized neural engine due to state change")
+                    }
+                } catch (e: Exception) {
+                    logE("Failed to initialize neural engine", e)
+                }
+            }
+        } else {
+            // Cleanup neural engines if disabled
+            neuralEngineInstances.forEach { engine ->
+                try {
+                    engine.cleanup()
+                    logD("Cleaned up neural engine due to state change")
+                } catch (e: Exception) {
+                    logE("Failed to cleanup neural engine", e)
+                }
+            }
+        }
     }
     
     /**

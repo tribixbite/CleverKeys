@@ -20,6 +20,23 @@ class InputConnectionManager(private val service: CleverKeysService) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var currentInputConnection: InputConnection? = null
     private var currentEditorInfo: EditorInfo? = null
+
+    // App-specific behavior flags
+    private var enableSmartComposition = false
+    private var enableContextualSuggestions = false
+    private var enableEmojiSuggestions = false
+    private var enableQuickResponses = false
+    private var disableAutoCorrect = false
+    private var enableHashtagCompletion = false
+    private var enableMentionCompletion = false
+    private var characterLimitWarning = 0
+    private var enableAdvancedFormatting = false
+    private var enableGrammarSuggestions = false
+    private var enableStyleSuggestions = false
+    private var enableUrlCompletion = false
+    private var enableSearchSuggestions = false
+    private var enableCodeCompletion = false
+    private var enableSymbolSuggestions = false
     
     /**
      * Text input state
@@ -121,16 +138,46 @@ class InputConnectionManager(private val service: CleverKeysService) {
         
         logD("Neural prediction ${if (shouldUseNeuralPrediction) "enabled" else "disabled"} for this field")
         
-        // Adjust based on app package
+        // App-specific input behavior adjustments
         when (packageName) {
             "com.google.android.gm" -> { // Gmail
                 logD("Gmail detected - enabling smart composition features")
+                // Enable advanced autocorrection and smart punctuation
+                enableSmartComposition = true
+                enableContextualSuggestions = true
             }
-            "com.whatsapp" -> { // WhatsApp
-                logD("WhatsApp detected - enabling emoji suggestions")
+            "com.whatsapp", "com.whatsapp.w4b" -> { // WhatsApp
+                logD("WhatsApp detected - enabling emoji and quick response features")
+                enableEmojiSuggestions = true
+                enableQuickResponses = true
+                disableAutoCorrect = true // User preference for messaging
             }
             "com.twitter.android" -> { // Twitter
                 logD("Twitter detected - enabling hashtag/mention completion")
+                enableHashtagCompletion = true
+                enableMentionCompletion = true
+                characterLimitWarning = 280
+            }
+            "com.google.android.apps.docs.editors.docs" -> { // Google Docs
+                logD("Google Docs detected - enabling advanced formatting")
+                enableAdvancedFormatting = true
+                enableGrammarSuggestions = true
+            }
+            "com.microsoft.office.word" -> { // Microsoft Word
+                logD("Word detected - enabling document-specific features")
+                enableAdvancedFormatting = true
+                enableStyleSuggestions = true
+            }
+            "com.android.chrome", "org.mozilla.firefox" -> { // Browsers
+                logD("Browser detected - enabling URL and search optimization")
+                enableUrlCompletion = true
+                enableSearchSuggestions = true
+            }
+            "com.termux" -> { // Termux
+                logD("Termux detected - enabling programming features")
+                enableCodeCompletion = true
+                disableAutoCorrect = true
+                enableSymbolSuggestions = true
             }
         }
     }

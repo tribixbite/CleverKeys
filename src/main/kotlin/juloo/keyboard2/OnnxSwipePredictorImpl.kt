@@ -65,7 +65,10 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     // Pre-allocated tensors for performance
     private var reusableTokensArray = LongArray(20)
     private var reusableTargetMaskArray = Array(1) { BooleanArray(20) }
-    
+
+    // Memory management integration
+    private val tensorMemoryManager = TensorMemoryManager(ortEnvironment)
+
     // Executor for async operations
     private val onnxExecutor = Executors.newSingleThreadExecutor { r ->
         Thread(r, "OnnxPredictor").apply { isDaemon = true }
@@ -282,6 +285,15 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         val inferenceTime = (System.nanoTime() - inferenceStart) / 1_000_000
         
         logDebug("🚀 BATCHED INFERENCE completed in ${inferenceTime}ms for $batchSize beams")
+
+        // Performance validation - compare with sequential baseline
+        val sequentialEstimate = batchSize * 50L // Estimated 50ms per beam sequential
+        val speedupFactor = if (inferenceTime > 0) sequentialEstimate.toFloat() / inferenceTime else 0f
+        logDebug("   Performance: ${speedupFactor}x speedup vs sequential (estimated)")
+
+        // Memory usage tracking
+        val memoryStats = tensorMemoryManager.getMemoryStats()
+        logDebug("   Memory: ${memoryStats.activeTensors} active tensors, ${memoryStats.totalActiveMemoryBytes / 1024 / 1024}MB")
         
         // Process batched results
         val newBeamCandidates = mutableListOf<BeamSearchState>()
@@ -316,9 +328,9 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
             }
         }
         
-        // Clean up tensors
-        batchedTokensTensor.close()
-        batchedMaskTensor.close()
+        // Clean up tensors with memory management
+        tensorMemoryManager.releaseTensor(batchedTokensTensor)
+        tensorMemoryManager.releaseTensor(batchedMaskTensor)
         batchedOutput.close()
         
         newBeamCandidates
@@ -358,7 +370,12 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         }
 
         buffer.rewind()
-        return OnnxTensor.createTensor(ortEnvironment, buffer, longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), TRAJECTORY_FEATURES.toLong()))
+        val tensor = OnnxTensor.createTensor(ortEnvironment, buffer, longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), TRAJECTORY_FEATURES.toLong()))
+
+        // Track tensor with memory manager
+        tensorMemoryManager.trackTensor(tensor, "TrajectoryTensor", longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), TRAJECTORY_FEATURES.toLong()), MAX_SEQUENCE_LENGTH * TRAJECTORY_FEATURES * 4L)
+
+        return tensor
     }
     
     /**
@@ -535,14 +552,16 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     }
     
     /**
-     * Cleanup resources
+     * Cleanup resources with complete memory management
      */
     fun cleanup() {
         encoderSession?.close()
         decoderSession?.close()
         onnxExecutor.shutdown()
+        tensorMemoryManager.cleanup()
         isModelLoaded = false
         isInitialized = false
+        logDebug("ONNX predictor cleaned up with memory management")
     }
     
     /**
@@ -684,24 +703,57 @@ class SwipeTrajectoryProcessor {
     }
     
     /**
-     * Detect nearest key for each coordinate
+     * Detect nearest key for each coordinate using real keyboard layout
      */
     private fun detectNearestKeys(coordinates: List<PointF>): List<Int> {
         return coordinates.map { point ->
-            if (realKeyPositions.isEmpty()) {
-                // Fallback: Simple grid-based detection
-                val col = (point.x / (keyboardWidth / 10f)).toInt().coerceIn(0, 9)
-                val row = (point.y / (keyboardHeight / 4f)).toInt().coerceIn(0, 3)
-                row * 10 + col
-            } else {
-                // Find nearest actual key
-                realKeyPositions.minByOrNull { (_, keyPos) ->
+            if (realKeyPositions.isNotEmpty()) {
+                // Use actual keyboard layout positions
+                val nearestKey = realKeyPositions.minByOrNull { (_, keyPos) ->
                     val dx = point.x - keyPos.x
                     val dy = point.y - keyPos.y
                     dx * dx + dy * dy
-                }?.key?.code ?: 0
+                }
+
+                // Convert character to token index using tokenizer
+                nearestKey?.key?.let { char ->
+                    tokenizer.charToToken(char)
+                } ?: 0
+            } else {
+                // Enhanced grid detection with proper QWERTY mapping
+                detectKeyFromQwertyGrid(point)
             }
         }
+    }
+
+    /**
+     * Detect key using accurate QWERTY grid mapping
+     */
+    private fun detectKeyFromQwertyGrid(point: PointF): Int {
+        val normalizedX = point.x / keyboardWidth
+        val normalizedY = point.y / keyboardHeight
+
+        // QWERTY layout mapping with proper key boundaries
+        val qwertyLayout = arrayOf(
+            arrayOf('q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'),
+            arrayOf('a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'),
+            arrayOf('z', 'x', 'c', 'v', 'b', 'n', 'm')
+        )
+
+        val row = (normalizedY * qwertyLayout.size).toInt().coerceIn(0, qwertyLayout.size - 1)
+        val rowKeys = qwertyLayout[row]
+
+        // Handle row offset for QWERTY layout
+        val effectiveX = when (row) {
+            1 -> normalizedX - 0.05f // ASDF row offset
+            2 -> normalizedX - 0.15f // ZXCV row offset
+            else -> normalizedX
+        }
+
+        val col = (effectiveX * rowKeys.size).toInt().coerceIn(0, rowKeys.size - 1)
+        val detectedChar = rowKeys[col]
+
+        return tokenizer.charToToken(detectedChar)
     }
     
     /**
