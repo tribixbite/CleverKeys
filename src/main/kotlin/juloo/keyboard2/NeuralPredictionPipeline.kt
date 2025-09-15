@@ -199,13 +199,11 @@ class NeuralPredictionPipeline(private val context: Context) {
     }
     
     /**
-     * Cleanup pipeline
+     * Cleanup pipeline - ONNX only
      */
     fun cleanup() {
         scope.cancel()
-        gestureRecognizer.cleanup()
         neuralEngine.cleanup()
-        wordPredictor.cleanup()
         performanceProfiler.cleanup()
     }
 }
