@@ -41,8 +41,17 @@ jobs:
 
     - name: Generate layouts and resources
       run: |
+        # Create expected directory structure for Python scripts
+        mkdir -p srcs/layouts
+        cp src/main/layouts/*.xml srcs/layouts/ 2>/dev/null || echo "No layouts to copy"
+
+        # Run resource generation
         python gen_layouts.py
         python gen_emoji.py
+
+        # Copy generated files to correct Kotlin locations
+        mkdir -p src/main/java/juloo/keyboard2
+        cp srcs/juloo.keyboard2/ComposeKeyData.java src/main/java/juloo/keyboard2/ 2>/dev/null || echo "No ComposeKeyData generated"
 
     - name: Build CleverKeys APK
       uses: gradle/gradle-build-action@v3
