@@ -120,10 +120,10 @@ class RuntimeTestSuite(private val context: Context) {
             
             RuntimeTestResult(
                 testName = "Neural Engine",
-                success = predictions.isNotEmpty(),
+                success = !predictions.isEmpty,
                 executionTimeMs = executionTime,
                 details = "Predictions: ${predictions.size}, Top: ${predictions.topPrediction ?: "none"}",
-                errorMessage = if (predictions.isEmpty()) "No predictions generated" else null
+                errorMessage = if (predictions.isEmpty) "No predictions generated" else null
             )
         } catch (e: Exception) {
             RuntimeTestResult(
