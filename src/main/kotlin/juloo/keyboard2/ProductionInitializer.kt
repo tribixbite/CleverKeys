@@ -1,6 +1,7 @@
 package juloo.keyboard2
 
 import android.content.Context
+import android.graphics.PointF
 import kotlinx.coroutines.*
 
 /**
@@ -37,8 +38,9 @@ class ProductionInitializer(private val context: Context) {
         
         try {
             // Step 1: Validate runtime environment
-            val (validationTime, validationSuccess) = measureTimeMillis {
-                validateRuntimeEnvironment(errors, warnings)
+            var validationSuccess = false
+            val validationTime = kotlin.system.measureTimeMillis {
+                validationSuccess = validateRuntimeEnvironment(errors, warnings)
             }
             metrics["environment_validation_ms"] = validationTime
             
@@ -47,26 +49,30 @@ class ProductionInitializer(private val context: Context) {
             }
             
             // Step 2: Initialize core components
-            val (coreInitTime, coreSuccess) = measureTimeMillis {
-                initializeCoreComponents(errors, warnings)
+            var coreSuccess = false
+            val coreInitTime = kotlin.system.measureTimeMillis {
+                coreSuccess = initializeCoreComponents(errors, warnings)
             }
             metrics["core_initialization_ms"] = coreInitTime
             
             // Step 3: Load and validate neural models
-            val (modelLoadTime, modelSuccess) = measureTimeMillis {
-                loadAndValidateModels(errors, warnings)
+            var modelSuccess = false
+            val modelLoadTime = kotlin.system.measureTimeMillis {
+                modelSuccess = loadAndValidateModels(errors, warnings)
             }
             metrics["model_loading_ms"] = modelLoadTime
             
             // Step 4: Initialize prediction pipeline
-            val (pipelineInitTime, pipelineSuccess) = measureTimeMillis {
-                initializePredictionPipeline(errors, warnings)
+            var pipelineSuccess = false
+            val pipelineInitTime = kotlin.system.measureTimeMillis {
+                pipelineSuccess = initializePredictionPipeline(errors, warnings)
             }
             metrics["pipeline_initialization_ms"] = pipelineInitTime
             
             // Step 5: Perform system health check
-            val (healthCheckTime, healthSuccess) = measureTimeMillis {
-                performSystemHealthCheck(errors, warnings)
+            var healthSuccess = false
+            val healthCheckTime = kotlin.system.measureTimeMillis {
+                healthSuccess = performSystemHealthCheck(errors, warnings)
             }
             metrics["health_check_ms"] = healthCheckTime
             
