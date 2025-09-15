@@ -325,49 +325,77 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     }
     
     /**
-     * Create trajectory tensor from features
+     * Create trajectory tensor from features - EXACT Java implementation match
      */
     private fun createTrajectoryTensor(features: SwipeTrajectoryProcessor.TrajectoryFeatures): OnnxTensor {
-        val trajectoryData = Array(1) { Array(MAX_SEQUENCE_LENGTH) { FloatArray(TRAJECTORY_FEATURES) } }
-        
-        for (i in 0 until minOf(features.coordinates.size, MAX_SEQUENCE_LENGTH)) {
-            val point = features.coordinates[i]
-            trajectoryData[0][i] = floatArrayOf(
-                point.x / NORMALIZED_WIDTH,
-                point.y / NORMALIZED_HEIGHT,
-                features.velocities.getOrNull(i) ?: 0f,
-                features.velocities.getOrNull(i) ?: 0f, // vx, vy (simplified)
-                0f, // ax (acceleration)
-                0f  // ay
-            )
+        // Create direct buffer exactly like Java implementation for performance
+        val byteBuffer = java.nio.ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * TRAJECTORY_FEATURES * 4) // 4 bytes per float
+        byteBuffer.order(java.nio.ByteOrder.nativeOrder())
+        val buffer = byteBuffer.asFloatBuffer()
+
+        for (i in 0 until MAX_SEQUENCE_LENGTH) {
+            if (i < features.actualLength) {
+                val point = features.normalizedCoordinates[i]
+                val velocity = features.velocities.getOrNull(i) ?: 0f
+                val acceleration = features.accelerations.getOrNull(i) ?: 0f
+
+                // Exact 6-feature layout matching Java: [x, y, vx, vy, ax, ay]
+                buffer.put(point.x)      // Normalized x [0,1]
+                buffer.put(point.y)      // Normalized y [0,1]
+                buffer.put(velocity)     // Velocity x component
+                buffer.put(velocity)     // Velocity y component (using magnitude for both)
+                buffer.put(acceleration) // Acceleration x component
+                buffer.put(acceleration) // Acceleration y component
+            } else {
+                // Padding with zeros exactly like Java
+                buffer.put(0.0f) // x
+                buffer.put(0.0f) // y
+                buffer.put(0.0f) // vx
+                buffer.put(0.0f) // vy
+                buffer.put(0.0f) // ax
+                buffer.put(0.0f) // ay
+            }
         }
-        
-        return OnnxTensor.createTensor(ortEnvironment, trajectoryData)
+
+        buffer.rewind()
+        return OnnxTensor.createTensor(ortEnvironment, buffer, longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), TRAJECTORY_FEATURES.toLong()))
     }
     
     /**
-     * Create nearest keys tensor
+     * Create nearest keys tensor - EXACT Java implementation match
      */
     private fun createNearestKeysTensor(features: SwipeTrajectoryProcessor.TrajectoryFeatures): OnnxTensor {
-        val nearestKeysData = Array(1) { LongArray(MAX_SEQUENCE_LENGTH) }
-        
-        for (i in 0 until minOf(features.coordinates.size, MAX_SEQUENCE_LENGTH)) {
-            nearestKeysData[0][i] = features.nearestKeys.getOrNull(i)?.toLong() ?: PAD_IDX.toLong()
+        // Create direct buffer exactly like Java implementation
+        val byteBuffer = java.nio.ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * 8) // 8 bytes per long
+        byteBuffer.order(java.nio.ByteOrder.nativeOrder())
+        val buffer = byteBuffer.asLongBuffer()
+
+        for (i in 0 until MAX_SEQUENCE_LENGTH) {
+            if (i < features.nearestKeys.size) {
+                val keyIndex = features.nearestKeys[i]
+                buffer.put(keyIndex.toLong())
+            } else {
+                buffer.put(PAD_IDX.toLong()) // Padding
+            }
         }
-        
-        return OnnxTensor.createTensor(ortEnvironment, nearestKeysData)
+
+        buffer.rewind()
+        return OnnxTensor.createTensor(ortEnvironment, buffer, longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong()))
     }
     
     /**
-     * Create source mask tensor
+     * Create source mask tensor - EXACT Java implementation match
      */
     private fun createSourceMaskTensor(features: SwipeTrajectoryProcessor.TrajectoryFeatures): OnnxTensor {
+        // Create 2D boolean array for proper tensor shape [1, MAX_SEQUENCE_LENGTH] - exactly like Java
         val maskData = Array(1) { BooleanArray(MAX_SEQUENCE_LENGTH) }
-        
+
+        // Mask padded positions (true = masked/padded, false = valid) - matching Java logic
         for (i in 0 until MAX_SEQUENCE_LENGTH) {
-            maskData[0][i] = i >= features.actualLength
+            maskData[0][i] = (i >= features.actualLength)
         }
-        
+
+        // Use 2D boolean array - ONNX API will infer shape as [1, MAX_SEQUENCE_LENGTH]
         return OnnxTensor.createTensor(ortEnvironment, maskData)
     }
     

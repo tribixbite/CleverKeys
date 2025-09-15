@@ -255,19 +255,52 @@ class CleverKeysView(
     }
     
     /**
-     * Update suggestion bar
+     * Update suggestion bar - COMPLETE implementation
      */
     fun updateSuggestions(words: List<String>) {
-        // TODO: Connect to actual suggestion bar
-        logD("Would update suggestions: $words")
+        // Find parent container that includes suggestion bar
+        val parent = parent as? android.view.ViewGroup
+        val suggestionBar = parent?.findViewById<SuggestionBar>(android.R.id.text1)
+            ?: parent?.findViewWithTag<SuggestionBar>("suggestion_bar")
+
+        suggestionBar?.setSuggestions(words) ?: run {
+            // Create suggestion bar if it doesn't exist
+            createAndAttachSuggestionBar(words)
+        }
+
+        logD("Updated suggestions: $words")
     }
-    
+
     /**
-     * Clear suggestions
+     * Clear suggestions - COMPLETE implementation
      */
     fun clearSuggestions() {
-        // TODO: Connect to actual suggestion bar
-        logD("Would clear suggestions")
+        val parent = parent as? android.view.ViewGroup
+        val suggestionBar = parent?.findViewById<SuggestionBar>(android.R.id.text1)
+            ?: parent?.findViewWithTag<SuggestionBar>("suggestion_bar")
+
+        suggestionBar?.clearSuggestions()
+        logD("Cleared suggestions")
+    }
+
+    /**
+     * Create and attach suggestion bar if missing
+     */
+    private fun createAndAttachSuggestionBar(words: List<String>) {
+        val parent = parent as? android.view.ViewGroup ?: return
+
+        val suggestionBar = SuggestionBar(context).apply {
+            tag = "suggestion_bar"
+            setSuggestions(words)
+            layoutParams = android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // Add suggestion bar above keyboard
+        parent.addView(suggestionBar, 0)
+        logD("Created and attached suggestion bar")
     }
     
     /**

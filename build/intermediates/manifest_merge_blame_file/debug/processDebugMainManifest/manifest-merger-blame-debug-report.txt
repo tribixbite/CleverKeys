@@ -66,16 +66,16 @@
 39-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:10:16-48
 40        <service
 40-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:5-16:15
-41            android:name="juloo.keyboard2.CleverKeysService"
-41-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:14-62
+41            android:name="juloo.keyboard2.SimpleCleverKeysService"
+41-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:14-68
 42            android:directBootAware="true"
-42-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:178-208
+42-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:184-214
 43            android:exported="true"
-43-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:154-177
+43-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:160-183
 44            android:label="@string/app_name"
-44-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:63-95
+44-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:69-101
 45            android:permission="android.permission.BIND_INPUT_METHOD" >
-45-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:96-153
+45-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:102-159
 46            <intent-filter>
 46-->/data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:12:7-14:23
 47                <action android:name="android.view.InputMethod" />
