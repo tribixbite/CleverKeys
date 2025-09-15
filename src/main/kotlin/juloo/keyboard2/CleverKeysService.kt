@@ -133,6 +133,9 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
                             throw RuntimeException("Failed to initialize neural engine")
                         }
                         setDebugLogger { message -> logD("Neural: $message") }
+
+                        // Register with configuration manager for automatic updates
+                        configManager?.registerNeuralEngine(this)
                     }
                     
                     // Initialize prediction service
@@ -177,6 +180,9 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         keyboardView = CleverKeysView(this, currentConfig).apply {
             onSwipeCompleted = { swipeData -> handleSwipeGesture(swipeData) }
             onKeyPressed = { key -> handleKeyPress(key) }
+
+            // Register with configuration manager for automatic updates
+            configManager?.registerKeyboardView(this)
         }
         
         return keyboardView
