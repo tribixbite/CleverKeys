@@ -1,0 +1,133 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for CleverKeys
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Please provide detailed information about your idea.
+
+  - type: dropdown
+    id: feature-category
+    attributes:
+      label: Feature Category
+      description: What type of feature are you requesting?
+      options:
+        - Neural Prediction (AI models, accuracy, speed)
+        - Keyboard Layout (new layouts, customization)
+        - Gestures (new swipe patterns, shortcuts)
+        - Languages (new language support, localization)
+        - Performance (speed, memory, battery optimization)
+        - Accessibility (screen readers, motor accessibility)
+        - Privacy/Security (data protection, encryption)
+        - Developer Tools (programming support, APIs)
+        - User Interface (settings, visual design)
+        - Integration (other apps, system features)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: Clearly describe the feature you'd like to see implemented.
+      placeholder: |
+        What would you like CleverKeys to do that it doesn't currently do?
+        How would this feature work from a user's perspective?
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem-solving
+    attributes:
+      label: Problem This Solves
+      description: What problem would this feature solve? What pain point does it address?
+      placeholder: |
+        - What current limitation or frustration would this address?
+        - How does this improve the typing experience?
+        - What use cases would benefit from this feature?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: How do you envision this feature working? Be as specific as possible.
+      placeholder: |
+        - How would users access this feature?
+        - What would the UI/UX look like?
+        - How would it integrate with existing features?
+        - Any specific implementation ideas?
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: Have you considered any alternative approaches to solving this problem?
+      placeholder: |
+        - Are there workarounds that partially solve this?
+        - Other apps or tools that do something similar?
+        - Different approaches to achieve the same goal?
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority Level
+      description: How important is this feature to you?
+      options:
+        - Nice to have (would be cool but not essential)
+        - Moderate (would improve my experience)
+        - High (would significantly improve my workflow)
+        - Critical (blocking my ability to use CleverKeys effectively)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: implementation-complexity
+    attributes:
+      label: Implementation Considerations
+      description: Please check any factors you think might be relevant to implementing this feature.
+      options:
+        - label: This might require neural model changes
+        - label: This might need new UI components
+        - label: This could impact performance
+        - label: This might affect privacy/security
+        - label: This could require system-level permissions
+        - label: This might need hardware acceleration
+        - label: I'm willing to help implement this
+
+  - type: textarea
+    id: neural-considerations
+    attributes:
+      label: Neural/AI Considerations (if applicable)
+      description: If this feature involves neural predictions, please describe how it should work.
+      placeholder: |
+        - How should the AI models be modified?
+        - What training data would be needed?
+        - How should it integrate with existing predictions?
+        - Any performance/accuracy trade-offs to consider?
+
+  - type: textarea
+    id: privacy-considerations
+    attributes:
+      label: Privacy Considerations
+      description: How should this feature maintain CleverKeys' privacy-first approach?
+      placeholder: |
+        - Should all processing remain local?
+        - What data (if any) needs to be stored?
+        - How to maintain user control over data?
+        - Any encryption or security requirements?
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, mockups, or examples that might help.
+      placeholder: |
+        - Screenshots or mockups of how this might look
+        - Examples from other apps
+        - Links to relevant documentation or specifications
+        - Any other helpful information

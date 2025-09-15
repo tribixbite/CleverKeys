@@ -1,0 +1,172 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Make gradlew executable
+      run: chmod +x gradlew
+
+    - name: Generate version info
+      run: |
+        echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
+        echo "BUILD_DATE=$(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+
+    - name: Build debug APK
+      run: ./gradlew assembleDebug --stacktrace
+
+    - name: Build release APK
+      if: github.event_name == 'release'
+      run: ./gradlew assembleRelease --stacktrace
+
+    - name: Sign release APK
+      if: github.event_name == 'release'
+      uses: r0adkll/sign-android-release@v1
+      with:
+        releaseDirectory: build/outputs/apk/release
+        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+        alias: ${{ secrets.ALIAS }}
+        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+        keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+    - name: Upload debug APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: cleverkeys-debug-${{ env.GITHUB_SHA_SHORT }}
+        path: build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
+        retention-days: 30
+
+    - name: Upload release APK
+      if: github.event_name == 'release'
+      uses: actions/upload-artifact@v4
+      with:
+        name: cleverkeys-release-${{ github.event.release.tag_name }}
+        path: build/outputs/apk/release/tribixbite.keyboard2.apk
+        retention-days: 90
+
+    - name: Upload release APK to GitHub Release
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: build/outputs/apk/release/tribixbite.keyboard2.apk
+        asset_name: CleverKeys-${{ github.event.release.tag_name }}.apk
+        asset_content_type: application/vnd.android.package-archive
+
+    - name: Run tests
+      run: ./gradlew test --stacktrace
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ env.GITHUB_SHA_SHORT }}
+        path: build/reports/tests/
+        retention-days: 7
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run security scan
+      uses: securecodewarrior/github-action-add-sarif@v1
+      with:
+        sarif-file: 'security-scan-results.sarif'
+
+  size-analysis:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download debug APK
+      uses: actions/download-artifact@v4
+      with:
+        name: cleverkeys-debug-${{ env.GITHUB_SHA_SHORT }}
+        path: ./
+
+    - name: Analyze APK size
+      run: |
+        APK_SIZE=$(stat -f%z tribixbite.keyboard2.debug.apk 2>/dev/null || stat -c%s tribixbite.keyboard2.debug.apk)
+        APK_SIZE_MB=$((APK_SIZE / 1024 / 1024))
+        echo "APK Size: ${APK_SIZE_MB}MB (${APK_SIZE} bytes)"
+
+        # Check if APK size is reasonable (< 50MB)
+        if [ $APK_SIZE_MB -gt 50 ]; then
+          echo "⚠️ Warning: APK size (${APK_SIZE_MB}MB) exceeds 50MB threshold"
+          exit 1
+        else
+          echo "✅ APK size (${APK_SIZE_MB}MB) is within acceptable limits"
+        fi
+
+        # Add to summary
+        echo "## 📱 Build Analysis" >> $GITHUB_STEP_SUMMARY
+        echo "- **APK Size**: ${APK_SIZE_MB}MB" >> $GITHUB_STEP_SUMMARY
+        echo "- **Neural Models**: Included (ONNX Runtime + transformer models)" >> $GITHUB_STEP_SUMMARY
+        echo "- **Package**: tribixbite.keyboard2" >> $GITHUB_STEP_SUMMARY
+
+  performance-test:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Run performance benchmarks
+      run: |
+        ./gradlew benchmarkDebug --stacktrace || echo "Benchmarks not available yet"
+
+    - name: Performance summary
+      run: |
+        echo "## ⚡ Performance Metrics" >> $GITHUB_STEP_SUMMARY
+        echo "- **Neural Inference**: Target <200ms per prediction" >> $GITHUB_STEP_SUMMARY
+        echo "- **Memory Usage**: Target <25MB additional RAM" >> $GITHUB_STEP_SUMMARY
+        echo "- **Battery Impact**: Target <2% additional usage" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,138 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Java 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Make gradlew executable
+      run: chmod +x gradlew
+
+    - name: Extract version info
+      run: |
+        TAG_NAME=${GITHUB_REF#refs/tags/}
+        echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+        echo "VERSION_CODE=$(echo $TAG_NAME | sed 's/v//' | sed 's/\.//' | head -c 8)" >> $GITHUB_ENV
+
+    - name: Build release APK
+      run: ./gradlew assembleRelease --stacktrace
+
+    - name: Sign release APK
+      uses: r0adkll/sign-android-release@v1
+      with:
+        releaseDirectory: build/outputs/apk/release
+        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+        alias: ${{ secrets.ALIAS }}
+        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+        keyPassword: ${{ secrets.KEY_PASSWORD }}
+      env:
+        BUILD_TOOLS_VERSION: "34.0.0"
+
+    - name: Generate changelog
+      run: |
+        # Extract changelog from recent commits
+        echo "## 🚀 What's New in ${{ env.TAG_NAME }}" > CHANGELOG.md
+        echo "" >> CHANGELOG.md
+
+        # Get commits since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        if [ -n "$LAST_TAG" ]; then
+          git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --grep="feat\|fix\|perf\|refactor" >> CHANGELOG.md
+        else
+          echo "- Initial release with neural swipe typing" >> CHANGELOG.md
+          echo "- Complete ONNX transformer integration" >> CHANGELOG.md
+          echo "- Hardware acceleration support" >> CHANGELOG.md
+          echo "- Privacy-first local processing" >> CHANGELOG.md
+        fi
+
+        echo "" >> CHANGELOG.md
+        echo "## 📊 Build Information" >> CHANGELOG.md
+        echo "- **APK Size**: ~43MB (includes ONNX Runtime + neural models)" >> CHANGELOG.md
+        echo "- **Package**: tribixbite.keyboard2" >> CHANGELOG.md
+        echo "- **Min Android**: 5.0 (API 21)" >> CHANGELOG.md
+        echo "- **Target Android**: 14 (API 34)" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "## 🧠 Neural Features" >> CHANGELOG.md
+        echo "- **Transformer Models**: Encoder-decoder architecture" >> CHANGELOG.md
+        echo "- **Hardware Acceleration**: XNNPACK CPU optimization" >> CHANGELOG.md
+        echo "- **Real-time Calibration**: Personalized model training" >> CHANGELOG.md
+        echo "- **Performance Analytics**: Detailed prediction metrics" >> CHANGELOG.md
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          build/outputs/apk/release/tribixbite.keyboard2.apk
+        name: CleverKeys ${{ env.TAG_NAME }}
+        tag_name: ${{ env.TAG_NAME }}
+        body_path: CHANGELOG.md
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload to artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: cleverkeys-release-${{ env.TAG_NAME }}
+        path: |
+          build/outputs/apk/release/tribixbite.keyboard2.apk
+          CHANGELOG.md
+        retention-days: 365
+
+    - name: Release summary
+      run: |
+        echo "## 🎉 Release ${{ env.TAG_NAME }} Published!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📱 Download" >> $GITHUB_STEP_SUMMARY
+        echo "- **APK**: [CleverKeys-${{ env.TAG_NAME }}.apk](https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/tribixbite.keyboard2.apk)" >> $GITHUB_STEP_SUMMARY
+        echo "- **Release Page**: [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ env.TAG_NAME }})" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🧠 Neural Features" >> $GITHUB_STEP_SUMMARY
+        echo "- ONNX transformer models for swipe typing" >> $GITHUB_STEP_SUMMARY
+        echo "- Hardware acceleration with XNNPACK" >> $GITHUB_STEP_SUMMARY
+        echo "- 100% local processing - no cloud dependency" >> $GITHUB_STEP_SUMMARY
+        echo "- Real-time calibration and performance analytics" >> $GITHUB_STEP_SUMMARY
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: release
+    if: success()
+
+    steps:
+    - name: Release notification
+      run: |
+        echo "🎉 CleverKeys ${{ env.TAG_NAME }} has been successfully released!"
+        echo "📱 Users can now download the latest APK with neural swipe typing."
+        echo "🧠 Neural models included: ONNX transformer encoder-decoder architecture."
+        echo "⚡ Hardware acceleration: XNNPACK CPU optimization for modern devices."

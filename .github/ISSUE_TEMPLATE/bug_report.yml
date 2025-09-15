@@ -1,0 +1,120 @@
+name: 🐛 Bug Report
+description: Report a bug or issue with CleverKeys
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please provide as much detail as possible to help us fix the issue.
+
+  - type: input
+    id: version
+    attributes:
+      label: CleverKeys Version
+      description: What version of CleverKeys are you using?
+      placeholder: "e.g., v1.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device Information
+      description: What device are you using?
+      options:
+        - Android Phone
+        - Android Tablet
+        - Chromebook
+        - Other (please specify in description)
+    validations:
+      required: true
+
+  - type: input
+    id: android-version
+    attributes:
+      label: Android Version
+      description: What version of Android are you running?
+      placeholder: "e.g., Android 13, Android 14"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: bug-category
+    attributes:
+      label: Bug Category
+      description: What type of issue are you experiencing?
+      options:
+        - Neural Prediction (ONNX models, swipe typing)
+        - Keyboard Layout (key positioning, custom layouts)
+        - Performance (lag, memory, battery)
+        - Settings (configuration, preferences)
+        - Gestures (swipe directions, corner swipes)
+        - Calibration (training, data collection)
+        - Installation (APK install, permissions)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Bug Description
+      description: Clearly describe what the bug is and what you expected to happen.
+      placeholder: |
+        1. What were you trying to do?
+        2. What happened instead?
+        3. What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Provide step-by-step instructions to reproduce the bug.
+      placeholder: |
+        1. Open CleverKeys
+        2. Go to Settings...
+        3. Tap on...
+        4. Bug appears...
+    validations:
+      required: true
+
+  - type: textarea
+    id: neural-config
+    attributes:
+      label: Neural Configuration (if applicable)
+      description: If this is a neural prediction issue, please provide your current settings.
+      placeholder: |
+        - Neural Predictions: Enabled/Disabled
+        - Beam Width: X
+        - Max Length: X
+        - Confidence Threshold: X
+        - Hardware Acceleration: Enabled/Disabled
+      render: yaml
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: If possible, please provide relevant logs from `adb logcat | grep -E "CleverKeys|Neural|ONNX"`
+      render: shell
+
+  - type: checkboxes
+    id: troubleshooting
+    attributes:
+      label: Troubleshooting Steps
+      description: Please confirm you've tried these basic troubleshooting steps.
+      options:
+        - label: I have restarted the CleverKeys app
+        - label: I have tried disabling and re-enabling the keyboard
+        - label: I have checked if this happens with neural predictions disabled
+        - label: I have tried clearing the app cache/data (if safe to do so)
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or information that might help.
+      placeholder: Screenshots, screen recordings, or any other relevant information...
