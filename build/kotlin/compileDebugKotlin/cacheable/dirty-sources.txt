@@ -18,6 +18,7 @@
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Resources.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/NumberLayout.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/PredictionResult.kt
+/data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeTokenizer.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ComposeKey.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/NeuralPredictionPipeline.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/KeyboardLayoutLoader.kt

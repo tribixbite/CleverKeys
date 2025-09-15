@@ -48,24 +48,7 @@ Unable to strip the following libraries, packaging them as they are: libonnxrunt
 
 > Task :processDebugResources
 > Task :compileDebugKotlin
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/OnnxSwipePredictorImpl.kt:810:21 Unresolved reference: tokenizer
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/OnnxSwipePredictorImpl.kt:846:16 Unresolved reference: tokenizer
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/RuntimeTestSuite.kt:160:34 Unresolved reference: recognizer
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/RuntimeTestSuite.kt:171:13 Unresolved reference: recognizer
 e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/RuntimeValidator.kt:120:28 'if' must have both main and 'else' branches if used as an expression
-e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SystemIntegrationTester.kt:421:32 Unresolved reference. None of the following candidates is applicable because of receiver type mismatch: 
-public inline fun <T> Array<out TypeVariable(T)>.isNotEmpty(): Boolean defined in kotlin.collections
-public inline fun BooleanArray.isNotEmpty(): Boolean defined in kotlin.collections
-public inline fun ByteArray.isNotEmpty(): Boolean defined in kotlin.collections
-public inline fun CharArray.isNotEmpty(): Boolean defined in kotlin.collections
-public inline fun CharSequence.isNotEmpty(): Boolean defined in kotlin.text
-public inline fun DoubleArray.isNotEmpty(): Boolean defined in kotlin.collections
-public inline fun FloatArray.isNotEmpty(): Boolean defined in kotlin.collections
-public inline fun IntArray.isNotEmpty(): Boolean defined in kotlin.collections
-public inline fun LongArray.isNotEmpty(): Boolean defined in kotlin.collections
-public inline fun ShortArray.isNotEmpty(): Boolean defined in kotlin.collections
-public inline fun <T> Collection<TypeVariable(T)>.isNotEmpty(): Boolean defined in kotlin.collections
-public inline fun <K, V> Map<out TypeVariable(K), TypeVariable(V)>.isNotEmpty(): Boolean defined in kotlin.collections
 
 > Task :compileDebugKotlin FAILED
 
@@ -82,5 +65,5 @@ Execution failed for task ':compileDebugKotlin'.
 > Run with --scan to get full insights.
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 50s
+BUILD FAILED in 2m 12s
 30 actionable tasks: 20 executed, 10 from cache

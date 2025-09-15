@@ -418,7 +418,7 @@ class SystemIntegrationTester(private val context: Context) {
                 timestamps = listOf(0L, 100L, 200L)
             )
             // Should get fallback predictions even if neural fails
-            result.predictions.isNotEmpty()
+            !result.predictions.isEmpty
         } catch (e: Exception) {
             false
         }
