@@ -4,15 +4,15 @@
     "type": "MERGED_MANIFESTS",
     "kind": "Directory"
   },
-  "applicationId": "juloo.keyboard2.debug",
+  "applicationId": "juloo.keyboard2.minimal",
   "variantName": "debug",
   "elements": [
     {
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 50,
-      "versionName": "1.32.1",
+      "versionCode": 1,
+      "versionName": "1.0-minimal",
       "outputFile": "AndroidManifest.xml"
     }
   ],
