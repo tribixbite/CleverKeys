@@ -15,11 +15,8 @@ class NeuralPredictionPipeline(private val context: Context) {
         private const val TAG = "NeuralPredictionPipeline"
     }
     
-    // Pipeline components
-    private val gestureRecognizer = SwipeGestureRecognizer()
-    private val swipeDetector = SwipeDetector()
+    // Pipeline components - ONNX-only neural prediction (no CGR)
     private val neuralEngine = NeuralSwipeEngine(context, Config.globalConfig())
-    private val wordPredictor = WordPredictor(context)
     private val performanceProfiler = PerformanceProfiler(context)
     
     // Pipeline state
@@ -38,27 +35,26 @@ class NeuralPredictionPipeline(private val context: Context) {
     )
     
     /**
-     * Prediction source type
+     * Prediction source type - ONNX neural only, no fallbacks
      */
-    enum class PredictionSource { NEURAL, TRADITIONAL, HYBRID, FALLBACK }
+    enum class PredictionSource { NEURAL }
     
     /**
      * Initialize complete pipeline
      */
     suspend fun initialize(): Boolean = withContext(Dispatchers.Default) {
         return@withContext ErrorHandling.safeExecute("Pipeline initialization") {
-            // Initialize all components
+            // Initialize ONNX neural engine only
             val neuralInit = neuralEngine.initialize()
-            val wordPredictorInit = wordPredictor.initialize()
-            
-            isInitialized = neuralInit && wordPredictorInit
-            
+
+            isInitialized = neuralInit
+
             if (isInitialized) {
-                logD("Neural prediction pipeline initialized successfully")
+                logD("ONNX neural prediction pipeline initialized successfully")
             } else {
-                logE("Pipeline initialization failed: neural=$neuralInit, traditional=$wordPredictorInit")
+                logE("ONNX pipeline initialization failed")
             }
-            
+
             isInitialized
         }.getOrElse { false }
     }
@@ -72,173 +68,67 @@ class NeuralPredictionPipeline(private val context: Context) {
         context: List<String> = emptyList()
     ): PipelineResult = withContext(Dispatchers.Default) {
         
-        return@withContext performanceProfiler.measureOperation("complete_pipeline") {
-            // Step 1: Gesture recognition and classification
-            val gestureResult = gestureRecognizer.recognizeGesture(points, timestamps)
+        return@withContext performanceProfiler.measureOperation("onnx_neural_pipeline") {
+            // Create SwipeInput for ONNX processing
             val swipeInput = SwipeInput(points, timestamps, emptyList())
-            val swipeClassification = swipeDetector.detectSwipe(swipeInput)
-            
-            // Step 2: Determine prediction strategy
-            val predictionSource = determinePredictionStrategy(gestureResult.gesture, swipeClassification)
-            
-            // Step 3: Execute prediction based on strategy
-            val predictions = when (predictionSource) {
-                PredictionSource.NEURAL -> {
-                    performanceProfiler.measureOperation("neural_prediction") {
-                        executeNeuralPrediction(swipeInput)
-                    }
-                }
-                PredictionSource.TRADITIONAL -> {
-                    performanceProfiler.measureOperation("traditional_prediction") {
-                        executeTraditionalPrediction(swipeInput, context)
-                    }
-                }
-                PredictionSource.HYBRID -> {
-                    performanceProfiler.measureOperation("hybrid_prediction") {
-                        executeHybridPrediction(swipeInput, context)
-                    }
-                }
-                PredictionSource.FALLBACK -> {
-                    performanceProfiler.measureOperation("fallback_prediction") {
-                        executeFallbackPrediction(swipeInput)
-                    }
-                }
+
+            // ONNX-only prediction - no CGR, no traditional methods, no fallbacks
+            val predictions = performanceProfiler.measureOperation("onnx_neural_prediction") {
+                executeOnnxNeuralPrediction(swipeInput)
             }
-            
+
+            // ONNX-only result
             PipelineResult(
                 predictions = predictions,
-                gestureInfo = gestureResult.gesture,
-                swipeClassification = swipeClassification,
+                gestureInfo = createBasicGestureInfo(swipeInput),
+                swipeClassification = createBasicSwipeClassification(swipeInput),
                 processingTimeMs = 0L, // Will be filled by measureOperation
-                source = predictionSource
+                source = PredictionSource.NEURAL
             )
         }
     }
     
     /**
-     * Determine best prediction strategy based on gesture analysis
+     * Execute ONNX neural prediction only
      */
-    private fun determinePredictionStrategy(
-        gesture: SwipeGestureRecognizer.RecognizedGesture,
-        classification: SwipeDetector.SwipeClassification
-    ): PredictionSource {
-        return when {
-            // Use neural for high-quality swipes
-            classification.isSwipe && 
-            classification.quality in listOf(SwipeDetector.SwipeQuality.EXCELLENT, SwipeDetector.SwipeQuality.GOOD) &&
-            gesture.type in listOf(
-                SwipeGestureRecognizer.GestureType.SWIPE_HORIZONTAL,
-                SwipeGestureRecognizer.GestureType.SWIPE_DIAGONAL
-            ) -> PredictionSource.NEURAL
-            
-            // Use traditional for simple linear gestures
-            classification.isSwipe && 
-            gesture.type == SwipeGestureRecognizer.GestureType.SWIPE_HORIZONTAL &&
-            gesture.distance < 200f -> PredictionSource.TRADITIONAL
-            
-            // Use hybrid for complex patterns
-            classification.isSwipe &&
-            gesture.type in listOf(
-                SwipeGestureRecognizer.GestureType.CIRCLE_CLOCKWISE,
-                SwipeGestureRecognizer.GestureType.LOOP,
-                SwipeGestureRecognizer.GestureType.ZIG_ZAG
-            ) -> PredictionSource.HYBRID
-            
-            // Fallback for everything else
-            else -> PredictionSource.FALLBACK
-        }
-    }
-    
-    /**
-     * Execute neural prediction with validation
-     */
-    private suspend fun executeNeuralPrediction(input: SwipeInput): PredictionResult {
-        // Validate input
+    private suspend fun executeOnnxNeuralPrediction(input: SwipeInput): PredictionResult {
+        // Validate input for neural processing
         val validation = ErrorHandling.Validation.validateSwipeInput(input)
-        if (!validation.isValid) {
-            logW("Invalid swipe input for neural prediction: ${validation.getErrorSummary()}")
-            return PredictionResult.empty
-        }
-        
+        validation.throwIfInvalid()
+
         return if (isInitialized) {
-            try {
-                neuralEngine.predictAsync(input)
-            } catch (e: Exception) {
-                logE("Neural prediction failed, falling back", e)
-                executeTraditionalPrediction(input, emptyList())
-            }
+            neuralEngine.predictAsync(input)
         } else {
-            logW("Neural engine not initialized, using fallback")
-            executeTraditionalPrediction(input, emptyList())
+            throw ErrorHandling.CleverKeysException.NeuralEngineException("Neural engine not initialized")
         }
     }
     
     /**
-     * Execute traditional prediction
+     * Create basic gesture info for ONNX pipeline
      */
-    private suspend fun executeTraditionalPrediction(input: SwipeInput, context: List<String>): PredictionResult {
-        return try {
-            if (input.keySequence.isNotBlank()) {
-                wordPredictor.predictWordsWithContext(input.keySequence, context)
-            } else {
-                wordPredictor.predictWords(extractKeySequenceFromPath(input.coordinates))
-            }
-        } catch (e: Exception) {
-            logE("Traditional prediction failed", e)
-            PredictionResult.empty
-        }
+    private fun createBasicGestureInfo(input: SwipeInput): SwipeGestureRecognizer.RecognizedGesture {
+        return SwipeGestureRecognizer.RecognizedGesture(
+            type = SwipeGestureRecognizer.GestureType.SWIPE_HORIZONTAL, // Simplified for ONNX-only
+            direction = 0f,
+            distance = input.pathLength,
+            duration = input.duration,
+            confidence = input.swipeConfidence,
+            points = input.coordinates
+        )
     }
-    
+
     /**
-     * Execute hybrid prediction (neural + traditional)
+     * Create basic swipe classification for ONNX pipeline
      */
-    private suspend fun executeHybridPrediction(input: SwipeInput, context: List<String>): PredictionResult {
-        return try {
-            // Get both predictions
-            val neuralResult = executeNeuralPrediction(input)
-            val traditionalResult = executeTraditionalPrediction(input, context)
-            
-            // Combine and rank results
-            val combinedWords = (neuralResult.words + traditionalResult.words).distinct()
-            val combinedScores = combinedWords.map { word ->
-                val neuralScore = neuralResult.words.indexOf(word).let { index ->
-                    if (index >= 0) neuralResult.scores.getOrNull(index) ?: 0 else 0
-                }
-                val traditionalScore = traditionalResult.words.indexOf(word).let { index ->
-                    if (index >= 0) traditionalResult.scores.getOrNull(index) ?: 0 else 0
-                }
-                
-                // Weighted combination (favor neural)
-                (neuralScore * 0.7 + traditionalScore * 0.3).toInt()
-            }
-            
-            // Sort by combined score
-            val sortedPairs = combinedWords.zip(combinedScores).sortedByDescending { it.second }
-            
-            PredictionResult(
-                sortedPairs.map { it.first },
-                sortedPairs.map { it.second }
-            )
-        } catch (e: Exception) {
-            logE("Hybrid prediction failed", e)
-            executeTraditionalPrediction(input, context)
-        }
-    }
-    
-    /**
-     * Execute fallback prediction for non-swipe gestures
-     */
-    private suspend fun executeFallbackPrediction(input: SwipeInput): PredictionResult {
-        // Simple fallback based on gesture characteristics
-        val words = when {
-            input.pathLength < 50f -> listOf("a", "i", "o")
-            input.duration < 0.3f -> listOf("the", "and", "for")
-            input.directionChanges > 5 -> listOf("complex", "pattern", "gesture")
-            else -> listOf("swipe", "keyboard", "input")
-        }
-        
-        val scores = words.mapIndexed { index, _ -> 500 - index * 100 }
-        return PredictionResult(words, scores)
+    private fun createBasicSwipeClassification(input: SwipeInput): SwipeDetector.SwipeClassification {
+        return SwipeDetector.SwipeClassification(
+            isSwipe = input.pathLength > 50f && input.duration > 0.1f,
+            confidence = input.swipeConfidence,
+            reason = "ONNX neural processing",
+            quality = if (input.swipeConfidence > 0.7f) SwipeDetector.SwipeQuality.EXCELLENT
+                     else if (input.swipeConfidence > 0.5f) SwipeDetector.SwipeQuality.GOOD
+                     else SwipeDetector.SwipeQuality.FAIR
+        )
     }
     
     /**

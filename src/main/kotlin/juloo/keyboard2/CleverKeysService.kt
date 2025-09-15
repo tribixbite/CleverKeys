@@ -269,30 +269,21 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         serviceScope.launch(Dispatchers.Main) {
             when (error) {
                 is ErrorHandling.CleverKeysException.NeuralEngineException -> {
-                    // Show neural-specific error
-                    showErrorToast("Neural prediction temporarily unavailable")
-                    // Fall back to traditional prediction
-                    fallbackToTraditionalPrediction()
+                    // Neural prediction failed - no fallbacks, throw error
+                    throw error
                 }
                 is ErrorHandling.CleverKeysException.GestureRecognitionException -> {
-                    // Gesture recognition failed
-                    showErrorToast("Gesture not recognized")
+                    // Gesture recognition failed - no fallbacks
+                    throw error
                 }
                 else -> {
-                    // Generic error
-                    showErrorToast("Prediction error occurred")
+                    // Any other error - no fallbacks
+                    throw ErrorHandling.CleverKeysException.NeuralEngineException("Prediction failed", error)
                 }
             }
         }
     }
     
-    /**
-     * Fallback to traditional prediction
-     */
-    private fun fallbackToTraditionalPrediction() {
-        // TODO: Implement traditional prediction fallback
-        logD("Falling back to traditional prediction")
-    }
     
     /**
      * Show error toast to user
