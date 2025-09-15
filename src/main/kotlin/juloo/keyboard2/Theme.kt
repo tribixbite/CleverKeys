@@ -108,8 +108,8 @@ class Theme private constructor(private val context: Context) {
             suggestionTextColor = labelColor,
             suggestionBackgroundColor = adjustColorBrightness(backgroundColor, 1.1f),
             swipeTrailColor = getThemeColor(android.R.attr.colorAccent, 0xFF00D4FF.toInt()),
-            keyCornerRadius = getThemeDimension(android.R.attr.cornerRadius, 8f),
-            keyElevation = getThemeDimension(android.R.attr.elevation, 2f)
+            keyCornerRadius = 8f, // Default corner radius
+            keyElevation = 2f // Default elevation
         )
     }
 
@@ -132,8 +132,8 @@ class Theme private constructor(private val context: Context) {
             suggestionTextColor = labelColor,
             suggestionBackgroundColor = adjustColorBrightness(backgroundColor, 0.95f),
             swipeTrailColor = getThemeColor(android.R.attr.colorAccent, 0xFF1976D2.toInt()),
-            keyCornerRadius = getThemeDimension(android.R.attr.cornerRadius, 8f),
-            keyElevation = getThemeDimension(android.R.attr.elevation, 2f)
+            keyCornerRadius = 8f, // Default corner radius
+            keyElevation = 2f // Default elevation
         )
     }
 

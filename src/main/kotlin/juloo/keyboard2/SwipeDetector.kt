@@ -103,7 +103,7 @@ class SwipeDetector {
             else -> {
                 val avgVel = input.velocityProfile.average()
                 val variation = input.velocityProfile.map { abs(it - avgVel) }.average()
-                (1f - (variation / MAX_VELOCITY_VARIATION).coerceAtMost(1f)) * 0.2f
+                (1f - (variation.toFloat() / MAX_VELOCITY_VARIATION).coerceAtMost(1f)) * 0.2f
             }
         }
         complexity += velocityScore
