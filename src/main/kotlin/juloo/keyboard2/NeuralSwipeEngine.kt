@@ -64,7 +64,7 @@ class NeuralSwipeEngine(
         
         return try {
             val (result, duration) = measureTimeNanos {
-                neuralPredictor!!.predict(input)
+                runBlocking { neuralPredictor!!.predict(input) }
             }
             
             logD("Neural prediction completed in ${duration / 1_000_000}ms")
