@@ -1,0 +1,52 @@
+plugins {
+  id 'com.android.application' version '8.6.0'
+  id 'org.jetbrains.kotlin.android' version '1.9.20'
+}
+
+dependencies {
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.20"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+  implementation "androidx.core:core:1.16.0"
+  implementation "com.microsoft.onnxruntime:onnxruntime-android:1.20.0"
+
+  testImplementation "junit:junit:4.13.2"
+  testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
+}
+
+android {
+  namespace 'juloo.keyboard2'
+  compileSdk 35
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+
+  kotlinOptions {
+    jvmTarget = "1.8"
+  }
+
+  defaultConfig {
+    applicationId "juloo.keyboard2.minimal"
+    minSdk 21
+    targetSdkVersion 35
+    versionCode 1
+    versionName "1.0-minimal"
+  }
+
+  sourceSets {
+    main {
+      manifest.srcFile 'AndroidManifest-minimal.xml'
+      kotlin.srcDirs = ['src/main/kotlin']
+      res.srcDirs = ['res-minimal']
+      assets.srcDirs = ['assets']
+    }
+  }
+
+  buildTypes {
+    debug {
+      debuggable true
+      minifyEnabled false
+    }
+  }
+}
