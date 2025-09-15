@@ -110,19 +110,26 @@ class RuntimeValidator(private val context: Context) {
                     val size = stream.available()
                     logD("✅ $description found: $size bytes")
                     
-                    if (size == 0) {
-                        errors.add(ValidationError(
-                            component = "ONNX Models",
-                            message = "$description is empty",
-                            severity = Severity.CRITICAL,
-                            suggestion = "Ensure model files are properly included in assets"
-                        ))
-                    } else if (size < 1_000_000 && path.endsWith(".onnx")) {
-                        warnings.add(ValidationWarning(
-                            component = "ONNX Models",
-                            message = "$description seems small ($size bytes)",
-                            impact = "May indicate corrupted or incomplete model"
-                        ))
+                    when {
+                        size == 0 -> {
+                            errors.add(ValidationError(
+                                component = "ONNX Models",
+                                message = "$description is empty",
+                                severity = Severity.CRITICAL,
+                                suggestion = "Ensure model files are properly included in assets"
+                            ))
+                        }
+                        size < 1_000_000 && path.endsWith(".onnx") -> {
+                            warnings.add(ValidationWarning(
+                                component = "ONNX Models",
+                                message = "$description seems small ($size bytes)",
+                                impact = "May indicate corrupted or incomplete model"
+                            ))
+                        }
+                        else -> {
+                            // Model file looks normal
+                            logD("Model file $description appears normal ($size bytes)")
+                        }
                     }
                 }
             } catch (e: Exception) {
