@@ -43,13 +43,21 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     
     override fun onCreate() {
         super.onCreate()
-        logD("CleverKeys service starting...")
-        
-        initializeConfiguration()
-        initializeKeyEventHandler()
-        initializePerformanceProfiler()
-        initializeNeuralComponents()
-        initializePredictionPipeline()
+        logD("CleverKeys InputMethodService starting...")
+
+        try {
+            // Initialize components in dependency order
+            initializeConfiguration()
+            initializeKeyEventHandler()
+            initializePerformanceProfiler()
+            initializeNeuralComponents()
+            initializePredictionPipeline()
+
+            logD("✅ CleverKeys service initialization completed successfully")
+        } catch (e: Exception) {
+            logE("Critical service initialization failure", e)
+            throw RuntimeException("CleverKeys service failed to initialize", e)
+        }
     }
     
     override fun onDestroy() {
@@ -172,20 +180,60 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     }
     
     /**
-     * Create keyboard view with modern Kotlin patterns
+     * Create keyboard view with complete InputMethodService integration
      */
     override fun onCreateInputView(): View? {
-        val currentConfig = config ?: return null
-        
-        keyboardView = CleverKeysView(this, currentConfig).apply {
-            onSwipeCompleted = { swipeData -> handleSwipeGesture(swipeData) }
-            onKeyPressed = { key -> handleKeyPress(key) }
+        logD("Creating keyboard input view...")
 
-            // Register with configuration manager for automatic updates
-            configManager?.registerKeyboardView(this)
+        val currentConfig = config ?: run {
+            logE("Configuration not available for input view creation")
+            return null
         }
-        
-        return keyboardView
+
+        try {
+            keyboardView = CleverKeysView(this, currentConfig).apply {
+                onSwipeCompleted = { swipeData -> handleSwipeGesture(swipeData) }
+                onKeyPressed = { key -> handleKeyPress(key) }
+
+                // Register with configuration manager for automatic updates
+                configManager?.registerKeyboardView(this)
+
+                // Set keyboard layout if available
+                currentLayout?.let { layout -> setLayout(layout) }
+            }
+
+            logD("✅ Keyboard input view created successfully")
+            return keyboardView
+
+        } catch (e: Exception) {
+            logE("Failed to create keyboard input view", e)
+            return null
+        }
+    }
+
+    /**
+     * Handle input started with proper context setup
+     */
+    override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
+        super.onStartInput(info, restarting)
+        logD("Input started: package=${info?.packageName}, restarting=$restarting")
+
+        // Configure input connection manager
+        serviceScope.launch {
+            val inputConnectionManager = InputConnectionManager(this@CleverKeysService)
+            inputConnectionManager.setInputConnection(currentInputConnection, info)
+        }
+    }
+
+    /**
+     * Handle input finishing with cleanup
+     */
+    override fun onFinishInput() {
+        super.onFinishInput()
+        logD("Input finished - cleaning up resources")
+
+        // Cancel any pending predictions
+        predictionService?.cancelAll()
     }
     
     /**

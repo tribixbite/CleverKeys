@@ -80,7 +80,7 @@ class SystemIntegrationTester(private val context: Context) {
      */
     private suspend fun testProductionInitialization(): IntegrationTestResult {
         return try {
-            val (duration, result) = measureTimeMillis {
+            val (result, duration) = measureTimeMillis {
                 val initializer = ProductionInitializer(context)
                 initializer.initialize()
             }
@@ -111,7 +111,7 @@ class SystemIntegrationTester(private val context: Context) {
      */
     private suspend fun testNeuralPredictionAccuracy(): IntegrationTestResult {
         return try {
-            val (duration, results) = measureTimeMillis {
+            val (results, duration) = measureTimeMillis {
                 testMultipleGestureWords()
             }
             
@@ -146,7 +146,7 @@ class SystemIntegrationTester(private val context: Context) {
             val recognizer = SwipeGestureRecognizer()
             val testGestures = createTestGestures()
             
-            val (duration, recognitionResults) = measureTimeMillis {
+            val (recognitionResults, duration) = measureTimeMillis {
                 testGestures.map { (points, timestamps) ->
                     recognizer.recognizeGesture(points, timestamps)
                 }
@@ -185,7 +185,7 @@ class SystemIntegrationTester(private val context: Context) {
             val ortEnv = ai.onnxruntime.OrtEnvironment.getEnvironment()
             val memoryManager = TensorMemoryManager(ortEnv)
             
-            val (duration, _) = measureTimeMillis {
+            val (_, duration) = measureTimeMillis {
                 // Simulate tensor operations
                 repeat(50) {
                     val data = FloatArray(1000) { it.toFloat() }
@@ -223,7 +223,7 @@ class SystemIntegrationTester(private val context: Context) {
      */
     private suspend fun testConfigurationManagement(): IntegrationTestResult {
         return try {
-            val (duration, success) = measureTimeMillis {
+            val (success, duration) = measureTimeMillis {
                 val configManager = ConfigurationManager(context)
                 configManager.initialize() &&
                 configManager.validateConfiguration().isValid
@@ -250,7 +250,7 @@ class SystemIntegrationTester(private val context: Context) {
      */
     private suspend fun testErrorHandlingResilience(): IntegrationTestResult {
         return try {
-            val (duration, results) = measureTimeMillis {
+            val (results, duration) = measureTimeMillis {
                 listOf(
                     testErrorRecovery(),
                     testGracefulDegradation(),
@@ -283,7 +283,7 @@ class SystemIntegrationTester(private val context: Context) {
         return try {
             val profiler = PerformanceProfiler(context)
             
-            val (duration, _) = measureTimeMillis {
+            val (_, duration) = measureTimeMillis {
                 // Test batched vs sequential operations
                 repeat(10) { i ->
                     profiler.measureOperation("test_operation_$i") {

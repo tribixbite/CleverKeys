@@ -81,25 +81,60 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         try {
             logDebug("🔄 Loading ONNX transformer models...")
             
-            // Load encoder model
+            // Load encoder model with validation
             val encoderData = loadModelFromAssets("models/swipe_model_character_quant.onnx")
+            logDebug("📥 Encoder model data loaded: ${encoderData.size} bytes")
+
             encoderSession = ortEnvironment.createSession(encoderData, createSessionOptions("Encoder"))
             logDebug("✅ Encoder session created successfully")
-            
-            // Load decoder model  
+
+            // Validate encoder input/output schema
+            encoderSession?.let { session ->
+                val inputInfo = session.inputInfo
+                val outputInfo = session.outputInfo
+                logDebug("   Encoder inputs: ${inputInfo.keys}")
+                logDebug("   Encoder outputs: ${outputInfo.keys}")
+
+                // Validate expected input names
+                val expectedInputs = setOf("trajectory_features", "nearest_keys", "src_mask")
+                if (!inputInfo.keys.containsAll(expectedInputs)) {
+                    throw RuntimeException("Encoder missing expected inputs: $expectedInputs")
+                }
+            }
+
+            // Load decoder model with validation
             val decoderData = loadModelFromAssets("models/swipe_decoder_character_quant.onnx")
+            logDebug("📥 Decoder model data loaded: ${decoderData.size} bytes")
+
             decoderSession = ortEnvironment.createSession(decoderData, createSessionOptions("Decoder"))
             logDebug("✅ Decoder session created successfully")
+
+            // Validate decoder input/output schema
+            decoderSession?.let { session ->
+                val inputInfo = session.inputInfo
+                val outputInfo = session.outputInfo
+                logDebug("   Decoder inputs: ${inputInfo.keys}")
+                logDebug("   Decoder outputs: ${outputInfo.keys}")
+
+                // Validate expected input names
+                val expectedInputs = setOf("memory", "target_tokens", "src_mask", "target_mask")
+                if (!inputInfo.keys.containsAll(expectedInputs)) {
+                    throw RuntimeException("Decoder missing expected inputs: $expectedInputs")
+                }
+            }
             
             // Initialize tokenizer and vocabulary
             tokenizer.initialize()
             val vocabLoaded = vocabulary.loadVocabulary()
             logDebug("📚 Vocabulary loaded: $vocabLoaded (words: ${vocabulary.getStats().totalWords})")
             
+            // Perform complete pipeline validation test
+            validateCompletePipeline()
+
             isModelLoaded = true
             isInitialized = true
-            logDebug("🧠 ONNX neural prediction system ready!")
-            
+            logDebug("🧠 ONNX neural prediction system ready and validated!")
+
             true
         } catch (e: Exception) {
             logE("Failed to initialize ONNX predictor", e)
@@ -538,6 +573,61 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         trajectoryProcessor.setRealKeyPositions(keyPositions)
     }
     
+    /**
+     * Validate complete pipeline with test input
+     */
+    private suspend fun validateCompletePipeline() {
+        logDebug("🧪 Validating complete ONNX prediction pipeline...")
+
+        try {
+            // Create test input that matches Java calibration activity
+            val testPoints = listOf(
+                PointF(100f, 200f), PointF(200f, 200f), PointF(300f, 200f),
+                PointF(400f, 250f), PointF(500f, 200f)
+            )
+            val testTimestamps = testPoints.indices.map { it * 100L }
+            val testInput = SwipeInput(testPoints, testTimestamps, emptyList())
+
+            logDebug("   Test input: ${testInput.coordinates.size} points, ${testInput.pathLength} path length")
+
+            // Test feature extraction
+            val features = trajectoryProcessor.extractFeatures(testInput.coordinates, testInput.timestamps)
+            logDebug("   Feature extraction: ${features.actualLength} features, ${features.nearestKeys.size} nearest keys")
+
+            // Test encoder
+            val trajectoryTensor = createTrajectoryTensor(features)
+            val nearestKeysTensor = createNearestKeysTensor(features)
+            val srcMaskTensor = createSourceMaskTensor(features)
+
+            logDebug("   Tensor creation successful:")
+            logDebug("     Trajectory: ${trajectoryTensor.info.shape.contentToString()}")
+            logDebug("     Nearest keys: ${nearestKeysTensor.info.shape.contentToString()}")
+            logDebug("     Source mask: ${srcMaskTensor.info.shape.contentToString()}")
+
+            // Test encoder inference
+            val encoderResult = runEncoder(features)
+            val memory = encoderResult.get(0) as OnnxTensor
+            logDebug("   Encoder inference: output shape ${memory.info.shape.contentToString()}")
+
+            // Test one step of decoder (simplified validation)
+            val beams = listOf(BeamSearchState(SOS_IDX, 0.0f, false))
+            val candidates = processBatchedBeams(beams, memory, srcMaskTensor, decoderSession!!)
+            logDebug("   Decoder inference: ${candidates.size} beam candidates generated")
+
+            // Cleanup test tensors
+            trajectoryTensor.close()
+            nearestKeysTensor.close()
+            srcMaskTensor.close()
+            encoderResult.close()
+
+            logDebug("✅ Complete pipeline validation successful")
+
+        } catch (e: Exception) {
+            logE("Pipeline validation failed", e)
+            throw RuntimeException("ONNX pipeline validation failed", e)
+        }
+    }
+
     /**
      * Debug logging
      */
