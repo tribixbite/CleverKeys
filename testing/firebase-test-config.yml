@@ -1,0 +1,231 @@
+# Firebase Test Lab configuration for CleverKeys
+# This configuration defines automated testing on real devices
+
+CleverKeys-UI-Tests:
+  type: instrumentation
+  app: build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
+  test: build/outputs/apk/androidTest/debug/tribixbite.keyboard2.debug-androidTest.apk
+
+  # Test on diverse device matrix
+  device-ids:
+    # Modern flagship devices
+    - model: Pixel7
+      version: 33
+      locale: en_US
+      orientation: portrait
+
+    - model: Pixel6
+      version: 32
+      locale: en_US
+      orientation: portrait
+
+    - model: SamsungGalaxyS22
+      version: 32
+      locale: en_US
+      orientation: portrait
+
+    # Mid-range devices
+    - model: Pixel4a
+      version: 30
+      locale: en_US
+      orientation: portrait
+
+    - model: SamsungGalaxyA53
+      version: 31
+      locale: en_US
+      orientation: portrait
+
+    # Older devices for compatibility
+    - model: Pixel3
+      version: 28
+      locale: en_US
+      orientation: portrait
+
+    - model: SamsungGalaxyS20
+      version: 29
+      locale: en_US
+      orientation: portrait
+
+    # Different form factors
+    - model: NexusLowRes
+      version: 25
+      locale: en_US
+      orientation: portrait
+
+    - model: Pixel7
+      version: 33
+      locale: en_US
+      orientation: landscape
+
+  # Test configuration
+  test-targets:
+    - class: tribixbite.keyboard2.test.PerformanceTestSuite
+    - class: tribixbite.keyboard2.test.UIResponsivenessTest
+    - class: tribixbite.keyboard2.test.VisualRegressionTestSuite
+    - class: tribixbite.keyboard2.test.AccessibilityTestSuite
+
+  # Performance monitoring
+  performance-metrics:
+    - cpu
+    - memory
+    - network
+    - fps
+
+  # Test environment setup
+  environment-variables:
+    clearPackageData: true
+    coverage: true
+
+  # Test execution parameters
+  timeout: 30m
+  num-flaky-test-attempts: 2
+
+  # Results configuration
+  results-bucket: gs://cleverkeys-test-results
+  results-dir: ui-tests
+
+  # Device setup
+  setup:
+    - "settings put secure enabled_accessibility_services ''"
+    - "settings put secure accessibility_enabled 0"
+    - "settings put system font_scale 1.0"
+    - "ime enable tribixbite.keyboard2/.CleverKeysService"
+    - "ime set tribixbite.keyboard2/.CleverKeysService"
+
+CleverKeys-Performance-Tests:
+  type: instrumentation
+  app: build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
+  test: build/outputs/apk/androidTest/debug/tribixbite.keyboard2.debug-androidTest.apk
+
+  # Focus on high-performance devices for neural benchmarks
+  device-ids:
+    - model: Pixel7Pro
+      version: 33
+      locale: en_US
+      orientation: portrait
+
+    - model: SamsungGalaxyS22Ultra
+      version: 32
+      locale: en_US
+      orientation: portrait
+
+    - model: Pixel6Pro
+      version: 32
+      locale: en_US
+      orientation: portrait
+
+  test-targets:
+    - class: tribixbite.keyboard2.test.PerformanceTestSuite
+    - package: tribixbite.keyboard2.benchmark
+
+  performance-metrics:
+    - cpu
+    - memory
+    - gpu
+    - thermal
+
+  timeout: 45m
+
+  # Performance-focused environment
+  environment-variables:
+    clearPackageData: true
+    disable-video: true
+    disable-performance-metrics: false
+
+CleverKeys-Accessibility-Tests:
+  type: instrumentation
+  app: build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
+  test: build/outputs/apk/androidTest/debug/tribixbite.keyboard2.debug-androidTest.apk
+
+  device-ids:
+    - model: Pixel7
+      version: 33
+      locale: en_US
+      orientation: portrait
+
+    - model: SamsungGalaxyS22
+      version: 32
+      locale: en_US
+      orientation: portrait
+
+  test-targets:
+    - class: tribixbite.keyboard2.test.AccessibilityTestSuite
+
+  # Accessibility-specific setup
+  setup:
+    - "settings put secure high_text_contrast_enabled 1"
+    - "settings put system font_scale 1.3"
+    - "settings put secure enabled_accessibility_services com.google.android.marvin.talkback/.TalkBackService"
+    - "settings put secure accessibility_enabled 1"
+    - "ime enable tribixbite.keyboard2/.CleverKeysService"
+    - "ime set tribixbite.keyboard2/.CleverKeysService"
+
+  timeout: 20m
+
+CleverKeys-Multi-Language-Tests:
+  type: instrumentation
+  app: build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
+  test: build/outputs/apk/androidTest/debug/tribixbite.keyboard2.debug-androidTest.apk
+
+  # Test different language configurations
+  device-ids:
+    - model: Pixel7
+      version: 33
+      locale: en_US
+      orientation: portrait
+
+    - model: Pixel7
+      version: 33
+      locale: es_ES
+      orientation: portrait
+
+    - model: Pixel7
+      version: 33
+      locale: fr_FR
+      orientation: portrait
+
+    - model: Pixel7
+      version: 33
+      locale: de_DE
+      orientation: portrait
+
+  test-targets:
+    - class: tribixbite.keyboard2.test.MultiLanguageTestSuite
+    - class: tribixbite.keyboard2.test.UIResponsivenessTest
+
+  timeout: 25m
+
+CleverKeys-Neural-Stress-Tests:
+  type: instrumentation
+  app: build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
+  test: build/outputs/apk/androidTest/debug/tribixbite.keyboard2.debug-androidTest.apk
+
+  # Use highest-performance devices for neural stress testing
+  device-ids:
+    - model: Pixel7Pro
+      version: 33
+      locale: en_US
+      orientation: portrait
+
+    - model: SamsungGalaxyS22Ultra
+      version: 32
+      locale: en_US
+      orientation: portrait
+
+  test-targets:
+    - class: tribixbite.keyboard2.test.NeuralStressTestSuite
+
+  # Extended timeout for stress testing
+  timeout: 60m
+
+  performance-metrics:
+    - cpu
+    - memory
+    - gpu
+    - thermal
+    - battery
+
+  environment-variables:
+    clearPackageData: true
+    stress-test-duration: 1800  # 30 minutes
+    neural-intensive-mode: true
