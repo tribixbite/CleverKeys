@@ -1,5 +1,7 @@
 package juloo.keyboard2
 
+import android.content.Context
+
 /**
  * Complete tokenizer matching Java implementation
  */

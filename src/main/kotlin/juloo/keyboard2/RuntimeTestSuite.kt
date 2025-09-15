@@ -152,37 +152,52 @@ class RuntimeTestSuite(private val context: Context) {
                 createCircularGesture() to "circular"
             )
             
+            // ONNX-only: Test neural processing of different gesture types
+            val neuralEngine = NeuralSwipeEngine(context, Config.globalConfig())
+            if (!neuralEngine.initialize()) {
+                return RuntimeTestResult(
+                    testName = "Gesture Recognition",
+                    success = false,
+                    executionTimeMs = System.currentTimeMillis() - startTime,
+                    details = "Neural engine initialization failed",
+                    errorMessage = "Could not initialize ONNX models"
+                )
+            }
+
             var successCount = 0
             val details = mutableListOf<String>()
-            
+
             testGestures.forEach { (points, type) ->
                 try {
-                    val result = recognizer.recognizeGesture(points, points.indices.map { it * 100L })
-                    if (result.gesture.confidence > 0.3f) {
+                    val swipeInput = SwipeInput(points, points.indices.map { it * 100L }, emptyList())
+                    val predictions = neuralEngine.predictAsync(swipeInput)
+                    if (!predictions.isEmpty) {
                         successCount++
-                        details.add("$type: ${result.gesture.type} (${result.gesture.confidence})")
+                        details.add("$type: ${predictions.size} predictions, top: ${predictions.topPrediction}")
+                    } else {
+                        details.add("$type: No predictions generated")
                     }
                 } catch (e: Exception) {
                     details.add("$type: Failed - ${e.message}")
                 }
             }
-            
+
             val executionTime = System.currentTimeMillis() - startTime
-            recognizer.cleanup()
+            neuralEngine.cleanup()
             
             RuntimeTestResult(
-                testName = "Gesture Recognition",
+                testName = "Neural Processing",
                 success = successCount >= 2, // At least 2/3 should work
                 executionTimeMs = executionTime,
-                details = "Recognized: $successCount/${testGestures.size} - ${details.joinToString(", ")}",
-                errorMessage = if (successCount == 0) "No gestures recognized" else null
+                details = "Processed: $successCount/${testGestures.size} - ${details.joinToString(", ")}",
+                errorMessage = if (successCount == 0) "No neural predictions generated" else null
             )
         } catch (e: Exception) {
             RuntimeTestResult(
-                testName = "Gesture Recognition",
+                testName = "Neural Processing",
                 success = false,
                 executionTimeMs = 0,
-                details = "Exception during gesture recognition",
+                details = "Exception during neural processing",
                 errorMessage = e.message
             )
         }
