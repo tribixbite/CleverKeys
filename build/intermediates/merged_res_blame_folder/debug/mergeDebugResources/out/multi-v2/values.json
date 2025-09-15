@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "juloo.keyboard2-mergeDebugResources-14:/values/values.xml",
+            "outputFile": "tribixbite.keyboard2-mergeDebugResources-14:/values/values.xml",
             "map": [
                 {
                     "source": "/data/data/com.termux/files/home/git/swype/cleverkeys/build/generated/res/resValues/debug/values/gradleResValues.xml",

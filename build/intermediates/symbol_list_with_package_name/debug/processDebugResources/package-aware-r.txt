@@ -1,4 +1,4 @@
-juloo.keyboard2
+tribixbite.keyboard2
 array layout_ids
 array pref_circle_sensitivity_entries
 array pref_circle_sensitivity_values

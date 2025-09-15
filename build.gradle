@@ -19,11 +19,11 @@ dependencies {
 }
 
 android {
-  namespace 'juloo.keyboard2'
+  namespace 'tribixbite.keyboard2'
   compileSdk 35
 
   defaultConfig {
-    applicationId "juloo.keyboard2"
+    applicationId "tribixbite.keyboard2"
     minSdk 21
     targetSdkVersion 35
     versionCode 50
@@ -159,7 +159,7 @@ tasks.register('checkKeyboardLayouts') {
 }
 
 tasks.register('compileComposeSequences') {
-  def out = "srcs/juloo.keyboard2/ComposeKeyData.java"
+  def out = "srcs/tribixbite.keyboard2/ComposeKeyData.java"
   println "\nGenerating ${out}"
   exec {
     def sequences = new File(projectDir, "srcs/compose").listFiles().findAll {

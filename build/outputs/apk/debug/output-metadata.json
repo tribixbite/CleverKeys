@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "juloo.keyboard2.debug",
+  "applicationId": "tribixbite.keyboard2.debug",
   "variantName": "debug",
   "elements": [
     {
@@ -13,7 +13,7 @@
       "attributes": [],
       "versionCode": 50,
       "versionName": "1.32.1",
-      "outputFile": "juloo.keyboard2.debug.apk"
+      "outputFile": "tribixbite.keyboard2.debug.apk"
     }
   ],
   "elementType": "File",

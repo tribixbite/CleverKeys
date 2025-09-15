@@ -15,12 +15,11 @@ Generated version info:  ()
 > Task :preDebugBuild
 > Task :mergeDebugNativeDebugMetadata NO-SOURCE
 > Task :checkKotlinGradlePluginConfigurationErrors
-> Task :generateDebugResValues FROM-CACHE
 > Task :checkDebugAarMetadata
+> Task :generateDebugResValues FROM-CACHE
 > Task :mapDebugSourceSetPaths
 > Task :generateDebugResources
 > Task :packageDebugResources
-> Task :mergeDebugResources
 > Task :createDebugCompatibleScreenManifests
 > Task :extractDeepLinksDebug FROM-CACHE
 > Task :processDebugMainManifest FROM-CACHE
@@ -33,6 +32,7 @@ Generated version info:  ()
 > Task :mergeDebugAssets
 > Task :compressDebugAssets FROM-CACHE
 > Task :parseDebugLocalResources
+> Task :mergeDebugResources
 > Task :checkDebugDuplicateClasses
 > Task :desugarDebugFileDependencies FROM-CACHE
 > Task :mergeExtDexDebug FROM-CACHE
@@ -47,61 +47,62 @@ Generated version info:  ()
 Unable to strip the following libraries, packaging them as they are: libonnxruntime.so, libonnxruntime4j_jni.so.
 
 > Task :processDebugResources
+
 > Task :compileDebugKotlin
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/AccessibilityHelper.kt:43:29 Variable 'childInfo' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/AccessibilityHelper.kt:43:63 'obtain(): AccessibilityNodeInfo!' is deprecated. Deprecated in Java
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/AccessibilityHelper.kt:44:29 'setBoundsInParent(Rect!): Unit' is deprecated. Deprecated in Java
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/AccessibilityHelper.kt:54:29 'addAction(Int): Unit' is deprecated. Deprecated in Java
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysSettings.kt:135:17 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysView.kt:79:13 Variable 'layout' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysView.kt:251:30 Parameter 'keyLabel' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Config.kt:17:5 Parameter 'foldableUnfolded' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Extensions.kt:18:1 Expected performance impact from inlining is insignificant. Inlining works best for functions with parameters of functional types
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Extensions.kt:19:1 Expected performance impact from inlining is insignificant. Inlining works best for functions with parameters of functional types
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Extensions.kt:21:1 Expected performance impact from inlining is insignificant. Inlining works best for functions with parameters of functional types
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/FoldStateTrackerImpl.kt:99:25 'getRealMetrics(DisplayMetrics!): Unit' is deprecated. Deprecated in Java
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/InputConnectionManager.kt:264:53 Parameter 'text' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/KeyEventHandler.kt:70:48 Parameter 'isSwipe' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/KeyEventHandler.kt:87:48 Parameter 'isSwipe' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/KeyEventHandler.kt:102:49 Parameter 'isSwipe' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Keyboard2View.kt:268:29 Parameter 'keyValue' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/LayoutModifier.kt:9:14 Parameter 'config' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/LayoutModifier.kt:9:30 Parameter 'resources' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/NeuralPredictionPipeline.kt:66:9 Parameter 'context' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/OnnxSwipePredictorImpl.kt:210:9 Parameter 'features' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/OnnxSwipePredictorImpl.kt:340:51 Unchecked cast: Any! to Array<Array<FloatArray>>
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/PredictionRepository.kt:121:36 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/PredictionRepository.kt:132:14 This declaration is in a preview state and can be changed in a backwards-incompatible manner with a best-effort migration. Its usage should be marked with '@kotlinx.coroutines.FlowPreview' or '@OptIn(kotlinx.coroutines.FlowPreview::class)' if you accept the drawback of relying on preview API
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/PredictionRepository.kt:151:36 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ProductionInitializer.kt:41:37 Variable 'validationSuccess' initializer is redundant
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ProductionInitializer.kt:52:31 Variable 'coreSuccess' initializer is redundant
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ProductionInitializer.kt:59:32 Variable 'modelSuccess' initializer is redundant
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ProductionInitializer.kt:66:35 Variable 'pipelineSuccess' initializer is redundant
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ProductionInitializer.kt:73:33 Variable 'healthSuccess' initializer is redundant
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ProductionInitializer.kt:121:79 Parameter 'warnings' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/RuntimeValidator.kt:147:17 Variable 'ortEnv' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/RuntimeValidator.kt:240:85 Parameter 'warnings' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/RuntimeValidator.kt:268:52 Parameter 'errors' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SettingsActivity.kt:6:27 'PreferenceActivity' is deprecated. Deprecated in Java
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SettingsActivity.kt:123:45 Parameter 'isChecked' is never used, could be renamed to _
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SettingsActivity.kt:131:45 Parameter 'isChecked' is never used, could be renamed to _
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SuggestionBar.kt:29:35 Parameter 'index' is never used, could be renamed to _
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeCalibrationActivity.kt:610:23 Unnecessary safe call on a non-null receiver of type TextView
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeInput.kt:19:20 Unnecessary safe call on a non-null receiver of type KeyboardData.Key
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipePredictionService.kt:102:14 This declaration is in a preview state and can be changed in a backwards-incompatible manner with a best-effort migration. Its usage should be marked with '@kotlinx.coroutines.FlowPreview' or '@OptIn(kotlinx.coroutines.FlowPreview::class)' if you accept the drawback of relying on preview API
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipePredictionService.kt:108:14 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipePredictionService.kt:167:32 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SystemIntegrationTester.kt:97:74 No cast needed
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Theme.kt:92:13 Variable 'typedValue' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Theme.kt:93:13 Variable 'theme' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Theme.kt:201:32 Parameter 'newConfig' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/CustomExtraKeysPreference.kt:15:13 Parameter 'prefs' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/ExtraKeysPreference.kt:15:24 Parameter 'prefs' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/LayoutsPreference.kt:46:23 Parameter 'customLayout' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/LayoutsPreference.kt:55:31 Parameter 'resources' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/LayoutsPreference.kt:55:53 Parameter 'prefs' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/LayoutsPreference.kt:62:29 Parameter 'editor' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/LayoutsPreference.kt:62:63 Parameter 'layouts' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/AccessibilityHelper.kt:43:29 Variable 'childInfo' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/AccessibilityHelper.kt:43:63 'obtain(): AccessibilityNodeInfo!' is deprecated. Deprecated in Java
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/AccessibilityHelper.kt:44:29 'setBoundsInParent(Rect!): Unit' is deprecated. Deprecated in Java
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/AccessibilityHelper.kt:54:29 'addAction(Int): Unit' is deprecated. Deprecated in Java
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/CleverKeysSettings.kt:135:17 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/CleverKeysView.kt:79:13 Variable 'layout' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/CleverKeysView.kt:251:30 Parameter 'keyLabel' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/Config.kt:17:5 Parameter 'foldableUnfolded' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/Extensions.kt:18:1 Expected performance impact from inlining is insignificant. Inlining works best for functions with parameters of functional types
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/Extensions.kt:19:1 Expected performance impact from inlining is insignificant. Inlining works best for functions with parameters of functional types
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/Extensions.kt:21:1 Expected performance impact from inlining is insignificant. Inlining works best for functions with parameters of functional types
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/FoldStateTrackerImpl.kt:99:25 'getRealMetrics(DisplayMetrics!): Unit' is deprecated. Deprecated in Java
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/InputConnectionManager.kt:264:53 Parameter 'text' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/KeyEventHandler.kt:70:48 Parameter 'isSwipe' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/KeyEventHandler.kt:87:48 Parameter 'isSwipe' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/KeyEventHandler.kt:102:49 Parameter 'isSwipe' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/Keyboard2View.kt:268:29 Parameter 'keyValue' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/LayoutModifier.kt:9:14 Parameter 'config' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/LayoutModifier.kt:9:30 Parameter 'resources' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/NeuralPredictionPipeline.kt:66:9 Parameter 'context' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/OnnxSwipePredictorImpl.kt:210:9 Parameter 'features' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/OnnxSwipePredictorImpl.kt:340:51 Unchecked cast: Any! to Array<Array<FloatArray>>
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/PredictionRepository.kt:121:36 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/PredictionRepository.kt:132:14 This declaration is in a preview state and can be changed in a backwards-incompatible manner with a best-effort migration. Its usage should be marked with '@kotlinx.coroutines.FlowPreview' or '@OptIn(kotlinx.coroutines.FlowPreview::class)' if you accept the drawback of relying on preview API
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/PredictionRepository.kt:151:36 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/ProductionInitializer.kt:41:37 Variable 'validationSuccess' initializer is redundant
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/ProductionInitializer.kt:52:31 Variable 'coreSuccess' initializer is redundant
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/ProductionInitializer.kt:59:32 Variable 'modelSuccess' initializer is redundant
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/ProductionInitializer.kt:66:35 Variable 'pipelineSuccess' initializer is redundant
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/ProductionInitializer.kt:73:33 Variable 'healthSuccess' initializer is redundant
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/ProductionInitializer.kt:121:79 Parameter 'warnings' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/RuntimeValidator.kt:147:17 Variable 'ortEnv' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/RuntimeValidator.kt:240:85 Parameter 'warnings' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/RuntimeValidator.kt:268:52 Parameter 'errors' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/SettingsActivity.kt:6:27 'PreferenceActivity' is deprecated. Deprecated in Java
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/SettingsActivity.kt:123:45 Parameter 'isChecked' is never used, could be renamed to _
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/SettingsActivity.kt:131:45 Parameter 'isChecked' is never used, could be renamed to _
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/SuggestionBar.kt:29:35 Parameter 'index' is never used, could be renamed to _
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/SwipeCalibrationActivity.kt:610:23 Unnecessary safe call on a non-null receiver of type TextView
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/SwipeInput.kt:19:20 Unnecessary safe call on a non-null receiver of type KeyboardData.Key
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/SwipePredictionService.kt:102:14 This declaration is in a preview state and can be changed in a backwards-incompatible manner with a best-effort migration. Its usage should be marked with '@kotlinx.coroutines.FlowPreview' or '@OptIn(kotlinx.coroutines.FlowPreview::class)' if you accept the drawback of relying on preview API
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/SwipePredictionService.kt:108:14 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/SwipePredictionService.kt:167:32 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/SystemIntegrationTester.kt:97:74 No cast needed
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/Theme.kt:92:13 Variable 'typedValue' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/Theme.kt:93:13 Variable 'theme' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/Theme.kt:201:32 Parameter 'newConfig' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/prefs/CustomExtraKeysPreference.kt:15:13 Parameter 'prefs' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/prefs/ExtraKeysPreference.kt:15:24 Parameter 'prefs' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/prefs/LayoutsPreference.kt:46:23 Parameter 'customLayout' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/prefs/LayoutsPreference.kt:55:31 Parameter 'resources' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/prefs/LayoutsPreference.kt:55:53 Parameter 'prefs' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/prefs/LayoutsPreference.kt:62:29 Parameter 'editor' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/prefs/LayoutsPreference.kt:62:63 Parameter 'layouts' is never used
 
 > Task :compileDebugJavaWithJavac NO-SOURCE
 > Task :processDebugJavaRes
@@ -112,5 +113,5 @@ w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/
 > Task :createDebugApkListingFileRedirect
 > Task :assembleDebug
 
-BUILD SUCCESSFUL in 1m 55s
+BUILD SUCCESSFUL in 57s
 36 actionable tasks: 26 executed, 10 from cache

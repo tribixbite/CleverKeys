@@ -1,12 +1,12 @@
-#Mon Sep 15 14:41:21 GMT 2025
-path.4=9/classes.dex
-path.3=7/classes.dex
-path.2=5/classes.dex
+#Mon Sep 15 18:41:51 GMT 2025
+path.4=6/classes.dex
+path.3=14/classes.dex
+path.2=1/classes.dex
 path.1=0/classes.dex
 path.0=classes.dex
-base.4=/data/data/com.termux/files/home/git/swype/cleverkeys/build/intermediates/dex/debug/mergeProjectDexDebug/9/classes.dex
-base.3=/data/data/com.termux/files/home/git/swype/cleverkeys/build/intermediates/dex/debug/mergeProjectDexDebug/7/classes.dex
-base.2=/data/data/com.termux/files/home/git/swype/cleverkeys/build/intermediates/dex/debug/mergeProjectDexDebug/5/classes.dex
+base.4=/data/data/com.termux/files/home/git/swype/cleverkeys/build/intermediates/dex/debug/mergeProjectDexDebug/6/classes.dex
+base.3=/data/data/com.termux/files/home/git/swype/cleverkeys/build/intermediates/dex/debug/mergeProjectDexDebug/14/classes.dex
+base.2=/data/data/com.termux/files/home/git/swype/cleverkeys/build/intermediates/dex/debug/mergeProjectDexDebug/1/classes.dex
 base.1=/data/data/com.termux/files/home/git/swype/cleverkeys/build/intermediates/dex/debug/mergeProjectDexDebug/0/classes.dex
 base.0=/data/data/com.termux/files/home/git/swype/cleverkeys/build/intermediates/dex/debug/mergeExtDexDebug/classes.dex
 renamed.3=classes4.dex
