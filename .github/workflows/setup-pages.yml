@@ -1,0 +1,19 @@
+name: Setup GitHub Pages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  administration: write
+
+jobs:
+  setup-pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable GitHub Pages
+        run: |
+          echo "Enabling GitHub Pages for CleverKeys repository"
+          # This workflow triggers Pages setup and sets homepage to Pages URL

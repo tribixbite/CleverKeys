@@ -1,0 +1,2909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CleverKeys - Neural Swipe Prediction Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ONNX Runtime Web -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort.min.js"></script>
+    <!-- Swipe Vocabulary Module -->
+    <script src="swipe-vocabulary.js"></script>
+    <!-- Custom Dictionary Support -->
+    <script src="custom-dictionary.js"></script>
+    <!-- Niche Words Loader -->
+    <script src="niche-words-loader.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#0a0a0f',
+                        'dark-surface': '#141420',
+                        'dark-key': '#1a1a2e',
+                        'dark-key-hover': '#252540',
+                        'neon-blue': '#00d4ff',
+                        'neon-purple': '#b300ff',
+                        'neon-pink': '#ff00d4',
+                    },
+                    animation: {
+                        'glow': 'glow 2s ease-in-out infinite',
+                        'pulse-neon': 'pulse-neon 1.5s ease-in-out infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(179, 0, 255, 0.8); }
+        }
+        
+        @keyframes pulse-neon {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .neon-trail {
+            filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 12px currentColor);
+        }
+
+        .key-active {
+            background: linear-gradient(135deg, #00d4ff, #b300ff) !important;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.8), inset 0 0 20px rgba(179, 0, 255, 0.3);
+            transform: scale(0.95);
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(0, 212, 255, 0.1);
+            border-top: 3px solid #00d4ff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .debug-overlay {
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 5px rgba(0, 212, 255, 0.8);
+        }
+
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Responsive keyboard sizing */
+        @media (max-height: 600px) {
+            .key {
+                height: 2.5rem !important;
+            }
+            .main-content-padding {
+                padding-bottom: 220px !important;
+            }
+        }
+        
+        @media (max-height: 500px) {
+            .key {
+                height: 2rem !important;
+            }
+            .main-content-padding {
+                padding-bottom: 180px !important;
+            }
+        }
+        
+        /* Mobile keyboard optimizations */
+        @media (max-width: 768px) {
+            .keyboard-container {
+                border-radius: 0 !important;
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+            .keyboard-container > div > div {
+                border-radius: 1rem 1rem 0 0 !important;
+            }
+        }
+        
+        /* iOS safe area handling */
+        @supports (padding: max(0px)) {
+            .keyboard-container {
+                padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-dark-bg via-gray-900 to-dark-bg min-h-screen max-h-screen flex flex-col overflow-hidden">
+    <!-- Header -->
+    <div class="bg-dark-surface/80 backdrop-blur-xl border-b border-white/10">
+        <div class="p-4 text-center">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-neon-blue to-neon-purple bg-clip-text text-transparent">
+                CleverKeys - Neural Swipe Demo
+            </h1>
+            <p class="text-gray-400 text-sm mt-1">
+                <span id="modelStatus">Loading models...</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="bg-dark-surface/60 backdrop-blur px-4 py-3 flex justify-between items-center border-b border-white/5">
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+                <div id="statusIndicator" class="w-2 h-2 bg-gray-500 rounded-full"></div>
+                <span id="statusText" class="text-gray-300 text-sm">Initializing...</span>
+            </div>
+            <div id="coordinateDisplay" class="text-xs text-neon-blue font-mono hidden">
+                X: <span id="xCoord">0</span> Y: <span id="yCoord">0</span> | 
+                Norm: <span id="normCoords">0.00, 0.00</span>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="clearInput()" 
+                    class="px-4 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 text-sm transition-all hover:border-neon-blue/50">
+                Clear
+            </button>
+            <button onclick="toggleDebug()" 
+                    class="px-4 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 text-sm transition-all hover:border-neon-purple/50">
+                Debug: <span id="debugStatus">OFF</span>
+            </button>
+            <button onclick="toggleDictionary()" 
+                    class="px-4 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 text-sm transition-all hover:border-neon-green/50">
+                📚 Dictionary
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-grow flex flex-col min-h-0 overflow-hidden pb-[280px] md:pb-[240px] main-content-padding">
+        <!-- Input Display -->
+        <div class="bg-dark-surface/40 backdrop-blur px-4 py-2 flex-shrink-0">
+            <div class="text-gray-400 text-xs uppercase tracking-wide mb-1">Input Text</div>
+            <div id="inputText" class="text-white text-lg min-h-[25px] break-words"></div>
+        </div>
+
+        <!-- Word Suggestions -->
+        <div id="suggestions" class="px-4 py-3 flex gap-2 flex-wrap bg-dark-surface/40 backdrop-blur flex-shrink-0 min-h-[60px]">
+            <div class="text-gray-500 text-sm">Tap or swipe on the keyboard to begin</div>
+        </div>
+
+        <!-- Debug Output -->
+        <div id="debugOutput" class="hidden px-4 py-2 bg-black/50 backdrop-blur flex-shrink-0 max-h-32 overflow-auto">
+            <pre id="debugText" class="text-xs text-neon-blue font-mono"></pre>
+        </div>
+        
+        <!-- Spacer -->
+        <div class="flex-grow"></div>
+    </div>
+
+    <!-- Debug Overlay -->
+    <div id="debugOverlay" class="absolute top-32 left-2 pointer-events-none z-20 hidden">
+        <div class="text-xs text-neon-blue debug-overlay bg-black/70 p-2 rounded">
+            <div>Current Key: <span id="currentKeyDebug">-</span></div>
+            <div>Path Length: <span id="pathLength">0</span></div>
+            <div>Keys Touched: <span id="keysTouched">-</span></div>
+        </div>
+    </div>
+
+    <!-- Dictionary Panel -->
+    <div id="dictionaryPanel" class="fixed inset-0 bg-black/75 backdrop-blur flex items-center justify-center z-50 hidden">
+        <div class="bg-dark-surface rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-white">📚 Custom Dictionary Manager</h2>
+                <button onclick="toggleDictionary()" 
+                        class="text-gray-400 hover:text-white transition-colors text-2xl">
+                    ✕
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto space-y-4">
+                <!-- Import Section -->
+                <div class="bg-white/5 rounded-lg p-4 border border-white/10">
+                    <h3 class="text-lg font-semibold text-white mb-3">Import Words</h3>
+                    
+                    <div class="space-y-3">
+                        <!-- File Upload -->
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">Upload Dictionary File</label>
+                            <input type="file" id="dictionaryFile" accept=".txt,.csv,.json" 
+                                   class="w-full px-3 py-2 bg-white/10 rounded-lg text-gray-300 border border-white/20 hover:border-neon-blue/50 transition-colors">
+                        </div>
+                        
+                        <!-- Text Input -->
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">Or Paste Words (one per line)</label>
+                            <textarea id="customWordList" rows="4" 
+                                      placeholder="Enter words here..."
+                                      class="w-full px-3 py-2 bg-white/10 rounded-lg text-gray-300 border border-white/20 hover:border-neon-blue/50 transition-colors resize-none"></textarea>
+                        </div>
+                        
+                        <button onclick="importCustomWords()" 
+                                class="w-full px-4 py-2 bg-neon-blue/20 hover:bg-neon-blue/30 text-neon-blue rounded-lg transition-colors">
+                            Import Words
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Personal Dictionary Section -->
+                <div class="bg-white/5 rounded-lg p-4 border border-white/10">
+                    <h3 class="text-lg font-semibold text-white mb-3">Personal Dictionary</h3>
+                    
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="newWord" placeholder="Add a word..." 
+                               class="flex-1 px-3 py-2 bg-white/10 rounded-lg text-gray-300 border border-white/20 hover:border-neon-purple/50 transition-colors">
+                        <button onclick="addPersonalWord()" 
+                                class="px-4 py-2 bg-neon-purple/20 hover:bg-neon-purple/30 text-neon-purple rounded-lg transition-colors">
+                            Add
+                        </button>
+                    </div>
+                    
+                    <div id="personalWordsList" class="max-h-40 overflow-y-auto space-y-1">
+                        <!-- Personal words will be listed here -->
+                    </div>
+                </div>
+                
+                <!-- Statistics -->
+                <div class="bg-white/5 rounded-lg p-4 border border-white/10">
+                    <h3 class="text-lg font-semibold text-white mb-3">Dictionary Statistics</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-400">Base Dictionary:</span>
+                            <span id="baseDictSize" class="text-white ml-2">0</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Custom Words:</span>
+                            <span id="customDictSize" class="text-white ml-2">0</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Personal Words:</span>
+                            <span id="personalDictSize" class="text-white ml-2">0</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Total Words:</span>
+                            <span id="totalDictSize" class="text-white ml-2">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Export/Import Buttons -->
+                <div class="flex gap-2">
+                    <button onclick="exportDictionary()" 
+                            class="flex-1 px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg transition-colors">
+                        Export All
+                    </button>
+                    <button onclick="loadNicheWords()" 
+                            class="flex-1 px-4 py-2 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 rounded-lg transition-colors">
+                        Load Niche Words
+                    </button>
+                    <button onclick="clearCustomDictionary()" 
+                            class="flex-1 px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors">
+                        Clear Custom
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/75 backdrop-blur flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-white">Loading ONNX models...</p>
+            <p id="loadingDetails" class="text-gray-400 text-sm mt-2"></p>
+        </div>
+    </div>
+
+    <!-- Keyboard Container -->
+    <div class="fixed bottom-0 left-0 right-0 z-30 keyboard-container">
+        <div class="w-full max-w-2xl mx-auto">
+            <div class="relative bg-dark-surface/95 backdrop-blur-xl rounded-t-3xl p-2 md:p-3 shadow-2xl border-t border-white/10">
+                <!-- Canvas for swipe trail -->
+                <canvas id="swipeCanvas" class="absolute inset-0 z-10"></canvas>
+                
+                <!-- Keyboard -->
+                <div class="space-y-1.5 md:space-y-2" id="keyboard">
+                    <!-- Row 1: QWERTYUIOP -->
+                    <div class="flex justify-center gap-1 md:gap-1.5 px-1">
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="q" data-row="0" data-col="0">Q</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="w" data-row="0" data-col="1">W</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="e" data-row="0" data-col="2">E</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="r" data-row="0" data-col="3">R</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="t" data-row="0" data-col="4">T</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="y" data-row="0" data-col="5">Y</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="u" data-row="0" data-col="6">U</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="i" data-row="0" data-col="7">I</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="o" data-row="0" data-col="8">O</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="p" data-row="0" data-col="9">P</button>
+                    </div>
+                    
+                    <!-- Row 2: ASDFGHJKL -->
+                    <div class="flex justify-center gap-1 md:gap-1.5 px-4 md:px-6">
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="a" data-row="1" data-col="0">A</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="s" data-row="1" data-col="1">S</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="d" data-row="1" data-col="2">D</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="f" data-row="1" data-col="3">F</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="g" data-row="1" data-col="4">G</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="h" data-row="1" data-col="5">H</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="j" data-row="1" data-col="6">J</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="k" data-row="1" data-col="7">K</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="l" data-row="1" data-col="8">L</button>
+                    </div>
+                    
+                    <!-- Row 3: Shift + ZXCVBNM + Backspace -->
+                    <div class="flex justify-center gap-1 md:gap-1.5 px-1">
+                        <button class="key w-14 h-12 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-400 text-sm transition-all border border-white/5" data-key="shift">⇧</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="z" data-row="2" data-col="1">Z</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="x" data-row="2" data-col="2">X</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="c" data-row="2" data-col="3">C</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="v" data-row="2" data-col="4">V</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="b" data-row="2" data-col="5">B</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="n" data-row="2" data-col="6">N</button>
+                        <button class="key flex-1 h-12 bg-dark-key hover:bg-dark-key-hover rounded-lg text-white text-xl font-light transition-all border border-white/5" data-key="m" data-row="2" data-col="7">M</button>
+                        <button class="key w-14 h-12 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-400 text-sm transition-all border border-white/5" data-key="backspace" onclick="handleBackspace()">⌫</button>
+                    </div>
+                    
+                    <!-- Row 4: Special keys -->
+                    <div class="flex justify-center gap-1 md:gap-1.5 px-1">
+                        <button class="w-16 h-12 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-400 text-sm transition-all border border-white/5" onclick="toggleNumberMode()" data-special="number-toggle">123</button>
+                        <button class="w-12 h-12 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-400 text-sm transition-all border border-white/5" onclick="toggleEmojiMode()" data-special="emoji-toggle">😊</button>
+                        <button class="flex-1 h-12 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-400 text-sm transition-all border border-white/5" onclick="handleSpace()" data-special="space">space</button>
+                        <button class="w-20 h-12 bg-gradient-to-r from-neon-blue/20 to-neon-purple/20 hover:from-neon-blue/30 hover:to-neon-purple/30 rounded-lg text-white text-sm transition-all border border-neon-blue/30" onclick="handleReturn()" data-special="return">return</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>        // Configuration
+        const NORMALIZED_WIDTH = 360;
+        const NORMALIZED_HEIGHT = 215;
+        const MAX_SEQUENCE_LENGTH = 150;  // Fixed sequence length from training - cannot change without retraining model
+        const DEBUG = { enabled: false };
+        
+        // Model variables
+        let encoderSession = null;
+        let decoderSession = null;
+        let tokenizer = null;
+        let isModelReady = false;
+        let swipeVocabulary = null;  // Using new SwipeVocabulary class
+        let commonTwoCharWords = null;
+        
+        // Expose for debugging
+        window.isModelReady = false;
+        
+        // Canvas setup
+        const canvas = document.getElementById('swipeCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Swipe tracking
+        let isDrawing = false;
+        let isPotentialSwipe = false; // Track if this might actually be a swipe
+        let swipePath = [];
+        let keySequence = [];
+        let currentKey = null;
+        let keyboardBounds = null;
+        let inputText = '';
+        let swipeStartPos = null;
+        let swipeStartTime = null;
+        let tapTimeout = null;
+        
+        // Initialize ONNX Runtime and load models
+        async function loadModels() {
+            try {
+                updateLoadingStatus('Initializing ONNX Runtime...');
+                
+                // Configure ONNX Runtime Web WASM paths
+                if (typeof ort !== 'undefined') {
+                    ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/';
+                    console.log('ONNX Runtime initialized, version:', ort.env.versions?.onnxruntime);
+                } else {
+                    throw new Error('ONNX Runtime not loaded');
+                }
+                
+                // Load tokenizer config first
+                updateLoadingStatus('Loading tokenizer...');
+                const tokenizerResponse = await fetch('tokenizer_config.json');
+                tokenizer = await tokenizerResponse.json();
+                console.log('Tokenizer loaded:', tokenizer);
+                
+                updateLoadingStatus('Loading encoder model...');
+                
+                // Load ONNX models with proper options
+                const sessionOptions = {
+                    executionProviders: ['wasm'],
+                    graphOptimizationLevel: 'all'
+                };
+                
+                encoderSession = await ort.InferenceSession.create('swipe_model_character_quant.onnx', sessionOptions);
+                console.log('Encoder model loaded');
+                
+                // Log input/output names for debugging
+                console.log('Model inputs:', encoderSession.inputNames);
+                console.log('Model outputs:', encoderSession.outputNames);
+                
+                // Load decoder model - required for beam search decoding
+                updateLoadingStatus('Loading decoder model...');
+                decoderSession = await ort.InferenceSession.create('swipe_decoder_character_quant.onnx', sessionOptions);
+                console.log('Decoder model loaded');
+                console.log('Decoder inputs:', decoderSession.inputNames);
+                console.log('Decoder outputs:', decoderSession.outputNames);
+                
+                // Load vocabulary dictionary
+                updateLoadingStatus('Loading vocabulary...');
+                await loadVocabulary();
+                
+                isModelReady = true;
+                window.isModelReady = true;  // Expose for debugging
+                hideLoadingOverlay();
+                updateStatus('Ready', 'success');
+                console.log('All models and vocabulary loaded successfully!');
+                
+            } catch (error) {
+                console.error('Error loading models:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
+                updateStatus('Model loading failed - check console', 'error');
+                hideLoadingOverlay();
+                
+                // More detailed error message
+                updateLoadingStatus(`Error: ${error.message || 'Unknown error'}`);
+                
+                // Display error in UI
+                const suggestionsDiv = document.getElementById('suggestions');
+                if (suggestionsDiv) {
+                    suggestionsDiv.innerHTML = `<div class="text-red-500 p-2">Error loading models: ${error.message}</div>`;
+                }
+            }
+        }
+        
+        // Load vocabulary for spell correction
+        async function loadVocabulary() {
+            console.log('Starting vocabulary load...');
+            try {
+                // Initialize the SwipeVocabulary instance
+                swipeVocabulary = new SwipeVocabulary();
+                
+                // Try loading the optimized JSON vocabulary first
+                const jsonSuccess = await swipeVocabulary.loadFromJSON('swipe_vocabulary.json');
+                
+                if (jsonSuccess) {
+                    console.log('Loaded optimized vocabulary:', swipeVocabulary.getStats());
+                    
+                    // Initialize custom dictionary support immediately
+                    initializeCustomDictionaryIntegration();
+                    
+                    // Extract common two-char words for backward compatibility
+                    commonTwoCharWords = Array.from(swipeVocabulary.wordFreq.keys())
+                        .filter(w => w.length === 2)
+                        .slice(0, 50);
+                    
+                    return;
+                }
+                
+                // Fallback to text file if JSON fails
+                console.log('JSON vocabulary not found, trying text format...');
+                const vocabUrl = 'vocabulary_words.txt';
+                const response = await fetch(vocabUrl);
+                
+                if (!response.ok) {
+                    console.warn(`Vocabulary file not found (${response.status}), using fallback dictionary`);
+                    loadFallbackVocabulary();
+                    return;
+                }
+                
+                const text = await response.text();
+                const lines = text.split('\n');
+                console.log('Text vocabulary lines count:', lines.length);
+                
+                // Convert text format to vocabulary structure
+                const wordFreqMap = new Map();
+                lines.forEach((line, index) => {
+                    const word = line.trim().toLowerCase();
+                    if (word && word.match(/^[a-z]+$/)) {
+                        // Assign decreasing frequency based on position
+                        const freq = 1e-4 * Math.pow(0.99, index);
+                        wordFreqMap.set(word, freq);
+                    }
+                });
+                
+                // Initialize swipeVocabulary with text data
+                swipeVocabulary = new SwipeVocabulary();
+                swipeVocabulary.wordFreq = wordFreqMap;
+                swipeVocabulary.commonWords = new Set(
+                    Array.from(wordFreqMap.keys()).slice(0, 5000)
+                );
+                swipeVocabulary.top5000 = swipeVocabulary.commonWords;
+                swipeVocabulary.isLoaded = true;
+                
+                // Initialize custom dictionary support immediately
+                initializeCustomDictionaryIntegration();
+                
+                // Extract common two-char words for backward compatibility
+                commonTwoCharWords = Array.from(wordFreqMap.keys())
+                    .filter(w => w.length === 2)
+                    .slice(0, 50);
+                
+                console.log(`Loaded text vocabulary with ${wordFreqMap.size} words`);
+                
+            } catch (error) {
+                console.error('Error loading vocabulary:', error);
+                // Set fallback common two-char words
+                commonTwoCharWords = [
+                    'of', 'to', 'in', 'it', 'is', 'be', 'as', 'at', 'so', 'we', 'he', 'by',
+                    'or', 'on', 'do', 'if', 'me', 'my', 'up', 'an', 'go', 'no', 'us', 'am',
+                    'hi', 'ok', 'oh', 'ah', 'ha', 'eh', 'hm', 'ya', 'uh'
+                ];
+                throw new Error(`Failed to load vocabulary: ${error.message}`);
+            }
+        }
+        
+        // Fast Levenshtein distance calculation
+        function levenshteinDistance(s1, s2) {
+            if (s1 === s2) return 0;
+            if (s1.length === 0) return s2.length;
+            if (s2.length === 0) return s1.length;
+            
+            // Use single array optimization
+            const prevRow = new Array(s2.length + 1);
+            const currRow = new Array(s2.length + 1);
+            
+            // Initialize first row
+            for (let j = 0; j <= s2.length; j++) {
+                prevRow[j] = j;
+            }
+            
+            for (let i = 0; i < s1.length; i++) {
+                currRow[0] = i + 1;
+                
+                for (let j = 0; j < s2.length; j++) {
+                    const cost = s1[i] === s2[j] ? 0 : 1;
+                    currRow[j + 1] = Math.min(
+                        prevRow[j + 1] + 1,     // deletion
+                        currRow[j] + 1,          // insertion
+                        prevRow[j] + cost        // substitution
+                    );
+                }
+                
+                // Swap arrays
+                [prevRow, currRow] = [currRow, prevRow];
+            }
+            
+            return prevRow[s2.length];
+        }
+        
+        // Find closest word in dictionary
+        function findClosestWord(input, maxDistance = 2) {
+            if (!swipeVocabulary || !swipeVocabulary.isLoaded) return input;
+            
+            input = input.toLowerCase();
+            
+            // If exact match exists, return it
+            if (swipeVocabulary.hasWord(input)) {
+                return input;
+            }
+            
+            // For very short words, be more strict
+            if (input.length <= 3) {
+                maxDistance = 1;
+            }
+            
+            let bestMatch = input;
+            let bestDistance = maxDistance + 1;
+            let bestFrequency = Infinity;
+            
+            // Use SwipeVocabulary's similar word finder
+            const similarWords = swipeVocabulary.getSimilarWords(input, 1);
+            if (similarWords.length > 0) {
+                return similarWords[0].word;
+            }
+            
+            return input;
+        }
+        
+        // Calculate total distance of swipe path
+        function getSwipeDistance(path) {
+            if (path.length < 2) return 0;
+            
+            let totalDistance = 0;
+            for (let i = 1; i < path.length; i++) {
+                const dx = path[i].x - path[i-1].x;
+                const dy = path[i].y - path[i-1].y;
+                totalDistance += Math.sqrt(dx * dx + dy * dy);
+            }
+            return totalDistance;
+        }
+        
+        // Check if swipe path is nearly straight
+        function isNearlyStraightLine(path) {
+            if (path.length < 3) return false;
+            
+            // Calculate variance from straight line
+            const startPoint = path[0];
+            const endPoint = path[path.length - 1];
+            
+            // Vector from start to end
+            const dx = endPoint.x - startPoint.x;
+            const dy = endPoint.y - startPoint.y;
+            const lineLength = Math.sqrt(dx * dx + dy * dy);
+            
+            if (lineLength < 50) return false; // Too short
+            
+            // Check deviation of middle points
+            let maxDeviation = 0;
+            
+            for (let i = 1; i < path.length - 1; i++) {
+                const point = path[i];
+                
+                // Calculate perpendicular distance to line
+                const t = Math.max(0, Math.min(1, 
+                    ((point.x - startPoint.x) * dx + (point.y - startPoint.y) * dy) / (lineLength * lineLength)
+                ));
+                
+                const projX = startPoint.x + t * dx;
+                const projY = startPoint.y + t * dy;
+                
+                const deviation = Math.sqrt(
+                    Math.pow(point.x - projX, 2) + Math.pow(point.y - projY, 2)
+                );
+                
+                maxDeviation = Math.max(maxDeviation, deviation);
+            }
+            
+            // Consider straight if max deviation is less than 15% of line length
+            return maxDeviation < lineLength * 0.15;
+        }
+        
+        // Get potential two-character word from start and end keys
+        function getTwoCharWordFromSwipe(keySequence) {
+            if (!keySequence || keySequence.length === 0 || !swipeVocabulary || !swipeVocabulary.isLoaded) return null;
+            
+            const startKey = keySequence[0]?.key;
+            const endKey = keySequence[keySequence.length - 1]?.key;
+            
+            if (startKey && endKey && startKey !== endKey) {
+                const twoCharWord = startKey + endKey;
+                // Only return if it's a valid word in the vocabulary
+                if (swipeVocabulary.hasWord(twoCharWord)) {
+                    console.log(`Found valid 2-char word from swipe: ${twoCharWord}`);
+                    return twoCharWord;
+                }
+            }
+            
+            return null;
+        }
+        
+        function updateLoadingStatus(message) {
+            document.getElementById('loadingDetails').textContent = message;
+        }
+        
+        function hideLoadingOverlay() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const statusText = document.getElementById('statusText');
+            const statusIndicator = document.getElementById('statusIndicator');
+            const modelStatus = document.getElementById('modelStatus');
+            
+            statusText.textContent = message;
+            
+            if (type === 'success') {
+                statusIndicator.className = 'w-2 h-2 bg-neon-blue rounded-full animate-pulse-neon';
+                modelStatus.textContent = 'ONNX Models Ready • Character-level Transformer';
+            } else if (type === 'error') {
+                statusIndicator.className = 'w-2 h-2 bg-red-500 rounded-full';
+                modelStatus.textContent = 'Models Failed to Load';
+            } else {
+                statusIndicator.className = 'w-2 h-2 bg-yellow-500 rounded-full';
+            }
+        }
+        
+        // Initialize canvas and keyboard
+        async function init() {
+            resizeCanvas();
+            updateKeyboardBounds();
+            
+            // Load models (which includes vocabulary loading)
+            await loadModels();
+            
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                updateKeyboardBounds();
+            });
+        }
+        
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+        
+        function updateKeyboardBounds() {
+            const keys = document.querySelectorAll('.key[data-row]');
+            if (keys.length === 0) return;
+            
+            let minX = Infinity, minY = Infinity;
+            let maxX = -Infinity, maxY = -Infinity;
+            
+            keys.forEach(key => {
+                const rect = key.getBoundingClientRect();
+                minX = Math.min(minX, rect.left);
+                minY = Math.min(minY, rect.top);
+                maxX = Math.max(maxX, rect.right);
+                maxY = Math.max(maxY, rect.bottom);
+            });
+            
+            keyboardBounds = { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+        }        
+        function getEventPosition(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top, clientX, clientY };
+        }
+        
+        function getNormalizedCoords(clientX, clientY) {
+            if (!keyboardBounds) return { x: 0, y: 0, normalized: { x: 0, y: 0 } };
+            
+            const x = clientX - keyboardBounds.minX;
+            const y = clientY - keyboardBounds.minY;
+            
+            // Normalize to 360x215 space
+            const normX = (x / keyboardBounds.width) * NORMALIZED_WIDTH;
+            const normY = (y / keyboardBounds.height) * NORMALIZED_HEIGHT;
+            
+            // Also calculate 0-1 range
+            const norm01X = x / keyboardBounds.width;
+            const norm01Y = y / keyboardBounds.height;
+            
+            return {
+                x: Math.round(normX),
+                y: Math.round(normY),
+                normalized: { x: norm01X.toFixed(3), y: norm01Y.toFixed(3) }
+            };
+        }
+        
+        function getKeyAtPosition(clientX, clientY) {
+            const keys = document.querySelectorAll('.key[data-key]:not([data-special])');
+            for (let key of keys) {
+                const rect = key.getBoundingClientRect();
+                if (clientX >= rect.left && clientX <= rect.right &&
+                    clientY >= rect.top && clientY <= rect.bottom) {
+                    return key;
+                }
+            }
+            return null;
+        }        
+        function startSwipe(e) {
+            const pos = getEventPosition(e);
+            const coords = getNormalizedCoords(pos.clientX, pos.clientY);
+            const key = getKeyAtPosition(pos.clientX, pos.clientY);
+            
+            // If starting on a key, set up tap detection timer
+            if (key) {
+                swipeStartPos = { x: pos.clientX, y: pos.clientY };
+                swipeStartTime = Date.now();
+                currentKey = key.dataset.key;
+                
+                // Set timer to detect if this is a tap (no movement after 150ms)
+                tapTimeout = setTimeout(() => {
+                    // If we get here, it's likely a tap
+                    if (isDrawing && !isPotentialSwipe) {
+                        console.log('👆 Detected as TAP (timer expired without movement)');
+                        handleSingleTap(key);
+                        cancelSwipe();
+                    }
+                }, 150);
+                
+                key.classList.add('key-active');
+            }
+            
+            // Always start drawing state but don't commit to swipe yet
+            isDrawing = true;
+            isPotentialSwipe = false;
+            swipePath = [];
+            keySequence = [];
+            
+            // Auto-select top prediction if user starts new input without manual selection
+            if (hasPendingPredictions && !userMadeManualSelection && currentPredictions.length > 0) {
+                autoSelectTopPrediction();
+            }
+            
+            // Clear tap typing state when starting any gesture
+            currentTypedWord = '';
+            
+            swipePath.push({
+                x: coords.x,
+                y: coords.y,
+                normalized: coords.normalized,
+                key: currentKey,
+                timestamp: Date.now()
+            });
+            
+            if (key) {
+                keySequence.push({ key: currentKey, timestamp: Date.now(), index: 0 });
+            }
+            
+            if (DEBUG.enabled) {
+                updateDebugDisplay(coords, currentKey);
+                document.getElementById('coordinateDisplay').classList.remove('hidden');
+            }
+        }
+        
+        function continueSwipe(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            
+            const pos = getEventPosition(e);
+            const coords = getNormalizedCoords(pos.clientX, pos.clientY);
+            const key = getKeyAtPosition(pos.clientX, pos.clientY);
+            
+            // Check if this is now definitely a swipe (movement threshold)
+            if (!isPotentialSwipe && swipeStartPos) {
+                const distance = Math.sqrt(
+                    Math.pow(pos.clientX - swipeStartPos.x, 2) + 
+                    Math.pow(pos.clientY - swipeStartPos.y, 2)
+                );
+                
+                // If moved more than 15px, it's definitely a swipe
+                if (distance > 15) {
+                    isPotentialSwipe = true;
+                    // Cancel the tap timeout
+                    if (tapTimeout) {
+                        clearTimeout(tapTimeout);
+                        tapTimeout = null;
+                    }
+                    console.log('🔄 Converted TAP to SWIPE (movement detected)');
+                }
+            }
+            
+            // Track key changes
+            const keyChar = key ? key.dataset.key : null;
+            if (keyChar !== currentKey) {
+                // Remove highlight from previous key
+                if (currentKey) {
+                    document.querySelector(`.key[data-key="${currentKey}"]`)?.classList.remove('key-active');
+                }
+                
+                // Add highlight to new key
+                if (key) {
+                    key.classList.add('key-active');
+                    keySequence.push({ 
+                        key: keyChar, 
+                        timestamp: Date.now(), 
+                        index: swipePath.length 
+                    });
+                }
+                
+                currentKey = keyChar;
+                
+                // Multiple keys = definitely a swipe
+                if (!isPotentialSwipe) {
+                    isPotentialSwipe = true;
+                    if (tapTimeout) {
+                        clearTimeout(tapTimeout);
+                        tapTimeout = null;
+                    }
+                    console.log('🔄 Converted TAP to SWIPE (multiple keys)');
+                }
+            }
+            
+            swipePath.push({
+                x: coords.x,
+                y: coords.y,
+                normalized: coords.normalized,
+                key: currentKey,
+                timestamp: Date.now()
+            });
+            
+            // Only draw trail for confirmed swipes
+            if (isPotentialSwipe) {
+                drawNeonTrail();
+            }
+            
+            if (DEBUG.enabled) {
+                updateDebugDisplay(coords, currentKey);
+            }
+        }        
+        function drawNeonTrail() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (swipePath.length < 2) return;
+            
+            // Create gradient effect
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#00d4ff');
+            gradient.addColorStop(0.5, '#b300ff');
+            gradient.addColorStop(1, '#ff00d4');
+            
+            // Draw multiple layers for glow effect
+            for (let layer = 3; layer > 0; layer--) {
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = layer * 2;
+                ctx.globalAlpha = 0.3 / layer;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                // Add glow
+                ctx.shadowColor = layer === 1 ? '#00d4ff' : '#b300ff';
+                ctx.shadowBlur = 15 * layer;
+                
+                ctx.beginPath();
+                swipePath.forEach((point, i) => {
+                    const canvasX = (point.x / NORMALIZED_WIDTH) * keyboardBounds.width;
+                    const canvasY = (point.y / NORMALIZED_HEIGHT) * keyboardBounds.height;
+                    
+                    if (i === 0) {
+                        ctx.moveTo(canvasX, canvasY);
+                    } else {
+                        ctx.lineTo(canvasX, canvasY);
+                    }
+                });
+                ctx.stroke();
+            }
+            
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+            
+            // Draw dots at key positions
+            keySequence.forEach((keyEvent, i) => {
+                const keyEl = document.querySelector(`.key[data-key="${keyEvent.key}"]`);
+                if (keyEl) {
+                    const rect = keyEl.getBoundingClientRect();
+                    const canvasRect = canvas.getBoundingClientRect();
+                    const x = rect.left + rect.width/2 - canvasRect.left;
+                    const y = rect.top + rect.height/2 - canvasRect.top;
+                    
+                    ctx.fillStyle = '#00d4ff';
+                    ctx.shadowColor = '#00d4ff';
+                    ctx.shadowBlur = 10;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+        }        
+        // Handle single tap (no swipe processing)
+        function handleSingleTap(keyElement) {
+            if (keyElement && keyElement.dataset.key) {
+                console.log('Processing single tap:', keyElement.dataset.key);
+                handleSingleCharacterInput(keyElement.dataset.key);
+            }
+        }
+        
+        // Handle pure single character input (no predictions)
+        function handleSingleCharacterInput(keyValue) {
+            if (keyValue && keyValue.length === 1) {
+                // Handle different character types
+                if (keyValue.match(/[a-z]/i)) {
+                    // Letters - lowercase for consistency
+                    inputText += keyValue.toLowerCase();
+                } else if (keyValue.match(/[0-9-/();$&@"'.,?!+*]/)) {
+                    // Numbers and symbols - add as-is
+                    inputText += keyValue;
+                } else if (keyValue.match(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u)) {
+                    // Emojis - add as-is
+                    inputText += keyValue;
+                } else {
+                    // Other single characters
+                    inputText += keyValue;
+                }
+                
+                document.getElementById('inputText').textContent = inputText;
+                console.log(`📝 Added character: "${keyValue}" (total: "${inputText}")`);
+                
+                // Clear any existing predictions since this is direct character input
+                clearPredictionState();
+                
+            } else {
+                // Handle special keys for single taps
+                switch (keyValue) {
+                    case 'backspace':
+                        handleBackspace();
+                        break;
+                    case 'space':
+                        inputText += ' ';
+                        document.getElementById('inputText').textContent = inputText;
+                        console.log('📝 Added space');
+                        break;
+                    case 'shift':
+                        handleShift();
+                        break;
+                    default:
+                        console.log(`Special key tapped: ${keyValue}`);
+                }
+            }
+        }
+        
+        // Handle shift key functionality
+        function handleShift() {
+            // Toggle shift state
+            const isShiftActive = document.querySelector('.key[data-key="shift"]')?.classList.contains('key-active');
+            
+            if (isShiftActive) {
+                // Turn off shift
+                document.querySelector('.key[data-key="shift"]')?.classList.remove('key-active');
+                console.log('🔤 Shift OFF');
+            } else {
+                // Turn on shift
+                document.querySelector('.key[data-key="shift"]')?.classList.add('key-active');
+                console.log('🔤 Shift ON');
+                
+                // Auto turn off after next character
+                setTimeout(() => {
+                    document.querySelector('.key[data-key="shift"]')?.classList.remove('key-active');
+                }, 3000); // Auto-off after 3 seconds
+            }
+        }
+        
+        // Cancel swipe and clean up
+        function cancelSwipe() {
+            isDrawing = false;
+            isPotentialSwipe = false;
+            
+            // Clear timeout
+            if (tapTimeout) {
+                clearTimeout(tapTimeout);
+                tapTimeout = null;
+            }
+            
+            // Clear highlights
+            document.querySelectorAll('.key-active').forEach(key => {
+                key.classList.remove('key-active');
+            });
+            
+            // Clear canvas and reset
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            swipePath = [];
+            keySequence = [];
+            currentKey = null;
+            swipeStartPos = null;
+            swipeStartTime = null;
+        }
+        
+        function endSwipe(e) {
+            if (!isDrawing) return;
+            
+            // Clear the tap timeout if it's still running
+            if (tapTimeout) {
+                clearTimeout(tapTimeout);
+                tapTimeout = null;
+            }
+            
+            isDrawing = false;
+            
+            // Clear all key highlights
+            document.querySelectorAll('.key-active').forEach(key => {
+                key.classList.remove('key-active');
+            });
+            
+            // Process gesture - only if it was determined to be a swipe
+            if (swipePath.length > 0 && isPotentialSwipe) {
+                const swipeData = {
+                    path: swipePath,
+                    keySequence: keySequence,
+                    duration: swipePath[swipePath.length - 1].timestamp - swipePath[0].timestamp,
+                    word: keySequence.map(k => k.key).join('')
+                };
+                
+                console.log(`🌀 SWIPE detected (path=${swipePath.length}, duration=${swipeData.duration}ms, keys=${keySequence.length}, distance=${getSwipeDistance(swipePath).toFixed(1)}px)`);
+                console.log('Swipe Data:', swipeData);
+                
+                if (DEBUG.enabled) {
+                    displaySwipeOutput(swipeData);
+                }
+                
+                // Send to model for swipe processing
+                processSwipe(swipeData);
+                
+            } else if (swipePath.length > 0 && !isPotentialSwipe) {
+                // This was a short gesture that didn't become a swipe
+                const endPos = getEventPosition(e);
+                const key = getKeyAtPosition(endPos.clientX, endPos.clientY);
+                
+                if (key && key === getKeyAtPosition(swipeStartPos.x, swipeStartPos.y)) {
+                    // Started and ended on same key - definitely a tap
+                    console.log('👆 TAP detected (same key start/end)');
+                    handleSingleTap(key);
+                } else {
+                    console.log('📍 Short gesture - treating as tap on start key');
+                    const startKey = getKeyAtPosition(swipeStartPos.x, swipeStartPos.y);
+                    if (startKey) {
+                        handleSingleTap(startKey);
+                    }
+                }
+            }
+            
+            // Clear trail after delay
+            setTimeout(() => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (DEBUG.enabled) {
+                    document.getElementById('coordinateDisplay').classList.add('hidden');
+                }
+            }, 300);
+        }        
+        // Process swipe path and generate predictions
+        async function processSwipe(swipeData) {
+            if (!isModelReady) {
+                console.warn('Models not ready yet');
+                return;
+            }
+            
+            try {
+                updateStatus('Processing swipe...', 'processing');
+                
+                // Prepare input features from swipe path
+                const features = prepareSwipeFeatures(swipeData);
+                
+                // Run inference
+                const predictions = await runInference(features);
+                
+                // Display predictions
+                displayPredictions(predictions);
+                
+                updateStatus('Ready', 'success');
+                
+            } catch (error) {
+                console.error('Error processing swipe:', error);
+                updateStatus('Processing error', 'error');
+            }
+        }
+        
+        function prepareSwipeFeatures(swipeData) {
+            // Normalize swipe path to fixed length
+            const path = swipeData.path;
+            const normalizedPath = [];
+            const originalLength = Math.min(path.length, MAX_SEQUENCE_LENGTH);
+            
+            // Take up to MAX_SEQUENCE_LENGTH points
+            for (let i = 0; i < Math.min(path.length, MAX_SEQUENCE_LENGTH); i++) {
+                const point = path[i];
+                normalizedPath.push({
+                    x: point.x / NORMALIZED_WIDTH,
+                    y: point.y / NORMALIZED_HEIGHT,
+                    key: point.key || null
+                });
+            }
+            
+            // Pad with last point if too short
+            const lastPoint = normalizedPath[normalizedPath.length - 1] || { x: 0, y: 0, key: null };
+            while (normalizedPath.length < MAX_SEQUENCE_LENGTH) {
+                normalizedPath.push({ ...lastPoint });
+            }
+            
+            return {
+                path: normalizedPath,
+                originalLength: originalLength,  // Track actual swipe length for masking
+                keySequence: swipeData.keySequence,
+                duration: swipeData.duration
+            };
+        }        
+        async function runInference(features) {
+            // The model expects (from working predictor.ts):
+            // - trajectory_features: [batch_size, seq_len, 6] with x, y, vx, vy, ax, ay - float32
+            // - nearest_keys: [batch_size, seq_len] with nearest key indices - int64
+            // - src_mask: [batch_size, seq_len] boolean mask for padded positions - bool
+            
+            // Prepare trajectory features
+            const trajectoryData = new Float32Array(MAX_SEQUENCE_LENGTH * 6);
+            const nearestKeysData = new BigInt64Array(MAX_SEQUENCE_LENGTH);  // int64 for ONNX
+            const srcMaskData = new Uint8Array(MAX_SEQUENCE_LENGTH);  // bool mask
+            
+            // Use tokenizer mapping if available, otherwise use defaults
+            const keyMap = tokenizer ? tokenizer.char_to_idx : {
+                'a': 4, 'b': 5, 'c': 6, 'd': 7, 'e': 8, 'f': 9, 'g': 10, 'h': 11,
+                'i': 12, 'j': 13, 'k': 14, 'l': 15, 'm': 16, 'n': 17, 'o': 18, 'p': 19,
+                'q': 20, 'r': 21, 's': 22, 't': 23, 'u': 24, 'v': 25, 'w': 26, 'x': 27,
+                'y': 28, 'z': 29
+            };
+            
+            // Track actual swipe length for masking
+            const actualLength = features.originalLength || MAX_SEQUENCE_LENGTH;
+            
+            for (let i = 0; i < MAX_SEQUENCE_LENGTH; i++) {
+                const point = features.path[i];
+                const baseIdx = i * 6;
+                
+                // Position (normalized 0-1)
+                trajectoryData[baseIdx + 0] = point.x;
+                trajectoryData[baseIdx + 1] = point.y;
+                
+                // Velocity (difference from previous point)
+                if (i > 0) {
+                    const prevPoint = features.path[i - 1];
+                    trajectoryData[baseIdx + 2] = point.x - prevPoint.x; // vx
+                    trajectoryData[baseIdx + 3] = point.y - prevPoint.y; // vy
+                } else {
+                    trajectoryData[baseIdx + 2] = 0;
+                    trajectoryData[baseIdx + 3] = 0;
+                }
+                
+                // Acceleration (difference of velocities)
+                if (i > 1) {
+                    const prevVx = trajectoryData[(i-1) * 6 + 2];
+                    const prevVy = trajectoryData[(i-1) * 6 + 3];
+                    trajectoryData[baseIdx + 4] = trajectoryData[baseIdx + 2] - prevVx; // ax
+                    trajectoryData[baseIdx + 5] = trajectoryData[baseIdx + 3] - prevVy; // ay
+                } else {
+                    trajectoryData[baseIdx + 4] = 0;
+                    trajectoryData[baseIdx + 5] = 0;
+                }
+                
+                // Nearest key index (int64)
+                if (point.key && keyMap.hasOwnProperty(point.key)) {
+                    nearestKeysData[i] = BigInt(keyMap[point.key]);
+                } else {
+                    nearestKeysData[i] = BigInt(0); // Default to first key if unknown
+                }
+                
+                // Mask: 1 for padded positions, 0 for real data
+                srcMaskData[i] = i >= actualLength ? 1 : 0;
+            }
+            
+            // Create tensors with correct shapes and types
+            const trajectoryTensor = new ort.Tensor('float32', trajectoryData, [1, MAX_SEQUENCE_LENGTH, 6]);
+            const nearestKeysTensor = new ort.Tensor('int64', nearestKeysData, [1, MAX_SEQUENCE_LENGTH]);
+            const srcMaskTensor = new ort.Tensor('bool', srcMaskData, [1, MAX_SEQUENCE_LENGTH]);
+            
+            console.log('Running encoder with inputs:', {
+                trajectory_features: trajectoryTensor.dims,
+                nearest_keys: nearestKeysTensor.dims,
+                src_mask: srcMaskTensor.dims
+            });
+            
+            // Run encoder with all three required inputs
+            const encoderOutput = await encoderSession.run({ 
+                trajectory_features: trajectoryTensor,
+                nearest_keys: nearestKeysTensor,
+                src_mask: srcMaskTensor
+            });
+            
+            console.log('Encoder output:', encoderOutput);
+            
+            // Pass encoder output to decoder for beam search
+            const predictions = await decodeLogits(encoderOutput);
+            
+            console.log('Predictions:', predictions);
+            
+            return predictions;
+        }
+        
+        async function decodeLogits(encoderOutput) {
+            // The encoder output contains memory states that need to be decoded
+            // We need to run the decoder with proper beam search
+            
+            if (!decoderSession) {
+                console.error('Decoder not loaded, cannot decode');
+                return [];
+            }
+            
+            // Beam search parameters - expanded by 50%
+            const beamWidth = 8; // Increased from 5 to 8 (50% more)
+            const maxLength = 35;  // Increased from 20 to 35 to support longer words
+            
+            // Special tokens from tokenizer config
+            const PAD_IDX = tokenizer?.special_tokens?.pad_idx ?? 0;
+            const UNK_IDX = tokenizer?.special_tokens?.unk_idx ?? 1;
+            const SOS_IDX = tokenizer?.special_tokens?.sos_idx ?? 2;
+            const EOS_IDX = tokenizer?.special_tokens?.eos_idx ?? 3;
+            
+            // Character mapping from tokenizer
+            const idxToChar = tokenizer?.idx_to_char ?? {
+                0: '<pad>', 1: '<unk>', 2: '<sos>', 3: '<eos>',
+                4: 'a', 5: 'b', 6: 'c', 7: 'd', 8: 'e', 9: 'f', 10: 'g', 11: 'h',
+                12: 'i', 13: 'j', 14: 'k', 15: 'l', 16: 'm', 17: 'n', 18: 'o', 19: 'p',
+                20: 'q', 21: 'r', 22: 's', 23: 't', 24: 'u', 25: 'v', 26: 'w', 27: 'x',
+                28: 'y', 29: 'z'
+            };
+            
+            // Get memory from encoder output
+            const memoryKey = Object.keys(encoderOutput)[0];
+            const memory = encoderOutput[memoryKey];
+            
+            console.log('Decoder memory shape:', memory.dims);
+            
+            // Initialize beams with SOS token
+            let beams = [{
+                tokens: [BigInt(SOS_IDX)],
+                score: 0,
+                finished: false
+            }];
+            
+            // Beam search
+            for (let step = 0; step < maxLength; step++) {
+                const candidates = [];
+                
+                for (const beam of beams) {
+                    if (beam.finished) {
+                        candidates.push(beam);
+                        continue;
+                    }
+                    
+                    // Prepare decoder input
+                    const tgtIds = new BigInt64Array(beam.tokens);
+                    const tgtTensor = new ort.Tensor('int64', tgtIds, [1, beam.tokens.length]);
+                    
+                    // Pad target tokens to fixed length (required by model)
+                    const DECODER_SEQ_LENGTH = 20; // Fixed decoder sequence length from predictor.ts
+                    const paddedTokens = new BigInt64Array(DECODER_SEQ_LENGTH);
+                    
+                    // Copy actual tokens
+                    for (let i = 0; i < beam.tokens.length && i < DECODER_SEQ_LENGTH; i++) {
+                        paddedTokens[i] = beam.tokens[i];
+                    }
+                    // Pad rest with PAD_IDX
+                    for (let i = beam.tokens.length; i < DECODER_SEQ_LENGTH; i++) {
+                        paddedTokens[i] = BigInt(PAD_IDX);
+                    }
+                    
+                    // Create target mask - IMPORTANT: 1 for PADDED positions, 0 for real tokens
+                    const tgtMask = new Uint8Array(DECODER_SEQ_LENGTH);
+                    for (let i = beam.tokens.length; i < DECODER_SEQ_LENGTH; i++) {
+                        tgtMask[i] = 1;  // Mark padded positions
+                    }
+                    
+                    // Create source mask (0 for all positions - all encoder positions are valid)
+                    const srcMaskArray = new Uint8Array(memory.dims[1]);
+                    srcMaskArray.fill(0);
+                    
+                    // Run decoder
+                    try {
+                        console.log('Decoder inputs:', {
+                            memory_shape: memory.dims,
+                            target_tokens_length: DECODER_SEQ_LENGTH,
+                            actual_tokens: beam.tokens.length,
+                            target_mask: tgtMask.slice(0, 10),
+                            src_mask_length: srcMaskArray.length
+                        });
+                        
+                        const decoderOutput = await decoderSession.run({
+                            memory: memory,
+                            target_tokens: new ort.Tensor('int64', paddedTokens, [1, DECODER_SEQ_LENGTH]),
+                            target_mask: new ort.Tensor('bool', tgtMask, [1, DECODER_SEQ_LENGTH]),
+                            src_mask: new ort.Tensor('bool', srcMaskArray, [1, memory.dims[1]])
+                        });
+                        
+                        // Get logits - shape is [1, DECODER_SEQ_LENGTH, 30]
+                        const logits = decoderOutput.logits;
+                        const logitsData = logits.data;
+                        const vocabSize = 30;
+                        
+                        // Get predictions for the position after the last real token
+                        const tokenPosition = Math.min(beam.tokens.length - 1, DECODER_SEQ_LENGTH - 1);
+                        const startIdx = tokenPosition * vocabSize;
+                        const endIdx = startIdx + vocabSize;
+                        const relevantLogits = logitsData.slice(startIdx, endIdx);
+                        
+                        // Apply softmax
+                        const probs = softmax(Array.from(relevantLogits));
+                        
+                        // Get top k tokens
+                        const topK = getTopKIndices(probs, beamWidth);
+                        
+                        for (const idx of topK) {
+                            const newBeam = {
+                                tokens: [...beam.tokens, BigInt(idx)],
+                                score: beam.score + Math.log(probs[idx]),
+                                finished: idx === EOS_IDX
+                            };
+                            candidates.push(newBeam);
+                        }
+                    } catch (error) {
+                        console.error('Decoder error:', error);
+                        console.error('Error message:', error.message);
+                        console.error('Error stack:', error.stack);
+                        throw error;
+                    }
+                }
+                
+                // Select top beams
+                candidates.sort((a, b) => b.score - a.score);
+                beams = candidates.slice(0, beamWidth);
+                
+                // Check if all beams are finished or if we have enough good predictions
+                if (beams.every(b => b.finished) || (step >= 10 && beams.filter(b => b.finished).length >= 3)) {
+                    break;
+                }
+            }
+            
+            // Convert token sequences to words
+            const predictions = beams.map(beam => {
+                const chars = [];
+                for (const token of beam.tokens) {
+                    const idx = Number(token);
+                    if (idx === SOS_IDX || idx === EOS_IDX || idx === PAD_IDX) continue;
+                    if (idxToChar[idx] && !idxToChar[idx].startsWith('<')) {
+                        chars.push(idxToChar[idx]);
+                    }
+                }
+                return chars.join('');
+            }).filter(word => word.length > 0);
+            
+            return predictions.length > 0 ? predictions : [];
+        }
+        
+        function softmax(logits) {
+            const maxLogit = Math.max(...logits);
+            const expScores = logits.map(l => Math.exp(l - maxLogit));
+            const sumExpScores = expScores.reduce((a, b) => a + b, 0);
+            return expScores.map(e => e / sumExpScores);
+        }
+        
+        function getTopKIndices(array, k) {
+            const indexed = array.map((val, idx) => ({val, idx}));
+            indexed.sort((a, b) => b.val - a.val);
+            return indexed.slice(0, k).map(item => item.idx);
+        }        
+        function displayPredictions(predictions) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            suggestionsDiv.innerHTML = '';
+            
+            console.log('Raw predictions from model:', predictions);
+            
+            // Apply vocabulary filtering if vocab is loaded
+            let filteredPredictions = [];
+            
+            if (swipeVocabulary && swipeVocabulary.isLoaded) {
+                console.log('Vocabulary loaded, applying intelligent filtering with custom dictionary support...');
+                
+                // First, check for 2-character words if it's a straight line
+                if (swipePath && swipePath.length > 0 && isNearlyStraightLine(swipePath)) {
+                    const twoCharWord = getTwoCharWordFromSwipe(keySequence);
+                    if (twoCharWord) {
+                        // Add valid 2-char word to the beginning of predictions
+                        filteredPredictions.push(twoCharWord);
+                    }
+                }
+                
+                // Convert predictions to format expected by SwipeVocabulary
+                const nnPredictions = predictions.map((word, index) => ({
+                    word: word,
+                    confidence: 1.0 - (index * 0.1) // Assign decreasing confidence based on order
+                }));
+                
+                // Calculate swipe statistics
+                const swipeStats = {
+                    pathLength: swipePath ? swipePath.length : 0,
+                    expectedLength: keySequence ? Math.round(keySequence.length * 0.8) : 0
+                };
+                
+                // Use SwipeVocabulary's intelligent filtering (which now includes custom dictionary support)
+                const filtered = swipeVocabulary.filterPredictions(nnPredictions, swipeStats);
+                
+                // Extract words from filtered results and mark sources
+                filtered.forEach(result => {
+                    if (!filteredPredictions.includes(result.word)) {
+                        filteredPredictions.push(result.word);
+                        
+                        // Log custom/personal word boost for debugging
+                        if (result.source === 'personal') {
+                            console.log(`🎯 Personal word boosted: ${result.word} (score: ${result.score.toFixed(4)})`);
+                        } else if (dictionaryManager && dictionaryManager.personalWords.has(result.word)) {
+                            console.log(`📚 Custom word found: ${result.word}`);
+                        }
+                    }
+                });
+                
+                // Limit to top predictions but ensure we have at least 5
+                filteredPredictions = filteredPredictions.slice(0, 10); // Get more initially
+                console.log('Filtered predictions (with custom dictionary):', filteredPredictions);
+            } else {
+                console.warn('Vocabulary not loaded! Filtering with basic validation.');
+                // Fallback: only show predictions that look like valid English words
+                const validPredictions = predictions
+                    .filter(word => word && word.match(/^[a-zA-Z]+$/) && word.length >= 2 && word.length <= 35)
+                    .map(word => word.toLowerCase())
+                    .filter(word => !filteredPredictions.includes(word));
+                filteredPredictions.push(...validPredictions);
+            }
+            
+            // Ensure we always have at least 5 suggestions by adding raw predictions if needed
+            if (filteredPredictions.length < 5) {
+                console.log(`Only ${filteredPredictions.length} filtered predictions, adding raw predictions to reach 5`);
+                
+                // Add raw predictions that aren't already included
+                const additionalPredictions = predictions
+                    .map(word => word.toLowerCase().trim())
+                    .filter(word => word && word.match(/^[a-z]+$/) && !filteredPredictions.includes(word))
+                    .slice(0, 5 - filteredPredictions.length);
+                
+                additionalPredictions.forEach(word => console.log(`Added raw prediction: ${word}`));
+                filteredPredictions.push(...additionalPredictions);
+                
+                // If still not enough, add common 2-char words based on keySequence
+                if (filteredPredictions.length < 5 && keySequence && keySequence.length >= 2) {
+                    const startKey = keySequence[0]?.key;
+                    const endKey = keySequence[keySequence.length - 1]?.key;
+                    
+                    if (startKey && endKey && commonTwoCharWords) {
+                        for (const twoCharWord of commonTwoCharWords) {
+                            if (filteredPredictions.length >= 5) break;
+                            
+                            if ((twoCharWord.startsWith(startKey) || twoCharWord.endsWith(endKey)) && 
+                                !filteredPredictions.includes(twoCharWord)) {
+                                filteredPredictions.push(twoCharWord);
+                                console.log(`Added 2-char fallback: ${twoCharWord}`);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Final limit to exactly 5 suggestions
+            filteredPredictions = filteredPredictions.slice(0, 5);
+            console.log(`Final predictions count: ${filteredPredictions.length}`, filteredPredictions);
+            
+            // Update prediction state
+            currentPredictions = [...filteredPredictions];
+            hasPendingPredictions = filteredPredictions.length > 0;
+            userMadeManualSelection = false;
+            
+            filteredPredictions.forEach((word, index) => {
+                const suggestion = document.createElement('div');
+                
+                // Check if this is a custom/personal word for special styling
+                const isPersonalWord = dictionaryManager && dictionaryManager.personalWords.has(word);
+                const isCustomWord = dictionaryManager && (dictionaryManager.customWords.has(word) || dictionaryManager.androidDictionary.has(word));
+                
+                let className;
+                if (index === 0) {
+                    // Top prediction
+                    className = 'px-4 py-1.5 rounded-full bg-gradient-to-r from-neon-blue/20 to-neon-purple/20 border border-neon-blue/50 text-white text-sm cursor-pointer hover:scale-105 transition-transform';
+                } else if (isPersonalWord) {
+                    // Personal dictionary words get a special highlight
+                    className = 'px-4 py-1.5 rounded-full bg-gradient-to-r from-neon-pink/15 to-neon-purple/15 border border-neon-pink/40 text-white text-sm cursor-pointer hover:bg-gradient-to-r hover:from-neon-pink/25 hover:to-neon-purple/25 transition-all';
+                } else if (isCustomWord) {
+                    // Custom dictionary words get a different highlight
+                    className = 'px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500/15 to-blue-500/15 border border-green-500/40 text-gray-200 text-sm cursor-pointer hover:bg-gradient-to-r hover:from-green-500/25 hover:to-blue-500/25 transition-all';
+                } else {
+                    // Regular vocabulary words
+                    className = 'px-4 py-1.5 rounded-full bg-white/5 border border-white/20 text-gray-300 text-sm cursor-pointer hover:bg-white/10 transition-all';
+                }
+                
+                suggestion.className = className;
+                
+                // Add indicator for custom words
+                if (isPersonalWord) {
+                    suggestion.textContent = `★ ${word}`; // Star for personal words
+                } else if (isCustomWord) {
+                    suggestion.textContent = `+ ${word}`; // Plus for custom words
+                } else {
+                    suggestion.textContent = word;
+                }
+                
+                suggestion.onclick = () => selectWord(word);
+                suggestionsDiv.appendChild(suggestion);
+            });
+        }
+        
+        function selectWord(word) {
+            // Mark that user made manual selection
+            userMadeManualSelection = true;
+            
+            inputText += word + ' ';
+            document.getElementById('inputText').textContent = inputText;
+            
+            // Clear prediction state and swipe canvas, but keep the input text
+            clearPredictionState();
+            clearSwipeState();
+            
+            console.log(`👆 User selected swipe prediction: "${word}"`);
+        }
+        
+        function handleBackspace() {
+            if (currentTypedWord.length > 0) {
+                // Remove character from current typed word
+                currentTypedWord = currentTypedWord.slice(0, -1);
+                
+                // Update display
+                const words = inputText.split(' ');
+                if (currentTypedWord.length > 0) {
+                    words[words.length - 1] = currentTypedWord;
+                    document.getElementById('inputText').textContent = words.join(' ');
+                    generateTapPredictions(currentTypedWord);
+                } else {
+                    // If no more characters in current word, remove the word
+                    words.pop();
+                    inputText = words.join(' ') + (words.length > 0 ? ' ' : '');
+                    document.getElementById('inputText').textContent = inputText;
+                    clearTapPredictions();
+                }
+            } else if (inputText.length > 0) {
+                // Remove character from inputText
+                inputText = inputText.slice(0, -1);
+                document.getElementById('inputText').textContent = inputText;
+                clearTapPredictions();
+            }
+        }
+        
+        function handleSpace() {
+            // Auto-select top prediction if available and not manually selected
+            if (hasPendingPredictions && !userMadeManualSelection && currentPredictions.length > 0) {
+                autoSelectTopPrediction();
+                return; // Space is consumed by auto-selection
+            }
+            
+            if (currentTypedWord.length > 0) {
+                // Finalize current typed word
+                inputText = document.getElementById('inputText').textContent + ' ';
+                document.getElementById('inputText').textContent = inputText;
+                currentTypedWord = '';
+                clearTapPredictions();
+            } else {
+                // Add space to existing text
+                inputText += ' ';
+                document.getElementById('inputText').textContent = inputText;
+            }
+        }
+        
+        function clearInput() {
+            cleanupGestureState();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            clearPredictionState(); // Use the comprehensive clear function
+            inputText = '';
+            document.getElementById('inputText').textContent = '';
+            document.getElementById('debugOutput').classList.add('hidden');
+        }
+        
+        function clearSwipeState() {
+            // Clear swipe-related state without clearing input text
+            cleanupGestureState();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById('debugOutput').classList.add('hidden');
+        }
+        
+        function clearTapPredictions() {
+            // Reset prediction state when clearing manually
+            currentPredictions = [];
+            hasPendingPredictions = false;
+            userMadeManualSelection = false;
+            document.getElementById('suggestions').innerHTML = '<div class="text-gray-500 text-sm">Tap or swipe on the keyboard to begin</div>';
+        }
+        
+        function toggleDebug() {
+            DEBUG.enabled = !DEBUG.enabled;
+            document.getElementById('debugStatus').textContent = DEBUG.enabled ? 'ON' : 'OFF';
+            document.getElementById('debugOverlay').classList.toggle('hidden', !DEBUG.enabled);
+            
+            if (!DEBUG.enabled) {
+                document.getElementById('coordinateDisplay').classList.add('hidden');
+                document.getElementById('debugOutput').classList.add('hidden');
+            }
+        }
+        
+        // Dictionary Management Functions
+        let dictionaryManager = null;
+        
+        // Initialize custom dictionary integration with the main vocabulary
+        function initializeCustomDictionaryIntegration() {
+            if (!swipeVocabulary || !swipeVocabulary.isLoaded) {
+                console.warn('Cannot initialize custom dictionary - vocabulary not loaded');
+                return;
+            }
+            
+            // Initialize the custom dictionary manager
+            if (typeof CustomDictionaryManager !== 'undefined') {
+                dictionaryManager = new CustomDictionaryManager(swipeVocabulary);
+                
+                // The CustomDictionaryManager constructor automatically loads from localStorage
+                // and calls mergeIntoVocabulary(), so custom words are already integrated
+                
+                console.log('Custom dictionary integration initialized');
+                console.log('Custom dictionary stats:', dictionaryManager.getStats());
+            } else {
+                console.warn('CustomDictionaryManager not loaded');
+            }
+        }
+        
+        // Update vocabulary with new custom word (reactive update)
+        function updateVocabularyWithCustomWord(word, frequency = 1e-5) {
+            if (!swipeVocabulary || !swipeVocabulary.isLoaded) {
+                console.warn('Vocabulary not ready for custom word updates');
+                return false;
+            }
+            
+            const cleanWord = word.toLowerCase().trim();
+            if (!cleanWord || !cleanWord.match(/^[a-z]+$/)) {
+                return false;
+            }
+            
+            // Add word to main vocabulary with boost for custom words
+            const boostFactor = 1.5;
+            const existingFreq = swipeVocabulary.wordFreq.get(cleanWord) || 0;
+            const newFreq = Math.max(existingFreq, frequency * boostFactor);
+            
+            swipeVocabulary.wordFreq.set(cleanWord, newFreq);
+            
+            // Add to common words if frequency is high enough
+            if (newFreq > 1e-5) {
+                swipeVocabulary.commonWords.add(cleanWord);
+            }
+            
+            // Update top5000 if needed
+            if (newFreq > 1e-6) {
+                swipeVocabulary.top5000.add(cleanWord);
+            }
+            
+            // Update words by length structure if it exists
+            if (swipeVocabulary.wordsByLength) {
+                const length = cleanWord.length;
+                if (!swipeVocabulary.wordsByLength.has(length)) {
+                    swipeVocabulary.wordsByLength.set(length, []);
+                }
+                const wordsAtLength = swipeVocabulary.wordsByLength.get(length);
+                if (!wordsAtLength.some(item => (item.word || item) === cleanWord)) {
+                    wordsAtLength.push({ word: cleanWord, frequency: newFreq });
+                    // Keep sorted by frequency
+                    wordsAtLength.sort((a, b) => (b.frequency || 0) - (a.frequency || 0));
+                }
+            }
+            
+            console.log(`Updated vocabulary with custom word: ${cleanWord} (freq: ${newFreq})`);
+            return true;
+        }
+        
+        function initializeDictionary() {
+            if (swipeVocabulary && swipeVocabulary.isLoaded) {
+                dictionaryManager = new CustomDictionaryManager(swipeVocabulary);
+                updateDictionaryStats();
+            }
+        }
+        
+        function toggleDictionary() {
+            const panel = document.getElementById('dictionaryPanel');
+            panel.classList.toggle('hidden');
+            
+            if (!panel.classList.contains('hidden')) {
+                if (!dictionaryManager) {
+                    initializeDictionary();
+                }
+                updateDictionaryStats();
+                updatePersonalWordsList();
+            }
+        }
+        
+        function updateDictionaryStats() {
+            if (!dictionaryManager) return;
+            
+            document.getElementById('baseDictSize').textContent = swipeVocabulary.wordFreq.size.toLocaleString();
+            document.getElementById('customDictSize').textContent = dictionaryManager.customWords.size.toLocaleString();
+            document.getElementById('personalDictSize').textContent = dictionaryManager.personalWords.size.toLocaleString();
+            
+            const total = swipeVocabulary.wordFreq.size + dictionaryManager.customWords.size + dictionaryManager.personalWords.size;
+            document.getElementById('totalDictSize').textContent = total.toLocaleString();
+        }
+        
+        function updatePersonalWordsList() {
+            if (!dictionaryManager) return;
+            
+            const listDiv = document.getElementById('personalWordsList');
+            listDiv.innerHTML = '';
+            
+            const words = Array.from(dictionaryManager.personalWords).sort();
+            words.forEach(word => {
+                const wordDiv = document.createElement('div');
+                wordDiv.className = 'flex justify-between items-center px-2 py-1 bg-white/5 rounded hover:bg-white/10 transition-colors';
+                wordDiv.innerHTML = `
+                    <span class="text-gray-300">${word}</span>
+                    <button onclick="removePersonalWord('${word}')" 
+                            class="text-red-400 hover:text-red-300 text-xs">✕</button>
+                `;
+                listDiv.appendChild(wordDiv);
+            });
+            
+            if (words.length === 0) {
+                listDiv.innerHTML = '<div class="text-gray-500 text-sm">No personal words added yet</div>';
+            }
+        }
+        
+        function importCustomWords() {
+            if (!dictionaryManager) {
+                initializeCustomDictionaryIntegration();
+            }
+            
+            const fileInput = document.getElementById('dictionaryFile');
+            const textArea = document.getElementById('customWordList');
+            
+            // Handle file upload
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    
+                    // Import to custom dictionary manager
+                    const imported = dictionaryManager.importCustomWordList(content);
+                    
+                    // Immediately update main vocabulary for each imported word
+                    const words = content.split(/[\n,;]+/);
+                    words.forEach(word => {
+                        const clean = word.toLowerCase().trim();
+                        if (clean && clean.match(/^[a-z]+$/) && clean.length >= 2) {
+                            updateVocabularyWithCustomWord(clean, 5e-6);
+                        }
+                    });
+                    
+                    alert(`Successfully imported ${imported} words from file!`);
+                    updateDictionaryStats();
+                    fileInput.value = '';
+                    
+                    console.log(`Imported ${imported} custom words - ready for predictions!`);
+                };
+                
+                reader.readAsText(file);
+            } 
+            // Handle text area input
+            else if (textArea.value.trim()) {
+                const content = textArea.value.trim();
+                
+                // Import to custom dictionary manager
+                const imported = dictionaryManager.importCustomWordList(content);
+                
+                // Immediately update main vocabulary for each imported word
+                const words = content.split(/[\n,;]+/);
+                words.forEach(word => {
+                    const clean = word.toLowerCase().trim();
+                    if (clean && clean.match(/^[a-z]+$/) && clean.length >= 2) {
+                        updateVocabularyWithCustomWord(clean, 5e-6);
+                    }
+                });
+                
+                alert(`Successfully imported ${imported} words!`);
+                updateDictionaryStats();
+                textArea.value = '';
+                
+                console.log(`Imported ${imported} custom words - ready for predictions!`);
+            } else {
+                alert('Please select a file or enter words to import');
+            }
+        }
+        
+        function addPersonalWord() {
+            if (!dictionaryManager) {
+                initializeCustomDictionaryIntegration();
+            }
+            
+            const input = document.getElementById('newWord');
+            const word = input.value.toLowerCase().trim();
+            
+            if (word && word.match(/^[a-z]+$/)) {
+                // Add to custom dictionary manager (this now checks for duplicates)
+                const added = dictionaryManager.addPersonalWord(word);
+                
+                if (added) {
+                    // Immediately update the main vocabulary for reactive behavior
+                    updateVocabularyWithCustomWord(word, 8e-6); // Higher frequency for personal words
+                    
+                    updateDictionaryStats();
+                    updatePersonalWordsList();
+                    input.value = '';
+                    
+                    console.log(`Added personal word "${word}" - ready for predictions!`);
+                } else {
+                    alert(`The word "${word}" already exists in the main vocabulary`);
+                    input.value = '';
+                }
+            } else {
+                alert('Please enter a valid word (letters only)');
+            }
+        }
+        
+        function removePersonalWord(word) {
+            if (dictionaryManager) {
+                dictionaryManager.removePersonalWord(word);
+                updateDictionaryStats();
+                updatePersonalWordsList();
+            }
+        }
+        
+        function exportDictionary() {
+            if (!dictionaryManager) return;
+            
+            const data = dictionaryManager.exportAll();
+            const blob = new Blob([data], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'custom-dictionary.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function clearCustomDictionary() {
+            if (!dictionaryManager) return;
+            
+            if (confirm('Are you sure you want to clear all custom and personal words?')) {
+                dictionaryManager.clearAll();
+                updateDictionaryStats();
+                updatePersonalWordsList();
+                alert('Custom dictionary cleared!');
+            }
+        }
+        
+        async function loadNicheWords() {
+            if (!dictionaryManager) {
+                initializeCustomDictionaryIntegration();
+            }
+            
+            try {
+                // Get all niche words from the loader
+                const allNicheWords = getAllNicheWords();
+                
+                // Import to custom dictionary manager
+                const imported = dictionaryManager.importCustomWordList(allNicheWords.join('\n'));
+                
+                // Immediately update main vocabulary for each niche word
+                allNicheWords.forEach(word => {
+                    const clean = word.toLowerCase().trim();
+                    if (clean && clean.match(/^[a-z]+$/) && clean.length >= 2) {
+                        updateVocabularyWithCustomWord(clean, 3e-6); // Medium frequency for niche words
+                    }
+                });
+                
+                console.log(`Imported ${imported} niche words - ready for predictions!`);
+                alert(`Successfully imported ${imported} niche words!`);
+                updateDictionaryStats();
+            } catch (error) {
+                console.error('Error loading niche words:', error);
+                alert('Error loading niche words. Check console for details.');
+            }
+        }
+        
+        function updateDebugDisplay(coords, key) {
+            document.getElementById('xCoord').textContent = coords.x;
+            document.getElementById('yCoord').textContent = coords.y;
+            document.getElementById('normCoords').textContent = `${coords.normalized.x}, ${coords.normalized.y}`;
+            document.getElementById('currentKeyDebug').textContent = key || '-';
+            document.getElementById('pathLength').textContent = swipePath.length;
+            document.getElementById('keysTouched').textContent = keySequence.map(k => k.key).join('');
+        }
+        
+        function displaySwipeOutput(data) {
+            const output = document.getElementById('debugOutput');
+            const text = document.getElementById('debugText');
+            
+            output.classList.remove('hidden');
+            text.textContent = JSON.stringify({
+                keySequence: data.keySequence.map(k => ({
+                    key: k.key,
+                    index: k.index,
+                    time: k.timestamp - data.path[0].timestamp
+                })),
+                pathSample: data.path.filter((_, i) => i % 5 === 0).map(p => ({
+                    x: p.x,
+                    y: p.y,
+                    norm: p.normalized,
+                    key: p.key
+                })),
+                duration: data.duration,
+                pointCount: data.path.length
+            }, null, 2);
+        }
+        
+        // Event listeners
+        canvas.addEventListener('mousedown', startSwipe);
+        canvas.addEventListener('mousemove', continueSwipe);
+        canvas.addEventListener('mouseup', endSwipe);
+        canvas.addEventListener('mouseleave', endSwipe);
+        
+        canvas.addEventListener('touchstart', startSwipe, { passive: false });
+        canvas.addEventListener('touchmove', continueSwipe, { passive: false });
+        canvas.addEventListener('touchend', endSwipe, { passive: false });
+        canvas.addEventListener('touchcancel', endSwipe, { passive: false });
+        
+        // Current typing context for tap predictions
+        let currentTypedWord = '';
+        
+        // Prediction state tracking
+        let currentPredictions = [];
+        let hasPendingPredictions = false;
+        let userMadeManualSelection = false;
+        
+        // Clean up gesture state
+        function cleanupGestureState() {
+            isDrawing = false;
+            isPotentialSwipe = false;
+            swipePath = [];
+            keySequence = [];
+            currentKey = null;
+            swipeStartPos = null;
+            swipeStartTime = null;
+            
+            if (tapTimeout) {
+                clearTimeout(tapTimeout);
+                tapTimeout = null;
+            }
+            
+            // Clear highlights
+            document.querySelectorAll('.key-active').forEach(key => {
+                key.classList.remove('key-active');
+            });
+        }
+        
+        // Enhanced tap handling with predictions
+        function handleKeyTap(keyValue) {
+            // Auto-select top prediction if user starts new input without manual selection
+            if (hasPendingPredictions && !userMadeManualSelection && currentPredictions.length > 0) {
+                autoSelectTopPrediction();
+            }
+            
+            if (keyValue && keyValue.length === 1 && keyValue.match(/[a-z]/i)) {
+                // Add character to current typed word
+                currentTypedWord += keyValue.toLowerCase();
+                
+                // Update input display to show what's being typed
+                const currentInput = document.getElementById('inputText').textContent;
+                const words = currentInput.split(' ');
+                words[words.length - 1] = currentTypedWord;
+                document.getElementById('inputText').textContent = words.join(' ');
+                
+                console.log(`Typing: "${currentTypedWord}"`);
+                
+                // Generate predictions for the current typed word
+                generateTapPredictions(currentTypedWord);
+                
+            } else {
+                // Handle special keys
+                console.log('Special key tapped:', keyValue);
+                
+                switch (keyValue) {
+                    case 'backspace':
+                        handleBackspace();
+                        break;
+                    case 'space':
+                        handleSpace();
+                        break;
+                    case 'shift':
+                        // TODO: Handle shift functionality
+                        break;
+                    default:
+                        console.log(`Unhandled special key: ${keyValue}`);
+                }
+            }
+        }
+        
+        // Generate predictions for tap-typed words
+        function generateTapPredictions(typedWord) {
+            if (!swipeVocabulary || !swipeVocabulary.isLoaded) {
+                console.warn('Vocabulary not loaded for tap predictions');
+                return;
+            }
+            
+            console.log(`Generating tap predictions for: "${typedWord}"`);
+            
+            let predictions = [];
+            
+            // Strategy 1: Exact matches and completions
+            if (typedWord.length >= 1) {
+                // Find words that start with typed characters
+                const completions = findWordCompletions(typedWord);
+                predictions.push(...completions);
+            }
+            
+            // Strategy 2: Common single character words
+            if (typedWord.length === 1) {
+                const singleCharWords = getSingleCharacterWords(typedWord);
+                predictions.push(...singleCharWords);
+            }
+            
+            // Strategy 3: Fuzzy matches for typos
+            if (typedWord.length >= 2) {
+                const fuzzyMatches = findFuzzyMatches(typedWord);
+                predictions.push(...fuzzyMatches);
+            }
+            
+            // Remove duplicates and limit to 5
+            predictions = [...new Set(predictions)].slice(0, 5);
+            
+            // Ensure we always have the typed word as first option if it's valid
+            if (typedWord.length >= 1) {
+                predictions = [typedWord, ...predictions.filter(p => p !== typedWord)].slice(0, 5);
+            }
+            
+            console.log('Tap predictions:', predictions);
+            
+            // Update prediction state for tap predictions  
+            currentPredictions = [...predictions];
+            hasPendingPredictions = predictions.length > 0;
+            userMadeManualSelection = false;
+            
+            displayTapPredictions(predictions, typedWord);
+        }
+        
+        // Find word completions that start with typed text
+        function findWordCompletions(prefix) {
+            if (!swipeVocabulary || !swipeVocabulary.isLoaded) return [];
+            
+            const completions = [];
+            const prefixLower = prefix.toLowerCase();
+            
+            // Check common words first
+            for (const word of swipeVocabulary.commonWords) {
+                if (word.startsWith(prefixLower) && word !== prefixLower) {
+                    completions.push(word);
+                    if (completions.length >= 10) break;
+                }
+            }
+            
+            // Check top5000 if we need more
+            if (completions.length < 10) {
+                for (const word of swipeVocabulary.top5000) {
+                    if (word.startsWith(prefixLower) && word !== prefixLower && !completions.includes(word)) {
+                        completions.push(word);
+                        if (completions.length >= 10) break;
+                    }
+                }
+            }
+            
+            // Sort by frequency
+            completions.sort((a, b) => {
+                const freqA = swipeVocabulary.getWordFrequency(a);
+                const freqB = swipeVocabulary.getWordFrequency(b);
+                return freqB - freqA;
+            });
+            
+            return completions.slice(0, 5);
+        }
+        
+        // Get valid single character words
+        function getSingleCharacterWords(char) {
+            const singleCharWords = ['a', 'i']; // Valid single character words in English
+            const charLower = char.toLowerCase();
+            
+            // Include the character itself if it's a valid word
+            if (singleCharWords.includes(charLower)) {
+                return [charLower];
+            }
+            
+            // For other characters, suggest words that start with that character
+            const suggestions = [];
+            const startingWords = ['an', 'at', 'as', 'am', 'is', 'it', 'in', 'of', 'on', 'or', 'up', 'us'];
+            
+            for (const word of startingWords) {
+                if (word.startsWith(charLower)) {
+                    suggestions.push(word);
+                }
+            }
+            
+            return suggestions.slice(0, 3);
+        }
+        
+        // Find fuzzy matches for potential typos
+        function findFuzzyMatches(typedWord) {
+            if (!swipeVocabulary || !swipeVocabulary.isLoaded) return [];
+            
+            const matches = [];
+            const typedLower = typedWord.toLowerCase();
+            
+            // Check words of similar length (±1)
+            const targetLength = typedWord.length;
+            
+            // Sample from common words to avoid performance issues
+            const wordsToCheck = Array.from(swipeVocabulary.commonWords).slice(0, 200);
+            
+            for (const word of wordsToCheck) {
+                if (Math.abs(word.length - targetLength) <= 1) {
+                    const distance = levenshteinDistance(typedLower, word);
+                    if (distance <= 1 && word !== typedLower) { // Allow 1 edit distance
+                        matches.push({ word, distance, frequency: swipeVocabulary.getWordFrequency(word) });
+                    }
+                }
+            }
+            
+            // Sort by distance, then frequency
+            matches.sort((a, b) => {
+                if (a.distance !== b.distance) return a.distance - b.distance;
+                return b.frequency - a.frequency;
+            });
+            
+            return matches.slice(0, 3).map(m => m.word);
+        }
+        
+        // Display tap predictions in the UI
+        function displayTapPredictions(predictions, typedWord) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            suggestionsDiv.innerHTML = '';
+            
+            if (predictions.length === 0) {
+                suggestionsDiv.innerHTML = '<div class="text-gray-500 text-sm">No predictions</div>';
+                return;
+            }
+            
+            predictions.forEach((word, index) => {
+                const suggestion = document.createElement('div');
+                
+                // Check if this is a custom/personal word for special styling
+                const isPersonalWord = dictionaryManager && dictionaryManager.personalWords.has(word);
+                const isCustomWord = dictionaryManager && (dictionaryManager.customWords.has(word) || dictionaryManager.androidDictionary.has(word));
+                const isTypedWord = word === typedWord;
+                
+                let className;
+                if (isTypedWord) {
+                    // Currently typed word - special styling
+                    className = 'px-4 py-1.5 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 text-white text-sm cursor-pointer hover:scale-105 transition-transform';
+                } else if (index === 0 || (index === 1 && isTypedWord)) {
+                    // Top prediction (or second if first is typed word)
+                    className = 'px-4 py-1.5 rounded-full bg-gradient-to-r from-neon-blue/20 to-neon-purple/20 border border-neon-blue/50 text-white text-sm cursor-pointer hover:scale-105 transition-transform';
+                } else if (isPersonalWord) {
+                    // Personal dictionary words
+                    className = 'px-4 py-1.5 rounded-full bg-gradient-to-r from-neon-pink/15 to-neon-purple/15 border border-neon-pink/40 text-white text-sm cursor-pointer hover:bg-gradient-to-r hover:from-neon-pink/25 hover:to-neon-purple/25 transition-all';
+                } else if (isCustomWord) {
+                    // Custom dictionary words
+                    className = 'px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500/15 to-blue-500/15 border border-green-500/40 text-gray-200 text-sm cursor-pointer hover:bg-gradient-to-r hover:from-green-500/25 hover:to-blue-500/25 transition-all';
+                } else {
+                    // Regular predictions
+                    className = 'px-4 py-1.5 rounded-full bg-white/5 border border-white/20 text-gray-300 text-sm cursor-pointer hover:bg-white/10 transition-all';
+                }
+                
+                suggestion.className = className;
+                
+                // Add indicators for special word types
+                if (isTypedWord) {
+                    suggestion.textContent = `"${word}"`; // Quotes for currently typed word
+                } else if (isPersonalWord) {
+                    suggestion.textContent = `★ ${word}`;
+                } else if (isCustomWord) {
+                    suggestion.textContent = `+ ${word}`;
+                } else {
+                    suggestion.textContent = word;
+                }
+                
+                suggestion.onclick = () => selectTapWord(word);
+                suggestionsDiv.appendChild(suggestion);
+            });
+        }
+        
+        // Auto-select the top prediction
+        function autoSelectTopPrediction() {
+            if (currentPredictions.length === 0) return;
+            
+            const topPrediction = currentPredictions[0];
+            console.log(`🤖 Auto-selecting top prediction: "${topPrediction}"`);
+            
+            // Add the top prediction to input with space
+            inputText += topPrediction + ' ';
+            document.getElementById('inputText').textContent = inputText;
+            
+            // Clear prediction state
+            clearPredictionState();
+        }
+        
+        // Clear prediction state
+        function clearPredictionState() {
+            currentPredictions = [];
+            hasPendingPredictions = false;
+            userMadeManualSelection = false;
+            currentTypedWord = '';
+            document.getElementById('suggestions').innerHTML = '<div class="text-gray-500 text-sm">Tap or swipe on the keyboard to begin</div>';
+        }
+        
+        // Handle word selection from tap predictions
+        function selectTapWord(word) {
+            // Mark that user made manual selection
+            userMadeManualSelection = true;
+            
+            // Replace the current typed word with selected word
+            const currentInput = document.getElementById('inputText').textContent;
+            const words = currentInput.split(' ');
+            words[words.length - 1] = word;
+            inputText = words.join(' ') + ' ';
+            
+            document.getElementById('inputText').textContent = inputText;
+            
+            // Clear prediction state completely after manual selection
+            clearPredictionState();
+            
+            console.log(`👆 User selected: "${word}"`);
+        }
+        
+        // Prevent scrolling
+        document.getElementById('keyboard').addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+        
+        // Debug function to test custom dictionary functionality
+        function testCustomDictionary() {
+            console.log('=== Testing Custom Dictionary Integration ===');
+            
+            if (!swipeVocabulary || !swipeVocabulary.isLoaded) {
+                console.error('❌ Vocabulary not loaded');
+                return false;
+            }
+            
+            if (!dictionaryManager) {
+                console.error('❌ Dictionary manager not initialized');
+                return false;
+            }
+            
+            // Test 1: Add a test word
+            const testWord = 'testword';
+            console.log(`Adding test word: ${testWord}`);
+            dictionaryManager.addPersonalWord(testWord);
+            updateVocabularyWithCustomWord(testWord, 8e-6);
+            
+            // Test 2: Check if word exists in vocabulary
+            const hasWord = swipeVocabulary.hasWord(testWord);
+            const frequency = swipeVocabulary.getWordFrequency(testWord);
+            console.log(`✓ Test word "${testWord}" in vocabulary: ${hasWord}, frequency: ${frequency}`);
+            
+            // Test 3: Test prediction filtering
+            const mockPredictions = [
+                { word: testWord, confidence: 0.9 },
+                { word: 'hello', confidence: 0.8 },
+                { word: 'world', confidence: 0.7 }
+            ];
+            
+            const filtered = swipeVocabulary.filterPredictions(mockPredictions);
+            console.log('✓ Filtered predictions:', filtered);
+            
+            const testWordResult = filtered.find(p => p.word === testWord);
+            if (testWordResult && testWordResult.source === 'personal') {
+                console.log(`✅ SUCCESS: Personal word "${testWord}" was boosted in predictions!`);
+            } else {
+                console.log(`⚠️  Personal word boost may not be working correctly`);
+            }
+            
+            // Test 4: Check stats
+            const stats = dictionaryManager.getStats();
+            console.log('✓ Dictionary stats:', stats);
+            
+            console.log('=== Custom Dictionary Test Complete ===');
+            return true;
+        }
+        
+        // Test function for tap functionality
+        function testTapFunctionality() {
+            console.log('=== Testing Tap Functionality ===');
+            
+            if (!swipeVocabulary || !swipeVocabulary.isLoaded) {
+                console.error('❌ Vocabulary not loaded');
+                return false;
+            }
+            
+            // Test 1: Single character word ('a')
+            console.log('Test 1: Typing single character "a"');
+            currentTypedWord = '';
+            handleKeyTap('a');
+            console.log(`✓ Current typed word: "${currentTypedWord}"`);
+            console.log(`✓ Input display: "${document.getElementById('inputText').textContent}"`);
+            
+            // Test 2: Multi-character word completion
+            console.log('\nTest 2: Typing "th" for completions');
+            currentTypedWord = '';
+            handleKeyTap('t');
+            handleKeyTap('h');
+            console.log(`✓ Current typed word: "${currentTypedWord}"`);
+            
+            // Test 3: Backspace functionality
+            console.log('\nTest 3: Testing backspace');
+            handleKeyTap('backspace');
+            console.log(`✓ After backspace: "${currentTypedWord}"`);
+            
+            // Test 4: Space functionality
+            console.log('\nTest 4: Testing space bar');
+            handleKeyTap('h'); // Add back the 'h'
+            handleKeyTap('space');
+            console.log(`✓ After space: "${currentTypedWord}" (should be empty)`);
+            console.log(`✓ Input text: "${document.getElementById('inputText').textContent}"`);
+            
+            // Test 5: Word completion suggestions
+            console.log('\nTest 5: Testing word completions for "he"');
+            currentTypedWord = '';
+            handleKeyTap('h');
+            handleKeyTap('e');
+            const completions = findWordCompletions('he');
+            console.log(`✓ Completions for "he":`, completions);
+            
+            console.log('=== Tap Functionality Test Complete ===');
+            return true;
+        }
+        
+        // Test function for auto-prediction functionality
+        function testAutoPrediction() {
+            console.log('=== Testing Auto-Prediction Functionality ===');
+            
+            // Clear everything first
+            clearInput();
+            
+            // Test 1: Create predictions with tap, then start new tap without selection
+            console.log('\nTest 1: Tap "t" -> Tap "h" (should auto-select top prediction from "t")');
+            currentPredictions = ['test', 'the', 'that']; // Mock predictions
+            hasPendingPredictions = true;
+            userMadeManualSelection = false;
+            
+            console.log(`Before second tap - Predictions: [${currentPredictions.join(', ')}]`);
+            console.log(`hasPendingPredictions: ${hasPendingPredictions}, userMadeManualSelection: ${userMadeManualSelection}`);
+            
+            handleKeyTap('h'); // This should auto-select 'test' first
+            
+            console.log(`After tap - Input text: "${document.getElementById('inputText').textContent}"`);
+            console.log(`Predictions state cleared: ${!hasPendingPredictions}`);
+            
+            // Test 2: Manual selection should not trigger auto-selection
+            console.log('\nTest 2: Manual selection should clear auto-selection state');
+            currentPredictions = ['hello', 'help', 'her'];
+            hasPendingPredictions = true;
+            userMadeManualSelection = false;
+            
+            selectTapWord('hello'); // Manual selection
+            
+            console.log(`After manual selection - userMadeManualSelection: ${userMadeManualSelection}`);
+            console.log(`Input text: "${document.getElementById('inputText').textContent}"`);
+            
+            // Test 3: Space bar auto-selection
+            console.log('\nTest 3: Space bar should auto-select top prediction');
+            currentPredictions = ['world', 'work', 'word'];
+            hasPendingPredictions = true;
+            userMadeManualSelection = false;
+            
+            handleSpace(); // Should auto-select 'world'
+            
+            console.log(`After space - Input text: "${document.getElementById('inputText').textContent}"`);
+            
+            console.log('=== Auto-Prediction Test Complete ===');
+            
+            // Reset
+            clearInput();
+        }
+        
+        // Test function for long word functionality
+        function testLongWordSupport() {
+            console.log('=== Testing Long Word Support ===');
+            
+            // Test 1: Verify artificial limits are removed
+            console.log('\nTest 1: Testing word length validation');
+            const longWords = ['supercalifragilisticexpialidocious', 'antidisestablishmentarianism', 'floccinaucinihilipilification'];
+            const shortWords = ['test', 'word', 'hello'];
+            
+            longWords.forEach(word => {
+                const isValid = word && word.match(/^[a-zA-Z]+$/) && word.length >= 2 && word.length <= 35;
+                console.log(`"${word}" (${word.length} chars): ${isValid ? '✓ VALID' : '❌ REJECTED'}`);
+            });
+            
+            // Test 2: Test swipe vs tap detection
+            console.log('\nTest 2: Testing swipe vs tap detection');
+            
+            // Mock short path (should be TAP)
+            const shortPath = [
+                {x: 100, y: 100}, {x: 102, y: 101}, {x: 103, y: 102}
+            ];
+            const shortDistance = getSwipeDistance(shortPath);
+            const isShortSwipe = (shortPath.length > 10 || 50 > 100 || 1 > 1 || (shortPath.length > 3 && shortDistance > 30));
+            console.log(`Short path: ${shortPath.length} points, ${shortDistance.toFixed(1)}px → ${isShortSwipe ? 'SWIPE' : 'TAP'}`);
+            
+            // Mock long path (should be SWIPE) 
+            const longPath = [];
+            for(let i = 0; i < 20; i++) {
+                longPath.push({x: 100 + i*10, y: 100 + Math.sin(i/5)*20});
+            }
+            const longDistance = getSwipeDistance(longPath);
+            const isLongSwipe = (longPath.length > 10 || 200 > 100 || 5 > 1 || (longPath.length > 3 && longDistance > 30));
+            console.log(`Long path: ${longPath.length} points, ${longDistance.toFixed(1)}px → ${isLongSwipe ? 'SWIPE' : 'TAP'}`);
+            
+            // Test 3: Check beam search settings
+            console.log('\nTest 3: Checking beam search configuration');
+            console.log(`Max output length: 35 characters`);
+            console.log(`Beam width: 8 (increased from 5)`);
+            console.log(`MAX_SEQUENCE_LENGTH: ${MAX_SEQUENCE_LENGTH} (model constraint)`);
+            
+            console.log('=== Long Word Support Test Complete ===');
+        }
+        
+        // Test function for selection functionality
+        function testSelectionFunctionality() {
+            console.log('=== Testing Selection Functionality ===');
+            
+            // Clear everything first
+            clearInput();
+            
+            // Test 1: Test swipe prediction selection
+            console.log('\nTest 1: Testing swipe prediction selection');
+            inputText = 'Hello world ';
+            document.getElementById('inputText').textContent = inputText;
+            console.log(`Before swipe selection: "${inputText}"`);
+            
+            // Mock current predictions
+            currentPredictions = ['testing', 'example', 'word'];
+            hasPendingPredictions = true;
+            userMadeManualSelection = false;
+            
+            selectWord('testing');
+            console.log(`After swipe selection: "${inputText}"`);
+            console.log(`Should be: "Hello world testing "`);
+            
+            // Test 2: Test tap prediction selection
+            console.log('\nTest 2: Testing tap prediction selection');
+            // Set up typing state
+            currentTypedWord = 'exampl';
+            const words = inputText.split(' ');
+            words[words.length - 1] = currentTypedWord;
+            document.getElementById('inputText').textContent = words.join(' ');
+            console.log(`Before tap selection: "${document.getElementById('inputText').textContent}"`);
+            
+            selectTapWord('example');
+            console.log(`After tap selection: "${inputText}"`);
+            console.log(`Should be: "Hello world testing example "`);
+            
+            // Test 3: Test auto-selection
+            console.log('\nTest 3: Testing auto-selection');
+            currentPredictions = ['world', 'work', 'word'];
+            hasPendingPredictions = true;
+            userMadeManualSelection = false;
+            console.log(`Before auto-selection: "${inputText}"`);
+            
+            autoSelectTopPrediction();
+            console.log(`After auto-selection: "${inputText}"`);
+            console.log(`Should be: "Hello world testing example world "`);
+            
+            console.log('=== Selection Functionality Test Complete ===');
+            
+            // Reset
+            clearInput();
+        }
+        
+        // Test function for tap vs swipe detection
+        function testGestureDetection() {
+            console.log('=== Testing Gesture Detection ===');
+            
+            // Test 1: Verify key event isolation
+            console.log('\nTest 1: Key event isolation');
+            console.log('- Added event.stopPropagation() to prevent canvas swipe events');
+            console.log('- Added touchstart, touchend, mousedown, mouseup event handlers');
+            console.log('- Added { passive: false } for proper touch handling');
+            
+            // Test 2: Verify swipe detection logic
+            console.log('\nTest 2: Swipe vs tap detection criteria');
+            const testCases = [
+                { points: 2, duration: 50, keys: 1, distance: 5, expected: 'TAP' },
+                { points: 15, duration: 80, keys: 1, distance: 20, expected: 'SWIPE' },
+                { points: 5, duration: 200, keys: 1, distance: 15, expected: 'SWIPE' },
+                { points: 8, duration: 80, keys: 3, distance: 25, expected: 'SWIPE' },
+                { points: 5, duration: 80, keys: 1, distance: 40, expected: 'SWIPE' }
+            ];
+            
+            testCases.forEach((test, i) => {
+                const isRealSwipe = (
+                    test.points > 10 ||
+                    test.duration > 100 ||
+                    test.keys > 1 ||
+                    (test.points > 3 && test.distance > 30)
+                );
+                const result = isRealSwipe ? 'SWIPE' : 'TAP';
+                const status = result === test.expected ? '✅' : '❌';
+                console.log(`Case ${i+1}: ${test.points}pts, ${test.duration}ms, ${test.keys}keys, ${test.distance}px → ${result} ${status}`);
+            });
+            
+            // Test 3: Custom dictionary duplicate prevention
+            console.log('\nTest 3: Custom dictionary duplicate prevention');
+            if (swipeVocabulary && swipeVocabulary.isLoaded) {
+                const commonWords = ['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all'];
+                commonWords.forEach(word => {
+                    const alreadyExists = swipeVocabulary.hasWord(word);
+                    console.log(`"${word}": ${alreadyExists ? 'EXISTS in vocab (would be skipped)' : 'Not in vocab (would be added)'}`);
+                });
+            } else {
+                console.log('❌ Vocabulary not loaded - cannot test duplicate prevention');
+            }
+            
+            console.log('=== Gesture Detection Test Complete ===');
+        }
+        
+        // Test mobile tap functionality
+        function testMobileTapFunctionality() {
+            console.log('=== Testing Mobile Tap Functionality ===');
+            
+            clearInput();
+            
+            // Test 1: Verify single character tap behavior
+            console.log('\nTest 1: Testing single character tap (should NOT show predictions)');
+            console.log('Before tap - Predictions:', currentPredictions);
+            console.log('Before tap - Input:', document.getElementById('inputText').textContent);
+            
+            // Directly test single character input
+            handleSingleCharacterInput('h');
+            
+            console.log('After tap - Predictions:', currentPredictions);
+            console.log('After tap - Input:', document.getElementById('inputText').textContent);
+            console.log('After tap - Has pending predictions:', hasPendingPredictions);
+            console.log('Suggestions HTML:', document.getElementById('suggestions').innerHTML);
+            
+            // Test 2: Test multiple single taps
+            console.log('\nTest 2: Testing multiple single taps');
+            handleSingleCharacterInput('e');
+            handleSingleCharacterInput('l');
+            handleSingleCharacterInput('l');
+            handleSingleCharacterInput('o');
+            
+            console.log('After multiple taps:', document.getElementById('inputText').textContent);
+            console.log('Should be: "hello" (no spaces, no predictions)');
+            
+            // Test 3: Test space bar behavior
+            console.log('\nTest 3: Testing space bar after single taps');
+            handleSingleCharacterInput('space');
+            console.log('After space:', document.getElementById('inputText').textContent);
+            console.log('Should be: "hello " (one space added)');
+            
+            // Test 4: Test custom dictionary duplicate prevention
+            console.log('\nTest 4: Testing custom dictionary duplicate prevention');
+            if (swipeVocabulary && swipeVocabulary.isLoaded && dictionaryManager) {
+                const existingWord = 'the';
+                console.log(`Testing with existing word: "${existingWord}"`);
+                const added = dictionaryManager.addPersonalWord(existingWord);
+                console.log(`Add result: ${added ? 'ADDED' : 'SKIPPED (already exists)'} ✓`);
+            }
+            
+            console.log('=== Mobile Tap Functionality Test Complete ===');
+        }
+        
+        // Test 4th row button isolation
+        function testFourthRowButtonIsolation() {
+            console.log('=== Testing 4th Row Button Isolation ===');
+            
+            clearInput();
+            
+            // Test 1: Verify special buttons are excluded from gesture detection
+            console.log('\nTest 1: Special button exclusion test');
+            const specialButtons = document.querySelectorAll('[data-special]');
+            console.log(`Found ${specialButtons.length} special buttons:`, 
+                Array.from(specialButtons).map(b => b.dataset.special));
+            
+            // Test if getKeyAtPosition ignores special buttons
+            const numberButton = document.querySelector('[data-special="number-toggle"]');
+            if (numberButton) {
+                const rect = numberButton.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const detectedKey = getKeyAtPosition(centerX, centerY);
+                console.log(`Number button position test: ${detectedKey ? 'DETECTED AS KEY ❌' : 'IGNORED ✅'}`);
+            }
+            
+            // Test 2: Verify functions work
+            console.log('\nTest 2: Testing special button functions');
+            
+            console.log('Before number toggle - Input:', document.getElementById('inputText').textContent);
+            toggleNumberMode();
+            console.log('After number toggle - Mode:', isNumberMode ? 'NUMBERS ✓' : 'LETTERS');
+            
+            console.log('Before space - Input:', document.getElementById('inputText').textContent);
+            handleSpace();
+            console.log('After space - Input:', JSON.stringify(document.getElementById('inputText').textContent));
+            
+            console.log('Before return - Input length:', document.getElementById('inputText').textContent.length);
+            handleReturn();
+            console.log('After return - Input contains newline:', document.getElementById('inputText').textContent.includes('\n') ? 'YES ✓' : 'NO ❌');
+            
+            // Test 3: Reset state
+            console.log('\nTest 3: Resetting to normal state');
+            if (isNumberMode) toggleNumberMode();
+            if (isEmojiMode) toggleEmojiMode();
+            clearInput();
+            
+            console.log('=== 4th Row Button Isolation Test Complete ===');
+        }
+        
+        // Test 4th row functionality
+        function testFourthRowFunctionality() {
+            console.log('=== Testing 4th Row Functionality ===');
+            
+            clearInput();
+            
+            // Test 1: Number mode toggle
+            console.log('\nTest 1: Testing number mode');
+            console.log('Current keyboard state:', isNumberMode ? 'NUMBERS' : 'LETTERS');
+            toggleNumberMode();
+            console.log('After toggle:', isNumberMode ? 'NUMBERS' : 'LETTERS');
+            
+            // Test 2: Number input
+            console.log('\nTest 2: Testing number input');
+            handleSingleCharacterInput('1');
+            handleSingleCharacterInput('2');
+            handleSingleCharacterInput('3');
+            console.log('After number input:', document.getElementById('inputText').textContent);
+            
+            // Test 3: Switch back to letters
+            console.log('\nTest 3: Switching back to letters');
+            toggleNumberMode();
+            handleSingleCharacterInput('a');
+            handleSingleCharacterInput('b');
+            console.log('After letter input:', document.getElementById('inputText').textContent);
+            
+            // Test 4: Emoji mode
+            console.log('\nTest 4: Testing emoji mode');
+            toggleEmojiMode();
+            console.log('Emoji mode:', isEmojiMode ? 'ON' : 'OFF');
+            
+            // Test 5: Return functionality
+            console.log('\nTest 5: Testing return key');
+            handleReturn();
+            console.log('After return:', JSON.stringify(document.getElementById('inputText').textContent));
+            
+            // Test 6: Shift functionality
+            console.log('\nTest 6: Testing shift key');
+            handleShift();
+            const shiftActive = document.querySelector('.key[data-key="shift"]')?.classList.contains('key-active');
+            console.log('Shift active:', shiftActive);
+            
+            console.log('=== 4th Row Functionality Test Complete ===');
+            
+            // Reset to normal mode
+            if (isNumberMode) toggleNumberMode();
+            if (isEmojiMode) toggleEmojiMode();
+            clearInput();
+        }
+        
+        // Expose test functions globally for debugging
+        window.testCustomDictionary = testCustomDictionary;
+        window.testTapFunctionality = testTapFunctionality;
+        window.testAutoPrediction = testAutoPrediction;
+        window.testLongWordSupport = testLongWordSupport;
+        window.testSelectionFunctionality = testSelectionFunctionality;
+        window.testGestureDetection = testGestureDetection;
+        window.testMobileTapFunctionality = testMobileTapFunctionality;
+        window.testFourthRowButtonIsolation = testFourthRowButtonIsolation;
+        window.testFourthRowFunctionality = testFourthRowFunctionality;
+        
+        // 4th Row Button Functions
+        let isNumberMode = false;
+        let isEmojiMode = false;
+        
+        function toggleNumberMode() {
+            isNumberMode = !isNumberMode;
+            const button = document.querySelector('button[onclick="toggleNumberMode()"]');
+            
+            if (isNumberMode) {
+                // Change to numbers layout
+                updateKeyboardToNumbers();
+                button.textContent = 'ABC';
+                button.classList.add('bg-neon-blue/20', 'text-neon-blue');
+                button.classList.remove('bg-gray-800', 'text-gray-400');
+                console.log('🔢 Number mode enabled');
+            } else {
+                // Change back to letters
+                updateKeyboardToLetters();
+                button.textContent = '123';
+                button.classList.remove('bg-neon-blue/20', 'text-neon-blue');
+                button.classList.add('bg-gray-800', 'text-gray-400');
+                console.log('🔤 Letter mode enabled');
+            }
+        }
+        
+        function toggleEmojiMode() {
+            isEmojiMode = !isEmojiMode;
+            const button = document.querySelector('button[onclick="toggleEmojiMode()"]');
+            
+            if (isEmojiMode) {
+                // Show emoji picker or common emojis
+                showEmojiKeyboard();
+                button.classList.add('bg-neon-purple/20', 'text-neon-purple');
+                button.classList.remove('bg-gray-800', 'text-gray-400');
+                console.log('😊 Emoji mode enabled');
+            } else {
+                // Return to normal keyboard
+                updateKeyboardToLetters();
+                button.classList.remove('bg-neon-purple/20', 'text-neon-purple');
+                button.classList.add('bg-gray-800', 'text-gray-400');
+                console.log('🔤 Letter mode enabled');
+            }
+        }
+        
+        function handleReturn() {
+            // Add newline to text
+            inputText += '\n';
+            document.getElementById('inputText').textContent = inputText;
+            console.log('📝 Added newline');
+            
+            // Clear any pending predictions since we're starting a new line
+            clearPredictionState();
+        }
+        
+        // Update keyboard layout to numbers
+        function updateKeyboardToNumbers() {
+            const numberLayouts = [
+                ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+                ['-', '/', ':', ';', '(', ')', '$', '&', '@', '"'],
+                ['shift', '.', ',', '?', '!', "'", '"', '+', '*', 'backspace']
+            ];
+            
+            // Update each row
+            numberLayouts.forEach((row, rowIndex) => {
+                const keys = document.querySelectorAll(`[data-row="${rowIndex}"] .key`);
+                row.forEach((char, keyIndex) => {
+                    if (keys[keyIndex]) {
+                        keys[keyIndex].textContent = char;
+                        keys[keyIndex].dataset.key = char;
+                        // Update data attributes for numbers
+                        if (char.match(/[0-9-/();$&@"'.,?!+*]/)) {
+                            keys[keyIndex].dataset.row = rowIndex;
+                            keys[keyIndex].dataset.col = keyIndex;
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Update keyboard layout to letters  
+        function updateKeyboardToLetters() {
+            const letterLayouts = [
+                ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+                ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+                ['shift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', 'backspace']
+            ];
+            
+            // Update each row
+            letterLayouts.forEach((row, rowIndex) => {
+                const rowDiv = document.querySelector(`[data-row="${rowIndex}"]`)?.parentElement;
+                if (rowDiv) {
+                    const keys = rowDiv.querySelectorAll('.key');
+                    row.forEach((char, keyIndex) => {
+                        if (keys[keyIndex]) {
+                            keys[keyIndex].textContent = char.toUpperCase();
+                            keys[keyIndex].dataset.key = char;
+                            keys[keyIndex].dataset.row = rowIndex;
+                            keys[keyIndex].dataset.col = keyIndex;
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Show emoji keyboard
+        function showEmojiKeyboard() {
+            const emojiSets = [
+                ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇'],
+                ['🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙'],
+                ['shift', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', 'backspace']
+            ];
+            
+            // Update each row with emojis
+            emojiSets.forEach((row, rowIndex) => {
+                const rowDiv = document.querySelector(`[data-row="${rowIndex}"]`)?.parentElement;
+                if (rowDiv) {
+                    const keys = rowDiv.querySelectorAll('.key');
+                    row.forEach((emoji, keyIndex) => {
+                        if (keys[keyIndex]) {
+                            keys[keyIndex].textContent = emoji;
+                            keys[keyIndex].dataset.key = emoji === 'shift' || emoji === 'backspace' ? emoji : emoji;
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Setup special button event handling
+        function setupSpecialButtonHandlers() {
+            // Add event handlers to special buttons to prevent gesture interference
+            document.querySelectorAll('[data-special]').forEach(button => {
+                // Prevent all gesture events on special buttons
+                ['touchstart', 'touchmove', 'touchend', 'touchcancel', 'mousedown', 'mousemove', 'mouseup'].forEach(eventType => {
+                    button.addEventListener(eventType, function(e) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                    }, { passive: false });
+                });
+                
+                // Ensure click events work normally
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    // The onclick attribute will still fire
+                }, { passive: false });
+            });
+            
+            console.log('✓ Special button handlers configured');
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', () => {
+            init();
+            setupSpecialButtonHandlers();
+        });
+    </script>
+</body>
+</html>

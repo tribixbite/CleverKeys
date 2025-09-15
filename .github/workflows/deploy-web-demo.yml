@@ -1,0 +1,147 @@
+name: Deploy CleverKeys Web Demo
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'web_demo/**', 'README.md' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Ensure LFS files
+        run: git lfs install && git lfs pull
+
+      - name: Prepare CleverKeys web demo
+        run: |
+          mkdir -p deploy
+
+          # Copy web demo files if they exist
+          if [ -d "web_demo" ]; then
+            cd web_demo
+            echo "📁 CleverKeys web demo files:"
+            ls -la
+            echo "📦 Copying demo files..."
+            cp *.html ../deploy/ 2>/dev/null || echo "No HTML files found"
+            cp *.js ../deploy/ 2>/dev/null || echo "No JS files found"
+            cp *.css ../deploy/ 2>/dev/null || echo "No CSS files found"
+            cp *.wasm ../deploy/ 2>/dev/null || echo "No WASM files found"
+            cp *.onnx ../deploy/ 2>/dev/null || echo "No ONNX files found"
+            cp *.pte ../deploy/ 2>/dev/null || echo "No PTE files found"
+            cp *.json ../deploy/ 2>/dev/null || echo "No JSON files found"
+            cp -r assets ../deploy/ 2>/dev/null || echo "No assets directory found"
+            cd ..
+          fi
+
+          # Copy ONNX models from assets for web demo
+          if [ -d "assets/models" ]; then
+            echo "📦 Copying neural models..."
+            cp assets/models/*.onnx deploy/ 2>/dev/null || echo "No ONNX models found"
+            cp assets/models/*.pte deploy/ 2>/dev/null || echo "No PTE models found"
+            cp assets/models/*.json deploy/ 2>/dev/null || echo "No JSON configs found"
+          fi
+
+          # Create basic web demo if none exists
+          if [ ! -f "deploy/index.html" ]; then
+            echo "📝 Creating basic web demo..."
+            cat > deploy/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>CleverKeys - Privacy-First Neural Keyboard</title>
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                      background: #1a1a1a; color: #ffffff; margin: 0; padding: 20px;
+                  }
+                  .container { max-width: 800px; margin: 0 auto; }
+                  .hero { text-align: center; padding: 40px 0; }
+                  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+                  .feature { background: #2a2a2a; padding: 20px; border-radius: 8px; }
+                  .cta { text-align: center; padding: 40px 0; }
+                  .btn {
+                      display: inline-block; padding: 12px 24px; background: #007acc;
+                      color: white; text-decoration: none; border-radius: 6px; margin: 10px;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <div class="hero">
+                      <h1>🔐 CleverKeys</h1>
+                      <p>Privacy-First Neural Keyboard for Android</p>
+                      <p>Neural swipe prediction with complete privacy - all processing happens on your device</p>
+                  </div>
+
+                  <div class="features">
+                      <div class="feature">
+                          <h3>🧠 Neural Prediction</h3>
+                          <p>Advanced transformer models for intelligent swipe-to-text with configurable algorithms</p>
+                      </div>
+                      <div class="feature">
+                          <h3>🔒 Complete Privacy</h3>
+                          <p>100% local processing - your typing data never leaves your device</p>
+                      </div>
+                      <div class="feature">
+                          <h3>⚙️ Power User Controls</h3>
+                          <p>Deep customization of neural parameters, gestures, and keyboard behavior</p>
+                      </div>
+                      <div class="feature">
+                          <h3>🎯 Advanced Gestures</h3>
+                          <p>8-directional swipes, circle gestures, and programmable patterns</p>
+                      </div>
+                  </div>
+
+                  <div class="cta">
+                      <a href="https://github.com/tribixbite/CleverKeys/releases" class="btn">📱 Download APK</a>
+                      <a href="https://github.com/tribixbite/CleverKeys" class="btn">📖 View Source</a>
+                      <a href="https://github.com/Julow/Unexpected" class="btn">🙏 Unexpected Keyboard</a>
+                  </div>
+
+                  <footer style="text-align: center; padding: 20px; color: #888;">
+                      <p>Built with ❤️ in Kotlin • Enhanced from <a href="https://github.com/Julow/Unexpected" style="color: #007acc;">Unexpected Keyboard</a></p>
+                  </footer>
+              </div>
+          </body>
+          </html>
+          EOF
+          fi
+
+          echo "✅ Web demo prepared"
+          ls -la deploy/
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./deploy
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
