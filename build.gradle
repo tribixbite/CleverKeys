@@ -6,36 +6,21 @@ plugins {
 dependencies {
   implementation "androidx.window:window-java:1.3.0"
   implementation "androidx.core:core:1.16.0"
-  
+
   // Kotlin dependencies
   implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.20"
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
-  implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.7.0"
-  implementation "androidx.activity:activity-ktx:1.8.2"
-  
+
   // ONNX Runtime for neural swipe prediction (upgraded for boolean tensor support)
   implementation "com.microsoft.onnxruntime:onnxruntime-android:1.20.0"
-  
-  // Testing dependencies
+
   testImplementation "junit:junit:4.13.2"
   testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
-  testImplementation "androidx.test:core:1.5.0"
-  testImplementation "androidx.test.ext:junit:1.1.5"
-  testImplementation "org.mockito:mockito-core:5.5.0"
 }
 
 android {
   namespace 'juloo.keyboard2'
   compileSdk 35
-  
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
-  }
-  
-  kotlinOptions {
-    jvmTarget = "1.8"
-  }
 
   defaultConfig {
     applicationId "juloo.keyboard2"
@@ -45,17 +30,25 @@ android {
     versionName "1.32.1"
   }
 
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+
+  kotlinOptions {
+    jvmTarget = "1.8"
+  }
+
   sourceSets {
     main {
       manifest.srcFile 'AndroidManifest.xml'
-      java.srcDirs = ['src/main/java']
       kotlin.srcDirs = ['src/main/kotlin']
+      java.srcDirs = ['src/main/java']
       res.srcDirs = ['res', 'build/generated-resources']
       assets.srcDirs = ['assets']
     }
 
     test {
-      kotlin.srcDirs = ['src/test/kotlin']
       java.srcDirs = ['test']
     }
   }
@@ -123,7 +116,7 @@ tasks.register('buildKeyboardFont') {
   println "\nBuilding assets/special_font.ttf"
   mkdir "$buildDir"
   exec {
-    workingDir "$projectDir/src/main/special_font"
+    workingDir "$projectDir/srcs/special_font"
     def svgFiles = workingDir.listFiles().findAll {
       it.isFile() && it.name.endsWith(".svg")
     }
@@ -166,14 +159,14 @@ tasks.register('checkKeyboardLayouts') {
 }
 
 tasks.register('compileComposeSequences') {
-  def out = "src/main/java/juloo/keyboard2/ComposeKeyData.java"
+  def out = "srcs/juloo.keyboard2/ComposeKeyData.java"
   println "\nGenerating ${out}"
   exec {
-    def sequences = new File(projectDir, "src/main/compose").listFiles().findAll {
+    def sequences = new File(projectDir, "srcs/compose").listFiles().findAll {
       !it.name.endsWith(".py") && !it.name.endsWith(".md")
     }
     workingDir = projectDir
-    commandLine("python", "src/main/compose/compile.py", *sequences)
+    commandLine("python", "srcs/compose/compile.py", *sequences)
     standardOutput = new FileOutputStream("${projectDir}/${out}")
   }
 }
@@ -220,7 +213,7 @@ tasks.register('initDebugKeystore') {
 tasks.register('copyRawQwertyUS')
 {
   copy {
-    from "src/main/layouts/latn_qwerty_us.xml"
+    from "srcs/layouts/latn_qwerty_us.xml"
     into "build/generated-resources/raw"
   }
 }

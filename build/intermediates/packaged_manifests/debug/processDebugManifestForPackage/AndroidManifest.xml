@@ -38,7 +38,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name" >
         <service
-            android:name="juloo.keyboard2.SimpleCleverKeysService"
+            android:name="juloo.keyboard2.CleverKeysService"
             android:directBootAware="true"
             android:exported="true"
             android:label="@string/app_name"

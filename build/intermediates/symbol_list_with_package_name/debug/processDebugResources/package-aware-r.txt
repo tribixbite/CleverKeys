@@ -234,7 +234,6 @@ id notification_main_column_container
 id pref_listgroup_remove_btn
 id progress_bar
 id progress_text
-id report_drawn
 id right_icon
 id right_side
 id rtl
@@ -262,9 +261,6 @@ id title
 id topToBottom
 id view_tree_disjoint_parent
 id view_tree_lifecycle_owner
-id view_tree_on_back_pressed_dispatcher_owner
-id view_tree_saved_state_registry_owner
-id view_tree_view_model_store_owner
 id word_text
 integer status_bar_notification_info_maxnum
 layout activity_swipe_calibration
@@ -292,7 +288,6 @@ layout pref_listgroup_item_widget
 menu launcher_menu
 mipmap ic_launcher
 raw emojis
-raw latn_qwerty_us
 raw version_info
 string androidx_startup
 string app_name
@@ -540,6 +535,7 @@ xml deva_phonetic_in
 xml emoji_bottom_row
 xml georgian_mes
 xml georgian_qwerty
+xml greekmath
 xml grek_qwerty
 xml guj_phonetic_in
 xml hang_dubeolsik_kr
@@ -595,6 +591,11 @@ xml latn_qwertz_sq
 xml latn_workman_us
 xml method
 xml number_row
+xml number_row_no_symbols
+xml numeric
+xml numpad
+xml pin
+xml settings
 xml shaw_imperial_en
 xml sinhala_phonetic
 xml tamil_default

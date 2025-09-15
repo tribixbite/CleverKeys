@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "juloo.keyboard2-mergeDebugResources-24:/values-pt-rBR/values-pt-rBR.xml",
+            "outputFile": "juloo.keyboard2-mergeDebugResources-14:/values-pt-rBR/values-pt-rBR.xml",
             "map": [
                 {
                     "source": "/data/data/com.termux/files/home/.gradle/caches/transforms-4/f947dd21c454b08d814ea374b3c4738e/transformed/core-1.16.0/res/values-pt-rBR/values-pt-rBR.xml",

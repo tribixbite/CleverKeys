@@ -105,7 +105,6 @@ layout pref_listgroup_item_widget
 menu launcher_menu
 mipmap ic_launcher
 raw emojis
-raw latn_qwerty_us
 raw version_info
 string app_name
 string app_name_debug
@@ -326,6 +325,7 @@ xml deva_phonetic_in
 xml emoji_bottom_row
 xml georgian_mes
 xml georgian_qwerty
+xml greekmath
 xml grek_qwerty
 xml guj_phonetic_in
 xml hang_dubeolsik_kr
@@ -381,6 +381,11 @@ xml latn_qwertz_sq
 xml latn_workman_us
 xml method
 xml number_row
+xml number_row_no_symbols
+xml numeric
+xml numpad
+xml pin
+xml settings
 xml shaw_imperial_en
 xml sinhala_phonetic
 xml tamil_default

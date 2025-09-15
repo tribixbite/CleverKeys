@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "juloo.keyboard2-mergeDebugResources-24:/values-nl/values-nl.xml",
+            "outputFile": "juloo.keyboard2-mergeDebugResources-14:/values-nl/values-nl.xml",
             "map": [
                 {
                     "source": "/data/data/com.termux/files/home/git/swype/cleverkeys/res/values-nl/strings.xml",

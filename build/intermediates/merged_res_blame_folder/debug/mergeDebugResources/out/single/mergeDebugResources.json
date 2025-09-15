@@ -1,514 +1,538 @@
 [
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_uz.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_uz.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_workman_us.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_workman_us.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_et.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_et.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_armenian_ph_am.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/armenian_ph_am.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_ga.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_ga.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable_ic_launcher_background.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/drawable/ic_launcher_background.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable-hdpi_ic_launcher_foreground.png.flat",
-        "source": "juloo.keyboard2-pngs-22:/drawable-hdpi/ic_launcher_foreground.png"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/mipmap-xxxhdpi/ic_launcher.png"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_da.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_da.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_grek_qwerty.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/grek_qwerty.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_fr_ch.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_fr_ch.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_arab_pc_hindu.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/arab_pc_hindu.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_us.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_us.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_beng_national.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/beng_national.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/mipmap-xxxhdpi_ic_launcher.png.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/mipmap-xxxhdpi/ic_launcher.png"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/mipmap-xxhdpi/ic_launcher.png"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/raw_emojis.txt.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/raw/emojis.txt"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_es.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_es.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/layout_activity_swipe_calibration.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/layout/activity_swipe_calibration.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_vi.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_vi.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_grek_qwerty.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/grek_qwerty.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_kann_kannada.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/kann_kannada.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_jp.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_jp.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable_doc_anim_swipe.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/drawable/doc_anim_swipe.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/mipmap-anydpi-v26_ic_launcher.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/mipmap-anydpi-v26/ic_launcher.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_sinhala_phonetic.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/sinhala_phonetic.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable_cog_outline.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/drawable/cog_outline.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_cyrl_lynyertdz_mk.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/cyrl_lynyertdz_mk.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_georgian_mes.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/georgian_mes.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/layout_pref_listgroup_item_widget.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/layout/pref_listgroup_item_widget.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_vi.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_vi.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_da.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_da.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable-xhdpi_ic_launcher_foreground.png.flat",
-        "source": "juloo.keyboard2-pngs-22:/drawable-xhdpi/ic_launcher_foreground.png"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/layout_activity_swipe_calibration.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/layout/activity_swipe_calibration.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_number_row.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/number_row.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable-anydpi-v24_ic_launcher_foreground.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-pngs-12:/drawable-anydpi-v24/ic_launcher_foreground.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_cz_multifunctional.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_cz_multifunctional.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_azerty_fr.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_azerty_fr.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_arab_pc_ir.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/arab_pc_ir.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_jp.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_jp.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_cyrl_jcuken_uk.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/cyrl_jcuken_uk.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/layout_keyboard_with_suggestions.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/layout/keyboard_with_suggestions.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_no.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_no.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwertz_de.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwertz_de.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_hu.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_hu.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_cy.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_cy.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_es.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_es.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_bone.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_bone.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_br.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_br.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_georgian_mes.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/georgian_mes.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_lt.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_lt.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_numpad.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/xml/numpad.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_sr.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_sr.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_shaw_imperial_en.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/shaw_imperial_en.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_urdu_phonetic_ur.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/urdu_phonetic_ur.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_colemak.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_colemak.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable_doc_key_u.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/drawable/doc_key_u.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/mipmap-hdpi/ic_launcher.png"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_bottom_row.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/bottom_row.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_tamil_default.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/tamil_default.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_bqn.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_bqn.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwertz_cz_diacritics.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwertz_cz_diacritics.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_cyrl_jcuken_ru.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/cyrl_jcuken_ru.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_deva_inscript.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/deva_inscript.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_cz.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_cz.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable_doc_anim_round_trip.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/drawable/doc_anim_round_trip.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_azerty_be.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_azerty_be.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_bepo_fr.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_bepo_fr.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable_doc_key_g.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/drawable/doc_key_g.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable_ic_clipboard_paste.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/drawable/ic_clipboard_paste.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable_ic_clipboard_save.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/drawable/ic_clipboard_save.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_guj_phonetic_in.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/guj_phonetic_in.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_sq.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_sq.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/menu_launcher_menu.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/menu/launcher_menu.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/layout_pref_listgroup_item_widget.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/layout/pref_listgroup_item_widget.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/layout_pref_listgroup_add_btn.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/layout/pref_listgroup_add_btn.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_de.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_de.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable-xxxhdpi_ic_launcher_foreground.png.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-pngs-12:/drawable-xxxhdpi/ic_launcher_foreground.png"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_gb.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_gb.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_cz.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_cz.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_tly.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_tly.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwertz_cz_multifunctional.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwertz_cz_multifunctional.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/layout_clipboard_pin_entry.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/layout/clipboard_pin_entry.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/layout_keyboard.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/layout/keyboard.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_hebr_1_il.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/hebr_1_il.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_hu.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_hu.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_arab_pc.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/arab_pc.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_neo2.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_neo2.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_deva_alt.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/deva_alt.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable_doc_anim_circle.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/drawable/doc_anim_circle.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_cyrl_jcuken_kk.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/cyrl_jcuken_kk.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable_ic_launcher_background.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/drawable/ic_launcher_background.xml"
+        "merged": "juloo.keyboard2-debug-16:/raw_version_info.txt.flat",
+        "source": "juloo.keyboard2-build-11:/raw/version_info.txt"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/mipmap-xxhdpi_ic_launcher.png.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/mipmap-xxhdpi/ic_launcher.png"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable-ldpi_ic_launcher_foreground.png.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-pngs-12:/drawable-ldpi/ic_launcher_foreground.png"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_armenian_ph_am.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/armenian_ph_am.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_arab_pc_ckb.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/arab_pc_ckb.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable_ic_clipboard_paste.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/drawable/ic_clipboard_paste.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable-xxhdpi_ic_launcher_foreground.png.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-pngs-12:/drawable-xxhdpi/ic_launcher_foreground.png"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_neo2.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_neo2.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_urdu_phonetic_ur.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/urdu_phonetic_ur.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_haw.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_haw.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_arab_pc.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/arab_pc.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_sinhala_phonetic.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/sinhala_phonetic.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/raw_version_info.txt.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/raw/version_info.txt"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_pl.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_pl.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/layout_launcher_activity.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/layout/launcher_activity.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_hang_dubeolsik_kr.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/hang_dubeolsik_kr.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_apl.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_apl.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_cyrl_lynyertdz_mk.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/cyrl_lynyertdz_mk.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/layout_emoji_pane.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/layout/emoji_pane.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_az.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_az.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_et.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_et.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_workman_us.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_workman_us.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_ga.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_ga.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_kk.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_kk.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_arab_hamvaj_tly.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/arab_hamvaj_tly.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_georgian_qwerty.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/georgian_qwerty.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_uz.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_uz.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_dvorak.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_dvorak.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_cyrl_fcuzhen_mn.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/cyrl_fcuzhen_mn.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_is.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_is.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_number_row_no_symbols.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/xml/number_row_no_symbols.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_beng_national.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/beng_national.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_cyrl_ueishsht.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/cyrl_ueishsht.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_bepo_fr.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_bepo_fr.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable-xhdpi_ic_launcher_foreground.png.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-pngs-12:/drawable-xhdpi/ic_launcher_foreground.png"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_ro.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_ro.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_se.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_se.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_sk.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_sk.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_beng_provat.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/beng_provat.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_cyrl_jcuken_as.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/cyrl_jcuken_as.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_cyrl_yaverti.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/cyrl_yaverti.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_shaw_imperial_en.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/shaw_imperial_en.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwertz_cz.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwertz_cz.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_arab_hamvaj_tly.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/arab_hamvaj_tly.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/mipmap-mdpi/ic_launcher.png"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/layout_launcher_activity.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/layout/launcher_activity.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_cyrl_yqukeng_tj.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/cyrl_yqukeng_tj.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable_doc_anim_round_trip.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/drawable/doc_anim_round_trip.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/raw_emojis.txt.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/raw/emojis.txt"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_cz.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_cz.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwertz_hu.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwertz_hu.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_tr.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_tr.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_cyrl_jcuken_as.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/cyrl_jcuken_as.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_mt.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_mt.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_hebr_1_il.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/hebr_1_il.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_arab_alt.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/arab_alt.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_hang_dubeolsik_kr.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/hang_dubeolsik_kr.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_cyrl_fcuzhen_mn.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/cyrl_fcuzhen_mn.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_pl.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_pl.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_se.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_se.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_haw.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_haw.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable_doc_anim_swipe.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/drawable/doc_anim_swipe.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_lv.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_lv.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_cyrl_jcuken_kk.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/cyrl_jcuken_kk.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_az.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_az.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_lv.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_lv.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwertz_sk.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwertz_sk.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_beng_provat.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/beng_provat.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_ro.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_ro.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/layout_clipboard_pane.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/layout/clipboard_pane.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_arab_pc_ir.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/arab_pc_ir.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/layout_keyboard_with_suggestions.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/layout/keyboard_with_suggestions.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_sk.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_sk.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_arab_pc_ckb_fa.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/arab_pc_ckb_fa.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_sr.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_sr.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_cyrl_yxukeng_os.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/cyrl_yxukeng_os.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_arab_pc_ckb_fa.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/arab_pc_ckb_fa.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_clipboard_bottom_row.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/clipboard_bottom_row.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/layout_clipboard_pane.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/layout/clipboard_pane.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_deva_inscript.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/deva_inscript.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable_cog_outline.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/drawable/cog_outline.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_bone.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_bone.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/layout_pref_layouts_add_btn.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/layout/pref_layouts_add_btn.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_cyrl_yqukeng_tj.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/cyrl_yqukeng_tj.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_tr.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_tr.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_deva_alt.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/deva_alt.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_settings.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/xml/settings.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/raw_version_info.txt.flat",
-        "source": "juloo.keyboard2-build-21:/raw/version_info.txt"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/layout_clipboard_history_entry.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/layout/clipboard_history_entry.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/layout_pref_listgroup_group.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/layout/pref_listgroup_group.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/mipmap-xhdpi/ic_launcher.png"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_cyrl_ueishsht.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/cyrl_ueishsht.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_bottom_row.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/xml/bottom_row.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/layout_pref_layouts_add_btn.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/layout/pref_layouts_add_btn.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_cyrl_jcuken_ru.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/cyrl_jcuken_ru.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_hu.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_hu.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_greekmath.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/xml/greekmath.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable-xxxhdpi_ic_launcher_foreground.png.flat",
-        "source": "juloo.keyboard2-pngs-22:/drawable-xxxhdpi/ic_launcher_foreground.png"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_method.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/xml/method.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_method.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/method.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_is.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_is.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_cyrl_yaverti.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/cyrl_yaverti.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_deva_phonetic_in.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/deva_phonetic_in.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_sk.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_sk.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_dvorak.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_dvorak.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable-anydpi-v24_ic_launcher_foreground.xml.flat",
-        "source": "juloo.keyboard2-pngs-22:/drawable-anydpi-v24/ic_launcher_foreground.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_kk.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_kk.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_tamil_default.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/tamil_default.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_bqn.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_bqn.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/layout_clipboard_history_entry.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/layout/clipboard_history_entry.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/layout_pref_listgroup_group.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/layout/pref_listgroup_group.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable-mdpi_ic_launcher_foreground.png.flat",
-        "source": "juloo.keyboard2-pngs-22:/drawable-mdpi/ic_launcher_foreground.png"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_hebr_2_il.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/hebr_2_il.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/layout_keyboard.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/layout/keyboard.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_azerty_be.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_azerty_be.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable_ic_delete.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/drawable/ic_delete.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable-mdpi_ic_launcher_foreground.png.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-pngs-12:/drawable-mdpi/ic_launcher_foreground.png"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_kann_kannada.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/kann_kannada.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_gb.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_gb.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/layout_dialog_edit_text.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/layout/dialog_edit_text.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_no.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_no.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/mipmap-hdpi_ic_launcher.png.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/mipmap-hdpi/ic_launcher.png"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwertz_fr_ch.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwertz_fr_ch.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_deva_phonetic_in.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/deva_phonetic_in.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_clipboard_bottom_row.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/xml/clipboard_bottom_row.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_colemak.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_colemak.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_mt.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_mt.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_apl.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_apl.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_georgian_qwerty.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/georgian_qwerty.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_arab_pc_ckb.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/arab_pc_ckb.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_emoji_bottom_row.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/xml/emoji_bottom_row.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/layout_pref_listgroup_add_btn.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/layout/pref_listgroup_add_btn.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_br.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_br.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_cyrl_lynyertz_sr.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/cyrl_lynyertz_sr.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_numeric.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/xml/numeric.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/layout_emoji_pane.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/layout/emoji_pane.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable_doc_anim_circle.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/drawable/doc_anim_circle.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable-xxhdpi_ic_launcher_foreground.png.flat",
-        "source": "juloo.keyboard2-pngs-22:/drawable-xxhdpi/ic_launcher_foreground.png"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/mipmap-anydpi-v26/ic_launcher.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_hebr_2_il.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/hebr_2_il.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwertz.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwertz.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_emoji_bottom_row.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/xml/emoji_bottom_row.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable_ic_delete.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/drawable/ic_delete.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/menu_launcher_menu.xml.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/menu/launcher_menu.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable_doc_key_u.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/drawable/doc_key_u.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/mipmap-xhdpi_ic_launcher.png.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/mipmap-xhdpi/ic_launcher.png"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_us.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_us.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwertz_cz_diacritics.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwertz_cz_diacritics.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_number_row.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/xml/number_row.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/mipmap-mdpi_ic_launcher.png.flat",
-        "source": "juloo.keyboard2-cleverkeys-27:/mipmap-mdpi/ic_launcher.png"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_lt.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_lt.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_azerty_fr.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_azerty_fr.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable_doc_key_g.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/drawable/doc_key_g.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_arab_pc_hindu.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/arab_pc_hindu.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/layout_dialog_edit_text.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/layout/dialog_edit_text.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_guj_phonetic_in.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/guj_phonetic_in.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/layout_clipboard_pin_entry.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/layout/clipboard_pin_entry.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/drawable-ldpi_ic_launcher_foreground.png.flat",
-        "source": "juloo.keyboard2-pngs-22:/drawable-ldpi/ic_launcher_foreground.png"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_pin.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/xml/pin.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/raw_latn_qwerty_us.xml.flat",
-        "source": "juloo.keyboard2-build-21:/raw/latn_qwerty_us.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwertz_sq.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwertz_sq.xml"
     },
     {
-        "merged": "juloo.keyboard2-debug-26:/xml_latn_qwerty_cy.xml.flat",
-        "source": "juloo.keyboard2-build-21:/xml/latn_qwerty_cy.xml"
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_latn_qwerty_tly.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/latn_qwerty_tly.xml"
+    },
+    {
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_cyrl_jcuken_uk.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/cyrl_jcuken_uk.xml"
+    },
+    {
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable_ic_clipboard_save.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-cleverkeys-17:/drawable/ic_clipboard_save.xml"
+    },
+    {
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_arab_alt.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/arab_alt.xml"
+    },
+    {
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_cyrl_lynyertz_sr.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/cyrl_lynyertz_sr.xml"
+    },
+    {
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/drawable-hdpi_ic_launcher_foreground.png.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-pngs-12:/drawable-hdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-debug-16:/xml_cyrl_yxukeng_os.xml.flat",
+        "source": "/data/data/com.termux/files/home/.gradle/daemon/8.7/juloo.keyboard2-build-11:/xml/cyrl_yxukeng_os.xml"
     }
 ]
