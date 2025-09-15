@@ -1,0 +1,88 @@
+name: Build CleverKeys APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  Build-APK:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Kotlin compilation
+      run: |
+        echo "Setting up Kotlin compilation environment"
+
+    - name: Restore debug keystore
+      run: |
+        if [[ ! "${{ secrets.DEBUG_KEYSTORE }}" = "" ]]; then
+            echo "${{ secrets.DEBUG_KEYSTORE }}" > "debug.keystore.asc"
+            if [[ -s "debug.keystore.asc" ]]; then
+                echo "Restoring debug keystore from GitHub secrets"
+                gpg -d --passphrase "debug0" --batch "debug.keystore.asc" > "debug.keystore"
+            fi
+        fi
+
+    - name: Generate layouts and resources
+      run: |
+        python gen_layouts.py
+        python gen_emoji.py
+
+    - name: Build CleverKeys APK
+      uses: gradle/gradle-build-action@v3
+      env:
+        DEBUG_KEYSTORE: "debug.keystore"
+        DEBUG_KEYSTORE_PASSWORD: debug0
+        DEBUG_KEY_ALIAS: debug
+        DEBUG_KEY_PASSWORD: debug0
+      with:
+        arguments: assembleDebug
+
+    - name: Setup artifact naming
+      run: |
+        artifact="CleverKeys-${{github.ref_name}}"
+        artifact="${artifact//\//-}"
+        echo "artifact=${artifact}" >> $GITHUB_ENV
+
+    - name: Upload CleverKeys APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: "${{env.artifact}}-debug"
+        path: build/outputs/apk/debug/*.apk
+
+    - name: Upload to releases (on tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: build/outputs/apk/debug/*.apk
+        name: "CleverKeys ${{ github.ref_name }}"
+        body: |
+          CleverKeys Android APK - Privacy-first neural keyboard
+
+          ## Features
+          - Neural swipe prediction with local processing
+          - Enhanced gesture support from Unexpected Keyboard
+          - Complete customization and transparency
+
+          ## Installation
+          1. Download APK
+          2. Enable "Unknown sources" in Android settings
+          3. Install and activate in Language & Input settings
+
+          Built on [Unexpected Keyboard](https://github.com/Julow/Unexpected) foundation.
