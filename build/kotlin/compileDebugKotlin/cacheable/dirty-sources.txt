@@ -1,6 +1,5 @@
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/ExtraKeysPreference.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/DirectBootAwarePreferences.kt
-/data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/WordPredictor.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Logs.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/AccessibilityHelper.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/R.kt
@@ -12,7 +11,6 @@
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/PerformanceProfiler.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Theme.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Utils.kt
-/data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/EnhancedSwipeGestureRecognizer.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Keyboard2View.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/RuntimeValidator.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ml/SwipeMLData.kt
@@ -40,7 +38,6 @@
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/CleverKeysService.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/prefs/LayoutsPreference.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/KeyModifier.kt
-/data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ContinuousGestureRecognizer.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/VoiceImeSwitcher.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/FoldStateTrackerImpl.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/KeyValue.kt
@@ -53,13 +50,11 @@
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Extensions.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipePredictionService.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/EmojiGridView.kt
-/data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/AdvancedTemplateMatching.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ExtraKeys.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/Pointers.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/KeyEventHandler.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/NeuralSwipeTypingEngine.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/VibratorCompat.kt
-/data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/SwipeGestureRecognizer.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ConfigurationManager.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/ClipboardHistoryView.kt
 /data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/juloo/keyboard2/OptimizedVocabularyImpl.kt

@@ -417,7 +417,7 @@ class RuntimeValidator(private val context: Context) {
             // Test prediction
             val result = neuralEngine.predictAsync(testInput)
             
-            val success = result.isNotEmpty()
+            val success = !result.isEmpty
             logD("Neural prediction test: ${if (success) "✅ PASSED" else "❌ FAILED"}")
             
             neuralEngine.cleanup()

@@ -143,7 +143,7 @@ class RuntimeTestSuite(private val context: Context) {
         return try {
             val startTime = System.currentTimeMillis()
             
-            val recognizer = SwipeGestureRecognizer()
+            // ONNX-only: Direct neural processing test
             
             // Test multiple gesture types
             val testGestures = listOf(
