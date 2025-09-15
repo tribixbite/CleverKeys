@@ -38,9 +38,7 @@ class Keyboard2View(
         }
     }, config)
     
-    // Gesture recognition
-    private val swipeDetector = SwipeDetector()
-    private val continuousRecognizer = ContinuousGestureRecognizer()
+    // ONNX-only: Direct neural processing without intermediate gesture recognition
     
     // Drawing paints
     private val keyPaint = Paint().apply {
@@ -194,13 +192,7 @@ class Keyboard2View(
         gesturePath.reset()
         gesturePath.moveTo(x, y)
         
-        // Start continuous recognition
-        continuousRecognizer.startRecognition { result ->
-            if (result.isPartial) {
-                // Show partial predictions
-                logD("Partial predictions: ${result.words}")
-            }
-        }
+        // ONNX-only: No continuous recognition - process complete gestures only
         
         invalidate()
     }
@@ -213,8 +205,7 @@ class Keyboard2View(
         gestureTimestamps.add(System.currentTimeMillis())
         gesturePath.lineTo(x, y)
         
-        // Update continuous recognition
-        continuousRecognizer.updateGesture(gesturePoints.toList(), gestureTimestamps.toList())
+        // ONNX-only: No intermediate recognition updates - await complete gesture
         
         invalidate()
     }
@@ -228,30 +219,21 @@ class Keyboard2View(
         
         isGestureActive = false
         
-        // Complete continuous recognition
-        continuousRecognizer.completeGesture(gesturePoints.toList(), gestureTimestamps.toList())
+        // ONNX-only: Gesture complete - ready for neural processing
         
-        // Create swipe input
+        // ONNX-only: Direct neural processing of complete gesture
         val swipeInput = SwipeInput(
             coordinates = gesturePoints.toList(),
             timestamps = gestureTimestamps.toList(),
-            touchedKeys = gesturePoints.mapNotNull { point ->
-                getKeyAt(point.x, point.y)?.let { key ->
-                    // Create a fake KeyboardData.Key for compatibility
-                    // This is a simplification - real implementation would have proper key data
-                    null
-                }
-            }
+            touchedKeys = emptyList() // ONNX neural handles key detection internally
         )
-        
-        // Classify gesture
-        val classification = swipeDetector.detectSwipe(swipeInput)
-        
-        if (classification.isSwipe) {
-            logD("Swipe detected: ${classification.confidence} confidence, ${classification.quality}")
+
+        // Simple threshold-based gesture/tap distinction for ONNX processing
+        if (swipeInput.pathLength > 50f && swipeInput.duration > 0.1f && swipeInput.coordinates.size > 5) {
+            logD("Gesture completed: ${swipeInput.pathLength}px, ${swipeInput.duration}s - processing with ONNX neural")
             onSwipeCompleted?.invoke(swipeInput)
         } else {
-            // Handle as key tap
+            // Handle as key tap without gesture classification
             val keyValue = getKeyAt(x, y)
             if (keyValue != null) {
                 logD("Key tap: $keyValue")
@@ -295,10 +277,9 @@ class Keyboard2View(
     }
     
     /**
-     * Cleanup
+     * Cleanup - ONNX only
      */
     fun cleanup() {
-        continuousRecognizer.cleanup()
         pointers.cleanup()
     }
     

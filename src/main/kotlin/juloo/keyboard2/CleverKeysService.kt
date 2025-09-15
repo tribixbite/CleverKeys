@@ -276,10 +276,9 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
      */
     private fun updateSuggestionsFromPipeline(result: NeuralPredictionPipeline.PipelineResult) {
         keyboardView?.updateSuggestions(result.predictions.words.take(5))
-        
-        logD("🧠 ${result.source} prediction: ${result.predictions.size} words in ${result.processingTimeMs}ms")
-        logD("   Gesture: ${result.gestureInfo.type} (${result.gestureInfo.confidence} confidence)")
-        logD("   Classification: ${result.swipeClassification.quality} (${result.swipeClassification.confidence})")
+
+        logD("🧠 ${result.source} neural prediction: ${result.predictions.size} words in ${result.processingTimeMs}ms")
+        logD("   Top predictions: ${result.predictions.words.take(3)}")
     }
     
     /**
@@ -287,13 +286,11 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
      */
     private fun logPipelineResult(result: NeuralPredictionPipeline.PipelineResult) {
         val details = buildString {
-            appendLine("📊 Pipeline Result Details:")
+            appendLine("📊 ONNX Neural Pipeline Result:")
             appendLine("   Source: ${result.source}")
             appendLine("   Processing Time: ${result.processingTimeMs}ms")
-            appendLine("   Gesture Type: ${result.gestureInfo.type}")
-            appendLine("   Gesture Confidence: ${result.gestureInfo.confidence}")
-            appendLine("   Swipe Quality: ${result.swipeClassification.quality}")
-            appendLine("   Predictions: ${result.predictions.words.take(3)}")
+            appendLine("   Predictions: ${result.predictions.words.take(5)}")
+            appendLine("   Scores: ${result.predictions.scores.take(5)}")
         }
         logD(details)
     }

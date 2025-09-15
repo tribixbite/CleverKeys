@@ -30,7 +30,7 @@ class Pointers(
     private val pointers = mutableListOf<Pointer>()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     
-    val swipeRecognizer = EnhancedSwipeGestureRecognizer()
+    // ONNX-only: No gesture recognizer needed - direct neural processing only
     
     /**
      * Get current modifiers

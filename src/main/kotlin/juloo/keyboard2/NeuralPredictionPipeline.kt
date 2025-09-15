@@ -28,8 +28,6 @@ class NeuralPredictionPipeline(private val context: Context) {
      */
     data class PipelineResult(
         val predictions: PredictionResult,
-        val gestureInfo: SwipeGestureRecognizer.RecognizedGesture,
-        val swipeClassification: SwipeDetector.SwipeClassification,
         val processingTimeMs: Long,
         val source: PredictionSource
     )
@@ -80,8 +78,6 @@ class NeuralPredictionPipeline(private val context: Context) {
             // ONNX-only result
             PipelineResult(
                 predictions = predictions,
-                gestureInfo = createBasicGestureInfo(swipeInput),
-                swipeClassification = createBasicSwipeClassification(swipeInput),
                 processingTimeMs = 0L, // Will be filled by measureOperation
                 source = PredictionSource.NEURAL
             )
@@ -103,86 +99,7 @@ class NeuralPredictionPipeline(private val context: Context) {
         }
     }
     
-    /**
-     * Create basic gesture info for ONNX pipeline
-     */
-    private fun createBasicGestureInfo(input: SwipeInput): SwipeGestureRecognizer.RecognizedGesture {
-        return SwipeGestureRecognizer.RecognizedGesture(
-            type = SwipeGestureRecognizer.GestureType.SWIPE_HORIZONTAL, // Simplified for ONNX-only
-            direction = 0f,
-            distance = input.pathLength,
-            duration = input.duration,
-            confidence = input.swipeConfidence,
-            points = input.coordinates
-        )
-    }
-
-    /**
-     * Create basic swipe classification for ONNX pipeline
-     */
-    private fun createBasicSwipeClassification(input: SwipeInput): SwipeDetector.SwipeClassification {
-        return SwipeDetector.SwipeClassification(
-            isSwipe = input.pathLength > 50f && input.duration > 0.1f,
-            confidence = input.swipeConfidence,
-            reason = "ONNX neural processing",
-            quality = if (input.swipeConfidence > 0.7f) SwipeDetector.SwipeQuality.EXCELLENT
-                     else if (input.swipeConfidence > 0.5f) SwipeDetector.SwipeQuality.GOOD
-                     else SwipeDetector.SwipeQuality.FAIR
-        )
-    }
     
-    /**
-     * Extract key sequence from coordinate path
-     */
-    private fun extractKeySequenceFromPath(coordinates: List<PointF>): String {
-        // Simple key detection based on coordinate regions
-        return coordinates.mapNotNull { point ->
-            val x = point.x.toInt()
-            val y = point.y.toInt()
-            
-            // Basic QWERTY layout detection
-            when {
-                y < 100 -> { // Top row
-                    when (x) {
-                        in 0..107 -> 'q'
-                        in 108..215 -> 'w'
-                        in 216..323 -> 'e'
-                        in 324..431 -> 'r'
-                        in 432..539 -> 't'
-                        in 540..647 -> 'y'
-                        in 648..755 -> 'u'
-                        in 756..863 -> 'i'
-                        in 864..971 -> 'o'
-                        else -> 'p'
-                    }
-                }
-                y < 200 -> { // Middle row
-                    when (x) {
-                        in 0..119 -> 'a'
-                        in 120..239 -> 's'
-                        in 240..359 -> 'd'
-                        in 360..479 -> 'f'
-                        in 480..599 -> 'g'
-                        in 600..719 -> 'h'
-                        in 720..839 -> 'j'
-                        in 840..959 -> 'k'
-                        else -> 'l'
-                    }
-                }
-                else -> { // Bottom row
-                    when (x) {
-                        in 0..153 -> 'z'
-                        in 154..307 -> 'x'
-                        in 308..461 -> 'c'
-                        in 462..615 -> 'v'
-                        in 616..769 -> 'b'
-                        in 770..923 -> 'n'
-                        else -> 'm'
-                    }
-                }
-            }
-        }.joinToString("")
-    }
     
     /**
      * Get pipeline performance statistics
