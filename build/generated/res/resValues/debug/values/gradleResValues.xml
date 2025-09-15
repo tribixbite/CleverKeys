@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Automatically generated file. DO NOT MODIFY -->
+
+    <!-- Value from build type: debug -->
+    <bool name="debug_logs">true</bool>
+    <!-- Value from build type: debug -->
+    <string name="app_name" translatable="false">@string/app_name_debug</string>
+
+</resources>

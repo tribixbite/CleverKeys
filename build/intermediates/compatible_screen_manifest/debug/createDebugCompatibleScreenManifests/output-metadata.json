@@ -4,7 +4,7 @@
     "type": "COMPATIBLE_SCREEN_MANIFEST",
     "kind": "Directory"
   },
-  "applicationId": "juloo.keyboard2.minimal",
+  "applicationId": "juloo.keyboard2.debug",
   "variantName": "debug",
   "elements": []
 }

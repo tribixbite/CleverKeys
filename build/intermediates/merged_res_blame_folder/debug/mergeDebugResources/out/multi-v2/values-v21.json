@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "juloo.keyboard2-mergeDebugResources-10:/values-v21/values-v21.xml",
+            "outputFile": "juloo.keyboard2-mergeDebugResources-14:/values-v21/values-v21.xml",
             "map": [
                 {
                     "source": "/data/data/com.termux/files/home/.gradle/caches/transforms-4/f947dd21c454b08d814ea374b3c4738e/transformed/core-1.16.0/res/values-v21/values-v21.xml",
@@ -12,6 +12,23 @@
                         "endLines": "2,3,4,5,6,7,8,9,12,17",
                         "endColumns": "117,63,66,63,115,125,125,127,12,12",
                         "endOffsets": "168,232,299,363,479,605,731,859,1031,1383"
+                    }
+                },
+                {
+                    "source": "/data/data/com.termux/files/home/git/swype/cleverkeys/res/values-v21/styles.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "2",
+                        "startOffsets": "53",
+                        "endColumns": "71",
+                        "endOffsets": "122"
+                    },
+                    "to": {
+                        "startLines": "18",
+                        "startColumns": "4",
+                        "startOffsets": "1388",
+                        "endColumns": "73",
+                        "endOffsets": "1457"
                     }
                 }
             ]

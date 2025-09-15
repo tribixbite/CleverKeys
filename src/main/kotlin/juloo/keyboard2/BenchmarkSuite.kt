@@ -138,31 +138,38 @@ class BenchmarkSuite(private val context: Context) {
         val testName = "Gesture Recognition"
         logD("🎯 Benchmarking $testName...")
         
-        val recognizer = SwipeGestureRecognizer()
-        val testGestures = createVariedTestGestures()
-        
-        // Warmup
+        // ONNX-only: Benchmark direct neural processing instead of gesture recognition
+        val neuralEngine = NeuralSwipeEngine(context, Config.globalConfig())
+        if (!neuralEngine.initialize()) {
+            return@withContext createFailedResult(testName, "Neural engine initialization failed")
+        }
+
+        val testGestures = createVariedTestGestures().map { (points, timestamps) ->
+            SwipeInput(points, timestamps, emptyList())
+        }
+
+        // Warmup neural engine
         repeat(WARMUP_ITERATIONS) {
-            testGestures.forEach { (points, timestamps) ->
-                recognizer.recognizeGesture(points, timestamps)
+            testGestures.forEach { swipeInput ->
+                neuralEngine.predictAsync(swipeInput)
             }
         }
-        
-        // Benchmark
+
+        // Benchmark neural prediction
         val times = mutableListOf<Long>()
         val memoryBefore = getMemoryUsage()
-        
+
         repeat(BENCHMARK_ITERATIONS) {
             val time = measureTimeMillis {
-                testGestures.forEach { (points, timestamps) ->
-                    recognizer.recognizeGesture(points, timestamps)
+                testGestures.forEach { swipeInput ->
+                    neuralEngine.predictAsync(swipeInput)
                 }
             }
-            times.add(time / testGestures.size) // Average per gesture
+            times.add(time / testGestures.size) // Average per prediction
         }
-        
+
         val memoryAfter = getMemoryUsage()
-        recognizer.cleanup()
+        neuralEngine.cleanup()
         
         createBenchmarkResult(testName, times, memoryAfter - memoryBefore)
     }
@@ -231,19 +238,25 @@ class BenchmarkSuite(private val context: Context) {
         val testName = "Template Matching"
         logD("🎯 Benchmarking $testName...")
         
-        val templateMatcher = AdvancedTemplateMatching()
-        val testGesture = createStandardTestInput().coordinates
-        val template = createTestTemplate()
-        
+        // ONNX-only: Benchmark ONNX prediction instead of template matching
+        val neuralEngine = NeuralSwipeEngine(context, Config.globalConfig())
+        if (!neuralEngine.initialize()) {
+            return@withContext createFailedResult(testName, "Neural engine initialization failed")
+        }
+
+        val testInput = createStandardTestInput()
+
         val times = mutableListOf<Long>()
         val memoryBefore = getMemoryUsage()
-        
+
         repeat(BENCHMARK_ITERATIONS) {
             val time = measureTimeMillis {
-                templateMatcher.matchGesture(testGesture, template, AdvancedTemplateMatching.MatchingMethod.HYBRID)
+                neuralEngine.predictAsync(testInput)
             }
             times.add(time)
         }
+
+        neuralEngine.cleanup()
         
         val memoryAfter = getMemoryUsage()
         
@@ -341,19 +354,6 @@ class BenchmarkSuite(private val context: Context) {
         )
     }
     
-    private fun createTestTemplate(): AdvancedTemplateMatching.GestureTemplate {
-        val points = listOf(PointF(0f, 0f), PointF(1f, 0f), PointF(2f, 0f))
-        val features = AdvancedTemplateMatching.TemplateFeatures(
-            pathLength = 2f,
-            duration = 1f,
-            directionChanges = 0,
-            curvature = 0f,
-            aspectRatio = 2f,
-            centerOfMass = PointF(1f, 0f),
-            boundingBox = PointF(0f, 0f) to PointF(2f, 0f)
-        )
-        return AdvancedTemplateMatching.GestureTemplate("test", points, features, 0.5f)
-    }
     
     private fun createBenchmarkResult(testName: String, times: List<Long>, memoryDelta: Double): BenchmarkResult {
         val totalTime = times.sum()
