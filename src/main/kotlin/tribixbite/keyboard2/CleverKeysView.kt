@@ -121,19 +121,39 @@ class CleverKeysView(
             }
         }
     }
-    
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        logD("📐 Keyboard view size changed: ${w}x${h} (was ${oldw}x${oldh})")
+
+        if (w > 0 && h > 0) {
+            // Initialize keyboard layout when we get proper dimensions
+            createQwertyLayout()
+            logD("✅ Keyboard layout initialized with dimensions ${w}x${h}")
+        } else {
+            logD("⚠️ Invalid keyboard dimensions: ${w}x${h}")
+        }
+    }
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        
+
+        logD("🎨 onDraw called: width=$width, height=$height, keys=${keys.size}")
+
+        // Draw bright background for debugging visibility
+        canvas.drawColor(Color.CYAN)
+
         // Draw keyboard keys
         keys.values.forEach { key ->
             key.draw(canvas, keyPaint, keyBorderPaint, textPaint)
         }
-        
+
         // Draw gesture trail
         if (!gesturePath.isEmpty) {
             canvas.drawPath(gesturePath, swipeTrailPaint)
         }
+
+        logD("🎨 Drawing complete: ${keys.size} keys rendered")
     }
     
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -330,5 +350,9 @@ class CleverKeysView(
             val centerY = bounds.centerY() - (textPaint.ascent() + textPaint.descent()) / 2
             canvas.drawText(label, centerX, centerY, textPaint)
         }
+    }
+
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
     }
 }

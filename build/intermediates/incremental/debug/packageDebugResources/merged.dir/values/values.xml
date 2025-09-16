@@ -393,8 +393,8 @@
     <dimen name="margin_top">3dp</dimen>
     <dimen name="pref_button_size">28dp</dimen>
     <string name="app_name" translatable="false">@string/app_name_debug</string>
-    <string name="app_name_debug">Unexpected Keyboard (Debug)</string>
-    <string name="app_name_release">Unexpected Keyboard</string>
+    <string name="app_name_debug">CleverKeys (Debug)</string>
+    <string name="app_name_release">CleverKeys</string>
     <string name="clipboard_history_heading">Recently copied text</string>
     <string name="clipboard_pin_heading">Pinned</string>
     <string name="clipboard_remove_confirm">Remove this clipboard item?</string>
@@ -553,8 +553,8 @@
     <string name="pref_vibrate_duration_title">Vibration intensity</string>
     <string name="pref_word_prediction_summary">Show word suggestions while typing</string>
     <string name="pref_word_prediction_title">Enable word predictions</string>
-    <string name="short_description">Lightweight and privacy-conscious virtual keyboard for Android.</string>
-    <string name="store_description">The main feature is that you can type more characters by swiping the keys towards the corners.\n\nThis application was originally designed for programmers using Termux.\nNow perfect for everyday use.\n\nThis application contains no ads, doesn\'t make any network requests and is Open Source.</string>
+    <string name="short_description">AI-powered swipe typing keyboard with neural predictions running entirely on-device.</string>
+    <string name="store_description">CleverKeys combines privacy-first design with cutting-edge neural prediction technology. Features include:\n\n• Neural swipe typing with ONNX transformer models\n• 8-directional gesture support for programming symbols\n• 100% local processing - no cloud, no data collection\n• Hardware acceleration for modern Android devices\n• Real-time calibration and personalized training\n\nBuilt upon Unexpected Keyboard with enhanced neural intelligence.</string>
     <string name="toast_no_voice_input">No voice typing app installed</string>
     <style name="AltBlack" parent="Black">
     <item name="keyBorderWidth">1dp</item>

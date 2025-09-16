@@ -87,7 +87,7 @@ class LauncherActivity : Activity() {
      */
     private fun openCleverKeysSettings() {
         try {
-            startActivity(Intent(this, CleverKeysSettings::class.java))
+            startActivity(Intent(this, SettingsActivity::class.java))
         } catch (e: Exception) {
             toast("Could not open CleverKeys settings")
             logE("Failed to open settings", e)
