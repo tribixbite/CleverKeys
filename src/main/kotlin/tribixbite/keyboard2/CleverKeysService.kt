@@ -470,7 +470,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         // TODO: Stop performance monitoring
         logD("Performance monitoring stopped")
     }
-    
+
     /**
      * Swipe gesture data container
      */
