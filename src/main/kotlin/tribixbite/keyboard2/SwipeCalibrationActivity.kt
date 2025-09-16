@@ -327,10 +327,16 @@ class SwipeCalibrationActivity : Activity() {
         
         keyboardView.layoutParams = keyboardParams
         
-        // Add to main layout (convert to RelativeLayout)
+        // Add to main layout (safe null handling)
         val mainLayout = android.widget.RelativeLayout(this).apply {
             setBackgroundColor(Color.BLACK)
-            addView(findViewById<LinearLayout>(android.R.id.content)?.getChildAt(0))
+
+            // Safely get existing content
+            val existingContent = findViewById<LinearLayout>(android.R.id.content)?.getChildAt(0)
+            if (existingContent != null) {
+                addView(existingContent)
+            }
+
             addView(keyboardView)
         }
         
