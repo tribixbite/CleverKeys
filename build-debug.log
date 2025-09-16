@@ -30,14 +30,14 @@ Generated version info:  ()
 > Task :compileDebugShaders NO-SOURCE
 > Task :generateDebugAssets UP-TO-DATE
 > Task :mergeDebugAssets
-> Task :parseDebugLocalResources
 > Task :compressDebugAssets FROM-CACHE
+> Task :parseDebugLocalResources
 > Task :mergeDebugResources
-> Task :desugarDebugFileDependencies FROM-CACHE
 > Task :checkDebugDuplicateClasses
-> Task :mergeDebugJniLibFolders
+> Task :desugarDebugFileDependencies FROM-CACHE
 > Task :mergeExtDexDebug FROM-CACHE
 > Task :mergeLibDexDebug FROM-CACHE
+> Task :mergeDebugJniLibFolders
 > Task :validateSigningDebug
 > Task :writeDebugAppMetadata
 > Task :writeDebugSigningConfigVersions
@@ -139,12 +139,12 @@ w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/
 
 > Task :compileDebugJavaWithJavac NO-SOURCE
 > Task :processDebugJavaRes
+> Task :dexBuilderDebug FROM-CACHE
+> Task :mergeProjectDexDebug FROM-CACHE
 > Task :mergeDebugJavaResource
-> Task :dexBuilderDebug
-> Task :mergeProjectDexDebug
 > Task :packageDebug
 > Task :createDebugApkListingFileRedirect
 > Task :assembleDebug
 
-BUILD SUCCESSFUL in 57s
-36 actionable tasks: 26 executed, 10 from cache
+BUILD SUCCESSFUL in 1m 5s
+36 actionable tasks: 24 executed, 12 from cache
