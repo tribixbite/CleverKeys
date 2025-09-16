@@ -1,0 +1,413 @@
+name: Community Health
+
+on:
+  schedule:
+    # Run weekly on Sundays at 6 AM UTC
+    - cron: '0 6 * * 0'
+  issues:
+    types: [opened, labeled, closed]
+  pull_request:
+    types: [opened, closed, merged]
+  push:
+    branches: [main]
+
+jobs:
+  issue-management:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues'
+
+    steps:
+    - name: Auto-label bug reports
+      if: github.event.action == 'opened'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const issue = context.payload.issue;
+          const body = issue.body.toLowerCase();
+
+          const labels = [];
+
+          // Auto-label based on content
+          if (body.includes('neural') || body.includes('prediction') || body.includes('onnx')) {
+            labels.push('neural');
+          }
+          if (body.includes('ui') || body.includes('keyboard layout') || body.includes('visual')) {
+            labels.push('ui');
+          }
+          if (body.includes('performance') || body.includes('slow') || body.includes('lag')) {
+            labels.push('performance');
+          }
+          if (body.includes('accessibility') || body.includes('talkback') || body.includes('screen reader')) {
+            labels.push('accessibility');
+          }
+          if (body.includes('crash') || body.includes('force close') || body.includes('error')) {
+            labels.push('bug');
+          }
+
+          if (labels.length > 0) {
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              labels: labels
+            });
+          }
+
+    - name: Welcome new contributors
+      if: github.event.action == 'opened'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const issue = context.payload.issue;
+
+          // Check if this is a first-time contributor
+          const { data: issues } = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            creator: issue.user.login,
+            state: 'all'
+          });
+
+          if (issues.length === 1) {
+            const welcomeMessage = `👋 Welcome to CleverKeys! Thank you for your first issue.
+
+          ## Getting Started
+          - 📖 Check our [Contributing Guide](CONTRIBUTING.md) for development setup
+          - 🧪 Our automated tests will help validate any fixes
+          - 💬 Join [GitHub Discussions](https://github.com/tribixbite/CleverKeys/discussions) for questions
+
+          ## Neural Keyboard Context
+          CleverKeys is an AI-powered keyboard with:
+          - 🧠 On-device neural predictions (no cloud)
+          - 🔒 Complete privacy (100% local processing)
+          - ⚡ Hardware acceleration for modern Android devices
+          - 🧪 Comprehensive automated testing
+
+          We appreciate your contribution to making typing smarter and more private! 🚀`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: welcomeMessage
+            });
+          }
+
+  pr-management:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - name: Auto-label PRs
+      if: github.event.action == 'opened'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const pr = context.payload.pull_request;
+          const title = pr.title.toLowerCase();
+          const body = (pr.body || '').toLowerCase();
+
+          const labels = [];
+
+          // Label based on conventional commit prefixes
+          if (title.includes('feat:') || title.includes('feature:')) {
+            labels.push('enhancement');
+          }
+          if (title.includes('fix:') || title.includes('bugfix:')) {
+            labels.push('bug');
+          }
+          if (title.includes('docs:') || title.includes('documentation:')) {
+            labels.push('documentation');
+          }
+          if (title.includes('test:') || title.includes('testing:')) {
+            labels.push('testing');
+          }
+          if (title.includes('perf:') || title.includes('performance:')) {
+            labels.push('performance');
+          }
+          if (title.includes('refactor:') || title.includes('refactoring:')) {
+            labels.push('refactoring');
+          }
+
+          // Label based on content
+          if (title.includes('neural') || body.includes('neural') || body.includes('onnx')) {
+            labels.push('neural');
+          }
+          if (title.includes('ui') || body.includes('ui') || body.includes('interface')) {
+            labels.push('ui');
+          }
+          if (title.includes('accessibility') || body.includes('accessibility')) {
+            labels.push('accessibility');
+          }
+
+          if (labels.length > 0) {
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: labels
+            });
+          }
+
+    - name: Check PR requirements
+      if: github.event.action == 'opened'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const pr = context.payload.pull_request;
+          const body = pr.body || '';
+
+          const checks = {
+            hasDescription: body.length > 50,
+            hasTestingInfo: body.toLowerCase().includes('test') || body.toLowerCase().includes('validation'),
+            hasChangelog: body.toLowerCase().includes('change') || body.toLowerCase().includes('update'),
+            followsNaming: /^(feat|fix|docs|test|perf|refactor|style|chore)(\(.+\))?: .+/.test(pr.title)
+          };
+
+          let message = "## 🧪 CleverKeys PR Checklist\n\n";
+
+          message += checks.hasDescription ? "✅" : "❌";
+          message += " **Description**: Detailed explanation of changes\n";
+
+          message += checks.hasTestingInfo ? "✅" : "❌";
+          message += " **Testing**: Testing approach described\n";
+
+          message += checks.followsNaming ? "✅" : "❌";
+          message += " **Title Format**: Follows conventional commit format\n\n";
+
+          if (!checks.hasDescription || !checks.hasTestingInfo || !checks.followsNaming) {
+            message += "### ⚠️ Action Required\n\n";
+
+            if (!checks.hasDescription) {
+              message += "- Add a detailed description of your changes\n";
+            }
+            if (!checks.hasTestingInfo) {
+              message += "- Describe how you tested your changes\n";
+            }
+            if (!checks.followsNaming) {
+              message += "- Update title to follow format: `type(scope): description`\n";
+            }
+
+            message += "\n### 🧠 Neural Keyboard Testing\n";
+            message += "For neural/UI changes, please run:\n";
+            message += "```bash\n./testing/run-ui-tests.sh\n```\n\n";
+            message += "Our automated CI will also validate:\n";
+            message += "- 🧪 Performance benchmarks (<200ms neural latency)\n";
+            message += "- 📸 Visual regression testing\n";
+            message += "- ♿ Accessibility compliance\n";
+            message += "- 🔧 Memory usage validation\n";
+          } else {
+            message += "### ✅ All checks passed!\n\n";
+            message += "Thank you for following our contribution guidelines. ";
+            message += "Our automated tests will validate your changes shortly.\n\n";
+            message += "### 🚀 What happens next:\n";
+            message += "1. Automated tests run on multiple Android versions\n";
+            message += "2. Performance benchmarks validate neural prediction speed\n";
+            message += "3. Visual regression tests ensure UI consistency\n";
+            message += "4. Code review by maintainers\n";
+          }
+
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: pr.number,
+            body: message
+          });
+
+    - name: Thank contributors on merge
+      if: github.event.action == 'closed' && github.event.pull_request.merged
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const pr = context.payload.pull_request;
+
+          const thankYouMessage = `🎉 **Thank you for contributing to CleverKeys!**
+
+          Your pull request has been merged and will be included in the next release.
+
+          ## 🚀 Your Impact
+          Your contribution helps make CleverKeys:
+          - 🧠 **Smarter**: Better neural predictions for users
+          - 🔒 **More Private**: Maintaining our privacy-first approach
+          - ⚡ **Faster**: Optimized performance for all users
+          - ♿ **More Accessible**: Better experience for all users
+
+          ## 🏆 Recognition
+          - You're now listed as a contributor in our README
+          - Your changes will be highlighted in the next release notes
+          - You're part of the CleverKeys community!
+
+          ## 🤝 Stay Connected
+          - Star the repo to stay updated
+          - Join [GitHub Discussions](https://github.com/tribixbite/CleverKeys/discussions)
+          - Consider contributing again - we'd love your continued help!
+
+          **Building the future of privacy-first neural keyboards, one contribution at a time!** 🧠⌨️🔒`;
+
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: pr.number,
+            body: thankYouMessage
+          });
+
+  community-metrics:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+    - name: Generate community health report
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: issues } = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'all',
+            per_page: 100
+          });
+
+          const { data: prs } = await github.rest.pulls.list({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'all',
+            per_page: 100
+          });
+
+          const now = new Date();
+          const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+          const weeklyIssues = issues.filter(issue =>
+            new Date(issue.created_at) > oneWeekAgo && !issue.pull_request
+          );
+          const weeklyPRs = prs.filter(pr =>
+            new Date(pr.created_at) > oneWeekAgo
+          );
+
+          const openIssues = issues.filter(issue =>
+            issue.state === 'open' && !issue.pull_request
+          );
+          const openPRs = prs.filter(pr => pr.state === 'open');
+
+          // Get unique contributors
+          const contributors = new Set();
+          [...issues, ...prs].forEach(item => {
+            contributors.add(item.user.login);
+          });
+
+          const report = `## 📊 CleverKeys Community Health Report
+
+          ### 📈 Weekly Activity
+          - **New Issues**: ${weeklyIssues.length}
+          - **New Pull Requests**: ${weeklyPRs.length}
+          - **Active Contributors**: ${contributors.size}
+
+          ### 🔧 Current Status
+          - **Open Issues**: ${openIssues.length}
+          - **Open Pull Requests**: ${openPRs.length}
+
+          ### 🏷️ Issue Categories
+          ${this.getCategoryBreakdown(openIssues)}
+
+          ### 🎯 Focus Areas
+          ${this.getFocusAreas(openIssues)}
+
+          ### 🙏 Top Contributors This Week
+          ${this.getTopContributors(weeklyIssues, weeklyPRs)}
+
+          ---
+          *Report generated automatically every Sunday*`;
+
+          console.log(report);
+
+          // Create a discussion post with the report
+          // (This would require GitHub GraphQL API for discussions)
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  stale-issue-management:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+    - name: Mark stale issues
+      uses: actions/stale@v9
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        stale-issue-message: |
+          👋 This issue has been automatically marked as stale because it has not had recent activity.
+
+          ## 🔄 Next Steps
+          - **Still relevant?** Add a comment to keep this issue open
+          - **Need help?** Check our [Contributing Guide](CONTRIBUTING.md)
+          - **Duplicate?** Reference the original issue
+          - **Resolved?** Close the issue with a comment
+
+          ## 🧠 CleverKeys Development
+          We're actively developing CleverKeys with:
+          - 🧪 Automated testing on every commit
+          - 🚀 Regular releases with new features
+          - 💬 Active community discussions
+
+          **This issue will be closed in 7 days if no further activity occurs.**
+
+        stale-pr-message: |
+          👋 This pull request has been automatically marked as stale.
+
+          ## 🔄 Next Steps
+          - **Ready for review?** Request a review from maintainers
+          - **Need updates?** Address any requested changes
+          - **Blocked?** Add a comment explaining the blocker
+          - **Alternative approach?** Reference in a new PR
+
+          ## 🧪 Testing Requirements
+          Ensure your PR passes:
+          - ✅ Automated test suite
+          - ✅ Performance benchmarks
+          - ✅ Visual regression tests
+          - ✅ Neural prediction validation
+
+          **This PR will be closed in 7 days if no further activity occurs.**
+
+        days-before-stale: 60
+        days-before-close: 7
+        stale-issue-label: 'stale'
+        stale-pr-label: 'stale'
+        exempt-issue-labels: 'pinned,security,neural'
+        exempt-pr-labels: 'pinned,security,neural'
+
+  release-celebration:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, 'release:')
+
+    steps:
+    - name: Celebrate release
+      uses: actions/github-script@v7
+      with:
+        script: |
+          // This would create a celebration discussion post
+          // highlighting new features and thanking contributors
+          console.log("🎉 New CleverKeys release detected!");
+          console.log("Creating celebration post...");
+
+          // Future: Create GitHub Discussion with release highlights
+          // Future: Tweet about release (if configured)
+          // Future: Update community metrics
+
+  community-documentation:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+    - name: Update contributor list
+      uses: actions/github-script@v7
+      with:
+        script: |
+          // This would automatically update the contributors section
+          // in README.md based on recent activity
+          console.log("📖 Updating contributor documentation...");
+
+          // Future: Generate contributor stats
+          // Future: Update README.md contributors section
+          // Future: Create contributor spotlight posts

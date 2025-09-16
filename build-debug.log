@@ -30,8 +30,8 @@ Generated version info:  ()
 > Task :compileDebugShaders NO-SOURCE
 > Task :generateDebugAssets UP-TO-DATE
 > Task :mergeDebugAssets
-> Task :compressDebugAssets FROM-CACHE
 > Task :parseDebugLocalResources
+> Task :compressDebugAssets FROM-CACHE
 > Task :mergeDebugResources
 > Task :checkDebugDuplicateClasses
 > Task :desugarDebugFileDependencies FROM-CACHE
@@ -53,6 +53,11 @@ w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/AccessibilityHelper.kt:43:63 'obtain(): AccessibilityNodeInfo!' is deprecated. Deprecated in Java
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/AccessibilityHelper.kt:44:29 'setBoundsInParent(Rect!): Unit' is deprecated. Deprecated in Java
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/AccessibilityHelper.kt:54:29 'addAction(Int): Unit' is deprecated. Deprecated in Java
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/BatchedMemoryOptimizer.kt:98:45 Unchecked cast: Any! to Array<FloatArray>
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/BatchedMemoryOptimizer.kt:99:60 Unchecked cast: Any! to Array<Array<FloatArray>>
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/BatchedMemoryOptimizer.kt:158:50 Unchecked cast: Any! to Array<BooleanArray>
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/BatchedMemoryOptimizer.kt:172:46 Unchecked cast: Any! to Array<LongArray>
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/BatchedMemoryOptimizer.kt:173:42 Unchecked cast: Any! to Array<BooleanArray>
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/CleverKeysSettings.kt:135:17 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/CleverKeysView.kt:79:13 Variable 'layout' is never used
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/CleverKeysView.kt:251:30 Parameter 'keyLabel' is never used
@@ -69,8 +74,19 @@ w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/LayoutModifier.kt:9:14 Parameter 'config' is never used
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/LayoutModifier.kt:9:30 Parameter 'resources' is never used
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/NeuralPredictionPipeline.kt:66:9 Parameter 'context' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/OnnxSwipePredictorImpl.kt:210:9 Parameter 'features' is never used
-w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/OnnxSwipePredictorImpl.kt:340:51 Unchecked cast: Any! to Array<Array<FloatArray>>
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/OnnxSwipePredictorImpl.kt:211:9 Parameter 'features' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/OnnxSwipePredictorImpl.kt:339:52 Unchecked cast: Any! to Array<LongArray>
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/OnnxSwipePredictorImpl.kt:340:48 Unchecked cast: Any! to Array<BooleanArray>
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/OnnxSwipePredictorImpl.kt:373:51 Unchecked cast: Any! to Array<Array<FloatArray>>
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/OptimizedTensorPool.kt:214:13 Variable 'totalElements' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/PipelineParallelismManager.kt:366:40 Parameter 'features' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/PipelineParallelismManager.kt:372:41 Parameter 'features' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/PipelineParallelismManager.kt:377:40 Parameter 'features' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/PipelineParallelismManager.kt:386:9 Parameter 'seqLength' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/PipelineParallelismManager.kt:389:46 Unchecked cast: Any! to Array<LongArray>
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/PipelineParallelismManager.kt:390:42 Unchecked cast: Any! to Array<BooleanArray>
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/PipelineParallelismManager.kt:401:9 Parameter 'batchedOutput' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/PipelineParallelismManager.kt:403:9 Parameter 'beamWidth' is never used
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/PredictionRepository.kt:121:36 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/PredictionRepository.kt:132:14 This declaration is in a preview state and can be changed in a backwards-incompatible manner with a best-effort migration. Its usage should be marked with '@kotlinx.coroutines.FlowPreview' or '@OptIn(kotlinx.coroutines.FlowPreview::class)' if you accept the drawback of relying on preview API
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/PredictionRepository.kt:151:36 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
@@ -113,5 +129,5 @@ w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/
 > Task :createDebugApkListingFileRedirect
 > Task :assembleDebug
 
-BUILD SUCCESSFUL in 57s
+BUILD SUCCESSFUL in 51s
 36 actionable tasks: 26 executed, 10 from cache
