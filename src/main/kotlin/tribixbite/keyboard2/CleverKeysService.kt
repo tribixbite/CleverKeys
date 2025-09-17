@@ -180,17 +180,25 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     }
     
     /**
-     * Create keyboard view with complete InputMethodService integration
+     * CRITICAL FIX: Create and set keyboard view using Unexpected Keyboard pattern
      */
-    override fun onCreateInputView(): View? {
-        logD("Creating keyboard input view...")
+    override fun onStartInput(editorInfo: EditorInfo?, restarting: Boolean) {
+        super.onStartInput(editorInfo, restarting)
+        logD("Input started: package=${editorInfo?.packageName}, restarting=$restarting")
 
+        // CRITICAL: Create and set input view manually like Unexpected Keyboard
+        createAndSetKeyboardView()
+    }
+
+    private fun createAndSetKeyboardView() {
         val currentConfig = config ?: run {
             logE("Configuration not available for input view creation")
-            return null
+            return
         }
 
         try {
+            logD("Creating keyboard input view...")
+
             keyboardView = CleverKeysView(this, currentConfig).apply {
                 onSwipeCompleted = { swipeData -> handleSwipeGesture(swipeData) }
                 onKeyPressed = { key -> handleKeyPress(key) }
@@ -202,28 +210,16 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
                 currentLayout?.let { layout -> setLayout(layout) }
             }
 
-            logD("✅ Keyboard input view created successfully")
-            return keyboardView
+            // CRITICAL: Use setInputView() like Unexpected Keyboard, not onCreateInputView()
+            setInputView(keyboardView)
+            logD("✅ Keyboard view set with setInputView() - should be visible!")
 
         } catch (e: Exception) {
             logE("Failed to create keyboard input view", e)
-            return null
         }
     }
 
-    /**
-     * Handle input started with proper context setup
-     */
-    override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
-        super.onStartInput(info, restarting)
-        logD("Input started: package=${info?.packageName}, restarting=$restarting")
-
-        // Configure input connection manager
-        serviceScope.launch {
-            val inputConnectionManager = InputConnectionManager(this@CleverKeysService)
-            inputConnectionManager.setInputConnection(currentInputConnection, info)
-        }
-    }
+    // Removed duplicate onStartInput - using the one at line 185 with createAndSetKeyboardView()
 
     /**
      * Handle input finishing with cleanup

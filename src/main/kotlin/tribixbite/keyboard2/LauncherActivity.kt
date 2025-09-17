@@ -34,17 +34,28 @@ class LauncherActivity : Activity() {
         orientation = LinearLayout.VERTICAL
         setPadding(32, 32, 32, 32)
         
-        // Title
+        // Title with version
         addView(TextView(this@LauncherActivity).apply {
-            text = "⌨️ CleverKeys Setup"
+            val versionName = packageManager.getPackageInfo(packageName, 0).versionName
+            val versionCode = packageManager.getPackageInfo(packageName, 0).versionCode
+            text = "⌨️ CleverKeys v$versionName (Build $versionCode)"
             textSize = 28f
-            setPadding(0, 0, 0, 32)
+            setPadding(0, 0, 0, 16)
         })
-        
+
         // Description
         addView(TextView(this@LauncherActivity).apply {
             text = "Modern Kotlin keyboard with neural swipe prediction"
             textSize = 16f
+            setPadding(0, 0, 0, 8)
+        })
+
+        // Build info
+        addView(TextView(this@LauncherActivity).apply {
+            val buildTime = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(java.util.Date())
+            text = "Built: $buildTime"
+            textSize = 12f
+            setTextColor(0xFF666666.toInt())
             setPadding(0, 0, 0, 24)
         })
         
