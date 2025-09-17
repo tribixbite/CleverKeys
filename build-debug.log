@@ -22,25 +22,25 @@ Generated version info:  ()
 > Task :packageDebugResources
 > Task :createDebugCompatibleScreenManifests
 > Task :extractDeepLinksDebug FROM-CACHE
-> Task :parseDebugLocalResources
-> Task :processDebugMainManifest
-> Task :processDebugManifest
-> Task :mergeDebugResources
+> Task :processDebugMainManifest FROM-CACHE
+> Task :processDebugManifest FROM-CACHE
+> Task :processDebugManifestForPackage FROM-CACHE
 > Task :javaPreCompileDebug FROM-CACHE
 > Task :mergeDebugShaders
 > Task :compileDebugShaders NO-SOURCE
 > Task :generateDebugAssets UP-TO-DATE
 > Task :mergeDebugAssets
 > Task :compressDebugAssets FROM-CACHE
-> Task :desugarDebugFileDependencies FROM-CACHE
-> Task :mergeDebugJniLibFolders
+> Task :parseDebugLocalResources
+> Task :mergeDebugResources
 > Task :checkDebugDuplicateClasses
+> Task :desugarDebugFileDependencies FROM-CACHE
 > Task :mergeExtDexDebug FROM-CACHE
 > Task :mergeLibDexDebug FROM-CACHE
+> Task :mergeDebugJniLibFolders
 > Task :validateSigningDebug
 > Task :writeDebugAppMetadata
 > Task :writeDebugSigningConfigVersions
-> Task :processDebugManifestForPackage
 > Task :mergeDebugNativeLibs
 
 > Task :stripDebugDebugSymbols
@@ -70,6 +70,7 @@ w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/KeyEventHandler.kt:87:48 Parameter 'isSwipe' is never used
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/KeyEventHandler.kt:102:49 Parameter 'isSwipe' is never used
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/Keyboard2View.kt:268:29 Parameter 'keyValue' is never used
+w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/LauncherActivity.kt:40:77 'versionCode: Int' is deprecated. Deprecated in Java
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/LayoutModifier.kt:9:14 Parameter 'config' is never used
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/LayoutModifier.kt:9:30 Parameter 'resources' is never used
 w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/NeuralPredictionPipeline.kt:66:9 Parameter 'context' is never used
@@ -146,5 +147,5 @@ w: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/
 > Task :createDebugApkListingFileRedirect
 > Task :assembleDebug
 
-BUILD SUCCESSFUL in 1m 13s
-36 actionable tasks: 29 executed, 7 from cache
+BUILD SUCCESSFUL in 1m 11s
+36 actionable tasks: 26 executed, 10 from cache

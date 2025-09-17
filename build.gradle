@@ -18,6 +18,42 @@ dependencies {
   testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
 }
 
+// Version management functions
+def getVersionCode() {
+    def versionFile = file("version.properties")
+    def versionCode = 51
+
+    if (versionFile.exists()) {
+        def props = new Properties()
+        props.load(new FileInputStream(versionFile))
+        versionCode = props.getProperty("VERSION_CODE", "51").toInteger()
+    }
+
+    // Increment version code
+    versionCode++
+
+    // Save back to file
+    versionFile.parentFile.mkdirs()
+    def props = new Properties()
+    props.setProperty("VERSION_CODE", versionCode.toString())
+    props.setProperty("VERSION_NAME", "1.1.${versionCode - 50}")
+    props.setProperty("BUILD_TIME", new Date().toString())
+    props.store(new FileOutputStream(versionFile), "CleverKeys Version")
+
+    println "🚀 CleverKeys version incremented to: ${versionCode}"
+    return versionCode
+}
+
+def getVersionName() {
+    def versionFile = file("version.properties")
+    if (versionFile.exists()) {
+        def props = new Properties()
+        props.load(new FileInputStream(versionFile))
+        return props.getProperty("VERSION_NAME", "1.1.1")
+    }
+    return "1.1.1"
+}
+
 android {
   namespace 'tribixbite.keyboard2'
   compileSdk 35
@@ -26,8 +62,8 @@ android {
     applicationId "tribixbite.keyboard2"
     minSdk 21
     targetSdkVersion 35
-    versionCode 50
-    versionName "1.32.1"
+    versionCode getVersionCode()
+    versionName getVersionName()
   }
 
   compileOptions {

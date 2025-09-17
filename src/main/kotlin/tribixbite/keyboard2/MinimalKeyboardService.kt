@@ -21,27 +21,38 @@ class MinimalKeyboardService : InputMethodService() {
         Log.d(TAG, "🚀 MinimalKeyboardService created")
     }
 
-    override fun onCreateInputView(): View {
-        Log.d(TAG, "🎨 Creating minimal input view")
+    override fun onStartInput(editorInfo: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
+        super.onStartInput(editorInfo, restarting)
+        Log.d(TAG, "📝 Input started: package=${editorInfo?.packageName}, restarting=$restarting")
 
-        // Create the simplest possible keyboard view
+        // CRITICAL FIX: Create and set input view manually like Unexpected Keyboard
+        createAndSetKeyboardView()
+    }
+
+    private fun createAndSetKeyboardView() {
+        Log.d(TAG, "🎨 Creating minimal keyboard view")
+
+        // Create the simplest possible keyboard view with explicit dimensions
         val view = TextView(this).apply {
-            text = "CLEVERKEYS MINIMAL TEST KEYBOARD"
+            text = "CLEVERKEYS MINIMAL TEST KEYBOARD - VISIBLE!"
             setBackgroundColor(Color.MAGENTA)
             setTextColor(Color.WHITE)
             textSize = 24f
             setPadding(20, 20, 20, 20)
-            height = 200 // Fixed height
+
+            // CRITICAL: Set explicit layout parameters with fixed height
+            layoutParams = android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                400 // 400px fixed height
+            )
         }
 
-        Log.d(TAG, "✅ Minimal input view created")
-        return view
+        // CRITICAL: Use setInputView() like Unexpected Keyboard, not onCreateInputView()
+        setInputView(view)
+        Log.d(TAG, "✅ Keyboard view set with setInputView() - should be visible!")
     }
 
-    override fun onStartInput(editorInfo: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
-        super.onStartInput(editorInfo, restarting)
-        Log.d(TAG, "📝 Input started: package=${editorInfo?.packageName}, restarting=$restarting")
-    }
+    // Removed duplicate onStartInput method
 
     override fun onFinishInput() {
         super.onFinishInput()
