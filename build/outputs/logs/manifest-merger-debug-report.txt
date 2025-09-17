@@ -77,18 +77,18 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /data/data/
 		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:10:76-110
 	android:allowBackup
 		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:10:49-75
-service#tribixbite.keyboard2.CleverKeysService
+service#tribixbite.keyboard2.MinimalKeyboardService
 ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:5-16:15
 	android:label
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:68-100
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:73-112
 	android:exported
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:159-182
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:171-194
 	android:permission
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:101-158
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:113-170
 	android:directBootAware
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:183-213
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:195-225
 	android:name
-		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:14-67
+		ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:11:14-72
 intent-filter#action:name:android.view.InputMethod
 ADDED from /data/data/com.termux/files/home/git/swype/cleverkeys/AndroidManifest.xml:12:7-14:23
 action#android.view.InputMethod
