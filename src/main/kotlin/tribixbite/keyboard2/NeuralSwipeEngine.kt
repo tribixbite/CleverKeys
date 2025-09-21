@@ -92,6 +92,14 @@ class NeuralSwipeEngine(
         neuralPredictor?.setConfig(newConfig)
         logD("Neural configuration updated")
     }
+
+    /**
+     * Update neural-specific configuration
+     */
+    fun setNeuralConfig(neuralConfig: NeuralConfig) {
+        neuralPredictor?.setNeuralConfig(neuralConfig)
+        logD("Neural-specific configuration updated: beam=${neuralConfig.beamWidth}, max=${neuralConfig.maxLength}, threshold=${neuralConfig.confidenceThreshold}")
+    }
     
     /**
      * Set keyboard dimensions for coordinate normalization

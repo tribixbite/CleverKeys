@@ -3,11 +3,22 @@ package tribixbite.keyboard2
 import android.content.SharedPreferences
 import android.graphics.PointF
 import android.inputmethodservice.InputMethodService
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+
+// Logging convenience functions
+private fun logD(tag: String, message: String) = Log.d(tag, message)
+private fun logE(tag: String, message: String, throwable: Throwable? = null) = Log.e(tag, message, throwable)
+private fun logW(tag: String, message: String) = Log.w(tag, message)
+
+// Extension for this service
+private fun logD(message: String) = logD("CleverKeysService", message)
+private fun logE(message: String, throwable: Throwable? = null) = logE("CleverKeysService", message, throwable)
+private fun logW(message: String) = logW("CleverKeysService", message)
 
 /**
  * Modern Kotlin InputMethodService for CleverKeys
@@ -84,6 +95,9 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         Config.initGlobalConfig(prefs, resources, null, false)
         config = Config.globalConfig()
         neuralConfig = NeuralConfig(prefs)
+
+        // Load saved settings from SharedPreferences
+        loadSavedSettings(prefs)
         
         // Initialize configuration manager
         configManager = ConfigurationManager(this).also { manager ->
@@ -99,7 +113,59 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         
         logD("Configuration initialized")
     }
-    
+
+    /**
+     * Load saved settings from SharedPreferences with validation and error handling
+     */
+    private fun loadSavedSettings(prefs: android.content.SharedPreferences) {
+        config?.let { cfg ->
+            try {
+                // Load theme with validation
+                val themeValue = prefs.getInt("theme", R.style.Dark)
+                cfg.theme = when (themeValue) {
+                    R.style.Light, R.style.Dark, R.style.Black -> themeValue
+                    else -> {
+                        logW("Invalid theme value $themeValue, using default Dark theme")
+                        R.style.Dark
+                    }
+                }
+
+                // Load keyboard height with validation
+                val heightValue = prefs.getInt("keyboardHeightPercent", 35)
+                cfg.keyboardHeightPercent = heightValue.coerceIn(20, 60).also { validHeight ->
+                    if (validHeight != heightValue) {
+                        logW("Keyboard height $heightValue out of range, clamped to $validHeight")
+                    }
+                }
+
+                // Load vibration setting
+                cfg.vibrate_custom = prefs.getBoolean("vibrate_custom", false)
+
+                // Load debug setting
+                val debugEnabled = prefs.getBoolean("debug_enabled", false)
+                Logs.setDebugEnabled(debugEnabled)
+
+                // Validate neural configuration
+                neuralConfig?.validate()
+
+                logD("Settings loaded: theme=${cfg.theme}, height=${cfg.keyboardHeightPercent}, vibration=${cfg.vibrate_custom}, debug=$debugEnabled")
+
+                // Test settings persistence for debugging
+                if (debugEnabled) {
+                    testSettingsPersistence(prefs)
+                }
+
+            } catch (e: Exception) {
+                logE("Error loading settings, using defaults", e)
+                // Reset to safe defaults
+                cfg.theme = R.style.Dark
+                cfg.keyboardHeightPercent = 35
+                cfg.vibrate_custom = false
+                Logs.setDebugEnabled(false)
+            }
+        }
+    }
+
     /**
      * Initialize performance profiler
      */
@@ -116,7 +182,9 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             override fun getInputConnection(): InputConnection? = currentInputConnection
             override fun getCurrentInputEditorInfo(): EditorInfo? = currentInputEditorInfo
             override fun performVibration() {
-                // TODO: Implement vibration
+                if (config?.vibrate_custom == true) {
+                    keyboardView?.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+                }
             }
             override fun commitText(text: String) {
                 currentInputConnection?.commitText(text, 1)
@@ -136,12 +204,17 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         if (currentConfig.swipe_typing_enabled) {
             serviceScope.launch {
                 try {
-                    // Initialize neural engine
+                    // Initialize neural engine with both general config and neural-specific config
                     neuralEngine = NeuralSwipeEngine(this@CleverKeysService, currentConfig).apply {
                         if (!initialize()) {
                             throw RuntimeException("Failed to initialize neural engine")
                         }
                         setDebugLogger { message -> logD("Neural: $message") }
+
+                        // Apply neural-specific configuration
+                        neuralConfig?.let { nc ->
+                            setNeuralConfig(nc)
+                        }
 
                         // Register with configuration manager for automatic updates
                         configManager?.registerNeuralEngine(this)
@@ -249,6 +322,9 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
 
                 // Set keyboard layout if available
                 currentLayout?.let { layout -> setLayout(layout) }
+
+                // Apply keyboard height setting
+                applyKeyboardHeight(this, currentConfig.keyboardHeightPercent)
             }
 
             keyboardView = view
@@ -258,6 +334,28 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         } catch (e: Exception) {
             logE("Failed to create keyboard input view", e)
             null
+        }
+    }
+
+    /**
+     * Apply keyboard height setting to the view
+     */
+    private fun applyKeyboardHeight(view: android.view.View, heightPercent: Int) {
+        try {
+            val displayMetrics = resources.displayMetrics
+            val screenHeight = displayMetrics.heightPixels
+            val desiredHeight = (screenHeight * heightPercent / 100f).toInt()
+
+            view.layoutParams = view.layoutParams?.apply {
+                height = desiredHeight
+            } ?: android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                desiredHeight
+            )
+
+            logD("Applied keyboard height: ${heightPercent}% = ${desiredHeight}px")
+        } catch (e: Exception) {
+            logE("Failed to apply keyboard height", e)
         }
     }
 
@@ -444,8 +542,11 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     private suspend fun handleConfigurationChange(change: ConfigurationManager.ConfigChange) {
         when (change.key) {
             "neural_beam_width", "neural_max_length", "neural_confidence_threshold" -> {
-                // Update neural configuration
-                neuralEngine?.setConfig(config ?: return)
+                // Update neural configuration with both general and neural-specific settings
+                neuralEngine?.let { engine ->
+                    config?.let { cfg -> engine.setConfig(cfg) }
+                    neuralConfig?.let { nc -> engine.setNeuralConfig(nc) }
+                }
                 predictionPipeline?.let { pipeline ->
                     // Reinitialize pipeline with new settings
                     pipeline.cleanup()
@@ -514,6 +615,72 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     private fun stopPerformanceMonitoring() {
         // TODO: Stop performance monitoring
         logD("Performance monitoring stopped")
+    }
+
+    /**
+     * Test settings persistence for debugging
+     */
+    private fun testSettingsPersistence(prefs: android.content.SharedPreferences) {
+        logD("🧪 Testing settings persistence...")
+
+        // Verify all expected settings exist
+        val expectedSettings = mapOf(
+            "theme" to R.style.Dark,
+            "keyboardHeightPercent" to 35,
+            "vibrate_custom" to false,
+            "debug_enabled" to false,
+            "neural_prediction_enabled" to true,
+            "neural_beam_width" to 8,
+            "neural_max_length" to 35,
+            "neural_confidence_threshold" to 0.1f
+        )
+
+        var allSettingsPresent = true
+        var settingsMatchExpected = true
+
+        expectedSettings.forEach { (key, defaultValue) ->
+            if (!prefs.contains(key)) {
+                logW("⚠️ Setting '$key' not found in preferences")
+                allSettingsPresent = false
+            } else {
+                val actualValue = when (defaultValue) {
+                    is Boolean -> prefs.getBoolean(key, false)
+                    is Int -> prefs.getInt(key, 0)
+                    is Float -> prefs.getFloat(key, 0.0f)
+                    is String -> prefs.getString(key, "")
+                    else -> null
+                }
+
+                if (actualValue != prefs.all[key]) {
+                    logW("⚠️ Setting '$key' value mismatch: expected type but got ${prefs.all[key]}")
+                    settingsMatchExpected = false
+                }
+            }
+        }
+
+        // Test neural configuration specifically
+        neuralConfig?.let { nc ->
+            val neuralSettingsValid = nc.beamWidth in nc.beamWidthRange &&
+                    nc.maxLength in nc.maxLengthRange &&
+                    nc.confidenceThreshold in nc.confidenceRange
+
+            if (!neuralSettingsValid) {
+                logW("⚠️ Neural configuration validation failed")
+                settingsMatchExpected = false
+            }
+        }
+
+        when {
+            allSettingsPresent && settingsMatchExpected -> {
+                logD("✅ Settings persistence test PASSED - all settings loaded correctly")
+            }
+            allSettingsPresent && !settingsMatchExpected -> {
+                logW("⚠️ Settings persistence test PARTIAL - settings exist but have validation issues")
+            }
+            else -> {
+                logE("❌ Settings persistence test FAILED - missing settings detected")
+            }
+        }
     }
 
     /**

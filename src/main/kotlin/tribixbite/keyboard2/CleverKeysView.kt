@@ -2,6 +2,7 @@ package tribixbite.keyboard2
 
 import android.content.Context
 import android.graphics.*
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import kotlinx.coroutines.*
@@ -293,8 +294,14 @@ class CleverKeysView(
             val keyValue = keys[key]?.keyValue
             keyValue?.let { kv ->
                 logD("🔘 Key tapped: $key")
+
+                // Haptic feedback if enabled
+                if (config.vibrate_custom) {
+                    performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                }
+
                 onKeyPressed?.invoke(kv)
-                
+
                 // Visual feedback
                 highlightKey(key)
             }

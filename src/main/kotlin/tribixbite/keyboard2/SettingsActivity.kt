@@ -23,12 +23,24 @@ class SettingsActivity : Activity() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        
+        // Apply saved theme before calling super.onCreate()
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        val savedTheme = prefs.getInt("theme", R.style.Dark)
+        setTheme(savedTheme)
+
+        super.onCreate(savedInstanceState)
+
         neuralConfig = NeuralConfig(prefs)
         config = Config.globalConfig()
-        
+
+        // Load and apply all saved settings
+        config.theme = savedTheme
+        config.keyboardHeightPercent = loadKeyboardHeightFromPrefs()
+        config.vibrate_custom = loadVibrationFromPrefs()
+
+        // Apply debug settings
+        Logs.setDebugEnabled(loadDebugFromPrefs())
+
         setupUI()
     }
     
@@ -110,7 +122,7 @@ class SettingsActivity : Activity() {
         
         addView(createSliderSetting(
             "Keyboard Height (%)",
-            config.keyboardHeightPercent,
+            loadKeyboardHeightFromPrefs(),
             20..60
         ) { value ->
             config.keyboardHeightPercent = value
@@ -125,7 +137,7 @@ class SettingsActivity : Activity() {
         
         addView(CheckBox(this@SettingsActivity).apply {
             text = "Enable Vibration"
-            isChecked = config.vibrate_custom
+            isChecked = loadVibrationFromPrefs()
             setOnCheckedChangeListener { _, isChecked ->
                 config.vibrate_custom = isChecked
                 saveConfigurationChange("vibrate_custom", isChecked)
@@ -134,7 +146,7 @@ class SettingsActivity : Activity() {
 
         addView(CheckBox(this@SettingsActivity).apply {
             text = "Show Debug Information"
-            isChecked = Logs.getDebugEnabled()
+            isChecked = loadDebugFromPrefs()
             setOnCheckedChangeListener { _, isChecked ->
                 Logs.setDebugEnabled(isChecked)
                 saveConfigurationChange("debug_enabled", isChecked)
@@ -265,14 +277,41 @@ class SettingsActivity : Activity() {
     }
 
     /**
+     * Load keyboard height from SharedPreferences
+     */
+    private fun loadKeyboardHeightFromPrefs(): Int {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        return prefs.getInt("keyboardHeightPercent", 35)
+    }
+
+    /**
+     * Load vibration setting from SharedPreferences
+     */
+    private fun loadVibrationFromPrefs(): Boolean {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        return prefs.getBoolean("vibrate_custom", false)
+    }
+
+    /**
+     * Load debug setting from SharedPreferences
+     */
+    private fun loadDebugFromPrefs(): Boolean {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        return prefs.getBoolean("debug_enabled", false)
+    }
+
+    /**
      * Get current theme index for spinner
      */
     private fun getCurrentThemeIndex(): Int {
-        return when (config.theme) {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        val themeValue = prefs.getInt("theme", R.style.Dark)
+
+        return when (themeValue) {
             R.style.Light -> 1
             R.style.Dark -> 2
             R.style.Black -> 3
-            else -> 0 // System default
+            else -> 2 // Default to Dark
         }
     }
 
@@ -296,22 +335,63 @@ class SettingsActivity : Activity() {
     }
 
     /**
-     * Save configuration change to preferences
+     * Save configuration change to preferences with validation
      */
     private fun saveConfigurationChange(key: String, value: Any) {
-        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        val editor = prefs.edit()
+        try {
+            // Validate the value before saving
+            val validatedValue = validateConfigurationValue(key, value)
 
-        when (value) {
-            is Boolean -> editor.putBoolean(key, value)
-            is Int -> editor.putInt(key, value)
-            is Float -> editor.putFloat(key, value)
-            is String -> editor.putString(key, value)
-            is Long -> editor.putLong(key, value)
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+            val editor = prefs.edit()
+
+            when (validatedValue) {
+                is Boolean -> editor.putBoolean(key, validatedValue)
+                is Int -> editor.putInt(key, validatedValue)
+                is Float -> editor.putFloat(key, validatedValue)
+                is String -> editor.putString(key, validatedValue)
+                is Long -> editor.putLong(key, validatedValue)
+            }
+
+            editor.apply()
+            logD("Configuration saved: $key = $validatedValue")
+
+        } catch (e: Exception) {
+            logE("Failed to save configuration: $key = $value", e)
+            toast("Settings error: Invalid value for $key")
         }
+    }
 
-        editor.apply()
-        logD("Configuration saved: $key = $value")
+    /**
+     * Validate configuration values before saving
+     */
+    private fun validateConfigurationValue(key: String, value: Any): Any {
+        return when (key) {
+            "keyboardHeightPercent" -> {
+                val intValue = value as? Int ?: throw IllegalArgumentException("Height must be integer")
+                intValue.coerceIn(20, 60)
+            }
+            "neural_beam_width" -> {
+                val intValue = value as? Int ?: throw IllegalArgumentException("Beam width must be integer")
+                intValue.coerceIn(neuralConfig.beamWidthRange)
+            }
+            "neural_max_length" -> {
+                val intValue = value as? Int ?: throw IllegalArgumentException("Max length must be integer")
+                intValue.coerceIn(neuralConfig.maxLengthRange)
+            }
+            "neural_confidence_threshold" -> {
+                val floatValue = value as? Float ?: throw IllegalArgumentException("Confidence must be float")
+                floatValue.coerceIn(neuralConfig.confidenceRange)
+            }
+            "theme" -> {
+                val intValue = value as? Int ?: throw IllegalArgumentException("Theme must be integer")
+                when (intValue) {
+                    R.style.Light, R.style.Dark, R.style.Black -> intValue
+                    else -> R.style.Dark // Default to dark theme
+                }
+            }
+            else -> value // No validation needed for other settings
+        }
     }
 
     /**
@@ -336,5 +416,13 @@ class SettingsActivity : Activity() {
     
     private fun openCalibration() {
         startActivity(Intent(this, SwipeCalibrationActivity::class.java))
+    }
+
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
+
+    private fun logE(message: String, throwable: Throwable) {
+        android.util.Log.e(TAG, message, throwable)
     }
 }
