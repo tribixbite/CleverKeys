@@ -220,7 +220,10 @@ class CleverKeysView(
         val gestureLength = gesturePoints.pathLength()
         val gestureDuration = (gestureTimestamps.last() - gestureTimestamps.first()) / 1000f
         
-        if (gestureLength > 50f && gestureDuration > 0.1f && gesturePoints.size > 10) {
+        // Check for settings gesture (swipe from bottom-left corner)
+        if (isSettingsGesture()) {
+            handleSettingsGesture()
+        } else if (gestureLength > 50f && gestureDuration > 0.1f && gesturePoints.size > 10) {
             // Process as swipe gesture
             handleSwipeGesture()
         } else {
@@ -246,6 +249,42 @@ class CleverKeysView(
         
         logD("🌀 Swipe detected: ${swipeData.path.size} points, ${swipeData.detectedKeys.size} keys")
         onSwipeCompleted?.invoke(swipeData)
+    }
+
+    /**
+     * Check if gesture is a settings access gesture
+     * (swipe from bottom-left corner upward and right)
+     */
+    private fun isSettingsGesture(): Boolean {
+        if (gesturePoints.size < 3) return false
+
+        val startPoint = gesturePoints.first()
+        val endPoint = gesturePoints.last()
+
+        // Must start in bottom-left corner (within 20% of edges)
+        val isStartInCorner = startPoint.x < width * 0.2f && startPoint.y > height * 0.8f
+
+        // Must move up and right significantly
+        val deltaX = endPoint.x - startPoint.x
+        val deltaY = startPoint.y - endPoint.y // Y increases downward
+        val isUpwardRightward = deltaX > 100f && deltaY > 100f
+
+        return isStartInCorner && isUpwardRightward
+    }
+
+    /**
+     * Handle settings access gesture
+     */
+    private fun handleSettingsGesture() {
+        logD("⚙️ Settings gesture detected - opening settings")
+
+        try {
+            val intent = android.content.Intent(context, SettingsActivity::class.java)
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            logE("Failed to open settings", e)
+        }
     }
     
     private fun handleKeyTap(x: Float, y: Float) {

@@ -20,42 +20,53 @@ Generated version info:  ()
 > Task :mapDebugSourceSetPaths
 > Task :generateDebugResources
 > Task :packageDebugResources
-> Task :mergeDebugResources
 > Task :createDebugCompatibleScreenManifests
 > Task :extractDeepLinksDebug FROM-CACHE
-> Task :processDebugMainManifest FROM-CACHE
-> Task :processDebugManifest FROM-CACHE
-> Task :processDebugManifestForPackage FROM-CACHE
+> Task :processDebugMainManifest
+> Task :mergeDebugResources
+> Task :parseDebugLocalResources
+> Task :processDebugManifest
 > Task :javaPreCompileDebug FROM-CACHE
 > Task :mergeDebugShaders
 > Task :compileDebugShaders NO-SOURCE
 > Task :generateDebugAssets UP-TO-DATE
 > Task :mergeDebugAssets
 > Task :compressDebugAssets FROM-CACHE
-> Task :parseDebugLocalResources
-> Task :checkDebugDuplicateClasses
 > Task :desugarDebugFileDependencies FROM-CACHE
+> Task :mergeDebugJniLibFolders
+> Task :checkDebugDuplicateClasses
 > Task :mergeExtDexDebug FROM-CACHE
 > Task :mergeLibDexDebug FROM-CACHE
-> Task :mergeDebugJniLibFolders
 > Task :validateSigningDebug
 > Task :writeDebugAppMetadata
 > Task :writeDebugSigningConfigVersions
+> Task :processDebugManifestForPackage
 > Task :mergeDebugNativeLibs
 
 > Task :stripDebugDebugSymbols
 Unable to strip the following libraries, packaging them as they are: libonnxruntime.so, libonnxruntime4j_jni.so.
 
 > Task :processDebugResources
-> Task :compileDebugKotlin FROM-CACHE
-> Task :compileDebugJavaWithJavac NO-SOURCE
-> Task :processDebugJavaRes
-> Task :dexBuilderDebug FROM-CACHE
-> Task :mergeProjectDexDebug FROM-CACHE
-> Task :mergeDebugJavaResource
-> Task :packageDebug
-> Task :createDebugApkListingFileRedirect
-> Task :assembleDebug
 
-BUILD SUCCESSFUL in 26s
-36 actionable tasks: 23 executed, 13 from cache
+> Task :compileDebugKotlin FAILED
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt:225:13 Cannot find a parameter with this name: rows
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt:225:13 No value passed for parameter 'keys'
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt:225:13 No value passed for parameter 'width'
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt:225:13 No value passed for parameter 'height'
+e: file:///data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/SettingsActivity.kt:136:30 Unresolved reference: getDebugEnabled
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 43s
+30 actionable tasks: 23 executed, 7 from cache

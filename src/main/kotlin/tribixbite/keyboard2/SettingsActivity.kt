@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.preference.PreferenceActivity
 import android.widget.*
 import kotlinx.coroutines.*
+import tribixbite.keyboard2.R
 
 /**
  * Main settings activity for CleverKeys
@@ -18,6 +19,7 @@ class SettingsActivity : Activity() {
     }
     
     private lateinit var neuralConfig: NeuralConfig
+    private lateinit var config: Config
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,6 +27,7 @@ class SettingsActivity : Activity() {
         
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
         neuralConfig = NeuralConfig(prefs)
+        config = Config.globalConfig()
         
         setupUI()
     }
@@ -102,14 +105,17 @@ class SettingsActivity : Activity() {
         addView(createSpinnerSetting(
             "Theme",
             listOf("System", "Light", "Dark", "Black"),
-            1
-        ) { /* TODO: Handle theme change */ })
+            getCurrentThemeIndex()
+        ) { index -> handleThemeChange(index) })
         
         addView(createSliderSetting(
             "Keyboard Height (%)",
-            35,
+            config.keyboardHeightPercent,
             20..60
-        ) { /* TODO: Handle height change */ })
+        ) { value ->
+            config.keyboardHeightPercent = value
+            saveConfigurationChange("keyboardHeightPercent", value)
+        })
     }
     
     private fun createAdvancedSection() = LinearLayout(this).apply {
@@ -119,17 +125,19 @@ class SettingsActivity : Activity() {
         
         addView(CheckBox(this@SettingsActivity).apply {
             text = "Enable Vibration"
-            isChecked = true
+            isChecked = config.vibrate_custom
             setOnCheckedChangeListener { _, isChecked ->
-                // TODO: Handle vibration setting
+                config.vibrate_custom = isChecked
+                saveConfigurationChange("vibrate_custom", isChecked)
             }
         })
-        
+
         addView(CheckBox(this@SettingsActivity).apply {
             text = "Show Debug Information"
-            isChecked = false
+            isChecked = Logs.getDebugEnabled()
             setOnCheckedChangeListener { _, isChecked ->
-                // TODO: Handle debug setting
+                Logs.setDebugEnabled(isChecked)
+                saveConfigurationChange("debug_enabled", isChecked)
             }
         })
     }
@@ -255,7 +263,64 @@ class SettingsActivity : Activity() {
             })
         }
     }
-    
+
+    /**
+     * Get current theme index for spinner
+     */
+    private fun getCurrentThemeIndex(): Int {
+        return when (config.theme) {
+            R.style.Light -> 1
+            R.style.Dark -> 2
+            R.style.Black -> 3
+            else -> 0 // System default
+        }
+    }
+
+    /**
+     * Handle theme change
+     */
+    private fun handleThemeChange(index: Int) {
+        val newTheme = when (index) {
+            1 -> R.style.Light
+            2 -> R.style.Dark
+            3 -> R.style.Black
+            else -> R.style.Dark // Default to dark
+        }
+
+        config.theme = newTheme
+        saveConfigurationChange("theme", newTheme)
+
+        // Apply theme immediately
+        setTheme(newTheme)
+        recreate()
+    }
+
+    /**
+     * Save configuration change to preferences
+     */
+    private fun saveConfigurationChange(key: String, value: Any) {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        val editor = prefs.edit()
+
+        when (value) {
+            is Boolean -> editor.putBoolean(key, value)
+            is Int -> editor.putInt(key, value)
+            is Float -> editor.putFloat(key, value)
+            is String -> editor.putString(key, value)
+            is Long -> editor.putLong(key, value)
+        }
+
+        editor.apply()
+        logD("Configuration saved: $key = $value")
+    }
+
+    /**
+     * Show toast message
+     */
+    private fun toast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
     private fun resetAllSettings() {
         android.app.AlertDialog.Builder(this)
             .setTitle("Reset Settings")
