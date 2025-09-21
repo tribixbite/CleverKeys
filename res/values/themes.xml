@@ -222,4 +222,12 @@
     <item name="emoji_button_bg">#26233a</item>
     <item name="emoji_color">#e0def4</item>
   </style>
+
+  <!-- Emoji group button style -->
+  <style name="emojiTypeButton" parent="@android:style/Widget.Button">
+    <item name="android:background">?attr/colorKey</item>
+    <item name="android:textColor">?attr/colorLabel</item>
+    <item name="android:textSize">18sp</item>
+    <item name="android:layout_weight">1</item>
+  </style>
 </resources>

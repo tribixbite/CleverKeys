@@ -17,6 +17,9 @@ class EmojiGridView(context: Context) : GridLayout(context) {
         private const val TAG = "EmojiGridView"
         private const val EMOJI_SIZE_DP = 48
         private const val EMOJI_COLUMNS = 8
+
+        // Group constants for emoji categories
+        const val GROUP_LAST_USE = -1
     }
     
     private val emoji = Emoji.getInstance(context)
@@ -143,11 +146,38 @@ class EmojiGridView(context: Context) : GridLayout(context) {
             return super.onTouchEvent(event)
         }
     }
-    
+
+    /**
+     * Set emoji group (compatible with original EmojiGroupButtonsBar)
+     */
+    fun setEmojiGroup(groupId: Int) {
+        scope.launch {
+            try {
+                val emojis = if (groupId == GROUP_LAST_USE) {
+                    // Show recently used emojis
+                    emoji.getRecentEmojis()
+                } else {
+                    // Show emojis from specific group
+                    emoji.getEmojisByGroupIndex(groupId)
+                }
+
+                withContext(Dispatchers.Main) {
+                    populateEmojiGrid(emojis)
+                }
+            } catch (e: Exception) {
+                logE("Failed to set emoji group $groupId", e)
+            }
+        }
+    }
+
     /**
      * Cleanup
      */
     fun cleanup() {
         scope.cancel()
+    }
+
+    private fun logE(message: String, throwable: Throwable? = null) {
+        android.util.Log.e(TAG, message, throwable)
     }
 }

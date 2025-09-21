@@ -102,4 +102,30 @@ class Emoji(private val context: Context) {
         // TODO: Load from preferences
         return emojis.take(10)
     }
+
+    /**
+     * Get emojis by group index (compatibility with original API)
+     */
+    fun getEmojisByGroupIndex(groupIndex: Int): List<EmojiData> {
+        val groupNames = getGroups()
+        return if (groupIndex >= 0 && groupIndex < groupNames.size) {
+            getEmojisByGroup(groupNames[groupIndex])
+        } else {
+            emptyList()
+        }
+    }
+
+    /**
+     * Get number of emoji groups (compatibility with original API)
+     */
+    fun getNumGroups(): Int {
+        return emojiGroups.size
+    }
+
+    /**
+     * Get first emoji of a group (compatibility with original API)
+     */
+    fun getFirstEmojiOfGroup(groupIndex: Int): EmojiData? {
+        return getEmojisByGroupIndex(groupIndex).firstOrNull()
+    }
 }

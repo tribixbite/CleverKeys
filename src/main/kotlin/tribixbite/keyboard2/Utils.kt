@@ -155,4 +155,21 @@ object Utils {
         
         return radiusVariation / avgRadius < (1 - threshold)
     }
+
+    /**
+     * Show dialog on IME window
+     * Required for dialogs to appear properly when keyboard is active
+     */
+    fun showDialogOnIme(dialog: android.app.AlertDialog, windowToken: android.os.IBinder) {
+        try {
+            // Set dialog window type for IME
+            dialog.window?.setType(android.view.WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG)
+            dialog.window?.setToken(windowToken)
+            dialog.show()
+        } catch (e: Exception) {
+            // Fallback: show normally if IME-specific showing fails
+            android.util.Log.w("Utils", "Failed to show dialog on IME, showing normally", e)
+            dialog.show()
+        }
+    }
 }
