@@ -11,7 +11,7 @@ import android.widget.TextView
 import android.widget.SeekBar
 
 /**
- * IntSlideBarPreference - Kotlin conversion from Unexpected Keyboard
+ * IntSlideBarPreference - Slider preference for integer values
  * Opens a dialog showing a seekbar for integer value selection
  *
  * XML attributes:

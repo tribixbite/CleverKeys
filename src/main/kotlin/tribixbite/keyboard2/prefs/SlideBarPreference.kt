@@ -11,7 +11,7 @@ import android.widget.TextView
 import android.widget.SeekBar
 
 /**
- * SlideBarPreference - Kotlin conversion from Unexpected Keyboard
+ * SlideBarPreference - Slider preference for float values
  * Opens a dialog showing a seekbar for float value selection
  *
  * XML attributes:

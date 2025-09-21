@@ -25,7 +25,7 @@ class MinimalKeyboardService : InputMethodService() {
         super.onStartInput(editorInfo, restarting)
         Log.d(TAG, "📝 Input started: package=${editorInfo?.packageName}, restarting=$restarting")
 
-        // CRITICAL FIX: Create and set input view manually like Unexpected Keyboard
+        // CRITICAL FIX: Create and set input view manually
         createAndSetKeyboardView()
     }
 

@@ -48,6 +48,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         try {
             // Initialize components in dependency order
             initializeConfiguration()
+            loadDefaultKeyboardLayout()
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -178,28 +179,68 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             }
         }
     }
-    
-    /**
-     * CRITICAL FIX: Create and set keyboard view using Unexpected Keyboard pattern
-     */
-    override fun onStartInput(editorInfo: EditorInfo?, restarting: Boolean) {
-        super.onStartInput(editorInfo, restarting)
-        logD("Input started: package=${editorInfo?.packageName}, restarting=$restarting")
 
-        // CRITICAL: Create and set input view manually like Unexpected Keyboard
-        createAndSetKeyboardView()
+    /**
+     * Load default QWERTY keyboard layout
+     */
+    private fun loadDefaultKeyboardLayout() {
+        try {
+            // Create a simple QWERTY layout for basic functionality
+            currentLayout = createBasicQwertyLayout()
+            logD("✅ Default QWERTY layout loaded")
+        } catch (e: Exception) {
+            logE("Failed to load default keyboard layout", e)
+        }
     }
 
-    private fun createAndSetKeyboardView() {
-        val currentConfig = config ?: run {
-            logE("Configuration not available for input view creation")
-            return
+    /**
+     * Create basic QWERTY layout for testing
+     */
+    private fun createBasicQwertyLayout(): KeyboardData {
+        val charRows = listOf(
+            // Top row
+            listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p"),
+            // Middle row
+            listOf("a", "s", "d", "f", "g", "h", "j", "k", "l"),
+            // Bottom row
+            listOf("z", "x", "c", "v", "b", "n", "m")
+        )
+
+        val keyRows = mutableListOf<List<KeyValue>>()
+
+        // Add character rows
+        charRows.forEach { row ->
+            keyRows.add(row.map { char -> KeyValue.makeCharKey(char[0]) })
         }
 
-        try {
-            logD("Creating keyboard input view...")
+        // Add bottom row with space and backspace
+        keyRows.add(listOf(
+            KeyValue.BACKSPACE,
+            KeyValue.SPACE,
+            KeyValue.ENTER
+        ))
 
-            keyboardView = CleverKeysView(this, currentConfig).apply {
+        return KeyboardData(
+            name = "Basic QWERTY",
+            rows = keyRows
+        )
+    }
+
+    /**
+     * Android requires this method to create the keyboard view
+     */
+    override fun onCreateInputView(): View? {
+        logD("onCreateInputView() called - creating keyboard view")
+
+        val currentConfig = config ?: run {
+            logE("Configuration not available for input view creation")
+            return null
+        }
+
+        return try {
+            logD("Creating CleverKeysView...")
+
+            val view = CleverKeysView(this, currentConfig).apply {
                 onSwipeCompleted = { swipeData -> handleSwipeGesture(swipeData) }
                 onKeyPressed = { key -> handleKeyPress(key) }
 
@@ -210,16 +251,24 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
                 currentLayout?.let { layout -> setLayout(layout) }
             }
 
-            // CRITICAL: Use setInputView() like Unexpected Keyboard, not onCreateInputView()
-            setInputView(keyboardView)
-            logD("✅ Keyboard view set with setInputView() - should be visible!")
+            keyboardView = view
+            logD("✅ Keyboard view created successfully")
+            view
 
         } catch (e: Exception) {
             logE("Failed to create keyboard input view", e)
+            null
         }
     }
 
-    // Removed duplicate onStartInput - using the one at line 185 with createAndSetKeyboardView()
+    /**
+     * Handle input starting
+     */
+    override fun onStartInput(editorInfo: EditorInfo?, restarting: Boolean) {
+        super.onStartInput(editorInfo, restarting)
+        logD("Input started: package=${editorInfo?.packageName}, restarting=$restarting")
+    }
+
 
     /**
      * Handle input finishing with cleanup
