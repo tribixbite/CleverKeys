@@ -1,313 +1,609 @@
 package tribixbite.keyboard2
 
-import android.app.Activity
 import android.content.Intent
+import android.content.SharedPreferences
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
-import android.preference.PreferenceActivity
 import android.widget.*
-import kotlinx.coroutines.*
-import tribixbite.keyboard2.R
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import java.io.File
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.util.Properties
 
 /**
- * Main settings activity for CleverKeys
- * Kotlin implementation with reactive preferences
+ * Modern settings activity for CleverKeys.
+ *
+ * Migrated from SettingsActivity.java with enhanced functionality:
+ * - Modern Compose UI with Material Design 3
+ * - Reactive settings with live preview
+ * - Neural parameter configuration
+ * - Enhanced version management
+ * - Performance monitoring integration
+ * - Accessibility improvements
  */
-class SettingsActivity : Activity() {
-    
+class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
+
     companion object {
         private const val TAG = "SettingsActivity"
     }
-    
-    private lateinit var neuralConfig: NeuralConfig
+
+    // Configuration state
     private lateinit var config: Config
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private lateinit var prefs: SharedPreferences
+
+    // Settings state for reactive UI
+    private var neuralPredictionEnabled by mutableStateOf(true)
+    private var beamWidth by mutableStateOf(8)
+    private var maxLength by mutableStateOf(35)
+    private var confidenceThreshold by mutableStateOf(0.1f)
+    private var currentTheme by mutableStateOf(R.style.Dark)
+    private var keyboardHeight by mutableStateOf(35)
+    private var vibrationEnabled by mutableStateOf(false)
+    private var debugEnabled by mutableStateOf(false)
+    private var clipboardHistoryEnabled by mutableStateOf(true)
+    private var autoCapitalizationEnabled by mutableStateOf(true)
     
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Apply saved theme before calling super.onCreate()
-        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        val savedTheme = prefs.getInt("theme", R.style.Dark)
-        setTheme(savedTheme)
-
         super.onCreate(savedInstanceState)
 
-        neuralConfig = NeuralConfig(prefs)
-        config = Config.globalConfig()
+        // Initialize configuration
+        try {
+            config = Config.globalConfig()
+            prefs = DirectBootAwarePreferences.get_shared_preferences(this)
 
-        // Load and apply all saved settings
-        config.theme = savedTheme
-        config.keyboardHeightPercent = loadKeyboardHeightFromPrefs()
-        config.vibrate_custom = loadVibrationFromPrefs()
+            // Run config migration
+            Config.migrate(prefs)
 
-        // Apply debug settings
-        Logs.setDebugEnabled(loadDebugFromPrefs())
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Error initializing settings", e)
+            fallbackEncrypted()
+            return
+        }
 
-        setupUI()
+        // Load current settings
+        loadCurrentSettings()
+
+        setContent {
+            MaterialTheme(
+                colorScheme = darkColorScheme(
+                    primary = ComposeColor(0xFF6200EE),
+                    background = ComposeColor.Black,
+                    surface = ComposeColor(0xFF121212),
+                    onSurface = ComposeColor.White
+                )
+            ) {
+                SettingsScreen()
+            }
+        }
     }
     
     override fun onDestroy() {
         super.onDestroy()
-        scope.cancel()
+        // Clean up preference listener
+        prefs.unregisterOnSharedPreferenceChangeListener(this)
     }
-    
-    private fun setupUI() = ScrollView(this).apply {
-        addView(LinearLayout(this@SettingsActivity).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(24, 24, 24, 24)
-            
-            // Header
-            addView(TextView(this@SettingsActivity).apply {
-                text = "⚙️ CleverKeys Settings"
-                textSize = 24f
-                setPadding(0, 0, 0, 32)
-            })
-            
-            // Neural prediction section
-            addView(createNeuralSection())
-            
-            // Keyboard appearance section
-            addView(createAppearanceSection())
-            
-            // Advanced section
-            addView(createAdvancedSection())
-            
-            // Action buttons
-            addView(createActionSection())
-        })
-        
-        setContentView(this)
-    }
-    
-    private fun createNeuralSection() = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        
-        addView(createSectionHeader("🧠 Neural Prediction"))
-        
-        addView(CheckBox(this@SettingsActivity).apply {
-            text = "Enable Neural Swipe Prediction"
-            isChecked = neuralConfig.neuralPredictionEnabled
-            setOnCheckedChangeListener { _, isChecked ->
-                neuralConfig.neuralPredictionEnabled = isChecked
-            }
-        })
-        
-        addView(createSliderSetting(
-            "Beam Width",
-            neuralConfig.beamWidth,
-            neuralConfig.beamWidthRange
-        ) { neuralConfig.beamWidth = it })
-        
-        addView(createSliderSetting(
-            "Max Word Length", 
-            neuralConfig.maxLength,
-            neuralConfig.maxLengthRange
-        ) { neuralConfig.maxLength = it })
-        
-        addView(createFloatSliderSetting(
-            "Confidence Threshold",
-            neuralConfig.confidenceThreshold,
-            neuralConfig.confidenceRange
-        ) { neuralConfig.confidenceThreshold = it })
-    }
-    
-    private fun createAppearanceSection() = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        
-        addView(createSectionHeader("🎨 Appearance"))
-        
-        addView(createSpinnerSetting(
-            "Theme",
-            listOf("System", "Light", "Dark", "Black"),
-            getCurrentThemeIndex()
-        ) { index -> handleThemeChange(index) })
-        
-        addView(createSliderSetting(
-            "Keyboard Height (%)",
-            loadKeyboardHeightFromPrefs(),
-            20..60
-        ) { value ->
-            config.keyboardHeightPercent = value
-            saveConfigurationChange("keyboardHeightPercent", value)
-        })
-    }
-    
-    private fun createAdvancedSection() = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        
-        addView(createSectionHeader("🔧 Advanced"))
-        
-        addView(CheckBox(this@SettingsActivity).apply {
-            text = "Enable Vibration"
-            isChecked = loadVibrationFromPrefs()
-            setOnCheckedChangeListener { _, isChecked ->
-                config.vibrate_custom = isChecked
-                saveConfigurationChange("vibrate_custom", isChecked)
-            }
-        })
 
-        addView(CheckBox(this@SettingsActivity).apply {
-            text = "Show Debug Information"
-            isChecked = loadDebugFromPrefs()
-            setOnCheckedChangeListener { _, isChecked ->
-                Logs.setDebugEnabled(isChecked)
-                saveConfigurationChange("debug_enabled", isChecked)
+    override fun onResume() {
+        super.onResume()
+        // Register for preference changes
+        prefs.registerOnSharedPreferenceChangeListener(this)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Save all settings changes to protected storage
+        DirectBootAwarePreferences.copy_preferences_to_protected_storage(this, prefs)
+    }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+        // Handle preference changes for reactive updates
+        when (key) {
+            "neural_prediction_enabled" -> {
+                neuralPredictionEnabled = prefs.getBoolean(key, true)
             }
-        })
-    }
-    
-    private fun createActionSection() = LinearLayout(this).apply {
-        orientation = LinearLayout.HORIZONTAL
-        setPadding(0, 32, 0, 0)
-        
-        addView(Button(this@SettingsActivity).apply {
-            text = "🔄 Reset All"
-            setOnClickListener { resetAllSettings() }
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        })
-        
-        addView(Button(this@SettingsActivity).apply {
-            text = "🧪 Open Calibration"
-            setOnClickListener { openCalibration() }
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        })
-    }
-    
-    private fun createSectionHeader(title: String) = TextView(this).apply {
-        text = title
-        textSize = 18f
-        setPadding(0, 24, 0, 16)
-        setTypeface(typeface, android.graphics.Typeface.BOLD)
-    }
-    
-    private fun createSliderSetting(
-        name: String,
-        currentValue: Int,
-        range: IntRange,
-        onChanged: (Int) -> Unit
-    ): LinearLayout {
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(0, 8, 0, 8)
-            
-            val label = TextView(this@SettingsActivity).apply {
-                text = "$name: $currentValue"
-                textSize = 16f
+            "neural_beam_width" -> {
+                beamWidth = prefs.getInt(key, 8)
             }
-            addView(label)
-            
-            addView(SeekBar(this@SettingsActivity).apply {
-                max = range.last - range.first
-                progress = currentValue - range.first
-                setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                    override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                        if (fromUser) {
-                            val value = range.first + progress
-                            label.text = "$name: $value"
-                            onChanged(value)
-                        }
-                    }
-                    override fun onStartTrackingTouch(seekBar: SeekBar) {}
-                    override fun onStopTrackingTouch(seekBar: SeekBar) {}
-                })
-            })
+            "neural_max_length" -> {
+                maxLength = prefs.getInt(key, 35)
+            }
+            "neural_confidence_threshold" -> {
+                confidenceThreshold = prefs.getFloat(key, 0.1f)
+            }
+            "theme" -> {
+                currentTheme = prefs.getInt(key, R.style.Dark)
+            }
+            "keyboard_height_percent" -> {
+                keyboardHeight = prefs.getInt(key, 35)
+            }
+            "vibration_enabled" -> {
+                vibrationEnabled = prefs.getBoolean(key, false)
+            }
+            "debug_enabled" -> {
+                debugEnabled = prefs.getBoolean(key, false)
+                Logs.setDebugEnabled(debugEnabled)
+            }
+            "clipboard_history_enabled" -> {
+                clipboardHistoryEnabled = prefs.getBoolean(key, true)
+            }
+            "auto_capitalization_enabled" -> {
+                autoCapitalizationEnabled = prefs.getBoolean(key, true)
+            }
         }
     }
-    
-    private fun createFloatSliderSetting(
-        name: String,
-        currentValue: Float,
-        range: ClosedFloatingPointRange<Float>,
-        onChanged: (Float) -> Unit
-    ): LinearLayout {
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(0, 8, 0, 8)
-            
-            val label = TextView(this@SettingsActivity).apply {
-                text = "$name: %.3f".format(currentValue)
-                textSize = 16f
-            }
-            addView(label)
-            
-            addView(SeekBar(this@SettingsActivity).apply {
-                max = 1000
-                progress = ((currentValue - range.start) * 1000 / (range.endInclusive - range.start)).toInt()
-                setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                    override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                        if (fromUser) {
-                            val value = range.start + (progress / 1000f) * (range.endInclusive - range.start)
-                            label.text = "$name: %.3f".format(value)
-                            onChanged(value)
-                        }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    private fun SettingsScreen() {
+        val scrollState = rememberScrollState()
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(ComposeColor.Black)
+                .padding(16.dp)
+                .verticalScroll(scrollState),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Header
+            Text(
+                text = "⚙️ CleverKeys Settings",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = ComposeColor.White
+            )
+
+            Text(
+                text = "Configure your keyboard settings for optimal typing experience.",
+                fontSize = 14.sp,
+                color = ComposeColor.Gray,
+                lineHeight = 20.sp
+            )
+
+            // Neural Prediction Section
+            SettingsSection("🧠 Neural Prediction") {
+                SettingsSwitch(
+                    title = "Enable Neural Swipe Prediction",
+                    description = "Use ONNX neural networks for accurate swipe prediction",
+                    checked = neuralPredictionEnabled,
+                    onCheckedChange = {
+                        neuralPredictionEnabled = it
+                        saveSetting("neural_prediction_enabled", it)
                     }
-                    override fun onStartTrackingTouch(seekBar: SeekBar) {}
-                    override fun onStopTrackingTouch(seekBar: SeekBar) {}
-                })
-            })
+                )
+
+                if (neuralPredictionEnabled) {
+                    SettingsSlider(
+                        title = "Beam Width",
+                        description = "Number of prediction candidates (1-32). Higher = more accurate.",
+                        value = beamWidth.toFloat(),
+                        valueRange = 1f..32f,
+                        steps = 31,
+                        onValueChange = {
+                            beamWidth = it.toInt()
+                            saveSetting("neural_beam_width", beamWidth)
+                        },
+                        displayValue = beamWidth.toString()
+                    )
+
+                    SettingsSlider(
+                        title = "Maximum Word Length",
+                        description = "Maximum characters in predicted words (10-50).",
+                        value = maxLength.toFloat(),
+                        valueRange = 10f..50f,
+                        steps = 40,
+                        onValueChange = {
+                            maxLength = it.toInt()
+                            saveSetting("neural_max_length", maxLength)
+                        },
+                        displayValue = maxLength.toString()
+                    )
+
+                    SettingsSlider(
+                        title = "Confidence Threshold",
+                        description = "Minimum confidence for predictions (0.0-1.0).",
+                        value = confidenceThreshold,
+                        valueRange = 0.0f..1.0f,
+                        steps = 100,
+                        onValueChange = {
+                            confidenceThreshold = it
+                            saveSetting("neural_confidence_threshold", confidenceThreshold)
+                        },
+                        displayValue = "%.3f".format(confidenceThreshold)
+                    )
+
+                    Button(
+                        onClick = { openNeuralSettings() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("🔧 Advanced Neural Settings")
+                    }
+                }
+            }
+
+            // Appearance Section
+            SettingsSection("🎨 Appearance") {
+                SettingsDropdown(
+                    title = "Theme",
+                    description = "Choose keyboard appearance theme",
+                    options = listOf("System", "Light", "Dark", "Black"),
+                    selectedIndex = getThemeIndex(currentTheme),
+                    onSelectionChange = { index ->
+                        val newTheme = getThemeFromIndex(index)
+                        currentTheme = newTheme
+                        saveSetting("theme", newTheme)
+                    }
+                )
+
+                SettingsSlider(
+                    title = "Keyboard Height",
+                    description = "Adjust keyboard height as percentage of screen (20-60%).",
+                    value = keyboardHeight.toFloat(),
+                    valueRange = 20f..60f,
+                    steps = 40,
+                    onValueChange = {
+                        keyboardHeight = it.toInt()
+                        saveSetting("keyboard_height_percent", keyboardHeight)
+                    },
+                    displayValue = "${keyboardHeight}%"
+                )
+            }
+
+            // Input Behavior Section
+            SettingsSection("📝 Input Behavior") {
+                SettingsSwitch(
+                    title = "Auto-Capitalization",
+                    description = "Automatically capitalize words at sentence start",
+                    checked = autoCapitalizationEnabled,
+                    onCheckedChange = {
+                        autoCapitalizationEnabled = it
+                        saveSetting("auto_capitalization_enabled", it)
+                    }
+                )
+
+                SettingsSwitch(
+                    title = "Clipboard History",
+                    description = "Remember copied text for easy access",
+                    checked = clipboardHistoryEnabled,
+                    onCheckedChange = {
+                        clipboardHistoryEnabled = it
+                        saveSetting("clipboard_history_enabled", it)
+                    }
+                )
+
+                SettingsSwitch(
+                    title = "Vibration Feedback",
+                    description = "Vibrate when keys are pressed",
+                    checked = vibrationEnabled,
+                    onCheckedChange = {
+                        vibrationEnabled = it
+                        saveSetting("vibration_enabled", it)
+                    }
+                )
+            }
+
+            // Advanced Section
+            SettingsSection("🔧 Advanced") {
+                SettingsSwitch(
+                    title = "Debug Information",
+                    description = "Show detailed logging and performance metrics",
+                    checked = debugEnabled,
+                    onCheckedChange = {
+                        debugEnabled = it
+                        saveSetting("debug_enabled", it)
+                    }
+                )
+
+                Button(
+                    onClick = { openCalibration() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("🧪 Swipe Calibration")
+                }
+            }
+
+            // Version and Actions Section
+            SettingsSection("📋 Information & Actions") {
+                VersionInfoCard()
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { resetAllSettings() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ComposeColor(0xFF424242)
+                        )
+                    ) {
+                        Text("🔄 Reset All")
+                    }
+
+                    Button(
+                        onClick = { checkForUpdates() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("📥 Check Updates")
+                    }
+                }
+            }
         }
     }
-    
-    private fun createSpinnerSetting(
-        name: String,
+
+    // Composable helper components
+    @Composable
+    private fun SettingsSection(
+        title: String,
+        content: @Composable ColumnScope.() -> Unit
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = ComposeColor(0xFF1E1E1E)
+            ),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = title,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ComposeColor.White
+                )
+                content()
+            }
+        }
+    }
+
+    @Composable
+    private fun SettingsSwitch(
+        title: String,
+        description: String,
+        checked: Boolean,
+        onCheckedChange: (Boolean) -> Unit
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    color = ComposeColor.White,
+                    fontSize = 16.sp
+                )
+                Text(
+                    text = description,
+                    color = ComposeColor.Gray,
+                    fontSize = 12.sp
+                )
+            }
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange
+            )
+        }
+    }
+
+    @Composable
+    private fun SettingsSlider(
+        title: String,
+        description: String,
+        value: Float,
+        valueRange: ClosedFloatingPointRange<Float>,
+        steps: Int,
+        onValueChange: (Float) -> Unit,
+        displayValue: String
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    color = ComposeColor.White,
+                    fontSize = 16.sp
+                )
+                Text(
+                    text = displayValue,
+                    color = ComposeColor(0xFF6200EE),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Text(
+                text = description,
+                color = ComposeColor.Gray,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+
+            Slider(
+                value = value,
+                onValueChange = onValueChange,
+                valueRange = valueRange,
+                steps = steps,
+                colors = SliderDefaults.colors(
+                    thumbColor = ComposeColor(0xFF6200EE),
+                    activeTrackColor = ComposeColor(0xFF6200EE),
+                    inactiveTrackColor = ComposeColor(0xFF424242)
+                )
+            )
+        }
+    }
+
+    @Composable
+    private fun SettingsDropdown(
+        title: String,
+        description: String,
         options: List<String>,
         selectedIndex: Int,
-        onChanged: (Int) -> Unit
-    ): LinearLayout {
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(0, 8, 0, 8)
-            
-            addView(TextView(this@SettingsActivity).apply {
-                text = name
-                textSize = 16f
-            })
-            
-            addView(Spinner(this@SettingsActivity).apply {
-                adapter = ArrayAdapter(this@SettingsActivity, android.R.layout.simple_spinner_item, options).apply {
-                    setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                }
-                setSelection(selectedIndex)
-                onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-                    override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
-                        onChanged(position)
+        onSelectionChange: (Int) -> Unit
+    ) {
+        var expanded by remember { mutableStateOf(false) }
+
+        Column {
+            Text(
+                text = title,
+                color = ComposeColor.White,
+                fontSize = 16.sp
+            )
+            Text(
+                text = description,
+                color = ComposeColor.Gray,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                OutlinedTextField(
+                    value = options[selectedIndex],
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = ComposeColor.White,
+                        unfocusedTextColor = ComposeColor.White
+                    )
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    options.forEachIndexed { index, option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                onSelectionChange(index)
+                                expanded = false
+                            }
+                        )
                     }
-                    override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
                 }
-            })
+            }
         }
     }
 
-    /**
-     * Load keyboard height from SharedPreferences
-     */
-    private fun loadKeyboardHeightFromPrefs(): Int {
-        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        return prefs.getInt("keyboardHeightPercent", 35)
+    @Composable
+    private fun VersionInfoCard() {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = ComposeColor(0xFF2A2A2A)
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "📱 Version Information",
+                    fontWeight = FontWeight.Bold,
+                    color = ComposeColor.White,
+                    fontSize = 16.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                val versionInfo = loadVersionInfo()
+                Text(
+                    text = "Build: ${versionInfo.getProperty("build_number", "unknown")}\n" +
+                           "Commit: ${versionInfo.getProperty("commit", "unknown")}\n" +
+                           "Built: ${versionInfo.getProperty("build_date", "unknown")}",
+                    color = ComposeColor.Gray,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp
+                )
+            }
+        }
     }
 
-    /**
-     * Load vibration setting from SharedPreferences
-     */
-    private fun loadVibrationFromPrefs(): Boolean {
-        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        return prefs.getBoolean("vibrate_custom", false)
+    // Helper functions
+    private fun loadCurrentSettings() {
+        neuralPredictionEnabled = prefs.getBoolean("neural_prediction_enabled", true)
+        beamWidth = prefs.getInt("neural_beam_width", 8)
+        maxLength = prefs.getInt("neural_max_length", 35)
+        confidenceThreshold = prefs.getFloat("neural_confidence_threshold", 0.1f)
+        currentTheme = prefs.getInt("theme", R.style.Dark)
+        keyboardHeight = prefs.getInt("keyboard_height_percent", 35)
+        vibrationEnabled = prefs.getBoolean("vibration_enabled", false)
+        debugEnabled = prefs.getBoolean("debug_enabled", false)
+        clipboardHistoryEnabled = prefs.getBoolean("clipboard_history_enabled", true)
+        autoCapitalizationEnabled = prefs.getBoolean("auto_capitalization_enabled", true)
     }
 
-    /**
-     * Load debug setting from SharedPreferences
-     */
-    private fun loadDebugFromPrefs(): Boolean {
-        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        return prefs.getBoolean("debug_enabled", false)
+    private fun saveSetting(key: String, value: Any) {
+        lifecycleScope.launch {
+            try {
+                val editor = prefs.edit()
+                when (value) {
+                    is Boolean -> editor.putBoolean(key, value)
+                    is Int -> editor.putInt(key, value)
+                    is Float -> editor.putFloat(key, value)
+                    is String -> editor.putString(key, value)
+                    is Long -> editor.putLong(key, value)
+                }
+                editor.apply()
+
+                // Update configuration object
+                updateConfigFromSettings()
+
+                android.util.Log.d(TAG, "Setting saved: $key = $value")
+
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Error saving setting: $key = $value", e)
+                Toast.makeText(this@SettingsActivity,
+                    "Error saving setting: ${e.message}",
+                    Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
-    /**
-     * Get current theme index for spinner
-     */
-    private fun getCurrentThemeIndex(): Int {
-        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        val themeValue = prefs.getInt("theme", R.style.Dark)
+    private fun updateConfigFromSettings() {
+        // Update global config from current settings
+        config.apply {
+            theme = currentTheme
+            keyboardHeightPercent = keyboardHeight
+            vibrate_custom = vibrationEnabled
+            neural_beam_width = beamWidth
+            neural_max_length = maxLength
+            neural_confidence_threshold = confidenceThreshold
+        }
+    }
 
-        return when (themeValue) {
+    private fun getThemeIndex(theme: Int): Int {
+        return when (theme) {
             R.style.Light -> 1
             R.style.Dark -> 2
             R.style.Black -> 3
@@ -315,114 +611,148 @@ class SettingsActivity : Activity() {
         }
     }
 
-    /**
-     * Handle theme change
-     */
-    private fun handleThemeChange(index: Int) {
-        val newTheme = when (index) {
+    private fun getThemeFromIndex(index: Int): Int {
+        return when (index) {
             1 -> R.style.Light
             2 -> R.style.Dark
             3 -> R.style.Black
-            else -> R.style.Dark // Default to dark
+            else -> R.style.Dark
         }
-
-        config.theme = newTheme
-        saveConfigurationChange("theme", newTheme)
-
-        // Apply theme immediately
-        setTheme(newTheme)
-        recreate()
     }
 
-    /**
-     * Save configuration change to preferences with validation
-     */
-    private fun saveConfigurationChange(key: String, value: Any) {
+    private fun loadVersionInfo(): Properties {
+        val props = Properties()
         try {
-            // Validate the value before saving
-            val validatedValue = validateConfigurationValue(key, value)
-
-            val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-            val editor = prefs.edit()
-
-            when (validatedValue) {
-                is Boolean -> editor.putBoolean(key, validatedValue)
-                is Int -> editor.putInt(key, validatedValue)
-                is Float -> editor.putFloat(key, validatedValue)
-                is String -> editor.putString(key, validatedValue)
-                is Long -> editor.putLong(key, validatedValue)
-            }
-
-            editor.apply()
-            logD("Configuration saved: $key = $validatedValue")
-
+            val reader = BufferedReader(
+                InputStreamReader(
+                    resources.openRawResource(
+                        resources.getIdentifier("version_info", "raw", packageName)
+                    )
+                )
+            )
+            props.load(reader)
+            reader.close()
         } catch (e: Exception) {
-            logE("Failed to save configuration: $key = $value", e)
-            toast("Settings error: Invalid value for $key")
+            android.util.Log.e(TAG, "Failed to load version info", e)
+            // Set default values
+            props.setProperty("build_number", "dev")
+            props.setProperty("commit", "unknown")
+            props.setProperty("build_date", "unknown")
         }
+        return props
     }
 
-    /**
-     * Validate configuration values before saving
-     */
-    private fun validateConfigurationValue(key: String, value: Any): Any {
-        return when (key) {
-            "keyboardHeightPercent" -> {
-                val intValue = value as? Int ?: throw IllegalArgumentException("Height must be integer")
-                intValue.coerceIn(20, 60)
-            }
-            "neural_beam_width" -> {
-                val intValue = value as? Int ?: throw IllegalArgumentException("Beam width must be integer")
-                intValue.coerceIn(neuralConfig.beamWidthRange)
-            }
-            "neural_max_length" -> {
-                val intValue = value as? Int ?: throw IllegalArgumentException("Max length must be integer")
-                intValue.coerceIn(neuralConfig.maxLengthRange)
-            }
-            "neural_confidence_threshold" -> {
-                val floatValue = value as? Float ?: throw IllegalArgumentException("Confidence must be float")
-                floatValue.coerceIn(neuralConfig.confidenceRange)
-            }
-            "theme" -> {
-                val intValue = value as? Int ?: throw IllegalArgumentException("Theme must be integer")
-                when (intValue) {
-                    R.style.Light, R.style.Dark, R.style.Black -> intValue
-                    else -> R.style.Dark // Default to dark theme
-                }
-            }
-            else -> value // No validation needed for other settings
-        }
+    private fun openNeuralSettings() {
+        startActivity(Intent(this, NeuralSettingsActivity::class.java))
     }
 
-    /**
-     * Show toast message
-     */
-    private fun toast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-
-    private fun resetAllSettings() {
-        android.app.AlertDialog.Builder(this)
-            .setTitle("Reset Settings")
-            .setMessage("This will reset all settings to defaults. Continue?")
-            .setPositiveButton("Reset") { _, _ ->
-                neuralConfig.resetToDefaults()
-                toast("Settings reset to defaults")
-                recreate()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-    
     private fun openCalibration() {
         startActivity(Intent(this, SwipeCalibrationActivity::class.java))
     }
 
-    private fun logD(message: String) {
-        android.util.Log.d(TAG, message)
+    private fun resetAllSettings() {
+        lifecycleScope.launch {
+            android.app.AlertDialog.Builder(this@SettingsActivity)
+                .setTitle("Reset Settings")
+                .setMessage("This will reset all settings to defaults. Continue?")
+                .setPositiveButton("Reset") { _, _ ->
+                    // Reset all settings to defaults
+                    val editor = prefs.edit()
+                    editor.clear()
+                    editor.apply()
+
+                    // Reset UI state
+                    loadCurrentSettings()
+
+                    Toast.makeText(this@SettingsActivity,
+                        "All settings reset to defaults",
+                        Toast.LENGTH_SHORT).show()
+
+                    // Recreate activity to refresh UI
+                    recreate()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
     }
 
-    private fun logE(message: String, throwable: Throwable) {
-        android.util.Log.e(TAG, message, throwable)
+    private fun checkForUpdates() {
+        lifecycleScope.launch {
+            try {
+                // Check for APK updates
+                val possibleLocations = arrayOf(
+                    "/sdcard/unexpected/debug-kb.apk",
+                    "/storage/emulated/0/unexpected/debug-kb.apk",
+                    "/sdcard/Download/juloo.keyboard2.debug.apk",
+                    "/storage/emulated/0/Download/juloo.keyboard2.debug.apk"
+                )
+
+                var updateApk: File? = null
+                for (location in possibleLocations) {
+                    val file = File(location)
+                    if (file.exists() && file.canRead()) {
+                        updateApk = file
+                        break
+                    }
+                }
+
+                if (updateApk != null) {
+                    showUpdateDialog(updateApk)
+                } else {
+                    showNoUpdateDialog()
+                }
+
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Error checking for updates", e)
+                Toast.makeText(this@SettingsActivity,
+                    "Error checking for updates: ${e.message}",
+                    Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showUpdateDialog(apkFile: File) {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Update Available")
+            .setMessage("APK found at:\n${apkFile.name}\n\nSize: ${apkFile.length() / 1024} KB")
+            .setPositiveButton("Install") { _, _ ->
+                installUpdate(apkFile)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showNoUpdateDialog() {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("No Updates Found")
+            .setMessage("Place APK file in one of these locations:\n\n" +
+                       "• /sdcard/Download/juloo.keyboard2.debug.apk\n" +
+                       "• /sdcard/unexpected/debug-kb.apk")
+            .setPositiveButton("OK", null)
+            .show()
+    }
+
+    private fun installUpdate(apkFile: File) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(
+                    android.net.Uri.fromFile(apkFile),
+                    "application/vnd.android.package-archive"
+                )
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Error installing update", e)
+            Toast.makeText(this,
+                "Install failed: ${e.message}",
+                Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun fallbackEncrypted() {
+        // Handle direct boot mode failure
+        android.util.Log.w(TAG, "Settings unavailable in direct boot mode")
+        finish()
     }
 }

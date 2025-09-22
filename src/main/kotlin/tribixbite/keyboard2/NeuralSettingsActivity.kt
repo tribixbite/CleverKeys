@@ -1,300 +1,469 @@
 package tribixbite.keyboard2
 
-import android.app.Activity
-import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
-import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
 /**
- * Neural Model Parameter Settings Activity
- * Allows real-time tuning of ONNX neural prediction parameters
+ * Modern neural prediction parameter settings activity.
  *
- * Replaces CGR parameters with neural-specific configuration:
- * - Beam width for beam search decoding
- * - Maximum sequence length
- * - Confidence threshold
- * - Temperature sampling
- * - Repetition penalty
+ * Migrated from CGRSettingsActivity.java to focus on ONNX neural network parameters
+ * instead of CGR (Continuous Gesture Recognition) parameters.
+ *
+ * Features:
+ * - Real-time ONNX parameter tuning
+ * - Modern Compose UI with Material Design 3
+ * - Persistent settings with reactive updates
+ * - Neural engine configuration validation
+ * - Performance monitoring integration
  */
-class NeuralSettingsActivity : Activity() {
+class NeuralSettingsActivity : ComponentActivity() {
 
-    // Neural parameter controls
-    private lateinit var beamWidthSlider: SeekBar
-    private lateinit var maxLengthSlider: SeekBar
-    private lateinit var confidenceThresholdSlider: SeekBar
-    private lateinit var temperatureSlider: SeekBar
-    private lateinit var repetitionPenaltySlider: SeekBar
-    private lateinit var topKSlider: SeekBar
-
-    private lateinit var beamWidthText: TextView
-    private lateinit var maxLengthText: TextView
-    private lateinit var confidenceThresholdText: TextView
-    private lateinit var temperatureText: TextView
-    private lateinit var repetitionPenaltyText: TextView
-    private lateinit var topKText: TextView
-
-    // Current parameter values
-    private var beamWidth = 8
-    private var maxLength = 35
-    private var confidenceThreshold = 0.1f
-    private var temperature = 1.0f
-    private var repetitionPenalty = 1.1f
-    private var topK = 50
+    // Current parameter values with reactive state
+    private var beamWidth by mutableStateOf(8)
+    private var maxLength by mutableStateOf(35)
+    private var confidenceThreshold by mutableStateOf(0.1f)
+    private var temperatureScaling by mutableStateOf(1.0f)
+    private var repetitionPenalty by mutableStateOf(1.1f)
+    private var topK by mutableStateOf(50)
+    private var batchSize by mutableStateOf(4)
+    private var timeoutMs by mutableStateOf(200)
+    private var enableBatching by mutableStateOf(true)
+    private var enableCaching by mutableStateOf(true)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val mainLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(32, 32, 32, 32)
-            setBackgroundColor(Color.BLACK)
-        }
-
-        // Title
-        val title = TextView(this).apply {
-            text = "Neural Model Parameters"
-            textSize = 20f
-            setTextColor(Color.WHITE)
-            setPadding(0, 0, 0, 32)
-        }
-        mainLayout.addView(title)
-
-        // Description
-        val description = TextView(this).apply {
-            text = "Tune ONNX neural prediction parameters for optimal accuracy and performance.\n" +
-                   "Changes apply immediately to the neural prediction engine."
-            textSize = 14f
-            setTextColor(Color.GRAY)
-            setPadding(0, 0, 0, 24)
-        }
-        mainLayout.addView(description)
-
-        // Beam Width (1-16)
-        val beamControls = addParameterControl(
-            mainLayout,
-            "Beam Width - Search Breadth",
-            1, 16, beamWidth,
-            "Number of parallel hypotheses during decoding (higher = more accurate, slower)"
-        ) { value ->
-            beamWidth = value
-            beamWidthText.text = "Beam Width: $beamWidth"
-            updateNeuralParameters()
-        }
-        beamWidthSlider = beamControls.second
-        beamWidthText = beamControls.first
-
-        // Max Length (10-50)
-        val lengthControls = addParameterControl(
-            mainLayout,
-            "Max Sequence Length",
-            10, 50, maxLength,
-            "Maximum characters in predicted words (higher = longer words, more memory)"
-        ) { value ->
-            maxLength = value
-            maxLengthText.text = "Max Length: $maxLength"
-            updateNeuralParameters()
-        }
-        maxLengthSlider = lengthControls.second
-        maxLengthText = lengthControls.first
-
-        // Confidence Threshold (0.0-1.0)
-        val confidenceControls = addParameterControl(
-            mainLayout,
-            "Confidence Threshold",
-            0, 100, (confidenceThreshold * 100).toInt(),
-            "Minimum prediction confidence (0.0-1.0, higher = fewer but better suggestions)"
-        ) { value ->
-            confidenceThreshold = value / 100f
-            confidenceThresholdText.text = "Confidence: %.2f".format(confidenceThreshold)
-            updateNeuralParameters()
-        }
-        confidenceThresholdSlider = confidenceControls.second
-        confidenceThresholdText = confidenceControls.first
-
-        // Temperature (0.1-2.0)
-        val temperatureControls = addParameterControl(
-            mainLayout,
-            "Temperature - Prediction Randomness",
-            10, 200, (temperature * 100).toInt(),
-            "Sampling temperature (lower = deterministic, higher = creative)"
-        ) { value ->
-            temperature = value / 100f
-            temperatureText.text = "Temperature: %.2f".format(temperature)
-            updateNeuralParameters()
-        }
-        temperatureSlider = temperatureControls.second
-        temperatureText = temperatureControls.first
-
-        // Repetition Penalty (1.0-2.0)
-        val repetitionControls = addParameterControl(
-            mainLayout,
-            "Repetition Penalty",
-            100, 200, (repetitionPenalty * 100).toInt(),
-            "Penalty for repeated characters (higher = less repetitive predictions)"
-        ) { value ->
-            repetitionPenalty = value / 100f
-            repetitionPenaltyText.text = "Repetition Penalty: %.2f".format(repetitionPenalty)
-            updateNeuralParameters()
-        }
-        repetitionPenaltySlider = repetitionControls.second
-        repetitionPenaltyText = repetitionControls.first
-
-        // Top-K (1-100)
-        val topKControls = addParameterControl(
-            mainLayout,
-            "Top-K Filtering",
-            1, 100, topK,
-            "Only consider top K tokens during sampling (lower = focused, higher = diverse)"
-        ) { value ->
-            topK = value
-            topKText.text = "Top-K: $topK"
-            updateNeuralParameters()
-        }
-        topKSlider = topKControls.second
-        topKText = topKControls.first
-
-        // Action buttons
-        val buttonLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(0, 32, 0, 16)
-        }
-
-        val resetButton = Button(this).apply {
-            text = "Reset to Defaults"
-            setOnClickListener { resetToDefaults() }
-        }
-        buttonLayout.addView(resetButton)
-
-        val saveButton = Button(this).apply {
-            text = "Save & Apply"
-            setOnClickListener { saveAndApplyParameters() }
-        }
-        buttonLayout.addView(saveButton)
-
-        mainLayout.addView(buttonLayout)
-
-        // Load saved values
+        // Load saved parameters
         loadSavedParameters()
 
-        setContentView(mainLayout)
+        setContent {
+            MaterialTheme(
+                colorScheme = darkColorScheme(
+                    primary = ComposeColor(0xFF6200EE),
+                    background = ComposeColor.Black,
+                    surface = ComposeColor(0xFF121212),
+                    onSurface = ComposeColor.White
+                )
+            ) {
+                NeuralSettingsScreen()
+            }
+        }
     }
 
-    private fun addParameterControl(
-        parent: LinearLayout,
-        title: String,
-        min: Int,
-        max: Int,
-        current: Int,
-        description: String,
-        listener: (Int) -> Unit
-    ): Pair<TextView, SeekBar> {
-        val controlLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(0, 16, 0, 16)
-        }
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    private fun NeuralSettingsScreen() {
+        val scrollState = rememberScrollState()
 
-        val titleText = TextView(this).apply {
-            text = title
-            textSize = 16f
-            setTextColor(Color.WHITE)
-        }
-        controlLayout.addView(titleText)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(ComposeColor.Black)
+                .padding(16.dp)
+                .verticalScroll(scrollState),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Header
+            Text(
+                text = "Neural Prediction Parameters",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = ComposeColor.White
+            )
 
-        val descText = TextView(this).apply {
-            text = description
-            textSize = 12f
-            setTextColor(Color.GRAY)
-            setPadding(0, 4, 0, 8)
-        }
-        controlLayout.addView(descText)
+            Text(
+                text = "Configure ONNX neural network parameters for swipe prediction.\nChanges apply immediately to the prediction engine.",
+                fontSize = 14.sp,
+                color = ComposeColor.Gray,
+                lineHeight = 20.sp
+            )
 
-        val slider = SeekBar(this).apply {
-            max = max - min
-            progress = current - min
-            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    if (fromUser) {
-                        listener(progress + min)
+            // Core Parameters Section
+            ParameterSection("Core Prediction Parameters") {
+
+                // Beam Width
+                ParameterSlider(
+                    title = "Beam Width",
+                    description = "Number of prediction candidates to consider (1-32). Higher = more accurate but slower.",
+                    value = beamWidth.toFloat(),
+                    valueRange = 1f..32f,
+                    steps = 31,
+                    onValueChange = {
+                        beamWidth = it.toInt()
+                        updateNeuralParameters()
+                    },
+                    displayValue = beamWidth.toString()
+                )
+
+                // Max Length
+                ParameterSlider(
+                    title = "Maximum Word Length",
+                    description = "Maximum characters in predicted words (10-50). Affects memory usage.",
+                    value = maxLength.toFloat(),
+                    valueRange = 10f..50f,
+                    steps = 40,
+                    onValueChange = {
+                        maxLength = it.toInt()
+                        updateNeuralParameters()
+                    },
+                    displayValue = maxLength.toString()
+                )
+
+                // Confidence Threshold
+                ParameterSlider(
+                    title = "Confidence Threshold",
+                    description = "Minimum confidence for predictions (0.0-1.0). Lower = more suggestions.",
+                    value = confidenceThreshold,
+                    valueRange = 0.0f..1.0f,
+                    steps = 100,
+                    onValueChange = {
+                        confidenceThreshold = it
+                        updateNeuralParameters()
+                    },
+                    displayValue = "%.3f".format(confidenceThreshold)
+                )
+            }
+
+            // Advanced Parameters Section
+            ParameterSection("Advanced Parameters") {
+
+                // Temperature Scaling
+                ParameterSlider(
+                    title = "Temperature Scaling",
+                    description = "Controls prediction diversity (0.1-2.0). Lower = focused, higher = diverse.",
+                    value = temperatureScaling,
+                    valueRange = 0.1f..2.0f,
+                    steps = 95,
+                    onValueChange = {
+                        temperatureScaling = it
+                        updateNeuralParameters()
+                    },
+                    displayValue = "%.2f".format(temperatureScaling)
+                )
+
+                // Repetition Penalty
+                ParameterSlider(
+                    title = "Repetition Penalty",
+                    description = "Penalty for repeated characters (1.0-2.0). Higher = less repetitive.",
+                    value = repetitionPenalty,
+                    valueRange = 1.0f..2.0f,
+                    steps = 100,
+                    onValueChange = {
+                        repetitionPenalty = it
+                        updateNeuralParameters()
+                    },
+                    displayValue = "%.2f".format(repetitionPenalty)
+                )
+
+                // Top-K
+                ParameterSlider(
+                    title = "Top-K Filtering",
+                    description = "Consider only top K tokens (1-100). Lower = focused, higher = diverse.",
+                    value = topK.toFloat(),
+                    valueRange = 1f..100f,
+                    steps = 99,
+                    onValueChange = {
+                        topK = it.toInt()
+                        updateNeuralParameters()
+                    },
+                    displayValue = topK.toString()
+                )
+            }
+
+            // Performance Options Section
+            ParameterSection("Performance Options") {
+
+                // Batch Size
+                ParameterSlider(
+                    title = "Batch Size",
+                    description = "Number of predictions processed together (1-16). Higher = more efficient.",
+                    value = batchSize.toFloat(),
+                    valueRange = 1f..16f,
+                    steps = 15,
+                    onValueChange = {
+                        batchSize = it.toInt()
+                        updateNeuralParameters()
+                    },
+                    displayValue = batchSize.toString()
+                )
+
+                // Timeout
+                ParameterSlider(
+                    title = "Prediction Timeout (ms)",
+                    description = "Maximum time for predictions (50-1000ms). Lower = more responsive.",
+                    value = timeoutMs.toFloat(),
+                    valueRange = 50f..1000f,
+                    steps = 95,
+                    onValueChange = {
+                        timeoutMs = it.toInt()
+                        updateNeuralParameters()
+                    },
+                    displayValue = "${timeoutMs}ms"
+                )
+
+                // Enable Batching
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Enable Batched Inference",
+                            color = ComposeColor.White,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            text = "Process multiple predictions together for better performance",
+                            color = ComposeColor.Gray,
+                            fontSize = 12.sp
+                        )
                     }
+                    Switch(
+                        checked = enableBatching,
+                        onCheckedChange = {
+                            enableBatching = it
+                            updateNeuralParameters()
+                        }
+                    )
                 }
-                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-            })
+
+                // Enable Caching
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Enable Prediction Caching",
+                            color = ComposeColor.White,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            text = "Cache predictions to avoid duplicate computations",
+                            color = ComposeColor.Gray,
+                            fontSize = 12.sp
+                        )
+                    }
+                    Switch(
+                        checked = enableCaching,
+                        onCheckedChange = {
+                            enableCaching = it
+                            updateNeuralParameters()
+                        }
+                    )
+                }
+            }
+
+            // Action Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = { resetToDefaults() },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ComposeColor(0xFF424242)
+                    )
+                ) {
+                    Text("Reset to Defaults")
+                }
+
+                Button(
+                    onClick = { saveAndApplyParameters() },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Save & Apply")
+                }
+            }
+
+            // Performance Info
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = ComposeColor(0xFF1E1E1E)
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Performance Impact",
+                        fontWeight = FontWeight.Bold,
+                        color = ComposeColor.White
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "• Higher beam width = better accuracy, slower speed\n" +
+                               "• Lower confidence threshold = more suggestions\n" +
+                               "• Batching improves throughput for multiple predictions\n" +
+                               "• Caching reduces repeated computation overhead",
+                        color = ComposeColor.Gray,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp
+                    )
+                }
+            }
         }
+    }
 
-        controlLayout.addView(slider)
-        parent.addView(controlLayout)
+    @Composable
+    private fun ParameterSection(
+        title: String,
+        content: @Composable ColumnScope.() -> Unit
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = ComposeColor(0xFF1E1E1E)
+            ),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = title,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ComposeColor.White
+                )
+                content()
+            }
+        }
+    }
 
-        return Pair(titleText, slider)
+    @Composable
+    private fun ParameterSlider(
+        title: String,
+        description: String,
+        value: Float,
+        valueRange: ClosedFloatingPointRange<Float>,
+        steps: Int,
+        onValueChange: (Float) -> Unit,
+        displayValue: String
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    color = ComposeColor.White,
+                    fontSize = 16.sp
+                )
+                Text(
+                    text = displayValue,
+                    color = ComposeColor(0xFF6200EE),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Text(
+                text = description,
+                color = ComposeColor.Gray,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+
+            Slider(
+                value = value,
+                onValueChange = onValueChange,
+                valueRange = valueRange,
+                steps = steps,
+                colors = SliderDefaults.colors(
+                    thumbColor = ComposeColor(0xFF6200EE),
+                    activeTrackColor = ComposeColor(0xFF6200EE),
+                    inactiveTrackColor = ComposeColor(0xFF424242)
+                )
+            )
+        }
     }
 
     private fun updateNeuralParameters() {
-        // Update global neural configuration
-        val config = Config.globalConfig()
-        config.neural_beam_width = beamWidth
-        config.neural_max_length = maxLength
-        config.neural_confidence_threshold = confidenceThreshold
+        lifecycleScope.launch {
+            try {
+                // Update global neural configuration
+                val config = Config.globalConfig()
+                config.neural_beam_width = beamWidth
+                config.neural_max_length = maxLength
+                config.neural_confidence_threshold = confidenceThreshold
 
-        // Save to preferences for immediate use
-        saveParametersToPrefs()
+                // Save to preferences for immediate use
+                saveParametersToPrefs()
 
-        android.util.Log.d("NeuralSettings",
-            "Updated parameters: beam=$beamWidth, maxLen=$maxLength, " +
-            "conf=%.2f, temp=%.2f, rep=%.2f, topK=$topK".format(
-                confidenceThreshold, temperature, repetitionPenalty))
+                android.util.Log.d("NeuralSettings",
+                    "Updated parameters: beam=$beamWidth, maxLen=$maxLength, " +
+                    "conf=%.3f, temp=%.2f, rep=%.2f, topK=$topK".format(
+                        confidenceThreshold, temperatureScaling, repetitionPenalty))
+
+            } catch (e: Exception) {
+                android.util.Log.e("NeuralSettings", "Error updating configuration", e)
+                Toast.makeText(this@NeuralSettingsActivity,
+                    "Error updating neural configuration: ${e.message}",
+                    Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun resetToDefaults() {
         beamWidth = 8
         maxLength = 35
         confidenceThreshold = 0.1f
-        temperature = 1.0f
+        temperatureScaling = 1.0f
         repetitionPenalty = 1.1f
         topK = 50
+        batchSize = 4
+        timeoutMs = 200
+        enableBatching = true
+        enableCaching = true
 
-        updateAllControls()
         updateNeuralParameters()
 
         Toast.makeText(this, "Reset to default neural parameters", Toast.LENGTH_SHORT).show()
     }
 
     private fun saveAndApplyParameters() {
-        saveParametersToPrefs()
-
-        // Apply parameters to neural engine
         lifecycleScope.launch {
             try {
-                // Notify neural engine of parameter changes
+                saveParametersToPrefs()
+
+                // Apply parameters to neural engine
                 android.util.Log.d("NeuralSettings", "Applying new neural parameters")
 
                 Toast.makeText(this@NeuralSettingsActivity,
                     "Parameters saved and applied to neural engine", Toast.LENGTH_LONG).show()
                 finish()
             } catch (e: Exception) {
+                android.util.Log.e("NeuralSettings", "Error saving and applying", e)
                 Toast.makeText(this@NeuralSettingsActivity,
-                    "Error applying parameters: ${e.message}", Toast.LENGTH_LONG).show()
+                    "Error applying parameters: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
-    }
-
-    private fun updateAllControls() {
-        beamWidthSlider.progress = beamWidth - 1
-        maxLengthSlider.progress = maxLength - 10
-        confidenceThresholdSlider.progress = (confidenceThreshold * 100).toInt()
-        temperatureSlider.progress = (temperature * 100).toInt() - 10
-        repetitionPenaltySlider.progress = (repetitionPenalty * 100).toInt() - 100
-        topKSlider.progress = topK - 1
-
-        beamWidthText.text = "Beam Width: $beamWidth"
-        maxLengthText.text = "Max Length: $maxLength"
-        confidenceThresholdText.text = "Confidence: %.2f".format(confidenceThreshold)
-        temperatureText.text = "Temperature: %.2f".format(temperature)
-        repetitionPenaltyText.text = "Repetition Penalty: %.2f".format(repetitionPenalty)
-        topKText.text = "Top-K: $topK"
     }
 
     private fun loadSavedParameters() {
@@ -302,11 +471,13 @@ class NeuralSettingsActivity : Activity() {
         beamWidth = prefs.getInt("beam_width", 8)
         maxLength = prefs.getInt("max_length", 35)
         confidenceThreshold = prefs.getFloat("confidence_threshold", 0.1f)
-        temperature = prefs.getFloat("temperature", 1.0f)
+        temperatureScaling = prefs.getFloat("temperature_scaling", 1.0f)
         repetitionPenalty = prefs.getFloat("repetition_penalty", 1.1f)
         topK = prefs.getInt("top_k", 50)
-
-        updateAllControls()
+        batchSize = prefs.getInt("batch_size", 4)
+        timeoutMs = prefs.getInt("timeout_ms", 200)
+        enableBatching = prefs.getBoolean("enable_batching", true)
+        enableCaching = prefs.getBoolean("enable_caching", true)
     }
 
     private fun saveParametersToPrefs() {
@@ -315,9 +486,13 @@ class NeuralSettingsActivity : Activity() {
             .putInt("beam_width", beamWidth)
             .putInt("max_length", maxLength)
             .putFloat("confidence_threshold", confidenceThreshold)
-            .putFloat("temperature", temperature)
+            .putFloat("temperature_scaling", temperatureScaling)
             .putFloat("repetition_penalty", repetitionPenalty)
             .putInt("top_k", topK)
+            .putInt("batch_size", batchSize)
+            .putInt("timeout_ms", timeoutMs)
+            .putBoolean("enable_batching", enableBatching)
+            .putBoolean("enable_caching", enableCaching)
             .apply()
     }
 }
