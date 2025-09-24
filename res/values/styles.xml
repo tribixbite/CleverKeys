@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <!-- Emoji pane -->
-  <style name="emojiTypeButton">
-    <item name="android:padding">1px</item>
-    <item name="android:gravity">center</item>
-    <item name="android:minHeight">18dp</item>
-    <item name="android:background">?attr/emoji_button_bg</item>
-    <item name="android:textColor">?attr/emoji_key_text</item>
-    <item name="android:textSize">18dp</item>
-  </style>
   <style name="emojiGridButton">
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">fill_parent</item>
