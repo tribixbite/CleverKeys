@@ -10,6 +10,8 @@ import android.view.inputmethod.InputConnection
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
+// CleverKeys specific classes - all in same package
+
 // Logging convenience functions
 private fun logD(tag: String, message: String) = Log.d(tag, message)
 private fun logE(tag: String, message: String, throwable: Throwable? = null) = Log.e(tag, message, throwable)
@@ -279,23 +281,52 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             listOf("z", "x", "c", "v", "b", "n", "m")
         )
 
-        val keyRows = mutableListOf<List<KeyValue>>()
+        val rows = mutableListOf<KeyboardData.Row>()
 
         // Add character rows
         charRows.forEach { row ->
-            keyRows.add(row.map { char -> KeyValue.makeCharKey(char[0]) })
+            val keys = row.map { char ->
+                val keyValue = KeyValue.makeCharKey(char[0])
+                val keysArray = Array<KeyValue?>(9) { null }
+                keysArray[0] = keyValue  // Center position (0 = center key value)
+                KeyboardData.Key(
+                    keys = keysArray,
+                    width = 1.0f,
+                    shift = 0.0f
+                )
+            }
+            rows.add(KeyboardData.Row(
+                keys = keys,
+                height = 1.0f,
+                shift = 0.0f
+            ))
         }
 
         // Add bottom row with space and backspace
-        keyRows.add(listOf(
+        val specialKeys = listOf(
             KeyValue.BACKSPACE,
             KeyValue.SPACE,
             KeyValue.ENTER
+        ).map { keyValue ->
+            val keysArray = Array<KeyValue?>(9) { null }
+            keysArray[0] = keyValue
+            KeyboardData.Key(
+                keys = keysArray,
+                width = 1.0f,
+                shift = 0.0f
+            )
+        }
+        rows.add(KeyboardData.Row(
+            keys = specialKeys,
+            height = 1.0f,
+            shift = 0.0f
         ))
 
         return KeyboardData(
-            name = "Basic QWERTY",
-            rows = keyRows
+            rows = rows,
+            keysWidth = 10.0f,  // 10 keys max width
+            keysHeight = 1.0f,  // Default key height
+            name = "Basic QWERTY"
         )
     }
 
@@ -492,17 +523,25 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
      */
     private fun handleKeyPress(key: KeyValue) {
         // Handle regular typing, special keys, etc.
-        when (key.kind) {
-            KeyValue.Kind.Char -> {
+        when (key) {
+            is KeyValue.CharKey -> {
                 // Send character to input connection
                 currentInputConnection?.commitText(key.char.toString(), 1)
             }
-            KeyValue.Kind.Event -> {
+            is KeyValue.EventKey -> {
                 // Handle special keys (backspace, enter, etc.)
-                handleSpecialKey(key.eventCode)
+                handleSpecialKey(key.event)
+            }
+            is KeyValue.KeyEventKey -> {
+                // Handle Android key events
+                handleAndroidKeyEvent(key.keyCode)
+            }
+            is KeyValue.StringKey -> {
+                // Handle multi-character strings
+                currentInputConnection?.commitText(key.string, 1)
             }
             else -> {
-                logD("Unhandled key type: ${key.kind}")
+                logD("Unhandled key type: ${key::class.simpleName}")
             }
         }
     }
@@ -510,15 +549,42 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     /**
      * Handle special key events
      */
-    private fun handleSpecialKey(eventCode: Int) {
-        when (eventCode) {
+    private fun handleSpecialKey(event: KeyValue.Event) {
+        when (event) {
+            KeyValue.Event.CONFIG -> {
+                // Open configuration/settings
+                logD("Opening configuration")
+            }
+            KeyValue.Event.SWITCH_TEXT -> {
+                // Switch to text input mode
+                logD("Switching to text mode")
+            }
+            KeyValue.Event.SWITCH_EMOJI -> {
+                // Switch to emoji input mode
+                logD("Switching to emoji mode")
+            }
+            // Add other special event handling
+            else -> {
+                logD("Unhandled special event: $event")
+            }
+        }
+    }
+
+    /**
+     * Handle Android key events
+     */
+    private fun handleAndroidKeyEvent(keyCode: Int) {
+        when (keyCode) {
             android.view.KeyEvent.KEYCODE_DEL -> {
                 currentInputConnection?.deleteSurroundingText(1, 0)
             }
             android.view.KeyEvent.KEYCODE_ENTER -> {
                 currentInputConnection?.performEditorAction(android.view.inputmethod.EditorInfo.IME_ACTION_DONE)
             }
-            // Add other special key handling
+            // Add other Android key handling
+            else -> {
+                logD("Unhandled Android key event: $keyCode")
+            }
         }
     }
     

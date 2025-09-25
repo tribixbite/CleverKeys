@@ -18,8 +18,12 @@ For production builds, use a standard Android development environment:
 - Standard AAPT2 (not Termux-patched version)
 ```
 
-### **Current Termux Limitation**
-The AAPT2 tool incompatibility on Termux ARM64 is an **environment-specific limitation**, not a code issue. All code compiles successfully on standard Android development environments.
+### **Termux Compatibility: RESOLVED**
+The AAPT2 tool now works perfectly in Termux ARM64 environment using the ARM64-compatible override:
+```properties
+android.aapt2FromMavenOverride=/data/data/com.termux/files/home/git/Unexpected-Keyboard/tools/aapt2-arm64/aapt2
+```
+Build system is **fully functional** in Termux and standard environments.
 
 ## 🚀 **PRODUCTION DEPLOYMENT CONFIGURATION**
 
