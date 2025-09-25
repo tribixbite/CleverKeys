@@ -9,6 +9,7 @@ import android.text.InputType
 import android.text.Layout
 import android.widget.EditText
 import kotlinx.coroutines.*
+import tribixbite.keyboard2.R
 
 /**
  * Custom layout editor dialog with modern Kotlin improvements

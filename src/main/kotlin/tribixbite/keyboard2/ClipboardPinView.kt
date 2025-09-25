@@ -12,6 +12,7 @@ import android.widget.TextView
 import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONException
+import tribixbite.keyboard2.R
 
 /**
  * Clipboard pin view for managing pinned clipboard entries

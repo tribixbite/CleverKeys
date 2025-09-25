@@ -13,6 +13,7 @@ import android.text.InputType
 import android.util.Log
 import android.util.TypedValue
 import android.view.View
+import tribixbite.keyboard2.R
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection

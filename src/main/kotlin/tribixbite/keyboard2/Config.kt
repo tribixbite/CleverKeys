@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import android.util.DisplayMetrics
 import android.util.TypedValue
 import tribixbite.keyboard2.prefs.*
+import tribixbite.keyboard2.R
 import kotlin.math.max
 import kotlin.math.min
 
