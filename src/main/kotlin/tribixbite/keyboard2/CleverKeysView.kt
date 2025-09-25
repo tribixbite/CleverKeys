@@ -90,12 +90,12 @@ class CleverKeysView(
     }
     
     private fun updatePaintColors() {
-        val theme = Theme.get_current()
-        
-        keyPaint.color = theme.keyColor
-        keyBorderPaint.color = theme.keyBorderColor
-        textPaint.color = theme.labelColor
-        textPaint.textSize = theme.labelTextSize
+        val themeData = Theme.getSystemThemeData(context)
+
+        keyPaint.color = themeData.keyColor
+        keyBorderPaint.color = themeData.keyBorderColor
+        textPaint.color = themeData.labelColor
+        textPaint.textSize = themeData.labelTextSize
     }
     
     private fun createQwertyLayout() {

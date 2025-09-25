@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.widget.CheckBox
 import android.widget.CompoundButton
+import kotlinx.coroutines.*
 
 /**
  * Checkbox for enabling/disabling clipboard history functionality
@@ -29,6 +30,8 @@ class ClipboardHistoryCheckBox : CheckBox, CompoundButton.OnCheckedChangeListene
 
     override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
         // Update clipboard history service when toggled
-        ClipboardHistoryService.set_history_enabled(isChecked)
+        GlobalScope.launch {
+            ClipboardHistoryService.setHistoryEnabled(isChecked)
+        }
     }
 }

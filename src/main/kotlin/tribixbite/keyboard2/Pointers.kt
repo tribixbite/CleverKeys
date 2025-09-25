@@ -603,4 +603,39 @@ class Pointers(
             inProgress = false
         }
     }
+
+    /**
+     * Modifier state representation
+     */
+    data class Modifiers(private val keys: Array<KeyValue>, private val size: Int) {
+        companion object {
+            val EMPTY = Modifiers(emptyArray(), 0)
+
+            fun ofArray(keys: Array<KeyValue>, size: Int): Modifiers {
+                return Modifiers(keys.copyOf(size), size)
+            }
+        }
+
+        fun withExtraMod(extraMod: KeyValue): Modifiers {
+            val newKeys = Array(size + 1) { i ->
+                if (i < size) keys[i] else extraMod
+            }
+            return Modifiers(newKeys, size + 1)
+        }
+
+        fun isEmpty(): Boolean = size == 0
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Modifiers) return false
+            if (size != other.size) return false
+            return keys.contentEquals(other.keys)
+        }
+
+        override fun hashCode(): Int {
+            var result = keys.contentHashCode()
+            result = 31 * result + size
+            return result
+        }
+    }
 }

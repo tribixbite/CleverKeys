@@ -98,7 +98,7 @@ class Config private constructor(
                         layouts.add(LayoutsPreference.CustomLayout.parse(customLayout))
                     }
 
-                    LayoutsPreference.save_to_preferences(editor, layouts)
+                    LayoutsPreference.saveToPreferences(editor, layouts)
                     // Fallthrough
                 }
                 1 -> {
@@ -115,8 +115,10 @@ class Config private constructor(
         }
 
         private fun migrateLayout(layoutName: String): LayoutsPreference.Layout {
-            return LayoutsPreference.BuiltinLayout.get(layoutName)
-                ?: LayoutsPreference.BuiltinLayout.get("system")!!
+            return when (layoutName) {
+                "system" -> LayoutsPreference.SystemLayout()
+                else -> LayoutsPreference.NamedLayout(layoutName)
+            }
         }
     }
 
@@ -247,7 +249,7 @@ class Config private constructor(
             )
         }
 
-        layouts = LayoutsPreference.load_from_preferences(resources, prefs)
+        layouts = LayoutsPreference.loadFromPreferences(resources, prefs)
         inverse_numpad = (prefs.getString("numpad_layout", "default") ?: "default") == "low_first"
 
         val numberRow = prefs.getString("number_row", "no_number_row") ?: "no_number_row"

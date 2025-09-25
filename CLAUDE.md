@@ -345,15 +345,23 @@ grep -r "Unresolved reference" build/
 ## 🔍 DEBUGGING INFO
 
 **Last Known Issues:**
-- Multiple import errors in test/validation files
-- ONNX tensor creation API compatibility questions
-- Type safety issues in advanced testing components
+- Hundreds of unresolved reference errors throughout codebase
+- Missing classes and incomplete Java-to-Kotlin migration
+- Many files still reference old Java API patterns
+- ONNX tensor creation API compatibility needs validation
 
 **Build System:**
 - AAPT2: ✅ Working with Termux ARM64 patched version
 - Resource generation: ✅ Custom Gradle tasks functional
 - Path corrections: ✅ src/main/ structure properly configured
-- Kotlin compilation: 🔄 Minor errors preventing completion
+- Kotlin compilation: 🔄 Major refactoring needed - many unresolved references
+
+**Recent Progress:**
+- Fixed KeyboardData constructor parameter issues
+- Updated KeyValue sealed class pattern matching in CleverKeysService
+- Fixed createBasicQwertyLayout to create proper Row/Key objects
+- Removed incorrect wildcard imports for non-existent subpackages
+- Still need to address hundreds of remaining unresolved reference errors
 
 **Architecture Validation:**
 - Pure ONNX neural prediction without CGR or fallbacks
