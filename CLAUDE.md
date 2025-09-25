@@ -344,11 +344,12 @@ grep -r "Unresolved reference" build/
 
 ## 🔍 DEBUGGING INFO
 
-**Last Known Issues:**
-- Hundreds of unresolved reference errors throughout codebase
-- Missing classes and incomplete Java-to-Kotlin migration
-- Many files still reference old Java API patterns
-- ONNX tensor creation API compatibility needs validation
+**Current Status (Post-Refactoring):**
+- Major architectural issues resolved (KeyValue sealed classes, Modifiers, Config methods)
+- Android resource imports systematically fixed
+- Core service structure updated for proper Kotlin patterns
+- Remaining: ~500-600 unresolved references (reduced from 700+)
+- Next: Focus on neural prediction pipeline and UI component integration
 
 **Build System:**
 - AAPT2: ✅ Working with Termux ARM64 patched version
@@ -357,11 +358,16 @@ grep -r "Unresolved reference" build/
 - Kotlin compilation: 🔄 Major refactoring needed - many unresolved references
 
 **Recent Progress:**
-- Fixed KeyboardData constructor parameter issues
-- Updated KeyValue sealed class pattern matching in CleverKeysService
-- Fixed createBasicQwertyLayout to create proper Row/Key objects
-- Removed incorrect wildcard imports for non-existent subpackages
-- Still need to address hundreds of remaining unresolved reference errors
+- Fixed KeyboardData constructor parameter issues in CleverKeysService
+- Updated KeyValue sealed class pattern matching from Java API to Kotlin sealed classes
+- Fixed createBasicQwertyLayout to create proper KeyboardData.Row and Key objects
+- Added missing Pointers.Modifiers class with proper data structure
+- Fixed Config.kt method calls (save_to_preferences -> saveToPreferences, etc.)
+- Replaced BuiltinLayout.get() with proper NamedLayout/SystemLayout constructors
+- Fixed Theme.get_current() to Theme.getSystemThemeData() with proper ThemeData usage
+- Added R class imports to multiple files (ClipboardPinView, Config, CustomLayoutEditDialog, etc.)
+- Added BufferOverflow import for MutableSharedFlow configuration
+- Systematic resolution of unresolved references progressing
 
 **Architecture Validation:**
 - Pure ONNX neural prediction without CGR or fallbacks
