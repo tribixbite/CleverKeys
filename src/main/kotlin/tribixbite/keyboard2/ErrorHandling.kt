@@ -127,16 +127,16 @@ object ErrorHandling {
         fun validateKeyboardLayout(layout: KeyboardData): ValidationResult {
             val errors = mutableListOf<String>()
             
-            if (layout.keys.isEmpty()) {
+            if (layout.rows.isEmpty()) {
                 errors.add("No keyboard rows defined")
             }
-            
-            layout.keys.forEachIndexed { rowIndex, row ->
-                if (row.isEmpty()) {
+
+            layout.rows.forEachIndexed { rowIndex, row ->
+                if (row.keys.isEmpty()) {
                     errors.add("Empty row at index $rowIndex")
                 }
-                
-                row.forEachIndexed { keyIndex, key ->
+
+                row.keys.forEachIndexed { keyIndex, key ->
                     if (key.keys.isEmpty() || key.keys.all { it == null }) {
                         errors.add("No key values defined at row $rowIndex, key $keyIndex")
                     }
