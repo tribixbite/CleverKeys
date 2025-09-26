@@ -23,7 +23,7 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
     }
     
     // State management
-    private val autocap = Autocapitalisation()
+    private var shouldCapitalizeNext = true
     private var mods = Pointers.Modifiers(0)
     private var metaState = 0
     private var moveCursorForceFallback = false
@@ -71,14 +71,16 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
     private fun handleCharacterKey(char: Char, isSwipe: Boolean) {
         val inputConnection = receiver.getInputConnection() ?: return
         
-        val finalChar = if (autocap.shouldCapitalize(char)) {
+        val finalChar = if (shouldCapitalizeNext && char.isLetter()) {
             char.uppercaseChar()
         } else {
             char
         }
-        
+
         inputConnection.commitText(finalChar.toString(), 1)
-        autocap.afterCharacter(finalChar)
+
+        // Update capitalization state
+        shouldCapitalizeNext = finalChar in ".!?"
         receiver.performVibration()
     }
     
@@ -129,7 +131,7 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
             inputConnection.deleteSurroundingText(1, 0)
         }
         
-        autocap.afterBackspace()
+        // Note: backspace logic could be more sophisticated
         receiver.performVibration()
     }
     
@@ -149,7 +151,7 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
             }
         }
         
-        autocap.afterEnter()
+        shouldCapitalizeNext = true
         receiver.performVibration()
     }
     
@@ -159,7 +161,7 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
     private fun handleSpace() {
         val inputConnection = receiver.getInputConnection() ?: return
         inputConnection.commitText(" ", 1)
-        autocap.afterSpace()
+        // Don't change capitalization state after space
         receiver.performVibration()
     }
     
@@ -241,30 +243,3 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
     }
 }
 
-/**
- * Autocapitalization logic
- */
-class Autocapitalisation {
-    
-    private var shouldCapitalizeNext = true
-    
-    fun shouldCapitalize(char: Char): Boolean {
-        return shouldCapitalizeNext && char.isLetter()
-    }
-    
-    fun afterCharacter(char: Char) {
-        shouldCapitalizeNext = char in ".!?"
-    }
-    
-    fun afterSpace() {
-        // Don't change capitalization state after space
-    }
-    
-    fun afterEnter() {
-        shouldCapitalizeNext = true
-    }
-    
-    fun afterBackspace() {
-        // Could implement more sophisticated logic here
-    }
-}
