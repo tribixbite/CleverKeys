@@ -66,7 +66,7 @@ object ClipboardHistoryService {
      * When disabled, clears all history.
      */
     suspend fun setHistoryEnabled(enabled: Boolean) {
-        Config.globalConfig().setClipboardHistoryEnabled(enabled)
+        Config.globalConfig().set_clipboard_history_enabled(enabled)
 
         _service?.let { service ->
             if (enabled) {
@@ -99,7 +99,7 @@ object ClipboardHistoryService {
 class ClipboardHistoryServiceImpl(private val context: Context) {
 
     private val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    private val database = ClipboardDatabase.getInstance(context)
+    private val database by lazy { runBlocking { ClipboardDatabase.getInstance(context) } }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     // Event flows for reactive programming
@@ -141,7 +141,7 @@ class ClipboardHistoryServiceImpl(private val context: Context) {
      */
     suspend fun clearExpiredAndGetHistory(): List<String> = operationMutex.withLock {
         database.cleanupExpiredEntries()
-        val entries = database.getActiveClipboardEntries()
+        val entries = database.getActiveClipboardEntries().getOrElse { emptyList() }
         _clipboardEntries.value = entries
         entries
     }
@@ -151,7 +151,7 @@ class ClipboardHistoryServiceImpl(private val context: Context) {
      * If it's the current system clipboard, also clears the system clipboard.
      */
     suspend fun removeHistoryEntry(clip: String) = operationMutex.withLock {
-        val currentHistory = database.getActiveClipboardEntries()
+        val currentHistory = database.getActiveClipboardEntries().getOrElse { emptyList() }
         val isCurrentClip = currentHistory.isNotEmpty() && currentHistory[0] == clip
 
         // Clear system clipboard if removing current clip

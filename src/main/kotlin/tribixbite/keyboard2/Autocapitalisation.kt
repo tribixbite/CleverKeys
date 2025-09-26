@@ -7,7 +7,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.view.KeyEvent
 import kotlinx.coroutines.*
-import tribixbite.keyboard2.config.Config
+import tribixbite.keyboard2.Config
 
 /**
  * Automatic capitalization system for CleverKeys.
