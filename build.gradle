@@ -164,6 +164,13 @@ android {
 }
 
 tasks.register('buildKeyboardFont') {
+  // Skip font building if font already exists
+  def fontFile = file("assets/special_font.ttf")
+  if (fontFile.exists()) {
+    println "\nSpecial font already exists, skipping build"
+    return
+  }
+
   println "\nBuilding assets/special_font.ttf"
   mkdir "$buildDir"
   exec {

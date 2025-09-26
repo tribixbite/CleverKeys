@@ -170,7 +170,7 @@ class ClipboardHistoryServiceImpl(private val context: Context) {
         }
 
         // Remove from database
-        val removed = database.removeClipboardEntry(clip)
+        val removed = database.removeClipboardEntry(clip).getOrElse { false }
         if (removed) {
             refreshEntryCache()
             _historyChanges.tryEmit(Unit)
@@ -182,7 +182,7 @@ class ClipboardHistoryServiceImpl(private val context: Context) {
      * Handles deduplication, size limits, and TTL automatically.
      */
     suspend fun addClip(clip: String) = operationMutex.withLock {
-        if (!Config.globalConfig().clipboardHistoryEnabled) return@withLock
+        if (!Config.globalConfig().clipboard_history_enabled) return@withLock
 
         val trimmedClip = clip.trim()
         if (trimmedClip.isEmpty()) return@withLock
