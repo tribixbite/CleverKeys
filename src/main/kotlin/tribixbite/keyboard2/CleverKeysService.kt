@@ -194,6 +194,22 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             override fun performAction(action: Int) {
                 currentInputConnection?.performEditorAction(action)
             }
+            override fun switchToMainLayout() {
+                // TODO: Implement layout switching
+                logD("Switching to main layout")
+            }
+            override fun switchToNumericLayout() {
+                // TODO: Implement numeric layout switching
+                logD("Switching to numeric layout")
+            }
+            override fun switchToEmojiLayout() {
+                // TODO: Implement emoji layout switching
+                logD("Switching to emoji layout")
+            }
+            override fun openSettings() {
+                // TODO: Implement settings opening
+                logD("Opening settings")
+            }
         })
     }
     

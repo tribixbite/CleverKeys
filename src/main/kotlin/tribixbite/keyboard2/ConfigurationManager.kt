@@ -305,7 +305,7 @@ class ConfigurationManager(private val context: Context) {
             try {
                 // TODO: Fix Theme.initialize(context).applyThemeToView(view, theme)
                 // Apply basic theming for now
-                view.setBackgroundColor(theme.keyboardBackground)
+                view.setBackgroundColor(theme.backgroundColor)
                 logD("Updated UI component theme")
             } catch (e: Exception) {
                 logE("Failed to update UI component theme", e)

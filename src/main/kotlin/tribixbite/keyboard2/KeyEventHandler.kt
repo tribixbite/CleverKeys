@@ -24,7 +24,7 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
     
     // State management
     private var shouldCapitalizeNext = true
-    private var mods = Pointers.Modifiers(0)
+    private var mods = Pointers.Modifiers.EMPTY
     private var metaState = 0
     private var moveCursorForceFallback = false
     
@@ -37,25 +37,31 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
         fun performVibration()
         fun commitText(text: String)
         fun performAction(action: Int)
+        fun switchToMainLayout()
+        fun switchToNumericLayout()
+        fun switchToEmojiLayout()
+        fun openSettings()
     }
     
     override fun key_down(value: KeyValue, is_swipe: Boolean) {
         logD("Key down: $value (swipe: $is_swipe)")
-        
-        when (value.kind) {
-            KeyValue.Kind.Char -> handleCharacterKey(value.char, is_swipe)
-            KeyValue.Kind.Event -> handleEventKey(value.eventCode, is_swipe)
-            KeyValue.Kind.String -> handleStringKey(value.string, is_swipe)
-            KeyValue.Kind.Modifier -> handleModifierKey(value.eventCode, true)
-            else -> logD("Unhandled key kind: ${value.kind}")
+
+        when (value) {
+            is KeyValue.CharKey -> handleCharacterKey(value.char, is_swipe)
+            is KeyValue.EventKey -> handleEventKey(value.event, is_swipe)
+            is KeyValue.StringKey -> handleStringKey(value.string, is_swipe)
+            is KeyValue.ModifierKey -> handleModifierKey(value.modifier, true)
+            is KeyValue.KeyEventKey -> handleKeyEventKey(value.keyCode, is_swipe)
+            is KeyValue.ComposePendingKey -> handleComposeKey(value.pendingCompose)
+            else -> logD("Unhandled key type: ${value::class.simpleName}")
         }
     }
     
     override fun key_up(value: KeyValue, mods: Pointers.Modifiers) {
         this.mods = mods
-        
-        when (value.kind) {
-            KeyValue.Kind.Modifier -> handleModifierKey(value.eventCode, false)
+
+        when (value) {
+            is KeyValue.ModifierKey -> handleModifierKey(value.modifier, false)
             else -> {} // Most keys only handle down events
         }
     }
@@ -87,18 +93,57 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
     /**
      * Handle special event keys
      */
-    private fun handleEventKey(eventCode: Int, isSwipe: Boolean) {
-        when (eventCode) {
+    private fun handleEventKey(event: KeyValue.Event, isSwipe: Boolean) {
+        when (event) {
+            KeyValue.Event.ACTION -> handleEnter()
+            KeyValue.Event.SWITCH_TEXT -> receiver.switchToMainLayout()
+            KeyValue.Event.SWITCH_NUMERIC -> receiver.switchToNumericLayout()
+            KeyValue.Event.SWITCH_EMOJI -> receiver.switchToEmojiLayout()
+            KeyValue.Event.CONFIG -> receiver.openSettings()
+            KeyValue.Event.CAPS_LOCK -> toggleCapsLock()
+            else -> logD("Unhandled event: $event")
+        }
+    }
+
+    /**
+     * Handle KeyEvent key input
+     */
+    private fun handleKeyEventKey(keyCode: Int, isSwipe: Boolean) {
+        when (keyCode) {
             KeyEvent.KEYCODE_DEL -> handleBackspace()
             KeyEvent.KEYCODE_ENTER -> handleEnter()
             KeyEvent.KEYCODE_SPACE -> handleSpace()
             KeyEvent.KEYCODE_TAB -> handleTab()
             KeyEvent.KEYCODE_DPAD_LEFT -> moveCursor(-1)
             KeyEvent.KEYCODE_DPAD_RIGHT -> moveCursor(1)
-            else -> sendKeyEvent(eventCode)
+            else -> sendKeyEvent(keyCode)
         }
     }
-    
+
+    /**
+     * Handle modifier key state changes
+     */
+    private fun handleModifierKey(modifier: KeyValue.Modifier, isPressed: Boolean) {
+        logD("Modifier key: $modifier (pressed: $isPressed)")
+        // TODO: Implement modifier key handling
+    }
+
+    /**
+     * Handle compose key sequences
+     */
+    private fun handleComposeKey(pendingCompose: Int) {
+        logD("Compose key: $pendingCompose")
+        // TODO: Implement compose key handling
+    }
+
+    /**
+     * Toggle caps lock state
+     */
+    private fun toggleCapsLock() {
+        // TODO: Implement caps lock toggle
+        logD("Caps lock toggled")
+    }
+
     /**
      * Handle string keys (multiple characters)
      */
@@ -216,18 +261,26 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
     }
     
     /**
+     * Check if modifiers contain a specific modifier
+     */
+    private fun hasModifier(modifier: KeyValue.Modifier): Boolean {
+        // TODO: Implement proper modifier checking based on Pointers.Modifiers implementation
+        return false
+    }
+
+    /**
      * Update meta state for modifiers
      */
     private fun updateMetaState() {
         metaState = 0
-        
-        if (mods.isShift) {
+
+        if (hasModifier(KeyValue.Modifier.SHIFT)) {
             metaState = metaState or KeyEvent.META_SHIFT_ON
         }
-        if (mods.isCtrl) {
+        if (hasModifier(KeyValue.Modifier.CTRL)) {
             metaState = metaState or KeyEvent.META_CTRL_ON
         }
-        if (mods.isAlt) {
+        if (hasModifier(KeyValue.Modifier.ALT)) {
             metaState = metaState or KeyEvent.META_ALT_ON
         }
     }
