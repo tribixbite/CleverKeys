@@ -188,11 +188,11 @@ class ClipboardHistoryServiceImpl(private val context: Context) {
         if (trimmedClip.isEmpty()) return@withLock
 
         val expiryTime = System.currentTimeMillis() + ClipboardHistoryService.HISTORY_TTL_MS
-        val added = database.addClipboardEntry(trimmedClip, expiryTime)
+        val added = database.addClipboardEntry(trimmedClip, expiryTime).getOrElse { false }
 
         if (added) {
             // Apply size limits if configured
-            val maxHistorySize = Config.globalConfig().clipboardHistoryLimit
+            val maxHistorySize = Config.globalConfig().clipboard_history_limit
             if (maxHistorySize > 0) {
                 database.applySizeLimit(maxHistorySize)
             }
@@ -215,7 +215,7 @@ class ClipboardHistoryServiceImpl(private val context: Context) {
      * Pin or unpin a clipboard entry to prevent/allow expiration.
      */
     suspend fun setPinnedStatus(clip: String, isPinned: Boolean) = operationMutex.withLock {
-        val updated = database.setPinnedStatus(clip, isPinned)
+        val updated = database.setPinnedStatus(clip, isPinned).getOrElse { false }
         if (updated) {
             refreshEntryCache()
             _historyChanges.tryEmit(Unit)
@@ -277,7 +277,7 @@ class ClipboardHistoryServiceImpl(private val context: Context) {
      * Refresh the cached entry list from database.
      */
     private suspend fun refreshEntryCache() {
-        val entries = database.getActiveClipboardEntries()
+        val entries = database.getActiveClipboardEntries().getOrElse { emptyList() }
         _clipboardEntries.value = entries
     }
 

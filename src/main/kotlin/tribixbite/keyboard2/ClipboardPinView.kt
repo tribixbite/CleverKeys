@@ -31,6 +31,36 @@ class ClipboardPinView : NonScrollListView {
 
         /** Preference name for pinned clipboards */
         private const val PERSIST_PREF = "pinned"
+
+        /**
+         * Load pinned clipboard entries from SharedPreferences
+         */
+        fun loadFromPrefs(store: SharedPreferences, destination: MutableList<String>) {
+            val arrayString = store.getString(PERSIST_PREF, null) ?: return
+
+            try {
+                val jsonArray = JSONArray(arrayString)
+                for (i in 0 until jsonArray.length()) {
+                    destination.add(jsonArray.getString(i))
+                }
+            } catch (e: JSONException) {
+                android.util.Log.e(TAG, "Failed to load pinned clipboards", e)
+            }
+        }
+
+        /**
+         * Save pinned clipboard entries to SharedPreferences
+         */
+        fun saveToPrefs(store: SharedPreferences, entries: List<String>) {
+            val jsonArray = JSONArray()
+            entries.forEach { entry ->
+                jsonArray.put(entry)
+            }
+
+            store.edit()
+                .putString(PERSIST_PREF, jsonArray.toString())
+                .apply() // Use apply() instead of commit() for better performance
+        }
     }
 
     private val entries = mutableListOf<String>()
@@ -165,35 +195,4 @@ class ClipboardPinView : NonScrollListView {
         android.util.Log.e(TAG, message, throwable)
     }
 
-    companion object {
-        /**
-         * Load pinned clipboard entries from SharedPreferences
-         */
-        fun loadFromPrefs(store: SharedPreferences, destination: MutableList<String>) {
-            val arrayString = store.getString(PERSIST_PREF, null) ?: return
-
-            try {
-                val jsonArray = JSONArray(arrayString)
-                for (i in 0 until jsonArray.length()) {
-                    destination.add(jsonArray.getString(i))
-                }
-            } catch (e: JSONException) {
-                android.util.Log.e(TAG, "Failed to load pinned clipboards", e)
-            }
-        }
-
-        /**
-         * Save pinned clipboard entries to SharedPreferences
-         */
-        fun saveToPrefs(store: SharedPreferences, entries: List<String>) {
-            val jsonArray = JSONArray()
-            entries.forEach { entry ->
-                jsonArray.put(entry)
-            }
-
-            store.edit()
-                .putString(PERSIST_PREF, jsonArray.toString())
-                .apply() // Use apply() instead of commit() for better performance
-        }
-    }
 }
