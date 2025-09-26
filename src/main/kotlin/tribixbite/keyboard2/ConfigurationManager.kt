@@ -288,7 +288,7 @@ class ConfigurationManager(private val context: Context) {
     private suspend fun notifyThemeChange() {
         logD("Theme configuration changed - updating all UI components")
 
-        val theme = Theme.get_current()
+        val theme = Theme.getSystemThemeData(context)
 
         // Update keyboard views
         keyboardViewInstances.forEach { view ->
@@ -303,7 +303,9 @@ class ConfigurationManager(private val context: Context) {
         // Update all registered UI components
         uiComponentInstances.forEach { view ->
             try {
-                Theme.initialize(context).applyThemeToView(view, theme)
+                // TODO: Fix Theme.initialize(context).applyThemeToView(view, theme)
+                // Apply basic theming for now
+                view.setBackgroundColor(theme.keyboardBackground)
                 logD("Updated UI component theme")
             } catch (e: Exception) {
                 logE("Failed to update UI component theme", e)

@@ -8,6 +8,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import kotlinx.coroutines.*
 import org.json.JSONArray
@@ -156,19 +158,45 @@ class ClipboardPinView : NonScrollListView {
         override fun getItemId(position: Int): Long = entries[position].hashCode().toLong()
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            val view = convertView ?: LayoutInflater.from(context)
-                .inflate(R.layout.clipboard_pin_entry, parent, false)
+            // Create simple layout programmatically since R.layout references aren't working
+            val view = convertView ?: LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(16, 8, 16, 8)
+
+                // Text view
+                addView(TextView(context).apply {
+                    id = android.R.id.text1
+                    textSize = 14f
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                })
+
+                // Paste button
+                addView(Button(context).apply {
+                    id = android.R.id.button1
+                    text = "📋"
+                    textSize = 12f
+                    setPadding(8, 4, 8, 4)
+                })
+
+                // Remove button
+                addView(Button(context).apply {
+                    id = android.R.id.button2
+                    text = "🗑️"
+                    textSize = 12f
+                    setPadding(8, 4, 8, 4)
+                })
+            }
 
             // Set the text content
-            val textView = view.findViewById<TextView>(R.id.clipboard_pin_text)
+            val textView = view.findViewById<TextView>(android.R.id.text1)
             textView.text = entries[position]
 
             // Set up paste button
-            val pasteButton = view.findViewById<View>(R.id.clipboard_pin_paste)
+            val pasteButton = view.findViewById<View>(android.R.id.button1)
             pasteButton.setOnClickListener { pasteEntry(position) }
 
             // Set up remove button with confirmation dialog
-            val removeButton = view.findViewById<View>(R.id.clipboard_pin_remove)
+            val removeButton = view.findViewById<View>(android.R.id.button2)
             removeButton.setOnClickListener { showRemoveConfirmDialog(position) }
 
             return view
@@ -179,15 +207,14 @@ class ClipboardPinView : NonScrollListView {
          */
         private fun showRemoveConfirmDialog(position: Int) {
             val dialog = AlertDialog.Builder(context)
-                .setTitle(R.string.clipboard_remove_confirm)
-                .setPositiveButton(R.string.clipboard_remove_confirmed) { _, _ ->
+                .setTitle("Remove clipboard entry?")
+                .setPositiveButton("Remove") { _, _ ->
                     removeEntry(position)
                 }
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
 
-            // Show dialog on IME using utility function
-            Utils.showDialogOnIme(dialog, rootView.windowToken)
+            dialog.show()
         }
     }
 

@@ -1,6 +1,6 @@
 package tribixbite.keyboard2
 
-import tribixbite.keyboard2.data.KeyValue
+import tribixbite.keyboard2.KeyValue
 import java.util.*
 
 /**
@@ -79,7 +79,7 @@ object ComposeKey {
             return when {
                 nextHeader == 0 -> {
                     // Enter new intermediate state
-                    KeyValue.makeComposePending(char.toString(), nextState, 0)
+                    KeyValue.ComposePendingKey(nextState, char.toString())
                 }
 
                 nextHeader == 0xFFFF -> {

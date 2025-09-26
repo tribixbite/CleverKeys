@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.view.View
 import android.widget.*
+import android.widget.Toast
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -12,12 +13,11 @@ import kotlinx.coroutines.flow.*
  * Kotlin implementation with Flow-based data binding
  */
 class ClipboardHistoryView(context: Context) : LinearLayout(context) {
-    
+
     companion object {
         private const val TAG = "ClipboardHistoryView"
     }
-    
-    private val clipboardService = ClipboardHistoryService(context)
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var onItemSelected: ((String) -> Unit)? = null
     
@@ -66,9 +66,13 @@ class ClipboardHistoryView(context: Context) : LinearLayout(context) {
         
         addView(Button(context).apply {
             text = "Clear All"
-            setOnClickListener { 
-                clipboardService.clearHistory()
-                context.toast("Clipboard history cleared")
+            setOnClickListener {
+                scope.launch {
+                    ClipboardHistoryService.getService(context)?.clearHistory()
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Clipboard history cleared", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
             layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
         })
@@ -87,9 +91,10 @@ class ClipboardHistoryView(context: Context) : LinearLayout(context) {
      */
     private fun observeClipboardHistory() {
         scope.launch {
-            clipboardService.getHistoryFlow()
-                .flowOn(Dispatchers.Default)
-                .collect { historyItems ->
+            val service = ClipboardHistoryService.getService(context)
+            service?.subscribeToHistoryChanges()
+                ?.flowOn(Dispatchers.Default)
+                ?.collect { historyItems ->
                     withContext(Dispatchers.Main) {
                         updateHistoryDisplay(historyItems)
                     }
@@ -100,10 +105,10 @@ class ClipboardHistoryView(context: Context) : LinearLayout(context) {
     /**
      * Update history display
      */
-    private fun updateHistoryDisplay(items: List<ClipboardHistoryService.ClipboardItem>) {
+    private fun updateHistoryDisplay(items: List<String>) {
         val container = findViewById<LinearLayout>(android.R.id.list) ?: return
         container.removeAllViews()
-        
+
         items.forEach { item ->
             container.addView(createHistoryItemView(item))
         }
@@ -112,40 +117,44 @@ class ClipboardHistoryView(context: Context) : LinearLayout(context) {
     /**
      * Create view for history item
      */
-    private fun createHistoryItemView(item: ClipboardHistoryService.ClipboardItem): View {
+    private fun createHistoryItemView(item: String): View {
         return LinearLayout(context).apply {
             orientation = HORIZONTAL
             setPadding(16, 8, 16, 8)
-            setBackgroundColor(if (item.isPinned) 0x22FFFF00 else Color.TRANSPARENT)
-            
+            setBackgroundColor(Color.TRANSPARENT)
+
             // Text content
             addView(TextView(context).apply {
-                text = item.text.take(100) + if (item.text.length > 100) "..." else ""
+                text = item.take(100) + if (item.length > 100) "..." else ""
                 textSize = 14f
                 maxLines = 2
-                setOnClickListener { 
-                    onItemSelected?.invoke(item.text)
+                setOnClickListener {
+                    onItemSelected?.invoke(item)
                 }
                 layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
             })
-            
+
             // Pin button
             addView(Button(context).apply {
-                text = if (item.isPinned) "📌" else "📍"
+                text = "📍"
                 textSize = 12f
                 setPadding(8, 4, 8, 4)
-                setOnClickListener { 
-                    clipboardService.togglePin(item)
+                setOnClickListener {
+                    scope.launch {
+                        ClipboardHistoryService.getService(context)?.setPinnedStatus(item, true)
+                    }
                 }
             })
-            
+
             // Delete button
             addView(Button(context).apply {
                 text = "🗑️"
                 textSize = 12f
                 setPadding(8, 4, 8, 4)
-                setOnClickListener { 
-                    clipboardService.deleteItem(item)
+                setOnClickListener {
+                    scope.launch {
+                        ClipboardHistoryService.getService(context)?.removeHistoryEntry(item)
+                    }
                 }
             })
         }
@@ -156,21 +165,22 @@ class ClipboardHistoryView(context: Context) : LinearLayout(context) {
      */
     fun show() {
         visibility = VISIBLE
-        clipboardService.startMonitoring()
+        scope.launch {
+            ClipboardHistoryService.getService(context)?.addCurrentClip()
+        }
     }
-    
+
     /**
      * Hide clipboard history
      */
     fun hide() {
         visibility = GONE
     }
-    
+
     /**
      * Cleanup
      */
     fun cleanup() {
         scope.cancel()
-        clipboardService.cleanup()
     }
 }
