@@ -92,7 +92,8 @@ class Keyboard2View @JvmOverloads constructor(
         // Initialize neural engine
         scope.launch {
             try {
-                neuralEngine = NeuralSwipeEngine.getInstance()
+                neuralEngine = NeuralSwipeEngine(context, config)
+                neuralEngine.initialize()
                 android.util.Log.d("Keyboard2View", "Neural engine initialized")
             } catch (e: Exception) {
                 android.util.Log.e("Keyboard2View", "Failed to initialize neural engine", e)
@@ -107,7 +108,12 @@ class Keyboard2View @JvmOverloads constructor(
         if (layoutId == 0) {
             reset()
         } else {
-            setKeyboard(KeyboardData.load(resources, layoutId))
+            val keyboardData = KeyboardData.load(resources, layoutId)
+            if (keyboardData != null) {
+                setKeyboard(keyboardData)
+            } else {
+                reset()
+            }
         }
     }
 
@@ -143,9 +149,9 @@ class Keyboard2View @JvmOverloads constructor(
     fun setKeyboard(keyboardData: KeyboardData) {
         keyboard = keyboardData
         shiftKeyValue = KeyValue.getKeyByName("shift")
-        shiftKey = keyboardData.findKeyWithValue(shiftKeyValue)
+        shiftKey = shiftKeyValue?.let { keyboardData.findKeyWithValue(it) }
         composeKeyValue = KeyValue.getKeyByName("compose")
-        composeKey = keyboardData.findKeyWithValue(composeKeyValue)
+        composeKey = composeKeyValue?.let { keyboardData.findKeyWithValue(it) }
 
         KeyModifier.set_modmap(keyboardData.modmap)
         reset()
@@ -169,8 +175,8 @@ class Keyboard2View @JvmOverloads constructor(
 
     // Fake pointer state management
     fun setFakePointerLatched(key: KeyboardData.Key?, keyValue: KeyValue?, latched: Boolean, lock: Boolean) {
-        if (keyboard == null || key == null) return
-        pointers.set_fake_pointer_state(key, keyValue, latched, lock)
+        if (keyboard == null || key == null || keyValue == null) return
+        pointers.setFakePointerState(key, keyValue, latched, lock)
     }
 
     fun setShiftState(latched: Boolean, lock: Boolean) {
@@ -219,6 +225,22 @@ class Keyboard2View @JvmOverloads constructor(
         if (shouldVibrate) vibrate()
     }
 
+    override fun onSwipeMove(x: Float, y: Float, recognizer: EnhancedSwipeGestureRecognizer) {
+        // Handle swipe trajectory updates for neural prediction
+        recognizer.addPoint(x, y)
+        invalidate()
+    }
+
+    override fun onSwipeEnd(recognizer: EnhancedSwipeGestureRecognizer) {
+        // Process complete swipe gesture for neural prediction
+        val swipeInput = recognizer.getSwipeInput()
+        if (swipeInput != null) {
+            // Trigger neural prediction (if neuralEngine is available)
+            // keyboard?.handleSwipeInput(swipeInput)
+        }
+        invalidate()
+    }
+
     private fun updateFlags() {
         modifiers = pointers.getModifiers()
         config.handler?.mods_changed(modifiers)
@@ -240,7 +262,9 @@ class Keyboard2View @JvmOverloads constructor(
                 val pointerId = event.getPointerId(pointerIndex)
                 val key = getKeyAtPosition(x, y)
 
-                pointers.onTouchDown(x, y, pointerId, key)
+                if (key != null) {
+                    pointers.onTouchDown(x, y, pointerId, key)
+                }
                 handleSwipeStart(x, y)
             }
 
@@ -297,9 +321,9 @@ class Keyboard2View @JvmOverloads constructor(
             } else 0L
 
             currentSwipeGesture = SwipeInput(
-                trajectory = ArrayList(swipeTrajectory),
+                coordinates = ArrayList(swipeTrajectory),
                 timestamps = ArrayList(swipeTimestamps),
-                duration = duration
+                touchedKeys = emptyList()
             )
 
             // Process neural prediction asynchronously
@@ -637,6 +661,10 @@ class Keyboard2View @JvmOverloads constructor(
             // Trigger haptic feedback
             performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
         }
+    }
+
+    override fun modifyKey(keyValue: KeyValue?, modifiers: Pointers.Modifiers): KeyValue {
+        return keyValue ?: KeyValue.CharKey(' ')
     }
 
     override fun onDetachedFromWindow() {

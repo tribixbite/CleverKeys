@@ -88,7 +88,7 @@ class EmojiGroupButtonsBar : LinearLayout {
         if (emojiGrid == null) {
             // Find the emoji grid in the parent hierarchy
             val parentGroup = parent as? ViewGroup
-            emojiGrid = parentGroup?.findViewById(R.id.emoji_grid)
+            emojiGrid = parentGroup?.findViewById(android.R.id.list)
         }
         return emojiGrid
     }
@@ -100,7 +100,7 @@ class EmojiGroupButtonsBar : LinearLayout {
         context: Context,
         private val groupId: Int,
         symbol: String
-    ) : Button(ContextThemeWrapper(context, R.style.emojiGridButton), null, 0), View.OnTouchListener {
+    ) : Button(context), View.OnTouchListener {
 
         init {
             text = symbol

@@ -16,7 +16,7 @@ import tribixbite.keyboard2.R
  * Key event handler for processing keyboard input
  * Kotlin implementation with null safety and modern patterns
  */
-class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler {
+class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler, ClipboardPasteCallback {
     
     companion object {
         private const val TAG = "KeyEventHandler"
@@ -27,6 +27,7 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
     private var mods = Pointers.Modifiers.EMPTY
     private var metaState = 0
     private var moveCursorForceFallback = false
+    private var inputConnection: InputConnection? = null
     
     /**
      * Receiver interface for key events
@@ -293,6 +294,16 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
         return info?.inputType?.let { inputType ->
             (inputType and InputType.TYPE_CLASS_TEXT) == 0
         } ?: false
+    }
+
+    override fun pasteFromClipboardPane(content: String) {
+        val inputConnection = receiver.getInputConnection()
+        inputConnection?.commitText(content, 1)
+    }
+
+    override fun started(info: android.view.inputmethod.EditorInfo?) {
+        // Initialize keyboard state for new input session
+        inputConnection = receiver.getInputConnection()
     }
 }
 

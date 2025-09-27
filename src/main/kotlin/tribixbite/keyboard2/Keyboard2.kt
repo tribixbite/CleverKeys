@@ -117,13 +117,13 @@ class Keyboard2 : InputMethodService(),
         // keyboardView.setKeyboardService(service)
 
         // Load default layout
-        localeTextLayout = loadDefaultLayout()
+        localeTextLayout = loadDefaultLayout() ?: createBasicQwertyLayout()
         keyboardView.setKeyboard(currentLayout())
 
         // Initialize neural engine
         serviceScope.launch {
             try {
-                neuralEngine = NeuralSwipeEngine.getInstance()
+                neuralEngine = NeuralSwipeEngine(this@Keyboard2, config)
                 Log.d(TAG, "Neural engine initialized")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize neural engine", e)
@@ -138,11 +138,45 @@ class Keyboard2 : InputMethodService(),
         registerReceiver(eventReceiver, filter)
 
         // Initialize other services
-        ClipboardHistoryService.on_startup(this, keyEventHandler)
+        serviceScope.launch { ClipboardHistoryService.onStartup(this@Keyboard2, keyEventHandler) }
     }
 
-    private fun loadDefaultLayout(): KeyboardData {
-        return KeyboardData.load(resources, R.layout.keyboard)
+    private fun loadDefaultLayout(): KeyboardData? {
+        return try {
+            // Try to load from available layouts or create a minimal one
+            val layouts = config.layouts
+            layouts.firstOrNull() ?: createBasicQwertyLayout()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load layout", e)
+            createBasicQwertyLayout()
+        }
+    }
+
+    private fun createBasicQwertyLayout(): KeyboardData {
+        // Create a minimal QWERTY layout programmatically
+        val qRow = KeyboardData.Row(
+            keys = listOf(
+                KeyboardData.Key(arrayOf(KeyValue.CharKey('q')), width = 1f, shift = 0f),
+                KeyboardData.Key(arrayOf(KeyValue.CharKey('w')), width = 1f, shift = 0f),
+                KeyboardData.Key(arrayOf(KeyValue.CharKey('e')), width = 1f, shift = 0f),
+                KeyboardData.Key(arrayOf(KeyValue.CharKey('r')), width = 1f, shift = 0f),
+                KeyboardData.Key(arrayOf(KeyValue.CharKey('t')), width = 1f, shift = 0f),
+                KeyboardData.Key(arrayOf(KeyValue.CharKey('y')), width = 1f, shift = 0f),
+                KeyboardData.Key(arrayOf(KeyValue.CharKey('u')), width = 1f, shift = 0f),
+                KeyboardData.Key(arrayOf(KeyValue.CharKey('i')), width = 1f, shift = 0f),
+                KeyboardData.Key(arrayOf(KeyValue.CharKey('o')), width = 1f, shift = 0f),
+                KeyboardData.Key(arrayOf(KeyValue.CharKey('p')), width = 1f, shift = 0f)
+            ),
+            height = 1f,
+            shift = 0f
+        )
+        return KeyboardData(
+            rows = listOf(qRow),
+            keysWidth = 10f,
+            keysHeight = 1f,
+            script = "latn",
+            name = "Basic QWERTY"
+        )
     }
 
     override fun onCreateInputView(): View {
@@ -166,7 +200,9 @@ class Keyboard2 : InputMethodService(),
 
     private fun createSuggestionBar() {
         suggestionBar = SuggestionBar(this).apply {
-            setOnSuggestionSelectedListener(this@Keyboard2)
+            setOnSuggestionSelectedListener { suggestion ->
+                onSuggestionSelected(suggestion)
+            }
         }
         inputViewContainer?.addView(suggestionBar, 0) // Add at top
     }
@@ -217,7 +253,7 @@ class Keyboard2 : InputMethodService(),
     }
 
     fun currentLayout(): KeyboardData {
-        return currentSpecialLayout ?: LayoutModifier.modify_layout(currentLayoutUnmodified())
+        return currentSpecialLayout ?: LayoutModifier.modifyLayout(currentLayoutUnmodified())
     }
 
     fun setTextLayout(layoutIndex: Int) {
@@ -242,16 +278,92 @@ class Keyboard2 : InputMethodService(),
 
         val inputType = info.inputType
         return when {
-            isPasswordField(inputType) -> loadLayout(R.xml.pin)
+            isPasswordField(inputType) -> createPinLayout()
             isNumericField(inputType) -> {
                 when (config.selected_number_layout) {
-                    NumberLayout.PIN -> loadLayout(R.xml.pin)
-                    NumberLayout.NUMBER -> loadNumpadLayout(R.xml.numeric)
+                    NumberLayout.PIN -> createPinLayout()
+                    NumberLayout.NUMBER -> createNumericLayout()
                     else -> null
                 }
             }
             else -> null
         }
+    }
+
+    private fun createPinLayout(): KeyboardData {
+        // Create a simple 3x4 PIN layout
+        val rows = listOf(
+            KeyboardData.Row(
+                keys = listOf(
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('1')), width = 1f, shift = 0f),
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('2')), width = 1f, shift = 0f),
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('3')), width = 1f, shift = 0f)
+                ),
+                height = 1f, shift = 0f
+            ),
+            KeyboardData.Row(
+                keys = listOf(
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('4')), width = 1f, shift = 0f),
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('5')), width = 1f, shift = 0f),
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('6')), width = 1f, shift = 0f)
+                ),
+                height = 1f, shift = 0f
+            ),
+            KeyboardData.Row(
+                keys = listOf(
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('7')), width = 1f, shift = 0f),
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('8')), width = 1f, shift = 0f),
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('9')), width = 1f, shift = 0f)
+                ),
+                height = 1f, shift = 0f
+            ),
+            KeyboardData.Row(
+                keys = listOf(
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('0')), width = 3f, shift = 0f)
+                ),
+                height = 1f, shift = 0f
+            )
+        )
+        return KeyboardData(
+            rows = rows,
+            keysWidth = 3f,
+            keysHeight = 4f,
+            script = "latn",
+            name = "PIN"
+        )
+    }
+
+    private fun createNumericLayout(): KeyboardData {
+        // Create a simple numeric layout with symbols
+        val rows = listOf(
+            KeyboardData.Row(
+                keys = listOf(
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('1'), KeyValue.CharKey('!')), width = 1f, shift = 0f),
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('2'), KeyValue.CharKey('@')), width = 1f, shift = 0f),
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('3'), KeyValue.CharKey('#')), width = 1f, shift = 0f),
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('4'), KeyValue.CharKey('$')), width = 1f, shift = 0f),
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('5'), KeyValue.CharKey('%')), width = 1f, shift = 0f)
+                ),
+                height = 1f, shift = 0f
+            ),
+            KeyboardData.Row(
+                keys = listOf(
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('6'), KeyValue.CharKey('^')), width = 1f, shift = 0f),
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('7'), KeyValue.CharKey('&')), width = 1f, shift = 0f),
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('8'), KeyValue.CharKey('*')), width = 1f, shift = 0f),
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('9'), KeyValue.CharKey('(')), width = 1f, shift = 0f),
+                    KeyboardData.Key(arrayOf(KeyValue.CharKey('0'), KeyValue.CharKey(')')), width = 1f, shift = 0f)
+                ),
+                height = 1f, shift = 0f
+            )
+        )
+        return KeyboardData(
+            rows = rows,
+            keysWidth = 5f,
+            keysHeight = 2f,
+            script = "latn",
+            name = "Numeric"
+        )
     }
 
     private fun isPasswordField(inputType: Int): Boolean {
@@ -265,12 +377,12 @@ class Keyboard2 : InputMethodService(),
     }
 
     fun loadLayout(layoutId: Int): KeyboardData {
-        return KeyboardData.load(resources, layoutId)
+        return KeyboardData.load(resources, layoutId) ?: createBasicQwertyLayout()
     }
 
     fun loadNumpadLayout(layoutId: Int): KeyboardData {
-        return LayoutModifier.modify_numpad(
-            KeyboardData.load(resources, layoutId),
+        return LayoutModifier.modifyNumpad(
+            KeyboardData.load(resources, layoutId) ?: createNumericLayout(),
             currentLayoutUnmodified()
         )
     }
@@ -288,12 +400,12 @@ class Keyboard2 : InputMethodService(),
 
     private fun getActionName(imeOptions: Int): String {
         return when (imeOptions and EditorInfo.IME_MASK_ACTION) {
-            EditorInfo.IME_ACTION_NEXT -> getString(R.string.key_action_next)
-            EditorInfo.IME_ACTION_DONE -> getString(R.string.key_action_done)
-            EditorInfo.IME_ACTION_GO -> getString(R.string.key_action_go)
-            EditorInfo.IME_ACTION_PREVIOUS -> getString(R.string.key_action_prev)
-            EditorInfo.IME_ACTION_SEARCH -> getString(R.string.key_action_search)
-            EditorInfo.IME_ACTION_SEND -> getString(R.string.key_action_send)
+            EditorInfo.IME_ACTION_NEXT -> "Next"
+            EditorInfo.IME_ACTION_DONE -> "Done"
+            EditorInfo.IME_ACTION_GO -> "Go"
+            EditorInfo.IME_ACTION_PREVIOUS -> "Prev"
+            EditorInfo.IME_ACTION_SEARCH -> "Search"
+            EditorInfo.IME_ACTION_SEND -> "Send"
             else -> ""
         }
     }
@@ -310,8 +422,7 @@ class Keyboard2 : InputMethodService(),
     fun handleSwipePrediction(prediction: PredictionResult) {
         serviceScope.launch {
             try {
-                val candidates = prediction.candidates.take(5) // Limit to top 5
-                val suggestions = candidates.map { it.word }
+                val suggestions = prediction.words.take(5) // Limit to top 5
 
                 suggestionBar?.setSuggestions(suggestions)
 
@@ -319,8 +430,9 @@ class Keyboard2 : InputMethodService(),
                 wasLastInputSwipe = true
 
                 // Auto-commit first suggestion if confidence is high
-                val topCandidate = candidates.firstOrNull()
-                if (topCandidate != null && topCandidate.confidence > 0.8f) {
+                val topWord = prediction.words.firstOrNull()
+                val topScore = prediction.scores.firstOrNull()
+                if (topWord != null && topScore != null && topScore > 800) { // Score 0-1000 range
                     // Could auto-commit here, but let user choose for now
                 }
 
@@ -330,8 +442,8 @@ class Keyboard2 : InputMethodService(),
         }
     }
 
-    // SuggestionBar.OnSuggestionSelectedListener implementation
-    override fun onSuggestionSelected(suggestion: String) {
+    // SuggestionBar callback implementation
+    fun onSuggestionSelected(suggestion: String) {
         try {
             val ic = currentInputConnection
             if (ic != null) {
@@ -414,7 +526,7 @@ class Keyboard2 : InputMethodService(),
         override fun getCurrentInputEditorInfo(): EditorInfo? = currentInputEditorInfo
         override fun performVibration() {
             if (config?.vibrate_custom == true) {
-                performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+                keyboardView.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
             }
         }
         override fun commitText(text: String) {

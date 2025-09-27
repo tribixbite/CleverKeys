@@ -190,7 +190,11 @@ class CustomLayoutEditor : Activity() {
                     canvas.drawRect(rect, borderPaint)
                     
                     // Draw label
-                    val label = key.keyValue?.char?.toString() ?: "?"
+                    val label = when (val keyValue = key.keys.getOrNull(0)) {
+                        is KeyValue.CharKey -> keyValue.char.toString()
+                        is KeyValue.StringKey -> keyValue.string
+                        else -> "?"
+                    }
                     val centerX = rect.centerX()
                     val centerY = rect.centerY() - (textPaint.ascent() + textPaint.descent()) / 2
                     canvas.drawText(label, centerX, centerY, textPaint)

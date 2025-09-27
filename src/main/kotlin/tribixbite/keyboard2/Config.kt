@@ -220,6 +220,7 @@ class Config private constructor(
         fun key_down(value: KeyValue, is_swipe: Boolean)
         fun key_up(value: KeyValue, mods: Pointers.Modifiers)
         fun mods_changed(mods: Pointers.Modifiers)
+        fun started(info: android.view.inputmethod.EditorInfo?)
     }
 
     /**
@@ -292,7 +293,7 @@ class Config private constructor(
         autocapitalisation = prefs.getBoolean("autocapitalisation", true)
         switch_input_immediate = prefs.getBoolean("switch_input_immediate", false)
         extra_keys_param = emptyMap() // TODO: Fix ExtraKeysPreference.get_extra_keys(prefs)
-        extra_keys_custom = CustomExtraKeysPreference.get(prefs)
+        extra_keys_custom = ExtraKeysPreference.getExtraKeys(prefs)
         selected_number_layout = NumberLayout.of_string(prefs.getString("number_entry_layout", "pin") ?: "pin")
         current_layout_narrow = prefs.getInt("current_layout_portrait", 0)
         current_layout_wide = prefs.getInt("current_layout_landscape", 0)

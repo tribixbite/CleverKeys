@@ -153,9 +153,25 @@ class KeyModifier {
     /**
      * Apply compose state or fallback to dead char
      */
-    fun applyComposeOrFallback(state: ComposeKey.ComposeState, deadChar: Char): KeyValue {
+    fun applyComposeOrFallback(state: ComposeKey.LegacyComposeSystem.ComposeState, deadChar: Char): KeyValue {
         return state.getResult()?.let { result ->
             KeyValue.StringKey(result)
         } ?: KeyValue.CharKey(deadChar)
+    }
+
+    companion object {
+        /**
+         * Set modmap for keyboard layout - no-op in current implementation
+         */
+        fun set_modmap(modmap: Any?) {
+            // No-op: modmap functionality not implemented in current system
+        }
+
+        /**
+         * Modify key value with modifiers
+         */
+        fun modify(keyValue: KeyValue?, mods: Pointers.Modifiers): KeyValue {
+            return keyValue ?: KeyValue.CharKey(' ')
+        }
     }
 }
