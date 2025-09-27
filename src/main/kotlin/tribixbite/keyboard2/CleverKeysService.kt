@@ -766,6 +766,29 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     }
 
     /**
+     * Handle swipe prediction results from neural engine
+     */
+    fun handleSwipePrediction(prediction: PredictionResult) {
+        serviceScope.launch {
+            try {
+                val suggestions = prediction.words.take(5)
+                logD("Received ${suggestions.size} neural predictions: ${suggestions.joinToString(", ")}")
+
+                // Update suggestion UI if available
+                // suggestionBar?.setSuggestions(suggestions)
+
+                // Could auto-commit high confidence predictions here
+                val topScore = prediction.scores.firstOrNull()
+                if (topScore != null && topScore > 800) { // High confidence threshold
+                    logD("High confidence prediction: ${suggestions.firstOrNull()}")
+                }
+            } catch (e: Exception) {
+                logE("Error handling swipe prediction", e)
+            }
+        }
+    }
+
+    /**
      * Swipe gesture data container
      */
     data class SwipeGestureData(

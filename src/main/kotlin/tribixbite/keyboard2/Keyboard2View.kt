@@ -349,8 +349,8 @@ class Keyboard2View @JvmOverloads constructor(
 
     private suspend fun handleNeuralPrediction(prediction: PredictionResult) {
         android.util.Log.d("Keyboard2View",
-            "Neural prediction: ${prediction.candidates.size} candidates, " +
-            "processing time: ${prediction.processingTimeMs}ms")
+            "Neural prediction: ${prediction.words.size} words, " +
+            "scores: ${prediction.scores.joinToString(",")}")
 
         // Pass predictions to keyboard service
         keyboardService?.handleSwipePrediction(prediction)
@@ -364,15 +364,15 @@ class Keyboard2View @JvmOverloads constructor(
         var yPos = config.marginTop
 
         for (row in kbd.rows) {
-            val rowTop = yPos + row.shift * tc.row_height
-            val rowBottom = rowTop + row.height * tc.row_height
+            val rowTop = yPos + row.shift * tc.rowHeight
+            val rowBottom = rowTop + row.height * tc.rowHeight
 
             if (y >= rowTop && y < rowBottom) {
                 var xPos = marginLeft
 
                 for (key in row.keys) {
                     xPos += key.shift * keyWidth
-                    val keyWidth = this.keyWidth * key.width - tc.horizontal_margin
+                    val keyWidth = this.keyWidth * key.width - tc.horizontalMargin
 
                     if (x >= xPos && x < xPos + keyWidth) {
                         return key
@@ -381,7 +381,7 @@ class Keyboard2View @JvmOverloads constructor(
                 }
                 break
             }
-            yPos += row.height * tc.row_height
+            yPos += row.height * tc.rowHeight
         }
         return null
     }
@@ -399,8 +399,8 @@ class Keyboard2View @JvmOverloads constructor(
             for (key in row.keys) {
                 val xLeft = x + key.shift * keyWidth
                 val xRight = xLeft + key.width * keyWidth
-                val yTop = y + row.shift * tc.row_height
-                val yBottom = yTop + row.height * tc.row_height
+                val yTop = y + row.shift * tc.rowHeight
+                val yBottom = yTop + row.height * tc.rowHeight
 
                 val centerX = (xLeft + xRight) / 2f
                 val centerY = (yTop + yBottom) / 2f
@@ -416,7 +416,7 @@ class Keyboard2View @JvmOverloads constructor(
 
                 x += keyWidth * key.width
             }
-            y += row.height * tc.row_height
+            y += row.height * tc.rowHeight
         }
 
         return keyPositions
@@ -445,11 +445,11 @@ class Keyboard2View @JvmOverloads constructor(
         themeComputed = theme.computeTheme(dm)
         val tc = themeComputed!!
 
-        mainLabelSize = keyWidth * tc.label_text_size
-        subLabelSize = keyWidth * tc.sublabel_text_size
+        mainLabelSize = keyWidth * 0.4f // Default label size ratio
+        subLabelSize = keyWidth * 0.25f // Default sublabel size ratio
 
         // Calculate total height
-        val keyboardHeight = kbd.keysHeight * tc.row_height + config.marginTop + marginBottom
+        val keyboardHeight = kbd.keysHeight * tc.rowHeight + config.marginTop + marginBottom
 
         setMeasuredDimension(
             windowWidth,
@@ -482,8 +482,8 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     private fun calculateMargins(windowWidth: Int) {
-        marginLeft = config.horizontal_margin
-        marginRight = config.horizontal_margin
+        marginLeft = config.horizontalMargin
+        marginRight = config.horizontalMargin
         marginBottom = config.margin_bottom
 
         // Ensure minimum margins
@@ -499,18 +499,18 @@ class Keyboard2View @JvmOverloads constructor(
         // Set keyboard background opacity
         background?.alpha = config.keyboardOpacity
 
-        var y = tc.margin_top
+        var y = tc.marginTop
 
         for (row in kbd.rows) {
-            y += row.shift * tc.row_height
-            var x = marginLeft + tc.margin_left
-            val keyHeight = row.height * tc.row_height - tc.vertical_margin
+            y += row.shift * tc.rowHeight
+            var x = marginLeft + tc.marginLeft
+            val keyHeight = row.height * tc.rowHeight - tc.verticalMargin
 
             for (key in row.keys) {
                 x += key.shift * keyWidth
-                val keyWidth = this.keyWidth * key.width - tc.horizontal_margin
+                val keyWidth = this.keyWidth * key.width - tc.horizontalMargin
                 val isKeyDown = pointers.isKeyDown(key)
-                val tcKey = if (isKeyDown) tc.key_activated else tc.key
+                val tcKey = if (isKeyDown) tc.keyActivated else tc.key
 
                 drawKeyFrame(canvas, x, y, keyWidth, keyHeight, tcKey)
 
@@ -529,7 +529,7 @@ class Keyboard2View @JvmOverloads constructor(
                 drawIndication(canvas, key, x, y, keyWidth, keyHeight, tc)
                 x += this.keyWidth * key.width
             }
-            y += row.height * tc.row_height
+            y += row.height * tc.rowHeight
         }
 
         // Draw neural swipe trail
