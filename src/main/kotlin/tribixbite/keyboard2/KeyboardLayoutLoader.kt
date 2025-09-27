@@ -104,7 +104,7 @@ class KeyboardLayoutLoader(private val context: Context) {
         
         return KeyboardData(
             rows = rows.map { keyRow ->
-                KeyboardData.Row(keyRow.toTypedArray())
+                KeyboardData.Row(keyRow, 1.0f, 0.0f)
             },
             keysWidth = 1.0f,
             keysHeight = 1.0f,
@@ -145,11 +145,11 @@ class KeyboardLayoutLoader(private val context: Context) {
             keyStr.startsWith("f") && keyStr.length > 1 -> {
                 // Function key
                 val code = keyStr.drop(1).toIntOrNull() ?: 0
-                KeyValue.makeEventKey(code)
+                KeyValue.KeyEventKey(code, keyStr)
             }
-            keyStr == "shift" -> KeyValue.makeModifierKey(1)
-            keyStr == "enter" -> KeyValue.makeEventKey(android.view.KeyEvent.KEYCODE_ENTER)
-            keyStr == "backspace" -> KeyValue.makeEventKey(android.view.KeyEvent.KEYCODE_DEL)
+            keyStr == "shift" -> KeyValue.makeModifierKey("shift", KeyValue.Modifier.SHIFT)
+            keyStr == "enter" -> KeyValue.makeEventKey("enter", KeyValue.Event.ACTION)
+            keyStr == "backspace" -> KeyValue.makeEventKey("backspace", KeyValue.Event.ACTION)
             keyStr == "space" -> KeyValue.makeCharKey(' ')
             else -> KeyValue.makeStringKey(keyStr)
         }

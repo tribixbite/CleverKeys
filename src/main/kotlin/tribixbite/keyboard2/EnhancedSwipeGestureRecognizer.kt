@@ -73,4 +73,23 @@ class EnhancedSwipeGestureRecognizer {
         isTracking = false
         startTime = 0
     }
+
+    /**
+     * Start swipe - alias for startTracking
+     */
+    fun startSwipe(x: Float, y: Float, key: KeyboardData.Key?) {
+        startTracking(x, y)
+    }
+
+    /**
+     * Check if currently swipe typing
+     */
+    fun isSwipeTyping(): Boolean = isTracking && trajectory.size >= 2
+
+    /**
+     * Reset - alias for clear
+     */
+    fun reset() {
+        clear()
+    }
 }

@@ -122,6 +122,7 @@ sealed class KeyValue : Comparable<KeyValue> {
         METEG
     }
 
+
     // Key type implementations with type safety
 
     /**
@@ -296,6 +297,21 @@ sealed class KeyValue : Comparable<KeyValue> {
         val adjustedFlags = flags - setOf(Flag.KEY_FONT, Flag.SMALLER_FONT)
         return CharKey(newChar, newSymbol, adjustedFlags)
     }
+
+    /**
+     * Check if this is a slider key
+     */
+    fun isSlider(): Boolean = this is SliderKey
+
+    /**
+     * Get slider value if this is a slider key
+     */
+    fun getSlider(): Slider? = (this as? SliderKey)?.slider
+
+    /**
+     * Get slider repeat value if this is a slider key
+     */
+    fun getSliderRepeat(): Int = (this as? SliderKey)?.repeat ?: 0
 
     fun withKeyEvent(keyCode: Int): KeyValue = when (this) {
         is KeyEventKey -> copy(keyCode = keyCode)

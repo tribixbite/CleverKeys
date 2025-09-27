@@ -6,6 +6,7 @@ import android.content.DialogInterface
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.content.res.TypedArray
+import android.preference.DialogPreference
 import android.util.AttributeSet
 import android.view.View
 import android.widget.ArrayAdapter
@@ -13,9 +14,9 @@ import kotlinx.coroutines.*
 import org.json.JSONException
 import org.json.JSONObject
 import tribixbite.keyboard2.*
-import tribixbite.keyboard2.data.KeyboardData
-import tribixbite.keyboard2.ui.CustomLayoutEditDialog
-import tribixbite.keyboard2.utils.Utils
+import tribixbite.keyboard2.KeyboardData
+import tribixbite.keyboard2.CustomLayoutEditDialog
+import tribixbite.keyboard2.Utils
 import java.util.*
 
 /**
@@ -30,9 +31,13 @@ import java.util.*
  * - Reactive preference updates
  */
 class LayoutsPreference @JvmOverloads constructor(
-    context: Context,
+    private val context: Context,
     attrs: AttributeSet? = null
-) : ListGroupPreference<LayoutsPreference.Layout>(context, attrs) {
+) : DialogPreference(context, attrs) {
+
+    // Layout values and related properties
+    private var values: MutableList<Layout> = mutableListOf()
+    private val layoutDisplayNames: Array<String> get() = values.map { labelOfLayout(it) }.toTypedArray()
 
     companion object {
         const val KEY = "layouts"
@@ -170,20 +175,28 @@ class LayoutsPreference @JvmOverloads constructor(
         }
     }
 
-    override fun labelOfValue(value: Layout, index: Int): String {
-        return context.getString(R.string.pref_layouts_item, index + 1, labelOfLayout(value))
+    fun labelOfValue(value: Layout, index: Int): String {
+        return "Layout ${index + 1}: ${labelOfLayout(value)}"
     }
 
-    override fun onAttachAddButton(prevButton: AddButton?): AddButton {
+    fun onAttachAddButton(prevButton: LayoutsAddButton?): LayoutsAddButton {
         return prevButton ?: LayoutsAddButton(context)
     }
 
-    override fun shouldAllowRemoveItem(value: Layout): Boolean {
+    fun shouldAllowRemoveItem(value: Layout): Boolean {
         // Allow removal if more than one layout exists and it's not a custom layout
         return values.size > 1 && value !is CustomLayout
     }
 
-    override fun getSerializer(): Serializer = SERIALIZER
+    fun getSerializer(): Serializer = SERIALIZER
+
+    /**
+     * Selection callback interface for layout dialogs.
+     */
+    interface SelectionCallback {
+        fun select(layout: Layout?)
+        fun allowRemove(): Boolean = false
+    }
 
     /**
      * Show layout selection dialog.
@@ -221,7 +234,7 @@ class LayoutsPreference @JvmOverloads constructor(
             initialText,
             allowRemove,
             object : CustomLayoutEditDialog.Callback {
-                override fun select(text: String?) {
+                override fun onSelect(text: String?) {
                     if (text == null) {
                         callback.select(null)
                     } else {
@@ -259,7 +272,7 @@ class LayoutsPreference @JvmOverloads constructor(
     private fun readInitialCustomLayout(): String {
         return try {
             val resources = context.resources
-            Utils.readAllUtf8(resources.openRawResource(R.raw.latn_qwerty_us))
+            Utils.readAllUtf8(resources.openRawResource(R.raw.qwerty))
         } catch (e: Exception) {
             ""
         }
@@ -268,9 +281,9 @@ class LayoutsPreference @JvmOverloads constructor(
     /**
      * Custom add button for layouts preference.
      */
-    private class LayoutsAddButton(context: Context) : AddButton(context) {
+    private class LayoutsAddButton(context: Context) : View(context) {
         init {
-            layoutResource = R.layout.pref_layouts_add_btn
+            // Simple button implementation
         }
     }
 
@@ -316,10 +329,10 @@ class LayoutsPreference @JvmOverloads constructor(
      * Serializer for saving/loading layout preferences.
      * Named layouts are serialized as strings, custom layouts as JSON objects.
      */
-    class Serializer : ListGroupPreference.Serializer<Layout> {
+    class Serializer {
 
         @Throws(JSONException::class)
-        override fun loadItem(obj: Any): Layout {
+        fun loadItem(obj: Any): Layout {
             return when (obj) {
                 is String -> {
                     when (obj) {
@@ -339,13 +352,14 @@ class LayoutsPreference @JvmOverloads constructor(
         }
 
         @Throws(JSONException::class)
-        override fun saveItem(layout: Layout): Any {
+        fun saveItem(layout: Layout): Any {
             return when (layout) {
                 is NamedLayout -> layout.name
                 is CustomLayout -> JSONObject()
                     .put("kind", "custom")
                     .put("xml", layout.xml)
                 is SystemLayout -> JSONObject().put("kind", "system")
+                else -> JSONObject().put("kind", "system") // Default fallback
             }
         }
     }

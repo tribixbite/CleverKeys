@@ -10,8 +10,8 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.flow.*
-import tribixbite.keyboard2.config.Config
-import tribixbite.keyboard2.data.KeyboardData
+import tribixbite.keyboard2.Config
+import tribixbite.keyboard2.KeyboardData
 
 /**
  * Complete theme management system for CleverKeys.
@@ -165,59 +165,39 @@ class Theme(context: Context, attrs: AttributeSet? = null) {
         // Ensure key font is loaded
         getKeyFont(context)
 
-        // Load theme attributes from XML
-        val typedArray = if (attrs != null) {
-            context.theme.obtainStyledAttributes(attrs, R.styleable.keyboard, 0, 0)
+        // Load theme from Android system colors (simplified for compatibility)
+        val isDarkMode = (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
+        if (isDarkMode) {
+            colorKey = Color.rgb(64, 64, 64)
+            colorKeyActivated = Color.rgb(96, 96, 96)
+            labelColor = Color.WHITE
+            activatedColor = Color.rgb(255, 165, 0) // Orange
+            lockedColor = Color.rgb(255, 255, 0) // Yellow
+            subLabelColor = Color.rgb(192, 192, 192)
+            colorNavBar = Color.BLACK
+            isLightNavBar = false
         } else {
-            // Create default theme from system
-            null
+            colorKey = Color.rgb(240, 240, 240)
+            colorKeyActivated = Color.rgb(200, 200, 200)
+            labelColor = Color.BLACK
+            activatedColor = Color.rgb(255, 140, 0) // Dark Orange
+            lockedColor = Color.rgb(200, 200, 0) // Dark Yellow
+            subLabelColor = Color.rgb(96, 96, 96)
+            colorNavBar = Color.WHITE
+            isLightNavBar = true
         }
 
-        if (typedArray != null) {
-            colorKey = typedArray.getColor(R.styleable.keyboard_colorKey, 0)
-            colorKeyActivated = typedArray.getColor(R.styleable.keyboard_colorKeyActivated, 0)
-            colorNavBar = typedArray.getColor(R.styleable.keyboard_navigationBarColor, 0)
-            isLightNavBar = typedArray.getBoolean(R.styleable.keyboard_windowLightNavigationBar, false)
-            labelColor = typedArray.getColor(R.styleable.keyboard_colorLabel, 0)
-            activatedColor = typedArray.getColor(R.styleable.keyboard_colorLabelActivated, 0)
-            lockedColor = typedArray.getColor(R.styleable.keyboard_colorLabelLocked, 0)
-            subLabelColor = typedArray.getColor(R.styleable.keyboard_colorSubLabel, 0)
+        secondaryLabelColor = adjustLight(labelColor, 0.25f)
+        greyedLabelColor = adjustLight(labelColor, 0.5f)
 
-            secondaryLabelColor = adjustLight(labelColor,
-                typedArray.getFloat(R.styleable.keyboard_secondaryDimming, 0.25f))
-            greyedLabelColor = adjustLight(labelColor,
-                typedArray.getFloat(R.styleable.keyboard_greyedDimming, 0.5f))
-
-            keyBorderRadius = typedArray.getDimension(R.styleable.keyboard_keyBorderRadius, 0f)
-            keyBorderWidth = typedArray.getDimension(R.styleable.keyboard_keyBorderWidth, 0f)
-            keyBorderWidthActivated = typedArray.getDimension(R.styleable.keyboard_keyBorderWidthActivated, 0f)
-            keyBorderColorLeft = typedArray.getColor(R.styleable.keyboard_keyBorderColorLeft, colorKey)
-            keyBorderColorTop = typedArray.getColor(R.styleable.keyboard_keyBorderColorTop, colorKey)
-            keyBorderColorRight = typedArray.getColor(R.styleable.keyboard_keyBorderColorRight, colorKey)
-            keyBorderColorBottom = typedArray.getColor(R.styleable.keyboard_keyBorderColorBottom, colorKey)
-
-            typedArray.recycle()
-        } else {
-            // Use system theme defaults
-            val systemTheme = getSystemThemeData(context)
-            colorKey = systemTheme.keyColor
-            colorKeyActivated = systemTheme.keyActivatedColor
-            colorNavBar = systemTheme.backgroundColor
-            isLightNavBar = !systemTheme.isDarkMode
-            labelColor = systemTheme.labelColor
-            activatedColor = adjustColorBrightness(labelColor, 1.2f)
-            lockedColor = adjustColorBrightness(labelColor, 0.8f)
-            subLabelColor = adjustColorBrightness(labelColor, 0.7f)
-            secondaryLabelColor = adjustLight(labelColor, 0.25f)
-            greyedLabelColor = adjustLight(labelColor, 0.5f)
-            keyBorderRadius = 8f
-            keyBorderWidth = 1f
-            keyBorderWidthActivated = 2f
-            keyBorderColorLeft = systemTheme.keyBorderColor
-            keyBorderColorTop = systemTheme.keyBorderColor
-            keyBorderColorRight = systemTheme.keyBorderColor
-            keyBorderColorBottom = systemTheme.keyBorderColor
-        }
+        keyBorderRadius = 8f
+        keyBorderWidth = 1f
+        keyBorderWidthActivated = 2f
+        keyBorderColorLeft = colorKey
+        keyBorderColorTop = colorKey
+        keyBorderColorRight = colorKey
+        keyBorderColorBottom = colorKey
     }
 
     /**
@@ -293,8 +273,8 @@ class Theme(context: Context, attrs: AttributeSet? = null) {
                 config.screenHeightPixels / layout.keysHeight
             )
 
-            verticalMargin = config.keyVerticalMargin * rowHeight
-            horizontalMargin = config.keyHorizontalMargin * keyWidth
+            verticalMargin = config.key_vertical_margin * rowHeight
+            horizontalMargin = config.key_horizontal_margin * keyWidth
             marginTop = config.marginTop + verticalMargin / 2
             marginLeft = horizontalMargin / 2
 

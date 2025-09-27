@@ -17,6 +17,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import kotlinx.coroutines.*
+import tribixbite.keyboard2.R
 
 /**
  * Modern Kotlin launcher activity for CleverKeys.
@@ -54,7 +55,8 @@ class LauncherActivity : Activity(), Handler.Callback {
         super.onCreate(savedInstanceState)
 
         try {
-            setContentView(R.layout.launcher_activity)
+            val layoutId = resources.getIdentifier("launcher_activity", "layout", packageName)
+            setContentView(layoutId)
             setupViews()
             setupAnimationHandler()
             Log.i(TAG, "LauncherActivity created successfully")
@@ -83,8 +85,10 @@ class LauncherActivity : Activity(), Handler.Callback {
     }
 
     private fun setupViews() {
-        tryhereText = findViewById(R.id.launcher_tryhere_text)
-        tryhereArea = findViewById(R.id.launcher_tryhere_area)
+        val textId = resources.getIdentifier("launcher_tryhere_text", "id", packageName)
+        val areaId = resources.getIdentifier("launcher_tryhere_area", "id", packageName)
+        tryhereText = findViewById(textId)
+        tryhereArea = findViewById(areaId)
 
         // Add key event listener for API 28+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -101,9 +105,12 @@ class LauncherActivity : Activity(), Handler.Callback {
 
         try {
             // Add animations if they exist in the layout
-            findAnimation(R.id.launcher_anim_swipe)?.let { animations.add(it) }
-            findAnimation(R.id.launcher_anim_round_trip)?.let { animations.add(it) }
-            findAnimation(R.id.launcher_anim_circle)?.let { animations.add(it) }
+            val swipeId = resources.getIdentifier("launcher_anim_swipe", "id", packageName)
+            val roundTripId = resources.getIdentifier("launcher_anim_round_trip", "id", packageName)
+            val circleId = resources.getIdentifier("launcher_anim_circle", "id", packageName)
+            findAnimation(swipeId)?.let { animations.add(it) }
+            findAnimation(roundTripId)?.let { animations.add(it) }
+            findAnimation(circleId)?.let { animations.add(it) }
 
             Log.d(TAG, "Loaded ${animations.size} animations")
         } catch (e: Exception) {
@@ -164,7 +171,8 @@ class LauncherActivity : Activity(), Handler.Callback {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         return try {
-            menuInflater.inflate(R.menu.launcher_menu, menu)
+            val menuId = resources.getIdentifier("launcher_menu", "menu", packageName)
+            menuInflater.inflate(menuId, menu)
             true
         } catch (e: Exception) {
             Log.e(TAG, "Error creating options menu", e)
@@ -173,8 +181,9 @@ class LauncherActivity : Activity(), Handler.Callback {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val btnId = resources.getIdentifier("btnLaunchSettingsActivity", "id", packageName)
         return when (item.itemId) {
-            R.id.btnLaunchSettingsActivity -> {
+            btnId -> {
                 launchSettingsActivity()
                 true
             }

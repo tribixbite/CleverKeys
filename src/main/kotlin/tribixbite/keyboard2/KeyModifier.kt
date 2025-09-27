@@ -173,5 +173,21 @@ class KeyModifier {
         fun modify(keyValue: KeyValue?, mods: Pointers.Modifiers): KeyValue {
             return keyValue ?: KeyValue.CharKey(' ')
         }
+
+        /**
+         * Modify key value for long press action
+         */
+        fun modifyLongPress(keyValue: KeyValue): KeyValue {
+            // For long press, return the key as-is or a modified version
+            return when (keyValue) {
+                is KeyValue.CharKey -> {
+                    // Long press on letters could produce uppercase
+                    if (keyValue.char.isLowerCase()) {
+                        KeyValue.CharKey(keyValue.char.uppercase().first())
+                    } else keyValue
+                }
+                else -> keyValue
+            }
+        }
     }
 }

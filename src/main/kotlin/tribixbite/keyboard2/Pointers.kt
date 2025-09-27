@@ -31,6 +31,11 @@ class Pointers(
             7, 2, 2, 6, 6, 4, 4, 8, 8, 3, 3, 5, 5, 1, 1, 7
         )
 
+        // Speed constants for slider operations
+        const val SPEED_SMOOTHING = 0.7f
+        const val SPEED_MAX = 4f
+        const val SPEED_VERTICAL_MULT = 0.5f
+
         private var uniqueTimeoutWhat = 0
     }
 
@@ -60,10 +65,11 @@ class Pointers(
         val keyValues = mutableListOf<KeyValue>()
 
         for (pointer in pointers) {
-            if (pointer.value != null &&
+            val value = pointer.value
+            if (value != null &&
                 !(skipLatched && pointer.hasFlagsAny(FLAG_P_LATCHED) &&
                   (pointer.flags and FLAG_P_LOCKED) == 0)) {
-                keyValues.add(pointer.value!!)
+                keyValues.add(value)
             }
         }
 
@@ -522,11 +528,6 @@ class Pointers(
         private var speed = 0.5f
         private var lastMoveMs = -1L
 
-        companion object {
-            const val SPEED_SMOOTHING = 0.7f
-            const val SPEED_MAX = 4f
-            const val SPEED_VERTICAL_MULT = 0.5f
-        }
 
         fun onTouchMove(pointer: Pointer, x: Float, y: Float) {
             val travelled = abs(x - lastX) + abs(y - lastY)
@@ -612,7 +613,8 @@ class Pointers(
             val EMPTY = Modifiers(emptyArray(), 0)
 
             fun ofArray(keys: Array<KeyValue>, size: Int): Modifiers {
-                return Modifiers(keys.copyOf(size), size)
+                val truncatedKeys = Array(size) { keys[it] }
+                return Modifiers(truncatedKeys, size)
             }
         }
 

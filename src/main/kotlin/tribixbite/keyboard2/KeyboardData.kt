@@ -6,6 +6,7 @@ import android.util.Xml
 import org.xmlpull.v1.XmlPullParser
 import java.io.StringReader
 import kotlin.math.max
+import tribixbite.keyboard2.R
 
 /**
  * Modern Kotlin representation of keyboard layout data
@@ -345,7 +346,7 @@ data class KeyboardData(
                     val parser = resources.getXml(resourceId)
                     parseKeyboard(parser).also { parser.close() }
                 } catch (e: Exception) {
-                    Logs.exn("Failed to load layout id $resourceId", e)
+                    Logs.e("KeyboardData", "Failed to load layout id $resourceId", e)
                     null
                 }
             }
@@ -382,7 +383,8 @@ data class KeyboardData(
          * Load number pad layout
          */
         fun loadNumPad(resources: Resources): KeyboardData {
-            return parseKeyboard(resources.getXml(R.xml.numpad))
+            val resourceId = resources.getIdentifier("numpad", "xml", "tribixbite.keyboard2")
+            return parseKeyboard(resources.getXml(resourceId))
         }
 
         private fun parseKeyboard(parser: XmlPullParser): KeyboardData {
@@ -499,7 +501,7 @@ data class KeyboardData(
                 // Skip content
             }
 
-            modmap.add(modifier, keyA, keyB)
+            modmap.addMapping(modifier, keyA, keyB)
         }
 
         private fun getKeyAttr(parser: XmlPullParser, synonym1: String, synonym2: String): String? {

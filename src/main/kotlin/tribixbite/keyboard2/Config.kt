@@ -75,7 +75,7 @@ class Config private constructor(
         /**
          * Configuration migration logic
          */
-        private fun migrate(prefs: SharedPreferences) {
+        fun migrate(prefs: SharedPreferences) {
             val savedVersion = prefs.getInt("version", 0)
             Logs.debug_config_migration(savedVersion, CONFIG_VERSION)
             if (savedVersion == CONFIG_VERSION) return

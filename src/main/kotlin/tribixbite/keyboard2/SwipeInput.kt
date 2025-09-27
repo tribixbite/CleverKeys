@@ -17,8 +17,9 @@ data class SwipeInput(
         buildString {
             touchedKeys.forEach { key ->
                 key?.keys?.firstOrNull()?.let { kv ->
-                    if (kv.kind == KeyValue.Kind.Char) {
-                        append(kv.char)
+                    when (kv) {
+                        is KeyValue.CharKey -> append(kv.char)
+                        else -> { /* Skip non-character keys */ }
                     }
                 }
             }

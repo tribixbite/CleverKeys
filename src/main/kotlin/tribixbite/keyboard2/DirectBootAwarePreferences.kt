@@ -17,4 +17,12 @@ object DirectBootAwarePreferences {
     fun get_shared_preferences(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     }
+
+    /**
+     * Copy preferences to protected storage (simplified implementation)
+     */
+    fun copy_preferences_to_protected_storage(context: Context, prefs: SharedPreferences) {
+        // In a real implementation, this would copy to device protected storage
+        // For now, this is a no-op since we're using regular shared preferences
+    }
 }

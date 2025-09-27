@@ -5,8 +5,7 @@ import android.graphics.*
 import android.os.Bundle
 import android.view.View
 import android.widget.*
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlin.math.*
 
 /**
@@ -26,6 +25,9 @@ class NeuralBrowserActivity : Activity() {
     private lateinit var modelInfo: TextView
     private lateinit var allWords: List<String>
     private lateinit var neuralEngine: NeuralSwipeEngine
+
+    // Coroutine scope for the activity
+    private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -116,11 +118,16 @@ class NeuralBrowserActivity : Activity() {
         initializeNeuralBrowser()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        activityScope.cancel()
+    }
+
     private fun initializeNeuralBrowser() {
-        lifecycleScope.launch {
+        activityScope.launch {
             try {
                 // Initialize neural engine
-                neuralEngine = NeuralSwipeEngine.getInstance()
+                neuralEngine = NeuralSwipeEngine(this@NeuralBrowserActivity, Config.globalConfig())
 
                 // Load dictionary words for testing
                 allWords = loadTestWords()
@@ -160,7 +167,7 @@ class NeuralBrowserActivity : Activity() {
     }
 
     private fun analyzeWord(word: String) {
-        lifecycleScope.launch {
+        activityScope.launch {
             try {
                 val info = StringBuilder()
                 info.append("WORD: ${word.uppercase()}\n")
@@ -169,7 +176,7 @@ class NeuralBrowserActivity : Activity() {
                 // Generate synthetic gesture for word
                 val syntheticGesture = generateSyntheticGesture(word)
                 info.append("✅ Synthetic gesture generated\n")
-                info.append("Points: ${syntheticGesture.trajectory.size}\n")
+                info.append("Points: ${syntheticGesture.coordinates.size}\n")
                 info.append("Duration: ${syntheticGesture.duration}ms\n")
 
                 // Get prediction
@@ -177,33 +184,34 @@ class NeuralBrowserActivity : Activity() {
                 info.append("\nPREDICTION RESULTS:\n")
                 info.append("================\n")
 
-                if (prediction.candidates.isEmpty()) {
+                if (prediction.words.isEmpty()) {
                     info.append("❌ No predictions generated\n")
                 } else {
-                    info.append("✅ ${prediction.candidates.size} predictions\n")
-                    info.append("Processing time: ${prediction.processingTimeMs}ms\n\n")
+                    info.append("✅ ${prediction.words.size} predictions\n")
+                    info.append("Prediction completed successfully\n\n")
 
                     // Show top predictions with confidence
-                    prediction.candidates.take(5).forEachIndexed { index, candidate ->
-                        val correctness = if (candidate.word.equals(word, ignoreCase = true)) "✅" else "❌"
-                        info.append("${index + 1}. $correctness ${candidate.word} (conf: %.3f)\n".format(candidate.confidence))
+                    prediction.words.take(5).forEachIndexed { index, word_pred ->
+                        val score = prediction.scores.getOrNull(index) ?: 0
+                        val confidence = score / 1000f // Convert score (0-1000) to confidence (0.0-1.0)
+                        val correctness = if (word_pred.equals(word, ignoreCase = true)) "✅" else "❌"
+                        info.append("${index + 1}. $correctness $word_pred (conf: %.3f)\n".format(confidence))
                     }
 
                     // Calculate accuracy metrics
-                    val topPrediction = prediction.candidates.first()
-                    val isCorrect = topPrediction.word.equals(word, ignoreCase = true)
-                    val top3Correct = prediction.candidates.take(3).any {
-                        it.word.equals(word, ignoreCase = true)
+                    val topPrediction = prediction.words.first()
+                    val isCorrect = topPrediction.equals(word, ignoreCase = true)
+                    val top3Correct = prediction.words.take(3).any {
+                        it.equals(word, ignoreCase = true)
                     }
 
                     info.append("\nACCURACY METRICS:\n")
                     info.append("================\n")
                     info.append("Top-1 Accuracy: ${if (isCorrect) "✅ CORRECT" else "❌ INCORRECT"}\n")
                     info.append("Top-3 Accuracy: ${if (top3Correct) "✅ FOUND" else "❌ NOT FOUND"}\n")
-                    info.append("Confidence range: %.3f - %.3f\n".format(
-                        prediction.candidates.minOfOrNull { it.confidence } ?: 0.0,
-                        prediction.candidates.maxOfOrNull { it.confidence } ?: 0.0
-                    ))
+                    val minScore = prediction.scores.minOrNull() ?: 0
+                    val maxScore = prediction.scores.maxOrNull() ?: 0
+                    info.append("Score range: $minScore - $maxScore\n")
 
                     // Feature analysis
                     info.append("\nFEATURE ANALYSIS:\n")
@@ -216,14 +224,14 @@ class NeuralBrowserActivity : Activity() {
                     predictionView.setPredictionData(syntheticGesture, prediction)
                 }
 
+                modelInfo.text = info.toString()
+                android.util.Log.d("NeuralBrowser", "Analyzed word: $word")
+
             } catch (e: Exception) {
                 android.util.Log.e("NeuralBrowser", "Failed to analyze word: $word", e)
                 modelInfo.text = "❌ Failed to analyze '$word': ${e.message}"
                 return@launch
             }
-
-            modelInfo.text = info.toString()
-            android.util.Log.d("NeuralBrowser", "Analyzed word: $word")
         }
     }
 
@@ -271,19 +279,19 @@ class NeuralBrowserActivity : Activity() {
         }
 
         return SwipeInput(
-            trajectory = trajectory,
+            coordinates = trajectory,
             timestamps = timestamps,
-            duration = currentTime - timestamps.first()
+            touchedKeys = emptyList()
         )
     }
 
     private fun calculateTrajectoryLength(gesture: SwipeInput): Double {
-        if (gesture.trajectory.size < 2) return 0.0
+        if (gesture.coordinates.size < 2) return 0.0
 
         var length = 0.0
-        for (i in 1 until gesture.trajectory.size) {
-            val p1 = gesture.trajectory[i - 1]
-            val p2 = gesture.trajectory[i]
+        for (i in 1 until gesture.coordinates.size) {
+            val p1 = gesture.coordinates[i - 1]
+            val p2 = gesture.coordinates[i]
             length += sqrt((p2.x - p1.x).pow(2) + (p2.y - p1.y).pow(2))
         }
         return length
@@ -291,13 +299,13 @@ class NeuralBrowserActivity : Activity() {
 
     private fun calculateGestureComplexity(gesture: SwipeInput): Double {
         // Calculate curvature-based complexity
-        if (gesture.trajectory.size < 3) return 0.0
+        if (gesture.coordinates.size < 3) return 0.0
 
         var totalCurvature = 0.0
-        for (i in 1 until gesture.trajectory.size - 1) {
-            val p1 = gesture.trajectory[i - 1]
-            val p2 = gesture.trajectory[i]
-            val p3 = gesture.trajectory[i + 1]
+        for (i in 1 until gesture.coordinates.size - 1) {
+            val p1 = gesture.coordinates[i - 1]
+            val p2 = gesture.coordinates[i]
+            val p3 = gesture.coordinates[i + 1]
 
             val angle1 = atan2((p2.y - p1.y).toDouble(), (p2.x - p1.x).toDouble())
             val angle2 = atan2((p3.y - p2.y).toDouble(), (p3.x - p2.x).toDouble())
@@ -309,16 +317,16 @@ class NeuralBrowserActivity : Activity() {
             totalCurvature += abs(angleDiff)
         }
 
-        return totalCurvature / (gesture.trajectory.size - 2)
+        return totalCurvature / (gesture.coordinates.size - 2)
     }
 
     private fun calculateVelocityVariance(gesture: SwipeInput): Double {
-        if (gesture.trajectory.size < 2 || gesture.timestamps.size != gesture.trajectory.size) return 0.0
+        if (gesture.coordinates.size < 2 || gesture.timestamps.size != gesture.coordinates.size) return 0.0
 
         val velocities = mutableListOf<Double>()
-        for (i in 1 until gesture.trajectory.size) {
-            val p1 = gesture.trajectory[i - 1]
-            val p2 = gesture.trajectory[i]
+        for (i in 1 until gesture.coordinates.size) {
+            val p1 = gesture.coordinates[i - 1]
+            val p2 = gesture.coordinates[i]
             val distance = sqrt((p2.x - p1.x).pow(2) + (p2.y - p1.y).pow(2))
             val timeDelta = (gesture.timestamps[i] - gesture.timestamps[i - 1]) / 1000.0
 
@@ -335,7 +343,7 @@ class NeuralBrowserActivity : Activity() {
     }
 
     private fun testPredictions() {
-        lifecycleScope.launch {
+        activityScope.launch {
             try {
                 modelInfo.text = "🔬 Testing predictions on sample words...\n\n"
 
@@ -352,14 +360,14 @@ class NeuralBrowserActivity : Activity() {
 
                     totalTime += (endTime - startTime)
 
-                    if (prediction.candidates.isNotEmpty()) {
-                        val topPrediction = prediction.candidates.first()
-                        if (topPrediction.word.equals(word, ignoreCase = true)) {
+                    if (prediction.words.isNotEmpty()) {
+                        val topPrediction = prediction.words.first()
+                        if (topPrediction.equals(word, ignoreCase = true)) {
                             correctTop1++
                         }
 
-                        val top3Correct = prediction.candidates.take(3).any {
-                            it.word.equals(word, ignoreCase = true)
+                        val top3Correct = prediction.words.take(3).any {
+                            it.equals(word, ignoreCase = true)
                         }
                         if (top3Correct) {
                             correctTop3++
@@ -385,7 +393,7 @@ class NeuralBrowserActivity : Activity() {
     }
 
     private fun runBenchmark() {
-        lifecycleScope.launch {
+        activityScope.launch {
             try {
                 modelInfo.text = "⏱️ Running performance benchmark...\n\n"
 
@@ -466,10 +474,8 @@ class NeuralBrowserActivity : Activity() {
             invalidate()
         }
 
-        override fun onDraw(canvas: Canvas?) {
+        override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
-
-            canvas ?: return
 
             val gesture = currentGesture
             val prediction = currentPrediction
@@ -480,49 +486,51 @@ class NeuralBrowserActivity : Activity() {
             }
 
             // Draw gesture trajectory
-            if (gesture.trajectory.size >= 2) {
+            if (gesture.coordinates.size >= 2) {
                 val path = Path()
                 val scaleX = (width - 100f) / 1080f
                 val scaleY = (height - 200f) / 400f
 
-                val firstPoint = gesture.trajectory[0]
+                val firstPoint = gesture.coordinates[0]
                 path.moveTo(firstPoint.x * scaleX + 50f, firstPoint.y * scaleY + 100f)
 
-                for (i in 1 until gesture.trajectory.size) {
-                    val point = gesture.trajectory[i]
+                for (i in 1 until gesture.coordinates.size) {
+                    val point = gesture.coordinates[i]
                     path.lineTo(point.x * scaleX + 50f, point.y * scaleY + 100f)
                 }
 
                 canvas.drawPath(path, gesturePaint)
 
                 // Draw start and end points
-                val startPoint = gesture.trajectory.first()
-                val endPoint = gesture.trajectory.last()
+                val startPoint = gesture.coordinates.first()
+                val endPoint = gesture.coordinates.last()
                 canvas.drawCircle(startPoint.x * scaleX + 50f, startPoint.y * scaleY + 100f, 12f, pointPaint)
                 canvas.drawCircle(endPoint.x * scaleX + 50f, endPoint.y * scaleY + 100f, 12f, pointPaint)
             }
 
             // Draw confidence bars for top predictions
-            if (prediction.candidates.isNotEmpty()) {
+            if (prediction.words.isNotEmpty()) {
                 val barHeight = 20f
                 val barSpacing = 25f
                 val startY = height - 150f
 
-                prediction.candidates.take(5).forEachIndexed { index, candidate ->
-                    val barWidth = (candidate.confidence * (width - 200f)).toFloat()
+                prediction.words.take(5).forEachIndexed { index, word ->
+                    val score = prediction.scores.getOrNull(index) ?: 0
+                    val confidence = score / 1000f // Convert score (0-1000) to confidence (0.0-1.0)
+                    val barWidth = (confidence * (width - 200f)).toFloat()
                     val y = startY + index * barSpacing
 
                     // Confidence bar
                     confidencePaint.color = when (index) {
                         0 -> Color.GREEN
                         1 -> Color.YELLOW
-                        2 -> Color.ORANGE
+                        2 -> Color.rgb(255, 165, 0) // Orange
                         else -> Color.RED
                     }
                     canvas.drawRect(100f, y, 100f + barWidth, y + barHeight, confidencePaint)
 
                     // Prediction text
-                    canvas.drawText("${candidate.word} (${(candidate.confidence * 100).toInt()}%)",
+                    canvas.drawText("$word (${(confidence * 100).toInt()}%)",
                         110f + barWidth, y + 15f, textPaint)
                 }
             }

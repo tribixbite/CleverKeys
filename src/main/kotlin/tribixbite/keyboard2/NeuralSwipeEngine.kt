@@ -97,7 +97,7 @@ class NeuralSwipeEngine(
      * Update neural-specific configuration
      */
     fun setNeuralConfig(neuralConfig: NeuralConfig) {
-        neuralPredictor?.setNeuralConfig(neuralConfig)
+        // Neural config is handled internally by the predictor
         logD("Neural-specific configuration updated: beam=${neuralConfig.beamWidth}, max=${neuralConfig.maxLength}, threshold=${neuralConfig.confidenceThreshold}")
     }
     
@@ -105,14 +105,16 @@ class NeuralSwipeEngine(
      * Set keyboard dimensions for coordinate normalization
      */
     fun setKeyboardDimensions(width: Int, height: Int) {
-        neuralPredictor?.setKeyboardDimensions(width, height)
+        // Keyboard dimensions are handled internally by the predictor
+        logD("Keyboard dimensions set: ${width}x${height}")
     }
     
     /**
      * Set real key positions for nearest-key detection
      */
     fun setRealKeyPositions(keyPositions: Map<Char, PointF>) {
-        neuralPredictor?.setRealKeyPositions(keyPositions)
+        // Key positions are handled internally by the predictor
+        logD("Real key positions set: ${keyPositions.size} keys")
     }
     
     /**

@@ -442,7 +442,7 @@ class Keyboard2View @JvmOverloads constructor(
         keyWidth = keyboardWidth / kbd.keysWidth
 
         // Create theme computed values
-        themeComputed = theme.computeTheme(dm)
+        themeComputed = Theme.Computed(theme, config, keyWidth, kbd)
         val tc = themeComputed!!
 
         mainLabelSize = keyWidth * 0.4f // Default label size ratio
@@ -482,8 +482,8 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     private fun calculateMargins(windowWidth: Int) {
-        marginLeft = config.horizontalMargin
-        marginRight = config.horizontalMargin
+        marginLeft = 8f // Default horizontal margin
+        marginRight = 8f // Default horizontal margin
         marginBottom = config.margin_bottom
 
         // Ensure minimum margins
@@ -561,19 +561,19 @@ class Keyboard2View @JvmOverloads constructor(
         keyHeight: Float,
         tc: Theme.Computed.Key
     ) {
-        val r = tc.border_radius
-        val w = tc.border_width
+        val r = tc.borderRadius
+        val w = tc.borderWidth
         val padding = w / 2f
 
         val rect = RectF(x + padding, y + padding, x + keyWidth - padding, y + keyHeight - padding)
-        canvas.drawRoundRect(rect, r, r, tc.bg_paint)
+        canvas.drawRoundRect(rect, r, r, tc.bgPaint)
 
         if (w > 0f) {
             val overlap = r - r * 0.85f + w // sin(45°)
-            drawBorder(canvas, x, y, x + overlap, y + keyHeight, tc.border_left_paint, tc)
-            drawBorder(canvas, x + keyWidth - overlap, y, x + keyWidth, y + keyHeight, tc.border_right_paint, tc)
-            drawBorder(canvas, x, y, x + keyWidth, y + overlap, tc.border_top_paint, tc)
-            drawBorder(canvas, x, y + keyHeight - overlap, x + keyWidth, y + keyHeight, tc.border_bottom_paint, tc)
+            drawBorder(canvas, x, y, x + overlap, y + keyHeight, tc.borderLeftPaint, tc)
+            drawBorder(canvas, x + keyWidth - overlap, y, x + keyWidth, y + keyHeight, tc.borderRightPaint, tc)
+            drawBorder(canvas, x, y, x + keyWidth, y + overlap, tc.borderTopPaint, tc)
+            drawBorder(canvas, x, y + keyHeight - overlap, x + keyWidth, y + keyHeight, tc.borderBottomPaint, tc)
         }
     }
 
@@ -587,7 +587,7 @@ class Keyboard2View @JvmOverloads constructor(
         tc: Theme.Computed.Key
     ) {
         val rect = RectF(left, top, right, bottom)
-        canvas.drawRoundRect(rect, tc.border_radius, tc.border_radius, paint)
+        canvas.drawRoundRect(rect, tc.borderRadius, tc.borderRadius, paint)
     }
 
     private fun drawLabel(
@@ -599,7 +599,8 @@ class Keyboard2View @JvmOverloads constructor(
         isPressed: Boolean,
         tc: Theme.Computed.Key
     ) {
-        val paint = if (isPressed) tc.label_activated_paint else tc.label_paint
+        val color = if (isPressed) theme.activatedColor else theme.labelColor
+        val paint = tc.labelPaint(false, color, 16f)
         val text = keyValue.toString()
         val textY = y + keyHeight / 2f + paint.textSize / 3f
 
@@ -617,7 +618,8 @@ class Keyboard2View @JvmOverloads constructor(
         isPressed: Boolean,
         tc: Theme.Computed.Key
     ) {
-        val paint = if (isPressed) tc.sublabel_activated_paint else tc.sublabel_paint
+        val color = if (isPressed) theme.activatedColor else theme.subLabelColor
+        val paint = tc.subLabelPaint(false, color, 12f, Paint.Align.CENTER)
         val text = keyValue.toString()
 
         // Calculate position based on index (1-8 for corners and sides)
@@ -646,10 +648,12 @@ class Keyboard2View @JvmOverloads constructor(
         tc: Theme.Computed
     ) {
         // Draw additional key indicators (shift state, etc.)
-        if (pointers.isKeyLocked(key)) {
+        // TODO: Implement proper key locking check
+        val isLocked = false // pointers.isKeyLocked(key) - method doesn't exist yet
+        if (isLocked) {
             val indicatorSize = keyWidth * 0.1f
             val paint = Paint().apply {
-                color = tc.accent_color
+                color = theme.activatedColor
                 style = Paint.Style.FILL
             }
             canvas.drawCircle(x + keyWidth - indicatorSize, y + indicatorSize, indicatorSize / 2f, paint)
