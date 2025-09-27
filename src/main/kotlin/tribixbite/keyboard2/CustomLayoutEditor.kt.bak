@@ -105,7 +105,11 @@ class CustomLayoutEditor : Activity() {
         
         qwertyRows.forEach { row ->
             val keyRow = row.map { char ->
-                KeyboardData.Key(arrayOf(KeyValue.makeCharKey(char[0])))
+                KeyboardData.Key(
+                    keys = arrayOf(KeyValue.makeCharKey(char[0])),
+                    width = 1.0f,
+                    shift = 0.0f
+                )
             }.toMutableList()
             currentLayout.add(keyRow)
         }

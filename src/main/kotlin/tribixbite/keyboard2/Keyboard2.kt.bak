@@ -37,8 +37,7 @@ import java.util.*
  * - Enhanced error handling and logging
  */
 class Keyboard2 : InputMethodService(),
-    SharedPreferences.OnSharedPreferenceChangeListener,
-    SuggestionBar.OnSuggestionSelectedListener {
+    SharedPreferences.OnSharedPreferenceChangeListener {
 
     companion object {
         private const val TAG = "Keyboard2"
@@ -106,16 +105,16 @@ class Keyboard2 : InputMethodService(),
 
         // Initialize configuration
         val prefs = getSharedPreferences("cleverkeys_prefs", Context.MODE_PRIVATE)
-        keyEventHandler = KeyEventHandler(EventReceiver())
+        keyEventHandler = KeyEventHandler(KeyReceiver())
 
         Config.initGlobalConfig(prefs, resources, keyEventHandler, false)
         config = Config.globalConfig()
         prefs.registerOnSharedPreferenceChangeListener(this)
 
         // Initialize keyboard view
-        keyboardView = Keyboard2View(this).apply {
-            setKeyboardService(this@Keyboard2)
-        }
+        keyboardView = Keyboard2View(this)
+        // TODO: Fix service integration - this@Keyboard2 is not CleverKeysService
+        // keyboardView.setKeyboardService(service)
 
         // Load default layout
         localeTextLayout = loadDefaultLayout()
@@ -409,8 +408,35 @@ class Keyboard2 : InputMethodService(),
         return layoutInflater.inflate(layoutId, null)
     }
 
-    // Event receiver implementation
-    private inner class EventReceiver {
+    // Key event receiver implementation
+    private inner class KeyReceiver : KeyEventHandler.IReceiver {
+        override fun getInputConnection(): InputConnection? = currentInputConnection
+        override fun getCurrentInputEditorInfo(): EditorInfo? = currentInputEditorInfo
+        override fun performVibration() {
+            if (config?.vibrate_custom == true) {
+                performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+            }
+        }
+        override fun commitText(text: String) {
+            currentInputConnection?.commitText(text, 1)
+        }
+        override fun performAction(action: Int) {
+            currentInputConnection?.performEditorAction(action)
+        }
+        override fun switchToMainLayout() {
+            // TODO: Implement layout switching
+        }
+        override fun switchToNumericLayout() {
+            // TODO: Implement numeric layout switching
+        }
+        override fun switchToEmojiLayout() {
+            // TODO: Implement emoji layout switching
+        }
+        override fun openSettings() {
+            // TODO: Implement settings opening
+        }
+
+        // Legacy methods for compatibility
         fun key_down(keyValue: KeyValue, isSwipe: Boolean) {
             // Handle key down events
             Log.d(TAG, "Key down: $keyValue (swipe: $isSwipe)")

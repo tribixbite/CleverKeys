@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import kotlinx.coroutines.*
+import tribixbite.keyboard2.R
 
 /**
  * Emoji group buttons bar for category navigation
@@ -99,7 +100,7 @@ class EmojiGroupButtonsBar : LinearLayout {
         context: Context,
         private val groupId: Int,
         symbol: String
-    ) : Button(ContextThemeWrapper(context, R.style.emojiTypeButton), null, 0), View.OnTouchListener {
+    ) : Button(ContextThemeWrapper(context, R.style.emojiGridButton), null, 0), View.OnTouchListener {
 
         init {
             text = symbol

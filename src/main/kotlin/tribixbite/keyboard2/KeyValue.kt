@@ -560,10 +560,11 @@ sealed class KeyValue : Comparable<KeyValue> {
 
             // Function keys
             for (i in 1..12) {
-                namedKeys["f$i"] = makeKeyEventKey("F$i", KeyEvent.KEYCODE_F1 + i - 1,
-                    if (i >= 11) Flag.SMALLER_FONT else null).let {
-                        if (it.flags.contains(Flag.SMALLER_FONT)) it else it.withFlags(emptySet())
-                    }
+                namedKeys["f$i"] = if (i >= 11) {
+                    makeKeyEventKey("F$i", KeyEvent.KEYCODE_F1 + i - 1, Flag.SMALLER_FONT)
+                } else {
+                    makeKeyEventKey("F$i", KeyEvent.KEYCODE_F1 + i - 1)
+                }
             }
 
             // Special spaces and characters
