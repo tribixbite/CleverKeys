@@ -103,10 +103,12 @@ class KeyboardLayoutLoader(private val context: Context) {
         }
         
         return KeyboardData(
-            name = layoutName,
-            keys = rows,
-            width = rows.maxOfOrNull { it.size } ?: 10,
-            height = rows.size
+            rows = rows.map { keyRow ->
+                KeyboardData.Row(keyRow.toTypedArray())
+            },
+            keysWidth = 1.0f,
+            keysHeight = 1.0f,
+            name = layoutName
         )
     }
     
@@ -127,7 +129,11 @@ class KeyboardLayoutLoader(private val context: Context) {
         parser.getAttributeValue(null, "key2")?.let { keys[2] = parseKeyValue(it) }
         parser.getAttributeValue(null, "key3")?.let { keys[3] = parseKeyValue(it) }
         
-        return KeyboardData.Key(keys, width, shift)
+        return KeyboardData.Key(
+            keys = keys,
+            width = width,
+            shift = shift
+        )
     }
     
     /**
