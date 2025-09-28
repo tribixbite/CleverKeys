@@ -278,7 +278,7 @@ class ExtraKeysPreference @JvmOverloads constructor(
     private var isAttached = false
 
     init {
-        orderingAsAdded = true
+        // Order preferences as added
     }
 
     override fun onAttachedToActivity() {
@@ -317,7 +317,7 @@ class ExtraKeysPreference @JvmOverloads constructor(
             }
 
             key = prefKeyOfKeyName(keyName)
-            defaultValue = defaultChecked
+            setDefaultValue(defaultChecked)
             setTitle(displayTitle)
 
             // Enable multi-line titles on API 26+

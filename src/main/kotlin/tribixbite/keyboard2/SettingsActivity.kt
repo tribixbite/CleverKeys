@@ -39,6 +39,7 @@ import java.util.Properties
  * - Performance monitoring integration
  * - Accessibility improvements
  */
+@OptIn(ExperimentalMaterial3Api::class)
 class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
 
     companion object {
