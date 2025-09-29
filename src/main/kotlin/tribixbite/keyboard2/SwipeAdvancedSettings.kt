@@ -32,45 +32,68 @@ class SwipeAdvancedSettings private constructor(context: Context) {
 
     // Trajectory preprocessing parameters
     var trajectoryMinPoints = 8             // Minimum points for valid gesture
+        set(value) { field = value.coerceIn(3, 50); saveSettings() }
     var trajectoryMaxPoints = 200           // Maximum points (more = higher quality, slower)
+        set(value) { field = value.coerceIn(50, 1000); saveSettings() }
     var trajectorySmoothingWindow = 3       // Moving average window for smoothing
+        set(value) { field = value.coerceIn(1, 10); saveSettings() }
     var trajectoryResamplingDistance = 5.0f // Distance between resampled points (pixels)
+        set(value) { field = value.coerceIn(1.0f, 20.0f); saveSettings() }
 
     // Neural feature extraction
     var featureNormalizationRange = 1.0f    // Range for coordinate normalization
+        set(value) { field = value.coerceIn(0.1f, 10.0f); saveSettings() }
     var velocityWindowSize = 5              // Window for velocity calculation
+        set(value) { field = value.coerceIn(2, 20); saveSettings() }
     var curvatureWindowSize = 3             // Window for curvature calculation
+        set(value) { field = value.coerceIn(2, 10); saveSettings() }
     var featureInterpolationPoints = 64     // Fixed-size feature vector length
+        set(value) { field = value.coerceIn(16, 256); saveSettings() }
 
     // Gesture validation parameters
     var minGestureLength = 20.0f            // Minimum gesture length (pixels)
+        set(value) { field = value.coerceIn(5.0f, 100.0f); saveSettings() }
     var maxGestureLength = 2000.0f          // Maximum gesture length (pixels)
+        set(value) { field = value.coerceIn(500.0f, 5000.0f); saveSettings() }
     var minGestureDuration = 50L            // Minimum gesture duration (ms)
+        set(value) { field = value.coerceIn(10L, 500L); saveSettings() }
     var maxGestureDuration = 3000L          // Maximum gesture duration (ms)
+        set(value) { field = value.coerceIn(1000L, 10000L); saveSettings() }
 
     // Neural inference optimization
     var batchInferenceEnabled = true        // Enable batched inference
     var maxBatchSize = 4                    // Maximum batch size for inference
+        set(value) { field = value.coerceIn(1, 16); saveSettings() }
     var tensorCacheSize = 8                 // Number of tensors to keep in cache
+        set(value) { field = value.coerceIn(1, 32); saveSettings() }
     var memoryOptimizationLevel = 2         // 0=disabled, 1=basic, 2=aggressive
+        set(value) { field = value.coerceIn(0, 3); saveSettings() }
 
     // Prediction filtering
     var minPredictionConfidence = 0.05f     // Minimum confidence to consider
+        set(value) { field = value.coerceIn(0.001f, 0.5f); saveSettings() }
     var maxPredictions = 8                  // Maximum number of predictions to return
+        set(value) { field = value.coerceIn(1, 20); saveSettings() }
     var duplicateFilterEnabled = true       // Filter duplicate predictions
     var lengthPenaltyFactor = 0.1f          // Penalty for very long/short words
+        set(value) { field = value.coerceIn(0.0f, 1.0f); saveSettings() }
 
     // Performance tuning
     var enableParallelProcessing = true     // Use multiple threads for processing
     var workerThreadCount = 2               // Number of worker threads
+        set(value) { field = value.coerceIn(1, 8); saveSettings() }
     var predictionTimeoutMs = 200L          // Maximum time for prediction (ms)
+        set(value) { field = value.coerceIn(50L, 2000L); saveSettings() }
     var enableDebugLogging = false          // Enable detailed debug logs
 
     // Calibration and adaptation
     var adaptationLearningRate = 0.01f      // Rate for online adaptation
+        set(value) { field = value.coerceIn(0.001f, 0.1f); saveSettings() }
     var calibrationDataWeight = 0.3f        // Weight for user calibration data
+        set(value) { field = value.coerceIn(0.0f, 1.0f); saveSettings() }
     var enablePersonalization = true       // Enable user-specific optimization
     var personalizationDecayRate = 0.995f  // Decay rate for personalization data
+        set(value) { field = value.coerceIn(0.9f, 0.999f); saveSettings() }
 
     init {
         loadSettings()
@@ -168,121 +191,7 @@ class SwipeAdvancedSettings private constructor(context: Context) {
         }
     }
 
-    // Setters with validation
-    fun setTrajectoryMinPoints(value: Int) {
-        trajectoryMinPoints = value.coerceIn(3, 50)
-        saveSettings()
-    }
-
-    fun setTrajectoryMaxPoints(value: Int) {
-        trajectoryMaxPoints = value.coerceIn(50, 1000)
-        saveSettings()
-    }
-
-    fun setTrajectorySmoothingWindow(value: Int) {
-        trajectorySmoothingWindow = value.coerceIn(1, 10)
-        saveSettings()
-    }
-
-    fun setTrajectoryResamplingDistance(value: Float) {
-        trajectoryResamplingDistance = value.coerceIn(1.0f, 20.0f)
-        saveSettings()
-    }
-
-    fun setFeatureNormalizationRange(value: Float) {
-        featureNormalizationRange = value.coerceIn(0.1f, 10.0f)
-        saveSettings()
-    }
-
-    fun setVelocityWindowSize(value: Int) {
-        velocityWindowSize = value.coerceIn(2, 20)
-        saveSettings()
-    }
-
-    fun setCurvatureWindowSize(value: Int) {
-        curvatureWindowSize = value.coerceIn(2, 10)
-        saveSettings()
-    }
-
-    fun setFeatureInterpolationPoints(value: Int) {
-        featureInterpolationPoints = value.coerceIn(16, 256)
-        saveSettings()
-    }
-
-    fun setMinGestureLength(value: Float) {
-        minGestureLength = value.coerceIn(5.0f, 100.0f)
-        saveSettings()
-    }
-
-    fun setMaxGestureLength(value: Float) {
-        maxGestureLength = value.coerceIn(500.0f, 5000.0f)
-        saveSettings()
-    }
-
-    fun setMinGestureDuration(value: Long) {
-        minGestureDuration = value.coerceIn(10L, 500L)
-        saveSettings()
-    }
-
-    fun setMaxGestureDuration(value: Long) {
-        maxGestureDuration = value.coerceIn(1000L, 10000L)
-        saveSettings()
-    }
-
-    fun setMaxBatchSize(value: Int) {
-        maxBatchSize = value.coerceIn(1, 16)
-        saveSettings()
-    }
-
-    fun setTensorCacheSize(value: Int) {
-        tensorCacheSize = value.coerceIn(1, 32)
-        saveSettings()
-    }
-
-    fun setMemoryOptimizationLevel(value: Int) {
-        memoryOptimizationLevel = value.coerceIn(0, 3)
-        saveSettings()
-    }
-
-    fun setMinPredictionConfidence(value: Float) {
-        minPredictionConfidence = value.coerceIn(0.001f, 0.5f)
-        saveSettings()
-    }
-
-    fun setMaxPredictions(value: Int) {
-        maxPredictions = value.coerceIn(1, 20)
-        saveSettings()
-    }
-
-    fun setLengthPenaltyFactor(value: Float) {
-        lengthPenaltyFactor = value.coerceIn(0.0f, 1.0f)
-        saveSettings()
-    }
-
-    fun setWorkerThreadCount(value: Int) {
-        workerThreadCount = value.coerceIn(1, 8)
-        saveSettings()
-    }
-
-    fun setPredictionTimeoutMs(value: Long) {
-        predictionTimeoutMs = value.coerceIn(50L, 2000L)
-        saveSettings()
-    }
-
-    fun setAdaptationLearningRate(value: Float) {
-        adaptationLearningRate = value.coerceIn(0.001f, 0.1f)
-        saveSettings()
-    }
-
-    fun setCalibrationDataWeight(value: Float) {
-        calibrationDataWeight = value.coerceIn(0.0f, 1.0f)
-        saveSettings()
-    }
-
-    fun setPersonalizationDecayRate(value: Float) {
-        personalizationDecayRate = value.coerceIn(0.9f, 0.999f)
-        saveSettings()
-    }
+    // Setters removed - using property custom setters instead
 
     /**
      * Reset all settings to optimized defaults for neural prediction

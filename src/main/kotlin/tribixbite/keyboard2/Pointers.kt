@@ -379,7 +379,7 @@ class Pointers(
     // Sliding functionality
 
     private fun startSliding(pointer: Pointer, x: Float, y: Float, dx: Float, dy: Float, keyValue: KeyValue) {
-        val slider = keyValue.getSlider() ?: return
+        val slider = keyValue.getSliderValue() ?: return
         val repeat = keyValue.getSliderRepeat()
         val dirX = if (dx < 0) -repeat else repeat
         val dirY = if (dy < 0) -repeat else repeat

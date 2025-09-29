@@ -306,7 +306,7 @@ sealed class KeyValue : Comparable<KeyValue> {
     /**
      * Get slider value if this is a slider key
      */
-    fun getSlider(): Slider? = (this as? SliderKey)?.slider
+    fun getSliderValue(): Slider? = (this as? SliderKey)?.slider
 
     /**
      * Get slider repeat value if this is a slider key
@@ -329,13 +329,13 @@ sealed class KeyValue : Comparable<KeyValue> {
     fun isMacro(): Boolean = this is MacroKey
 
     // Safe casting with default values
-    fun getChar(): Char = (this as? CharKey)?.char ?: '\u0000'
-    fun getKeyEvent(): Int = (this as? KeyEventKey)?.keyCode ?: 0
-    fun getEvent(): Event? = (this as? EventKey)?.event
-    fun getString(): String = (this as? StringKey)?.string ?: displayString
-    fun getModifier(): Modifier? = (this as? ModifierKey)?.modifier
-    fun getEditing(): Editing? = (this as? EditingKey)?.editing
-    fun getMacro(): Array<KeyValue> = (this as? MacroKey)?.keys ?: emptyArray()
+    fun getCharValue(): Char = (this as? CharKey)?.char ?: '\u0000'
+    fun getKeyEventValue(): Int = (this as? KeyEventKey)?.keyCode ?: 0
+    fun getEventValue(): Event? = (this as? EventKey)?.event
+    fun getStringValue(): String = (this as? StringKey)?.string ?: displayString
+    fun getModifierValue(): Modifier? = (this as? ModifierKey)?.modifier
+    fun getEditingValue(): Editing? = (this as? EditingKey)?.editing
+    fun getMacroValue(): Array<KeyValue> = (this as? MacroKey)?.keys ?: emptyArray()
 
     // Comparison for sorting and equality
     override fun compareTo(other: KeyValue): Int {

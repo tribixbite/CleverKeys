@@ -196,7 +196,7 @@ class Keyboard2View @JvmOverloads constructor(
         )
     }
 
-    fun modifyKey(keyValue: KeyValue, mods: Pointers.Modifiers): KeyValue {
+    private fun modifyKeyInternal(keyValue: KeyValue, mods: Pointers.Modifiers): KeyValue {
         return KeyModifier.modify(keyValue, mods)
     }
 
