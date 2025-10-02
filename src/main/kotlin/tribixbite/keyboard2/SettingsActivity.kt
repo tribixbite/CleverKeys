@@ -67,11 +67,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
         // Initialize configuration
         try {
-            config = Config.globalConfig()
             prefs = DirectBootAwarePreferences.get_shared_preferences(this)
 
             // Run config migration
             Config.migrate(prefs)
+
+            // Initialize global config if not already initialized
+            try {
+                config = Config.globalConfig()
+            } catch (e: IllegalStateException) {
+                // Config not initialized yet, initialize it
+                Config.initGlobalConfig(prefs, resources, null, null)
+                config = Config.globalConfig()
+            }
 
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Error initializing settings", e)
