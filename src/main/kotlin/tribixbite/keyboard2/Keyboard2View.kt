@@ -42,7 +42,15 @@ class Keyboard2View @JvmOverloads constructor(
     private lateinit var pointers: Pointers
     private var modifiers = Pointers.Modifiers.EMPTY
 
-    private lateinit var config: Config
+    private val config: Config by lazy {
+        try {
+            Config.globalConfig()
+        } catch (e: IllegalStateException) {
+            // Config not initialized yet - will be set by CleverKeysService
+            android.util.Log.w("Keyboard2View", "Config not initialized, will retry later")
+            throw e
+        }
+    }
     private lateinit var neuralEngine: NeuralSwipeEngine
     private lateinit var theme: Theme
     private var themeComputed: Theme.Computed? = null
@@ -86,13 +94,21 @@ class Keyboard2View @JvmOverloads constructor(
 
     private fun initialize(attrs: AttributeSet?) {
         theme = Theme(context, attrs)
-        config = Config.globalConfig()
-        pointers = Pointers(this, config)
 
-        // Initialize neural engine
+        // Pointers will access config lazily when needed
+        try {
+            pointers = Pointers(this, config)
+        } catch (e: IllegalStateException) {
+            android.util.Log.w("Keyboard2View", "Config not ready, pointers will be initialized later")
+            // Will be initialized when setKeyboard is called from CleverKeysService
+        }
+
+        // Initialize neural engine lazily
         scope.launch {
             try {
-                neuralEngine = NeuralSwipeEngine(context, config)
+                // Access config here to trigger lazy initialization
+                val cfg = config
+                neuralEngine = NeuralSwipeEngine(context, cfg)
                 neuralEngine.initialize()
                 android.util.Log.d("Keyboard2View", "Neural engine initialized")
             } catch (e: Exception) {

@@ -195,20 +195,48 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
                 currentInputConnection?.performEditorAction(action)
             }
             override fun switchToMainLayout() {
-                // TODO: Implement layout switching
                 logD("Switching to main layout")
+                // Return to the user's configured primary layout
+                val mainLayoutIndex = 0
+                switchToLayout(mainLayoutIndex)
             }
             override fun switchToNumericLayout() {
-                // TODO: Implement numeric layout switching
                 logD("Switching to numeric layout")
+                // Load numeric keypad layout
+                try {
+                    val numericLayoutName = when (config?.selected_number_layout) {
+                        NumberLayout.NUMBER -> "numeric"
+                        NumberLayout.NUMPAD -> "numpad"
+                        NumberLayout.PIN -> "pin"
+                        else -> "numeric"
+                    }
+                    val resourceId = resources.getIdentifier(numericLayoutName, "xml", packageName)
+                    if (resourceId != 0) {
+                        val numericLayout = KeyboardData.load(resources, resourceId)
+                        numericLayout?.let { layout ->
+                            keyboardView?.setKeyboard(layout)
+                            logD("✅ Switched to numeric layout: $numericLayoutName")
+                        }
+                    }
+                } catch (e: Exception) {
+                    logE("Failed to switch to numeric layout", e)
+                }
             }
             override fun switchToEmojiLayout() {
-                // TODO: Implement emoji layout switching
                 logD("Switching to emoji layout")
+                // Emoji layout is typically shown as a separate view/pane
+                // For now, just log - full emoji implementation would need EmojiGridView integration
+                logW("Emoji layout switching not yet fully integrated with EmojiGridView")
             }
             override fun openSettings() {
-                // TODO: Implement settings opening
                 logD("Opening settings")
+                try {
+                    val intent = android.content.Intent(this@CleverKeysService, SettingsActivity::class.java)
+                    intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    logE("Failed to open settings", e)
+                }
             }
         })
     }
@@ -376,6 +404,30 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             logD("Applied keyboard height: ${heightPercent}% = ${desiredHeight}px")
         } catch (e: Exception) {
             logE("Failed to apply keyboard height", e)
+        }
+    }
+
+    /**
+     * Switch to a different keyboard layout by index
+     */
+    private fun switchToLayout(layoutIndex: Int) {
+        try {
+            val cfg = config ?: run {
+                logE("Cannot switch layout: config not initialized")
+                return
+            }
+
+            if (layoutIndex >= 0 && layoutIndex < cfg.layouts.size) {
+                val layout = cfg.layouts[layoutIndex]
+                currentLayout = layout
+                keyboardView?.setKeyboard(layout)
+                cfg.set_current_layout(layoutIndex)
+                logD("✅ Switched to layout index $layoutIndex: ${layout.name}")
+            } else {
+                logE("Invalid layout index: $layoutIndex (available: ${cfg.layouts.size})")
+            }
+        } catch (e: Exception) {
+            logE("Failed to switch layout", e)
         }
     }
 

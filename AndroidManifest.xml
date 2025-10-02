@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:hardwareAccelerated="false">
+<!-- Hardware acceleration enabled for better rendering performance -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:hardwareAccelerated="true">
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
   <uses-permission android:name="android.permission.RECORD_AUDIO"/>
@@ -7,7 +8,7 @@
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
-  <application android:label="@string/app_name" android:allowBackup="true" android:icon="@mipmap/ic_launcher" android:hardwareAccelerated="false">
+  <application android:label="@string/app_name" android:allowBackup="true" android:icon="@mipmap/ic_launcher" android:hardwareAccelerated="true">
     <service android:name="tribixbite.keyboard2.CleverKeysService" android:label="CleverKeys Neural Keyboard" android:permission="android.permission.BIND_INPUT_METHOD" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.view.InputMethod"/>
