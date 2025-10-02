@@ -240,7 +240,7 @@ class ConfigurationManager(private val context: Context) {
     
     // Component registry for propagation
     private val neuralEngineInstances = mutableListOf<NeuralSwipeEngine>()
-    private val keyboardViewInstances = mutableListOf<CleverKeysView>()
+    private val keyboardViewInstances = mutableListOf<Keyboard2View>()
     private val uiComponentInstances = mutableListOf<android.view.View>()
 
     /**
@@ -253,7 +253,7 @@ class ConfigurationManager(private val context: Context) {
     /**
      * Register keyboard view for configuration updates
      */
-    fun registerKeyboardView(view: CleverKeysView) {
+    fun registerKeyboardView(view: Keyboard2View) {
         keyboardViewInstances.add(view)
     }
 
@@ -291,9 +291,9 @@ class ConfigurationManager(private val context: Context) {
         val theme = Theme.getSystemThemeData(context)
 
         // Update keyboard views
-        keyboardViewInstances.forEach { view ->
+        keyboardViewInstances.forEach { view: Keyboard2View ->
             try {
-                view.updateTheme()
+                view.invalidate()  // Request redraw with new theme
                 logD("Updated keyboard view theme")
             } catch (e: Exception) {
                 logE("Failed to update keyboard view theme", e)
@@ -301,7 +301,7 @@ class ConfigurationManager(private val context: Context) {
         }
 
         // Update all registered UI components
-        uiComponentInstances.forEach { view ->
+        uiComponentInstances.forEach { view: android.view.View ->
             try {
                 // TODO: Fix Theme.initialize(context).applyThemeToView(view, theme)
                 // Apply basic theming for now
@@ -319,7 +319,7 @@ class ConfigurationManager(private val context: Context) {
     private suspend fun notifyLayoutChange(key: String, newValue: Any?) {
         logD("Layout configuration changed: $key = $newValue")
 
-        keyboardViewInstances.forEach { view ->
+        keyboardViewInstances.forEach { view: Keyboard2View ->
             try {
                 view.requestLayout()
                 logD("Updated keyboard view layout for $key")

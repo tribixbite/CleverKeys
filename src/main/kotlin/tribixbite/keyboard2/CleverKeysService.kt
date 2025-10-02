@@ -40,7 +40,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     )
     
     // Core components with null safety
-    private var keyboardView: CleverKeysView? = null
+    private var keyboardView: Keyboard2View? = null
     private var neuralEngine: NeuralSwipeEngine? = null
     private var predictionService: SwipePredictionService? = null
     private var suggestionBar: SuggestionBar? = null
@@ -328,11 +328,31 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
                 applyKeyboardHeight(this, currentConfig.keyboardHeightPercent)
             }
 
+            // Store the view for later access
+            keyboardView = view
+
             logD("✅ Keyboard view created successfully")
             view
 
         } catch (e: Exception) {
             logE("Failed to create keyboard input view", e)
+            null
+        }
+    }
+
+    /**
+     * Create suggestion bar for word predictions
+     */
+    override fun onCreateCandidatesView(): View? {
+        logD("onCreateCandidatesView() called - creating suggestion bar")
+
+        return try {
+            val bar = SuggestionBar(this)
+            suggestionBar = bar
+            logD("✅ Suggestion bar created successfully")
+            bar
+        } catch (e: Exception) {
+            logE("Failed to create suggestion bar", e)
             null
         }
     }
@@ -418,7 +438,8 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
      * Update suggestions from pipeline result
      */
     private fun updateSuggestionsFromPipeline(result: NeuralPredictionPipeline.PipelineResult) {
-        keyboardView?.updateSuggestions(result.predictions.words.take(5))
+        // Update suggestion bar with prediction results
+        suggestionBar?.setSuggestions(result.predictions.words.take(5))
 
         logD("🧠 ${result.source} neural prediction: ${result.predictions.size} words in ${result.processingTimeMs}ms")
         logD("   Top predictions: ${result.predictions.words.take(3)}")
@@ -601,8 +622,9 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             "theme" -> {
                 // Update theme across all components
                 withContext(Dispatchers.Main) {
-                    keyboardView?.updateTheme()
+                    // Theme update handled by updateUITheme and view recreation
                     updateUITheme()
+                    keyboardView?.invalidate()  // Request redraw with new theme
                 }
             }
             
