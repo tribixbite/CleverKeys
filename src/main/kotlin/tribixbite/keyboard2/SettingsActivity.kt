@@ -82,17 +82,23 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Load current settings
         loadCurrentSettings()
 
-        setContent {
-            MaterialTheme(
-                colorScheme = darkColorScheme(
-                    primary = ComposeColor(0xFF6200EE),
-                    background = ComposeColor.Black,
-                    surface = ComposeColor(0xFF121212),
-                    onSurface = ComposeColor.White
-                )
-            ) {
-                SettingsScreen()
+        try {
+            setContent {
+                MaterialTheme(
+                    colorScheme = darkColorScheme(
+                        primary = ComposeColor(0xFF6200EE),
+                        background = ComposeColor.Black,
+                        surface = ComposeColor(0xFF121212),
+                        onSurface = ComposeColor.White
+                    )
+                ) {
+                    SettingsScreen()
+                }
             }
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Error setting up Compose UI", e)
+            // Fallback to XML-based settings if Compose fails
+            useLegacySettingsUI()
         }
     }
     
@@ -755,5 +761,112 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Handle direct boot mode failure
         android.util.Log.w(TAG, "Settings unavailable in direct boot mode")
         finish()
+    }
+
+    /**
+     * Fallback to legacy XML-based settings UI if Compose fails
+     */
+    private fun useLegacySettingsUI() {
+        try {
+            // Create simple scrollable settings UI with XML views
+            val scrollView = ScrollView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                )
+            }
+
+            val layout = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(32, 32, 32, 32)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+
+            // Title
+            val title = TextView(this).apply {
+                text = "⚙️ CleverKeys Settings"
+                textSize = 24f
+                setPadding(0, 0, 0, 24)
+                setTextColor(android.graphics.Color.WHITE)
+            }
+            layout.addView(title)
+
+            // Neural prediction toggle
+            val neuralSwitch = Switch(this).apply {
+                text = "Enable Neural Swipe Prediction"
+                isChecked = neuralPredictionEnabled
+                setPadding(0, 16, 0, 16)
+                setOnCheckedChangeListener { _, isChecked ->
+                    neuralPredictionEnabled = isChecked
+                    saveSetting("neural_prediction_enabled", isChecked)
+                }
+            }
+            layout.addView(neuralSwitch)
+
+            // Beam width setting
+            val beamWidthLabel = TextView(this).apply {
+                text = "Beam Width: $beamWidth"
+                setPadding(0, 16, 0, 8)
+                setTextColor(android.graphics.Color.WHITE)
+            }
+            layout.addView(beamWidthLabel)
+
+            val beamWidthSeekBar = SeekBar(this).apply {
+                max = 31 // 1-32 range
+                progress = beamWidth - 1
+                setPadding(0, 0, 0, 16)
+                setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                        beamWidth = progress + 1
+                        beamWidthLabel.text = "Beam Width: $beamWidth"
+                    }
+                    override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                    override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                        saveSetting("neural_beam_width", beamWidth)
+                    }
+                })
+            }
+            layout.addView(beamWidthSeekBar)
+
+            // Open advanced neural settings button
+            val advancedButton = Button(this).apply {
+                text = "🔧 Advanced Neural Settings"
+                setOnClickListener {
+                    openNeuralSettings()
+                }
+            }
+            layout.addView(advancedButton)
+
+            // Calibration button
+            val calibrationButton = Button(this).apply {
+                text = "📊 Neural Calibration"
+                setOnClickListener {
+                    openCalibration()
+                }
+            }
+            layout.addView(calibrationButton)
+
+            // System info
+            val versionInfo = TextView(this).apply {
+                text = "CleverKeys v2.0 (Kotlin)\n\nNote: Compose UI unavailable. Using legacy settings."
+                setPadding(0, 32, 0, 0)
+                textSize = 12f
+                setTextColor(android.graphics.Color.GRAY)
+            }
+            layout.addView(versionInfo)
+
+            scrollView.addView(layout)
+            setContentView(scrollView)
+
+            android.util.Log.i(TAG, "Legacy settings UI initialized successfully")
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Failed to create legacy UI", e)
+            // If even this fails, show error and close
+            Toast.makeText(this, "Settings UI failed to load: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
+        }
     }
 }
