@@ -85,6 +85,29 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
 13. ✅ **SuggestionBar Integration**: Added onCreateCandidatesView() for proper word predictions (Oct 2)
 14. ✅ **ConfigurationManager**: Fixed type references from CleverKeysView to Keyboard2View (Oct 2)
 15. ✅ **Mock Removal**: Deleted unused generateMockPredictions() stub function (Oct 2)
+16. ✅ **Termux Mode Setting**: Added termux_mode_enabled checkbox to settings.xml (Oct 2)
+17. ✅ **Config Safety**: Changed Keyboard2View config to lazy initialization with graceful fallback (Oct 2)
+18. ✅ **Layout Switching**: Implemented switchToMainLayout, switchToNumericLayout, openSettings (Oct 2)
+19. ✅ **Hardware Acceleration**: Enabled in AndroidManifest.xml for better rendering performance (Oct 2)
+
+## 🎉 CRITICAL ISSUES RESOLVED (Oct 2, 2025)
+
+**4 Critical Issues Fixed in Latest Session:**
+1. ✅ **Issue #5**: Termux mode setting now exposed in settings UI
+2. ✅ **Issue #1**: Keyboard2View config initialization crash prevented with lazy loading
+3. ✅ **Issue #3**: Layout switching implemented (main, numeric, settings)
+4. ✅ **Issue #7**: Hardware acceleration enabled for better performance
+
+**Remaining Critical Issues:** 2 out of 6
+- Issue #2: ExtraKeysPreference implementation (needs get_extra_keys method)
+- Issue #4: CustomLayoutEditor save/load (needs persistence logic)
+
+**Issue Count Update:**
+- Total: 27 issues (was 25, added 2 from feature comparison)
+- Critical: 2 remaining (was 6, fixed 4)
+- High: 6 (unchanged)
+- Medium: 9 (unchanged)
+- Low: 6 (unchanged)
 
 ## 🔬 NEXT PRIORITY - RUNTIME VALIDATION
 
