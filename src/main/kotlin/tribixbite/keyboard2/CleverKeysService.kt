@@ -358,23 +358,13 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         }
 
         return try {
-            logD("Creating CleverKeysView...")
+            logD("Creating Keyboard2View...")
 
-            val view = CleverKeysView(this, currentConfig).apply {
-                onSwipeCompleted = { swipeData -> handleSwipeGesture(swipeData) }
-                onKeyPressed = { key -> handleKeyPress(key) }
-
-                // Register with configuration manager for automatic updates
-                configManager?.registerKeyboardView(this)
-
-                // Set keyboard layout if available
-                currentLayout?.let { layout -> setLayout(layout) }
-
+            val view = Keyboard2View(this).apply {
                 // Apply keyboard height setting
                 applyKeyboardHeight(this, currentConfig.keyboardHeightPercent)
             }
 
-            keyboardView = view
             logD("✅ Keyboard view created successfully")
             view
 
