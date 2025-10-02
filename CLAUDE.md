@@ -58,6 +58,8 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
 3. ✅ **SwipeAdvancedSettings.kt**: Replaced explicit setters with property custom setters
 4. ✅ **Pointers.kt**: Updated getSlider() references to getSliderValue()
 5. ✅ **SettingsActivity.kt**: Added Compose UI fallback to prevent settings crash (Oct 2)
+6. ✅ **Build Scripts**: Created install.sh, build-install.sh with auto-installation (Oct 2)
+7. ✅ **Update Button**: Fixed checkForUpdates() with correct paths and FileProvider (Oct 2)
 
 ## 🔬 NEXT PRIORITY - RUNTIME VALIDATION
 
