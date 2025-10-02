@@ -686,12 +686,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private fun checkForUpdates() {
         lifecycleScope.launch {
             try {
-                // Check for APK updates
+                // Check for APK updates in common locations
                 val possibleLocations = arrayOf(
+                    "/sdcard/Download/cleverkeys-debug.apk",
+                    "/storage/emulated/0/Download/cleverkeys-debug.apk",
+                    "/sdcard/Download/tribixbite.keyboard2.debug.apk",
+                    "/storage/emulated/0/Download/tribixbite.keyboard2.debug.apk",
                     "/sdcard/unexpected/debug-kb.apk",
                     "/storage/emulated/0/unexpected/debug-kb.apk",
-                    "/sdcard/Download/juloo.keyboard2.debug.apk",
-                    "/storage/emulated/0/Download/juloo.keyboard2.debug.apk"
+                    "${getExternalFilesDir(null)?.parent}/files/home/storage/downloads/cleverkeys-debug.apk"
                 )
 
                 var updateApk: File? = null
@@ -699,6 +702,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     val file = File(location)
                     if (file.exists() && file.canRead()) {
                         updateApk = file
+                        android.util.Log.d(TAG, "Found update APK at: $location")
                         break
                     }
                 }
@@ -733,27 +737,65 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         android.app.AlertDialog.Builder(this)
             .setTitle("No Updates Found")
             .setMessage("Place APK file in one of these locations:\n\n" +
-                       "• /sdcard/Download/juloo.keyboard2.debug.apk\n" +
-                       "• /sdcard/unexpected/debug-kb.apk")
+                       "• /sdcard/Download/cleverkeys-debug.apk\n" +
+                       "• /sdcard/Download/tribixbite.keyboard2.debug.apk\n" +
+                       "• /sdcard/unexpected/debug-kb.apk\n\n" +
+                       "Or run from Termux:\n" +
+                       "  ./install.sh")
             .setPositiveButton("OK", null)
             .show()
     }
 
     private fun installUpdate(apkFile: File) {
         try {
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(
-                    android.net.Uri.fromFile(apkFile),
-                    "application/vnd.android.package-archive"
+            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                // Use FileProvider for Android 7.0+
+                androidx.core.content.FileProvider.getUriForFile(
+                    this,
+                    "${packageName}.fileprovider",
+                    apkFile
                 )
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            } else {
+                android.net.Uri.fromFile(apkFile)
             }
+
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+            }
+
             startActivity(intent)
+            android.util.Log.d(TAG, "Launched installer for: ${apkFile.absolutePath}")
+
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Error installing update", e)
-            Toast.makeText(this,
-                "Install failed: ${e.message}",
-                Toast.LENGTH_LONG).show()
+
+            // Fallback: try to copy to accessible location
+            try {
+                val publicApk = File("/sdcard/Download/cleverkeys-update.apk")
+                apkFile.copyTo(publicApk, overwrite = true)
+
+                val fallbackIntent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(
+                        android.net.Uri.fromFile(publicApk),
+                        "application/vnd.android.package-archive"
+                    )
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                startActivity(fallbackIntent)
+
+                Toast.makeText(this,
+                    "Opening installer (copied to Downloads)",
+                    Toast.LENGTH_SHORT).show()
+
+            } catch (fallbackError: Exception) {
+                Toast.makeText(this,
+                    "Install failed: ${e.message}\nTry installing manually from file manager",
+                    Toast.LENGTH_LONG).show()
+            }
         }
     }
 

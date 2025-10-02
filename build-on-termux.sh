@@ -95,7 +95,7 @@ if [ "$BUILD_TYPE_LOWER" = "release" ]; then
     APK_PATH="build/outputs/apk/release/juloo.keyboard2.apk"
 else
     GRADLE_TASK="assembleDebug"
-    APK_PATH="build/outputs/apk/debug/juloo.keyboard2.debug.apk"
+    APK_PATH="build/outputs/apk/debug/tribixbite.keyboard2.debug.apk"
     echo "Step 4: Building Debug APK..."
 fi
 
@@ -234,7 +234,7 @@ if [ -f "$APK_PATH" ]; then
             # Uninstall old version if it's a debug build
             if [ "$BUILD_TYPE_LOWER" = "debug" ]; then
                 echo "Uninstalling previous debug version..."
-                adb uninstall juloo.keyboard2.debug 2>/dev/null || true
+                adb uninstall tribixbite.keyboard2 2>/dev/null || true
             fi
             
             # Install the new APK
