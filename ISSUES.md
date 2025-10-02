@@ -30,15 +30,29 @@ Generated: October 2, 2025
 **Impact:** Custom layouts cannot be persisted
 **Fix Required:** Implement persistence to SharedPreferences
 
+### 5. Termux Mode Setting Missing from UI
+**File:** `res/xml/settings.xml`
+**Issue:** `termux_mode_enabled` checkbox not present in neural settings screen
+**Impact:** Users cannot enable Termux-compatible prediction insertion
+**Status:** Variable exists in Config.kt but not exposed in settings XML
+**Fix Required:** Add checkbox after `neural_prediction_enabled` in settings.xml
+
+### 6. CustomExtraKeysPreference Not Implemented
+**File:** Missing from `src/main/kotlin/tribixbite/keyboard2/prefs/`
+**Issue:** Custom extra keys preference dialog not implemented
+**Impact:** Users cannot configure custom extra keys via UI
+**Referenced in:** res/xml/settings.xml line 7
+**Fix Required:** Implement CustomExtraKeysPreference.kt with key picker and persistence
+
 ## ⚠️ HIGH PRIORITY ISSUES (Functionality Impact)
 
-### 5. Hardware Acceleration Disabled
+### 7. Hardware Acceleration Disabled
 **File:** `AndroidManifest.xml:2,10`
 **Issue:** `android:hardwareAccelerated="false"` globally disabled
 **Impact:** Severe rendering performance degradation
 **Fix Required:** Enable hardware acceleration, test ONNX compatibility
 
-### 6. Key Event Handlers Not Implemented
+### 8. Key Event Handlers Not Implemented
 **File:** `src/main/kotlin/tribixbite/keyboard2/KeyEventHandler.kt`
 **Issues:**
 - Line 129: Modifier key handling
@@ -48,25 +62,25 @@ Generated: October 2, 2025
 **Impact:** Special keys don't function correctly
 **Fix Required:** Implement complete key event logic
 
-### 7. External Storage Permissions (Android 11+)
+### 9. External Storage Permissions (Android 11+)
 **File:** `AndroidManifest.xml:7-8`
 **Issue:** READ/WRITE_EXTERNAL_STORAGE deprecated on Android 11+
 **Impact:** File access will fail on modern Android versions
 **Fix Required:** Use scoped storage or MANAGE_EXTERNAL_STORAGE
 
-### 8. Service Integration Broken in Keyboard2.kt
+### 10. Service Integration Broken in Keyboard2.kt
 **File:** `src/main/kotlin/tribixbite/keyboard2/Keyboard2.kt:116`
 **Issue:** `// TODO: Fix service integration - this@Keyboard2 is not CleverKeysService`
 **Impact:** Keyboard2 class cannot communicate with service
 **Fix Required:** Pass service reference or use interface
 
-### 9. Missing Error Feedback
+### 11. Missing Error Feedback
 **File:** `src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt:507`
 **Issue:** `// TODO: Implement user-visible error feedback`
 **Impact:** Users don't see errors when predictions fail
 **Fix Required:** Add toast/notification for errors
 
-### 10. Performance Monitoring Not Cleaned Up
+### 12. Performance Monitoring Not Cleaned Up
 **File:** `src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt:673`
 **Issue:** `// TODO: Stop performance monitoring` in onDestroy
 **Impact:** Possible memory leak if monitoring not stopped
@@ -74,12 +88,12 @@ Generated: October 2, 2025
 
 ## 🔍 MEDIUM PRIORITY ISSUES (Quality/Stability)
 
-### 11. Forced Unwraps (17 instances)
+### 13. Forced Unwraps (17 instances)
 **Pattern:** `!!` operator used 17 times
 **Risk:** NullPointerException if assumption is wrong
 **Recommendation:** Replace with safe calls (?.) or null checks
 
-### 12. Lateinit Properties (19 instances)
+### 14. Lateinit Properties (19 instances)
 **Risk:** UninitializedPropertyAccessException
 **Files:**
 - SwipeCalibrationActivity.kt: 11 lateinit vars
@@ -88,43 +102,43 @@ Generated: October 2, 2025
 - Others: 3 lateinit vars
 **Recommendation:** Add initialization checks or use lazy initialization
 
-### 13. Theme Propagation Incomplete
+### 15. Theme Propagation Incomplete
 **File:** `src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt:654`
 **Issue:** `// TODO: Propagate theme changes to active UI components`
 **Impact:** Theme changes may not apply until restart
 **Fix:** Implement proper theme update notification
 
-### 14. Key Locking Not Implemented
+### 16. Key Locking Not Implemented
 **File:** `src/main/kotlin/tribixbite/keyboard2/Keyboard2View.kt:651`
 **Issue:** `// TODO: Implement proper key locking check`
 **Impact:** Key locking/sticky keys don't work
 **Fix:** Implement lock state tracking
 
-### 15. Emoji Preferences Not Loaded
+### 17. Emoji Preferences Not Loaded
 **File:** `src/main/kotlin/tribixbite/keyboard2/Emoji.kt:102`
 **Issue:** `// TODO: Load from preferences`
 **Impact:** Emoji preferences don't persist
 **Fix:** Load recent/favorite emoji from SharedPreferences
 
-### 16. ConfigurationManager Theme Application
+### 18. ConfigurationManager Theme Application
 **File:** `src/main/kotlin/tribixbite/keyboard2/ConfigurationManager.kt:306`
 **Issue:** `// TODO: Fix Theme.initialize(context).applyThemeToView(view, theme)`
 **Impact:** Theme not fully applied to all UI components
 **Fix:** Implement proper theme application
 
-### 17. Input Connection Ctrl Modifier
+### 19. Input Connection Ctrl Modifier
 **File:** `src/main/kotlin/tribixbite/keyboard2/InputConnectionManager.kt:343`
 **Issue:** `// TODO: Check for ctrl modifier`
 **Impact:** Ctrl+key shortcuts don't work
 **Fix:** Add modifier state checking
 
-### 18. Keyboard2.kt Layout Switching Duplicates
+### 20. Keyboard2.kt Layout Switching Duplicates
 **File:** `src/main/kotlin/tribixbite/keyboard2/Keyboard2.kt:539-548`
 **Issue:** Duplicate TODO for layout/emoji/numeric switching
 **Impact:** Same as CleverKeysService issues
 **Fix:** Consolidate or implement in one location
 
-### 19. Empty Collection Returns
+### 21. Empty Collection Returns
 **Pattern:** Multiple `return emptyList()/emptyMap()` on error
 **Risk:** Silent failures - errors not visible
 **Files:** OnnxSwipePredictorImpl, Emoji, Utils, etc.
@@ -132,36 +146,36 @@ Generated: October 2, 2025
 
 ## 📝 LOW PRIORITY ISSUES (Cosmetic/Future)
 
-### 20. Gradle Deprecation Warning
+### 22. Gradle Deprecation Warning
 **Issue:** Convention API deprecated, scheduled for Gradle 9.0
 **Impact:** Build will break in future Gradle versions
 **Fix:** Migrate to new API when upgrading
 
-### 21. Deprecated API Suppressions (3 instances)
+### 23. Deprecated API Suppressions (3 instances)
 **Files:**
 - ClipboardHistoryService.kt:165
 - VibratorCompat.kt:20,38
 **Issue:** Using deprecated Android APIs
 **Fix:** Migrate to modern alternatives
 
-### 22. Hardcoded Strings in CustomLayoutEditDialog
+### 24. Hardcoded Strings in CustomLayoutEditDialog
 **File:** `src/main/kotlin/tribixbite/keyboard2/CustomLayoutEditDialog.kt:46,54`
 **Issue:** Hardcoded "Custom layout" and "Remove layout" strings
 **Fix:** Use string resources (R.string)
 
-### 23. Test Layout Interface Not Implemented
+### 25. Test Layout Interface Not Implemented
 **File:** `src/main/kotlin/tribixbite/keyboard2/CustomLayoutEditor.kt:143-144`
 **Issue:** `toast("Test layout (TODO: Implement test interface)")`
 **Impact:** Cannot preview custom layouts before saving
 **Fix:** Create test/preview activity
 
-### 24. Key Editing Dialog Not Implemented
+### 26. Key Editing Dialog Not Implemented
 **File:** `src/main/kotlin/tribixbite/keyboard2/CustomLayoutEditor.kt:223`
 **Issue:** `// TODO: Open key editing dialog`
 **Impact:** Cannot edit individual keys in custom layouts
 **Fix:** Create key properties dialog
 
-### 25. Add Key to Layout Not Implemented
+### 27. Add Key to Layout Not Implemented
 **File:** `src/main/kotlin/tribixbite/keyboard2/CustomLayoutEditor.kt:267`
 **Issue:** `// TODO: Add key to layout`
 **Impact:** Cannot add new keys to custom layouts
@@ -171,11 +185,11 @@ Generated: October 2, 2025
 
 | Priority | Count | Status |
 |----------|-------|--------|
-| Critical | 4 | 🔴 Blocking core functionality |
+| Critical | 6 | 🔴 Blocking core functionality |
 | High | 6 | 🟠 Significant feature gaps |
 | Medium | 9 | 🟡 Quality/stability concerns |
 | Low | 6 | 🟢 Minor improvements |
-| **TOTAL** | **25** | |
+| **TOTAL** | **27** | |
 
 ## ✅ ASSETS VALIDATION
 
