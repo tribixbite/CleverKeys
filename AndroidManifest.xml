@@ -5,8 +5,14 @@
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
   <uses-permission android:name="android.permission.RECORD_AUDIO"/>
   <uses-permission android:name="android.permission.INTERNET"/>
-  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+
+  <!-- Storage permissions - deprecated on Android 11+ (API 30+), use scoped storage instead -->
+  <!-- These are only needed for Android 10 and below -->
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
+
+  <!-- For Android 11+ (API 30+), use scoped storage via MediaStore or SAF (Storage Access Framework) -->
+  <!-- No explicit permission needed for app-specific directories (getExternalFilesDir()) -->
 
   <application android:label="@string/app_name" android:allowBackup="true" android:icon="@mipmap/ic_launcher" android:hardwareAccelerated="true">
     <service android:name="tribixbite.keyboard2.CleverKeysService" android:label="CleverKeys Neural Keyboard" android:permission="android.permission.BIND_INPUT_METHOD" android:exported="true" android:directBootAware="true">

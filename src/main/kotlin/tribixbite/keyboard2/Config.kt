@@ -292,8 +292,8 @@ class Config private constructor(
         theme = getThemeId(resources, prefs.getString("theme", "") ?: "")
         autocapitalisation = prefs.getBoolean("autocapitalisation", true)
         switch_input_immediate = prefs.getBoolean("switch_input_immediate", false)
-        extra_keys_param = emptyMap() // TODO: Fix ExtraKeysPreference.get_extra_keys(prefs)
-        extra_keys_custom = ExtraKeysPreference.getExtraKeys(prefs)
+        extra_keys_param = ExtraKeysPreference.getExtraKeys(prefs)
+        extra_keys_custom = emptyMap() // TODO: Implement CustomExtraKeysPreference.get(prefs) - Issue #6
         selected_number_layout = NumberLayout.of_string(prefs.getString("number_entry_layout", "pin") ?: "pin")
         current_layout_narrow = prefs.getInt("current_layout_portrait", 0)
         current_layout_wide = prefs.getInt("current_layout_landscape", 0)

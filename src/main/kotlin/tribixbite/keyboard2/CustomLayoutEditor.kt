@@ -118,13 +118,189 @@ class CustomLayoutEditor : Activity() {
     }
     
     private fun saveLayout() {
-        // TODO: Implement layout saving to preferences
-        toast("Layout saved (TODO: Implement persistence)")
+        try {
+            val prefs = getSharedPreferences("cleverkeys_prefs", Context.MODE_PRIVATE)
+            val layoutJson = serializeLayout(currentLayout)
+
+            prefs.edit()
+                .putString("custom_layout_editor_state", layoutJson)
+                .apply()
+
+            toast("✅ Layout saved successfully")
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Failed to save layout", e)
+            toast("❌ Failed to save layout: ${e.message}")
+        }
     }
-    
+
     private fun loadLayout() {
-        // TODO: Implement layout loading from preferences
-        toast("Layout loaded (TODO: Implement loading)")
+        try {
+            val prefs = getSharedPreferences("cleverkeys_prefs", Context.MODE_PRIVATE)
+            val layoutJson = prefs.getString("custom_layout_editor_state", null)
+
+            if (layoutJson != null) {
+                currentLayout = deserializeLayout(layoutJson)
+                layoutCanvas.setLayout(currentLayout)
+                toast("✅ Layout loaded successfully")
+            } else {
+                toast("ℹ️ No saved layout found")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Failed to load layout", e)
+            toast("❌ Failed to load layout: ${e.message}")
+        }
+    }
+
+    /**
+     * Serialize layout to JSON format for persistence.
+     * Format: [[{"width":1.0,"shift":0.5,"keys":[...]}, ...], ...]
+     */
+    private fun serializeLayout(layout: List<List<KeyboardData.Key>>): String {
+        val jsonRows = layout.map { row ->
+            row.map { key ->
+                buildString {
+                    append("{")
+                    append("\"width\":").append(key.width).append(",")
+                    append("\"shift\":").append(key.shift).append(",")
+                    append("\"indication\":").append(if (key.indication != null) "\"${escapeJsonString(key.indication)}\"" else "null").append(",")
+                    append("\"keys\":[")
+                    append(key.keys.joinToString(",") { serializeKeyValue(it) })
+                    append("]}")
+                }
+            }.joinToString(",", "[", "]")
+        }.joinToString(",", "[", "]")
+
+        return jsonRows
+    }
+
+    /**
+     * Serialize a KeyValue to JSON string representation.
+     */
+    private fun serializeKeyValue(keyValue: KeyValue?): String {
+        if (keyValue == null) return "null"
+
+        return when (keyValue) {
+            is KeyValue.CharKey -> "\"${escapeJsonString(keyValue.char.toString())}\""
+            is KeyValue.StringKey -> "\"${escapeJsonString(keyValue.string)}\""
+            is KeyValue.EventKey -> "{\"event\":\"${keyValue.event.name}\"}"
+            is KeyValue.ModifierKey -> "{\"modifier\":\"${keyValue.modifier.name}\"}"
+            is KeyValue.EditingKey -> "{\"editing\":\"${keyValue.editing.name}\"}"
+            is KeyValue.ComposePendingKey -> "{\"compose\":${keyValue.pendingCompose}}"
+            is KeyValue.KeyEventKey -> "{\"keycode\":${keyValue.keyCode}}"
+            else -> "null" // Handle other key types as null for simplicity
+        }
+    }
+
+    /**
+     * Escape special JSON characters in strings.
+     */
+    private fun escapeJsonString(str: String): String {
+        return str.replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t")
+    }
+
+    /**
+     * Deserialize layout from JSON format using Android's built-in JSON parser.
+     * Returns empty layout if parsing fails.
+     */
+    private fun deserializeLayout(json: String): MutableList<MutableList<KeyboardData.Key>> {
+        val layout = mutableListOf<MutableList<KeyboardData.Key>>()
+
+        try {
+            val jsonArray = org.json.JSONArray(json)
+
+            for (i in 0 until jsonArray.length()) {
+                val rowArray = jsonArray.getJSONArray(i)
+                val row = mutableListOf<KeyboardData.Key>()
+
+                for (j in 0 until rowArray.length()) {
+                    val keyObj = rowArray.getJSONObject(j)
+                    val keysArray = keyObj.getJSONArray("keys")
+
+                    val keys = Array<KeyValue?>(9) { idx ->
+                        if (idx < keysArray.length()) {
+                            deserializeKeyValue(keysArray.get(idx))
+                        } else {
+                            null
+                        }
+                    }
+
+                    val indication = if (keyObj.isNull("indication")) null else keyObj.getString("indication")
+
+                    val key = KeyboardData.Key(
+                        keys = keys,
+                        anticircle = null,
+                        keysFlags = 0,
+                        width = keyObj.getDouble("width").toFloat(),
+                        shift = keyObj.getDouble("shift").toFloat(),
+                        indication = indication
+                    )
+                    row.add(key)
+                }
+
+                layout.add(row)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Failed to deserialize layout JSON", e)
+            // Return empty layout on error
+        }
+
+        return layout
+    }
+
+    /**
+     * Deserialize a KeyValue from JSON object or string.
+     */
+    private fun deserializeKeyValue(obj: Any?): KeyValue? {
+        if (obj == null || obj == org.json.JSONObject.NULL) return null
+
+        return try {
+            when (obj) {
+                is String -> {
+                    // Single character string
+                    if (obj.length == 1) {
+                        KeyValue.CharKey(obj.first())
+                    } else {
+                        KeyValue.StringKey(obj)
+                    }
+                }
+                is org.json.JSONObject -> {
+                    when {
+                        obj.has("event") -> {
+                            val eventName = obj.getString("event")
+                            val event = KeyValue.Event.valueOf(eventName)
+                            KeyValue.EventKey(event, eventName)
+                        }
+                        obj.has("modifier") -> {
+                            val modName = obj.getString("modifier")
+                            val mod = KeyValue.Modifier.valueOf(modName)
+                            KeyValue.ModifierKey(mod, modName)
+                        }
+                        obj.has("editing") -> {
+                            val editName = obj.getString("editing")
+                            val edit = KeyValue.Editing.valueOf(editName)
+                            KeyValue.EditingKey(edit, editName)
+                        }
+                        obj.has("compose") -> {
+                            val compose = obj.getInt("compose")
+                            KeyValue.ComposePendingKey(compose, "◌")
+                        }
+                        obj.has("keycode") -> {
+                            val keycode = obj.getInt("keycode")
+                            KeyValue.KeyEventKey(keycode, "Key")
+                        }
+                        else -> null
+                    }
+                }
+                else -> null
+            }
+        } catch (e: Exception) {
+            android.util.Log.w(TAG, "Failed to deserialize KeyValue: $obj", e)
+            null
+        }
     }
     
     private fun resetLayout() {

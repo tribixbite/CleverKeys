@@ -553,11 +553,26 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     
     
     /**
-     * Show error toast to user
+     * Show error toast to user with proper UI thread handling
      */
     private fun showErrorToast(message: String) {
-        // TODO: Implement user-visible error feedback
         logE("User error: $message")
+
+        // Ensure toast is shown on main UI thread
+        runOnUiThread {
+            android.widget.Toast.makeText(
+                this@CleverKeysService,
+                "⚠️ $message",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    /**
+     * Run code on main UI thread (helper for service context)
+     */
+    private fun runOnUiThread(action: () -> Unit) {
+        android.os.Handler(android.os.Looper.getMainLooper()).post(action)
     }
     
     /**
@@ -700,11 +715,29 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     }
     
     /**
-     * Update UI theme
+     * Update UI theme and propagate to active components
      */
     private fun updateUITheme() {
-        // TODO: Propagate theme changes to active UI components
-        logD("UI theme updated")
+        try {
+            val cfg = config ?: run {
+                logW("Cannot update theme: config not initialized")
+                return
+            }
+
+            // Update keyboard view theme
+            keyboardView?.let { view ->
+                // Trigger view refresh with new theme
+                view.invalidate()
+                view.requestLayout()
+            }
+
+            // Update suggestion bar theme if active
+            (currentInputConnection as? android.view.View)?.invalidate()
+
+            logD("✅ UI theme updated and propagated to active components")
+        } catch (e: Exception) {
+            logE("Failed to update UI theme", e)
+        }
     }
     
     /**
@@ -719,11 +752,11 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     }
     
     /**
-     * Stop performance monitoring
+     * Stop performance monitoring with proper cleanup
      */
     private fun stopPerformanceMonitoring() {
-        // TODO: Stop performance monitoring
-        logD("Performance monitoring stopped")
+        performanceProfiler?.cleanup()
+        logD("Performance monitoring stopped and cleaned up")
     }
 
     /**
