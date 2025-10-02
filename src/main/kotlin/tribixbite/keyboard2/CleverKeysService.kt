@@ -267,7 +267,9 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
                     }
                     
                     // Initialize prediction service
-                    predictionService = SwipePredictionService(neuralEngine!!)
+                    neuralEngine?.let { engine ->
+                        predictionService = SwipePredictionService(engine)
+                    } ?: logE("Cannot initialize prediction service: neural engine is null")
                     
                     logD("Neural components initialized successfully")
                     

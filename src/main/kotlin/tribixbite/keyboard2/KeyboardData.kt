@@ -102,14 +102,15 @@ data class KeyboardData(
      * Get cached mapping of all key values to their positions
      */
     fun getKeys(): Map<KeyValue, KeyPos> {
-        if (_keyPositions == null) {
-            _keyPositions = buildMap {
+        return _keyPositions ?: run {
+            val positions = buildMap {
                 rows.forEachIndexed { rowIndex, row ->
                     row.getKeys(this, rowIndex)
                 }
             }
+            _keyPositions = positions
+            positions
         }
-        return _keyPositions!!
     }
 
     private fun addKeyToPreferredPos(rows: MutableList<Row>, keyValue: KeyValue, pos: PreferredPos): Boolean {

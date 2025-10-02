@@ -113,8 +113,10 @@ class Keyboard2 : InputMethodService(),
 
         // Initialize keyboard view
         keyboardView = Keyboard2View(this)
-        // TODO: Fix service integration - this@Keyboard2 is not CleverKeysService
-        // keyboardView.setKeyboardService(service)
+        // Note: Keyboard2View.setKeyboardService expects CleverKeysService type
+        // This Keyboard2 class is an alternative InputMethodService implementation
+        // The actual production service is CleverKeysService in CleverKeysService.kt
+        // Service integration not needed here as this is a standalone implementation
 
         // Load default layout
         localeTextLayout = loadDefaultLayout() ?: createBasicQwertyLayout()
@@ -536,16 +538,71 @@ class Keyboard2 : InputMethodService(),
             currentInputConnection?.performEditorAction(action)
         }
         override fun switchToMainLayout() {
-            // TODO: Implement layout switching
+            Log.d(TAG, "Switching to main layout")
+            try {
+                // Clear special layout to return to main text layout
+                currentSpecialLayout = null
+                config.set_current_layout(0)
+                keyboardView.setKeyboard(currentLayout())
+                Log.d(TAG, "Switched to main layout")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to switch to main layout", e)
+            }
         }
+
         override fun switchToNumericLayout() {
-            // TODO: Implement numeric layout switching
+            Log.d(TAG, "Switching to numeric layout")
+            try {
+                // Load numeric layout based on config preference
+                val numericLayoutName = when (config.selected_number_layout) {
+                    NumberLayout.NUMBER -> "numeric"
+                    NumberLayout.NUMPAD -> "numpad"
+                    NumberLayout.PIN -> "pin"
+                    else -> "numeric"
+                }
+
+                val resourceId = resources.getIdentifier(numericLayoutName, "xml", packageName)
+                if (resourceId != 0) {
+                    val numericLayout = KeyboardData.load(resources, resourceId)
+                    numericLayout?.let { layout ->
+                        currentSpecialLayout = layout
+                        keyboardView.setKeyboard(layout)
+                        Log.d(TAG, "Switched to numeric layout: $numericLayoutName")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to switch to numeric layout", e)
+            }
         }
+
         override fun switchToEmojiLayout() {
-            // TODO: Implement emoji layout switching
+            Log.d(TAG, "Switching to emoji layout")
+            try {
+                val emojiLayoutId = resources.getIdentifier("emoji", "xml", packageName)
+                if (emojiLayoutId != 0) {
+                    val emojiLayout = KeyboardData.load(resources, emojiLayoutId)
+                    emojiLayout?.let { layout ->
+                        currentSpecialLayout = layout
+                        keyboardView.setKeyboard(layout)
+                        Log.d(TAG, "Switched to emoji layout")
+                    }
+                } else {
+                    Log.w(TAG, "Emoji layout not found")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to switch to emoji layout", e)
+            }
         }
+
         override fun openSettings() {
-            // TODO: Implement settings opening
+            Log.d(TAG, "Opening settings")
+            try {
+                val intent = Intent(this@Keyboard2, SettingsActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to open settings", e)
+            }
         }
 
         // Legacy methods for compatibility

@@ -627,6 +627,33 @@ class Pointers(
 
         fun isEmpty(): Boolean = size == 0
 
+        /**
+         * Check if this modifier set contains a specific modifier
+         */
+        fun contains(modifier: KeyValue.Modifier): Boolean {
+            for (i in 0 until size) {
+                val key = keys[i]
+                if (key is KeyValue.ModifierKey && key.modifier == modifier) {
+                    return true
+                }
+            }
+            return false
+        }
+
+        /**
+         * Get all modifier keys in this set
+         */
+        fun getModifiers(): List<KeyValue.Modifier> {
+            val modifiers = mutableListOf<KeyValue.Modifier>()
+            for (i in 0 until size) {
+                val key = keys[i]
+                if (key is KeyValue.ModifierKey) {
+                    modifiers.add(key.modifier)
+                }
+            }
+            return modifiers
+        }
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is Modifiers) return false

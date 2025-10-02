@@ -343,12 +343,14 @@ class Keyboard2View @JvmOverloads constructor(
             )
 
             // Process neural prediction asynchronously
-            scope.launch {
-                try {
-                    val prediction = neuralEngine.predictAsync(currentSwipeGesture!!)
-                    handleNeuralPrediction(prediction)
-                } catch (e: Exception) {
-                    android.util.Log.e("Keyboard2View", "Neural prediction failed", e)
+            currentSwipeGesture?.let { gesture ->
+                scope.launch {
+                    try {
+                        val prediction = neuralEngine.predictAsync(gesture)
+                        handleNeuralPrediction(prediction)
+                    } catch (e: Exception) {
+                        android.util.Log.e("Keyboard2View", "Neural prediction failed", e)
+                    }
                 }
             }
         }
@@ -458,8 +460,8 @@ class Keyboard2View @JvmOverloads constructor(
         keyWidth = keyboardWidth / kbd.keysWidth
 
         // Create theme computed values
-        themeComputed = Theme.Computed(theme, config, keyWidth, kbd)
-        val tc = themeComputed!!
+        val tc = Theme.Computed(theme, config, keyWidth, kbd)
+        themeComputed = tc
 
         mainLabelSize = keyWidth * 0.4f // Default label size ratio
         subLabelSize = keyWidth * 0.25f // Default sublabel size ratio

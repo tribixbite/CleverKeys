@@ -37,8 +37,9 @@ class Config private constructor(
             foldableUnfolded: Boolean?
         ) {
             migrate(prefs)
-            globalConfig = Config(prefs, resources, handler, foldableUnfolded)
-            LayoutModifier.init(globalConfig!!, resources)
+            val config = Config(prefs, resources, handler, foldableUnfolded)
+            globalConfig = config
+            LayoutModifier.init(config, resources)
         }
 
         /**
