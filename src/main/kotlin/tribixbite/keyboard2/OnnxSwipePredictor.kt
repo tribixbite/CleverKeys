@@ -42,23 +42,7 @@ class OnnxSwipePredictor private constructor(private val context: Context) {
     
     // Delegate to real implementation
     private val realPredictor by lazy { OnnxSwipePredictorImpl.getInstance(context) }
-    
-    private fun generateMockPredictions(keySequence: String): List<String> {
-        // Simple mock implementation for testing
-        val commonWords = mapOf(
-            "th" to listOf("the", "that", "this", "then", "they"),
-            "an" to listOf("and", "any", "answer", "another"),
-            "he" to listOf("hello", "help", "here", "heart"),
-            "yo" to listOf("you", "your", "young", "york"),
-            "sw" to listOf("swipe", "sweet", "switch", "swim"),
-            "ke" to listOf("keyboard", "key", "keep", "kept"),
-            "wo" to listOf("word", "work", "world", "would")
-        )
-        
-        val prefix = keySequence.take(2).lowercase()
-        return commonWords[prefix] ?: listOf("test", "demo", "mock")
-    }
-    
+
     /**
      * Set configuration
      */
