@@ -272,78 +272,35 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     }
 
     /**
-     * Load default QWERTY keyboard layout
+     * Load current keyboard layout from Config
      */
     private fun loadDefaultKeyboardLayout() {
         try {
-            // Create a simple QWERTY layout for basic functionality
-            currentLayout = createBasicQwertyLayout()
-            logD("✅ Default QWERTY layout loaded")
-        } catch (e: Exception) {
-            logE("Failed to load default keyboard layout", e)
-        }
-    }
-
-    /**
-     * Create basic QWERTY layout for testing
-     */
-    private fun createBasicQwertyLayout(): KeyboardData {
-        val charRows = listOf(
-            // Top row
-            listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p"),
-            // Middle row
-            listOf("a", "s", "d", "f", "g", "h", "j", "k", "l"),
-            // Bottom row
-            listOf("z", "x", "c", "v", "b", "n", "m")
-        )
-
-        val rows = mutableListOf<KeyboardData.Row>()
-
-        // Add character rows
-        charRows.forEach { row ->
-            val keys = row.map { char ->
-                val keyValue = KeyValue.makeCharKey(char[0])
-                val keysArray = Array<KeyValue?>(9) { null }
-                keysArray[0] = keyValue  // Center position (0 = center key value)
-                KeyboardData.Key(
-                    keys = keysArray,
-                    width = 1.0f,
-                    shift = 0.0f
-                )
+            val cfg = config ?: run {
+                logE("Config not initialized - cannot load layout")
+                return
             }
-            rows.add(KeyboardData.Row(
-                keys = keys,
-                height = 1.0f,
-                shift = 0.0f
-            ))
-        }
 
-        // Add bottom row with space and backspace
-        val specialKeys = listOf(
-            KeyValue.BACKSPACE,
-            KeyValue.SPACE,
-            KeyValue.ENTER
-        ).map { keyValue ->
-            val keysArray = Array<KeyValue?>(9) { null }
-            keysArray[0] = keyValue
-            KeyboardData.Key(
-                keys = keysArray,
-                width = 1.0f,
-                shift = 0.0f
-            )
-        }
-        rows.add(KeyboardData.Row(
-            keys = specialKeys,
-            height = 1.0f,
-            shift = 0.0f
-        ))
+            // Get current layout index from config
+            val layoutIndex = cfg.get_current_layout()
 
-        return KeyboardData(
-            rows = rows,
-            keysWidth = 10.0f,  // 10 keys max width
-            keysHeight = 1.0f,  // Default key height
-            name = "Basic QWERTY"
-        )
+            // Get the keyboard layout from config's layouts list
+            currentLayout = cfg.layouts.getOrNull(layoutIndex)
+
+            if (currentLayout != null) {
+                logD("✅ Layout loaded from Config: index=$layoutIndex, name=${currentLayout?.name}")
+            } else {
+                // Fallback to first available layout if index is invalid
+                currentLayout = cfg.layouts.firstOrNull()
+                if (currentLayout != null) {
+                    logD("✅ Fallback to first layout: ${currentLayout?.name}")
+                } else {
+                    logE("No keyboard layouts available in Config")
+                }
+            }
+        } catch (e: Exception) {
+            logE("Failed to load keyboard layout", e)
+        }
     }
 
     /**
@@ -361,6 +318,12 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             logD("Creating Keyboard2View...")
 
             val view = Keyboard2View(this).apply {
+                // Set the loaded keyboard layout
+                currentLayout?.let { layout ->
+                    setKeyboard(layout)
+                    logD("Layout set on view: ${layout.name}")
+                } ?: logW("No keyboard layout available to set on view")
+
                 // Apply keyboard height setting
                 applyKeyboardHeight(this, currentConfig.keyboardHeightPercent)
             }
