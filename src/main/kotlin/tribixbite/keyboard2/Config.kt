@@ -123,20 +123,9 @@ class Config private constructor(
         }
     }
 
-    // Resource values with fallback for missing resources
-    val marginTop: Float = try {
-        resources.getDimension(R.dimen.margin_top)
-    } catch (e: Exception) {
-        // Fallback: 3dp converted to pixels
-        3f * resources.displayMetrics.density
-    }
-
-    val keyPadding: Float = try {
-        resources.getDimension(R.dimen.key_padding)
-    } catch (e: Exception) {
-        // Fallback: 2dp converted to pixels
-        2f * resources.displayMetrics.density
-    }
+    // Resource values: 3dp margin_top, 2dp key_padding converted to pixels
+    val marginTop: Float = 3f * resources.displayMetrics.density
+    val keyPadding: Float = 2f * resources.displayMetrics.density
     val labelTextSize: Float = 0.33f
     val sublabelTextSize: Float = 0.22f
 
