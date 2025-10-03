@@ -57,14 +57,17 @@ class NeuralSwipeEngine(
             runBlocking { initialize() }
         }
         
-        requireNotNull(neuralPredictor) { "Neural predictor not initialized" }
-        
+        val predictor = neuralPredictor ?: run {
+            logE("Neural predictor not initialized")
+            return PredictionResult.empty
+        }
+
         logD("=== NEURAL PREDICTION START ===")
         logD("Input: keySeq=${input.keySequence}, pathLen=${input.pathLength}, duration=${input.duration}")
-        
+
         return try {
             val (result, duration) = measureTimeNanos {
-                runBlocking { neuralPredictor!!.predict(input) }
+                runBlocking { predictor.predict(input) }
             }
             
             logD("Neural prediction completed in ${duration / 1_000_000}ms")

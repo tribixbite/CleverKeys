@@ -64,7 +64,7 @@ class Theme(context: Context, attrs: AttributeSet? = null) {
                     Typeface.DEFAULT // Fallback to default font
                 }
             }
-            return keyFont!!
+            return keyFont ?: Typeface.DEFAULT
         }
 
         /**

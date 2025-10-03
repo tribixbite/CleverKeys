@@ -223,11 +223,13 @@ class Pointers(
 
         if (distance < config.swipe_dist_px) {
             // Pointer is still in center
-            if (pointer.gesture?.isInProgress() == true) {
-                // Gesture ended
-                pointer.gesture?.movedToCenter()
-                pointer.value = applyGesture(pointer, pointer.gesture!!.getGesture())
-                pointer.flags = 0
+            pointer.gesture?.let { gesture ->
+                if (gesture.isInProgress()) {
+                    // Gesture ended
+                    gesture.movedToCenter()
+                    pointer.value = applyGesture(pointer, gesture.getGesture())
+                    pointer.flags = 0
+                }
             }
         } else {
             // Pointer is in a direction
@@ -248,16 +250,20 @@ class Pointers(
                     }
                     handler.onPointerDown(newValue, true)
                 }
-            } else if (pointer.gesture!!.changedDirection(direction)) {
-                // Gesture changed state
-                if (!pointer.gesture!!.isInProgress()) {
-                    // Gesture ended
-                    handler.onPointerFlagsChanged(true)
-                } else {
-                    pointer.value = applyGesture(pointer, pointer.gesture!!.getGesture())
-                    restartLongPress(pointer)
-                    pointer.flags = 0
-                    handler.onPointerFlagsChanged(true)
+            } else {
+                pointer.gesture?.let { gesture ->
+                    if (gesture.changedDirection(direction)) {
+                        // Gesture changed state
+                        if (!gesture.isInProgress()) {
+                            // Gesture ended
+                            handler.onPointerFlagsChanged(true)
+                        } else {
+                            pointer.value = applyGesture(pointer, gesture.getGesture())
+                            restartLongPress(pointer)
+                            pointer.flags = 0
+                            handler.onPointerFlagsChanged(true)
+                        }
+                    }
                 }
             }
         }
@@ -371,20 +377,23 @@ class Pointers(
         // Skip latched keys or keys without values
         if (pointer.hasFlagsAny(FLAG_P_LATCHED) || pointer.value == null) return
 
+        // Safe access to pointer value
+        val currentValue = pointer.value ?: return
+
         // Try to apply long press modifier
-        val longPressValue = KeyModifier.modifyLongPress(pointer.value!!)
-        if (longPressValue != pointer.value) {
+        val longPressValue = KeyModifier.modifyLongPress(currentValue)
+        if (longPressValue != currentValue) {
             pointer.value = longPressValue
             handler.onPointerDown(longPressValue, true)
             return
         }
 
         // Skip special keys
-        if (pointer.value!!.hasFlag(KeyValue.Flag.SPECIAL)) return
+        if (longPressValue.hasFlag(KeyValue.Flag.SPECIAL)) return
 
         // Key repeat for other keys
         if (config.keyrepeat_enabled) {
-            handler.onPointerHold(pointer.value!!, pointer.modifiers)
+            handler.onPointerHold(longPressValue, pointer.modifiers)
             longPressHandler.sendEmptyMessageDelayed(
                 pointer.timeoutWhat,
                 config.longPressInterval
@@ -485,7 +494,7 @@ class Pointers(
     private fun isOtherPointerDown(): Boolean {
         return pointers.any { pointer ->
             !pointer.hasFlagsAny(FLAG_P_LATCHED) &&
-            (pointer.value == null || !pointer.value!!.hasFlag(KeyValue.Flag.SPECIAL))
+            (pointer.value?.hasFlag(KeyValue.Flag.SPECIAL) != true)
         }
     }
 

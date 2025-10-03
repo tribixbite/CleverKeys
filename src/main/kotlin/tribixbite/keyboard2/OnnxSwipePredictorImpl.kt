@@ -210,8 +210,11 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         srcMaskTensor: OnnxTensor,
         features: SwipeTrajectoryProcessor.TrajectoryFeatures
     ): List<BeamSearchCandidate> = withContext(Dispatchers.Default) {
-        
-        val decoderSession = this@OnnxSwipePredictorImpl.decoderSession ?: return@withContext emptyList()
+
+        val decoderSession = this@OnnxSwipePredictorImpl.decoderSession ?: run {
+            logE("Decoder session not initialized - cannot run beam search")
+            return@withContext emptyList()
+        }
         
         // Initialize beam search
         val beams = mutableListOf<BeamSearchState>()
@@ -639,7 +642,11 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
 
             // Test one step of decoder (simplified validation)
             val beams = listOf(BeamSearchState(SOS_IDX, 0.0f, false))
-            val candidates = processBatchedBeams(beams, memory, srcMaskTensor, decoderSession!!)
+            val session = decoderSession ?: run {
+                logE("Decoder session not initialized for validation")
+                return
+            }
+            val candidates = processBatchedBeams(beams, memory, srcMaskTensor, session)
             logDebug("   Decoder inference: ${candidates.size} beam candidates generated")
 
             // Cleanup test tensors

@@ -239,6 +239,7 @@ object Utils {
      */
     fun calculateVelocityProfile(points: List<PointF>, timestamps: List<Long>): List<Float> {
         if (points.size != timestamps.size || points.size < 2) {
+            android.util.Log.w("Utils", "Invalid velocity profile input: points=${points.size}, timestamps=${timestamps.size}")
             return emptyList()
         }
 

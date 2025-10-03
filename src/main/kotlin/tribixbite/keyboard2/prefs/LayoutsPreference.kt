@@ -62,7 +62,7 @@ class LayoutsPreference @JvmOverloads constructor(
                 // Hardcoded layout names for compilation
                 unsafeLayoutIdsStr = listOf("system", "qwerty_us", "azerty", "qwertz", "dvorak", "colemak")
             }
-            return unsafeLayoutIdsStr!!
+            return unsafeLayoutIdsStr ?: emptyList()
         }
 
         /**
