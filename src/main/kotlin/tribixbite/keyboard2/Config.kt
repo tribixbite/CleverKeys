@@ -294,7 +294,7 @@ class Config private constructor(
         autocapitalisation = prefs.getBoolean("autocapitalisation", true)
         switch_input_immediate = prefs.getBoolean("switch_input_immediate", false)
         extra_keys_param = ExtraKeysPreference.getExtraKeys(prefs)
-        extra_keys_custom = emptyMap() // TODO: Implement CustomExtraKeysPreference.get(prefs) - Issue #6
+        extra_keys_custom = CustomExtraKeysPreference.get(prefs)
         selected_number_layout = NumberLayout.of_string(prefs.getString("number_entry_layout", "pin") ?: "pin")
         current_layout_narrow = prefs.getInt("current_layout_portrait", 0)
         current_layout_wide = prefs.getInt("current_layout_landscape", 0)
