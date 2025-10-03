@@ -109,18 +109,28 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
 6. ✅ **Issue #15**: Theme propagation - view invalidation implemented
 
 **Issue Count Update:**
-- Total: 27 issues → 18 remaining
+- Total: 27 issues → 7 remaining
 - Critical: 0 remaining (was 6, **ALL FIXED!** 🎉)
 - High: 0 remaining (was 6, **ALL FIXED!** 🎉)
-- Medium: 9 (unchanged)
+- Medium: 4 remaining (was 9, fixed 5)
 - Low: 6 (unchanged)
-- **Fixed this session: 9 issues (6 critical/high in first commit, 3 high in second commit)**
-- **Total fixed to date: 15 out of 27 (56% completion)**
+- **Fixed this session: 14 issues total**
+  - First commit: 6 critical/high issues (#2, #4, #9, #11, #12, #15)
+  - Second commit: 3 high issues (#8, #10, #13)
+  - Third commit: 5 medium issues (#14, #17, #19, #16, #18)
+- **Total fixed to date: 20 out of 27 (74% completion)**
 
 **Latest Session Fixes (3 more issues):**
 7. ✅ **Issue #8**: Key event handlers - implemented modifiers, compose, caps lock
 8. ✅ **Issue #10**: Service integration - implemented layout switching in Keyboard2.kt
 9. ✅ **Issue #13**: Null safety - replaced 5 forced unwraps with safe calls
+
+**Medium Priority Issues Fixed (Oct 3, 2025):**
+10. ✅ **Issue #14**: Lateinit initialization checks - added throughout codebase
+11. ✅ **Issue #17**: Emoji preferences loading - implemented persistent recent emoji tracking
+12. ✅ **Issue #19**: Ctrl modifier checking - added word deletion support for ctrl+backspace
+13. ✅ **Issue #16**: Key locking implementation - visual indicators for locked/latched keys
+14. ✅ **Issue #18**: ConfigurationManager theme application - recursive ViewGroup theming
 
 ## 🔬 NEXT PRIORITY - RUNTIME VALIDATION
 
