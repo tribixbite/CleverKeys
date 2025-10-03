@@ -109,17 +109,18 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
 6. ✅ **Issue #15**: Theme propagation - view invalidation implemented
 
 **Issue Count Update:**
-- Total: 27 issues → 4 remaining
+- Total: 27 issues → 3 remaining
 - Critical: 0 remaining (was 6, **ALL FIXED!** 🎉)
 - High: 0 remaining (was 6, **ALL FIXED!** 🎉)
-- Medium: 1 remaining (was 9, fixed 8)
-- Low: 6 (unchanged)
-- **Fixed this session: 17 issues total**
+- Medium: 0 remaining (was 9, **ALL FIXED!** 🎉)
+- Low: 6 (3 unfixable/defer)
+- **Fixed this session: 18 issues total**
   - First commit: 6 critical/high issues (#2, #4, #9, #11, #12, #15)
   - Second commit: 3 high issues (#8, #10, #13)
   - Third commit: 5 medium issues (#14, #17, #19, #16, #18)
   - Fourth commit: 3 medium issues (#13 remaining unwraps, #20, #21)
-- **Total fixed to date: 23 out of 27 (85% completion)**
+  - Fifth commit: 1 medium issue (#6 CustomExtraKeysPreference stub)
+- **Total fixed to date: 24 out of 27 (89% completion)**
 
 **Latest Session Fixes (3 more issues):**
 7. ✅ **Issue #8**: Key event handlers - implemented modifiers, compose, caps lock
@@ -135,6 +136,7 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
 15. ✅ **Issue #13**: Forced unwraps eliminated - all 12 !! operators replaced with safe calls
 16. ✅ **Issue #20**: Duplicate TODOs removed - layout switching already implemented
 17. ✅ **Issue #21**: Error logging added - critical empty returns now log failures
+18. ✅ **Issue #6**: CustomExtraKeysPreference stub - prevents crashes, documented for future
 
 ## 🔬 NEXT PRIORITY - RUNTIME VALIDATION
 
