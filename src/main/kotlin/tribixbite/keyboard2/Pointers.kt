@@ -101,6 +101,22 @@ class Pointers(
     }
 
     /**
+     * Check if a key value is currently locked (double-tap locked)
+     */
+    fun isKeyLocked(keyValue: KeyValue): Boolean {
+        val pointer = pointers.firstOrNull { it.value == keyValue } ?: return false
+        return (pointer.flags and FLAG_P_LOCKED) != 0
+    }
+
+    /**
+     * Check if a key is currently latched (single press, not locked)
+     */
+    fun isKeyLatched(keyValue: KeyValue): Boolean {
+        val pointer = pointers.firstOrNull { it.value == keyValue } ?: return false
+        return (pointer.flags and FLAG_P_LATCHED) != 0 && (pointer.flags and FLAG_P_LOCKED) == 0
+    }
+
+    /**
      * Add a fake pointer for programmatic key latching
      */
     fun addFakePointer(key: KeyboardData.Key, keyValue: KeyValue, locked: Boolean) {

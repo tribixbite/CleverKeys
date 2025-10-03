@@ -303,14 +303,51 @@ class ConfigurationManager(private val context: Context) {
         // Update all registered UI components
         uiComponentInstances.forEach { view: android.view.View ->
             try {
-                // TODO: Fix Theme.initialize(context).applyThemeToView(view, theme)
-                // Apply basic theming for now
-                view.setBackgroundColor(theme.backgroundColor)
+                // Apply theme to view
+                applyThemeToView(view, theme)
                 logD("Updated UI component theme")
             } catch (e: Exception) {
                 logE("Failed to update UI component theme", e)
             }
         }
+    }
+
+    /**
+     * Apply theme properties to a view
+     */
+    private fun applyThemeToView(view: android.view.View, theme: Theme.ThemeData) {
+        // Apply basic theme properties
+        view.setBackgroundColor(theme.backgroundColor)
+
+        // Apply theme recursively to child views if it's a ViewGroup
+        if (view is android.view.ViewGroup) {
+            for (i in 0 until view.childCount) {
+                val child = view.getChildAt(i)
+
+                when (child) {
+                    is android.widget.TextView -> {
+                        child.setTextColor(theme.labelColor)
+                        child.setTypeface(Theme.getKeyFont(context))
+                    }
+                    is android.widget.Button -> {
+                        child.setTextColor(theme.labelColor)
+                        child.setBackgroundColor(theme.keyColor)
+                    }
+                    is android.widget.EditText -> {
+                        child.setTextColor(theme.labelColor)
+                        child.setHintTextColor(theme.suggestionTextColor)
+                    }
+                }
+
+                // Recursively apply to nested ViewGroups
+                if (child is android.view.ViewGroup) {
+                    applyThemeToView(child, theme)
+                }
+            }
+        }
+
+        // Request invalidate to redraw with new theme
+        view.invalidate()
     }
 
     /**

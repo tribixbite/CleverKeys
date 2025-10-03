@@ -45,7 +45,7 @@ class EmojiGridView(context: Context) : GridLayout(context) {
         scope.launch {
             try {
                 if (emoji.loadEmojis()) {
-                    val recentEmojis = emoji.getRecentEmojis()
+                    val recentEmojis = emoji.getRecentEmojis(context)
                     
                     withContext(Dispatchers.Main) {
                         populateEmojiGrid(recentEmojis)
@@ -155,7 +155,7 @@ class EmojiGridView(context: Context) : GridLayout(context) {
             try {
                 val emojis = if (groupId == GROUP_LAST_USE) {
                     // Show recently used emojis
-                    emoji.getRecentEmojis()
+                    emoji.getRecentEmojis(context)
                 } else {
                     // Show emojis from specific group
                     emoji.getEmojisByGroupIndex(groupId)

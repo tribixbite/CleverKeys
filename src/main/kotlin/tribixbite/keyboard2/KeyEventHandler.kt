@@ -205,21 +205,76 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
     }
     
     /**
-     * Handle backspace
+     * Handle backspace with ctrl modifier support
      */
     private fun handleBackspace() {
         val inputConnection = receiver.getInputConnection() ?: return
-        
+
         // Try to delete selected text first
         val selectedText = inputConnection.getSelectedText(0)
         if (!selectedText.isNullOrEmpty()) {
             inputConnection.commitText("", 1)
+            receiver.performVibration()
+            return
+        }
+
+        // Check for ctrl modifier to delete whole word
+        if (hasModifier(KeyValue.Modifier.CTRL)) {
+            deleteWord(inputConnection)
         } else {
             inputConnection.deleteSurroundingText(1, 0)
         }
-        
-        // Note: backspace logic could be more sophisticated
+
         receiver.performVibration()
+    }
+
+    /**
+     * Delete a whole word (used for ctrl+backspace)
+     */
+    private fun deleteWord(inputConnection: InputConnection) {
+        try {
+            // Get text before cursor
+            val textBefore = inputConnection.getTextBeforeCursor(100, 0)?.toString() ?: ""
+
+            if (textBefore.isEmpty()) return
+
+            // Find the start of the current word
+            var deleteCount = 0
+            var foundNonWhitespace = false
+
+            for (i in textBefore.length - 1 downTo 0) {
+                val char = textBefore[i]
+
+                if (char.isWhitespace()) {
+                    if (foundNonWhitespace) {
+                        // Stop at whitespace after finding a word
+                        break
+                    }
+                    // Skip leading whitespace
+                    deleteCount++
+                } else {
+                    foundNonWhitespace = true
+                    if (char.isLetterOrDigit() || char == '_') {
+                        deleteCount++
+                    } else {
+                        // Stop at punctuation
+                        if (foundNonWhitespace && deleteCount > 0) {
+                            break
+                        }
+                        deleteCount++
+                        break
+                    }
+                }
+            }
+
+            if (deleteCount > 0) {
+                inputConnection.deleteSurroundingText(deleteCount, 0)
+            }
+        } catch (e: Exception) {
+            logE("Failed to delete word", e)
+            // Fallback to single character delete
+            inputConnection.deleteSurroundingText(1, 0)
+        }
     }
     
     /**

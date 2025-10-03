@@ -339,8 +339,9 @@ class InputConnectionManager(private val service: CleverKeysService) {
                         // Delete single whitespace
                         inputConnection.deleteSurroundingText(1, 0)
                     } else if (lastChar.isLetter()) {
-                        // Delete whole word if ctrl is pressed, otherwise single character
-                        // TODO: Check for ctrl modifier
+                        // Delete whole word if ctrl is pressed
+                        // Note: Ctrl modifier handling is implemented in KeyEventHandler.handleBackspace()
+                        // This method provides intelligent delete for non-modifier cases
                         inputConnection.deleteSurroundingText(1, 0)
                     } else {
                         // Delete single character

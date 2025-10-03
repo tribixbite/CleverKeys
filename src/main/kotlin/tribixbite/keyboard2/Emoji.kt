@@ -96,11 +96,60 @@ class Emoji(private val context: Context) {
     }
     
     /**
-     * Get recent emojis (would be stored in preferences)
+     * Get recent emojis from preferences
      */
-    fun getRecentEmojis(): List<EmojiData> {
-        // TODO: Load from preferences
-        return emojis.take(10)
+    fun getRecentEmojis(context: android.content.Context): List<EmojiData> {
+        try {
+            val prefs = context.getSharedPreferences("cleverkeys_prefs", android.content.Context.MODE_PRIVATE)
+            val recentString = prefs.getString("recent_emojis", "") ?: ""
+
+            if (recentString.isEmpty()) {
+                return emojis.take(10) // Default to first 10 if no recent history
+            }
+
+            // Recent emojis stored as pipe-separated emoji strings
+            val recentEmojiStrings = recentString.split("|").filter { it.isNotEmpty() }
+            val recentEmojis = mutableListOf<EmojiData>()
+
+            for (emojiStr in recentEmojiStrings) {
+                emojis.find { it.emoji == emojiStr }?.let { recentEmojis.add(it) }
+            }
+
+            return recentEmojis.ifEmpty { emojis.take(10) }
+        } catch (e: Exception) {
+            android.util.Log.e("Emoji", "Failed to load recent emojis", e)
+            return emojis.take(10)
+        }
+    }
+
+    /**
+     * Record emoji usage and update recent list
+     */
+    fun recordEmojiUsage(context: android.content.Context, emoji: EmojiData) {
+        try {
+            val prefs = context.getSharedPreferences("cleverkeys_prefs", android.content.Context.MODE_PRIVATE)
+            val recentString = prefs.getString("recent_emojis", "") ?: ""
+
+            // Parse existing recent emojis
+            val recentEmojiStrings = recentString.split("|")
+                .filter { it.isNotEmpty() }
+                .toMutableList()
+
+            // Remove this emoji if it's already in the list (will be added to front)
+            recentEmojiStrings.remove(emoji.emoji)
+
+            // Add emoji to front
+            recentEmojiStrings.add(0, emoji.emoji)
+
+            // Keep only the 20 most recent
+            val trimmedRecent = recentEmojiStrings.take(20)
+
+            // Save back to preferences
+            val newRecentString = trimmedRecent.joinToString("|")
+            prefs.edit().putString("recent_emojis", newRecentString).apply()
+        } catch (e: Exception) {
+            android.util.Log.e("Emoji", "Failed to record emoji usage", e)
+        }
     }
 
     /**

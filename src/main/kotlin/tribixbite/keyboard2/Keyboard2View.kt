@@ -665,16 +665,26 @@ class Keyboard2View @JvmOverloads constructor(
         keyHeight: Float,
         tc: Theme.Computed
     ) {
-        // Draw additional key indicators (shift state, etc.)
-        // TODO: Implement proper key locking check
-        val isLocked = false // pointers.isKeyLocked(key) - method doesn't exist yet
-        if (isLocked) {
-            val indicatorSize = keyWidth * 0.1f
-            val paint = Paint().apply {
-                color = theme.activatedColor
-                style = Paint.Style.FILL
+        // Draw additional key indicators (shift state, locked keys, etc.)
+        key.keys.getOrNull(0)?.let { keyValue ->
+            val isLocked = pointers.isKeyLocked(keyValue)
+            val isLatched = pointers.isKeyLatched(keyValue)
+
+            if (isLocked || isLatched) {
+                val indicatorSize = keyWidth * 0.1f
+                val paint = Paint().apply {
+                    color = if (isLocked) theme.activatedColor else theme.secondaryLabelColor
+                    style = Paint.Style.FILL
+                    alpha = if (isLocked) 255 else 180
+                }
+                // Draw indicator dot in top-right corner
+                canvas.drawCircle(
+                    x + keyWidth - indicatorSize * 1.5f,
+                    y + indicatorSize * 1.5f,
+                    indicatorSize / 2f,
+                    paint
+                )
             }
-            canvas.drawCircle(x + keyWidth - indicatorSize, y + indicatorSize, indicatorSize / 2f, paint)
         }
     }
 
