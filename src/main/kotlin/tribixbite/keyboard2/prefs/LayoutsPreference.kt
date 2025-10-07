@@ -90,8 +90,34 @@ class LayoutsPreference @JvmOverloads constructor(
         @JvmStatic
         fun loadFromPreferences(resources: Resources, prefs: SharedPreferences): List<KeyboardData?> {
             val layouts = mutableListOf<KeyboardData?>()
-            // Simplified implementation - just use default layout for now
-            layouts.add(null) // System layout
+
+            // Try to load saved layout preferences
+            val layoutCount = prefs.getInt(KEY + "_count", 0)
+
+            if (layoutCount > 0) {
+                // Load saved layouts from preferences
+                for (i in 0 until layoutCount) {
+                    val layoutName = prefs.getString(KEY + "_" + i, null)
+                    if (layoutName != null) {
+                        val layout = layoutOfString(resources, layoutName)
+                        layouts.add(layout)
+                    }
+                }
+            }
+
+            // If no saved layouts, load default QWERTY layout
+            if (layouts.isEmpty()) {
+                // Try to load latn_qwerty_us as default
+                val qwertyId = resources.getIdentifier("latn_qwerty_us", "xml", "tribixbite.keyboard2")
+                if (qwertyId != 0) {
+                    val qwertyLayout = KeyboardData.load(resources, qwertyId)
+                    layouts.add(qwertyLayout)
+                } else {
+                    // Fallback: add null for system layout
+                    layouts.add(null)
+                }
+            }
+
             return layouts
         }
 

@@ -42,16 +42,8 @@ class Keyboard2View @JvmOverloads constructor(
     private lateinit var pointers: Pointers
     private var modifiers = Pointers.Modifiers.EMPTY
 
-    private val config: Config by lazy {
-        try {
-            Config.globalConfig()
-        } catch (e: IllegalStateException) {
-            // Config not initialized yet - will be set by CleverKeysService
-            android.util.Log.w("Keyboard2View", "Config not initialized, will retry later")
-            throw e
-        }
-    }
-    private lateinit var neuralEngine: NeuralSwipeEngine
+    // Config will be set by CleverKeysService via setViewConfig()
+    private var config: Config? = null
     private lateinit var theme: Theme
     private var themeComputed: Theme.Computed? = null
 
@@ -95,26 +87,7 @@ class Keyboard2View @JvmOverloads constructor(
     private fun initialize(attrs: AttributeSet?) {
         theme = Theme(context, attrs)
 
-        // Pointers will access config lazily when needed
-        try {
-            pointers = Pointers(this, config)
-        } catch (e: IllegalStateException) {
-            android.util.Log.w("Keyboard2View", "Config not ready, pointers will be initialized later")
-            // Will be initialized when setKeyboard is called from CleverKeysService
-        }
-
-        // Initialize neural engine lazily
-        scope.launch {
-            try {
-                // Access config here to trigger lazy initialization
-                val cfg = config
-                neuralEngine = NeuralSwipeEngine(context, cfg)
-                neuralEngine.initialize()
-                android.util.Log.d("Keyboard2View", "Neural engine initialized")
-            } catch (e: Exception) {
-                android.util.Log.e("Keyboard2View", "Failed to initialize neural engine", e)
-            }
-        }
+        // Pointers will be initialized when config is set via setViewConfig()
 
         setupNavigationBar()
         setOnTouchListener(this)
@@ -135,6 +108,22 @@ class Keyboard2View @JvmOverloads constructor(
 
     fun setKeyboardService(service: CleverKeysService) {
         keyboardService = service
+    }
+
+    /**
+     * Set configuration for the view - must be called before view becomes active
+     */
+    fun setViewConfig(cfg: Config) {
+        config = cfg
+        // Initialize pointers now that config is available
+        if (!::pointers.isInitialized) {
+            try {
+                pointers = Pointers(this, cfg)
+                android.util.Log.d("Keyboard2View", "Pointers initialized with config")
+            } catch (e: Exception) {
+                android.util.Log.e("Keyboard2View", "Failed to initialize pointers", e)
+            }
+        }
     }
 
     private fun setupNavigationBar() {
@@ -219,19 +208,19 @@ class Keyboard2View @JvmOverloads constructor(
     // Pointer event handlers
     override fun onPointerDown(keyValue: KeyValue, isSwipe: Boolean) {
         updateFlags()
-        config.handler?.key_down(keyValue, isSwipe)
+        config?.handler?.key_down(keyValue, isSwipe)
         invalidate()
         vibrate()
     }
 
     override fun onPointerUp(keyValue: KeyValue, mods: Pointers.Modifiers) {
-        config.handler?.key_up(keyValue, mods)
+        config?.handler?.key_up(keyValue, mods)
         updateFlags()
         invalidate()
     }
 
     override fun onPointerHold(keyValue: KeyValue, mods: Pointers.Modifiers) {
-        config.handler?.key_up(keyValue, mods)
+        config?.handler?.key_up(keyValue, mods)
         updateFlags()
     }
 
@@ -259,7 +248,7 @@ class Keyboard2View @JvmOverloads constructor(
 
     private fun updateFlags() {
         modifiers = pointers.getModifiers()
-        config.handler?.mods_changed(modifiers)
+        config?.handler?.mods_changed(modifiers)
     }
 
     // Touch event handling
@@ -305,7 +294,7 @@ class Keyboard2View @JvmOverloads constructor(
 
     // Neural swipe handling
     private fun handleSwipeStart(x: Float, y: Float) {
-        if (!config.swipe_typing_enabled) return
+        if (config?.swipe_typing_enabled != true) return
 
         isSwipeActive = true
         swipeTrajectory.clear()
@@ -318,7 +307,7 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     private fun handleSwipeMove(x: Float, y: Float) {
-        if (!isSwipeActive || !config.swipe_typing_enabled) return
+        if (!isSwipeActive || config?.swipe_typing_enabled != true) return
 
         swipeTrajectory.add(PointF(x, y))
         swipeTimestamps.add(System.currentTimeMillis())
@@ -328,7 +317,7 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     private fun handleSwipeEnd() {
-        if (!isSwipeActive || !config.swipe_typing_enabled) return
+        if (!isSwipeActive || config?.swipe_typing_enabled != true) return
 
         if (swipeTrajectory.size >= 2) {
             // Create swipe input for neural prediction
@@ -343,15 +332,10 @@ class Keyboard2View @JvmOverloads constructor(
             )
 
             // Process neural prediction asynchronously
+            // Neural prediction is handled by CleverKeysService
             currentSwipeGesture?.let { gesture ->
-                scope.launch {
-                    try {
-                        val prediction = neuralEngine.predictAsync(gesture)
-                        handleNeuralPrediction(prediction)
-                    } catch (e: Exception) {
-                        android.util.Log.e("Keyboard2View", "Neural prediction failed", e)
-                    }
-                }
+                android.util.Log.d("Keyboard2View", "Swipe gesture completed: ${gesture.coordinates.size} points")
+                // Service will handle prediction via its neural engine
             }
         }
 
@@ -379,7 +363,7 @@ class Keyboard2View @JvmOverloads constructor(
         val kbd = keyboard ?: return null
         val tc = themeComputed ?: return null
 
-        var yPos = config.marginTop
+        var yPos = config?.marginTop ?: 0f
 
         for (row in kbd.rows) {
             val rowTop = yPos + row.shift * tc.rowHeight
@@ -409,7 +393,7 @@ class Keyboard2View @JvmOverloads constructor(
         val kbd = keyboard ?: return keyPositions
         val tc = themeComputed ?: return keyPositions
 
-        var y = config.marginTop
+        var y = config?.marginTop ?: 0f
 
         for (row in kbd.rows) {
             var x = marginLeft
@@ -460,14 +444,14 @@ class Keyboard2View @JvmOverloads constructor(
         keyWidth = keyboardWidth / kbd.keysWidth
 
         // Create theme computed values
-        val tc = Theme.Computed(theme, config, keyWidth, kbd)
+        val tc = config?.let { Theme.Computed(theme, it, keyWidth, kbd) } ?: return
         themeComputed = tc
 
         mainLabelSize = keyWidth * 0.4f // Default label size ratio
         subLabelSize = keyWidth * 0.25f // Default sublabel size ratio
 
         // Calculate total height
-        val keyboardHeight = kbd.keysHeight * tc.rowHeight + config.marginTop + marginBottom
+        val keyboardHeight = kbd.keysHeight * tc.rowHeight + (config?.marginTop ?: 0f) + marginBottom
 
         setMeasuredDimension(
             windowWidth,
@@ -502,7 +486,7 @@ class Keyboard2View @JvmOverloads constructor(
     private fun calculateMargins(windowWidth: Int) {
         marginLeft = 8f // Default horizontal margin
         marginRight = 8f // Default horizontal margin
-        marginBottom = config.margin_bottom
+        marginBottom = config?.margin_bottom ?: 0f
 
         // Ensure minimum margins
         val minMargin = 8f * resources.displayMetrics.density
@@ -515,7 +499,7 @@ class Keyboard2View @JvmOverloads constructor(
         val tc = themeComputed ?: return
 
         // Set keyboard background opacity
-        background?.alpha = config.keyboardOpacity
+        background?.alpha = config?.keyboardOpacity ?: 255
 
         var y = tc.marginTop
 
@@ -551,7 +535,7 @@ class Keyboard2View @JvmOverloads constructor(
         }
 
         // Draw neural swipe trail
-        if (config.swipe_typing_enabled && isSwipeActive) {
+        if (config?.swipe_typing_enabled == true && isSwipeActive) {
             drawSwipeTrail(canvas)
         }
     }
@@ -689,7 +673,7 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     private fun vibrate() {
-        if (config.vibrate_custom) {
+        if (config?.vibrate_custom == true) {
             // Trigger haptic feedback
             performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
         }

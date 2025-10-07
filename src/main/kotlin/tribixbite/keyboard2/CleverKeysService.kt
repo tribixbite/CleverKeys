@@ -348,6 +348,10 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             logD("Creating Keyboard2View...")
 
             val view = Keyboard2View(this).apply {
+                // Set configuration first
+                setViewConfig(currentConfig)
+                logD("Config set on view")
+
                 // Set the loaded keyboard layout
                 currentLayout?.let { layout ->
                     setKeyboard(layout)
@@ -441,6 +445,33 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         logD("Input started: package=${editorInfo?.packageName}, restarting=$restarting")
     }
 
+    /**
+     * Handle input view starting - called when keyboard becomes visible
+     */
+    override fun onStartInputView(editorInfo: EditorInfo?, restarting: Boolean) {
+        super.onStartInputView(editorInfo, restarting)
+        logD("Starting input view: package=${editorInfo?.packageName}, restarting=$restarting")
+
+        try {
+            // Refresh configuration
+            config?.refresh(resources, null)
+
+            // Update keyboard view with current layout
+            keyboardView?.let { view ->
+                currentLayout?.let { layout ->
+                    view.setKeyboard(layout)
+                    logD("Layout applied to view: ${layout.name}")
+                }
+            }
+
+            // Notify key event handler
+            keyEventHandler?.started(editorInfo)
+
+            logD("✅ Input view started successfully")
+        } catch (e: Exception) {
+            logE("Error starting input view", e)
+        }
+    }
 
     /**
      * Handle input finishing with cleanup
