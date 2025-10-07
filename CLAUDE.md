@@ -99,7 +99,23 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
    - Neural prediction centralized in service
    - **MEDIUM**: Memory optimization
 
-25. ✅ **Keyboard2.kt deletion**: Removed unused 649-line file
+25. ✅ **UninitializedPropertyAccessException crash**: Fixed in Keyboard2View.reset()
+   - Added ::pointers.isInitialized check before pointers.clear()
+   - Prevents crash during initialization before setViewConfig() is called
+   - **CRITICAL SHOWSTOPPER**: Would crash immediately on startup
+
+26. ✅ **Swipe typing completely broken**: Fixed missing service connection
+   - Added setKeyboardService(this) call in CleverKeysService.onCreateInputView()
+   - Implemented gesture data passing in Keyboard2View.handleSwipeEnd()
+   - Changed handleSwipeGesture() from private to internal
+   - **CRITICAL SHOWSTOPPER**: Swipe gestures now reach neural prediction
+
+27. ✅ **Hardcoded package name**: Fixed in LayoutsPreference.loadFromPreferences()
+   - Changed getIdentifier() package param to null
+   - Prevents breakage if package name changes
+   - **MEDIUM**: Build variant compatibility
+
+28. ✅ **Keyboard2.kt deletion**: Removed unused 649-line file (from earlier session)
    - Eliminated confusing duplicate InputMethodService
    - **LOW**: Code cleanup
 
