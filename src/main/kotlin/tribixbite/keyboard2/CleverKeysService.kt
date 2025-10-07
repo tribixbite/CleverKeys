@@ -352,6 +352,10 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
                 setViewConfig(currentConfig)
                 logD("Config set on view")
 
+                // Link view to service for swipe gesture processing
+                setKeyboardService(this@CleverKeysService)
+                logD("Service linked to view")
+
                 // Set the loaded keyboard layout
                 currentLayout?.let { layout ->
                     setKeyboard(layout)
@@ -486,8 +490,9 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     
     /**
      * Handle swipe gesture completion with complete pipeline integration
+     * Called by Keyboard2View when user completes a swipe gesture
      */
-    private fun handleSwipeGesture(swipeData: SwipeGestureData) {
+    internal fun handleSwipeGesture(swipeData: SwipeGestureData) {
         val pipeline = this.predictionPipeline ?: return
         val profiler = this.performanceProfiler ?: return
         

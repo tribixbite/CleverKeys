@@ -108,7 +108,8 @@ class LayoutsPreference @JvmOverloads constructor(
             // If no saved layouts, load default QWERTY layout
             if (layouts.isEmpty()) {
                 // Try to load latn_qwerty_us as default
-                val qwertyId = resources.getIdentifier("latn_qwerty_us", "xml", "tribixbite.keyboard2")
+                // Use null for package name to search in current app's package (avoids hardcoding)
+                val qwertyId = resources.getIdentifier("latn_qwerty_us", "xml", null)
                 if (qwertyId != 0) {
                     val qwertyLayout = KeyboardData.load(resources, qwertyId)
                     layouts.add(qwertyLayout)

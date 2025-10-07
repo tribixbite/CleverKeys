@@ -164,7 +164,10 @@ class Keyboard2View @JvmOverloads constructor(
 
     fun reset() {
         modifiers = Pointers.Modifiers.EMPTY
-        pointers.clear()
+        // Check if pointers is initialized before clearing (prevents crash during initialization)
+        if (::pointers.isInitialized) {
+            pointers.clear()
+        }
         clearSwipeState()
         requestLayout()
         invalidate()
@@ -331,11 +334,15 @@ class Keyboard2View @JvmOverloads constructor(
                 touchedKeys = emptyList()
             )
 
-            // Process neural prediction asynchronously
-            // Neural prediction is handled by CleverKeysService
+            // Process neural prediction asynchronously via service
             currentSwipeGesture?.let { gesture ->
                 android.util.Log.d("Keyboard2View", "Swipe gesture completed: ${gesture.coordinates.size} points")
-                // Service will handle prediction via its neural engine
+                // Pass gesture data to service for neural prediction
+                val gestureData = CleverKeysService.SwipeGestureData(
+                    path = gesture.coordinates,
+                    timestamps = gesture.timestamps
+                )
+                keyboardService?.handleSwipeGesture(gestureData)
             }
         }
 
