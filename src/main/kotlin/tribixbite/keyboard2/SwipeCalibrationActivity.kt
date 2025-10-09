@@ -197,59 +197,61 @@ class SwipeCalibrationActivity : Activity() {
         }
     }
     
-    private fun setupUI() = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        setBackgroundColor(Color.BLACK)
-        
-        // Title with Kotlin's apply scope function
-        addView(TextView(this@SwipeCalibrationActivity).apply {
-            text = "🧠 Neural Swipe Calibration"
-            textSize = 24f
-            setTextColor(0xFF00d4ff.toInt())
-            setPadding(40, 40, 40, 20)
-        })
-        
-        // Instructions
-        instructionText = TextView(this@SwipeCalibrationActivity).apply {
-            text = "Swipe the word shown below - auto-advances on completion"
-            setTextColor(Color.GRAY)
+    private lateinit var contentLayout: LinearLayout
+
+    private fun setupUI() {
+        contentLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Color.BLACK)
+
+            // Title with Kotlin's apply scope function
+            addView(TextView(this@SwipeCalibrationActivity).apply {
+                text = "🧠 Neural Swipe Calibration"
+                textSize = 24f
+                setTextColor(0xFF00d4ff.toInt())
+                setPadding(40, 40, 40, 20)
+            })
+
+            // Instructions
+            instructionText = TextView(this@SwipeCalibrationActivity).apply {
+                text = "Swipe the word shown below - auto-advances on completion"
+                setTextColor(Color.GRAY)
+            }
+            addView(instructionText)
+
+            // Current word display
+            currentWordText = TextView(this@SwipeCalibrationActivity).apply {
+                textSize = 32f
+                setTextColor(Color.CYAN)
+                setPadding(0, 20, 0, 20)
+            }
+            addView(currentWordText)
+
+            // Progress components
+            progressText = TextView(this@SwipeCalibrationActivity).apply {
+                setTextColor(Color.WHITE)
+            }
+            addView(progressText)
+
+            progressBar = ProgressBar(this@SwipeCalibrationActivity, null, android.R.attr.progressBarStyleHorizontal).apply {
+                max = WORDS_PER_SESSION
+            }
+            addView(progressBar)
+
+            // Benchmark display
+            benchmarkText = TextView(this@SwipeCalibrationActivity).apply {
+                setTextColor(0xFF00d4ff.toInt())
+                textSize = 14f
+                setPadding(0, 10, 0, 10)
+            }
+            addView(benchmarkText)
+
+            // Control buttons using Kotlin DSL pattern
+            addView(createButtonRow())
+
+            // Results display
+            addView(createResultsSection())
         }
-        addView(instructionText)
-        
-        // Current word display
-        currentWordText = TextView(this@SwipeCalibrationActivity).apply {
-            textSize = 32f
-            setTextColor(Color.CYAN)
-            setPadding(0, 20, 0, 20)
-        }
-        addView(currentWordText)
-        
-        // Progress components
-        progressText = TextView(this@SwipeCalibrationActivity).apply {
-            setTextColor(Color.WHITE)
-        }
-        addView(progressText)
-        
-        progressBar = ProgressBar(this@SwipeCalibrationActivity, null, android.R.attr.progressBarStyleHorizontal).apply {
-            max = WORDS_PER_SESSION
-        }
-        addView(progressBar)
-        
-        // Benchmark display
-        benchmarkText = TextView(this@SwipeCalibrationActivity).apply {
-            setTextColor(0xFF00d4ff.toInt())
-            textSize = 14f
-            setPadding(0, 10, 0, 10)
-        }
-        addView(benchmarkText)
-        
-        // Control buttons using Kotlin DSL pattern
-        addView(createButtonRow())
-        
-        // Results display
-        addView(createResultsSection())
-        
-        setContentView(this)
     }
     
     private fun createButtonRow() = LinearLayout(this).apply {
@@ -317,31 +319,41 @@ class SwipeCalibrationActivity : Activity() {
     
     private fun setupKeyboard() {
         keyboardView = NeuralKeyboardView(this)
-        
-        // Position keyboard at bottom
-        val keyboardParams = android.widget.RelativeLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, keyboardHeight
-        ).apply {
-            addRule(android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM)
-        }
-        
-        keyboardView.layoutParams = keyboardParams
-        
-        // Add to main layout (safe null handling)
+
+        logD("Setting up keyboard with calculated height: ${keyboardHeight}px")
+
+        // Create main layout with RelativeLayout for proper positioning
         val mainLayout = android.widget.RelativeLayout(this).apply {
             setBackgroundColor(Color.BLACK)
 
-            // Safely get existing content
-            val existingContent = findViewById<LinearLayout>(android.R.id.content)?.getChildAt(0)
-            if (existingContent != null) {
-                addView(existingContent)
+            // Add scrollable content area above keyboard
+            val scrollView = android.widget.ScrollView(this@SwipeCalibrationActivity).apply {
+                id = View.generateViewId()
+                addView(contentLayout)
+                layoutParams = android.widget.RelativeLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                ).apply {
+                    // Position above keyboard (leave space for keyboard at bottom)
+                    addRule(android.widget.RelativeLayout.ALIGN_PARENT_TOP)
+                    bottomMargin = keyboardHeight
+                }
             }
+            addView(scrollView)
 
+            // Add keyboard at bottom with user-configured height
+            keyboardView.layoutParams = android.widget.RelativeLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                keyboardHeight  // Use the calculated height from user settings
+            ).apply {
+                addRule(android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM)
+            }
             addView(keyboardView)
         }
-        
+
         setContentView(mainLayout)
-        
+        logD("Keyboard positioned at bottom with height ${keyboardHeight}px")
+
         // Configure neural engine dimensions
         neuralEngine.setKeyboardDimensions(screenWidth, keyboardHeight)
     }
