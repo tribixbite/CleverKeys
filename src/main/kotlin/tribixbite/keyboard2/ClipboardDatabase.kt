@@ -81,10 +81,70 @@ class ClipboardDatabase private constructor(context: Context) : SQLiteOpenHelper
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         Log.w("ClipboardDatabase", "Upgrading database from version $oldVersion to $newVersion")
 
-        // For now, recreate the table
-        // TODO: Implement proper migration strategy for future versions
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_CLIPBOARD")
-        onCreate(db)
+        try {
+            // Migrate database schema while preserving data
+            when {
+                oldVersion < 2 && newVersion >= 2 -> {
+                    // Example migration for future version 2:
+                    // ALTER TABLE clipboard_entries ADD COLUMN new_column TEXT DEFAULT ''
+                    Log.d("ClipboardDatabase", "No migrations needed from v$oldVersion to v$newVersion")
+                }
+                // Add more migration paths here as schema evolves
+                // oldVersion < 3 && newVersion >= 3 -> { ... }
+            }
+
+            // For now, since this is version 1, no migrations exist yet
+            // When version 2 is released, implement proper ALTER TABLE migrations above
+            Log.d("ClipboardDatabase", "Database upgrade completed successfully")
+
+        } catch (e: Exception) {
+            Log.e("ClipboardDatabase", "Migration failed, recreating database", e)
+
+            // Last resort: backup existing data, recreate table, restore data
+            backupAndRecreateDatabase(db)
+        }
+    }
+
+    /**
+     * Backup existing data, recreate table with new schema, restore data.
+     * This is a last-resort migration strategy if ALTER TABLE migrations fail.
+     */
+    private fun backupAndRecreateDatabase(db: SQLiteDatabase) {
+        Log.w("ClipboardDatabase", "Performing backup-and-recreate migration")
+
+        try {
+            // Backup existing data to temporary table
+            db.execSQL("CREATE TEMPORARY TABLE clipboard_backup AS SELECT * FROM $TABLE_CLIPBOARD")
+
+            // Drop old table
+            db.execSQL("DROP TABLE IF EXISTS $TABLE_CLIPBOARD")
+
+            // Create new table with current schema
+            onCreate(db)
+
+            // Restore data from backup (only columns that still exist)
+            val restoreQuery = """
+                INSERT OR IGNORE INTO $TABLE_CLIPBOARD
+                    ($COLUMN_CONTENT, $COLUMN_TIMESTAMP, $COLUMN_EXPIRY_TIMESTAMP, $COLUMN_IS_PINNED, $COLUMN_CONTENT_HASH)
+                SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP, $COLUMN_EXPIRY_TIMESTAMP, $COLUMN_IS_PINNED, $COLUMN_CONTENT_HASH
+                FROM clipboard_backup
+            """.trimIndent()
+
+            db.execSQL(restoreQuery)
+
+            // Drop backup table
+            db.execSQL("DROP TABLE clipboard_backup")
+
+            Log.d("ClipboardDatabase", "Backup-and-recreate migration completed successfully")
+
+        } catch (e: Exception) {
+            Log.e("ClipboardDatabase", "Backup-and-recreate migration failed, data may be lost", e)
+
+            // If all else fails, start fresh (this should be extremely rare)
+            db.execSQL("DROP TABLE IF EXISTS $TABLE_CLIPBOARD")
+            db.execSQL("DROP TABLE IF EXISTS clipboard_backup")
+            onCreate(db)
+        }
     }
 
     /**
