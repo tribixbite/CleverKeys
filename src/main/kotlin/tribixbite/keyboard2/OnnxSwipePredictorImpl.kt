@@ -322,6 +322,14 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
             memory  // No expansion needed for single beam
         }
 
+        // CRITICAL FIX: Also expand src_mask to match batch size
+        // src_mask shape is [1, 150], need [batchSize, 150]
+        val expandedSrcMask = if (batchSize > 1) {
+            expandSrcMaskTensor(srcMaskTensor, batchSize)
+        } else {
+            srcMaskTensor  // No expansion needed for single beam
+        }
+
         // OPTIMIZATION: Use tensor pool for batched tensors - eliminates allocation overhead
         val batchedTokensShape = longArrayOf(batchSize.toLong(), seqLength.toLong())
         val batchedMaskShape = longArrayOf(batchSize.toLong(), seqLength.toLong())
@@ -337,13 +345,14 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                     "memory" to expandedMemory,
                     "target_tokens" to batchedTokensTensor,
                     "target_mask" to batchedMaskTensor,
-                    "src_mask" to srcMaskTensor
+                    "src_mask" to expandedSrcMask
                 )
 
                 logDebug("🔧 OPTIMIZED batched decoder shapes:")
                 logDebug("   memory: ${expandedMemory.info.shape.contentToString()}")
                 logDebug("   target_tokens: ${batchedTokensTensor.info.shape.contentToString()}")
                 logDebug("   target_mask: ${batchedMaskTensor.info.shape.contentToString()}")
+                logDebug("   src_mask: ${expandedSrcMask.info.shape.contentToString()}")
 
                 // SINGLE BATCHED INFERENCE with tensor pool optimization
                 val inferenceStart = System.nanoTime()
@@ -364,9 +373,14 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 // Automatic cleanup via tensor pool
                 batchedOutput.close()
 
-                // Clean up expanded memory tensor if we created one
-                if (batchSize > 1 && expandedMemory != memory) {
-                    expandedMemory.close()
+                // Clean up expanded tensors if we created them
+                if (batchSize > 1) {
+                    if (expandedMemory != memory) {
+                        expandedMemory.close()
+                    }
+                    if (expandedSrcMask != srcMaskTensor) {
+                        expandedSrcMask.close()
+                    }
                 }
 
                 newBeamCandidates
@@ -394,6 +408,25 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         }
 
         return OnnxTensor.createTensor(ortEnvironment, expandedData)
+    }
+
+    /**
+     * Expand src_mask tensor from [1, seq_len] to [batch_size, seq_len]
+     * by replicating the single batch mask across multiple batches
+     */
+    private fun expandSrcMaskTensor(srcMask: OnnxTensor, batchSize: Int): OnnxTensor {
+        val maskData = srcMask.value as Array<BooleanArray>
+        val seqLen = maskData[0].size
+
+        // Create expanded array [batch_size, seq_len]
+        val expandedMask = Array(batchSize) { BooleanArray(seqLen) }
+
+        // Replicate the single batch mask to all batch positions
+        for (b in 0 until batchSize) {
+            System.arraycopy(maskData[0], 0, expandedMask[b], 0, seqLen)
+        }
+
+        return OnnxTensor.createTensor(ortEnvironment, expandedMask)
     }
 
     /**
