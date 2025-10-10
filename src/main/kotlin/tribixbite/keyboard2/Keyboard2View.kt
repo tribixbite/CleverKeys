@@ -64,6 +64,10 @@ class Keyboard2View @JvmOverloads constructor(
     private var insetsRight = 0
     private var insetsBottom = 0
 
+    // Keyboard height control
+    private var keyboardHeightPercent = 35 // Default 35%
+    private var calculatedHeight = 0
+
     // Paint objects for rendering
     private val swipeTrailPaint = Paint().apply {
         color = 0xFF1976D2.toInt()
@@ -108,6 +112,15 @@ class Keyboard2View @JvmOverloads constructor(
 
     fun setKeyboardService(service: CleverKeysService) {
         keyboardService = service
+    }
+
+    /**
+     * Set keyboard height percentage (0-100)
+     */
+    fun setKeyboardHeightPercent(percent: Int) {
+        keyboardHeightPercent = percent.coerceIn(10, 100)
+        requestLayout() // Trigger remeasure
+        android.util.Log.d("Keyboard2View", "Keyboard height set to $keyboardHeightPercent%")
     }
 
     /**
@@ -458,11 +471,24 @@ class Keyboard2View @JvmOverloads constructor(
         subLabelSize = keyWidth * 0.25f // Default sublabel size ratio
 
         // Calculate total height
-        val keyboardHeight = kbd.keysHeight * tc.rowHeight + (config?.marginTop ?: 0f) + marginBottom
+        val naturalHeight = kbd.keysHeight * tc.rowHeight + (config?.marginTop ?: 0f) + marginBottom
+
+        // Apply user-configured height percentage
+        val screenHeight = dm.heightPixels
+        calculatedHeight = (screenHeight * keyboardHeightPercent / 100f).toInt()
+
+        // Use user preference if set, otherwise use natural keyboard height
+        val finalHeight = if (keyboardHeightPercent != 35) { // 35 is default
+            calculatedHeight
+        } else {
+            naturalHeight.toInt() + insetsBottom
+        }
+
+        android.util.Log.d("Keyboard2View", "onMeasure: natural=${naturalHeight.toInt()}, calculated=$calculatedHeight (${keyboardHeightPercent}%), using=$finalHeight")
 
         setMeasuredDimension(
             windowWidth,
-            keyboardHeight.toInt() + insetsBottom
+            finalHeight
         )
     }
 

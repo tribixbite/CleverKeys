@@ -363,7 +363,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
                 } ?: logW("No keyboard layout available to set on view")
 
                 // Apply keyboard height setting
-                applyKeyboardHeight(this, currentConfig.keyboardHeightPercent)
+                setKeyboardHeightPercent(currentConfig.keyboardHeightPercent)
             }
 
             // Store the view for later access
@@ -392,28 +392,6 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         } catch (e: Exception) {
             logE("Failed to create suggestion bar", e)
             null
-        }
-    }
-
-    /**
-     * Apply keyboard height setting to the view
-     */
-    private fun applyKeyboardHeight(view: android.view.View, heightPercent: Int) {
-        try {
-            val displayMetrics = resources.displayMetrics
-            val screenHeight = displayMetrics.heightPixels
-            val desiredHeight = (screenHeight * heightPercent / 100f).toInt()
-
-            view.layoutParams = view.layoutParams?.apply {
-                height = desiredHeight
-            } ?: android.view.ViewGroup.LayoutParams(
-                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                desiredHeight
-            )
-
-            logD("Applied keyboard height: ${heightPercent}% = ${desiredHeight}px")
-        } catch (e: Exception) {
-            logE("Failed to apply keyboard height", e)
         }
     }
 

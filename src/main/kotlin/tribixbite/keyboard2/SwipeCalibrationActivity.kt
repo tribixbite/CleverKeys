@@ -126,19 +126,29 @@ class SwipeCalibrationActivity : Activity() {
         val isLandscape = resources.configuration.orientation == 
                          android.content.res.Configuration.ORIENTATION_LANDSCAPE
         
-        val keyboardHeightPref = when {
-            isLandscape && foldTracker.isUnfolded() -> 
-                prefs.getInt("keyboard_height_landscape_unfolded", 50)
-            isLandscape -> 
-                prefs.getInt("keyboard_height_landscape", 50)
-            foldTracker.isUnfolded() -> 
-                prefs.getInt("keyboard_height_unfolded", 35)
-            else -> 
-                prefs.getInt("keyboard_height", 35)
+        // Get keyboard height preference - try global setting first
+        val globalHeightPref = prefs.getInt("keyboard_height_percent", -1)
+
+        val keyboardHeightPref = if (globalHeightPref != -1) {
+            // Use global setting if available
+            logD("Using global keyboard_height_percent: $globalHeightPref")
+            globalHeightPref
+        } else {
+            // Fall back to orientation-specific settings
+            when {
+                isLandscape && foldTracker.isUnfolded() ->
+                    prefs.getInt("keyboard_height_landscape_unfolded", 50)
+                isLandscape ->
+                    prefs.getInt("keyboard_height_landscape", 50)
+                foldTracker.isUnfolded() ->
+                    prefs.getInt("keyboard_height_unfolded", 35)
+                else ->
+                    prefs.getInt("keyboard_height", 35)
+            }
         }
-        
+
         keyboardHeight = (screenHeight * keyboardHeightPref / 100f).toInt()
-        logD("Calculated keyboard height: ${keyboardHeight}px (${keyboardHeightPref}% of $screenHeight)")
+        logD("Calculated keyboard height: ${keyboardHeight}px (${keyboardHeightPref}% of $screenHeight, landscape=$isLandscape)")
     }
     
     private fun loadVocabulary() {
@@ -691,11 +701,22 @@ class SwipeCalibrationActivity : Activity() {
         init {
             setBackgroundColor(Color.BLACK)
         }
-        
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            val widthSize = MeasureSpec.getSize(widthMeasureSpec)
+
+            // ALWAYS use our calculated keyboardHeight from user settings
+            // Ignore parent's height specification completely
+            logD("🔍 NeuralKeyboardView.onMeasure: using keyboardHeight=$keyboardHeight")
+
+            setMeasuredDimension(widthSize, keyboardHeight)
+        }
+
         override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
             super.onSizeChanged(w, h, oldw, oldh)
+            logD("🔍 NeuralKeyboardView.onSizeChanged: w=$w, h=$h (expected height=$keyboardHeight)")
             layoutKeys(w, h)
-            
+
             // Update neural engine with key positions
             neuralEngine.setKeyboardDimensions(w, h)
             val keyPositions = keys.mapNotNull { (keyStr, button) ->

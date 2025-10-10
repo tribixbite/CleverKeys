@@ -165,13 +165,15 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
             
             // Create source mask
             val srcMaskTensor = createSourceMaskTensor(features)
-            
+
             // Run beam search decoder
+            logDebug("🔍 Starting beam search decoder...")
             val candidates = runBeamSearch(memory, srcMaskTensor, features)
-            
+            logDebug("✅ Beam search returned ${candidates.size} candidates")
+
             // Create final prediction result
             val result = createPredictionResult(candidates)
-            
+
             logDebug("🧠 Neural prediction completed: ${result.size} candidates")
             result
             
@@ -212,9 +214,11 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     ): List<BeamSearchCandidate> = withContext(Dispatchers.Default) {
 
         val decoderSession = this@OnnxSwipePredictorImpl.decoderSession ?: run {
-            logE("Decoder session not initialized - cannot run beam search")
+            logE("❌ CRITICAL: Decoder session not initialized - cannot run beam search", RuntimeException("Decoder not initialized"))
             return@withContext emptyList()
         }
+
+        logDebug("✅ Decoder session is initialized, starting beam search")
         
         // Initialize beam search
         val beams = mutableListOf<BeamSearchState>()
@@ -223,46 +227,60 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         logDebug("🚀 Beam search initialized with SOS token ($SOS_IDX)")
         logDebug("🚀 BATCHED INFERENCE: Using optimized batch processing for beam search")
         
+        // Maintain separate lists for finished and active beams
+        val finishedBeams = mutableListOf<BeamSearchState>()
+
         // Beam search loop with batched processing
         for (step in 0 until maxLength) {
-            logDebug("🔄 Beam search step $step with ${beams.size} beams")
-            
-            // Separate finished and active beams
-            val finishedBeams = beams.filter { it.finished }
+            // Separate active beams (need further expansion)
             val activeBeams = beams.filter { !it.finished }
-            
+
+            logDebug("🔄 Beam search step $step: beams.size=${beams.size}, activeBeams.size=${activeBeams.size}, finishedBeams.size=${finishedBeams.size}")
+
             if (activeBeams.isEmpty()) {
                 // All beams finished
+                logDebug("🏁 All beams finished at step $step (total beams: ${beams.size})")
                 break
             }
-            
+
             try {
                 // CRITICAL OPTIMIZATION: Process all active beams in single batch
                 val newCandidates = processBatchedBeams(activeBeams, memory, srcMaskTensor, decoderSession)
-                
-                // Combine finished beams with new candidates
-                val allCandidates = finishedBeams + newCandidates
-                
-                // Select top beams for next iteration
+
+                logDebug("📦 processBatchedBeams returned ${newCandidates.size} candidates")
+
+                // Separate new finished candidates from still-active ones
+                val newFinished = newCandidates.filter { it.finished }
+                val stillActive = newCandidates.filter { !it.finished }
+
+                // Add newly finished beams to finished list
+                finishedBeams.addAll(newFinished)
+
+                // Update beams list with only active candidates for next iteration
                 beams.clear()
-                beams.addAll(allCandidates.sortedByDescending { it.score }.take(beamWidth))
-                
-                logDebug("🚀 Batched processing: ${activeBeams.size} beams → ${newCandidates.size} candidates")
-                
+                beams.addAll(stillActive.sortedByDescending { it.score }.take(beamWidth))
+
+                logDebug("🚀 Step result: ${newCandidates.size} total → ${newFinished.size} finished, ${stillActive.size} still active → keeping top ${beams.size} beams")
+
+                // If we have enough finished beams and no more active ones, stop
+                if (beams.isEmpty() && finishedBeams.isNotEmpty()) {
+                    logDebug("🏁 All beams finished at step $step")
+                    break
+                }
+
             } catch (e: Exception) {
                 logE("Batched beam search failed at step $step", e)
                 break
             }
-            
-            // Check if all beams finished
-            if (beams.all { it.finished }) {
-                logDebug("🏁 All beams finished at step $step")
-                break
-            }
         }
-        
+
+        // Return best hypotheses from both finished and remaining active beams
+        val allFinalBeams = finishedBeams + beams
+
+        logDebug("🎯 Beam search complete: ${finishedBeams.size} finished, ${beams.size} active, returning ${allFinalBeams.size} total")
+
         // Convert beams to candidates
-        beams.map { beam ->
+        allFinalBeams.map { beam ->
             val word = tokenizer.tokensToWord(beam.tokens.drop(1)) // Remove SOS token
             BeamSearchCandidate(word, kotlin.math.exp(beam.score).toFloat())
         }

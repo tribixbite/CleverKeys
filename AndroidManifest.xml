@@ -36,6 +36,10 @@
     </activity>
 
     <activity android:name="tribixbite.keyboard2.SwipeCalibrationActivity" android:label="@string/pref_swipe_calibration_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true"/>
+
+    <activity android:name="tribixbite.keyboard2.NeuralSettingsActivity" android:label="Neural Settings" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true"/>
+
+    <activity android:name="tribixbite.keyboard2.NeuralBrowserActivity" android:label="Neural Model Browser" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true"/>
   </application>
 
   <!-- To query enabled input methods for voice IME detection -->
