@@ -42,6 +42,7 @@ const val KEYBOARD_WIDTH = 1080f
 const val KEYBOARD_HEIGHT = 400f
 const val BEAM_WIDTH = 8
 const val MAX_LENGTH = 35
+const val DECODER_SEQ_LENGTH = 20  // Fixed decoder sequence length (model was exported with this)
 const val PAD_IDX = 0L
 const val UNK_IDX = 1L
 const val SOS_IDX = 2L
@@ -171,32 +172,33 @@ fun createTrajectoryTensor(env: OrtEnvironment, features: TrajectoryFeatures): O
 }
 
 fun createNearestKeysTensor(env: OrtEnvironment, features: TrajectoryFeatures): OnnxTensor {
-    // Shape: [batch_size=1, seq_length=150]
-    val shape = longArrayOf(1, MAX_TRAJECTORY_POINTS.toLong())
-    val data = features.nearestKeys.map { it.toLong() }.toLongArray()
-    return OnnxTensor.createTensor(env, data, shape)
+    // Shape: [batch_size=1, seq_length=150] - inferred from 2D array
+    val data = Array(1) { features.nearestKeys.map { it.toLong() }.toLongArray() }
+    return OnnxTensor.createTensor(env, data)
 }
 
 fun createSourceMaskTensor(env: OrtEnvironment, actualLength: Int): OnnxTensor {
-    // Shape: [batch_size=1, seq_length=150]
-    // Convention: 1.0f = padded, 0.0f = valid
-    val shape = longArrayOf(1, MAX_TRAJECTORY_POINTS.toLong())
-    val data = FloatArray(MAX_TRAJECTORY_POINTS) { i -> if (i >= actualLength) 1.0f else 0.0f }
-    return OnnxTensor.createTensor(env, java.nio.FloatBuffer.wrap(data), shape)
+    // Shape: [batch_size=1, seq_length=150] - inferred from 2D array
+    // Convention: true = padded, false = valid
+    val data = Array(1) { BooleanArray(MAX_TRAJECTORY_POINTS) { i -> i >= actualLength } }
+    return OnnxTensor.createTensor(env, data)
 }
 
 fun createTargetTokensTensor(env: OrtEnvironment, tokens: List<Long>): OnnxTensor {
-    // Shape: [batch_size=1, seq_length]
-    val shape = longArrayOf(1, tokens.size.toLong())
-    return OnnxTensor.createTensor(env, tokens.toLongArray(), shape)
+    // Shape: [batch_size=1, seq_length=20] - FIXED length, pad with PAD_IDX
+    val paddedTokens = tokens.take(DECODER_SEQ_LENGTH).toMutableList()
+    while (paddedTokens.size < DECODER_SEQ_LENGTH) {
+        paddedTokens.add(PAD_IDX)
+    }
+    val data = Array(1) { paddedTokens.toLongArray() }
+    return OnnxTensor.createTensor(env, data)
 }
 
-fun createTargetMaskTensor(env: OrtEnvironment, validLength: Int, totalLength: Int): OnnxTensor {
-    // Shape: [batch_size=1, seq_length]
-    // Convention: 1.0f = padded, 0.0f = valid
-    val shape = longArrayOf(1, totalLength.toLong())
-    val data = FloatArray(totalLength) { i -> if (i >= validLength) 1.0f else 0.0f }
-    return OnnxTensor.createTensor(env, java.nio.FloatBuffer.wrap(data), shape)
+fun createTargetMaskTensor(env: OrtEnvironment, validLength: Int): OnnxTensor {
+    // Shape: [batch_size=1, seq_length=20] - FIXED length
+    // Convention: true = padded, false = valid
+    val data = Array(1) { BooleanArray(DECODER_SEQ_LENGTH) { i -> i >= validLength } }
+    return OnnxTensor.createTensor(env, data)
 }
 
 // ============================================================================
@@ -250,7 +252,7 @@ fun loadOnnxModels(modelsDir: String): OnnxModels {
 fun runEncoderInference(
     models: OnnxModels,
     features: TrajectoryFeatures
-): OnnxValue {
+): OnnxTensor {
     println("\n🧠 Running Encoder Inference")
 
     val trajectoryTensor = createTrajectoryTensor(models.env, features)
@@ -258,7 +260,7 @@ fun runEncoderInference(
     val srcMaskTensor = createSourceMaskTensor(models.env, features.actualLength)
 
     val inputs = mapOf(
-        "trajectory" to trajectoryTensor,
+        "trajectory_features" to trajectoryTensor,
         "nearest_keys" to nearestKeysTensor,
         "src_mask" to srcMaskTensor
     )
@@ -274,17 +276,17 @@ fun runEncoderInference(
     nearestKeysTensor.close()
     srcMaskTensor.close()
 
-    return outputs.get(0).get()
+    return outputs.get(0) as OnnxTensor
 }
 
 fun runDecoderStep(
     models: OnnxModels,
-    encoderOutput: OnnxValue,
+    encoderOutput: OnnxTensor,
     targetTokens: List<Long>,
     srcMask: OnnxTensor
 ): FloatArray {
     val targetTensor = createTargetTokensTensor(models.env, targetTokens)
-    val targetMaskTensor = createTargetMaskTensor(models.env, targetTokens.size, MAX_LENGTH)
+    val targetMaskTensor = createTargetMaskTensor(models.env, targetTokens.size)
 
     val inputs = mapOf(
         "memory" to encoderOutput,
@@ -294,7 +296,7 @@ fun runDecoderStep(
     )
 
     val outputs = models.decoder.run(inputs)
-    val logits = (outputs.get(0).get().value as Array<Array<FloatArray>>)[0]
+    val logits = ((outputs.get(0) as OnnxTensor).value as Array<Array<FloatArray>>)[0]
 
     // Clean up tensors
     targetTensor.close()
@@ -315,13 +317,13 @@ fun applyLogSoftmax(logits: FloatArray): FloatArray {
 
 fun beamSearchDecode(
     models: OnnxModels,
-    encoderOutput: OnnxValue,
+    encoderOutput: OnnxTensor,
     srcMask: OnnxTensor
 ): PredictionResult {
     println("\n🔍 Beam Search Decoding (width=$BEAM_WIDTH)")
 
     // Initialize beams
-    val beams = List(BEAM_WIDTH) {
+    val beams = MutableList(BEAM_WIDTH) {
         BeamState(mutableListOf(SOS_IDX), 0f, false)
     }
 
@@ -569,5 +571,3 @@ fun main() {
         System.exit(1)
     }
 }
-
-main()
