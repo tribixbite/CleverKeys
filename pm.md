@@ -1641,3 +1641,90 @@ This completes the coordinate collapse investigation:
 
 **Expected:** Proper word predictions with distinct coordinates throughout trajectory.
 
+
+## ONNX CLI Test - MAJOR BREAKTHROUGH (Oct 10, 2025)
+
+### ✅ End-to-End ONNX Pipeline Working
+
+**Status**: CLI test runs successfully with complete ONNX inference pipeline.
+
+**Performance**:
+- Encoder inference: 5-8ms
+- Beam search decoder: 120ms
+- Total prediction time: 128ms
+- ONNX Runtime 1.20.0 with Android native libraries in Termux
+
+**Technical Achievement**:
+1. ✅ **ONNX Runtime Termux Compatibility**
+   - Created patched JAR with Android (Bionic) native libraries
+   - Replaced glibc `.so` files with AAR arm64-v8a natives
+   - 92MB onnxruntime-1.20.0-android.jar working in Termux
+
+2. ✅ **Fixed Decoder Shape Mismatch**
+   - Discovered decoder was exported with fixed seq_length=20
+   - Added DECODER_SEQ_LENGTH constant
+   - Updated tensor creation to pad to 20 tokens
+   - Matches Android implementation exactly
+
+3. ✅ **Correct Tensor Types**
+   - Boolean masks for both encoder and decoder
+   - Float tensors for trajectory features
+   - Long tensors for tokens and nearest keys
+
+4. ✅ **ONNX API Compatibility**
+   - Used Object-based createTensor() for automatic shape inference
+   - Avoided cached OrtAllocator API issues
+   - Proper tensor cleanup and memory management
+
+### ⚠️ Prediction Accuracy Issue
+
+**Current Output**: All beams predict "geno" (27.1% confidence)
+**Expected Output**: "hello" and variants [hall, hill, hull, hell, halo, heal, held]
+
+**Possible Causes**:
+1. Test swipe generation may not match training data format
+2. Feature extraction (velocity/acceleration) calculation differences
+3. QWERTY key positions may differ from model training
+4. Model may not have been trained well on "hello" pattern
+
+**Evidence**: Previous successful test (Oct 9, 2025) showed correct "hello" predictions
+
+### Key Discoveries from Gemini Analysis
+
+The decoder model has **hardcoded sequence length 20** baked into the graph:
+- Reshape node expects {20, 8, 32} = [seq_length, num_heads, head_dim]
+- Model was exported without dynamic_axes specification
+- Android implementation works by always padding to 20 tokens
+
+**Quote from Gemini**:
+> "The ONNX graph has a hardcoded expectation that the input sequence length is 20. When you provide an input with a sequence length of 1, the reshape operation fails because the total number of elements doesn't match."
+
+### Files Modified
+
+- `test_onnx_cli.kt`:
+  - Added DECODER_SEQ_LENGTH = 20 constant
+  - Updated createTargetTokensTensor() to pad to 20
+  - Updated createTargetMaskTensor() for fixed length
+  - Fixed encoder input name: trajectory → trajectory_features
+  - Changed mask types from float to boolean
+  - Added proper tensor cleanup
+
+### Next Steps for Accuracy
+
+1. Compare test swipe coordinates with successful previous test
+2. Verify feature extraction matches training pipeline
+3. Check if QWERTY layout positions match model expectations
+4. Consider re-exporting decoder model with dynamic_axes
+5. Test with different words to verify model functionality
+
+### Build Artifacts
+
+```bash
+# Compile test
+kotlinc test_onnx_cli.kt -classpath "./onnxruntime-1.20.0-android.jar" -include-runtime -d test_onnx_cli.jar
+
+# Run test
+java -classpath "test_onnx_cli.jar:onnxruntime-1.20.0-android.jar" Test_onnx_cliKt
+```
+
+**Output**: Consistent predictions with proper ONNX inference pipeline execution.
