@@ -504,3 +504,167 @@ All three were needed to enable batched beam search:
 
 **Status:** Committed, ready for APK rebuild and device testing.
 
+---
+
+## Fix #4: Beam Search Scoring - Log-Softmax Implementation (Oct 10, 2025)
+
+### Problem: Beam Search Returning 0 Predictions with Invalid Scores
+
+**Symptom:**
+```
+[02:07:55.727] ✅ Beam search returned 120 candidates
+[02:07:55.743] 🧠 Neural prediction completed: 0 candidates  ← ALL FILTERED OUT!
+```
+
+Beam search completed successfully with 120 candidates but vocabulary filter rejected them all. Beam scores were huge positive numbers (27, 35, 44...) instead of negative log probabilities (-2.3, -3.5...).
+
+### Root Cause: Raw Logits Used Instead of Log Probabilities
+
+**What Was Wrong:**
+
+In `processBatchedResults()`, the code was adding raw decoder logits directly to beam scores:
+
+```kotlin
+// WRONG - Raw logits are NOT log probabilities!
+val vocabLogits = batchedLogits[batchIndex][currentPos]
+val topK = getTopKIndices(vocabLogits, beamWidth)  // Sorting raw logits
+topK.forEach { tokenId ->
+    newBeam.score += vocabLogits[tokenId]  // Adding raw logit value
+}
+```
+
+**Why This Was Wrong:**
+
+1. **Raw Logits Are Unnormalized:** Decoder outputs raw scores, not probabilities
+2. **No Probability Distribution:** Logits can be any real number (positive/negative)
+3. **Incorrect Beam Scores:** Adding logits produces meaningless accumulated scores
+4. **Vocabulary Filter Rejects Everything:** `exp(score)` produces astronomical values
+
+**Mathematical Issue:**
+
+```
+For vocabulary probabilities:
+  p(word|context) = softmax(logits)
+  log_p(word|context) = log_softmax(logits) = logits - log(sum(exp(logits)))
+
+Beam search requires LOG PROBABILITIES:
+  beam_score = log_p(w1) + log_p(w2) + ... + log_p(wn)
+  final_confidence = exp(beam_score)
+
+Using raw logits instead:
+  wrong_score = logit1 + logit2 + ... + logitn
+  wrong_confidence = exp(wrong_score) → ASTRONOMICAL!
+```
+
+### Solution: Implement Log-Softmax Conversion
+
+**Implementation Added:**
+
+```kotlin
+/**
+ * Apply log-softmax to convert raw logits to log probabilities
+ * log_softmax(x) = x - log(sum(exp(x)))
+ * Uses numerical stability trick: subtract max before exp to prevent overflow
+ */
+private fun applyLogSoftmax(logits: FloatArray): FloatArray {
+    // Find max for numerical stability
+    val maxLogit = logits.maxOrNull() ?: 0f
+
+    // Compute exp(x - max) and sum
+    val expValues = logits.map { kotlin.math.exp((it - maxLogit).toDouble()).toFloat() }
+    val sumExp = expValues.sum()
+
+    // Compute log probabilities: log(exp(x - max) / sum) = (x - max) - log(sum)
+    val logSumExp = kotlin.math.ln(sumExp.toDouble()).toFloat() + maxLogit
+    return logits.map { it - logSumExp }.toFloatArray()
+}
+```
+
+**Updated processBatchedResults():**
+
+```kotlin
+// CORRECT - Apply log-softmax first
+val vocabLogits = batchedLogits[batchIndex][currentPos]
+val logProbs = applyLogSoftmax(vocabLogits)  // Convert to log probabilities
+val topK = getTopKIndices(logProbs, beamWidth)  // Sort by log probability
+
+topK.forEach { tokenId ->
+    newBeam.score += logProbs[tokenId]  // Add log probability
+}
+```
+
+### Technical Details:
+
+**Log-Softmax Algorithm:**
+
+1. **Numerical Stability:** Subtract max value before exp to prevent overflow
+2. **Efficient Computation:** log(softmax(x)) = x - log(sum(exp(x)))
+3. **Preserves Ordering:** Relative rankings stay the same as softmax
+4. **Proper Probabilities:** Sum of exp(log_softmax(x)) = 1.0
+
+**Mathematical Correctness:**
+
+```
+softmax(x_i) = exp(x_i) / sum(exp(x_j))
+log_softmax(x_i) = log(softmax(x_i))
+                 = log(exp(x_i) / sum(exp(x_j)))
+                 = log(exp(x_i)) - log(sum(exp(x_j)))
+                 = x_i - log(sum(exp(x_j)))
+
+With numerical stability:
+  max_x = max(x)
+  log_sum_exp = log(sum(exp(x - max_x))) + max_x
+  log_softmax(x_i) = x_i - log_sum_exp
+```
+
+### Expected Impact:
+
+**Before Fix:**
+- ❌ Beam scores: 27.5, 35.2, 44.1 (raw logit sums)
+- ❌ Confidence values: exp(27) = 5.3e11 (astronomical!)
+- ❌ Vocabulary filter rejects everything (too high)
+- ❌ Final predictions: 0 words returned
+
+**After Fix:**
+- ✅ Beam scores: -2.3, -3.5, -4.1 (proper log probabilities)
+- ✅ Confidence values: exp(-2.3) = 0.10, exp(-3.5) = 0.03 (reasonable)
+- ✅ Vocabulary filter accepts valid words
+- ✅ Final predictions: Actual words returned ("hello", "world", etc.)
+
+### Validation:
+
+**Expected Test Results:**
+- Beam search should return 8-12 word candidates (not 0)
+- Scores should be negative numbers between -5 and 0
+- Confidence values should be between 0.001 and 1.0
+- Top prediction should be the most likely word from swipe path
+
+**Performance Impact:**
+- Minimal - log-softmax is O(V) where V = vocabulary size (~30 tokens)
+- Computation happens once per beam per step
+- Already optimized with numerical stability trick
+
+### Related Fixes:
+
+This is the 4th critical batched beam search fix:
+1. ✅ **Fix #1 (ab8347c)**: Tensor pool buffer capacity check
+2. ✅ **Fix #2 (423126b)**: Memory tensor expansion
+3. ✅ **Fix #3 (e7bcdfa)**: src_mask tensor expansion
+4. ✅ **Fix #4 (CURRENT)**: **Log-softmax scoring (THIS FIX)**
+
+All four were needed for proper beam search predictions:
+- Fix #1: Buffer capacity for batched processing
+- Fix #2: Memory expansion for multiple beams
+- Fix #3: src_mask expansion for attention masking
+- Fix #4: Log-softmax for proper probability scoring
+
+### Next Steps:
+
+1. **Rebuild APK** with log-softmax fix
+2. **Test swipe prediction** - should see actual words now
+3. **Verify scores** are negative log probabilities
+4. **Check vocabulary filtering** accepts valid words
+5. **Performance benchmark** - should still be ~80-110ms
+
+**Status:** Implemented, ready for commit and APK rebuild.
+

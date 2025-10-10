@@ -483,13 +483,16 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
 
                 if (currentPos >= 0 && currentPos < batchedLogits[batchIndex].size) {
                     val vocabLogits = batchedLogits[batchIndex][currentPos]
-                    val topK = getTopKIndices(vocabLogits, beamWidth)
+
+                    // CRITICAL FIX: Apply log-softmax to convert raw logits to log probabilities
+                    val logProbs = applyLogSoftmax(vocabLogits)
+                    val topK = getTopKIndices(logProbs, beamWidth)
 
                     // Create new beam candidates for this beam
                     topK.forEach { tokenId ->
                         val newBeam = BeamSearchState(beam)
                         newBeam.tokens.add(tokenId.toLong())
-                        newBeam.score += vocabLogits[tokenId]
+                        newBeam.score += logProbs[tokenId]  // Add log probability, not raw logit
 
                         if (tokenId == EOS_IDX) {
                             newBeam.finished = true
@@ -596,7 +599,25 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
             reusableTargetMaskArray[0][i] = true
         }
     }
-    
+
+    /**
+     * Apply log-softmax to convert raw logits to log probabilities
+     * log_softmax(x) = x - log(sum(exp(x)))
+     * Uses numerical stability trick: subtract max before exp to prevent overflow
+     */
+    private fun applyLogSoftmax(logits: FloatArray): FloatArray {
+        // Find max for numerical stability
+        val maxLogit = logits.maxOrNull() ?: 0f
+
+        // Compute exp(x - max) and sum
+        val expValues = logits.map { kotlin.math.exp((it - maxLogit).toDouble()).toFloat() }
+        val sumExp = expValues.sum()
+
+        // Compute log probabilities: log(exp(x - max) / sum) = (x - max) - log(sum)
+        val logSumExp = kotlin.math.ln(sumExp.toDouble()).toFloat() + maxLogit
+        return logits.map { it - logSumExp }.toFloatArray()
+    }
+
     /**
      * Get top K indices from probability array
      */
