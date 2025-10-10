@@ -193,10 +193,10 @@ fun createTargetTokensTensor(env: OrtEnvironment, tokens: List<Long>): OnnxTenso
 
 fun createTargetMaskTensor(env: OrtEnvironment, validLength: Int, totalLength: Int): OnnxTensor {
     // Shape: [batch_size=1, seq_length]
-    // Convention: true (1) = padded, false (0) = valid
+    // Convention: 1.0f = padded, 0.0f = valid
     val shape = longArrayOf(1, totalLength.toLong())
-    val data = BooleanArray(totalLength) { i -> i >= validLength }
-    return OnnxTensor.createTensor(env, data, shape)
+    val data = FloatArray(totalLength) { i -> if (i >= validLength) 1.0f else 0.0f }
+    return OnnxTensor.createTensor(env, java.nio.FloatBuffer.wrap(data), shape)
 }
 
 // ============================================================================
