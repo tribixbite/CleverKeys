@@ -205,14 +205,16 @@ All TODO items found in the codebase with their context, priority, and implement
 - ✅ Features properly disabled in UI
 - ✅ Database production-ready with migrations
 
-**Current status:**
+**Current status (Oct 10, 2025 - Beam Search Debugging):**
 1. ✅ Beam search return value fixed (commit 17487b5)
 2. ✅ Comprehensive debug logging added to neural pipeline
 3. ✅ Tensor buffer size mismatch fixed (commit 7efd9a0)
-4. ✅ Neural prediction WORKING - returns 8 word candidates per swipe
+4. ✅ Neural prediction infrastructure working - returns 8 candidates per swipe
 5. ✅ Performance: 3-7ms per beam, 66% tensor pool efficiency, 7-16x speedup
-6. ⏳ NEXT: Verify actual word predictions match swipe gestures
-7. ⏳ NEXT: Test calibration screen displays properly with correct height
+6. ❌ **CRITICAL ISSUE**: Beam search loop exits after step 1 instead of running 35 steps
+7. 🔧 **IN PROGRESS**: Comprehensive exception handling added to diagnose early termination (commit f8b2cb6)
+8. ⏳ NEXT: Test with latest APK to capture exception logs and identify root cause
+9. ⏳ NEXT: Verify actual word predictions match swipe gestures after loop fix
 
 **Post-testing (optional):**
 - Revisit Phase 2 TODOs to complete layout editor UX improvements
