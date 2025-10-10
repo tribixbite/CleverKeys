@@ -491,27 +491,17 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         val buffer = byteBuffer.asFloatBuffer()
 
         for (i in 0 until MAX_SEQUENCE_LENGTH) {
-            if (i < features.actualLength) {
-                val point = features.normalizedCoordinates[i]
-                val velocity = features.velocities.getOrNull(i) ?: 0f
-                val acceleration = features.accelerations.getOrNull(i) ?: 0f
+            val point = features.normalizedCoordinates.getOrNull(i) ?: PointF(0f, 0f)
+            val velocity = features.velocities.getOrNull(i) ?: PointF(0f, 0f)
+            val acceleration = features.accelerations.getOrNull(i) ?: PointF(0f, 0f)
 
-                // Exact 6-feature layout matching Java: [x, y, vx, vy, ax, ay]
-                buffer.put(point.x)      // Normalized x [0,1]
-                buffer.put(point.y)      // Normalized y [0,1]
-                buffer.put(velocity)     // Velocity x component
-                buffer.put(velocity)     // Velocity y component (using magnitude for both)
-                buffer.put(acceleration) // Acceleration x component
-                buffer.put(acceleration) // Acceleration y component
-            } else {
-                // Padding with zeros exactly like Java
-                buffer.put(0.0f) // x
-                buffer.put(0.0f) // y
-                buffer.put(0.0f) // vx
-                buffer.put(0.0f) // vy
-                buffer.put(0.0f) // ax
-                buffer.put(0.0f) // ay
-            }
+            // Exact 6-feature layout matching web demo: [x, y, vx, vy, ax, ay]
+            buffer.put(point.x)          // Normalized x [0,1]
+            buffer.put(point.y)          // Normalized y [0,1]
+            buffer.put(velocity.x)       // Velocity x component (delta)
+            buffer.put(velocity.y)       // Velocity y component (delta)
+            buffer.put(acceleration.x)   // Acceleration x component (delta of delta)
+            buffer.put(acceleration.y)   // Acceleration y component (delta of delta)
         }
 
         buffer.rewind()
@@ -847,39 +837,56 @@ class SwipeTrajectoryProcessor {
     
     data class TrajectoryFeatures(
         val coordinates: List<PointF>,
-        val velocities: List<Float>,
-        val accelerations: List<Float>,
+        val velocities: List<PointF>,  // Now stores (vx, vy) as PointF
+        val accelerations: List<PointF>,  // Now stores (ax, ay) as PointF
         val nearestKeys: List<Int>,
         val actualLength: Int,
         val normalizedCoordinates: List<PointF>
     )
     
     fun extractFeatures(coordinates: List<PointF>, timestamps: List<Long>): TrajectoryFeatures {
-        // Smooth trajectory to reduce noise
-        val smoothedCoords = smoothTrajectory(coordinates)
+        // 1. Normalize coordinates FIRST (0-1 range) - matches web demo line 1171-1172
+        val normalizedCoords = normalizeCoordinates(coordinates)
 
-        // Calculate velocities (first derivative)
-        val velocities = calculateVelocities(smoothedCoords, timestamps)
+        // 2. Detect nearest keys on raw coordinates
+        val nearestKeys = detectNearestKeys(coordinates)
 
-        // Calculate accelerations (second derivative)
-        val accelerations = calculateAccelerations(velocities, timestamps)
-
-        // Normalize coordinates to [0, 1] range
-        val normalizedCoords = normalizeCoordinates(smoothedCoords)
-
-        // Detect nearest keys for each point
-        val nearestKeys = detectNearestKeys(smoothedCoords)
-
-        // Pad or truncate to MAX_TRAJECTORY_POINTS
+        // 3. Pad or truncate to MAX_TRAJECTORY_POINTS
         val finalCoords = padOrTruncate(normalizedCoords, MAX_TRAJECTORY_POINTS)
-        val finalVelocities = padOrTruncate(velocities, MAX_TRAJECTORY_POINTS)
-        val finalAccelerations = padOrTruncate(accelerations, MAX_TRAJECTORY_POINTS)
         val finalNearestKeys = padOrTruncate(nearestKeys, MAX_TRAJECTORY_POINTS, 0)
-        
+
+        // 4. Calculate velocities and accelerations on normalized coords (simple deltas, no time!)
+        //    Matches web demo lines 1220-1238
+        val velocities = mutableListOf<PointF>()
+        val accelerations = mutableListOf<PointF>()
+
+        for (i in 0 until MAX_TRAJECTORY_POINTS) {
+            if (i == 0) {
+                // First point: zero velocity and acceleration
+                velocities.add(PointF(0f, 0f))
+                accelerations.add(PointF(0f, 0f))
+            } else if (i == 1) {
+                // Second point: calculate velocity, zero acceleration
+                val vx = finalCoords[i].x - finalCoords[i-1].x
+                val vy = finalCoords[i].y - finalCoords[i-1].y
+                velocities.add(PointF(vx, vy))
+                accelerations.add(PointF(0f, 0f))
+            } else {
+                // Rest: calculate both velocity and acceleration
+                val vx = finalCoords[i].x - finalCoords[i-1].x
+                val vy = finalCoords[i].y - finalCoords[i-1].y
+                velocities.add(PointF(vx, vy))
+
+                val ax = vx - velocities[i-1].x  // acceleration = delta of velocity
+                val ay = vy - velocities[i-1].y
+                accelerations.add(PointF(ax, ay))
+            }
+        }
+
         return TrajectoryFeatures(
             coordinates = finalCoords,
-            velocities = finalVelocities,
-            accelerations = finalAccelerations,
+            velocities = velocities,
+            accelerations = accelerations,
             nearestKeys = finalNearestKeys,
             actualLength = coordinates.size.coerceAtMost(MAX_TRAJECTORY_POINTS),
             normalizedCoordinates = finalCoords
