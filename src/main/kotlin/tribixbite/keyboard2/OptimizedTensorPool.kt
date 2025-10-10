@@ -193,6 +193,10 @@ class OptimizedTensorPool private constructor(private val ortEnvironment: OrtEnv
         val sizeBytes = (totalElements * 4).toInt() // 4 bytes per float
 
         val buffer = acquireFloatBuffer(sizeBytes)
+
+        // CRITICAL FIX: Limit buffer to exact size needed for shape
+        buffer.limit(sizeBytes)
+
         return OnnxTensor.createTensor(ortEnvironment, buffer.asFloatBuffer(), shape)
     }
 
@@ -204,6 +208,11 @@ class OptimizedTensorPool private constructor(private val ortEnvironment: OrtEnv
         val sizeBytes = (totalElements * 8).toInt() // 8 bytes per long
 
         val buffer = acquireLongBuffer(sizeBytes)
+
+        // CRITICAL FIX: Limit buffer to exact size needed for shape
+        // Pool may return larger buffer than needed (e.g. 1024 bytes for 160 bytes request)
+        buffer.limit(sizeBytes)
+
         return OnnxTensor.createTensor(ortEnvironment, buffer.asLongBuffer(), shape)
     }
 
