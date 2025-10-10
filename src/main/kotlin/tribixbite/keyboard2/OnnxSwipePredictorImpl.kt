@@ -260,9 +260,14 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 beams.clear()
                 beams.addAll(stillActive.sortedByDescending { it.score }.take(beamWidth))
 
-                // If we have enough finished beams and no more active ones, stop
+                // Early stopping conditions (matching web demo):
+                // 1. All beams finished
+                // 2. After step 10, if we have at least 3 finished beams (good enough)
                 if (beams.isEmpty() && finishedBeams.isNotEmpty()) {
-                    break
+                    break  // All beams finished
+                }
+                if (step >= 10 && finishedBeams.size >= 3) {
+                    break  // Have enough good predictions
                 }
 
             } catch (e: Exception) {
@@ -422,13 +427,14 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
             val maskArray = maskData[batchIndex]
 
             // Fill tokens and mask for this beam
+            // CRITICAL: Mask convention is 1 = PADDED, 0 = VALID (matches web demo)
             for (seqIndex in 0 until seqLength) {
                 if (seqIndex < beam.tokens.size) {
                     tokensArray[seqIndex] = beam.tokens[seqIndex]
-                    maskArray[seqIndex] = true
+                    maskArray[seqIndex] = false  // Valid token = 0
                 } else {
                     tokensArray[seqIndex] = PAD_IDX.toLong()
-                    maskArray[seqIndex] = false
+                    maskArray[seqIndex] = true   // Padded position = 1
                 }
             }
         }
@@ -553,14 +559,15 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     
     /**
      * Update reusable token arrays for beam
+     * CRITICAL: Mask convention is 1 = PADDED, 0 = VALID (matches web demo)
      */
     private fun updateReusableTokens(beam: BeamSearchState, seqLength: Int) {
         reusableTokensArray.fill(PAD_IDX.toLong())
-        reusableTargetMaskArray[0].fill(false)
-        
+        reusableTargetMaskArray[0].fill(true)  // Default: all padded (1)
+
         for (i in 0 until minOf(beam.tokens.size, seqLength)) {
             reusableTokensArray[i] = beam.tokens[i]
-            reusableTargetMaskArray[0][i] = true
+            reusableTargetMaskArray[0][i] = false  // Mark as VALID (0)
         }
     }
 
