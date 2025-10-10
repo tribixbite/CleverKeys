@@ -119,46 +119,43 @@ Created comprehensive verification suite:
 
 **Implementation matches web demo reference exactly!**
 
-✅ **CLI Decoding Test Complete (commit 9069c60):**
+✅ **CLI Feature Extraction Math Validation (commit c320a7c):**
 
-Created comprehensive end-to-end pipeline test:
-- `test_decoding.kt`: Full pipeline simulation (245 lines)
+**Improved from mock beam search to precise math validation:**
+- `test_decoding.kt`: Validates feature extraction formulas without ONNX models
   * Realistic 'hello' swipe with 14 coordinates (h→e→l→l→o)
-  * Feature extraction validation
-  * Tensor creation verification
-  * Mask convention testing
-  * Mock beam search with early stopping
-  * Token decoding simulation
+  * `validateFeatureExtraction()`: Checks formulas with 0.0001 precision
+  * No mock predictions - focuses on mathematical correctness
+  * Complements Android instrumentation tests
 
-- `run_decoding_test.sh`: Automated test runner
+- `run_decoding_test.sh`: Updated with clear explanation of approach
 
-**Test Results: 6/6 PASSED ✅**
+**Validation Checks (5 tests):**
 ```
-✅ Feature extraction: Normalized to [0,1]
-✅ Tensor shape: [1, 150, 6] = 900 floats
-✅ Velocity calculation: 13 non-zero values
-✅ Acceleration calculation: 12 non-zero values
-✅ Mask convention: 1=padded, 0=valid
-✅ Beam search: 3 predictions generated
+✅ Normalization: coordinates in [0,1] range
+✅ Velocity magnitude: reasonable values (<1.0)
+✅ Velocity formula: vx = x[i] - x[i-1] (exact delta match)
+✅ Acceleration formula: ax = vx[i] - vx[i-1] (exact velocity delta)
+✅ Component separation: vx != vy for movement
 ```
 
-**Sample Output:**
-```
-🎉 Final Predictions
-   1. hello      [confidence:  60%] ██████████████████████████████
-   2. hells      [confidence:  13%] ██████
-   3. helm       [confidence:   8%] ████
-```
+**Why This Approach:**
+- **Fast feedback**: No ONNX models or Android environment required
+- **Precise validation**: Checks formulas to 0.0001 precision
+- **Catches bugs early**: Detects formula errors before running models
+- **Complementary**: Works alongside real ONNX model tests
+
+**Complementary Test Strategy:**
+1. **CLI test (this)**: Math validation - fast dev feedback
+2. **Android instrumentation**: Real ONNX models - accuracy verification
+3. **RuntimeTestSuite**: In-app testing - production validation
 
 **What Was Validated:**
-- Feature extraction matches web demo exactly
 - Normalization happens FIRST (critical fix verified)
-- Velocities use simple deltas: vx = x[i] - x[i-1]
-- Accelerations use velocity deltas: ax = vx[i] - vx[i-1]
-- Tensor layout [x, y, vx, vy, ax, ay] in correct order
+- Velocities use simple deltas: vx = x[i] - x[i-1] (NOT distance/time)
+- Accelerations use velocity deltas: ax = vx[i] - vx[i-1] (NOT velocityDelta/time)
+- Components separated properly (PointF storage for vx/vy)
 - Mask conventions follow ONNX standard (1=padded, 0=valid)
-- Beam search with early stopping optimization
-- Token decoding filters special tokens correctly
 
 ✅ **ONNX Accuracy Tests Created (commit 9423a19):**
 
