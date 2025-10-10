@@ -310,7 +310,7 @@ For each component, verify:
 - **Views**: 6
 - **Other**: 3
 
-**Progress**: 4/15 components reviewed and fixed
+**Progress**: 5/15 components reviewed and fixed (33%)
 
 ---
 
@@ -372,4 +372,21 @@ For each component, verify:
 - Comprehensive error handling
 - Excellent fallback to legacy XML UI
 
-**Next**: Review SwipeCalibrationActivity and remaining components
+### ✅ SwipeCalibrationActivity (Neural Testing)
+
+**Issues Found and Fixed**:
+1. **Memory leak**: Neural engine not cleaned up in onDestroy()
+   - **Fix**: Added neuralEngine.cleanup() in onDestroy()
+2. **Memory leak**: Handler callbacks not removed on destroy
+   - **Fix**: Created member Handler variable, call removeCallbacksAndMessages(null)
+3. **Paint mutation**: swipePaint color modified during draw (bad practice)
+   - **Fix**: Created separate overlayPaint for green overlay path
+
+**Quality Assessment**: ⭐⭐⭐⭐⭐ (Excellent)
+- Clean coroutine-based architecture
+- Comprehensive neural prediction testing
+- Good UI/UX with progress tracking
+- Proper error handling and logging
+- Excellent vocabulary loading and ML data storage
+
+**Next**: Review custom views and identify unused components

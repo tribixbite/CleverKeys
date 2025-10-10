@@ -42,7 +42,10 @@ class SwipeCalibrationActivity : Activity() {
     
     // Coroutine scope for async operations
     private val uiScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    
+
+    // Handler for delayed operations
+    private val handler = Handler(Looper.getMainLooper())
+
     // Configuration and data
     private lateinit var neuralConfig: NeuralConfig
     private lateinit var neuralEngine: NeuralSwipeTypingEngine
@@ -85,7 +88,18 @@ class SwipeCalibrationActivity : Activity() {
     
     override fun onDestroy() {
         super.onDestroy()
-        uiScope.cancel() // Clean up coroutines
+        // Clean up all resources
+        uiScope.cancel()
+
+        // Remove pending handler callbacks to prevent leaks
+        handler.removeCallbacksAndMessages(null)
+
+        // Clean up neural engine resources
+        if (::neuralEngine.isInitialized) {
+            neuralEngine.cleanup()
+        }
+
+        logD("=== NEURAL CALIBRATION ACTIVITY DESTROYED ===")
     }
     
     private fun initializeComponents() {
@@ -620,9 +634,9 @@ class SwipeCalibrationActivity : Activity() {
                 }
                 
                 updateBenchmarkDisplay()
-                
+
                 // Auto-advance after delay
-                Handler(Looper.getMainLooper()).postDelayed({ nextWord() }, 1500)
+                handler.postDelayed({ nextWord() }, 1500)
                 
             } catch (e: Exception) {
                 logToResults("💥 Neural prediction FAILED: ${e.javaClass.simpleName} - ${e.message}")
@@ -693,7 +707,17 @@ class SwipeCalibrationActivity : Activity() {
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
         }
-        
+
+        private val overlayPaint = Paint().apply {
+            color = Color.GREEN
+            strokeWidth = 8f
+            style = Paint.Style.STROKE
+            alpha = 180
+            isAntiAlias = true
+            strokeCap = Paint.Cap.ROUND
+            strokeJoin = Paint.Join.ROUND
+        }
+
         private val keys = mutableMapOf<String, KeyButton>()
         private val swipePath = Path()
         private var overlayPath: Path? = null
@@ -783,10 +807,10 @@ class SwipeCalibrationActivity : Activity() {
             if (!swipePath.isEmpty) {
                 canvas.drawPath(swipePath, swipePaint)
             }
-            
+
             // Draw overlay path
             overlayPath?.let { path ->
-                canvas.drawPath(path, swipePaint.apply { color = Color.GREEN })
+                canvas.drawPath(path, overlayPaint)
             }
         }
         
