@@ -1761,3 +1761,101 @@ Validation: ✅ ALL CHECKS PASSED
 ```
 
 The ONNX CLI test is now **fully functional** with accurate predictions!
+
+## Swipe Prediction Pipeline - Complete Documentation (Oct 10, 2025)
+
+### ✅ COMPREHENSIVE PIPELINE DOCUMENTATION
+
+**Created**: `SWIPE_PREDICTION_PIPELINE.md` (497 lines)
+
+**Contents**:
+1. Full pipeline stages from raw input to predictions
+2. Detailed implementation for each component
+3. Verification of all implementations
+4. Performance targets and model details
+5. Common pitfalls and best practices
+
+### ✅ VERIFIED IMPLEMENTATIONS
+
+All components verified to follow the documented pipeline:
+
+1. **SwipeCalibrationActivity** ✅
+   - Collects touch events (x, y, t)
+   - Creates SwipeInput
+   - Calls neuralEngine.predictAsync()
+   - Displays results with confidence scores
+
+2. **Keyboard2View** ✅
+   - Handles swipe gestures (START/MOVE/END)
+   - Builds coordinate + timestamp arrays
+   - Creates SwipeInput
+   - Passes to service
+
+3. **CleverKeysService** ✅
+   - Receives gesture data
+   - Calls pipeline.processGesture()
+   - Updates suggestions UI
+
+4. **NeuralPredictionPipeline** ✅
+   - Creates SwipeInput from raw data
+   - Calls neuralEngine.predictAsync()
+   - Returns PredictionResult
+
+5. **OnnxSwipePredictorImpl** ✅
+   - Feature extraction
+   - Encoder inference
+   - Beam search decoder
+   - Token to text conversion
+
+6. **SwipeTrajectoryProcessor** ✅
+   - Normalizes coordinates FIRST
+   - Calculates velocities (deltas)
+   - Calculates accelerations (delta of deltas)
+   - Pads to 150 points
+   - Sets nearest_keys to 0 (PAD)
+
+### 🎯 CONSISTENT DATA FLOW
+
+All implementations follow:
+```
+Touch (x,y,t) 
+  → SwipeInput 
+  → extractFeatures 
+  → Encoder 
+  → Memory[150,256]
+  → Beam Search Decoder (seq_len=20)
+  → Predictions
+```
+
+### 📊 KEY FINDINGS
+
+1. **nearest_keys = 0 (PAD)**
+   - Model learns from trajectory features alone
+   - Only used for logging/debugging in HTML demo
+   - Set to zeros in production (correct!)
+
+2. **Decoder seq_length = 20**
+   - Hardcoded in ONNX model export
+   - MUST pad target_tokens to 20
+   - Cannot be changed without re-exporting model
+
+3. **Normalization order critical**
+   - MUST normalize BEFORE velocity calculation
+   - Velocities/accelerations are deltas (no time division)
+   - Matches working swipe-onnx.html exactly
+
+4. **Boolean masks**
+   - true = padded, false = valid
+   - Both encoder and decoder expect boolean
+   - Do NOT use float masks
+
+### ✅ VALIDATION STATUS
+
+- [x] CLI test produces accurate predictions ("hello")
+- [x] All components follow same pipeline
+- [x] Feature extraction matches HTML demo
+- [x] ONNX inference working (5-8ms encoder, 120ms total)
+- [x] Calibration activity ready for testing
+- [x] Production keyboard ready for testing
+
+**Next Steps**: Runtime testing on Android device
