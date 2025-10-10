@@ -159,84 +159,94 @@ fun createTensorData(features: TrajectoryFeatures): FloatArray {
 }
 
 /**
- * Mock beam search with simulated logits
+ * Validate feature extraction against expected values from web demo
+ * This replaces mock beam search with actual math validation
  */
-fun mockBeamSearch(features: TrajectoryFeatures, targetWord: String): List<Pair<String, Float>> {
-    println("\n🔍 Mock Beam Search Decoder")
-    println("   Target word: '$targetWord'")
+fun validateFeatureExtraction(features: TrajectoryFeatures, swipeName: String): Boolean {
+    println("\n🔍 Feature Extraction Validation")
+    println("   Testing: $swipeName swipe")
 
-    // Initialize beam with SOS token
-    var beams = listOf(BeamState(mutableListOf(SOS_IDX.toLong()), 0.0f, false))
-    val finishedBeams = mutableListOf<BeamState>()
+    var allPassed = true
 
-    // Convert target word to token sequence for simulation
-    val targetTokens = targetWord.map { char ->
-        if (char in 'a'..'z') (char - 'a') + 4 else UNK_IDX
-    }
+    // Test 1: Verify coordinates are normalized [0,1]
+    val maxCoord = features.normalizedCoordinates.take(features.actualLength)
+        .maxOfOrNull { maxOf(it.x, it.y) } ?: 0f
+    val minCoord = features.normalizedCoordinates.take(features.actualLength)
+        .minOfOrNull { minOf(it.x, it.y) } ?: 0f
 
-    println("   Target tokens: $targetTokens")
+    val normCheck = maxCoord <= 1.0f && minCoord >= 0.0f
+    println("   ${if (normCheck) "✅" else "❌"} Normalization: coords in [0,1] (min=${"%.3f".format(minCoord)}, max=${"%.3f".format(maxCoord)})")
+    allPassed = allPassed && normCheck
 
-    // Simulate beam search steps
-    for (step in 0 until targetWord.length + 1) {
-        val activeBeams = beams.filter { !it.finished }
+    // Test 2: Verify velocity values are reasonable (small deltas after normalization)
+    val avgVelocityMag = features.velocities.take(features.actualLength)
+        .map { sqrt(it.x * it.x + it.y * it.y) }
+        .filter { it > 0 }
+        .average()
 
-        if (activeBeams.isEmpty()) break
+    val velocityCheck = avgVelocityMag < 1.0 && avgVelocityMag > 0.0
+    println("   ${if (velocityCheck) "✅" else "❌"} Velocity: avg magnitude = ${"%.4f".format(avgVelocityMag)} (should be << 1.0)")
+    allPassed = allPassed && velocityCheck
 
-        val newCandidates = mutableListOf<BeamState>()
+    // Test 3: Verify velocities are ACTUALLY simple deltas
+    // Check that vx[i] = x[i] - x[i-1]
+    var deltaErrors = 0
+    for (i in 1 until minOf(features.actualLength, 10)) {
+        val expectedVx = features.normalizedCoordinates[i].x - features.normalizedCoordinates[i-1].x
+        val expectedVy = features.normalizedCoordinates[i].y - features.normalizedCoordinates[i-1].y
+        val actualVx = features.velocities[i].x
+        val actualVy = features.velocities[i].y
 
-        for (beam in activeBeams) {
-            // Simulate logits for current position
-            val currentPos = beam.tokens.size - 1
+        val errorX = abs(expectedVx - actualVx)
+        val errorY = abs(expectedVy - actualVy)
 
-            // Create mock logits favoring target word
-            val topK = if (currentPos < targetTokens.size) {
-                // Favor correct next character
-                val correctToken = targetTokens[currentPos]
-                listOf(
-                    correctToken to -0.5f,  // High probability for correct
-                    ((correctToken + 1) % 26 + 4) to -2.0f,  // Lower for alternatives
-                    ((correctToken + 2) % 26 + 4) to -2.5f
-                ).take(BEAM_WIDTH)
-            } else {
-                // End of word - favor EOS
-                listOf(EOS_IDX to -0.3f)
+        if (errorX > 0.0001f || errorY > 0.0001f) {
+            deltaErrors++
+            if (deltaErrors == 1) {
+                println("   ❌ Velocity formula error at i=$i:")
+                println("      Expected: vx=${"%.6f".format(expectedVx)}, vy=${"%.6f".format(expectedVy)}")
+                println("      Actual:   vx=${"%.6f".format(actualVx)}, vy=${"%.6f".format(actualVy)}")
             }
-
-            // Expand beam
-            for ((tokenId, logProb) in topK) {
-                val newBeam = BeamState(
-                    tokens = (beam.tokens + tokenId.toLong()).toMutableList(),
-                    score = beam.score + logProb,
-                    finished = tokenId == EOS_IDX
-                )
-                newCandidates.add(newBeam)
-            }
-        }
-
-        // Keep top beams
-        beams = newCandidates.sortedByDescending { it.score }.take(BEAM_WIDTH)
-        finishedBeams.addAll(beams.filter { it.finished })
-
-        // Early stopping
-        if (step >= 10 && finishedBeams.size >= 3) {
-            println("   ⚡ Early stopping at step $step (${finishedBeams.size} beams finished)")
-            break
         }
     }
 
-    // Decode beams to words
-    val allBeams = (finishedBeams + beams).sortedByDescending { it.score }
-    val predictions = allBeams.map { beam ->
-        val word = beam.tokens.drop(1).filter { it != EOS_IDX.toLong() }
-            .mapNotNull { tokenToChar[it.toInt()] }
-            .joinToString("")
-        val confidence = exp(beam.score)
-        word to confidence
-    }.filter { it.first.isNotEmpty() }.distinctBy { it.first }.take(3)
+    val deltaCheck = deltaErrors == 0
+    println("   ${if (deltaCheck) "✅" else "❌"} Velocity formula: simple deltas (errors: $deltaErrors/10)")
+    allPassed = allPassed && deltaCheck
 
-    println("   ✅ Generated ${predictions.size} predictions")
+    // Test 4: Verify accelerations are velocity deltas
+    var accelErrors = 0
+    for (i in 2 until minOf(features.actualLength, 10)) {
+        val expectedAx = features.velocities[i].x - features.velocities[i-1].x
+        val expectedAy = features.velocities[i].y - features.velocities[i-1].y
+        val actualAx = features.accelerations[i].x
+        val actualAy = features.accelerations[i].y
 
-    return predictions
+        val errorX = abs(expectedAx - actualAx)
+        val errorY = abs(expectedAy - actualAy)
+
+        if (errorX > 0.0001f || errorY > 0.0001f) {
+            accelErrors++
+            if (accelErrors == 1) {
+                println("   ❌ Acceleration formula error at i=$i:")
+                println("      Expected: ax=${"%.6f".format(expectedAx)}, ay=${"%.6f".format(expectedAy)}")
+                println("      Actual:   ax=${"%.6f".format(actualAx)}, ay=${"%.6f".format(actualAy)}")
+            }
+        }
+    }
+
+    val accelCheck = accelErrors == 0
+    println("   ${if (accelCheck) "✅" else "❌"} Acceleration formula: velocity deltas (errors: $accelErrors/10)")
+    allPassed = allPassed && accelCheck
+
+    // Test 5: Verify components are separated (vx != vy for movement)
+    val hasDifferentComponents = features.velocities.take(features.actualLength)
+        .count { it.x != it.y } > features.actualLength / 2
+
+    println("   ${if (hasDifferentComponents) "✅" else "❌"} Component separation: vx/vy different (${features.velocities.count { it.x != it.y }} distinct)")
+    allPassed = allPassed && hasDifferentComponents
+
+    return allPassed
 }
 
 /**
@@ -341,17 +351,8 @@ fun main() {
     // Step 4: Mask Conventions
     testMaskConventions(features.actualLength)
 
-    // Step 5: Mock Beam Search
-    val predictions = mockBeamSearch(features, "hello")
-
-    // Step 6: Display Results
-    println("\n🎉 Final Predictions")
-    println("-" .repeat(70))
-    predictions.forEachIndexed { index, (word, confidence) ->
-        val percentage = (confidence * 100).toInt()
-        val bar = "█".repeat((confidence * 50).toInt())
-        println("   ${index + 1}. %-10s [confidence: %3d%%] %s".format(word, percentage, bar))
-    }
+    // Step 5: Feature Extraction Validation
+    val featureValidationPassed = validateFeatureExtraction(features, "hello")
 
     // Verification Summary
     println("\n" + "=" .repeat(70))
@@ -360,12 +361,9 @@ fun main() {
 
     var allPassed = true
 
-    // Check 1: Feature extraction
-    val maxCoord = features.normalizedCoordinates.take(features.actualLength)
-        .maxOf { maxOf(it.x, it.y) }
-    val check1 = maxCoord <= 1.0f
-    println("   ${if (check1) "✅" else "❌"} Feature extraction: Normalized to [0,1]")
-    allPassed = allPassed && check1
+    // Check 1: Feature extraction validation passed
+    println("   ${if (featureValidationPassed) "✅" else "❌"} Feature extraction: Math validation passed")
+    allPassed = allPassed && featureValidationPassed
 
     // Check 2: Tensor shape
     val check2 = tensorData.size == MAX_TRAJECTORY_POINTS * 6
@@ -393,17 +391,19 @@ fun main() {
     println("   ${if (check5) "✅" else "❌"} Mask convention: 1=padded, 0=valid")
     allPassed = allPassed && check5
 
-    // Check 6: Predictions generated
-    val check6 = predictions.isNotEmpty()
-    println("   ${if (check6) "✅" else "❌"} Beam search: ${predictions.size} predictions generated")
-    allPassed = allPassed && check6
-
     println()
     if (allPassed) {
-        println("🎉 ALL CHECKS PASSED - Pipeline working correctly!")
-        println("   Ready for ONNX runtime integration")
+        println("🎉 ALL CHECKS PASSED - Feature extraction math is correct!")
+        println("   • Normalization: coordinates in [0,1]")
+        println("   • Velocity formula: vx = x[i] - x[i-1]")
+        println("   • Acceleration formula: ax = vx[i] - vx[i-1]")
+        println("   • Component separation: vx/vy stored separately")
+        println("   • Mask conventions: 1=padded, 0=valid")
+        println()
+        println("   ✅ Ready for real ONNX model testing")
+        println("   → Run: ./test_onnx_accuracy.sh")
     } else {
-        println("❌ Some checks failed - review implementation")
+        println("❌ Some checks failed - review feature extraction implementation")
     }
 
     println()
