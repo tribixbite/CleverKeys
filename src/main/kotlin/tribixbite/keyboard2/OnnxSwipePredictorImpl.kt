@@ -219,11 +219,12 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         }
 
         logDebug("✅ Decoder session is initialized, starting beam search")
-        
+        logDebug("🔧 Beam search config: maxLength=$maxLength, beamWidth=$beamWidth")
+
         // Initialize beam search
         val beams = mutableListOf<BeamSearchState>()
         beams.add(BeamSearchState(SOS_IDX, 0.0f, false))
-        
+
         logDebug("🚀 Beam search initialized with SOS token ($SOS_IDX)")
         logDebug("🚀 BATCHED INFERENCE: Using optimized batch processing for beam search")
         
@@ -232,6 +233,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
 
         // Beam search loop with batched processing
         for (step in 0 until maxLength) {
+            logDebug("⏩ Loop iteration: step=$step, maxLength=$maxLength")
+
             // Separate active beams (need further expansion)
             val activeBeams = beams.filter { !it.finished }
 
@@ -243,9 +246,13 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 break
             }
 
+            logDebug("🚦 About to call processBatchedBeams with ${activeBeams.size} beams")
+
             try {
+                logDebug("🔵 Inside try block, calling processBatchedBeams...")
                 // CRITICAL OPTIMIZATION: Process all active beams in single batch
                 val newCandidates = processBatchedBeams(activeBeams, memory, srcMaskTensor, decoderSession)
+                logDebug("🟢 processBatchedBeams returned successfully with ${newCandidates.size} candidates")
 
                 logDebug("📦 processBatchedBeams returned ${newCandidates.size} candidates")
 
@@ -278,6 +285,7 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         val allFinalBeams = finishedBeams + beams
 
         logDebug("🎯 Beam search complete: ${finishedBeams.size} finished, ${beams.size} active, returning ${allFinalBeams.size} total")
+        logDebug("🔍 Final beams: ${allFinalBeams.map { "tokens=${it.tokens.size}, score=${it.score}" }}")
 
         // Convert beams to candidates
         allFinalBeams.map { beam ->
@@ -388,6 +396,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         val newBeamCandidates = mutableListOf<BeamSearchState>()
         val batchedLogitsTensor = batchedOutput.get(0) as OnnxTensor
         val batchedTensorData = batchedLogitsTensor.value
+
+        logDebug("📊 Decoder output shape: ${batchedLogitsTensor.info.shape.contentToString()}, type: ${batchedTensorData::class.simpleName}")
 
         if (batchedTensorData is Array<*>) {
             // Handle 4D tensor: [batch_size, seq_length, vocab_size]
