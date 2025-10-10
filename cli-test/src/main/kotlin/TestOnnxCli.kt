@@ -258,7 +258,7 @@ fun runEncoderInference(
     val srcMaskTensor = createSourceMaskTensor(models.env, features.actualLength)
 
     val inputs = mapOf(
-        "trajectory_features" to trajectoryTensor,  // FIXED: was "trajectory"
+        "trajectory" to trajectoryTensor,
         "nearest_keys" to nearestKeysTensor,
         "src_mask" to srcMaskTensor
     )
@@ -287,10 +287,10 @@ fun runDecoderStep(
     val targetMaskTensor = createTargetMaskTensor(models.env, targetTokens.size, MAX_LENGTH)
 
     val inputs = mapOf(
-        "memory" to encoderOutput,           // FIXED: was "encoder_output"
+        "encoder_output" to encoderOutput,
         "target_tokens" to targetTensor,
         "src_mask" to srcMask,
-        "target_mask" to targetMaskTensor    // FIXED: was "tgt_mask"
+        "tgt_mask" to targetMaskTensor
     )
 
     val outputs = models.decoder.run(inputs)

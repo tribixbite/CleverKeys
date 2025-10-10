@@ -217,16 +217,11 @@ Created comprehensive verification suite:
 ./gradlew connectedAndroidTest --tests OnnxAccuracyTest
 ```
 
-✅ **Complete ONNX CLI Test (commit 2777b8d, fixed a1a993a):**
+✅ **Complete ONNX CLI Test (commit 2777b8d):**
 
 **Full-featured CLI test with real ONNX inference:**
 
 Unlike the simple math validation, this is a **complete production-grade test** that loads and runs actual ONNX models:
-
-**CRITICAL FIX (commit a1a993a):** Corrected ONNX model input names to match actual models:
-- Encoder: `"trajectory"` → `"trajectory_features"` ✅
-- Decoder: `"encoder_output"` → `"memory"`, `"tgt_mask"` → `"target_mask"` ✅
-- These names are validated by app in OnnxSwipePredictorImpl.kt lines 100, 121
 
 **New Files:**
 - `test_onnx_cli.kt`: Complete 600+ line CLI test (real ONNX Runtime)
