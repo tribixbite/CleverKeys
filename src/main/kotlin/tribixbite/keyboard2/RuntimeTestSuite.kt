@@ -111,19 +111,54 @@ class RuntimeTestSuite(private val context: Context) {
                 )
             }
             
-            // Test prediction
+            // Test prediction with realistic "hello" swipe
             val testInput = createTestSwipeInput()
             val predictions = neuralEngine.predictAsync(testInput)
-            
+
             val executionTime = System.currentTimeMillis() - startTime
             neuralEngine.cleanup()
-            
+
+            // Validate prediction quality
+            val topWord = predictions.topPrediction
+            val topScore = predictions.topScore
+
+            // Check for gibberish patterns
+            val isGibberish = if (topWord != null) {
+                val hasRepeatedChars = topWord.zipWithNext().count { (a, b) -> a == b } > topWord.length / 2
+                val isTooLong = topWord.length > 15
+                val hasOnlyOneChar = topWord.toSet().size == 1
+                hasRepeatedChars || isTooLong || hasOnlyOneChar
+            } else {
+                false
+            }
+
+            // Check for reasonable confidence scores (not raw logits)
+            val hasReasonableScores = topScore in 1..1000
+
+            val success = !predictions.isEmpty &&
+                         topWord != null &&
+                         topWord.isNotEmpty() &&
+                         !isGibberish &&
+                         hasReasonableScores
+
+            val details = buildString {
+                append("Predictions: ${predictions.size}, ")
+                append("Top: '$topWord' (score: $topScore)")
+                if (!hasReasonableScores) append(" [WARN: Unusual score]")
+                if (isGibberish) append(" [WARN: Gibberish detected]")
+            }
+
             RuntimeTestResult(
-                testName = "Neural Engine",
-                success = !predictions.isEmpty,
+                testName = "Neural Engine Accuracy",
+                success = success,
                 executionTimeMs = executionTime,
-                details = "Predictions: ${predictions.size}, Top: ${predictions.topPrediction ?: "none"}",
-                errorMessage = if (predictions.isEmpty) "No predictions generated" else null
+                details = details,
+                errorMessage = when {
+                    predictions.isEmpty -> "No predictions generated"
+                    isGibberish -> "Gibberish prediction: '$topWord' - feature extraction may be broken"
+                    !hasReasonableScores -> "Score out of range: $topScore - log-softmax may not be applied"
+                    else -> null
+                }
             )
         } catch (e: Exception) {
             RuntimeTestResult(
@@ -362,13 +397,20 @@ class RuntimeTestSuite(private val context: Context) {
     // Helper methods for creating test data
     
     private fun createTestSwipeInput(): SwipeInput {
+        // Create realistic "hello" swipe: h -> e -> l -> l -> o
         val points = listOf(
-            PointF(100f, 200f),
-            PointF(200f, 200f),
-            PointF(300f, 200f),
-            PointF(400f, 200f)
+            // Start at 'h' (540, 200)
+            PointF(540f, 200f), PointF(545f, 200f), PointF(550f, 200f),
+            // Move to 'e' (280, 100)
+            PointF(500f, 150f), PointF(400f, 120f), PointF(350f, 110f), PointF(280f, 100f),
+            // Move to 'l' (730, 200)
+            PointF(400f, 150f), PointF(550f, 180f), PointF(680f, 195f), PointF(720f, 200f), PointF(730f, 200f),
+            // Stay at 'l' (double letter)
+            PointF(735f, 200f), PointF(740f, 200f),
+            // Move to 'o' (820, 100)
+            PointF(760f, 180f), PointF(780f, 150f), PointF(800f, 120f), PointF(810f, 110f), PointF(820f, 100f)
         )
-        val timestamps = points.indices.map { it * 100L }
+        val timestamps = points.indices.map { it * 50L }
         return SwipeInput(points, timestamps, emptyList())
     }
     
