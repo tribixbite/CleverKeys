@@ -138,15 +138,39 @@ class OptimizedTensorPool private constructor(private val ortEnvironment: OrtEnv
      * Acquire pre-allocated buffer for efficient tensor creation
      */
     fun acquireFloatBuffer(sizeBytes: Int): ByteBuffer {
-        return floatBufferPool.poll() ?: createFloatBuffer(sizeBytes)
+        // CRITICAL FIX: Only use pooled buffer if it's large enough
+        val pooledBuffer = floatBufferPool.poll()
+        return if (pooledBuffer != null && pooledBuffer.capacity() >= sizeBytes) {
+            pooledBuffer
+        } else {
+            // Return undersized buffer to pool and create new one
+            pooledBuffer?.let { floatBufferPool.offer(it) }
+            createFloatBuffer(sizeBytes)
+        }
     }
 
     fun acquireLongBuffer(sizeBytes: Int): ByteBuffer {
-        return longBufferPool.poll() ?: createLongBuffer(sizeBytes)
+        // CRITICAL FIX: Only use pooled buffer if it's large enough
+        val pooledBuffer = longBufferPool.poll()
+        return if (pooledBuffer != null && pooledBuffer.capacity() >= sizeBytes) {
+            pooledBuffer
+        } else {
+            // Return undersized buffer to pool and create new one
+            pooledBuffer?.let { longBufferPool.offer(it) }
+            createLongBuffer(sizeBytes)
+        }
     }
 
     fun acquireBooleanBuffer(sizeBytes: Int): ByteBuffer {
-        return booleanBufferPool.poll() ?: createBooleanBuffer(sizeBytes)
+        // CRITICAL FIX: Only use pooled buffer if it's large enough
+        val pooledBuffer = booleanBufferPool.poll()
+        return if (pooledBuffer != null && pooledBuffer.capacity() >= sizeBytes) {
+            pooledBuffer
+        } else {
+            // Return undersized buffer to pool and create new one
+            pooledBuffer?.let { booleanBufferPool.offer(it) }
+            createBooleanBuffer(sizeBytes)
+        }
     }
 
     /**
