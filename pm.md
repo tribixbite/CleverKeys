@@ -980,3 +980,183 @@ termux-open build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
 
 **Status:** Build deployed, awaiting test results to confirm Fix #5 effectiveness.
 
+
+---
+
+## Fix #7: Logging Cleanup and Raw Input Data Addition
+
+**Date:** October 10, 2025
+**Status:** ✅ **COMPLETE**
+**Commit:** c09f6f4
+
+### Problem:
+
+Logs were extremely verbose and cluttered with unhelpful information:
+- Beam search step-by-step spam (🔵, 🟢, 🚦, ⏩ for every iteration)
+- Tensor shape logging on every batch
+- Performance metrics on every inference
+- Pool efficiency statistics
+- Broken `logD()` calls in `SwipeTrajectoryProcessor` (function doesn't exist in that class scope)
+- No visibility into actual raw input data being fed to model
+
+**Example verbose output (17 steps × 10+ lines each = 170+ lines per prediction!):**
+```
+🔄 Beam search step 13: beams.size=3, activeBeams.size=3, finishedBeams.size=21
+🚦 About to call processBatchedBeams with 3 beams
+🔵 Inside try block, calling processBatchedBeams...
+🔧 OPTIMIZED batched decoder shapes:
+   memory: [3, 150, 256]
+   target_tokens: [3, 20]
+   target_mask: [3, 20]
+   src_mask: [3, 150]
+🚀 TENSOR-POOLED INFERENCE: 14ms for 3 beams
+   Speedup: 10.714286x vs sequential
+   Pool efficiency: 87.5% hit rate (28/32)
+📊 Decoder output shape: [3, 20, 30], type: Array
+🟢 processBatchedBeams returned successfully with 9 candidates
+📦 processBatchedBeams returned 9 candidates
+🚀 Step result: 9 total → 3 finished, 6 still active → keeping top 3 beams
+```
+
+### Changes Made:
+
+**1. Removed verbose beam search logging:**
+```kotlin
+// REMOVED:
+logDebug("✅ Decoder session is initialized, starting beam search")
+logDebug("🔧 Beam search config: maxLength=$maxLength, beamWidth=$beamWidth")
+logDebug("🚀 Beam search initialized with SOS token ($SOS_IDX)")
+logDebug("🚀 BATCHED INFERENCE: Using optimized batch processing for beam search")
+logDebug("⏩ Loop iteration: step=$step, maxLength=$maxLength")
+logDebug("🔄 Beam search step $step: beams.size=${beams.size}...")
+logDebug("🚦 About to call processBatchedBeams with ${activeBeams.size} beams")
+logDebug("🔵 Inside try block, calling processBatchedBeams...")
+logDebug("🟢 processBatchedBeams returned successfully...")
+logDebug("📦 processBatchedBeams returned ${newCandidates.size} candidates")
+logDebug("🚀 Step result: ${newCandidates.size} total → ...")
+logDebug("🏁 All beams finished at step $step")
+logDebug("🎯 Beam search complete: ${finishedBeams.size} finished...")
+logDebug("🔍 Final beams: ${allFinalBeams.map { ... }}")
+logDebug("💥 Exception details: ${e.javaClass.simpleName}: ${e.message}")
+logDebug("📊 Beam state at failure: beams.size=${beams.size}...")
+
+// KEPT (simplified):
+logDebug("🏆 Top 3: ${top3.map { "'${it.word}'" }.joinToString(", ")}")
+```
+
+**2. Removed verbose tensor/performance logging:**
+```kotlin
+// REMOVED:
+logDebug("🔧 OPTIMIZED batched decoder shapes:")
+logDebug("   memory: ${expandedMemory.info.shape.contentToString()}")
+logDebug("   target_tokens: ${batchedTokensTensor.info.shape.contentToString()}")
+logDebug("   target_mask: ${batchedMaskTensor.info.shape.contentToString()}")
+logDebug("   src_mask: ${expandedSrcMask.info.shape.contentToString()}")
+logDebug("🚀 TENSOR-POOLED INFERENCE: ${inferenceTime}ms for $batchSize beams")
+logDebug("   Speedup: ${speedupFactor}x vs sequential")
+logDebug("   Pool efficiency: ${poolStats.hitRate}% hit rate...")
+```
+
+**3. Removed broken logD() calls in SwipeTrajectoryProcessor:**
+```kotlin
+// REMOVED (these were silently failing - logD() doesn't exist):
+logD("🔬 Feature extraction DEBUG:")
+logD("   Input: ${coordinates.size} coordinates")
+logD("   First 3 raw: ${coordinates.take(3).map { ... }}")
+logD("   After smoothing: ${smoothedCoords.size} coordinates")
+logD("   First 3 smoothed: ${smoothedCoords.take(3).map { ... }}")
+logD("   After normalization: ${normalizedCoords.size} coordinates")
+logD("   First 3 normalized: ${normalizedCoords.take(3).map { ... }}")
+logD("   Nearest keys detected: ${nearestKeys.size} keys")
+logD("   First 10 keys: ${nearestKeys.take(10)}")
+logD("   After padding/truncate: ${finalCoords.size} coordinates")
+logD("   Final first 3: ${finalCoords.take(3).map { ... }}")
+```
+
+**Why broken:** `SwipeTrajectoryProcessor` is a top-level class outside `OnnxSwipePredictorImpl`, so it doesn't have access to `logDebug()` or `logD()`.
+
+**4. Added raw input data logging:**
+```kotlin
+// ADDED in predict():
+logDebug("📍 Raw swipe input (first 10 points):")
+input.coordinates.take(10).forEachIndexed { i, point ->
+    val timestamp = if (i < input.timestamps.size) input.timestamps[i] else 0L
+    logDebug("   [$i] x=${point.x}, y=${point.y}, t=$timestamp")
+}
+```
+
+**5. Simplified vocabulary filter logging:**
+```kotlin
+// BEFORE:
+logDebug("📋 BEFORE vocabulary filtering: ${candidates.size} candidates")
+top5Before.forEachIndexed { idx, cand ->
+    logDebug("   ${idx + 1}. word='${cand.word}' conf=${cand.confidence}")
+}
+logDebug("🔍 Applying vocabulary filter...")
+logDebug("📋 AFTER vocabulary filtering: ${result.size} candidates")
+result.take(5).forEachIndexed { idx, cand ->
+    logDebug("   ${idx + 1}. word='${cand.word}' score=${cand.score}")
+}
+
+// AFTER:
+logDebug("📋 Vocabulary filter: ${candidates.size} → ${result.size} candidates")
+```
+
+### Expected Impact:
+
+**Before (per prediction):**
+- ~170+ lines of beam search spam
+- ~50+ lines of tensor shape/performance logging
+- ~10+ lines of vocabulary filtering details
+- **Total: ~230+ lines per prediction** (99% noise)
+
+**After (per prediction):**
+- ~10 lines raw input data (USEFUL!)
+- ~1 line feature extraction summary
+- ~1 line top 3 results
+- ~1 line vocabulary filter summary
+- ~1 line prediction complete
+- **Total: ~15 lines per prediction** (95% signal)
+
+**Log reduction: 93% fewer lines, 20x more readable**
+
+### Benefits:
+
+1. **✅ Raw input data visibility** - Can now see if coordinates are already collapsed at input
+2. **✅ Readable logs** - Essential information only
+3. **✅ Faster debugging** - Less scrolling, clearer signal
+4. **✅ Removed broken code** - logD() calls that were silently failing
+5. **✅ Cleaner codebase** - Removed unnecessary logging clutter
+
+### Next Test Expected Output:
+
+```
+🚀 Starting neural prediction for 366 points
+📍 Raw swipe input (first 10 points):
+   [0] x=479.0, y=47.0, t=1234567890
+   [1] x=480.5, y=48.2, t=1234567891  ← Should be DIFFERENT!
+   [2] x=482.3, y=49.8, t=1234567892  ← Should be DIFFERENT!
+   [3] x=484.7, y=51.6, t=1234567893
+   ...
+📊 Feature extraction complete:
+   Actual length: 150
+   First 10 nearest keys: [23, 23, 23, 17, ...]  ← Still collapsed?
+   First 3 normalized points: [(0.444, 0.117), (0.445, 0.118), ...]
+🏆 Top 3: 'ggniie', 'ggniit', 'ggniiee'
+📋 Vocabulary filter: 36 → 0 candidates
+🧠 Neural prediction completed: 0 candidates
+```
+
+**If raw input shows distinct coordinates but nearest keys are identical**, the bug is in `detectNearestKeys()` or coordinate processing.
+
+**If raw input shows identical coordinates**, the bug is BEFORE feature extraction (in swipe gesture recording).
+
+### Status:
+
+- ✅ Logging cleaned up
+- ✅ Raw input data logging added
+- ✅ APK rebuilt and installed
+- ⏳ Awaiting next test to see raw input coordinates
+
+**Expected next step:** Test swipe and examine raw input coordinates to pinpoint where collapse happens.
+
