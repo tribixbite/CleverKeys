@@ -1641,3 +1641,40 @@ This completes the coordinate collapse investigation:
 
 **Expected:** Proper word predictions with distinct coordinates throughout trajectory.
 
+
+---
+
+## ✅ ONNX CLI Test API Fixes (commit 9554720 - Oct 10, 2025)
+
+**Status:** Compilation SUCCESS, Runtime BLOCKED (Termux limitation)
+
+### Fixes Applied:
+1. **Tensor Creation** - ByteBuffer for Long arrays (nearest_keys, target_tokens)
+2. **Mask Tensors** - 2D Boolean arrays for proper shape inference
+3. **Output Extraction** - Proper OnnxTensor casting from session.run() results
+4. **Beam Search** - Mutable list for clear()/addAll() operations
+5. **Main Class** - Proper structure for kotlinc compilation
+
+### Compilation Output:
+```
+✅ Compilation successful
+```
+
+### Runtime Limitation:
+```
+UnsatisfiedLinkError: libonnxruntime.so requires libdl.so.2 (glibc)
+```
+**Reason:** Termux uses Bionic (Android libc), ONNX Runtime JVM requires glibc.
+
+### Workaround:
+CLI test cannot run in Termux. Use Android APK for runtime verification:
+- APK includes Android-specific ONNX Runtime native libs
+- `validateCompletePipeline()` runs on app initialization
+- Check logcat for validation results
+
+### Input Names Confirmed:
+From `OnnxSwipePredictorImpl.kt` validation:
+- **Encoder**: trajectory_features, nearest_keys, src_mask
+- **Decoder**: memory, target_tokens, src_mask, target_mask
+
+These names are validated against actual model files during initialization.
