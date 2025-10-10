@@ -160,10 +160,72 @@ Created comprehensive end-to-end pipeline test:
 - Beam search with early stopping optimization
 - Token decoding filters special tokens correctly
 
+✅ **ONNX Accuracy Tests Created (commit 9423a19):**
+
+**Real ONNX model testing to verify accurate predictions:**
+
+**New Test Suite:** `src/androidTest/kotlin/tribixbite/keyboard2/OnnxAccuracyTest.kt`
+- 5 instrumentation tests with real ONNX models
+- Tests realistic swipes: "hello", "test", "the"
+- Anti-regression tests for gibberish patterns
+- Confidence score validation (1-1000 range)
+
+**Test Runner:** `test_onnx_accuracy.sh`
+- Automated APK installation
+- Runs tests on device/emulator
+- Parses and displays results
+- CI/CD ready (exit codes)
+
+**Enhanced RuntimeTestSuite:**
+- "Neural Engine Accuracy" test
+- Gibberish detection (repeated chars, too long, single char)
+- Score range validation
+- Uses realistic "hello" swipe
+
+**Documentation:** `TESTING.md`
+- Complete testing guide
+- How to verify accurate predictions
+- Troubleshooting gibberish/bad scores
+- Success criteria and examples
+
+**Success Criteria:**
+```
+✅ 5/5 instrumentation tests pass
+✅ Top predictions are real words (e.g., "hello", "test", "the")
+✅ No gibberish patterns (e.g., "ggeeeeee", "hhhhhh")
+✅ Confidence scores 1-1000 (not raw logits)
+✅ Execution time < 200ms
+```
+
+**Expected Test Output:**
+```
+🎯 Test: hello swipe
+   Top prediction: 'hello'
+   All predictions: [hello, hells, helm, helps, held]
+   ✅ PERFECT: Got exact word 'hello'
+
+🎯 Test: test swipe
+   Top prediction: 'test'
+   ✅ Word 'test' found in top 5
+
+🎉 ALL TESTS PASSED (5/5)
+```
+
+**Run Tests:**
+```bash
+# Quick automated test
+./test_onnx_accuracy.sh
+
+# Or manually
+./gradlew connectedAndroidTest --tests OnnxAccuracyTest
+```
+
 ⏳ **Next Steps:**
-1. Build and install APK with all fixes
-2. Test swipe gestures produce real words (not gibberish)
-3. Verify predictions match expected quality from web demo
+1. Build and install APK: `./build-on-termux.sh`
+2. Run accuracy tests: `./test_onnx_accuracy.sh`
+3. Verify all 5 tests pass with real words
+4. Test real swipe gestures in text fields
+5. Compare quality with web demo
 
 ### Impact:
 
