@@ -156,6 +156,13 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         try {
             logDebug("🚀 Starting neural prediction for ${input.coordinates.size} points")
 
+            // Log raw input data (first 10 points)
+            logDebug("📍 Raw swipe input (first 10 points):")
+            input.coordinates.take(10).forEachIndexed { i, point ->
+                val timestamp = if (i < input.timestamps.size) input.timestamps[i] else 0L
+                logDebug("   [$i] x=${point.x}, y=${point.y}, t=$timestamp")
+            }
+
             // Extract trajectory features
             val features = trajectoryProcessor.extractFeatures(input.coordinates, input.timestamps)
             logDebug("📊 Feature extraction complete:")
@@ -222,44 +229,25 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
             return@withContext emptyList()
         }
 
-        logDebug("✅ Decoder session is initialized, starting beam search")
-        logDebug("🔧 Beam search config: maxLength=$maxLength, beamWidth=$beamWidth")
-
         // Initialize beam search
         val beams = mutableListOf<BeamSearchState>()
         beams.add(BeamSearchState(SOS_IDX, 0.0f, false))
-
-        logDebug("🚀 Beam search initialized with SOS token ($SOS_IDX)")
-        logDebug("🚀 BATCHED INFERENCE: Using optimized batch processing for beam search")
         
         // Maintain separate lists for finished and active beams
         val finishedBeams = mutableListOf<BeamSearchState>()
 
         // Beam search loop with batched processing
-        // CRITICAL FIX: Wrap entire loop body in try-catch to catch filter exceptions
         for (step in 0 until maxLength) {
             try {
-                logDebug("⏩ Loop iteration: step=$step, maxLength=$maxLength")
-
                 // Separate active beams (need further expansion)
                 val activeBeams = beams.filter { !it.finished }
 
-                logDebug("🔄 Beam search step $step: beams.size=${beams.size}, activeBeams.size=${activeBeams.size}, finishedBeams.size=${finishedBeams.size}")
-
                 if (activeBeams.isEmpty()) {
-                    // All beams finished
-                    logDebug("🏁 All beams finished at step $step (total beams: ${beams.size})")
-                    break
+                    break  // All beams finished
                 }
-
-                logDebug("🚦 About to call processBatchedBeams with ${activeBeams.size} beams")
-                logDebug("🔵 Inside try block, calling processBatchedBeams...")
 
                 // CRITICAL OPTIMIZATION: Process all active beams in single batch
                 val newCandidates = processBatchedBeams(activeBeams, memory, srcMaskTensor, decoderSession)
-                logDebug("🟢 processBatchedBeams returned successfully with ${newCandidates.size} candidates")
-
-                logDebug("📦 processBatchedBeams returned ${newCandidates.size} candidates")
 
                 // Separate new finished candidates from still-active ones
                 val newFinished = newCandidates.filter { it.finished }
@@ -272,18 +260,13 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 beams.clear()
                 beams.addAll(stillActive.sortedByDescending { it.score }.take(beamWidth))
 
-                logDebug("🚀 Step result: ${newCandidates.size} total → ${newFinished.size} finished, ${stillActive.size} still active → keeping top ${beams.size} beams")
-
                 // If we have enough finished beams and no more active ones, stop
                 if (beams.isEmpty() && finishedBeams.isNotEmpty()) {
-                    logDebug("🏁 All beams finished at step $step")
                     break
                 }
 
             } catch (e: Exception) {
-                logE("❌ CRITICAL: Beam search failed at step $step", e)
-                logDebug("💥 Exception details: ${e.javaClass.simpleName}: ${e.message}")
-                logDebug("📊 Beam state at failure: beams.size=${beams.size}, finishedBeams.size=${finishedBeams.size}")
+                logE("❌ Beam search failed at step $step", e)
                 break
             }
         }
@@ -291,23 +274,15 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         // Return best hypotheses from both finished and remaining active beams
         val allFinalBeams = finishedBeams + beams
 
-        logDebug("🎯 Beam search complete: ${finishedBeams.size} finished, ${beams.size} active, returning ${allFinalBeams.size} total")
-        logDebug("🔍 Final beams: ${allFinalBeams.map { "tokens=${it.tokens.size}, score=${it.score}" }}")
-
         // Convert beams to candidates
         val candidates = allFinalBeams.map { beam ->
             val word = tokenizer.tokensToWord(beam.tokens.drop(1)) // Remove SOS token
             BeamSearchCandidate(word, kotlin.math.exp(beam.score).toFloat())
         }
 
-        // Log top 5 candidates with tokens, words, and confidences
-        val top5Beams = allFinalBeams.sortedByDescending { kotlin.math.exp(it.score) }.take(5)
-        logDebug("🏆 TOP 5 BEAM SEARCH RESULTS:")
-        top5Beams.forEachIndexed { idx, beam ->
-            val word = tokenizer.tokensToWord(beam.tokens.drop(1))
-            val conf = kotlin.math.exp(beam.score).toFloat()
-            logDebug("   ${idx + 1}. tokens=${beam.tokens} → word='$word' confidence=$conf (log_score=${beam.score})")
-        }
+        // Log top 3 results
+        val top3 = candidates.sortedByDescending { it.confidence }.take(3)
+        logDebug("🏆 Top 3: ${top3.map { "'${it.word}'" }.joinToString(", ")}")
 
         candidates
     }
@@ -363,24 +338,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                     "src_mask" to expandedSrcMask
                 )
 
-                logDebug("🔧 OPTIMIZED batched decoder shapes:")
-                logDebug("   memory: ${expandedMemory.info.shape.contentToString()}")
-                logDebug("   target_tokens: ${batchedTokensTensor.info.shape.contentToString()}")
-                logDebug("   target_mask: ${batchedMaskTensor.info.shape.contentToString()}")
-                logDebug("   src_mask: ${expandedSrcMask.info.shape.contentToString()}")
-
                 // SINGLE BATCHED INFERENCE with tensor pool optimization
-                val inferenceStart = System.nanoTime()
                 val batchedOutput = decoderSession.run(decoderInputs)
-                val inferenceTime = (System.nanoTime() - inferenceStart) / 1_000_000
-
-                logDebug("🚀 TENSOR-POOLED INFERENCE: ${inferenceTime}ms for $batchSize beams")
-
-                // Performance metrics with pool statistics
-                val poolStats = tensorPool.getPoolStats()
-                val speedupFactor = if (inferenceTime > 0) (batchSize * 50L).toFloat() / inferenceTime else 0f
-                logDebug("   Speedup: ${speedupFactor}x vs sequential")
-                logDebug("   Pool efficiency: ${poolStats.hitRate}% hit rate (${poolStats.poolHits}/${poolStats.totalAcquisitions})")
 
                 // Process batched results with enhanced error handling
                 val newBeamCandidates = processBatchedResults(batchedOutput, activeBeams)
@@ -686,22 +645,12 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
             return PredictionResult.empty
         }
 
-        logDebug("📋 BEFORE vocabulary filtering: ${candidates.size} candidates")
-        val top5Before = candidates.sortedByDescending { it.confidence }.take(5)
-        top5Before.forEachIndexed { idx, cand ->
-            logDebug("   ${idx + 1}. word='${cand.word}' conf=${cand.confidence}")
-        }
-
         // Filter through vocabulary if available
         val filteredCandidates = if (vocabulary.isLoaded()) {
-            logDebug("🔍 Applying vocabulary filter...")
             val result = vocabulary.filterPredictions(candidates.map { candidate ->
                 OptimizedVocabulary.CandidateWord(candidate.word, candidate.confidence)
             }, createSwipeStats())
-            logDebug("📋 AFTER vocabulary filtering: ${result.size} candidates")
-            result.take(5).forEachIndexed { idx, cand ->
-                logDebug("   ${idx + 1}. word='${cand.word}' score=${cand.score}")
-            }
+            logDebug("📋 Vocabulary filter: ${candidates.size} → ${result.size} candidates")
             result
         } else {
             candidates.map { OptimizedVocabulary.FilteredPrediction(it.word, it.confidence) }
@@ -906,14 +855,8 @@ class SwipeTrajectoryProcessor {
     )
     
     fun extractFeatures(coordinates: List<PointF>, timestamps: List<Long>): TrajectoryFeatures {
-        logD("🔬 Feature extraction DEBUG:")
-        logD("   Input: ${coordinates.size} coordinates")
-        logD("   First 3 raw: ${coordinates.take(3).map { "(%.1f, %.1f)".format(it.x, it.y) }}")
-
         // Smooth trajectory to reduce noise
         val smoothedCoords = smoothTrajectory(coordinates)
-        logD("   After smoothing: ${smoothedCoords.size} coordinates")
-        logD("   First 3 smoothed: ${smoothedCoords.take(3).map { "(%.1f, %.1f)".format(it.x, it.y) }}")
 
         // Calculate velocities (first derivative)
         val velocities = calculateVelocities(smoothedCoords, timestamps)
@@ -923,21 +866,15 @@ class SwipeTrajectoryProcessor {
 
         // Normalize coordinates to [0, 1] range
         val normalizedCoords = normalizeCoordinates(smoothedCoords)
-        logD("   After normalization: ${normalizedCoords.size} coordinates")
-        logD("   First 3 normalized: ${normalizedCoords.take(3).map { "(%.3f, %.3f)".format(it.x, it.y) }}")
 
         // Detect nearest keys for each point
         val nearestKeys = detectNearestKeys(smoothedCoords)
-        logD("   Nearest keys detected: ${nearestKeys.size} keys")
-        logD("   First 10 keys: ${nearestKeys.take(10)}")
 
         // Pad or truncate to MAX_TRAJECTORY_POINTS
         val finalCoords = padOrTruncate(normalizedCoords, MAX_TRAJECTORY_POINTS)
         val finalVelocities = padOrTruncate(velocities, MAX_TRAJECTORY_POINTS)
         val finalAccelerations = padOrTruncate(accelerations, MAX_TRAJECTORY_POINTS)
         val finalNearestKeys = padOrTruncate(nearestKeys, MAX_TRAJECTORY_POINTS, 0)
-        logD("   After padding/truncate: ${finalCoords.size} coordinates")
-        logD("   Final first 3: ${finalCoords.take(3).map { "(%.3f, %.3f)".format(it.x, it.y) }}")
         
         return TrajectoryFeatures(
             coordinates = finalCoords,
