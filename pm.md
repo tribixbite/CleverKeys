@@ -206,11 +206,12 @@ All TODO items found in the codebase with their context, priority, and implement
 - ✅ Database production-ready with migrations
 
 **Current focus:**
-1. Complete wireless ADB setup
-2. Install and test keyboard on device
-3. Verify neural prediction works
-4. Test swipe typing functionality
-5. Monitor for runtime crashes
+1. ✅ Beam search return value fixed (commit 17487b5)
+2. ✅ Comprehensive debug logging added to neural pipeline
+3. 🔄 APK rebuilt and ready for installation (49MB)
+4. ⏳ AWAITING: User to tap 'Install' in Android Package Installer
+5. ⏳ NEXT: Test neural prediction produces full words
+6. ⏳ NEXT: Test calibration screen displays properly with correct height
 
 **Post-testing (optional):**
 - Revisit Phase 2 TODOs to complete layout editor UX improvements
