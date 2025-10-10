@@ -77,7 +77,14 @@ class NeuralSwipeTypingEngine(
     }
     
     /**
-     * Update configuration
+     * Update configuration from NeuralConfig
+     */
+    fun setConfig(neuralConfig: NeuralConfig) {
+        neuralPredictor?.setConfig(neuralConfig)
+    }
+
+    /**
+     * Update configuration from Config (fallback)
      */
     fun setConfig(newConfig: Config) {
         neuralPredictor?.setConfig(newConfig)

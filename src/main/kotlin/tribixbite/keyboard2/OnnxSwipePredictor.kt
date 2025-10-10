@@ -44,7 +44,14 @@ class OnnxSwipePredictor private constructor(private val context: Context) {
     private val realPredictor by lazy { OnnxSwipePredictorImpl.getInstance(context) }
 
     /**
-     * Set configuration
+     * Set configuration from NeuralConfig
+     */
+    fun setConfig(neuralConfig: NeuralConfig) {
+        realPredictor.setConfig(neuralConfig)
+    }
+
+    /**
+     * Set configuration from Config (fallback)
      */
     fun setConfig(config: Config) {
         realPredictor.setConfig(config)

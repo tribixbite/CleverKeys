@@ -642,14 +642,24 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     }
     
     /**
-     * Set configuration
+     * Set configuration from NeuralConfig
+     */
+    fun setConfig(neuralConfig: NeuralConfig) {
+        beamWidth = neuralConfig.beamWidth.coerceIn(neuralConfig.beamWidthRange)
+        maxLength = neuralConfig.maxLength.coerceIn(neuralConfig.maxLengthRange)
+        confidenceThreshold = neuralConfig.confidenceThreshold.coerceIn(neuralConfig.confidenceRange)
+
+        logDebug("Neural config updated: beam_width=$beamWidth, max_length=$maxLength, threshold=$confidenceThreshold")
+    }
+
+    /**
+     * Set configuration from Config (fallback for compatibility)
+     * Creates NeuralConfig from SharedPreferences
      */
     fun setConfig(config: Config) {
-        beamWidth = if (config.neural_beam_width != 0) config.neural_beam_width else DEFAULT_BEAM_WIDTH
-        maxLength = if (config.neural_max_length != 0) config.neural_max_length else DEFAULT_MAX_LENGTH
-        confidenceThreshold = config.neural_confidence_threshold
-        
-        logDebug("Neural config updated: beam_width=$beamWidth, max_length=$maxLength, threshold=$confidenceThreshold")
+        val prefs = Config.globalPrefs()
+        val neuralConfig = NeuralConfig(prefs)
+        setConfig(neuralConfig)
     }
     
     /**

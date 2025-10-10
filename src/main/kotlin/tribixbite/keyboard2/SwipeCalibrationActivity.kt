@@ -463,7 +463,9 @@ class SwipeCalibrationActivity : Activity() {
             
             setView(layout)
             setPositiveButton("Apply") { _, _ ->
-                neuralEngine.setConfig(Config.globalConfig())
+                // Validate and save neural config
+                neuralConfig.validate()
+                neuralEngine.setConfig(neuralConfig)
                 toast("Neural parameters updated and saved")
             }
             setNegativeButton("Cancel", null)
