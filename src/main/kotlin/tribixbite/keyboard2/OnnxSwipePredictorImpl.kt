@@ -291,10 +291,19 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         logDebug("🔍 Final beams: ${allFinalBeams.map { "tokens=${it.tokens.size}, score=${it.score}" }}")
 
         // Convert beams to candidates
-        allFinalBeams.map { beam ->
+        val candidates = allFinalBeams.map { beam ->
             val word = tokenizer.tokensToWord(beam.tokens.drop(1)) // Remove SOS token
             BeamSearchCandidate(word, kotlin.math.exp(beam.score).toFloat())
         }
+
+        // Log top 5 candidates with words and confidences
+        val top5 = candidates.sortedByDescending { it.confidence }.take(5)
+        logDebug("🏆 TOP 5 BEAM SEARCH RESULTS:")
+        top5.forEachIndexed { idx, cand ->
+            logDebug("   ${idx + 1}. word='${cand.word}' confidence=${cand.confidence} (log_score=${kotlin.math.ln(cand.confidence.toDouble())})")
+        }
+
+        candidates
     }
     
     /**
@@ -670,19 +679,31 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         if (candidates.isEmpty()) {
             return PredictionResult.empty
         }
-        
+
+        logDebug("📋 BEFORE vocabulary filtering: ${candidates.size} candidates")
+        val top5Before = candidates.sortedByDescending { it.confidence }.take(5)
+        top5Before.forEachIndexed { idx, cand ->
+            logDebug("   ${idx + 1}. word='${cand.word}' conf=${cand.confidence}")
+        }
+
         // Filter through vocabulary if available
         val filteredCandidates = if (vocabulary.isLoaded()) {
-            vocabulary.filterPredictions(candidates.map { candidate ->
+            logDebug("🔍 Applying vocabulary filter...")
+            val result = vocabulary.filterPredictions(candidates.map { candidate ->
                 OptimizedVocabulary.CandidateWord(candidate.word, candidate.confidence)
             }, createSwipeStats())
+            logDebug("📋 AFTER vocabulary filtering: ${result.size} candidates")
+            result.take(5).forEachIndexed { idx, cand ->
+                logDebug("   ${idx + 1}. word='${cand.word}' score=${cand.score}")
+            }
+            result
         } else {
             candidates.map { OptimizedVocabulary.FilteredPrediction(it.word, it.confidence) }
         }
-        
+
         val words = filteredCandidates.map { it.word }
         val scores = filteredCandidates.map { (it.score * 1000).toInt() }
-        
+
         return PredictionResult(words, scores)
     }
     
