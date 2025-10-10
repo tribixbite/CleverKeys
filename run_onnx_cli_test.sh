@@ -76,6 +76,6 @@ echo ""
 # Run test
 echo "🚀 Running complete ONNX neural prediction test..."
 echo ""
-java -classpath "test_onnx_cli.jar:$ONNX_JAR" Test_onnx_cliKt
+java -classpath "test_onnx_cli.jar:$ONNX_JAR" TestOnnxCliKt
 
 exit $?
