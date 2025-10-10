@@ -205,18 +205,21 @@ All TODO items found in the codebase with their context, priority, and implement
 - ✅ Features properly disabled in UI
 - ✅ Database production-ready with migrations
 
-**Current status (Oct 10, 2025 - Beam Search FIXED!):**
+**Current status (Oct 10, 2025 - Batched Beam Search COMPLETE!):**
 1. ✅ Beam search return value fixed (commit 17487b5)
 2. ✅ Comprehensive debug logging added to neural pipeline
 3. ✅ Tensor buffer size mismatch fixed (commit 7efd9a0)
 4. ✅ Neural prediction infrastructure working - returns 8 candidates per swipe
 5. ✅ Performance: 3-7ms per beam, 66% tensor pool efficiency, 7-16x speedup
-6. ✅ **CRITICAL FIX**: Tensor pool buffer capacity check for batched processing (commit ab8347c)
+6. ✅ **CRITICAL FIX 1**: Tensor pool buffer capacity check (commit ab8347c)
    - Root cause: Pool returned 1024-byte buffer for 1280-byte request (batchSize=8)
    - Fix: Check buffer capacity before use, create new buffer if too small
-   - Beam search can now run full 35 steps!
-7. ⏳ NEXT: Test full beam search execution with fresh APK (build 04:48:26)
-8. ⏳ NEXT: Verify actual word predictions match swipe gestures
+7. ✅ **CRITICAL FIX 2**: Memory tensor expansion for batched decoding (commit 423126b)
+   - Root cause: Encoder memory [1,150,256] vs batched targets [8,20] size mismatch
+   - Fix: expandMemoryTensor() replicates encoder output to [8,150,256]
+   - Enables true batched beam search with 7-16x speedup!
+8. ⏳ NEXT: Test full beam search with fresh APK (build 04:58:04)
+9. ⏳ NEXT: Verify predictions are full words (not single characters)
 
 **Post-testing (optional):**
 - Revisit Phase 2 TODOs to complete layout editor UX improvements
