@@ -77,7 +77,19 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     override fun onDestroy() {
         super.onDestroy()
         logD("CleverKeys service stopping...")
-        
+
+        // Unregister preference listener to prevent memory leak
+        try {
+            DirectBootAwarePreferences.get_shared_preferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this)
+        } catch (e: Exception) {
+            logE("Failed to unregister preference listener", e)
+        }
+
+        // Clear view references to prevent memory leaks
+        keyboardView = null
+        suggestionBar = null
+
         // Clean shutdown of all components
         serviceScope.cancel()
         predictionService?.shutdown()

@@ -255,12 +255,7 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     override fun onSwipeEnd(recognizer: EnhancedSwipeGestureRecognizer) {
-        // Process complete swipe gesture for neural prediction
-        val swipeInput = recognizer.getSwipeInput()
-        if (swipeInput != null) {
-            // Trigger neural prediction (if neuralEngine is available)
-            // keyboard?.handleSwipeInput(swipeInput)
-        }
+        // Process complete swipe gesture - handled by handleSwipeEnd() instead
         invalidate()
     }
 
@@ -378,15 +373,6 @@ class Keyboard2View @JvmOverloads constructor(
             android.util.Log.d("Keyboard2View", "Neural swipe cancelled")
             clearSwipeState()
         }
-    }
-
-    private suspend fun handleNeuralPrediction(prediction: PredictionResult) {
-        android.util.Log.d("Keyboard2View",
-            "Neural prediction: ${prediction.words.size} words, " +
-            "scores: ${prediction.scores.joinToString(",")}")
-
-        // Pass predictions to keyboard service
-        keyboardService?.handleSwipePrediction(prediction)
     }
 
     // Key position calculation
@@ -724,7 +710,11 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     override fun modifyKey(keyValue: KeyValue?, modifiers: Pointers.Modifiers): KeyValue {
-        return keyValue ?: KeyValue.CharKey(' ')
+        return if (keyValue != null) {
+            modifyKeyInternal(keyValue, modifiers)
+        } else {
+            KeyValue.CharKey(' ')
+        }
     }
 
     override fun onDetachedFromWindow() {
@@ -739,6 +729,5 @@ class Keyboard2View @JvmOverloads constructor(
 
     companion object {
         private const val TAG = "Keyboard2View"
-        private var currentWhat = 0
     }
 }

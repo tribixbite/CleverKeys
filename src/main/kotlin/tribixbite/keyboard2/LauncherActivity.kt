@@ -277,6 +277,7 @@ class LauncherActivity : Activity(), Handler.Callback {
      */
     fun test_neural_prediction(view: View) {
         scope.launch {
+            var neuralEngine: NeuralSwipeEngine? = null
             try {
                 Log.d(TAG, "Starting neural prediction test")
 
@@ -289,7 +290,7 @@ class LauncherActivity : Activity(), Handler.Callback {
                 val testTimestamps = listOf(0L, 100L, 200L)
                 val testInput = SwipeInput(testPoints, testTimestamps, emptyList())
 
-                val neuralEngine = NeuralSwipeEngine(this@LauncherActivity, Config.globalConfig())
+                neuralEngine = NeuralSwipeEngine(this@LauncherActivity, Config.globalConfig())
 
                 if (neuralEngine.initialize()) {
                     val result = neuralEngine.predictAsync(testInput)
@@ -320,6 +321,9 @@ class LauncherActivity : Activity(), Handler.Callback {
                 withContext(Dispatchers.Main) {
                     showError("❌ Neural test failed: ${e.message}")
                 }
+            } finally {
+                // Clean up neural engine resources
+                neuralEngine?.cleanup()
             }
         }
     }
