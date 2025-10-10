@@ -4,6 +4,7 @@
  * Compile: kotlinc -cp onnxruntime-1.20.0.jar test_onnx_cli.kt -include-runtime -d test_onnx_cli.jar
  * Run: java -cp test_onnx_cli.jar:onnxruntime-1.20.0.jar TestOnnxCliKt
  */
+@file:JvmName("TestOnnxCliKt")
 
 import ai.onnxruntime.*
 import java.io.File
@@ -436,19 +437,6 @@ fun predictWithOnnx(models: OnnxModels, features: TrajectoryFeatures): Predictio
 }
 
 // ============================================================================
-// Main Class for Kotlin Compilation
-// ============================================================================
-
-class TestOnnxCliKt {
-    companion object {
-        @JvmStatic
-        fun main(args: Array<String>) {
-            runTest()
-        }
-    }
-}
-
-// ============================================================================
 // Validation & Display
 // ============================================================================
 
@@ -557,7 +545,7 @@ fun createTestSwipe(word: String): List<PointF> {
 // Main Test Function
 // ============================================================================
 
-fun runTest() {
+fun main(args: Array<String>) {
     println("🧪 CleverKeys Complete ONNX Neural Pipeline CLI Test")
     println("=" .repeat(70))
     println()
