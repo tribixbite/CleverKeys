@@ -155,10 +155,14 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         
         try {
             logDebug("🚀 Starting neural prediction for ${input.coordinates.size} points")
-            
+
             // Extract trajectory features
             val features = trajectoryProcessor.extractFeatures(input.coordinates, input.timestamps)
-            
+            logDebug("📊 Feature extraction complete:")
+            logDebug("   Actual length: ${features.actualLength}")
+            logDebug("   First 10 nearest keys: ${features.nearestKeys.take(10)}")
+            logDebug("   First 3 normalized points: ${features.normalizedCoordinates.take(3).map { "(%.3f, %.3f)".format(it.x, it.y) }}")
+
             // Run encoder
             val encoderResult = runEncoder(features)
             val memory = encoderResult.get(0) as OnnxTensor
@@ -296,11 +300,13 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
             BeamSearchCandidate(word, kotlin.math.exp(beam.score).toFloat())
         }
 
-        // Log top 5 candidates with words and confidences
-        val top5 = candidates.sortedByDescending { it.confidence }.take(5)
+        // Log top 5 candidates with tokens, words, and confidences
+        val top5Beams = allFinalBeams.sortedByDescending { kotlin.math.exp(it.score) }.take(5)
         logDebug("🏆 TOP 5 BEAM SEARCH RESULTS:")
-        top5.forEachIndexed { idx, cand ->
-            logDebug("   ${idx + 1}. word='${cand.word}' confidence=${cand.confidence} (log_score=${kotlin.math.ln(cand.confidence.toDouble())})")
+        top5Beams.forEachIndexed { idx, beam ->
+            val word = tokenizer.tokensToWord(beam.tokens.drop(1))
+            val conf = kotlin.math.exp(beam.score).toFloat()
+            logDebug("   ${idx + 1}. tokens=${beam.tokens} → word='$word' confidence=$conf (log_score=${beam.score})")
         }
 
         candidates
