@@ -112,8 +112,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     
     override fun onDestroy() {
         super.onDestroy()
-        // Clean up preference listener
-        prefs.unregisterOnSharedPreferenceChangeListener(this)
     }
 
     override fun onResume() {
@@ -124,6 +122,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     override fun onPause() {
         super.onPause()
+        // Unregister preference listener (balanced with onResume)
+        prefs.unregisterOnSharedPreferenceChangeListener(this)
         // Save all settings changes to protected storage
         DirectBootAwarePreferences.copy_preferences_to_protected_storage(this, prefs)
     }
@@ -671,9 +671,22 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 .setTitle("Reset Settings")
                 .setMessage("This will reset all settings to defaults. Continue?")
                 .setPositiveButton("Reset") { _, _ ->
-                    // Reset all settings to defaults
+                    // Reset all settings to safe defaults
                     val editor = prefs.edit()
                     editor.clear()
+
+                    // Set essential defaults to prevent crashes
+                    editor.putBoolean("neural_prediction_enabled", true)
+                    editor.putInt("neural_beam_width", 8)
+                    editor.putInt("neural_max_length", 35)
+                    editor.putFloat("neural_confidence_threshold", 0.1f)
+                    editor.putInt("theme", R.style.Dark)
+                    editor.putInt("keyboard_height_percent", 35)
+                    editor.putBoolean("vibration_enabled", false)
+                    editor.putBoolean("debug_enabled", false)
+                    editor.putBoolean("clipboard_history_enabled", true)
+                    editor.putBoolean("auto_capitalization_enabled", true)
+
                     editor.apply()
 
                     // Reset UI state

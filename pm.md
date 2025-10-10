@@ -1,9 +1,41 @@
 # CleverKeys TODO Items - Project Management
 
 Generated: October 10, 2025
+Last Updated: Component Audit Session
 
 ## Overview
 All TODO items found in the codebase with their context, priority, and implementation status.
+
+---
+
+## Component Audit - Quality Review (Oct 10, 2025)
+
+### Status: ✅ IN PROGRESS
+
+**Components Reviewed:**
+1. ✅ CleverKeysService (Main InputMethodService)
+   - Fixed memory leak: Unregister SharedPreferences listener in onDestroy()
+   - Fixed memory leak: Clear view references to prevent retention
+
+2. ✅ Keyboard2View (Main keyboard rendering)
+   - Fixed modifyKey() stub implementation - now calls modifyKeyInternal()
+   - Removed unused dead code (handleNeuralPrediction)
+   - Cleaned up companion object
+
+3. ✅ LauncherActivity (App entry point)
+   - Fixed neural engine memory leak in test_neural_prediction()
+   - Added proper cleanup with finally block
+
+4. ✅ SettingsActivity (Configuration UI)
+   - Fixed lifecycle balance: onResume/onPause for preference listener
+   - Fixed resetAllSettings() to set defaults instead of just clearing
+   - Improved error handling
+
+**Remaining Components:**
+- SwipeCalibrationActivity (Neural testing)
+- Custom Views (Clipboard, Emoji, etc.)
+- Identify unused components
+- Create final quality report
 
 ---
 
