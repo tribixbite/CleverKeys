@@ -541,7 +541,10 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         if (!config?.auto_commit_predictions.let { it == true }) return
 
         val topPrediction = result.predictions.words.firstOrNull() ?: return
-        val topConfidence = result.predictions.confidence
+        val topScore = result.predictions.topScore ?: return
+
+        // Convert score (0-1000) to confidence (0.0-1.0)
+        val topConfidence = topScore / 1000.0f
 
         // Auto-commit if confidence exceeds threshold (default 0.8 = 80%)
         val threshold = config?.auto_commit_threshold ?: 0.8f
