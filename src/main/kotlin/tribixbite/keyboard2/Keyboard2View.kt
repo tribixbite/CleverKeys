@@ -52,6 +52,7 @@ class Keyboard2View @JvmOverloads constructor(
     private var swipeTrajectory = mutableListOf<PointF>()
     private var swipeTimestamps = mutableListOf<Long>()
     private var isSwipeActive = false
+    private var swipePointerId = -1  // Track which pointer is doing the swipe
 
     // Rendering dimensions
     private var keyWidth = 0f
@@ -188,6 +189,7 @@ class Keyboard2View @JvmOverloads constructor(
 
     fun clearSwipeState() {
         isSwipeActive = false
+        swipePointerId = -1
         swipeTrajectory.clear()
         swipeTimestamps.clear()
         currentSwipeGesture = null
@@ -286,7 +288,11 @@ class Keyboard2View @JvmOverloads constructor(
                 if (key != null) {
                     pointers.onTouchDown(x, y, pointerId, key)
                 }
-                handleSwipeStart(x, y)
+
+                // Only start swipe if not already active (first finger down wins)
+                if (!isSwipeActive) {
+                    handleSwipeStart(x, y, pointerId)
+                }
             }
 
             MotionEvent.ACTION_MOVE -> {
@@ -296,7 +302,11 @@ class Keyboard2View @JvmOverloads constructor(
                     val pointerId = event.getPointerId(p)
 
                     pointers.onTouchMove(x, y, pointerId)
-                    handleSwipeMove(x, y)
+
+                    // Only record coordinates from the pointer that started the swipe
+                    if (isSwipeActive && pointerId == swipePointerId) {
+                        handleSwipeMove(x, y)
+                    }
                 }
             }
 
@@ -309,17 +319,18 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     // Neural swipe handling
-    private fun handleSwipeStart(x: Float, y: Float) {
+    private fun handleSwipeStart(x: Float, y: Float, pointerId: Int) {
         if (config?.swipe_typing_enabled != true) return
 
         isSwipeActive = true
+        swipePointerId = pointerId  // Remember which pointer is swiping
         swipeTrajectory.clear()
         swipeTimestamps.clear()
 
         swipeTrajectory.add(PointF(x, y))
         swipeTimestamps.add(System.currentTimeMillis())
 
-        android.util.Log.d("Keyboard2View", "Neural swipe started at ($x, $y)")
+        android.util.Log.d("Keyboard2View", "Neural swipe started at ($x, $y) with pointer $pointerId")
     }
 
     private fun handleSwipeMove(x: Float, y: Float) {
