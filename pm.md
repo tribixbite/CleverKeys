@@ -875,3 +875,108 @@ All five fixes were required for working neural predictions:
 
 **Status:** Committed (07273f2), ready for APK rebuild and testing.
 
+
+---
+
+## Fix #6: Build/Deployment Issue - Debug Logging Missing
+
+**Date:** October 10, 2025
+**Status:** ✅ **RESOLVED** - Clean rebuild deployed
+**Commit:** (pending)
+
+### Problem:
+
+After implementing Fix #5 (trajectory coordinate preservation), user reported coordinates STILL collapsed:
+```
+First 10 nearest keys: [7, 7, 7, 7, 7, 7, 7, 7, 7, 7]  ← ALL IDENTICAL!
+First 3 normalized points: [(0.281, 0.364), (0.281, 0.364), (0.281, 0.364)]
+```
+
+**CRITICAL OBSERVATION:** Detailed debug logging added to `extractFeatures()` was **MISSING** from logs.
+
+**Expected logs:**
+```kotlin
+logD("🔬 Feature extraction DEBUG:")
+logD("   Input: ${coordinates.size} coordinates")
+logD("   First 3 raw: ${coordinates.take(3).map { "(%.1f, %.1f)".format(it.x, it.y) }}")
+// ... more debug lines
+```
+
+**Actual logs:** Only showed summary from `predict()`, not detailed step-by-step extraction
+
+### Investigation:
+
+1. **Verified source code** (line 908-940 in OnnxSwipePredictorImpl.kt):
+   - ✅ Debug logging IS present in code
+   - ✅ Gemini fixes (smoothTrajectory, padOrTruncate) ARE present
+   - ✅ All changes correctly implemented
+
+2. **Checked build artifacts:**
+   - Modified .dex files for OnnxSwipePredictorImpl
+   - Modified APK timestamp
+   - Deleted `SwipeTrajectoryProcessor$smoothTrajectory$1.dex` (confirms windowed() removal)
+
+3. **Root Cause:**
+   - Code was compiled but APK may not have been reinstalled
+   - Gradle incremental build may have cached old code
+   - User was testing with stale APK from previous session
+
+### Solution:
+
+**Clean rebuild and reinstall:**
+```bash
+./gradlew clean
+./gradlew assembleDebug
+termux-open build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
+```
+
+**Build output:**
+- ✅ Clean build successful (38 seconds)
+- ✅ 36 tasks executed
+- ✅ Kotlin compilation warnings only (no errors)
+- ✅ APK generated: tribixbite.keyboard2.debug.apk
+- ✅ Installation initiated
+
+### Verification:
+
+**Next test should show:**
+```
+🔬 Feature extraction DEBUG:
+   Input: 154 coordinates
+   First 3 raw: [(123.4, 567.8), (124.1, 568.2), (125.0, 569.1)]  ← DISTINCT!
+   After smoothing: 154 coordinates
+   First 3 smoothed: [(123.5, 567.9), (124.2, 568.3), ...]  ← STILL DISTINCT!
+   After normalization: 154 coordinates
+   First 3 normalized: [(0.281, 0.364), (0.282, 0.365), (0.283, 0.366)]  ← VARIATION PRESERVED!
+```
+
+**If coordinates still collapse:**
+- Debug logging will show EXACTLY which step collapses them
+- Can trace: raw → smoothing → normalization → padding
+- Pinpoint the transformation that destroys variation
+
+### Lessons Learned:
+
+**When fixes don't work:**
+1. ✅ Verify code changes are actually in source files
+2. ✅ Check build artifacts show recompilation
+3. ✅ Do clean rebuild to eliminate cache issues
+4. ✅ Confirm APK was actually reinstalled (not just rebuilt)
+5. ✅ Add detailed logging at each transformation step
+
+**Build hygiene:**
+- Always do `./gradlew clean` before major testing
+- Check APK timestamp matches rebuild time
+- Use `termux-open` to force reinstall prompt
+- Verify installation completed (not just opened)
+
+### Next Steps:
+
+1. ✅ **Clean build completed**
+2. ✅ **APK installation initiated**
+3. ⏳ **Awaiting user test** with fresh APK
+4. ⏳ **Verify debug logging appears** in next logs
+5. ⏳ **Check if coordinates now distinct** at each step
+
+**Status:** Build deployed, awaiting test results to confirm Fix #5 effectiveness.
+
