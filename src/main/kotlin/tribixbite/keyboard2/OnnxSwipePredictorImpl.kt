@@ -232,24 +232,25 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         val finishedBeams = mutableListOf<BeamSearchState>()
 
         // Beam search loop with batched processing
+        // CRITICAL FIX: Wrap entire loop body in try-catch to catch filter exceptions
         for (step in 0 until maxLength) {
-            logDebug("⏩ Loop iteration: step=$step, maxLength=$maxLength")
-
-            // Separate active beams (need further expansion)
-            val activeBeams = beams.filter { !it.finished }
-
-            logDebug("🔄 Beam search step $step: beams.size=${beams.size}, activeBeams.size=${activeBeams.size}, finishedBeams.size=${finishedBeams.size}")
-
-            if (activeBeams.isEmpty()) {
-                // All beams finished
-                logDebug("🏁 All beams finished at step $step (total beams: ${beams.size})")
-                break
-            }
-
-            logDebug("🚦 About to call processBatchedBeams with ${activeBeams.size} beams")
-
             try {
+                logDebug("⏩ Loop iteration: step=$step, maxLength=$maxLength")
+
+                // Separate active beams (need further expansion)
+                val activeBeams = beams.filter { !it.finished }
+
+                logDebug("🔄 Beam search step $step: beams.size=${beams.size}, activeBeams.size=${activeBeams.size}, finishedBeams.size=${finishedBeams.size}")
+
+                if (activeBeams.isEmpty()) {
+                    // All beams finished
+                    logDebug("🏁 All beams finished at step $step (total beams: ${beams.size})")
+                    break
+                }
+
+                logDebug("🚦 About to call processBatchedBeams with ${activeBeams.size} beams")
                 logDebug("🔵 Inside try block, calling processBatchedBeams...")
+
                 // CRITICAL OPTIMIZATION: Process all active beams in single batch
                 val newCandidates = processBatchedBeams(activeBeams, memory, srcMaskTensor, decoderSession)
                 logDebug("🟢 processBatchedBeams returned successfully with ${newCandidates.size} candidates")
@@ -276,7 +277,9 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 }
 
             } catch (e: Exception) {
-                logE("Batched beam search failed at step $step", e)
+                logE("❌ CRITICAL: Beam search failed at step $step", e)
+                logDebug("💥 Exception details: ${e.javaClass.simpleName}: ${e.message}")
+                logDebug("📊 Beam state at failure: beams.size=${beams.size}, finishedBeams.size=${finishedBeams.size}")
                 break
             }
         }
