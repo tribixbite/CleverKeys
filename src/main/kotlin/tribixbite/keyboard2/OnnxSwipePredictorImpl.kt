@@ -311,6 +311,17 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         val batchSize = activeBeams.size
         val seqLength = 20 // Standard decoder sequence length
 
+        // CRITICAL FIX: Expand memory tensor to match batch size
+        // Memory shape is [1, 150, 256], need [batchSize, 150, 256]
+        val memoryShape = memory.info.shape
+        val expandedMemoryShape = longArrayOf(batchSize.toLong(), memoryShape[1], memoryShape[2])
+
+        val expandedMemory = if (batchSize > 1) {
+            expandMemoryTensor(memory, batchSize)
+        } else {
+            memory  // No expansion needed for single beam
+        }
+
         // OPTIMIZATION: Use tensor pool for batched tensors - eliminates allocation overhead
         val batchedTokensShape = longArrayOf(batchSize.toLong(), seqLength.toLong())
         val batchedMaskShape = longArrayOf(batchSize.toLong(), seqLength.toLong())
@@ -323,14 +334,14 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
 
                 // Prepare decoder inputs with optimized tensors
                 val decoderInputs = mapOf(
-                    "memory" to memory,
+                    "memory" to expandedMemory,
                     "target_tokens" to batchedTokensTensor,
                     "target_mask" to batchedMaskTensor,
                     "src_mask" to srcMaskTensor
                 )
 
                 logDebug("🔧 OPTIMIZED batched decoder shapes:")
-                logDebug("   memory: ${memory.info.shape.contentToString()}")
+                logDebug("   memory: ${expandedMemory.info.shape.contentToString()}")
                 logDebug("   target_tokens: ${batchedTokensTensor.info.shape.contentToString()}")
                 logDebug("   target_mask: ${batchedMaskTensor.info.shape.contentToString()}")
 
@@ -353,9 +364,36 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 // Automatic cleanup via tensor pool
                 batchedOutput.close()
 
+                // Clean up expanded memory tensor if we created one
+                if (batchSize > 1 && expandedMemory != memory) {
+                    expandedMemory.close()
+                }
+
                 newBeamCandidates
             }
         }
+    }
+
+    /**
+     * Expand memory tensor from [1, seq_len, hidden_dim] to [batch_size, seq_len, hidden_dim]
+     * by replicating the single batch across multiple batches
+     */
+    private fun expandMemoryTensor(memory: OnnxTensor, batchSize: Int): OnnxTensor {
+        val memoryData = memory.value as Array<Array<FloatArray>>
+        val seqLen = memoryData[0].size
+        val hiddenDim = memoryData[0][0].size
+
+        // Create expanded array [batch_size, seq_len, hidden_dim]
+        val expandedData = Array(batchSize) { Array(seqLen) { FloatArray(hiddenDim) } }
+
+        // Replicate the single batch to all batch positions
+        for (b in 0 until batchSize) {
+            for (s in 0 until seqLen) {
+                System.arraycopy(memoryData[0][s], 0, expandedData[b][s], 0, hiddenDim)
+            }
+        }
+
+        return OnnxTensor.createTensor(ortEnvironment, expandedData)
     }
 
     /**
