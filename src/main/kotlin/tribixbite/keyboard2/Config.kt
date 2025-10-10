@@ -187,6 +187,10 @@ class Config private constructor(
     var neural_confidence_threshold = 0.1f
     var termux_mode_enabled = false
 
+    // Auto-commit predictions configuration
+    var auto_commit_predictions = false  // Feature flag for auto-commit
+    var auto_commit_threshold = 0.8f     // Confidence threshold (0.0-1.0) for auto-commit
+
     // Dynamically set properties
     var shouldOfferVoiceTyping = false
     var actionLabel: String? = null

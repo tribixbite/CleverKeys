@@ -397,7 +397,13 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         logD("onCreateCandidatesView() called - creating suggestion bar")
 
         return try {
-            val bar = SuggestionBar(this)
+            val bar = SuggestionBar(this).apply {
+                // Handle suggestion selection - commit the selected word
+                setOnSuggestionSelectedListener { word ->
+                    logD("User selected suggestion: '$word'")
+                    currentInputConnection?.commitText(word + " ", 1)
+                }
+            }
             suggestionBar = bar
             logD("✅ Suggestion bar created successfully")
             bar
@@ -523,6 +529,26 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
 
         logD("🧠 ${result.source} neural prediction: ${result.predictions.size} words in ${result.processingTimeMs}ms")
         logD("   Top predictions: ${result.predictions.words.take(3)}")
+
+        // Auto-commit high-confidence predictions if enabled
+        autoCommitHighConfidencePrediction(result)
+    }
+
+    /**
+     * Auto-commit prediction if confidence is high enough
+     */
+    private fun autoCommitHighConfidencePrediction(result: NeuralPredictionPipeline.PipelineResult) {
+        if (!config?.auto_commit_predictions.let { it == true }) return
+
+        val topPrediction = result.predictions.words.firstOrNull() ?: return
+        val topConfidence = result.predictions.confidence
+
+        // Auto-commit if confidence exceeds threshold (default 0.8 = 80%)
+        val threshold = config?.auto_commit_threshold ?: 0.8f
+        if (topConfidence >= threshold) {
+            logD("Auto-committing high-confidence prediction: '$topPrediction' (${topConfidence * 100}%)")
+            currentInputConnection?.commitText(topPrediction + " ", 1)
+        }
     }
     
     /**

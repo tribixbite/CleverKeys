@@ -18,10 +18,15 @@ class NeuralPredictionPipeline(private val context: Context) {
     // Pipeline components - ONNX-only neural prediction (no CGR)
     private val neuralEngine = NeuralSwipeEngine(context, Config.globalConfig())
     private val performanceProfiler = PerformanceProfiler(context)
-    
+    private val predictionCache = PredictionCache(maxSize = 20)
+
     // Pipeline state
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var isInitialized = false
+
+    // Cache hit tracking
+    private var cacheHits = 0
+    private var cacheMisses = 0
     
     /**
      * Pipeline result with comprehensive data
@@ -85,18 +90,33 @@ class NeuralPredictionPipeline(private val context: Context) {
     }
     
     /**
-     * Execute ONNX neural prediction only
+     * Execute ONNX neural prediction with caching
      */
     private suspend fun executeOnnxNeuralPrediction(input: SwipeInput): PredictionResult {
         // Validate input for neural processing
         val validation = ErrorHandling.Validation.validateSwipeInput(input)
         validation.throwIfInvalid()
 
-        return if (isInitialized) {
-            neuralEngine.predictAsync(input)
-        } else {
+        if (!isInitialized) {
             throw ErrorHandling.CleverKeysException.NeuralEngineException("Neural engine not initialized")
         }
+
+        // Check cache first
+        val cachedResult = predictionCache.get(input.coordinates)
+        if (cachedResult != null) {
+            cacheHits++
+            logD("Cache hit! ($cacheHits hits / $cacheMisses misses)")
+            return cachedResult
+        }
+
+        // Cache miss - run ONNX inference
+        cacheMisses++
+        val result = neuralEngine.predictAsync(input)
+
+        // Store in cache for future use
+        predictionCache.put(input.coordinates, result)
+
+        return result
     }
     
     
@@ -106,15 +126,37 @@ class NeuralPredictionPipeline(private val context: Context) {
      */
     fun getPerformanceStats(): Map<String, PerformanceProfiler.PerformanceStats> {
         val operations = listOf(
-            "complete_pipeline", "neural_prediction", "traditional_prediction", 
+            "complete_pipeline", "neural_prediction", "traditional_prediction",
             "hybrid_prediction", "fallback_prediction"
         )
-        
+
         return operations.mapNotNull { operation ->
             performanceProfiler.getStats(operation)?.let { operation to it }
         }.toMap()
     }
-    
+
+    /**
+     * Get cache statistics
+     */
+    fun getCacheStats(): String {
+        val cacheStats = predictionCache.getStats()
+        val hitRate = if ((cacheHits + cacheMisses) > 0) {
+            (cacheHits * 100.0 / (cacheHits + cacheMisses))
+        } else 0.0
+
+        return "Cache: ${cacheStats.size}/${cacheStats.maxSize} entries, " +
+               "Hit rate: %.1f%% ($cacheHits hits / $cacheMisses misses)".format(hitRate)
+    }
+
+    /**
+     * Clear prediction cache
+     */
+    fun clearCache() {
+        predictionCache.clear()
+        cacheHits = 0
+        cacheMisses = 0
+    }
+
     /**
      * Cleanup pipeline - ONNX only
      */
@@ -122,5 +164,6 @@ class NeuralPredictionPipeline(private val context: Context) {
         scope.cancel()
         neuralEngine.cleanup()
         performanceProfiler.cleanup()
+        predictionCache.clear()
     }
 }
