@@ -950,17 +950,33 @@ class SwipeTrajectoryProcessor {
     }
     
     /**
-     * Smooth trajectory using moving average
+     * Smooth trajectory using moving average. This implementation uses an explicit loop
+     * to avoid potential issues with the .windowed() extension function on lists of objects.
      */
     private fun smoothTrajectory(coordinates: List<PointF>): List<PointF> {
-        if (coordinates.size <= SMOOTHING_WINDOW) return coordinates
-        
-        return coordinates.windowed(SMOOTHING_WINDOW, partialWindows = true) { window ->
-            PointF(
-                window.map { it.x }.average().toFloat(),
-                window.map { it.y }.average().toFloat()
-            )
+        if (coordinates.size <= SMOOTHING_WINDOW) {
+            return coordinates
         }
+
+        val smoothedResult = mutableListOf<PointF>()
+        for (i in coordinates.indices) {
+            // Define the window starting at the current index, up to SMOOTHING_WINDOW elements.
+            // This replicates the behavior of .windowed(size, step=1, partialWindows=true).
+            val windowEnd = (i + SMOOTHING_WINDOW).coerceAtMost(coordinates.size)
+            val window = coordinates.subList(i, windowEnd)
+
+            if (window.isEmpty()) continue
+
+            // Manually calculate the average for clarity and safety.
+            var sumX = 0.0
+            var sumY = 0.0
+            for (p in window) {
+                sumX += p.x
+                sumY += p.y
+            }
+            smoothedResult.add(PointF((sumX / window.size).toFloat(), (sumY / window.size).toFloat()))
+        }
+        return smoothedResult
     }
     
     /**
@@ -1062,15 +1078,32 @@ class SwipeTrajectoryProcessor {
     /**
      * Pad or truncate list to target size
      */
+    /**
+     * Pad or truncate list to target size.
+     * FIX: Handles padding of mutable objects like PointF by creating new instances.
+     */
     private fun <T> padOrTruncate(list: List<T>, targetSize: Int, paddingValue: T? = null): List<T> {
         return when {
             list.size == targetSize -> list
             list.size > targetSize -> list.take(targetSize)
             else -> {
-                val padding = paddingValue ?: list.lastOrNull()
-                if (padding != null) {
-                    list + List(targetSize - list.size) { padding }
-                } else list
+                val lastValue = list.lastOrNull()
+                val paddingTemplate = paddingValue ?: lastValue
+
+                if (paddingTemplate != null) {
+                    val paddingList = List(targetSize - list.size) {
+                        // If the padding value is a PointF, create a new instance to avoid reference sharing.
+                        // Otherwise, use the value as-is (for immutable types like Float, Int).
+                        if (paddingTemplate is PointF) {
+                            PointF(paddingTemplate.x, paddingTemplate.y) as T
+                        } else {
+                            paddingTemplate
+                        }
+                    }
+                    list + paddingList
+                } else {
+                    list
+                }
             }
         }
     }
