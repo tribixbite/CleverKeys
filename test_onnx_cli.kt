@@ -1,15 +1,10 @@
 /**
  * Complete ONNX Neural Pipeline CLI Test
  * Loads real ONNX models and runs actual inference to verify predictions
- * Compile: kotlinc -cp onnxruntime-1.20.0.jar test_onnx_cli.kt -include-runtime -d test_onnx_cli.jar
- * Run: java -cp test_onnx_cli.jar:onnxruntime-1.20.0.jar TestOnnxCliKt
  */
-@file:JvmName("TestOnnxCliKt")
 
 import ai.onnxruntime.*
 import java.io.File
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import kotlin.math.*
 
@@ -177,48 +172,31 @@ fun createTrajectoryTensor(env: OrtEnvironment, features: TrajectoryFeatures): O
 
 fun createNearestKeysTensor(env: OrtEnvironment, features: TrajectoryFeatures): OnnxTensor {
     // Shape: [batch_size=1, seq_length=150]
-    // Use direct buffer for long array
-    val byteBuffer = ByteBuffer.allocateDirect(MAX_TRAJECTORY_POINTS * 8) // 8 bytes per long
-    byteBuffer.order(ByteOrder.nativeOrder())
-    val buffer = byteBuffer.asLongBuffer()
-
-    for (i in 0 until MAX_TRAJECTORY_POINTS) {
-        buffer.put(features.nearestKeys[i].toLong())
-    }
-    buffer.rewind()
-
-    return OnnxTensor.createTensor(env, buffer, longArrayOf(1, MAX_TRAJECTORY_POINTS.toLong()))
+    val shape = longArrayOf(1, MAX_TRAJECTORY_POINTS.toLong())
+    val data = features.nearestKeys.map { it.toLong() }.toLongArray()
+    return OnnxTensor.createTensor(env, data, shape)
 }
 
 fun createSourceMaskTensor(env: OrtEnvironment, actualLength: Int): OnnxTensor {
     // Shape: [batch_size=1, seq_length=150]
-    // Convention: true (1) = padded, false (0) = valid
-    // Use 2D array for proper tensor shape
-    val maskData = Array(1) { BooleanArray(MAX_TRAJECTORY_POINTS) { i -> i >= actualLength } }
-    return OnnxTensor.createTensor(env, maskData)
+    // Convention: 1.0f = padded, 0.0f = valid
+    val shape = longArrayOf(1, MAX_TRAJECTORY_POINTS.toLong())
+    val data = FloatArray(MAX_TRAJECTORY_POINTS) { i -> if (i >= actualLength) 1.0f else 0.0f }
+    return OnnxTensor.createTensor(env, java.nio.FloatBuffer.wrap(data), shape)
 }
 
 fun createTargetTokensTensor(env: OrtEnvironment, tokens: List<Long>): OnnxTensor {
     // Shape: [batch_size=1, seq_length]
-    // Use direct buffer for long array
-    val byteBuffer = ByteBuffer.allocateDirect(tokens.size * 8) // 8 bytes per long
-    byteBuffer.order(ByteOrder.nativeOrder())
-    val buffer = byteBuffer.asLongBuffer()
-
-    for (token in tokens) {
-        buffer.put(token)
-    }
-    buffer.rewind()
-
-    return OnnxTensor.createTensor(env, buffer, longArrayOf(1, tokens.size.toLong()))
+    val shape = longArrayOf(1, tokens.size.toLong())
+    return OnnxTensor.createTensor(env, tokens.toLongArray(), shape)
 }
 
 fun createTargetMaskTensor(env: OrtEnvironment, validLength: Int, totalLength: Int): OnnxTensor {
     // Shape: [batch_size=1, seq_length]
-    // Convention: true (1) = padded, false (0) = valid
-    // Use 2D array for proper tensor shape
-    val maskData = Array(1) { BooleanArray(totalLength) { i -> i >= validLength } }
-    return OnnxTensor.createTensor(env, maskData)
+    // Convention: 1.0f = padded, 0.0f = valid
+    val shape = longArrayOf(1, totalLength.toLong())
+    val data = FloatArray(totalLength) { i -> if (i >= validLength) 1.0f else 0.0f }
+    return OnnxTensor.createTensor(env, java.nio.FloatBuffer.wrap(data), shape)
 }
 
 // ============================================================================
@@ -272,7 +250,7 @@ fun loadOnnxModels(modelsDir: String): OnnxModels {
 fun runEncoderInference(
     models: OnnxModels,
     features: TrajectoryFeatures
-): OnnxTensor {
+): OnnxValue {
     println("\n🧠 Running Encoder Inference")
 
     val trajectoryTensor = createTrajectoryTensor(models.env, features)
@@ -280,7 +258,7 @@ fun runEncoderInference(
     val srcMaskTensor = createSourceMaskTensor(models.env, features.actualLength)
 
     val inputs = mapOf(
-        "trajectory_features" to trajectoryTensor,
+        "trajectory" to trajectoryTensor,
         "nearest_keys" to nearestKeysTensor,
         "src_mask" to srcMaskTensor
     )
@@ -296,16 +274,12 @@ fun runEncoderInference(
     nearestKeysTensor.close()
     srcMaskTensor.close()
 
-    // Extract output tensor
-    val outputTensor = outputs.get(0) as OnnxTensor
-    outputs.close()
-
-    return outputTensor
+    return outputs.get(0).get()
 }
 
 fun runDecoderStep(
     models: OnnxModels,
-    encoderOutput: OnnxTensor,
+    encoderOutput: OnnxValue,
     targetTokens: List<Long>,
     srcMask: OnnxTensor
 ): FloatArray {
@@ -320,9 +294,7 @@ fun runDecoderStep(
     )
 
     val outputs = models.decoder.run(inputs)
-    val outputTensor = outputs.get(0) as OnnxTensor
-    val tensorData = outputTensor.value
-    val logits = (tensorData as Array<Array<FloatArray>>)[0]
+    val logits = (outputs.get(0).get().value as Array<Array<FloatArray>>)[0]
 
     // Clean up tensors
     targetTensor.close()
@@ -343,15 +315,14 @@ fun applyLogSoftmax(logits: FloatArray): FloatArray {
 
 fun beamSearchDecode(
     models: OnnxModels,
-    encoderOutput: OnnxTensor,
+    encoderOutput: OnnxValue,
     srcMask: OnnxTensor
 ): PredictionResult {
     println("\n🔍 Beam Search Decoding (width=$BEAM_WIDTH)")
 
-    // Initialize beams - use mutable list
-    val beams = mutableListOf<BeamState>()
-    repeat(BEAM_WIDTH) {
-        beams.add(BeamState(mutableListOf(SOS_IDX), 0f, false))
+    // Initialize beams
+    val beams = List(BEAM_WIDTH) {
+        BeamState(mutableListOf(SOS_IDX), 0f, false)
     }
 
     var step = 0
@@ -415,7 +386,7 @@ fun beamSearchDecode(
 
 fun predictWithOnnx(models: OnnxModels, features: TrajectoryFeatures): PredictionResult {
     println("\n🚀 Running Complete Neural Prediction Pipeline")
-    println("=".repeat(70))
+    println("=" .repeat(70))
 
     val totalStartTime = System.currentTimeMillis()
 
@@ -430,7 +401,6 @@ fun predictWithOnnx(models: OnnxModels, features: TrajectoryFeatures): Predictio
     println("\n⏱️  Total prediction time: ${totalTime}ms")
 
     // Clean up
-    encoderOutput.close()
     srcMask.close()
 
     return result
@@ -542,10 +512,10 @@ fun createTestSwipe(word: String): List<PointF> {
 }
 
 // ============================================================================
-// Main Test Function
+// Main Test
 // ============================================================================
 
-fun main(args: Array<String>) {
+fun main() {
     println("🧪 CleverKeys Complete ONNX Neural Pipeline CLI Test")
     println("=" .repeat(70))
     println()
@@ -599,3 +569,5 @@ fun main(args: Array<String>) {
         System.exit(1)
     }
 }
+
+main()

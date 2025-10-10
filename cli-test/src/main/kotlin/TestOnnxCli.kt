@@ -179,10 +179,10 @@ fun createNearestKeysTensor(env: OrtEnvironment, features: TrajectoryFeatures): 
 
 fun createSourceMaskTensor(env: OrtEnvironment, actualLength: Int): OnnxTensor {
     // Shape: [batch_size=1, seq_length=150]
-    // Convention: true (1) = padded, false (0) = valid
+    // Convention: 1.0f = padded, 0.0f = valid
     val shape = longArrayOf(1, MAX_TRAJECTORY_POINTS.toLong())
-    val data = BooleanArray(MAX_TRAJECTORY_POINTS) { i -> i >= actualLength }
-    return OnnxTensor.createTensor(env, data, shape)
+    val data = FloatArray(MAX_TRAJECTORY_POINTS) { i -> if (i >= actualLength) 1.0f else 0.0f }
+    return OnnxTensor.createTensor(env, java.nio.FloatBuffer.wrap(data), shape)
 }
 
 fun createTargetTokensTensor(env: OrtEnvironment, tokens: List<Long>): OnnxTensor {
@@ -287,10 +287,10 @@ fun runDecoderStep(
     val targetMaskTensor = createTargetMaskTensor(models.env, targetTokens.size, MAX_LENGTH)
 
     val inputs = mapOf(
-        "encoder_output" to encoderOutput,
+        "memory" to encoderOutput,
         "target_tokens" to targetTensor,
         "src_mask" to srcMask,
-        "tgt_mask" to targetMaskTensor
+        "target_mask" to targetMaskTensor
     )
 
     val outputs = models.decoder.run(inputs)
