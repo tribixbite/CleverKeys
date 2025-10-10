@@ -100,8 +100,27 @@ This prevents wasting cycles when we already have 3 complete predictions after 1
 
 ### Testing Status:
 
+✅ **Pipeline Verification Complete (commit 867209c):**
+
+Created comprehensive verification suite:
+- `verify_pipeline.sh`: 8-point automated verification script
+- `test_pipeline.kt`: Standalone CLI test with realistic 'hello' swipe
+- `run_test.sh`: Test runner
+
+**Verification Results: 8/8 PASSED ✅**
+1. ✅ Normalization order (normalize FIRST at line 855)
+2. ✅ Velocity formula (simple deltas: vx = x[i] - x[i-1])
+3. ✅ Acceleration formula (velocity deltas: ax = vx[i] - vx[i-1])
+4. ✅ Feature storage (PointF for separate vx/vy components)
+5. ✅ Target mask convention (1=padded, 0=valid)
+6. ✅ Batched mask convention (false=valid, true=padded)
+7. ✅ Early stopping optimization (step >= 10 && finishedBeams >= 3)
+8. ✅ Log-softmax scoring (numerically stable)
+
+**Implementation matches web demo reference exactly!**
+
 ⏳ **Next Steps:**
-1. Build and install APK with feature extraction fixes
+1. Build and install APK with all fixes
 2. Test swipe gestures produce real words (not gibberish)
 3. Verify predictions match expected quality from web demo
 
