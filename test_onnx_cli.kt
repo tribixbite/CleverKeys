@@ -77,9 +77,9 @@ fun extractFeatures(coordinates: List<PointF>): TrajectoryFeatures {
     }
     println("   ✅ Step 1: Normalized coordinates to [0,1]")
 
-    // Step 2: Detect nearest keys
-    val nearestKeys = coordinates.map { detectNearestKey(it) }
-    println("   ✅ Step 2: Detected nearest keys")
+    // Step 2: Nearest keys - set to 0 (PAD) for synthetic test
+    val nearestKeys = List(coordinates.size) { 0 }
+    println("   ✅ Step 2: Set nearest keys to PAD (synthetic test)")
 
     // Step 3: Pad or truncate to MAX_TRAJECTORY_POINTS
     val finalCoords = padOrTruncate(normalizedCoords, MAX_TRAJECTORY_POINTS, PointF(0f, 0f))
@@ -124,22 +124,38 @@ fun extractFeatures(coordinates: List<PointF>): TrajectoryFeatures {
 }
 
 fun detectNearestKey(point: PointF): Int {
-    val normalizedX = point.x / KEYBOARD_WIDTH
-    val normalizedY = point.y / KEYBOARD_HEIGHT
+    // Standard QWERTY key positions (center of each key) on 1080x400 keyboard
+    val keyPositions = mapOf(
+        'q' to PointF(54f, 100f), 'w' to PointF(162f, 100f), 'e' to PointF(270f, 100f),
+        'r' to PointF(378f, 100f), 't' to PointF(486f, 100f), 'y' to PointF(594f, 100f),
+        'u' to PointF(702f, 100f), 'i' to PointF(810f, 100f), 'o' to PointF(918f, 100f),
+        'p' to PointF(1026f, 100f),
 
-    val row = (normalizedY * QWERTY_LAYOUT.size).toInt().coerceIn(0, QWERTY_LAYOUT.size - 1)
-    val rowKeys = QWERTY_LAYOUT[row]
+        'a' to PointF(108f, 200f), 's' to PointF(216f, 200f), 'd' to PointF(324f, 200f),
+        'f' to PointF(432f, 200f), 'g' to PointF(540f, 200f), 'h' to PointF(648f, 200f),
+        'j' to PointF(756f, 200f), 'k' to PointF(864f, 200f), 'l' to PointF(972f, 200f),
 
-    val effectiveX = when (row) {
-        1 -> normalizedX - 0.05f
-        2 -> normalizedX - 0.15f
-        else -> normalizedX
+        'z' to PointF(162f, 300f), 'x' to PointF(270f, 300f), 'c' to PointF(378f, 300f),
+        'v' to PointF(486f, 300f), 'b' to PointF(594f, 300f), 'n' to PointF(702f, 300f),
+        'm' to PointF(810f, 300f)
+    )
+
+    // Find nearest key by Euclidean distance
+    var nearestKey = 'a'
+    var minDistance = Float.MAX_VALUE
+
+    for ((char, keyPos) in keyPositions) {
+        val dx = point.x - keyPos.x
+        val dy = point.y - keyPos.y
+        val distance = Math.sqrt((dx * dx + dy * dy).toDouble()).toFloat()
+
+        if (distance < minDistance) {
+            minDistance = distance
+            nearestKey = char
+        }
     }
 
-    val col = (effectiveX * rowKeys.size).toInt().coerceIn(0, rowKeys.size - 1)
-    val detectedChar = rowKeys[col]
-
-    return CHAR_TO_TOKEN[detectedChar]?.toInt() ?: 0
+    return CHAR_TO_TOKEN[nearestKey]?.toInt() ?: 0
 }
 
 fun <T> padOrTruncate(list: List<T>, targetSize: Int, paddingValue: T): List<T> {
@@ -485,15 +501,18 @@ fun displayPredictions(result: PredictionResult) {
 fun createTestSwipe(word: String): List<PointF> {
     println("\n📝 Creating Test Swipe for '$word'")
 
-    // Map characters to approximate QWERTY positions
+    // Standard QWERTY key positions (same as detectNearestKey)
     val keyPositions = mapOf(
-        'h' to PointF(540f, 200f),  // ASDF row, middle
-        'e' to PointF(280f, 100f),  // QWER row, left-middle
-        'l' to PointF(730f, 200f),  // ASDF row, right-middle
-        'o' to PointF(820f, 100f),  // QWER row, right-middle
-        't' to PointF(430f, 100f),  // QWER row, middle
-        's' to PointF(190f, 200f),  // ASDF row, left
-        // Add more as needed
+        'q' to PointF(54f, 100f), 'w' to PointF(162f, 100f), 'e' to PointF(270f, 100f),
+        'r' to PointF(378f, 100f), 't' to PointF(486f, 100f), 'y' to PointF(594f, 100f),
+        'u' to PointF(702f, 100f), 'i' to PointF(810f, 100f), 'o' to PointF(918f, 100f),
+        'p' to PointF(1026f, 100f),
+        'a' to PointF(108f, 200f), 's' to PointF(216f, 200f), 'd' to PointF(324f, 200f),
+        'f' to PointF(432f, 200f), 'g' to PointF(540f, 200f), 'h' to PointF(648f, 200f),
+        'j' to PointF(756f, 200f), 'k' to PointF(864f, 200f), 'l' to PointF(972f, 200f),
+        'z' to PointF(162f, 300f), 'x' to PointF(270f, 300f), 'c' to PointF(378f, 300f),
+        'v' to PointF(486f, 300f), 'b' to PointF(594f, 300f), 'n' to PointF(702f, 300f),
+        'm' to PointF(810f, 300f)
     )
 
     val points = mutableListOf<PointF>()
