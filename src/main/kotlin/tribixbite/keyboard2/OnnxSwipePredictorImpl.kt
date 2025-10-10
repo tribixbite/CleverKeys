@@ -906,26 +906,38 @@ class SwipeTrajectoryProcessor {
     )
     
     fun extractFeatures(coordinates: List<PointF>, timestamps: List<Long>): TrajectoryFeatures {
+        logD("🔬 Feature extraction DEBUG:")
+        logD("   Input: ${coordinates.size} coordinates")
+        logD("   First 3 raw: ${coordinates.take(3).map { "(%.1f, %.1f)".format(it.x, it.y) }}")
+
         // Smooth trajectory to reduce noise
         val smoothedCoords = smoothTrajectory(coordinates)
-        
+        logD("   After smoothing: ${smoothedCoords.size} coordinates")
+        logD("   First 3 smoothed: ${smoothedCoords.take(3).map { "(%.1f, %.1f)".format(it.x, it.y) }}")
+
         // Calculate velocities (first derivative)
         val velocities = calculateVelocities(smoothedCoords, timestamps)
-        
+
         // Calculate accelerations (second derivative)
         val accelerations = calculateAccelerations(velocities, timestamps)
-        
+
         // Normalize coordinates to [0, 1] range
         val normalizedCoords = normalizeCoordinates(smoothedCoords)
-        
+        logD("   After normalization: ${normalizedCoords.size} coordinates")
+        logD("   First 3 normalized: ${normalizedCoords.take(3).map { "(%.3f, %.3f)".format(it.x, it.y) }}")
+
         // Detect nearest keys for each point
         val nearestKeys = detectNearestKeys(smoothedCoords)
-        
+        logD("   Nearest keys detected: ${nearestKeys.size} keys")
+        logD("   First 10 keys: ${nearestKeys.take(10)}")
+
         // Pad or truncate to MAX_TRAJECTORY_POINTS
         val finalCoords = padOrTruncate(normalizedCoords, MAX_TRAJECTORY_POINTS)
         val finalVelocities = padOrTruncate(velocities, MAX_TRAJECTORY_POINTS)
         val finalAccelerations = padOrTruncate(accelerations, MAX_TRAJECTORY_POINTS)
         val finalNearestKeys = padOrTruncate(nearestKeys, MAX_TRAJECTORY_POINTS, 0)
+        logD("   After padding/truncate: ${finalCoords.size} coordinates")
+        logD("   Final first 3: ${finalCoords.take(3).map { "(%.3f, %.3f)".format(it.x, it.y) }}")
         
         return TrajectoryFeatures(
             coordinates = finalCoords,
