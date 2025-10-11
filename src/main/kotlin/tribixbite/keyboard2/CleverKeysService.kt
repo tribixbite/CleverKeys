@@ -485,15 +485,24 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     }
     
     /**
+     * Update keyboard dimensions for neural prediction coordinate normalization
+     * Called by Keyboard2View when keyboard is measured
+     */
+    internal fun updateKeyboardDimensions(width: Int, height: Int) {
+        neuralEngine?.setKeyboardDimensions(width, height)
+        logD("📐 Keyboard dimensions updated: ${width}x${height}")
+    }
+
+    /**
      * Handle swipe gesture completion with complete pipeline integration
      * Called by Keyboard2View when user completes a swipe gesture
      */
     internal fun handleSwipeGesture(swipeData: SwipeGestureData) {
         val pipeline = this.predictionPipeline ?: return
         val profiler = this.performanceProfiler ?: return
-        
+
         logD("🎯 Gesture completion: ${swipeData.path.size} points")
-        
+
         // Process through complete neural prediction pipeline
         serviceScope.launch {
             try {
@@ -504,13 +513,13 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
                         context = getCurrentTextContext()
                     )
                 }
-                
+
                 // Update UI on main thread
                 withContext(Dispatchers.Main) {
                     updateSuggestionsFromPipeline(pipelineResult)
                     logPipelineResult(pipelineResult)
                 }
-                
+
             } catch (e: CancellationException) {
                 logD("Gesture processing cancelled by new gesture")
             } catch (e: Exception) {

@@ -483,6 +483,9 @@ class Keyboard2View @JvmOverloads constructor(
 
         android.util.Log.d("Keyboard2View", "onMeasure: natural=${naturalHeight.toInt()}, calculated=$calculatedHeight (${keyboardHeightPercent}%), using=$finalHeight")
 
+        // Notify service of keyboard dimensions for neural prediction
+        keyboardService?.updateKeyboardDimensions(windowWidth, finalHeight)
+
         setMeasuredDimension(
             windowWidth,
             finalHeight

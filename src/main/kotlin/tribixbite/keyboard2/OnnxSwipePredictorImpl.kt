@@ -53,7 +53,7 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     
     // Processing components
     private val tokenizer = SwipeTokenizer()
-    private val trajectoryProcessor = SwipeTrajectoryProcessor()
+    internal val trajectoryProcessor = SwipeTrajectoryProcessor() // Internal for dimension setting
     private val vocabulary = OptimizedVocabulary(context)
     
     // Configuration
@@ -851,56 +851,54 @@ class SwipeTrajectoryProcessor {
     )
     
     fun extractFeatures(coordinates: List<PointF>, timestamps: List<Long>): TrajectoryFeatures {
-        // 1. Normalize coordinates FIRST (0-1 range) - matches web demo line 1171-1172
+        // 1. Add validation check for keyboard dimensions
+        if (keyboardWidth == 1080 && keyboardHeight == 400) {
+            Log.w(TAG, "⚠️ Using default keyboard dimensions (1080x400). Key detection may be inaccurate. Ensure setKeyboardDimensions() is called.")
+        }
+
+        // 2. Normalize coordinates FIRST (0-1 range) - matches web demo
         val normalizedCoords = normalizeCoordinates(coordinates)
 
-        // 2. CRITICAL FIX: Detect nearest keys from coordinates directly
-        // The model was trained on keys that the swipe path intersects, not on pre-computed touchedKeys
-        // This matches web demo's behavior where each point knows which key it's over
+        // 3. Detect nearest keys from the original, un-normalized coordinates
+        // This is more accurate as it uses the raw pixel data
         val nearestKeys = detectNearestKeys(coordinates)
 
-        // 3. Pad or truncate to MAX_TRAJECTORY_POINTS
+        // 4. Pad or truncate to MAX_TRAJECTORY_POINTS
         val finalCoords = padOrTruncate(normalizedCoords, MAX_TRAJECTORY_POINTS)
-        val finalNearestKeys = padOrTruncate(nearestKeys, MAX_TRAJECTORY_POINTS, 0)
+        val finalNearestKeys = padOrTruncate(nearestKeys, MAX_TRAJECTORY_POINTS, 0) // Pad with PAD_IDX
 
-        // 4. Calculate velocities and accelerations on normalized coords (simple deltas, no time!)
-        //    VERIFICATION: Matches web demo lines 1220-1238 exactly
-        //    - Velocity: vx = point.x - prevPoint.x, vy = point.y - prevPoint.y
-        //    - Acceleration: ax = vx - prevVx, ay = vy - prevVy
+        // 5. Calculate velocities and accelerations on normalized coords (simple deltas)
+        // This logic correctly matches the working web demo
         val velocities = mutableListOf<PointF>()
         val accelerations = mutableListOf<PointF>()
 
         for (i in 0 until MAX_TRAJECTORY_POINTS) {
             if (i == 0) {
-                // First point: zero velocity and acceleration (web demo line 1223-1226)
                 velocities.add(PointF(0f, 0f))
                 accelerations.add(PointF(0f, 0f))
-            } else if (i == 1) {
-                // Second point: calculate velocity, zero acceleration (web demo line 1227-1232)
-                val vx = finalCoords[i].x - finalCoords[i-1].x
-                val vy = finalCoords[i].y - finalCoords[i-1].y
-                velocities.add(PointF(vx, vy))
-                accelerations.add(PointF(0f, 0f))
             } else {
-                // Rest: calculate both velocity and acceleration (web demo line 1233-1238)
                 val vx = finalCoords[i].x - finalCoords[i-1].x
                 val vy = finalCoords[i].y - finalCoords[i-1].y
                 velocities.add(PointF(vx, vy))
 
-                val ax = vx - velocities[i-1].x  // acceleration = delta of velocity
-                val ay = vy - velocities[i-1].y
-                accelerations.add(PointF(ax, ay))
+                if (i == 1) {
+                    accelerations.add(PointF(0f, 0f))
+                } else {
+                    val ax = vx - velocities[i-1].x
+                    val ay = vy - velocities[i-1].y
+                    accelerations.add(PointF(ax, ay))
+                }
             }
         }
 
-        // VERIFICATION LOGGING: Log first 3 feature vectors for comparison with web demo
-        if (coordinates.size >= 3) {
-            logD("🔬 Feature calculation verification (first 3 points):")
-            for (i in 0..2) {
-                logD("   Point[$i]: x=${String.format("%.4f", finalCoords[i].x)}, y=${String.format("%.4f", finalCoords[i].y)}, " +
-                     "vx=${String.format("%.4f", velocities[i].x)}, vy=${String.format("%.4f", velocities[i].y)}, " +
-                     "ax=${String.format("%.4f", accelerations[i].x)}, ay=${String.format("%.4f", accelerations[i].y)}, " +
-                     "key_idx=${finalNearestKeys[i]}")
+        // Verification logging
+        if (coordinates.isNotEmpty()) {
+            Log.d(TAG, "🔬 Feature calculation (first 3 points):")
+            for (i in 0..2.coerceAtMost(finalCoords.size - 1)) {
+                Log.d(TAG, "   Point[$i]: x=${String.format("%.4f", finalCoords[i].x)}, y=${String.format("%.4f", finalCoords[i].y)}, " +
+                         "vx=${String.format("%.4f", velocities[i].x)}, vy=${String.format("%.4f", velocities[i].y)}, " +
+                         "ax=${String.format("%.4f", accelerations[i].x)}, ay=${String.format("%.4f", accelerations[i].y)}, " +
+                         "key_idx=${finalNearestKeys.getOrNull(i) ?: "N/A"}")
             }
         }
 
@@ -1041,36 +1039,27 @@ class SwipeTrajectoryProcessor {
     }
     
     /**
-     * Pad or truncate list to target size
-     */
-    /**
      * Pad or truncate list to target size.
-     * FIX: Handles padding of mutable objects like PointF by creating new instances.
+     * Handles padding of mutable objects like PointF by creating new instances.
+     * Returns original list if empty and cannot determine padding.
      */
     private fun <T> padOrTruncate(list: List<T>, targetSize: Int, paddingValue: T? = null): List<T> {
-        return when {
-            list.size == targetSize -> list
-            list.size > targetSize -> list.take(targetSize)
-            else -> {
-                val lastValue = list.lastOrNull()
-                val paddingTemplate = paddingValue ?: lastValue
+        if (list.size >= targetSize) {
+            return list.take(targetSize)
+        }
 
-                if (paddingTemplate != null) {
-                    val paddingList = List(targetSize - list.size) {
-                        // If the padding value is a PointF, create a new instance to avoid reference sharing.
-                        // Otherwise, use the value as-is (for immutable types like Float, Int).
-                        if (paddingTemplate is PointF) {
-                            PointF(paddingTemplate.x, paddingTemplate.y) as T
-                        } else {
-                            paddingTemplate
-                        }
-                    }
-                    list + paddingList
-                } else {
-                    list
-                }
+        val lastValue = list.lastOrNull()
+        val paddingTemplate = paddingValue ?: lastValue ?: return list // Return original if cannot determine padding
+
+        val paddingList = List(targetSize - list.size) {
+            if (paddingTemplate is PointF) {
+                // Create new instance to avoid reference sharing
+                PointF(paddingTemplate.x, paddingTemplate.y) as T
+            } else {
+                paddingTemplate
             }
         }
+        return list + paddingList
     }
     
     fun setKeyboardDimensions(width: Int, height: Int) {

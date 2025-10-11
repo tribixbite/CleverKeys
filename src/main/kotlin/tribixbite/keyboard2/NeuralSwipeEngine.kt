@@ -108,16 +108,20 @@ class NeuralSwipeEngine(
      * Set keyboard dimensions for coordinate normalization
      */
     fun setKeyboardDimensions(width: Int, height: Int) {
-        // Keyboard dimensions are handled internally by the predictor
-        logD("Keyboard dimensions set: ${width}x${height}")
+        neuralPredictor?.let { predictor ->
+            predictor.setKeyboardDimensions(width, height)
+            logD("Keyboard dimensions set: ${width}x${height}")
+        } ?: logD("Cannot set keyboard dimensions: predictor not initialized")
     }
-    
+
     /**
      * Set real key positions for nearest-key detection
      */
     fun setRealKeyPositions(keyPositions: Map<Char, PointF>) {
-        // Key positions are handled internally by the predictor
-        logD("Real key positions set: ${keyPositions.size} keys")
+        neuralPredictor?.let { predictor ->
+            predictor.setRealKeyPositions(keyPositions)
+            logD("Real key positions set: ${keyPositions.size} keys")
+        } ?: logD("Cannot set key positions: predictor not initialized")
     }
     
     /**
