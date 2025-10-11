@@ -1,0 +1,708 @@
+# Neural Swipe Typing - Implementation Differences Analysis
+
+**Date:** October 11, 2025
+**Purpose:** Document every difference between working web demo (swipe.html) and Kotlin app implementation
+**Status:** Initial analysis - predictions failing (returning repetitive tokens)
+
+---
+
+## 🔴 CRITICAL DIFFERENCES
+
+### 1. **Swipe Data Collection & Key Tracking**
+
+#### Web Demo (swipe.html):
+- **Lines 905-934: `startSwipe()`**
+  ```javascript
+  // Tracks which key finger is over during swipe
+  if (key) {
+      currentKey = key.dataset.key;  // Stores 'q', 'w', 'e', etc.
+      key.classList.add('key-active');
+      keySequence.push({ key: currentKey, timestamp: Date.now(), index: 0 });
+  }
+
+  swipePath.push({
+      x: coords.x,
+      y: coords.y,
+      normalized: coords.normalized,
+      key: currentKey,  // ← CRITICAL: Associates key with each point
+      timestamp: Date.now()
+  });
+  ```
+
+- **Lines 936-975: `continueSwipe()`**
+  ```javascript
+  // Updates currentKey when finger moves to different key
+  const keyChar = key ? key.dataset.key : null;
+  if (keyChar !== currentKey) {
+      // Highlight new key, update keySequence
+      currentKey = keyChar;
+  }
+
+  swipePath.push({
+      key: currentKey,  // ← Each point knows which key it's near
+      // ...
+  });
+  ```
+
+#### Kotlin App (Keyboard2View.kt):
+- **Location:** `/data/data/com.termux/files/home/git/swype/cleverkeys/src/main/kotlin/tribixbite/keyboard2/Keyboard2View.kt`
+- **Problem:** Need to verify key tracking implementation
+- **TODO:** Check if `Pointer` class tracks touched keys for each point
+
+**IMPACT:** If touchedKeys list doesn't match swipe path length 1:1, nearest_keys tensor will be wrong size or have incorrect mappings.
+
+---
+
+### 2. **Feature Extraction Pipeline**
+
+#### Web Demo (swipe.html):
+- **Lines 1086-1111: `prepareSwipeFeatures()`**
+  ```javascript
+  function prepareSwipeFeatures(swipeData) {
+      const path = swipeData.path;
+      const normalizedPath = [];
+      const originalLength = Math.min(path.length, MAX_SEQUENCE_LENGTH);
+
+      // Take up to MAX_SEQUENCE_LENGTH points
+      for (let i = 0; i < Math.min(path.length, MAX_SEQUENCE_LENGTH); i++) {
+          const point = path[i];
+          normalizedPath.push({
+              x: point.x / NORMALIZED_WIDTH,   // ← Divide by 360
+              y: point.y / NORMALIZED_HEIGHT,  // ← Divide by 215
+              key: point.key || null           // ← Preserve key association
+          });
+      }
+
+      // Pad with last point if too short
+      const lastPoint = normalizedPath[normalizedPath.length - 1] || { x: 0, y: 0, key: null };
+      while (normalizedPath.length < MAX_SEQUENCE_LENGTH) {
+          normalizedPath.push({ ...lastPoint });  // ← Pad with LAST point
+      }
+
+      return {
+          path: normalizedPath,
+          originalLength: originalLength,  // ← Track actual length for masking
+          keySequence: swipeData.keySequence,
+          duration: swipeData.duration
+      };
+  }
+  ```
+
+#### Kotlin App (OnnxSwipePredictorImpl.kt):
+- **Lines 871-933: `extractFeatures()`**
+  ```kotlin
+  fun extractFeatures(coordinates: List<PointF>, timestamps: List<Long>, touchedKeys: List<KeyboardData.Key>): TrajectoryFeatures {
+      // 1. Normalize coordinates FIRST (0-1 range)
+      val normalizedCoords = normalizeCoordinates(coordinates)
+
+      // 2. Map touchedKeys to token indices
+      val nearestKeys = touchedKeys.map { key ->
+          key?.keys?.firstOrNull()?.let { kv ->
+              when (kv) {
+                  is KeyValue.CharKey -> {
+                      val char = kv.char.lowercaseChar()
+                      if (char in 'a'..'z') {
+                          (char - 'a') + 4  // a=4, b=5, ..., z=29
+                      } else {
+                          0  // PAD for non-letter keys
+                      }
+                  }
+                  else -> 0
+              }
+          } ?: 0
+      }
+
+      // 3. Pad or truncate to MAX_TRAJECTORY_POINTS
+      val finalCoords = padOrTruncate(normalizedCoords, MAX_TRAJECTORY_POINTS)
+      val finalNearestKeys = padOrTruncate(nearestKeys, MAX_TRAJECTORY_POINTS, 0)
+
+      // ... velocity/acceleration calculation ...
+  }
+  ```
+
+**DIFFERENCES:**
+1. ❓ **Coordinate normalization method** - Need to verify `normalizeCoordinates()` divides by correct dimensions
+2. ❓ **touchedKeys length validation** - Does touchedKeys.size == coordinates.size?
+3. ✅ **Padding strategy** - Uses `padOrTruncate()` helper
+4. ❓ **Actual length tracking** - Does TrajectoryFeatures store originalLength?
+
+**TODO:**
+- [ ] Verify normalizeCoordinates() implementation
+- [ ] Check padOrTruncate() matches web demo's lastPoint padding
+- [ ] Ensure TrajectoryFeatures.actualLength is set correctly
+
+---
+
+### 3. **Encoder Input Tensor Creation**
+
+#### Web Demo (swipe.html):
+- **Lines 1113-1174: `runInference()`**
+  ```javascript
+  async function runInference(features) {
+      const trajectoryData = new Float32Array(MAX_SEQUENCE_LENGTH * 6);
+      const nearestKeysData = new BigInt64Array(MAX_SEQUENCE_LENGTH);
+      const srcMaskData = new Uint8Array(MAX_SEQUENCE_LENGTH);
+
+      const keyMap = tokenizer ? tokenizer.char_to_idx : {
+          'a': 4, 'b': 5, 'c': 6, 'd': 7, 'e': 8, 'f': 9, 'g': 10, 'h': 11,
+          // ...
+      };
+
+      const actualLength = features.originalLength || MAX_SEQUENCE_LENGTH;
+
+      for (let i = 0; i < MAX_SEQUENCE_LENGTH; i++) {
+          const point = features.path[i];
+          const baseIdx = i * 6;
+
+          // Position (normalized 0-1)
+          trajectoryData[baseIdx + 0] = point.x;
+          trajectoryData[baseIdx + 1] = point.y;
+
+          // Velocity (difference from previous point)
+          if (i > 0) {
+              const prevPoint = features.path[i - 1];
+              trajectoryData[baseIdx + 2] = point.x - prevPoint.x; // vx
+              trajectoryData[baseIdx + 3] = point.y - prevPoint.y; // vy
+          } else {
+              trajectoryData[baseIdx + 2] = 0;
+              trajectoryData[baseIdx + 3] = 0;
+          }
+
+          // Acceleration (difference of velocities)
+          if (i > 1) {
+              const prevVx = trajectoryData[(i-1) * 6 + 2];
+              const prevVy = trajectoryData[(i-1) * 6 + 3];
+              trajectoryData[baseIdx + 4] = trajectoryData[baseIdx + 2] - prevVx; // ax
+              trajectoryData[baseIdx + 5] = trajectoryData[baseIdx + 3] - prevVy; // ay
+          } else {
+              trajectoryData[baseIdx + 4] = 0;
+              trajectoryData[baseIdx + 5] = 0;
+          }
+
+          // Nearest key index (int64)
+          if (point.key && keyMap.hasOwnProperty(point.key)) {
+              nearestKeysData[i] = BigInt(keyMap[point.key]);
+          } else {
+              nearestKeysData[i] = BigInt(0); // ← PAD if no key
+          }
+
+          // Mask: 1 for padded positions, 0 for real data
+          srcMaskData[i] = i >= actualLength ? 1 : 0;
+      }
+
+      const trajectoryTensor = new ort.Tensor('float32', trajectoryData, [1, MAX_SEQUENCE_LENGTH, 6]);
+      const nearestKeysTensor = new ort.Tensor('int64', nearestKeysData, [1, MAX_SEQUENCE_LENGTH]);
+      const srcMaskTensor = new ort.Tensor('bool', srcMaskData, [1, MAX_SEQUENCE_LENGTH]);
+
+      const encoderOutput = await encoderSession.run({
+          trajectory_features: trajectoryTensor,
+          nearest_keys: nearestKeysTensor,
+          src_mask: srcMaskTensor
+      });
+  }
+  ```
+
+#### Kotlin App (OnnxSwipePredictorImpl.kt):
+- **Lines 510-537: `createTrajectoryTensor()`**
+  ```kotlin
+  private fun createTrajectoryTensor(features: SwipeTrajectoryProcessor.TrajectoryFeatures): OnnxTensor {
+      val byteBuffer = java.nio.ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * TRAJECTORY_FEATURES * 4)
+      byteBuffer.order(java.nio.ByteOrder.nativeOrder())
+      val buffer = byteBuffer.asFloatBuffer()
+
+      for (i in 0 until MAX_SEQUENCE_LENGTH) {
+          val point = features.normalizedCoordinates.getOrNull(i) ?: PointF(0f, 0f)
+          val velocity = features.velocities.getOrNull(i) ?: PointF(0f, 0f)
+          val acceleration = features.accelerations.getOrNull(i) ?: PointF(0f, 0f)
+
+          // Exact 6-feature layout matching web demo: [x, y, vx, vy, ax, ay]
+          buffer.put(point.x)          // Normalized x [0,1]
+          buffer.put(point.y)          // Normalized y [0,1]
+          buffer.put(velocity.x)       // Velocity x component (delta)
+          buffer.put(velocity.y)       // Velocity y component (delta)
+          buffer.put(acceleration.x)   // Acceleration x component (delta of delta)
+          buffer.put(acceleration.y)   // Acceleration y component (delta of delta)
+      }
+
+      buffer.rewind()
+      return OnnxTensor.createTensor(ortEnvironment, buffer,
+          longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), TRAJECTORY_FEATURES.toLong()))
+  }
+  ```
+
+- **Lines 542-560: `createNearestKeysTensor()`**
+  ```kotlin
+  private fun createNearestKeysTensor(features: SwipeTrajectoryProcessor.TrajectoryFeatures): OnnxTensor {
+      val byteBuffer = java.nio.ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * 8)
+      byteBuffer.order(java.nio.ByteOrder.nativeOrder())
+      val buffer = byteBuffer.asLongBuffer()
+
+      for (i in 0 until MAX_SEQUENCE_LENGTH) {
+          if (i < features.nearestKeys.size) {
+              buffer.put(features.nearestKeys[i].toLong())
+          } else {
+              buffer.put(0L) // PAD
+          }
+      }
+
+      buffer.rewind()
+      return OnnxTensor.createTensor(ortEnvironment, buffer,
+          longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong()))
+  }
+  ```
+
+**DIFFERENCES:**
+1. ✅ **Tensor layout matches** - Both use [x, y, vx, vy, ax, ay] order
+2. ✅ **Velocity/acceleration calculation** - Done in extractFeatures() (lines 897-923)
+3. ✅ **Key mapping** - Uses same token indices (a=4, b=5, etc.)
+4. ❓ **Padding behavior** - Need to verify getOrNull() vs explicit checks
+
+**TODO:**
+- [ ] Verify extractFeatures() calculates velocity/acceleration identically to web demo
+- [ ] Check if padding uses zeros vs last point
+
+---
+
+### 4. **Beam Search Decoder Implementation**
+
+#### Web Demo (swipe.html):
+- **Lines 1176-1289: `decodeLogits()`**
+  ```javascript
+  async function decodeLogits(encoderOutput) {
+      const beamWidth = 5;
+      const maxLength = 20;
+
+      const PAD_IDX = 0, UNK_IDX = 1, SOS_IDX = 2, EOS_IDX = 3;
+
+      let beams = [{
+          tokens: [BigInt(SOS_IDX)],
+          score: 0,
+          finished: false
+      }];
+
+      for (let step = 0; step < maxLength; step++) {
+          const candidates = [];
+
+          for (const beam of beams) {
+              if (beam.finished) {
+                  candidates.push(beam);
+                  continue;
+              }
+
+              // Prepare decoder inputs
+              const DECODER_SEQ_LENGTH = 20;
+              const paddedTokens = new BigInt64Array(DECODER_SEQ_LENGTH);
+              const tgtMask = new Uint8Array(DECODER_SEQ_LENGTH);
+
+              // Copy beam tokens
+              for (let i = 0; i < beam.tokens.length && i < DECODER_SEQ_LENGTH; i++) {
+                  paddedTokens[i] = beam.tokens[i];
+              }
+              for (let i = beam.tokens.length; i < DECODER_SEQ_LENGTH; i++) {
+                  paddedTokens[i] = BigInt(PAD_IDX);
+              }
+
+              // Create target mask (1 for padded)
+              for (let i = beam.tokens.length; i < DECODER_SEQ_LENGTH; i++) {
+                  tgtMask[i] = 1;
+              }
+
+              // Source mask (all zeros)
+              const srcMaskArray = new Uint8Array(memory.dims[1]);
+              srcMaskArray.fill(0);
+
+              // Run decoder
+              const decoderOutput = await decoderSession.run({
+                  memory: memory,
+                  target_tokens: new ort.Tensor('int64', paddedTokens, [1, DECODER_SEQ_LENGTH]),
+                  target_mask: new ort.Tensor('bool', tgtMask, [1, DECODER_SEQ_LENGTH]),
+                  src_mask: new ort.Tensor('bool', srcMaskArray, [1, memory.dims[1]])
+              });
+
+              const logits = decoderOutput.logits;
+              const logitsData = logits.data;
+              const vocabSize = 30;
+
+              // Extract logits for NEXT token position
+              const tokenPosition = Math.min(beam.tokens.length - 1, DECODER_SEQ_LENGTH - 1);
+              const startIdx = tokenPosition * vocabSize;
+              const endIdx = startIdx + vocabSize;
+              const relevantLogits = logitsData.slice(startIdx, endIdx);
+
+              // Apply softmax
+              const probs = softmax(Array.from(relevantLogits));
+              const topK = getTopKIndices(probs, beamWidth);
+
+              // Create new beam candidates
+              for (const idx of topK) {
+                  const newBeam = {
+                      tokens: [...beam.tokens, BigInt(idx)],
+                      score: beam.score + Math.log(probs[idx]),  // ← Log probability
+                      finished: idx === EOS_IDX
+                  };
+                  candidates.push(newBeam);
+              }
+          }
+
+          // Select top beams globally
+          candidates.sort((a, b) => b.score - a.score);
+          beams = candidates.slice(0, beamWidth);
+
+          if (beams.every(b => b.finished)) {
+              break;
+          }
+      }
+
+      // Convert tokens to words
+      const predictions = beams.map(beam => {
+          const chars = [];
+          for (const token of beam.tokens) {
+              const idx = Number(token);
+              if (idx === SOS_IDX || idx === EOS_IDX || idx === PAD_IDX) continue;
+              if (idxToChar[idx] && !idxToChar[idx].startsWith('<')) {
+                  chars.push(idxToChar[idx]);
+              }
+          }
+          return chars.join('');
+      }).filter(word => word.length > 0);
+
+      return predictions;
+  }
+  ```
+
+#### Kotlin App (OnnxSwipePredictorImpl.kt):
+- **Lines 221-295: `runBeamSearch()`**
+  ```kotlin
+  private suspend fun runBeamSearch(
+      memory: OnnxTensor,
+      srcMaskTensor: OnnxTensor,
+      features: SwipeTrajectoryProcessor.TrajectoryFeatures
+  ): List<BeamSearchCandidate> = withContext(Dispatchers.Default) {
+
+      // Initialize beam search
+      val beams = mutableListOf<BeamSearchState>()
+      beams.add(BeamSearchState(SOS_IDX, 0.0f, false))
+
+      val finishedBeams = mutableListOf<BeamSearchState>()
+
+      // Beam search loop with batched processing
+      for (step in 0 until maxLength) {
+          val activeBeams = beams.filter { !it.finished }
+
+          if (activeBeams.isEmpty()) break
+
+          // CRITICAL: Process all active beams in single batch
+          val newBeams = processBatchedBeams(activeBeams, memory, srcMaskTensor, decoderSession)
+
+          // Separate finished from active
+          val newFinished = newBeams.filter { it.finished }
+          val stillActive = newBeams.filter { !it.finished }
+
+          finishedBeams.addAll(newFinished)
+          beams.clear()
+          beams.addAll(stillActive)
+
+          // Early stopping
+          if (beams.isEmpty() && finishedBeams.isNotEmpty()) break
+          if (step >= 10 && finishedBeams.size >= 3) break
+      }
+
+      // Return all final beams
+      val allFinalBeams = finishedBeams + beams
+
+      val candidates = allFinalBeams.map { beam ->
+          val word = tokenizer.tokensToWord(beam.tokens.drop(1)) // Remove SOS
+          BeamSearchCandidate(word, kotlin.math.exp(beam.score).toFloat())
+      }
+
+      return candidates
+  }
+  ```
+
+- **Lines 450-505: `processBatchedResults()`**
+  ```kotlin
+  private fun processBatchedResults(
+      batchedOutput: OrtSession.Result,
+      activeBeams: List<BeamSearchState>
+  ): List<BeamSearchState> {
+      val batchedLogitsTensor = batchedOutput.get(0) as OnnxTensor
+      val batchedLogits = batchedLogitsTensor.value as Array<Array<FloatArray>>
+
+      // CRITICAL: Collect ALL possible next hypotheses with GLOBAL scores
+      val allHypotheses = mutableListOf<Triple<Int, Int, Float>>()
+
+      activeBeams.forEachIndexed { batchIndex, beam ->
+          val currentPos = beam.tokens.size - 1
+
+          if (currentPos >= 0 && currentPos < batchedLogits[batchIndex].size) {
+              val vocabLogits = batchedLogits[batchIndex][currentPos]
+              val logProbs = applyLogSoftmax(vocabLogits)
+
+              // Consider EVERY possible next token for global selection
+              logProbs.forEachIndexed { tokenId, logProb ->
+                  val newScore = beam.score + logProb
+                  allHypotheses.add(Triple(batchIndex, tokenId, newScore))
+              }
+          }
+      }
+
+      // GLOBAL top-k selection: Sort ALL possibilities and take top beamWidth
+      val topHypotheses = allHypotheses.sortedByDescending { it.third }.take(beamWidth)
+
+      // Construct new beams from winners
+      val newBeams = mutableListOf<BeamSearchState>()
+      topHypotheses.forEach { (parentIndex, tokenId, score) ->
+          val parentBeam = activeBeams[parentIndex]
+          val newBeam = BeamSearchState(parentBeam)
+          newBeam.tokens.add(tokenId.toLong())
+          newBeam.score = score
+
+          if (tokenId == EOS_IDX) {
+              newBeam.finished = true
+          }
+
+          newBeams.add(newBeam)
+      }
+
+      return newBeams
+  }
+  ```
+
+**DIFFERENCES:**
+1. ✅ **Global top-k selection** - Kotlin implementation uses global beam selection (fixed in commit c4c51d0)
+2. ✅ **Batched inference** - Kotlin processes all beams in single batch (optimization, should work)
+3. ❓ **Token position calculation** - Web demo: `beam.tokens.length - 1`, Kotlin: `beam.tokens.size - 1` (same)
+4. ❓ **Log probability accumulation** - Both use log-space scoring
+5. ❓ **Early stopping** - Web demo: checks `beams.every(b => b.finished)`, Kotlin: checks `beams.isEmpty()`
+
+**TODO:**
+- [ ] Verify token position indexing matches between implementations
+- [ ] Check if memory tensor expansion (lines 312-328) works correctly
+- [ ] Validate src_mask tensor (should be all zeros like web demo line 1232)
+
+---
+
+## 🟡 MEDIUM PRIORITY DIFFERENCES
+
+### 5. **Coordinate Normalization**
+
+#### Web Demo (swipe.html):
+- **Lines 873-890: `getNormalizedCoords()`**
+  ```javascript
+  function getNormalizedCoords(clientX, clientY) {
+      if (!keyboardBounds) return { x: 0, y: 0, normalized: { x: 0, y: 0 } };
+
+      const x = clientX - keyboardBounds.minX;
+      const y = clientY - keyboardBounds.minY;
+
+      const normX = (x / keyboardBounds.width) * NORMALIZED_WIDTH;  // Scale to 360
+      const normY = (y / keyboardBounds.height) * NORMALIZED_HEIGHT; // Scale to 215
+
+      const norm01X = x / keyboardBounds.width;   // ← For inference (0-1)
+      const norm01Y = y / keyboardBounds.height;  // ← For inference (0-1)
+
+      return {
+          x: Math.round(normX),          // For display (360x215)
+          y: Math.round(normY),
+          normalized: {
+              x: norm01X.toFixed(3),     // ← Used in inference
+              y: norm01Y.toFixed(3)
+          }
+      };
+  }
+  ```
+
+- **Lines 1093-1097: In `prepareSwipeFeatures()`**
+  ```javascript
+  normalizedPath.push({
+      x: point.x / NORMALIZED_WIDTH,   // Divide 360-scale by 360 → 0-1
+      y: point.y / NORMALIZED_HEIGHT,  // Divide 215-scale by 215 → 0-1
+      key: point.key || null
+  });
+  ```
+
+#### Kotlin App (OnnxSwipePredictorImpl.kt):
+- **Need to find:** `normalizeCoordinates()` implementation
+- **Location:** Likely in SwipeTrajectoryProcessor or OnnxSwipePredictorImpl
+
+**TODO:**
+- [ ] Find and verify normalizeCoordinates() implementation
+- [ ] Ensure it divides by keyboard dimensions to get 0-1 range
+- [ ] Check if it matches web demo's two-step normalization
+
+---
+
+### 6. **Tokenizer Configuration**
+
+#### Web Demo (swipe.html):
+- **Lines 1118-1123: Token mapping**
+  ```javascript
+  const keyMap = tokenizer ? tokenizer.char_to_idx : {
+      'a': 4, 'b': 5, 'c': 6, 'd': 7, 'e': 8, 'f': 9, 'g': 10, 'h': 11,
+      'i': 12, 'j': 13, 'k': 14, 'l': 15, 'm': 16, 'n': 17, 'o': 18, 'p': 19,
+      'q': 20, 'r': 21, 's': 22, 't': 23, 'u': 24, 'v': 25, 'w': 26, 'x': 27,
+      'y': 28, 'z': 29
+  };
+  ```
+
+- **Lines 1185-1196: Token decoding**
+  ```javascript
+  const PAD_IDX = 0, UNK_IDX = 1, SOS_IDX = 2, EOS_IDX = 3;
+
+  const idxToChar = tokenizer?.idx_to_char ?? {
+      0: '<pad>', 1: '<unk>', 2: '<sos>', 3: '<eos>',
+      4: 'a', 5: 'b', 6: 'c', 7: 'd', 8: 'e', 9: 'f', 10: 'g', 11: 'h',
+      12: 'i', 13: 'j', 14: 'k', 15: 'l', 16: 'm', 17: 'n', 18: 'o', 19: 'p',
+      20: 'q', 21: 'r', 22: 's', 23: 't', 24: 'u', 25: 'v', 26: 'w', 27: 'x',
+      28: 'y', 29: 'z'
+  };
+  ```
+
+#### Kotlin App:
+- **Need to verify:** Tokenizer class implementation
+- **Check:** Token indices match exactly (a=4, b=5, ..., z=29)
+- **Check:** Special token indices (PAD=0, UNK=1, SOS=2, EOS=3)
+
+**TODO:**
+- [ ] Verify Tokenizer.kt has correct char_to_idx mapping
+- [ ] Check tokensToWord() decoding implementation
+- [ ] Ensure special tokens are filtered correctly
+
+---
+
+## 🟢 LOW PRIORITY / OPTIMIZATIONS
+
+### 7. **Memory Management**
+
+#### Kotlin App Advantages:
+- **Lines 312-328:** Tensor expansion for batched inference
+- **Lines 330-369:** Tensor pooling optimization
+- **TensorMemoryManager:** Automatic cleanup
+
+#### Web Demo:
+- No explicit tensor management
+- Relies on JavaScript garbage collection
+
+**Note:** These are Kotlin optimizations, not causes of prediction failures.
+
+---
+
+### 8. **Error Handling**
+
+#### Web Demo:
+- **Lines 1262-1265:** Simple try-catch with console.error
+  ```javascript
+  try {
+      const decoderOutput = await decoderSession.run({...});
+  } catch (error) {
+      console.error('Decoder error:', error);
+      throw error;
+  }
+  ```
+
+#### Kotlin App:
+- **Lines 275-278:** Structured error handling with logging
+- **ErrorHandling.kt:** Comprehensive exception management
+
+**Note:** Better error handling in Kotlin, not a functional difference.
+
+---
+
+## 📋 IMMEDIATE ACTION ITEMS
+
+### Priority 1: Data Pipeline Validation
+1. **Verify touchedKeys collection in Keyboard2View.kt**
+   - Check if Pointer tracking associates keys with coordinates
+   - Ensure touchedKeys.size == coordinates.size for all swipes
+   - Validate key characters are lowercase ('a'-'z')
+
+2. **Validate coordinate normalization**
+   - Find normalizeCoordinates() implementation
+   - Verify it produces 0-1 range matching web demo
+   - Check padding behavior (zeros vs last point)
+
+3. **Test feature extraction with known input**
+   - Create unit test with fixed coordinates + keys
+   - Compare output with web demo prepareSwipeFeatures()
+   - Verify trajectory tensor values match exactly
+
+### Priority 2: Decoder Validation
+4. **Verify token position calculation**
+   - Add logging to processBatchedResults()
+   - Check currentPos matches web demo's tokenPosition
+   - Validate logits extraction from correct position
+
+5. **Test beam search with single inference**
+   - Disable batching temporarily
+   - Run single-beam decoding like web demo
+   - Compare intermediate scores and tokens
+
+6. **Validate vocabulary filtering**
+   - Check if tokensToWord() handles special tokens correctly
+   - Ensure vocabulary.contains() works properly
+   - Verify word candidates aren't empty strings
+
+### Priority 3: Integration Testing
+7. **Compare end-to-end pipeline**
+   - Record swipe from web demo (export trail data)
+   - Import same swipe into app
+   - Compare predictions at each stage:
+     - Normalized coordinates
+     - Trajectory tensor
+     - Encoder output
+     - Decoder logits
+     - Final words
+
+---
+
+## 🔬 DEBUGGING CHECKLIST
+
+When predictions fail, check these in order:
+
+- [ ] **Input Data**
+  - [ ] coordinates.size > 0
+  - [ ] touchedKeys.size == coordinates.size
+  - [ ] All touchedKeys are valid KeyValue.CharKey
+  - [ ] Timestamps are monotonically increasing
+
+- [ ] **Feature Extraction**
+  - [ ] normalizedCoordinates all in [0, 1] range
+  - [ ] nearestKeys all in [0, 29] range (0=PAD, 4-29=letters)
+  - [ ] actualLength matches original swipe length
+  - [ ] velocities/accelerations calculated correctly
+
+- [ ] **Encoder Inference**
+  - [ ] trajectory_features shape = [1, 150, 6]
+  - [ ] nearest_keys shape = [1, 150]
+  - [ ] src_mask shape = [1, 150], values 0/1
+  - [ ] Encoder output shape = [1, 150, 256]
+
+- [ ] **Decoder Inference**
+  - [ ] memory tensor shape = [batchSize, 150, 256]
+  - [ ] target_tokens shape = [batchSize, 20]
+  - [ ] target_mask correctly marks padding
+  - [ ] src_mask all zeros (no masking)
+  - [ ] Decoder output shape = [batchSize, 20, 30]
+
+- [ ] **Beam Search**
+  - [ ] Token position = beam.tokens.size - 1
+  - [ ] Logits extracted from correct position
+  - [ ] Log softmax applied before scoring
+  - [ ] Global top-k selection across all beams
+  - [ ] EOS token (3) marks finished beams
+
+- [ ] **Output Processing**
+  - [ ] Tokens decoded excluding SOS/EOS/PAD
+  - [ ] Words filtered to remove empty strings
+  - [ ] Vocabulary lookup succeeds
+  - [ ] At least one valid candidate returned
+
+---
+
+## 📝 NOTES
+
+**Last Updated:** October 11, 2025
+**Status:** Symlink build error fixed, pipeline analysis complete
+**Next Step:** Execute Priority 1 validation tasks
+
+**Key Insight:** The most likely issue is in the data pipeline (touchedKeys collection/mapping) since the beam search algorithm has been fixed to use global top-k selection. The web demo's success depends on having correct key associations for each swipe point.
