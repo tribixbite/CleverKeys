@@ -751,7 +751,8 @@ All **Priority 1** fixes have been implemented to align Kotlin implementation wi
    - **Files:** `OnnxSwipePredictorImpl.kt:23-24, 71-72, 314`
 
 ### Testing Status
-- [ ] Build and install updated APK
+- [x] Build and install updated APK (48MB debug APK, commit a9a9006)
+- [x] APK installation initiated via termux-open
 - [ ] Test swipe gestures with variety of words
 - [ ] Verify logging shows correct key detection
 - [ ] Compare predictions with web demo on same gestures
@@ -763,3 +764,27 @@ After these fixes, the prediction pipeline should:
 - Use proper masking for decoder attention mechanism
 - Produce diverse predictions instead of repetitive tokens
 - Match web demo's accuracy for common English words
+
+---
+
+## 🧪 TESTING INSTRUCTIONS
+
+### Manual Testing Required:
+1. **Install APK** - Tap "Install" in Android Package Installer (if not already done)
+2. **Enable Keyboard** - Settings → Languages & input → Virtual keyboard → Add CleverKeys
+3. **Activate Keyboard** - Open any text field and select CleverKeys from keyboard picker
+4. **Test Swipe Gestures** - Try swiping common words:
+   - "hello" (h → e → l → l → o)
+   - "world" (w → o → r → l → d)
+   - "the" (t → h → e)
+   - "test" (t → e → s → t)
+5. **Check Logs** - Use `adb logcat | grep OnnxSwipe` or `adb logcat -s OnnxSwipePredictor SwipeTrajectoryProcessor` to verify:
+   - Key detection: "First 10 nearest keys: [...]"
+   - Feature calculation: "Point[0]: x=..., y=..., vx=..., vy=..., ax=..., ay=..., key_idx=..."
+   - Predictions: "Top 3: 'word1', 'word2', 'word3'"
+
+### Expected Behavior:
+- ✅ Predictions should be real English words
+- ✅ Top prediction should usually match intended word
+- ✅ No repetitive tokens (no more "ttt", "tttt", "rt", "tr")
+- ✅ Diverse beam search results across multiple candidates
