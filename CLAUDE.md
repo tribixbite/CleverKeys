@@ -136,6 +136,19 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
    - **CRITICAL SHOWSTOPPER**: Beam search now produces diverse, correct word predictions
    - Analysis by: Gemini 2.5 Pro via Zen MCP (continuation_id: a663fcae-e13c-4bef-8fc9-b29d1d0e3865)
 
+**Oct 11, 2025 - NEAREST_KEYS FEATURE FIX:**
+30. ✅ **Real key positions not passed to neural predictor**: Fixed coordinate-to-key mapping
+   - **ROOT CAUSE**: CleverKeysService only passed keyboard dimensions, not actual key positions
+   - This caused OnnxSwipePredictorImpl to fall back to inaccurate QWERTY grid detection
+   - **SYMPTOMS**: Wrong nearest_keys like [25,25,25,25...] (nine 'v's) for swipe of "values"
+   - Grid detection is dimension-sensitive and fails with default/incorrect dimensions
+   - **FIX**: CleverKeysService.updateKeyboardDimensions() now calls getRealKeyPositions()
+   - Passes actual key center coordinates to neural engine via setRealKeyPositions()
+   - Keyboard2View.getRealKeyPositions() already calculated centers, now properly used
+   - OnnxSwipePredictorImpl prefers real positions over grid fallback when available
+   - **CRITICAL**: Accurate key detection is essential for correct neural predictions
+   - OnnxSwipePredictorImpl already had warning at line 855 for default dimensions
+
 **Previous Fixes:**
 1. ✅ **KeyValue.kt**: Removed duplicate method declarations causing JVM signature clashes
 2. ✅ **Keyboard2View.kt**: Resolved platform declaration clashes in modifyKey methods
