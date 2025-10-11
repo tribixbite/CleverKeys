@@ -28,6 +28,12 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
 
 ## 📊 CURRENT STATUS
 
+**📋 SEE TODO.md FOR DETAILED PIPELINE ANALYSIS**
+- Comprehensive line-by-line comparison of web demo vs Kotlin implementation
+- 6 critical differences documented with file paths and line numbers
+- Prioritized action items for fixing prediction failures
+- Debugging checklist for systematic validation
+
 ### 🎉 **MAJOR MILESTONE: STUB ELIMINATION COMPLETE (Oct 2, 2025)**
 
 **All placeholder/stub implementations have been removed from the codebase:**
