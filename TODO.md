@@ -2,7 +2,7 @@
 
 **Date:** October 11, 2025
 **Purpose:** Document every difference between working web demo (swipe.html) and Kotlin app implementation
-**Status:** Initial analysis - predictions failing (returning repetitive tokens)
+**Status:** ✅ **CRITICAL FIXES IMPLEMENTED** - All Priority 1 mismatches resolved (commit 65c4d3c)
 
 ---
 
@@ -713,7 +713,53 @@ When predictions fail, check these in order:
 ## 📝 NOTES
 
 **Last Updated:** October 11, 2025
-**Status:** Symlink build error fixed, pipeline analysis complete
-**Next Step:** Execute Priority 1 validation tasks
+**Status:** ✅ Critical fixes implemented and committed (65c4d3c)
+**Next Step:** Test predictions on device with logging enabled
 
 **Key Insight:** The most likely issue is in the data pipeline (touchedKeys collection/mapping) since the beam search algorithm has been fixed to use global top-k selection. The web demo's success depends on having correct key associations for each swipe point.
+
+---
+
+## ✅ FIXES IMPLEMENTED (October 11, 2025)
+
+### Commit 65c4d3c: Critical ONNX Pipeline Alignment
+
+All **Priority 1** fixes have been implemented to align Kotlin implementation with working web demo:
+
+1. **✅ Fixed touchedKeys Detection (Lines 871-878)**
+   - **Before:** `extractFeatures()` accepted `touchedKeys` parameter from caller (usually empty)
+   - **After:** Auto-detects keys from coordinates using `detectNearestKeys()`
+   - **Impact:** Ensures 1:1 mapping between swipe points and key indices
+   - **Files:** `OnnxSwipePredictorImpl.kt:871-878`
+
+2. **✅ Fixed Decoder src_mask (Lines 322-329)**
+   - **Before:** Reused encoder's src_mask (with proper padding masking)
+   - **After:** Creates new all-zeros mask for decoder ([batchSize, 150] filled with false)
+   - **Impact:** Matches trained model's expectation (web demo line 1232: `srcMaskArray.fill(0)`)
+   - **Files:** `OnnxSwipePredictorImpl.kt:322-329, 358-362`
+
+3. **✅ Added Feature Verification Logging (Lines 892-901)**
+   - Logs first 3 trajectory feature vectors for comparison
+   - Displays x, y, vx, vy, ax, ay, key_idx values
+   - Confirms calculations match web demo implementation
+   - **Files:** `OnnxSwipePredictorImpl.kt:892-901`
+
+4. **✅ Unified Sequence Length Constants (Lines 23-24)**
+   - Added `DECODER_SEQ_LENGTH = 20` constant
+   - Replaced hardcoded values throughout codebase
+   - Ensures consistency: encoder=150, decoder=20
+   - **Files:** `OnnxSwipePredictorImpl.kt:23-24, 71-72, 314`
+
+### Testing Status
+- [ ] Build and install updated APK
+- [ ] Test swipe gestures with variety of words
+- [ ] Verify logging shows correct key detection
+- [ ] Compare predictions with web demo on same gestures
+- [ ] Validate feature calculations match expected values
+
+### Expected Improvements
+After these fixes, the prediction pipeline should:
+- Generate correct `nearest_keys` tensor matching swipe path
+- Use proper masking for decoder attention mechanism
+- Produce diverse predictions instead of repetitive tokens
+- Match web demo's accuracy for common English words
