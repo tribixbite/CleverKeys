@@ -163,8 +163,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 logDebug("   [$i] x=${point.x}, y=${point.y}, t=$timestamp")
             }
 
-            // Extract trajectory features
-            val features = trajectoryProcessor.extractFeatures(input.coordinates, input.timestamps)
+            // Extract trajectory features with touched keys
+            val features = trajectoryProcessor.extractFeatures(input.coordinates, input.timestamps, input.touchedKeys)
             logDebug("📊 Feature extraction complete:")
             logDebug("   Actual length: ${features.actualLength}")
             logDebug("   First 10 nearest keys: ${features.nearestKeys.take(10)}")
@@ -744,8 +744,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
 
             logDebug("   Test input: ${testInput.coordinates.size} points, ${testInput.pathLength} path length")
 
-            // Test feature extraction
-            val features = trajectoryProcessor.extractFeatures(testInput.coordinates, testInput.timestamps)
+            // Test feature extraction (with empty touchedKeys for validation)
+            val features = trajectoryProcessor.extractFeatures(testInput.coordinates, testInput.timestamps, testInput.touchedKeys)
             logDebug("   Feature extraction: ${features.actualLength} features, ${features.nearestKeys.size} nearest keys")
 
             // Test encoder
@@ -868,13 +868,27 @@ class SwipeTrajectoryProcessor {
         val normalizedCoordinates: List<PointF>
     )
     
-    fun extractFeatures(coordinates: List<PointF>, timestamps: List<Long>): TrajectoryFeatures {
+    fun extractFeatures(coordinates: List<PointF>, timestamps: List<Long>, touchedKeys: List<KeyboardData.Key>): TrajectoryFeatures {
         // 1. Normalize coordinates FIRST (0-1 range) - matches web demo line 1171-1172
         val normalizedCoords = normalizeCoordinates(coordinates)
 
-        // 2. Set nearest_keys to PAD (all zeros) - model learns from trajectory alone
-        // (nearest_keys only used for logging in web demo, not for prediction)
-        val nearestKeys = List(coordinates.size) { 0 }
+        // 2. Map touchedKeys to token indices (matches web demo line 1242-1246)
+        // Token mapping: a=4, b=5, ..., z=29 (PAD=0, UNK=1, SOS=2, EOS=3)
+        val nearestKeys = touchedKeys.map { key ->
+            key?.keys?.firstOrNull()?.let { kv ->
+                when (kv) {
+                    is KeyValue.CharKey -> {
+                        val char = kv.char.lowercaseChar()
+                        if (char in 'a'..'z') {
+                            (char - 'a') + 4  // a=4, b=5, ..., z=29
+                        } else {
+                            0  // PAD for non-letter keys
+                        }
+                    }
+                    else -> 0  // PAD for non-character keys
+                }
+            } ?: 0  // PAD if key is null
+        }
 
         // 3. Pad or truncate to MAX_TRAJECTORY_POINTS
         val finalCoords = padOrTruncate(normalizedCoords, MAX_TRAJECTORY_POINTS)
