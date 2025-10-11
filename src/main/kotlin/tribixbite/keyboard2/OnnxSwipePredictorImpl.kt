@@ -247,18 +247,20 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 }
 
                 // CRITICAL OPTIMIZATION: Process all active beams in single batch
-                val newCandidates = processBatchedBeams(activeBeams, memory, srcMaskTensor, decoderSession)
+                // Returns beamWidth globally-selected beams (already sorted and pruned)
+                val newBeams = processBatchedBeams(activeBeams, memory, srcMaskTensor, decoderSession)
 
-                // Separate new finished candidates from still-active ones
-                val newFinished = newCandidates.filter { it.finished }
-                val stillActive = newCandidates.filter { !it.finished }
+                // Separate new finished beams from still-active ones
+                val newFinished = newBeams.filter { it.finished }
+                val stillActive = newBeams.filter { !it.finished }
 
                 // Add newly finished beams to finished list
                 finishedBeams.addAll(newFinished)
 
-                // Update beams list with only active candidates for next iteration
+                // Update beams list for next iteration
+                // No need to sort/take - processBatchedResults already did global top-k selection
                 beams.clear()
-                beams.addAll(stillActive.sortedByDescending { it.score }.take(beamWidth))
+                beams.addAll(stillActive)
 
                 // Early stopping conditions (matching web demo):
                 // 1. All beams finished
@@ -441,50 +443,65 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     }
 
     /**
-     * Process batched results efficiently with optimized memory access
+     * Process batched results with GLOBAL top-k selection
+     * CRITICAL FIX: Select top-k candidates from ALL beams globally, not locally per beam
+     * This prevents beam collapse where all beams originate from single parent
      */
     private fun processBatchedResults(
         batchedOutput: OrtSession.Result,
         activeBeams: List<BeamSearchState>
     ): List<BeamSearchState> {
-        val newBeamCandidates = mutableListOf<BeamSearchState>()
         val batchedLogitsTensor = batchedOutput.get(0) as OnnxTensor
         val batchedTensorData = batchedLogitsTensor.value
 
         logDebug("📊 Decoder output shape: ${batchedLogitsTensor.info.shape.contentToString()}, type: ${batchedTensorData::class.simpleName}")
 
-        if (batchedTensorData is Array<*>) {
-            // Handle 4D tensor: [batch_size, seq_length, vocab_size]
-            val batchedLogits = batchedTensorData as Array<Array<FloatArray>>
+        if (batchedTensorData !is Array<*>) {
+            return emptyList()
+        }
 
-            // Process results for each beam in the batch
-            activeBeams.forEachIndexed { batchIndex, beam ->
-                val currentPos = beam.tokens.size - 1
+        val batchedLogits = batchedTensorData as Array<Array<FloatArray>>
 
-                if (currentPos >= 0 && currentPos < batchedLogits[batchIndex].size) {
-                    val vocabLogits = batchedLogits[batchIndex][currentPos]
+        // CRITICAL: Collect ALL possible next hypotheses with their GLOBAL scores
+        // Each item is (parentBeamIndex, tokenId, newTotalScore)
+        val allHypotheses = mutableListOf<Triple<Int, Int, Float>>()
 
-                    // CRITICAL FIX: Apply log-softmax to convert raw logits to log probabilities
-                    val logProbs = applyLogSoftmax(vocabLogits)
-                    val topK = getTopKIndices(logProbs, beamWidth)
+        activeBeams.forEachIndexed { batchIndex, beam ->
+            val currentPos = beam.tokens.size - 1
 
-                    // Create new beam candidates for this beam
-                    topK.forEach { tokenId ->
-                        val newBeam = BeamSearchState(beam)
-                        newBeam.tokens.add(tokenId.toLong())
-                        newBeam.score += logProbs[tokenId]  // Add log probability, not raw logit
+            if (currentPos >= 0 && currentPos < batchedLogits[batchIndex].size) {
+                val vocabLogits = batchedLogits[batchIndex][currentPos]
+                val logProbs = applyLogSoftmax(vocabLogits)
 
-                        if (tokenId == EOS_IDX) {
-                            newBeam.finished = true
-                        }
-
-                        newBeamCandidates.add(newBeam)
-                    }
+                // CRITICAL FIX: Consider EVERY possible next token for global selection
+                // This prevents beam collapse by allowing lower-scoring beams with
+                // high-probability tokens to compete with higher-scoring beams
+                logProbs.forEachIndexed { tokenId, logProb ->
+                    val newScore = beam.score + logProb
+                    allHypotheses.add(Triple(batchIndex, tokenId, newScore))
                 }
             }
         }
 
-        return newBeamCandidates
+        // GLOBAL top-k selection: Sort ALL possibilities and take top beamWidth
+        val topHypotheses = allHypotheses.sortedByDescending { it.third }.take(beamWidth)
+
+        // Construct new beam generation from globally-selected winners
+        val newBeams = mutableListOf<BeamSearchState>()
+        topHypotheses.forEach { (parentIndex, tokenId, score) ->
+            val parentBeam = activeBeams[parentIndex]
+            val newBeam = BeamSearchState(parentBeam)
+            newBeam.tokens.add(tokenId.toLong())
+            newBeam.score = score  // Use the globally-computed score
+
+            if (tokenId == EOS_IDX) {
+                newBeam.finished = true
+            }
+
+            newBeams.add(newBeam)
+        }
+
+        return newBeams
     }
 
     /**
