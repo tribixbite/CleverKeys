@@ -119,6 +119,17 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
    - Eliminated confusing duplicate InputMethodService
    - **LOW**: Code cleanup
 
+**Oct 10, 2025 - BEAM SEARCH ALGORITHM FIX (Gemini AI Analysis):**
+29. ✅ **Beam collapse in neural prediction**: Fixed local vs global top-k selection bug
+   - **ROOT CAUSE**: processBatchedResults selected top-k tokens PER BEAM, then selected from that reduced set
+   - This caused beam collapse where all beams originated from single high-scoring parent
+   - **SYMPTOMS**: Repetitive tokens ('ttt', 'tttt', 'tt'), wrong predictions ("rt"/"tr" instead of "couch")
+   - **FIX**: Implemented global top-k selection across all beam×vocab possibilities (8×30=240 candidates)
+   - For each beam, compute scores for ALL vocab tokens, then globally select top-8 by total score
+   - Maintains beam diversity and prevents collapse to single hypothesis path
+   - **CRITICAL SHOWSTOPPER**: Beam search now produces diverse, correct word predictions
+   - Analysis by: Gemini 2.5 Pro via Zen MCP (continuation_id: a663fcae-e13c-4bef-8fc9-b29d1d0e3865)
+
 **Previous Fixes:**
 1. ✅ **KeyValue.kt**: Removed duplicate method declarations causing JVM signature clashes
 2. ✅ **Keyboard2View.kt**: Resolved platform declaration clashes in modifyKey methods
