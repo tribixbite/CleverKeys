@@ -750,11 +750,22 @@ All **Priority 1** fixes have been implemented to align Kotlin implementation wi
    - Ensures consistency: encoder=150, decoder=20
    - **Files:** `OnnxSwipePredictorImpl.kt:23-24, 71-72, 314`
 
+5. **✅ Real Key Positions Integration (FIX #30) - October 11, 2025**
+   - **Before:** Only keyboard dimensions passed to neural predictor
+   - **After:** `CleverKeysService.updateKeyboardDimensions()` now calls `getRealKeyPositions()`
+   - **Impact:** Fixes incorrect nearest_keys detection [25,25,25...] by using actual key centers
+   - **Root Cause:** Fallback QWERTY grid detection failed with default/incorrect dimensions
+   - **Files:** `CleverKeysService.kt:491-503`, `Keyboard2View.kt:408-442`
+   - **Commit:** 3ad76d4
+
 ### Testing Status
 - [x] Build and install updated APK (48MB debug APK, commit a9a9006)
 - [x] APK installation initiated via termux-open
-- [ ] Test swipe gestures with variety of words
-- [ ] Verify logging shows correct key detection
+- [x] **FIX #30 APPLIED** - Real key positions now passed to neural predictor (commit 3ad76d4)
+- [x] **REBUILT** - New APK (49MB) with fix #30 ready for installation (Oct 11, 2025)
+- [ ] **INSTALL** - Tap 'Install' in Android Package Installer
+- [ ] **TEST** - Swipe common words: "hello", "world", "the", "test", "values"
+- [ ] Verify logging shows correct key detection (not [25,25,25...])
 - [ ] Compare predictions with web demo on same gestures
 - [ ] Validate feature calculations match expected values
 
