@@ -328,7 +328,6 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         // The working web demo passes srcMaskArray.fill(0) to the decoder, meaning ALL positions are valid
         // This differs from the encoder which uses a proper mask for padding
         // Shape: [batchSize, 150] filled with false (0 = valid, 1 = masked)
-        val memoryShape = memory.info.shape
         val decoderSrcMaskShape = longArrayOf(batchSize.toLong(), memoryShape[1])
         val decoderSrcMaskData = Array(batchSize) { BooleanArray(memoryShape[1].toInt()) { false } }
         val decoderSrcMask = OnnxTensor.createTensor(ortEnvironment, decoderSrcMaskData)
