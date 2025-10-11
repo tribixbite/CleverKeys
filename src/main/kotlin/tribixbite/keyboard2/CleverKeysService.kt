@@ -490,6 +490,15 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
      */
     internal fun updateKeyboardDimensions(width: Int, height: Int) {
         neuralEngine?.setKeyboardDimensions(width, height)
+
+        // CRITICAL: Update real key positions for accurate nearest_keys detection
+        // This fixes the issue where nearest_keys were detecting wrong keys due to
+        // using fallback grid detection with incorrect dimensions
+        keyboardView?.getRealKeyPositions()?.let { keyPositions ->
+            neuralEngine?.setRealKeyPositions(keyPositions)
+            logD("🎹 Real key positions updated: ${keyPositions.size} keys")
+        }
+
         logD("📐 Keyboard dimensions updated: ${width}x${height}")
     }
 
