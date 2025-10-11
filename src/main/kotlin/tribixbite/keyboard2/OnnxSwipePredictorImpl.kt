@@ -17,14 +17,19 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     
     companion object {
         private const val TAG = "OnnxSwipePredictor"
-        private const val MAX_SEQUENCE_LENGTH = 150
+
+        // CRITICAL: Sequence length constants matching web demo
+        // These MUST match the ONNX model's expected input shapes
+        private const val MAX_SEQUENCE_LENGTH = 150  // Encoder input sequence length (web demo: MAX_SEQUENCE_LENGTH)
+        private const val DECODER_SEQ_LENGTH = 20     // Decoder input sequence length (web demo: DECODER_SEQ_LENGTH)
+
         private const val TRAJECTORY_FEATURES = 6 // x, y, vx, vy, ax, ay
         private const val NORMALIZED_WIDTH = 1.0f
         private const val NORMALIZED_HEIGHT = 1.0f
         private const val DEFAULT_BEAM_WIDTH = 8
         private const val DEFAULT_MAX_LENGTH = 35
         private const val DEFAULT_CONFIDENCE_THRESHOLD = 0.1f
-        
+
         // Special tokens
         private const val PAD_IDX = 0
         private const val UNK_IDX = 1
@@ -63,8 +68,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     private var debugLogger: ((String) -> Unit)? = null
     
     // Pre-allocated tensors for performance
-    private var reusableTokensArray = LongArray(20)
-    private var reusableTargetMaskArray = Array(1) { BooleanArray(20) }
+    private var reusableTokensArray = LongArray(DECODER_SEQ_LENGTH)
+    private var reusableTargetMaskArray = Array(1) { BooleanArray(DECODER_SEQ_LENGTH) }
 
     // High-performance tensor pooling for 50-70% speedup
     private val tensorPool = OptimizedTensorPool.getInstance(ortEnvironment)
@@ -163,8 +168,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 logDebug("   [$i] x=${point.x}, y=${point.y}, t=$timestamp")
             }
 
-            // Extract trajectory features with touched keys
-            val features = trajectoryProcessor.extractFeatures(input.coordinates, input.timestamps, input.touchedKeys)
+            // Extract trajectory features with automatic key detection
+            val features = trajectoryProcessor.extractFeatures(input.coordinates, input.timestamps)
             logDebug("📊 Feature extraction complete:")
             logDebug("   Actual length: ${features.actualLength}")
             logDebug("   First 10 nearest keys: ${features.nearestKeys.take(10)}")
@@ -306,7 +311,7 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     ): List<BeamSearchState> = withContext(Dispatchers.Default) {
 
         val batchSize = activeBeams.size
-        val seqLength = 20 // Standard decoder sequence length
+        val seqLength = DECODER_SEQ_LENGTH // Standard decoder sequence length (matches web demo)
 
         // CRITICAL FIX: Expand memory tensor to match batch size
         // Memory shape is [1, 150, 256], need [batchSize, 150, 256]
@@ -319,13 +324,14 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
             memory  // No expansion needed for single beam
         }
 
-        // CRITICAL FIX: Also expand src_mask to match batch size
-        // src_mask shape is [1, 150], need [batchSize, 150]
-        val expandedSrcMask = if (batchSize > 1) {
-            expandSrcMaskTensor(srcMaskTensor, batchSize)
-        } else {
-            srcMaskTensor  // No expansion needed for single beam
-        }
+        // CRITICAL FIX: Create all-zeros src_mask for decoder (matches web demo line 1232)
+        // The working web demo passes srcMaskArray.fill(0) to the decoder, meaning ALL positions are valid
+        // This differs from the encoder which uses a proper mask for padding
+        // Shape: [batchSize, 150] filled with false (0 = valid, 1 = masked)
+        val memoryShape = memory.info.shape
+        val decoderSrcMaskShape = longArrayOf(batchSize.toLong(), memoryShape[1])
+        val decoderSrcMaskData = Array(batchSize) { BooleanArray(memoryShape[1].toInt()) { false } }
+        val decoderSrcMask = OnnxTensor.createTensor(ortEnvironment, decoderSrcMaskData)
 
         // OPTIMIZATION: Use tensor pool for batched tensors - eliminates allocation overhead
         val batchedTokensShape = longArrayOf(batchSize.toLong(), seqLength.toLong())
@@ -342,7 +348,7 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                     "memory" to expandedMemory,
                     "target_tokens" to batchedTokensTensor,
                     "target_mask" to batchedMaskTensor,
-                    "src_mask" to expandedSrcMask
+                    "src_mask" to decoderSrcMask  // All-zeros mask for decoder
                 )
 
                 // SINGLE BATCHED INFERENCE with tensor pool optimization
@@ -354,14 +360,10 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 // Automatic cleanup via tensor pool
                 batchedOutput.close()
 
-                // Clean up expanded tensors if we created them
-                if (batchSize > 1) {
-                    if (expandedMemory != memory) {
-                        expandedMemory.close()
-                    }
-                    if (expandedSrcMask != srcMaskTensor) {
-                        expandedSrcMask.close()
-                    }
+                // Clean up created tensors
+                decoderSrcMask.close()
+                if (batchSize > 1 && expandedMemory != memory) {
+                    expandedMemory.close()
                 }
 
                 newBeamCandidates
@@ -389,25 +391,6 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         }
 
         return OnnxTensor.createTensor(ortEnvironment, expandedData)
-    }
-
-    /**
-     * Expand src_mask tensor from [1, seq_len] to [batch_size, seq_len]
-     * by replicating the single batch mask across multiple batches
-     */
-    private fun expandSrcMaskTensor(srcMask: OnnxTensor, batchSize: Int): OnnxTensor {
-        val maskData = srcMask.value as Array<BooleanArray>
-        val seqLen = maskData[0].size
-
-        // Create expanded array [batch_size, seq_len]
-        val expandedMask = Array(batchSize) { BooleanArray(seqLen) }
-
-        // Replicate the single batch mask to all batch positions
-        for (b in 0 until batchSize) {
-            System.arraycopy(maskData[0], 0, expandedMask[b], 0, seqLen)
-        }
-
-        return OnnxTensor.createTensor(ortEnvironment, expandedMask)
     }
 
     /**
@@ -744,8 +727,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
 
             logDebug("   Test input: ${testInput.coordinates.size} points, ${testInput.pathLength} path length")
 
-            // Test feature extraction (with empty touchedKeys for validation)
-            val features = trajectoryProcessor.extractFeatures(testInput.coordinates, testInput.timestamps, testInput.touchedKeys)
+            // Test feature extraction (with automatic key detection)
+            val features = trajectoryProcessor.extractFeatures(testInput.coordinates, testInput.timestamps)
             logDebug("   Feature extraction: ${features.actualLength} features, ${features.nearestKeys.size} nearest keys")
 
             // Test encoder
@@ -868,50 +851,39 @@ class SwipeTrajectoryProcessor {
         val normalizedCoordinates: List<PointF>
     )
     
-    fun extractFeatures(coordinates: List<PointF>, timestamps: List<Long>, touchedKeys: List<KeyboardData.Key>): TrajectoryFeatures {
+    fun extractFeatures(coordinates: List<PointF>, timestamps: List<Long>): TrajectoryFeatures {
         // 1. Normalize coordinates FIRST (0-1 range) - matches web demo line 1171-1172
         val normalizedCoords = normalizeCoordinates(coordinates)
 
-        // 2. Map touchedKeys to token indices (matches web demo line 1242-1246)
-        // Token mapping: a=4, b=5, ..., z=29 (PAD=0, UNK=1, SOS=2, EOS=3)
-        val nearestKeys = touchedKeys.map { key ->
-            key?.keys?.firstOrNull()?.let { kv ->
-                when (kv) {
-                    is KeyValue.CharKey -> {
-                        val char = kv.char.lowercaseChar()
-                        if (char in 'a'..'z') {
-                            (char - 'a') + 4  // a=4, b=5, ..., z=29
-                        } else {
-                            0  // PAD for non-letter keys
-                        }
-                    }
-                    else -> 0  // PAD for non-character keys
-                }
-            } ?: 0  // PAD if key is null
-        }
+        // 2. CRITICAL FIX: Detect nearest keys from coordinates directly
+        // The model was trained on keys that the swipe path intersects, not on pre-computed touchedKeys
+        // This matches web demo's behavior where each point knows which key it's over
+        val nearestKeys = detectNearestKeys(coordinates)
 
         // 3. Pad or truncate to MAX_TRAJECTORY_POINTS
         val finalCoords = padOrTruncate(normalizedCoords, MAX_TRAJECTORY_POINTS)
         val finalNearestKeys = padOrTruncate(nearestKeys, MAX_TRAJECTORY_POINTS, 0)
 
         // 4. Calculate velocities and accelerations on normalized coords (simple deltas, no time!)
-        //    Matches web demo lines 1220-1238
+        //    VERIFICATION: Matches web demo lines 1220-1238 exactly
+        //    - Velocity: vx = point.x - prevPoint.x, vy = point.y - prevPoint.y
+        //    - Acceleration: ax = vx - prevVx, ay = vy - prevVy
         val velocities = mutableListOf<PointF>()
         val accelerations = mutableListOf<PointF>()
 
         for (i in 0 until MAX_TRAJECTORY_POINTS) {
             if (i == 0) {
-                // First point: zero velocity and acceleration
+                // First point: zero velocity and acceleration (web demo line 1223-1226)
                 velocities.add(PointF(0f, 0f))
                 accelerations.add(PointF(0f, 0f))
             } else if (i == 1) {
-                // Second point: calculate velocity, zero acceleration
+                // Second point: calculate velocity, zero acceleration (web demo line 1227-1232)
                 val vx = finalCoords[i].x - finalCoords[i-1].x
                 val vy = finalCoords[i].y - finalCoords[i-1].y
                 velocities.add(PointF(vx, vy))
                 accelerations.add(PointF(0f, 0f))
             } else {
-                // Rest: calculate both velocity and acceleration
+                // Rest: calculate both velocity and acceleration (web demo line 1233-1238)
                 val vx = finalCoords[i].x - finalCoords[i-1].x
                 val vy = finalCoords[i].y - finalCoords[i-1].y
                 velocities.add(PointF(vx, vy))
@@ -919,6 +891,17 @@ class SwipeTrajectoryProcessor {
                 val ax = vx - velocities[i-1].x  // acceleration = delta of velocity
                 val ay = vy - velocities[i-1].y
                 accelerations.add(PointF(ax, ay))
+            }
+        }
+
+        // VERIFICATION LOGGING: Log first 3 feature vectors for comparison with web demo
+        if (coordinates.size >= 3) {
+            logD("🔬 Feature calculation verification (first 3 points):")
+            for (i in 0..2) {
+                logD("   Point[$i]: x=${String.format("%.4f", finalCoords[i].x)}, y=${String.format("%.4f", finalCoords[i].y)}, " +
+                     "vx=${String.format("%.4f", velocities[i].x)}, vy=${String.format("%.4f", velocities[i].y)}, " +
+                     "ax=${String.format("%.4f", accelerations[i].x)}, ay=${String.format("%.4f", accelerations[i].y)}, " +
+                     "key_idx=${finalNearestKeys[i]}")
             }
         }
 

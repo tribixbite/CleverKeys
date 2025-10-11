@@ -608,50 +608,61 @@
 
 ---
 
-## 📋 IMMEDIATE ACTION ITEMS
+## 📋 IMMEDIATE ACTION ITEMS (Updated October 11, 2025)
 
-### Priority 1: Data Pipeline Validation
-1. **Verify touchedKeys collection in Keyboard2View.kt**
-   - Check if Pointer tracking associates keys with coordinates
-   - Ensure touchedKeys.size == coordinates.size for all swipes
-   - Validate key characters are lowercase ('a'-'z')
+### 🔴 Priority 1: Fix Core Feature Mismatches
+These issues are the most likely cause of incorrect predictions.
 
-2. **Validate coordinate normalization**
-   - Find normalizeCoordinates() implementation
-   - Verify it produces 0-1 range matching web demo
-   - Check padding behavior (zeros vs last point)
+#### 1. **Fix "Touched Keys" Logic for nearest_keys Tensor**
+   **Problem:** The Kotlin `NeuralPredictionPipeline` provides an empty `touchedKeys` list to `SwipeTrajectoryProcessor`. The processor then falls back to geometric proximity calculation, which doesn't match the web demo. The model was trained on the sequence of keys the swipe path actually intersects.
 
-3. **Test feature extraction with known input**
-   - Create unit test with fixed coordinates + keys
-   - Compare output with web demo prepareSwipeFeatures()
-   - Verify trajectory tensor values match exactly
+   **Required Fix:**
+   - In `SwipeTrajectoryProcessor.extractFeatures()`, remove the `touchedKeys` parameter
+   - Generate `nearestKeys` by mapping each coordinate point to the key it's currently over
+   - Use `detectNearestKeys()` or `detectKeyFromQwertyGrid()` as primary method, not fallback
+   - Ensure character-to-token mapping ('a' -> 4, 'b' -> 5, etc.) matches web demo's `keyMap`
 
-### Priority 2: Decoder Validation
-4. **Verify token position calculation**
-   - Add logging to processBatchedResults()
-   - Check currentPos matches web demo's tokenPosition
-   - Validate logits extraction from correct position
+   **Files:**
+   - `src/main/kotlin/tribixbite/keyboard2/neural/SwipeTrajectoryProcessor.kt`
+   - `src/main/kotlin/tribixbite/keyboard2/neural/NeuralPredictionPipeline.kt`
 
-5. **Test beam search with single inference**
-   - Disable batching temporarily
-   - Run single-beam decoding like web demo
-   - Compare intermediate scores and tokens
+#### 2. **Fix Decoder src_mask to All-Zeros**
+   **Problem:** Kotlin code correctly calculates source mask (masking padded positions) and passes it to both encoder and decoder. However, working `swipe.html` passes an all-zeros mask (all positions valid) to the decoder. Model is trained expecting this specific behavior.
 
-6. **Validate vocabulary filtering**
-   - Check if tokensToWord() handles special tokens correctly
-   - Ensure vocabulary.contains() works properly
-   - Verify word candidates aren't empty strings
+   **Required Fix:**
+   - In `OnnxSwipePredictorImpl.runBeamSearch()` or `processBatchedBeams()`, don't reuse encoder's `srcMaskTensor`
+   - When preparing decoder inputs, create new `OnnxTensor` for `src_mask` input
+   - New tensor must have shape `[batch_size, sequence_length]` (e.g., `[8, 150]`) filled with `false`
+   - This replicates web demo's `srcMaskArray.fill(0)` logic (line 1232)
 
-### Priority 3: Integration Testing
-7. **Compare end-to-end pipeline**
-   - Record swipe from web demo (export trail data)
-   - Import same swipe into app
-   - Compare predictions at each stage:
-     - Normalized coordinates
-     - Trajectory tensor
-     - Encoder output
-     - Decoder logits
-     - Final words
+   **Files:**
+   - `src/main/kotlin/tribixbite/keyboard2/neural/OnnxSwipePredictorImpl.kt` (lines 221-505)
+
+### 🟡 Priority 2: Verification and Refinement
+Important checks to ensure perfect alignment after primary fixes.
+
+#### 3. **Verify Trajectory Feature Calculation**
+   **Problem:** Subtle differences in feature calculation after padding could exist.
+
+   **Required Fix:**
+   - Add detailed logging to `SwipeTrajectoryProcessor.extractFeatures()` and JS `runInference()`
+   - Using same input swipe data, log final `trajectory_features` array from both
+   - Confirm x, y (normalized), vx, vy (velocity), ax, ay (acceleration) are identical
+   - Verify zero velocity/acceleration for padded points
+
+   **Files:**
+   - `src/main/kotlin/tribixbite/keyboard2/neural/SwipeTrajectoryProcessor.kt` (lines 871-933)
+
+#### 4. **Unify Hardcoded Sequence Lengths**
+   **Problem:** Magic numbers for sequence lengths need verification.
+
+   **Required Fix:**
+   - Confirm `MAX_SEQUENCE_LENGTH = 150` (encoder) and `DECODER_SEQ_LENGTH = 20` (decoder) used consistently
+   - Move to shared constants in `OnnxSwipePredictorImpl.Companion`
+   - Audit all functions: `createTrajectoryTensor()`, `runBeamSearch()`, `processBatchedBeams()`
+
+   **Files:**
+   - `src/main/kotlin/tribixbite/keyboard2/neural/OnnxSwipePredictorImpl.kt`
 
 ---
 
