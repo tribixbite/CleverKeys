@@ -855,8 +855,9 @@ class SwipeTrajectoryProcessor {
         // 1. Normalize coordinates FIRST (0-1 range) - matches web demo line 1171-1172
         val normalizedCoords = normalizeCoordinates(coordinates)
 
-        // 2. Detect nearest keys on raw coordinates
-        val nearestKeys = detectNearestKeys(coordinates)
+        // 2. Set nearest_keys to PAD (all zeros) - model learns from trajectory alone
+        // (nearest_keys only used for logging in web demo, not for prediction)
+        val nearestKeys = List(coordinates.size) { 0 }
 
         // 3. Pad or truncate to MAX_TRAJECTORY_POINTS
         val finalCoords = padOrTruncate(normalizedCoords, MAX_TRAJECTORY_POINTS)
