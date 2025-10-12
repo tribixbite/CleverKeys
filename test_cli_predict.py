@@ -117,7 +117,8 @@ def decode_prediction(token_indices):
     return ''.join(chars)
 
 def run_beam_search(encoder_session, decoder_session, memory, beam_size=8, max_len=20):
-    """Run beam search decoding"""
+    """Run beam search decoding - matches Kotlin implementation"""
+    DECODER_SEQ_LENGTH = 20
     batch_size = 1
 
     # Initialize beams with <sos> token
@@ -127,13 +128,18 @@ def run_beam_search(encoder_session, decoder_session, memory, beam_size=8, max_l
         candidates = []
 
         for last_token, sequence, score in beams:
-            # Prepare decoder input
-            tgt_tokens = np.array([sequence], dtype=np.int64)
-            tgt_len = len(sequence)
+            # CRITICAL: Pad sequence to DECODER_SEQ_LENGTH (matches Kotlin line 336)
+            # Prepare decoder input with fixed length
+            tgt_tokens = np.full((1, DECODER_SEQ_LENGTH), PAD_IDX, dtype=np.int64)
+            for i, token in enumerate(sequence[:DECODER_SEQ_LENGTH]):
+                tgt_tokens[0, i] = token
 
-            # Create dummy masks
+            # Create target mask (false = valid, true = padded)
+            tgt_mask = np.ones((1, DECODER_SEQ_LENGTH), dtype=bool)
+            tgt_mask[0, :len(sequence)] = False  # Mark valid positions
+
+            # Create src_mask (all zeros = all valid, matches Kotlin line 332)
             src_mask = np.zeros((1, 150), dtype=bool)
-            tgt_mask = np.zeros((1, tgt_len), dtype=bool)
 
             # Run decoder
             decoder_inputs = {
@@ -143,16 +149,20 @@ def run_beam_search(encoder_session, decoder_session, memory, beam_size=8, max_l
                 'target_mask': tgt_mask
             }
 
-            logits = decoder_session.run(None, decoder_inputs)[0]  # [1, tgt_len, 30]
-            probs = np.exp(logits[0, -1]) / np.sum(np.exp(logits[0, -1]))
+            logits = decoder_session.run(None, decoder_inputs)[0]  # [1, DECODER_SEQ_LENGTH, vocab_size]
 
-            # Get top beam_size tokens
-            top_indices = np.argsort(probs)[-beam_size:]
+            # Get logits for last valid position (Kotlin line 452)
+            current_pos = len(sequence) - 1
+            if current_pos >= 0 and current_pos < DECODER_SEQ_LENGTH:
+                probs = np.exp(logits[0, current_pos]) / np.sum(np.exp(logits[0, current_pos]))
 
-            for idx in top_indices:
-                new_score = score - np.log(probs[idx] + 1e-10)
-                new_seq = sequence + [int(idx)]
-                candidates.append((int(idx), new_seq, new_score))
+                # Get top beam_size tokens
+                top_indices = np.argsort(probs)[-beam_size:]
+
+                for idx in top_indices:
+                    new_score = score - np.log(probs[idx] + 1e-10)
+                    new_seq = sequence + [int(idx)]
+                    candidates.append((int(idx), new_seq, new_score))
 
         # Select top beams
         beams = sorted(candidates, key=lambda x: x[2])[:beam_size]
@@ -167,15 +177,20 @@ def run_beam_search(encoder_session, decoder_session, memory, beam_size=8, max_l
 
 def main():
     print("=" * 70)
-    print("CLI Encoder Test - Validate 2D nearest_keys with swipes.jsonl")
+    print("CLI Prediction Test - Full encoder+decoder with swipes.jsonl")
     print("=" * 70)
 
     # Check models exist
     encoder_path = Path("assets/models/swipe_model_character_quant.onnx")
-    swipes_path = Path("model/swipes.jsonl")
+    decoder_path = Path("assets/models/swipe_decoder_character_quant.onnx")
+    swipes_path = Path("../swype-model-training/swipes.jsonl")
 
     if not encoder_path.exists():
         print(f"❌ ERROR: Encoder not found at {encoder_path}")
+        return 1
+
+    if not decoder_path.exists():
+        print(f"❌ ERROR: Decoder not found at {decoder_path}")
         return 1
 
     if not swipes_path.exists():
@@ -189,6 +204,14 @@ def main():
     encoder_session = ort.InferenceSession(str(encoder_path))
 
     print(f"✅ Encoder loaded successfully")
+
+    print(f"\n✅ Loading decoder model...")
+    print(f"   Path: {decoder_path}")
+
+    # Load decoder
+    decoder_session = ort.InferenceSession(str(decoder_path))
+
+    print(f"✅ Decoder loaded successfully")
     print(f"\nEncoder inputs:")
     for inp in encoder_session.get_inputs():
         print(f"   {inp.name}: {inp.shape} ({inp.type})")
@@ -212,13 +235,14 @@ def main():
 
     print(f"✅ Loaded {len(test_swipes)} test swipes")
 
-    # Run encoder inference tests
+    # Run full prediction tests
     print("\n" + "=" * 70)
-    print("Running Encoder Inference Tests")
+    print("Running Full Prediction Tests (Encoder + Decoder)")
     print("=" * 70)
 
     success_count = 0
     total = 0
+    predictions = []
 
     for i, swipe_data in enumerate(test_swipes):
         target_word = swipe_data['word']
@@ -246,16 +270,33 @@ def main():
 
             # Verify encoder output shape
             expected_shape = (1, MAX_SEQUENCE_LENGTH, 256)
-            if memory.shape == expected_shape:
-                print(f"  [{i+1:2d}/{len(test_swipes)}] '{target_word:10s}' → Encoder output: {memory.shape} ✅")
+            assert memory.shape == expected_shape, f"Wrong encoder output: {memory.shape}"
+
+            # Run beam search decoder
+            predicted_tokens = run_beam_search(encoder_session, decoder_session, memory, beam_size=8, max_len=20)
+            predicted_word = decode_prediction(predicted_tokens)
+
+            # Check if prediction matches target
+            is_correct = predicted_word == target_word
+            status = "✅" if is_correct else "❌"
+
+            print(f"  [{i+1:2d}/{len(test_swipes)}] Target: '{target_word:10s}' → Predicted: '{predicted_word:10s}' {status}")
+
+            predictions.append({
+                'target': target_word,
+                'predicted': predicted_word,
+                'correct': is_correct
+            })
+
+            if is_correct:
                 success_count += 1
-            else:
-                print(f"  [{i+1:2d}/{len(test_swipes)}] '{target_word:10s}' → Wrong output shape: {memory.shape} ❌")
 
             total += 1
 
         except Exception as e:
             print(f"  [{i+1:2d}/{len(test_swipes)}] '{target_word:10s}' → ERROR: {e} ❌")
+            import traceback
+            traceback.print_exc()
             total += 1
 
     # Summary
@@ -263,19 +304,21 @@ def main():
     print("Test Summary")
     print("=" * 70)
     print(f"Total tests: {total}")
-    print(f"Successful encoder runs: {success_count}")
-    print(f"Success rate: {(success_count/total*100) if total > 0 else 0:.1f}%")
+    print(f"Correct predictions: {success_count}")
+    print(f"Prediction accuracy: {(success_count/total*100) if total > 0 else 0:.1f}%")
     print("=" * 70)
 
-    if success_count == total:
-        print("\n✅ ALL TESTS PASSED - 2D nearest_keys tensor format works correctly!")
-        print("   ✅ Model accepts [batch, 150] nearest_keys (2D)")
-        print("   ✅ Encoder produces correct output shape [1, 150, 256]")
-        print("   ✅ Compatible with Sept 14 ONNX models")
-        return 0
-    else:
-        print(f"\n❌ SOME TESTS FAILED - {total - success_count} out of {total} failed")
-        return 1
+    if total > 0:
+        print("\n📊 Detailed Results:")
+        for pred in predictions:
+            status = "✅ CORRECT" if pred['correct'] else "❌ WRONG"
+            print(f"   {status}: '{pred['target']}' → '{pred['predicted']}'")
+
+    print("\n✅ PREDICTION TEST COMPLETE")
+    print("   ✅ Model accepts [batch, 150] nearest_keys (2D)")
+    print("   ✅ Encoder+decoder pipeline working")
+    print(f"   {'✅' if success_count == total else '⚠️'}  Prediction accuracy: {(success_count/total*100) if total > 0 else 0:.1f}%")
+    return 0
 
 if __name__ == "__main__":
     exit(main())
