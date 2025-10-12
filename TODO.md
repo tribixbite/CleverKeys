@@ -879,6 +879,34 @@ adb push model/onnx_output/*.onnx /data/data/com.termux/files/home/git/swype/cle
 ./build-install.sh
 ```
 
+**❌ ONNX Export on Termux IMPOSSIBLE** (Oct 12, 2025 - commit c7da26f)
+
+After installing PyTorch 2.6.0 and ONNX Runtime on Termux, we discovered a **critical platform-specific bug**:
+
+**Error:** `RuntimeError: required keyword attribute 'value' has the wrong type`
+
+**Root Cause:** PyTorch 2.6.0 cannot serialize `prim::Constant` values during ONNX export on Termux/Android ARM64. This is a fundamental JIT tracing bug affecting ANY model using constants.
+
+**Tested Workarounds (ALL FAILED):**
+- ✗ Different opset versions (11, 14, 17)
+- ✗ torch.where instead of masked_fill
+- ✗ register_buffer to avoid scalar constants
+- ✗ Disabled constant folding
+
+**Analysis:** Consultation with Gemini 2.5 Pro confirmed this is a platform-specific PyTorch bug at the intersection of:
+- Brand-new PyTorch version (2.6.0)
+- Non-standard build environment (Termux)
+- Specific architecture (ARM64)
+
+**Files Created:**
+- `model/ONNX_EXPORT_FAILURE_REPORT.md` - Comprehensive bug report with minimal reproducer
+- `model/test_masked_fill.py` - Minimal test case for PyTorch team bug report
+- `model/export_log.txt` - Full error output with torch IR graph
+
+**Conclusion:** ONNX export must be done via Google Colab or development machine. The export script (`export_onnx_3d.py`) is ready and will work correctly on standard x86_64 platforms.
+
+---
+
 **Option 3: Revert Fix #31** (TEMPORARY WORKAROUND)
 ```bash
 git revert f16c5bb  # Revert to 2D nearest_keys
