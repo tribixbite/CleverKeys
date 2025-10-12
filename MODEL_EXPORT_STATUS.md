@@ -9,18 +9,27 @@
 
 ## Why Can't We Export on Termux?
 
-Both PyTorch and ONNX Runtime **do not support Android/Termux**:
+**UPDATE (Oct 12, 2025):** After installing PyTorch 2.6.0 and ONNX Runtime on Termux, we discovered a **critical bug in PyTorch 2.6.0's ONNX export**:
 
-1. **PyTorch:** Missing `libabsl_low_level_hash.so` dependency
-   ```
-   ImportError: library "libabsl_low_level_hash.so" not found
-   ```
+### PyTorch 2.6.0 ONNX Export Bug (Termux/ARM64)
 
-2. **ONNX Runtime:** No Android wheels available
-   ```
-   Wheels are available for: manylinux, macosx, win_amd64
-   Not available for: android_24_aarch64
-   ```
+**Symptom:** `RuntimeError: required keyword attribute 'value' has the wrong type`
+
+**Root Cause:** PyTorch 2.6.0 cannot serialize `prim::Constant` values during ONNX export on Termux/Android ARM64
+
+**Tested Workarounds (ALL FAILED):**
+- ✗ Different opset versions (11, 14, 17)
+- ✗ `torch.where` instead of `masked_fill`
+- ✗ `register_buffer` to avoid scalar constants
+- ✗ Disabling constant folding
+
+**Conclusion:** This is a fundamental platform-specific bug in PyTorch 2.6.0's JIT ONNX exporter on Termux/ARM64. The issue affects ANY model that uses constants during tracing, making ONNX export impossible on this platform.
+
+### Previous Known Issues (Now Resolved)
+
+~~1. **PyTorch:** Missing `libabsl_low_level_hash.so` dependency~~ ✅ FIXED (installed via pkg)
+
+~~2. **ONNX Runtime:** No Android wheels available~~ ✅ FIXED (installed via pip)
 
 ## Solutions
 

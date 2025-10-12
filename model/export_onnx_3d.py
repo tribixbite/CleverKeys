@@ -12,7 +12,15 @@ import torch.nn as nn
 import numpy as np
 from pathlib import Path
 from typing import Dict, Tuple, List
-import onnx
+
+# Optional ONNX validation (not available on some platforms)
+try:
+    import onnx
+    ONNX_VALIDATION_AVAILABLE = True
+except ImportError:
+    ONNX_VALIDATION_AVAILABLE = False
+    print("Warning: onnx package not available, skipping model validation")
+
 import onnxruntime as ort
 
 
@@ -82,11 +90,15 @@ class CharacterLevelSwipeModel(nn.Module):
         self.d_model = d_model
         self.max_seq_len = max_seq_len
 
+        # Trajectory and keyboard features project to d_model//2 each
+        # They are concatenated to form d_model dimensional input
+        self.embed_dim = d_model // 2
+
         # Trajectory projection
-        self.traj_proj = nn.Linear(traj_dim, d_model)
+        self.traj_proj = nn.Linear(traj_dim, self.embed_dim)
 
         # Keyboard embedding (for nearest keys)
-        self.kb_embedding = nn.Embedding(kb_vocab_size, d_model)
+        self.kb_embedding = nn.Embedding(kb_vocab_size, self.embed_dim)
 
         # Positional encoding
         self.register_buffer('pe', self._create_positional_encoding(max_seq_len, d_model))
@@ -152,15 +164,18 @@ class CharacterLevelSwipeModel(nn.Module):
         batch_size, seq_len, _ = traj_features.shape
 
         # Project trajectory features
-        traj_emb = self.traj_proj(traj_features) * math.sqrt(self.d_model)
+        traj_emb = self.traj_proj(traj_features) * math.sqrt(self.d_model)  # [batch, seq_len, embed_dim]
 
         # Embed nearest keys and average
         # nearest_keys: [batch, seq_len, 3]
-        kb_emb = self.kb_embedding(nearest_keys)  # [batch, seq_len, 3, d_model]
-        kb_emb = kb_emb.mean(dim=2)  # Average the 3 keys: [batch, seq_len, d_model]
+        kb_emb = self.kb_embedding(nearest_keys)  # [batch, seq_len, 3, embed_dim]
+        kb_emb = kb_emb.mean(dim=2)  # Average the 3 keys: [batch, seq_len, embed_dim]
 
-        # Combine trajectory and keyboard embeddings
-        encoder_input = traj_emb + kb_emb + self.pe[:, :seq_len, :]
+        # Concatenate trajectory and keyboard embeddings to form d_model dimensional input
+        combined_emb = torch.cat([traj_emb, kb_emb], dim=-1)  # [batch, seq_len, d_model]
+
+        # Add positional encoding
+        encoder_input = combined_emb + self.pe[:, :seq_len, :]
 
         # Encode
         memory = self.encoder(encoder_input, src_key_padding_mask=src_mask)
@@ -295,28 +310,35 @@ def export_encoder_onnx(model: CharacterLevelSwipeModel, output_path: str):
     nearest_keys = torch.randint(0, 30, (batch_size, seq_len, 3))  # 3D: top 3 keys
     src_mask = torch.zeros(batch_size, seq_len, dtype=torch.bool)
 
-    # Export
+    # Export with workarounds for ONNX optimization errors
+    # - Use opset 11 (more stable than 14)
+    # - Disable constant folding to avoid optimization pass errors
+    # - Simplify dynamic axes (only mark batch dimension as dynamic)
     torch.onnx.export(
         wrapper,
         (traj_features, nearest_keys, src_mask),
         output_path,
         export_params=True,
-        opset_version=14,
-        do_constant_folding=True,
+        opset_version=11,
+        do_constant_folding=False,
         input_names=['trajectory_features', 'nearest_keys', 'src_mask'],
         output_names=['encoder_output'],
         dynamic_axes={
-            'trajectory_features': {0: 'batch', 1: 'sequence'},
-            'nearest_keys': {0: 'batch', 1: 'sequence'},
-            'src_mask': {0: 'batch', 1: 'sequence'},
-            'encoder_output': {0: 'batch', 1: 'sequence'}
+            'trajectory_features': {0: 'batch'},
+            'nearest_keys': {0: 'batch'},
+            'src_mask': {0: 'batch'},
+            'encoder_output': {0: 'batch'}
         },
         verbose=False
     )
 
-    # Validate
-    onnx_model = onnx.load(output_path)
-    onnx.checker.check_model(onnx_model)
+    # Validate (optional)
+    if ONNX_VALIDATION_AVAILABLE:
+        onnx_model = onnx.load(output_path)
+        onnx.checker.check_model(onnx_model)
+        print("   Model validation: ✅ passed")
+    else:
+        print("   Model validation: ⏭️  skipped (onnx package unavailable)")
 
     # Test inference
     ort_session = ort.InferenceSession(output_path)
@@ -382,22 +404,25 @@ def export_decoder_onnx(model: CharacterLevelSwipeModel, output_path: str):
     src_mask = torch.zeros(batch_size, seq_len, dtype=torch.bool)
     tgt_mask = torch.zeros(batch_size, tgt_len, dtype=torch.bool)
 
-    # Export
+    # Export with workarounds for ONNX optimization errors
+    # - Use opset 11 (more stable than 14)
+    # - Disable constant folding to avoid optimization pass errors
+    # - Simplify dynamic axes (only mark batch dimension as dynamic)
     torch.onnx.export(
         decoder_wrapper,
         (memory, tgt_tokens, src_mask, tgt_mask),
         output_path,
         export_params=True,
-        opset_version=14,
-        do_constant_folding=True,
+        opset_version=11,
+        do_constant_folding=False,
         input_names=['memory', 'target_tokens', 'src_mask', 'target_mask'],
         output_names=['logits'],
         dynamic_axes={
-            'memory': {0: 'batch', 1: 'enc_sequence'},
-            'target_tokens': {0: 'batch', 1: 'dec_sequence'},
-            'src_mask': {0: 'batch', 1: 'enc_sequence'},
-            'target_mask': {0: 'batch', 1: 'dec_sequence'},
-            'logits': {0: 'batch', 1: 'dec_sequence'}
+            'memory': {0: 'batch'},
+            'target_tokens': {0: 'batch'},
+            'src_mask': {0: 'batch'},
+            'target_mask': {0: 'batch'},
+            'logits': {0: 'batch'}
         },
         verbose=False
     )
@@ -563,24 +588,25 @@ def main():
     print("ONNX Export with 3D nearest_keys Tensor")
     print("="*70)
 
-    # Paths
-    checkpoint_path = 'model/full-model-49-0.795.ckpt'
-    output_dir = Path('model/onnx_output')
-    output_dir.mkdir(exist_ok=True)
+    # Paths (relative to script location)
+    script_dir = Path(__file__).parent
+    checkpoint_path = script_dir / 'full-model-49-0.795.ckpt'
+    output_dir = script_dir / 'onnx_output'
+    output_dir.mkdir(exist_ok=True, parents=True)
 
     encoder_path = str(output_dir / 'swipe_model_character_quant.onnx')
     decoder_path = str(output_dir / 'swipe_decoder_character_quant.onnx')
-    test_file = 'model/swipes.jsonl'
+    test_file = script_dir / 'swipes.jsonl'
 
     # Load model
-    model, tokenizer, accuracy = load_checkpoint(checkpoint_path)
+    model, tokenizer, accuracy = load_checkpoint(str(checkpoint_path))
 
     # Export models
     export_encoder_onnx(model, encoder_path)
     export_decoder_onnx(model, decoder_path)
 
     # Test models
-    test_accuracy = test_onnx_models(encoder_path, decoder_path, test_file, tokenizer)
+    test_accuracy = test_onnx_models(encoder_path, decoder_path, str(test_file), tokenizer)
 
     print("\n" + "="*70)
     print("✅ Export Complete!")
