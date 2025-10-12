@@ -24,7 +24,28 @@ Both PyTorch and ONNX Runtime **do not support Android/Termux**:
 
 ## Solutions
 
-### Option 1: Export on Development Machine (Recommended)
+### Option 1: Google Colab (Recommended - 5 Minutes)
+
+**Easiest path:** Use free cloud environment, no local setup required.
+
+**Quick Steps:**
+1. Open [colab.research.google.com](https://colab.research.google.com)
+2. Upload: `export_onnx_3d.py`, `full-model-49-0.795.ckpt`, `swipes.jsonl`
+3. Run: `!pip install onnx onnxruntime`
+4. Run: `!python export_onnx_3d.py`
+5. Download generated `.onnx` files
+6. Copy to Android `assets/models/` directory
+
+**Full instructions:** See `model/EXPORT_VIA_COLAB.md`
+
+**Benefits:**
+- ✅ Works from any device with browser
+- ✅ PyTorch pre-installed
+- ✅ Takes ~5 minutes total
+- ✅ No local dependencies needed
+- ✅ Free tier sufficient
+
+### Option 2: Export on Development Machine
 
 Export the models on Mac/Linux/Windows and copy to Android:
 
@@ -39,18 +60,18 @@ python export_onnx_3d.py
 
 # Copy to Android via ADB:
 adb push model/onnx_output/*.onnx /data/data/com.termux/files/home/git/swype/cleverkeys/assets/models/
-
-# Or via termux-setup-storage and file manager:
-# 1. Copy files to ~/storage/downloads/
-# 2. Move to assets/models/
 ```
 
 **Benefits:**
-- ✅ Proper 3D tensor format
-- ✅ Better prediction accuracy
-- ✅ Matches current Kotlin code
+- ✅ Works offline
+- ✅ Full control over environment
+- ✅ Faster if machine already set up
 
-### Option 2: Revert to 2D Format (Quick Fix)
+**Requirements:**
+- Python 3.8+
+- PyTorch, ONNX, ONNX Runtime installed
+
+### Option 3: Revert to 2D Format (Quick Fix)
 
 Temporarily revert Fix #31 to work with old models:
 
@@ -69,9 +90,9 @@ git revert f16c5bb
 - ✅ Works with existing models immediately
 - ✅ No external dependencies
 
-### Option 3: Request Pre-Exported Models
+### Option 4: Request Pre-Exported Models
 
-If you don't have access to a development machine, I can provide pre-exported models from the checkpoint.
+If none of the above options work, pre-exported models can be provided from the checkpoint.
 
 ## Files Prepared
 
@@ -81,9 +102,11 @@ If you don't have access to a development machine, I can provide pre-exported mo
    - Exports decoder
    - Tests with swipes.jsonl
 
-2. **`EXPORT_INSTRUCTIONS.md`** - Detailed export steps
+2. **`EXPORT_VIA_COLAB.md`** - Step-by-step Google Colab guide (5 minutes)
 
-3. **`model/swipes.jsonl`** - Test data for validation
+3. **`EXPORT_INSTRUCTIONS.md`** - Detailed export steps for local machine
+
+4. **`model/swipes.jsonl`** - Test data for validation
 
 ## Expected Results After Export
 
@@ -157,10 +180,15 @@ def encode_trajectory(self, traj_features, nearest_keys, src_mask=None):
 
 **Code:** ✅ Ready (Fix #31 implemented)
 **Export Script:** ✅ Ready (export_onnx_3d.py)
-**Models:** ❌ Blocked (need dev machine)
+**Models:** ⏳ Can be exported via Google Colab (5 minutes)
+**Documentation:** ✅ Complete (includes Colab walkthrough)
 
 ## Recommendation
 
-**Use Option 1** (export on dev machine) for best results. The export script is tested and ready to run.
+**Use Option 1** (Google Colab) - fastest and easiest path. Takes ~5 minutes, works from any device with a browser.
 
-If blocked, **use Option 2** (revert Fix #31) as a temporary workaround until models can be exported.
+See detailed walkthrough in: **`model/EXPORT_VIA_COLAB.md`**
+
+If you prefer local execution, **use Option 2** (dev machine export).
+
+If completely blocked, **use Option 3** (revert Fix #31) as temporary workaround.
