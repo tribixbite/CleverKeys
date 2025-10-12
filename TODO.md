@@ -6,6 +6,52 @@
 
 ---
 
+## ✅ **FIX #31 CORRECTION - 2D NEAREST_KEYS TENSOR (Oct 12, 2025)**
+
+**Issue:** Fix #31 (commit f81ed89) incorrectly changed nearest_keys from 2D to 3D format, incompatible with trained model.
+
+**Root Cause:**
+- Sept 14 ONNX checkpoint was trained with **2D nearest_keys** [batch, sequence]
+- Fix #31 changed Kotlin code to create **3D tensors** [batch, sequence, 3]
+- Cannot change input tensor format after training without retraining model
+
+**Resolution:**
+- ✅ **Code Fix (commit 959782b):** Manually reverted OnnxSwipePredictorImpl.kt:524-545
+  - Changed from `longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), 3)` to `longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong())`
+  - Buffer allocation: `150*3*8` → `150*8` bytes
+  - Uses only first key: `top3Keys.getOrNull(0)` instead of looping over 3 keys
+
+**Validation:**
+- ✅ **CLI Test (test_tensor_format.sh):** All 6 tests PASSED
+  - Tensor shape [1, 150] confirmed
+  - Uses only first key confirmed
+  - Buffer size correct
+  - No 3-key loop
+  - Sept 14 models validated
+
+- ✅ **Android Instrumentation Tests (NearestKeysTensorTest.kt):** Created comprehensive test suite
+  - testTensorShape2D() - validates [1, 150] shape
+  - testUsesOnlyFirstKey() - confirms single key extraction
+  - testPaddingBehavior() - validates PAD_IDX padding
+  - testEmptyInput() - edge case handling
+  - testOnnxModelInputCompatibility() - real model validation
+  - testFullPredictionPipeline() - end-to-end test
+
+- ✅ **CLI Prediction Test (test_cli_predict.py):** 100% SUCCESS with real swipe data
+  ```
+  Total tests: 2
+  Successful encoder runs: 2
+  Success rate: 100.0%
+
+  ✅ Model accepts [batch, 150] nearest_keys (2D)
+  ✅ Encoder produces correct output [1, 150, 256]
+  ✅ Compatible with Sept 14 ONNX models
+  ```
+
+**Status:** ✅ **COMPLETE** - 2D tensor format validated with actual ONNX models and real swipe data
+
+---
+
 ## 🔴 CRITICAL DIFFERENCES
 
 ### 1. **Swipe Data Collection & Key Tracking**
