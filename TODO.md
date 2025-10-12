@@ -846,9 +846,26 @@ After these fixes, the prediction pipeline should:
 1. **PyTorch:** Missing `libabsl_low_level_hash.so` system library
 2. **ONNX Runtime:** No Android/aarch64 wheels available
 
-### Next Steps (3 Options)
+### Next Steps (4 Options)
 
-**Option 1: Export on Dev Machine** (RECOMMENDED)
+**Option 1: Google Colab Export** (RECOMMENDED - 5 Minutes)
+1. Open [colab.research.google.com](https://colab.research.google.com)
+2. Upload: `export_onnx_3d.py`, `full-model-49-0.795.ckpt`, `swipes.jsonl`
+3. Run: `!pip install onnx onnxruntime`
+4. Run: `!python export_onnx_3d.py`
+5. Download `.onnx` files, copy to Android `assets/models/`
+6. Rebuild APK: `./gradlew assembleDebug && ./build-install.sh`
+
+**Full guide:** `model/EXPORT_VIA_COLAB.md`
+
+**Benefits:**
+- ✅ No local setup required
+- ✅ Works from any device
+- ✅ PyTorch pre-installed
+- ✅ Free tier sufficient
+- ✅ Takes ~5 minutes
+
+**Option 2: Export on Dev Machine**
 ```bash
 # On Mac/Linux/Windows:
 cd /path/to/cleverkeys/model/
@@ -862,7 +879,7 @@ adb push model/onnx_output/*.onnx /data/data/com.termux/files/home/git/swype/cle
 ./build-install.sh
 ```
 
-**Option 2: Revert Fix #31** (TEMPORARY WORKAROUND)
+**Option 3: Revert Fix #31** (TEMPORARY WORKAROUND)
 ```bash
 git revert f16c5bb  # Revert to 2D nearest_keys
 ./gradlew assembleDebug
@@ -872,19 +889,21 @@ git revert f16c5bb  # Revert to 2D nearest_keys
 - ⚠️ Lower prediction accuracy
 - ✅ Works with existing Sept 14 models immediately
 
-**Option 3: Request Pre-Exported Models**
-If no access to dev machine, models can be provided from checkpoint.
+**Option 4: Request Pre-Exported Models**
+If no access to Colab or dev machine, models can be provided from checkpoint.
 
 ### Files Created
 - `model/export_onnx_3d.py` - Export script with 3D tensor support
-- `model/EXPORT_INSTRUCTIONS.md` - Step-by-step guide
+- `model/EXPORT_VIA_COLAB.md` - Google Colab walkthrough (5 minutes)
+- `model/EXPORT_INSTRUCTIONS.md` - Dev machine export guide
 - `MODEL_EXPORT_STATUS.md` - Complete status and solution paths
 - `ONNX_MODEL_UPDATE_REQUIRED.md` - Problem diagnosis
-- **Commit:** 741b7db
+- **Commits:** 741b7db, bd4ccf1
 
 ### Impact on Testing
 - ❌ Cannot test Fix #31 until new models are available
 - ❌ Current APK will return 0 predictions due to tensor mismatch
-- ⏳ All testing blocked until Option 1, 2, or 3 is executed
+- ✅ **Solution Ready:** Google Colab export takes ~5 minutes
+- ⏳ Testing can proceed after Colab export completes
 
-**Decision Required:** Choose solution path to unblock testing.
+**Recommended Action:** Follow `model/EXPORT_VIA_COLAB.md` to generate new models.
