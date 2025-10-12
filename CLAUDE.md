@@ -149,6 +149,19 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
    - **CRITICAL**: Accurate key detection is essential for correct neural predictions
    - OnnxSwipePredictorImpl already had warning at line 855 for default dimensions
 
+**Oct 11, 2025 - ONNX EXPORT COMPATIBILITY FIX:**
+31. ✅ **nearest_keys tensor shape mismatch**: Fixed to match Python ONNX export spec
+   - **ROOT CAUSE**: Kotlin code used 2D tensor [batch, sequence] with 1 key per point
+   - Python ONNX export changed to 3D tensor [batch, sequence, 3] with top 3 nearest keys per point
+   - **SYMPTOMS**: Tensor shape mismatch would cause ONNX runtime errors
+   - **FIX**: Updated TrajectoryFeatures.nearestKeys from List<Int> to List<List<Int>>
+   - Modified detectNearestKeys() to return top 3 nearest keys sorted by Euclidean distance
+   - Updated detectKeysFromQwertyGrid() with full key position map and top-3 selection
+   - Modified createNearestKeysTensor() to create 3D tensor [1, 150, 3]
+   - Updated padOrTruncate() usage with listOf(0, 0, 0) padding for 3 keys
+   - Updated logging to display all 3 nearest keys per point
+   - **CRITICAL**: Tensor shapes must exactly match ONNX model expectations
+
 **Previous Fixes:**
 1. ✅ **KeyValue.kt**: Removed duplicate method declarations causing JVM signature clashes
 2. ✅ **Keyboard2View.kt**: Resolved platform declaration clashes in modifyKey methods

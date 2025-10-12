@@ -758,6 +758,20 @@ All **Priority 1** fixes have been implemented to align Kotlin implementation wi
    - **Files:** `CleverKeysService.kt:491-503`, `Keyboard2View.kt:408-442`
    - **Commit:** 3ad76d4
 
+6. **✅ ONNX Export Compatibility (FIX #31) - October 11, 2025**
+   - **Before:** nearest_keys was 2D tensor [batch, sequence] with 1 key per point
+   - **After:** nearest_keys is 3D tensor [batch, sequence, 3] with top 3 nearest keys per point
+   - **Impact:** Matches Python ONNX export spec, prevents tensor shape mismatch errors
+   - **Root Cause:** Python export changed to provide top 3 nearest keys for better prediction accuracy
+   - **Changes:**
+     - `TrajectoryFeatures.nearestKeys`: Changed from `List<Int>` to `List<List<Int>>`
+     - `detectNearestKeys()`: Returns top 3 keys sorted by Euclidean distance
+     - `detectKeysFromQwertyGrid()`: Full key position map with top-3 selection
+     - `createNearestKeysTensor()`: Creates 3D tensor shape [1, 150, 3]
+     - Logging: Displays all 3 nearest keys per point
+   - **Files:** `OnnxSwipePredictorImpl.kt:524-548, 855, 875, 905, 990-1051`
+   - **Commit:** TBD
+
 ### Testing Status
 - [x] Build and install updated APK (48MB debug APK, commit a9a9006)
 - [x] APK installation initiated via termux-open

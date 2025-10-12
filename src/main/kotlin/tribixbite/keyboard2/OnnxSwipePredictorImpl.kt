@@ -522,22 +522,29 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
      * Create nearest keys tensor - EXACT Java implementation match
      */
     private fun createNearestKeysTensor(features: SwipeTrajectoryProcessor.TrajectoryFeatures): OnnxTensor {
-        // Create direct buffer exactly like Java implementation
-        val byteBuffer = java.nio.ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * 8) // 8 bytes per long
+        // Create 3D tensor [batch=1, sequence=MAX_SEQUENCE_LENGTH, num_keys=3]
+        val byteBuffer = java.nio.ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * 3 * 8) // 3 keys per point, 8 bytes per long
         byteBuffer.order(java.nio.ByteOrder.nativeOrder())
         val buffer = byteBuffer.asLongBuffer()
 
         for (i in 0 until MAX_SEQUENCE_LENGTH) {
             if (i < features.nearestKeys.size) {
-                val keyIndex = features.nearestKeys[i]
-                buffer.put(keyIndex.toLong())
+                val top3Keys = features.nearestKeys[i]
+                // Write all 3 nearest keys (pad with PAD_IDX if less than 3)
+                for (j in 0 until 3) {
+                    val keyIndex = top3Keys.getOrNull(j) ?: PAD_IDX
+                    buffer.put(keyIndex.toLong())
+                }
             } else {
-                buffer.put(PAD_IDX.toLong()) // Padding
+                // Padding: all 3 keys are PAD_IDX
+                buffer.put(PAD_IDX.toLong())
+                buffer.put(PAD_IDX.toLong())
+                buffer.put(PAD_IDX.toLong())
             }
         }
 
         buffer.rewind()
-        return OnnxTensor.createTensor(ortEnvironment, buffer, longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong()))
+        return OnnxTensor.createTensor(ortEnvironment, buffer, longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), 3))
     }
     
     /**
@@ -845,7 +852,7 @@ class SwipeTrajectoryProcessor {
         val coordinates: List<PointF>,
         val velocities: List<PointF>,  // Now stores (vx, vy) as PointF
         val accelerations: List<PointF>,  // Now stores (ax, ay) as PointF
-        val nearestKeys: List<Int>,
+        val nearestKeys: List<List<Int>>,  // ONNX export fix: 3 nearest keys per point
         val actualLength: Int,
         val normalizedCoordinates: List<PointF>
     )
@@ -865,7 +872,8 @@ class SwipeTrajectoryProcessor {
 
         // 4. Pad or truncate to MAX_TRAJECTORY_POINTS
         val finalCoords = padOrTruncate(normalizedCoords, MAX_TRAJECTORY_POINTS)
-        val finalNearestKeys = padOrTruncate(nearestKeys, MAX_TRAJECTORY_POINTS, 0) // Pad with PAD_IDX
+        val paddingKeys = listOf(0, 0, 0) // 3 padding keys (PAD_IDX=0)
+        val finalNearestKeys = padOrTruncate(nearestKeys, MAX_TRAJECTORY_POINTS, paddingKeys)
 
         // 5. Calculate velocities and accelerations on normalized coords (simple deltas)
         // This logic correctly matches the working web demo
@@ -895,10 +903,11 @@ class SwipeTrajectoryProcessor {
         if (coordinates.isNotEmpty()) {
             Log.d(TAG, "🔬 Feature calculation (first 3 points):")
             for (i in 0..2.coerceAtMost(finalCoords.size - 1)) {
+                val top3Keys = finalNearestKeys.getOrNull(i)?.joinToString(",") ?: "N/A"
                 Log.d(TAG, "   Point[$i]: x=${String.format("%.4f", finalCoords[i].x)}, y=${String.format("%.4f", finalCoords[i].y)}, " +
                          "vx=${String.format("%.4f", velocities[i].x)}, vy=${String.format("%.4f", velocities[i].y)}, " +
                          "ax=${String.format("%.4f", accelerations[i].x)}, ay=${String.format("%.4f", accelerations[i].y)}, " +
-                         "key_idx=${finalNearestKeys.getOrNull(i) ?: "N/A"}")
+                         "top3_keys=[$top3Keys]")
             }
         }
 
@@ -987,55 +996,67 @@ class SwipeTrajectoryProcessor {
     /**
      * Detect nearest key for each coordinate using real keyboard layout
      */
-    private fun detectNearestKeys(coordinates: List<PointF>): List<Int> {
+    private fun detectNearestKeys(coordinates: List<PointF>): List<List<Int>> {
         return coordinates.map { point ->
             if (realKeyPositions.isNotEmpty()) {
-                // Use actual keyboard layout positions
-                val nearestKey = realKeyPositions.minByOrNull { (_, keyPos) ->
+                // Use actual keyboard layout positions - find top 3 nearest keys
+                val distances = realKeyPositions.map { (char, keyPos) ->
                     val dx = point.x - keyPos.x
                     val dy = point.y - keyPos.y
-                    dx * dx + dy * dy
+                    val distance = dx * dx + dy * dy
+                    Pair(char, distance)
                 }
 
-                // Convert character to token index (simplified for trajectory processor)
-                nearestKey?.key?.let { char ->
-                    if (char in 'a'..'z') (char - 'a') + 4 else 0 // Simple a-z mapping to tokens 4-29
-                } ?: 0
+                // Sort by distance and take top 3
+                val top3Keys = distances.sortedBy { it.second }.take(3)
+
+                // Convert characters to token indices
+                top3Keys.map { (char, _) ->
+                    if (char in 'a'..'z') (char - 'a') + 4 else 0 // a-z mapping to tokens 4-29
+                }
             } else {
                 // Enhanced grid detection with proper QWERTY mapping
-                detectKeyFromQwertyGrid(point)
+                detectKeysFromQwertyGrid(point)
             }
         }
     }
 
     /**
-     * Detect key using accurate QWERTY grid mapping
+     * Detect top 3 nearest keys using accurate QWERTY grid mapping
      */
-    private fun detectKeyFromQwertyGrid(point: PointF): Int {
+    private fun detectKeysFromQwertyGrid(point: PointF): List<Int> {
         val normalizedX = point.x / keyboardWidth
         val normalizedY = point.y / keyboardHeight
 
-        // QWERTY layout mapping with proper key boundaries
-        val qwertyLayout = arrayOf(
-            arrayOf('q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'),
-            arrayOf('a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'),
-            arrayOf('z', 'x', 'c', 'v', 'b', 'n', 'm')
+        // QWERTY layout mapping with proper key positions
+        val qwertyLayout = mapOf(
+            'q' to PointF(0.05f, 0.17f), 'w' to PointF(0.15f, 0.17f), 'e' to PointF(0.25f, 0.17f),
+            'r' to PointF(0.35f, 0.17f), 't' to PointF(0.45f, 0.17f), 'y' to PointF(0.55f, 0.17f),
+            'u' to PointF(0.65f, 0.17f), 'i' to PointF(0.75f, 0.17f), 'o' to PointF(0.85f, 0.17f),
+            'p' to PointF(0.95f, 0.17f),
+            'a' to PointF(0.10f, 0.50f), 's' to PointF(0.20f, 0.50f), 'd' to PointF(0.30f, 0.50f),
+            'f' to PointF(0.40f, 0.50f), 'g' to PointF(0.50f, 0.50f), 'h' to PointF(0.60f, 0.50f),
+            'j' to PointF(0.70f, 0.50f), 'k' to PointF(0.80f, 0.50f), 'l' to PointF(0.90f, 0.50f),
+            'z' to PointF(0.20f, 0.83f), 'x' to PointF(0.30f, 0.83f), 'c' to PointF(0.40f, 0.83f),
+            'v' to PointF(0.50f, 0.83f), 'b' to PointF(0.60f, 0.83f), 'n' to PointF(0.70f, 0.83f),
+            'm' to PointF(0.80f, 0.83f)
         )
 
-        val row = (normalizedY * qwertyLayout.size).toInt().coerceIn(0, qwertyLayout.size - 1)
-        val rowKeys = qwertyLayout[row]
-
-        // Handle row offset for QWERTY layout
-        val effectiveX = when (row) {
-            1 -> normalizedX - 0.05f // ASDF row offset
-            2 -> normalizedX - 0.15f // ZXCV row offset
-            else -> normalizedX
+        // Calculate Euclidean distance to all keys
+        val distances = qwertyLayout.map { (char, keyPos) ->
+            val dx = normalizedX - keyPos.x
+            val dy = normalizedY - keyPos.y
+            val distance = dx * dx + dy * dy
+            Pair(char, distance)
         }
 
-        val col = (effectiveX * rowKeys.size).toInt().coerceIn(0, rowKeys.size - 1)
-        val detectedChar = rowKeys[col]
+        // Sort by distance and take top 3
+        val top3Keys = distances.sortedBy { it.second }.take(3)
 
-        return if (detectedChar in 'a'..'z') (detectedChar - 'a') + 4 else 0 // Simple a-z mapping
+        // Convert characters to token indices
+        return top3Keys.map { (char, _) ->
+            if (char in 'a'..'z') (char - 'a') + 4 else 0 // a-z mapping to tokens 4-29
+        }
     }
     
     /**
