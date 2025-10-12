@@ -519,32 +519,29 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     }
     
     /**
-     * Create nearest keys tensor - EXACT Java implementation match
+     * Create nearest keys tensor - 2D format matching trained model
      */
     private fun createNearestKeysTensor(features: SwipeTrajectoryProcessor.TrajectoryFeatures): OnnxTensor {
-        // Create 3D tensor [batch=1, sequence=MAX_SEQUENCE_LENGTH, num_keys=3]
-        val byteBuffer = java.nio.ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * 3 * 8) // 3 keys per point, 8 bytes per long
+        // Create 2D tensor [batch=1, sequence=MAX_SEQUENCE_LENGTH]
+        // Model was trained with single nearest key per point
+        val byteBuffer = java.nio.ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * 8) // 8 bytes per long
         byteBuffer.order(java.nio.ByteOrder.nativeOrder())
         val buffer = byteBuffer.asLongBuffer()
 
         for (i in 0 until MAX_SEQUENCE_LENGTH) {
             if (i < features.nearestKeys.size) {
                 val top3Keys = features.nearestKeys[i]
-                // Write all 3 nearest keys (pad with PAD_IDX if less than 3)
-                for (j in 0 until 3) {
-                    val keyIndex = top3Keys.getOrNull(j) ?: PAD_IDX
-                    buffer.put(keyIndex.toLong())
-                }
+                // Use only the first (closest) key to match trained model
+                val keyIndex = top3Keys.getOrNull(0) ?: PAD_IDX
+                buffer.put(keyIndex.toLong())
             } else {
-                // Padding: all 3 keys are PAD_IDX
-                buffer.put(PAD_IDX.toLong())
-                buffer.put(PAD_IDX.toLong())
+                // Padding
                 buffer.put(PAD_IDX.toLong())
             }
         }
 
         buffer.rewind()
-        return OnnxTensor.createTensor(ortEnvironment, buffer, longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), 3))
+        return OnnxTensor.createTensor(ortEnvironment, buffer, longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong()))
     }
     
     /**
