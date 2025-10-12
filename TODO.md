@@ -813,3 +813,78 @@ After these fixes, the prediction pipeline should:
 - ✅ Top prediction should usually match intended word
 - ✅ No repetitive tokens (no more "ttt", "tttt", "rt", "tr")
 - ✅ Diverse beam search results across multiple candidates
+
+---
+
+## 🚨 CRITICAL BLOCKER: ONNX Model Update Required (Oct 11, 2025)
+
+### Status: **BLOCKED - Cannot Export Models on Termux**
+
+### Problem
+**Fix #31** changed the tensor format in Kotlin to send **3D nearest_keys [1, 150, 3]**, but existing ONNX models (dated Sept 14) expect **2D nearest_keys [1, 150]**.
+
+**Test Result:**
+```
+[22:17:46.273] ✅ Neural engine initialized successfully
+[22:17:51.855] 🌀 Swipe recorded: 238 points, keys: uuuuuuuujjjjjjjnnnnnn...
+[22:17:52.260] 🧠 Neural prediction completed in 398ms
+[22:17:52.261]    Predictions: 0 candidates ❌
+```
+
+**Root Cause:** ONNX Runtime throws exception on tensor shape mismatch, error handler returns empty predictions.
+
+### Solution Created
+✅ **Export script ready:** `model/export_onnx_3d.py` (commit 741b7db)
+- Complete CharacterLevelSwipeModel definition inline
+- 3D tensor support: top 3 nearest keys per point
+- Feature extraction matching Kotlin implementation
+- Beam search testing with swipes.jsonl
+- Comprehensive documentation in `MODEL_EXPORT_STATUS.md`
+
+### Platform Limitation
+❌ **Cannot export on Termux/Android:**
+1. **PyTorch:** Missing `libabsl_low_level_hash.so` system library
+2. **ONNX Runtime:** No Android/aarch64 wheels available
+
+### Next Steps (3 Options)
+
+**Option 1: Export on Dev Machine** (RECOMMENDED)
+```bash
+# On Mac/Linux/Windows:
+cd /path/to/cleverkeys/model/
+python export_onnx_3d.py
+
+# Copy to Android:
+adb push model/onnx_output/*.onnx /data/data/com.termux/files/home/git/swype/cleverkeys/assets/models/
+
+# Rebuild APK:
+./gradlew assembleDebug
+./build-install.sh
+```
+
+**Option 2: Revert Fix #31** (TEMPORARY WORKAROUND)
+```bash
+git revert f16c5bb  # Revert to 2D nearest_keys
+./gradlew assembleDebug
+./build-install.sh
+```
+- ⚠️ Uses inferior 2D format (1 key per point)
+- ⚠️ Lower prediction accuracy
+- ✅ Works with existing Sept 14 models immediately
+
+**Option 3: Request Pre-Exported Models**
+If no access to dev machine, models can be provided from checkpoint.
+
+### Files Created
+- `model/export_onnx_3d.py` - Export script with 3D tensor support
+- `model/EXPORT_INSTRUCTIONS.md` - Step-by-step guide
+- `MODEL_EXPORT_STATUS.md` - Complete status and solution paths
+- `ONNX_MODEL_UPDATE_REQUIRED.md` - Problem diagnosis
+- **Commit:** 741b7db
+
+### Impact on Testing
+- ❌ Cannot test Fix #31 until new models are available
+- ❌ Current APK will return 0 predictions due to tensor mismatch
+- ⏳ All testing blocked until Option 1, 2, or 3 is executed
+
+**Decision Required:** Choose solution path to unblock testing.
