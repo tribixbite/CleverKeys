@@ -136,7 +136,15 @@ fun runBeamSearch(env: OrtEnvironment, decoder: OrtSession, memory: OnnxTensor, 
     var beams = listOf(Beam(mutableListOf(SOS_IDX), 0f))
 
     for (step in 0 until maxLen) {
-        if (beams.all { it.finished }) break
+        // CRITICAL: Stop if we have finished beams and no more active beams,
+        // OR if all beams are finished
+        val finishedBeams = beams.filter { it.finished }
+        val activeBeams = beams.filter { !it.finished }
+
+        if (finishedBeams.isNotEmpty() && activeBeams.isEmpty()) {
+            println("      Stopping at step $step: All beams finished")
+            break
+        }
 
         val candidates = mutableListOf<Beam>()
 
@@ -181,19 +189,40 @@ fun runBeamSearch(env: OrtEnvironment, decoder: OrtSession, memory: OnnxTensor, 
 
                 val topIndices = probs.withIndex().sortedByDescending { it.value }.take(beamSize).map { it.index }
 
+                // Debug disabled for cleaner output
+
                 for (tokenId in topIndices) {
-                    val newBeam = Beam(beam.tokens.toMutableList().apply { add(tokenId) }, beam.score - ln(probs[tokenId].toDouble() + 1e-10).toFloat())
-                    if (tokenId == EOS_IDX || tokenId == PAD_IDX) newBeam.finished = true
+                    val newBeam = Beam(
+                        beam.tokens.toMutableList().apply { add(tokenId) },
+                        beam.score - ln(probs[tokenId].toDouble() + 1e-10).toFloat()
+                    )
+                    // Mark beam as finished if it produces EOS or PAD token
+                    if (tokenId == EOS_IDX || tokenId == PAD_IDX) {
+                        newBeam.finished = true
+                    }
                     candidates.add(newBeam)
                 }
             }
         }
 
         beams = candidates.sortedBy { it.score }.take(beamSize)
+
+        // CRITICAL: Stop if all beams have ended (matching Python implementation)
+        if (beams.all { it.finished }) {
+            break
+        }
     }
 
-    val bestTokens = beams.firstOrNull()?.tokens ?: return ""
-    return bestTokens.drop(1).takeWhile { it != EOS_IDX && it != PAD_IDX }.mapNotNull { IDX_TO_CHAR[it] }.joinToString("")
+    // Return best beam (lowest score = highest probability)
+    val bestBeam = beams.minByOrNull { it.score } ?: return ""
+    val bestTokens = bestBeam.tokens
+
+    // Decode: skip SOS, stop at EOS/PAD
+    return bestTokens
+        .drop(1) // Skip SOS token
+        .takeWhile { it != EOS_IDX && it != PAD_IDX }
+        .mapNotNull { IDX_TO_CHAR[it] }
+        .joinToString("")
 }
 
 fun main() {

@@ -3,35 +3,41 @@
 
 echo "Compiling Kotlin test..."
 
-# Find ONNX runtime JAR
-ONNX_JAR=$(find .gradle/caches -name "onnxruntime-android-*.jar" | head -1)
+# Use local lib directory (no Gradle cache dependency)
+ONNX_RUNTIME="lib/onnx/onnxruntime-android-1.20.0-runtime.jar"
+ONNX_API="lib/onnx/onnxruntime-android-1.20.0-api.jar"
+ONNX_NATIVE="lib/onnx/native/arm64-v8a"
 
-if [ -z "$ONNX_JAR" ]; then
-    echo "❌ ONNX runtime JAR not found in Gradle cache"
-    echo "Running gradle build to download dependencies..."
-    ./gradlew dependencies >/dev/null 2>&1
-    ONNX_JAR=$(find .gradle/caches -name "onnxruntime-android-*.jar" | head -1)
-fi
-
-if [ -z "$ONNX_JAR" ]; then
-    echo "❌ Still can't find ONNX runtime JAR"
+if [ ! -f "$ONNX_RUNTIME" ] || [ ! -f "$ONNX_API" ]; then
+    echo "❌ ONNX JAR files not found in lib/onnx/"
+    echo "Expected:"
+    echo "  - $ONNX_RUNTIME"
+    echo "  - $ONNX_API"
     exit 1
 fi
 
-echo "✅ Found ONNX runtime: $ONNX_JAR"
+if [ ! -d "$ONNX_NATIVE" ]; then
+    echo "❌ ONNX native libraries not found at $ONNX_NATIVE"
+    exit 1
+fi
+
+echo "✅ Found ONNX runtime: $ONNX_RUNTIME"
+echo "✅ Found ONNX API: $ONNX_API"
+echo "✅ Found native libs: $ONNX_NATIVE"
 
 # Compile
+echo ""
 echo "Compiling TestOnnxPrediction.kt..."
-kotlinc -cp "$ONNX_JAR:." TestOnnxPrediction.kt -include-runtime -d TestOnnxPrediction.jar
+kotlinc -cp "$ONNX_RUNTIME:$ONNX_API" TestOnnxPrediction.kt -include-runtime -d TestOnnxPrediction.jar
 
 if [ $? -ne 0 ]; then
     echo "❌ Compilation failed"
     exit 1
 fi
 
-echo "✅ Compilation successful"
+echo "✅ Compilation successful: TestOnnxPrediction.jar"
 echo ""
 
 # Run
 echo "Running test..."
-java -cp "$ONNX_JAR:TestOnnxPrediction.jar" TestOnnxPredictionKt
+java -Djava.library.path="$ONNX_NATIVE" -cp "$ONNX_RUNTIME:$ONNX_API:TestOnnxPrediction.jar" TestOnnxPredictionKt
