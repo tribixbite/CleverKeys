@@ -530,9 +530,7 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
 
         for (i in 0 until MAX_SEQUENCE_LENGTH) {
             if (i < features.nearestKeys.size) {
-                val top3Keys = features.nearestKeys[i]
-                // Use only the first (closest) key to match trained model
-                val keyIndex = top3Keys.getOrNull(0) ?: PAD_IDX
+                val keyIndex = features.nearestKeys[i]
                 buffer.put(keyIndex.toLong())
             } else {
                 // Padding
@@ -849,7 +847,7 @@ class SwipeTrajectoryProcessor {
         val coordinates: List<PointF>,
         val velocities: List<PointF>,  // Now stores (vx, vy) as PointF
         val accelerations: List<PointF>,  // Now stores (ax, ay) as PointF
-        val nearestKeys: List<List<Int>>,  // ONNX export fix: 3 nearest keys per point
+        val nearestKeys: List<Int>,  // 2D format: single nearest key per point (matches trained model)
         val actualLength: Int,
         val normalizedCoordinates: List<PointF>
     )
@@ -869,8 +867,8 @@ class SwipeTrajectoryProcessor {
 
         // 4. Pad or truncate to MAX_TRAJECTORY_POINTS
         val finalCoords = padOrTruncate(normalizedCoords, MAX_TRAJECTORY_POINTS)
-        val paddingKeys = listOf(0, 0, 0) // 3 padding keys (PAD_IDX=0)
-        val finalNearestKeys = padOrTruncate(nearestKeys, MAX_TRAJECTORY_POINTS, paddingKeys)
+        val paddingKey = 0 // PAD_IDX=0 (single key, not 3)
+        val finalNearestKeys = padOrTruncate(nearestKeys, MAX_TRAJECTORY_POINTS, paddingKey)
 
         // 5. Calculate velocities and accelerations on normalized coords (simple deltas)
         // This logic correctly matches the working web demo
@@ -900,11 +898,11 @@ class SwipeTrajectoryProcessor {
         if (coordinates.isNotEmpty()) {
             Log.d(TAG, "🔬 Feature calculation (first 3 points):")
             for (i in 0..2.coerceAtMost(finalCoords.size - 1)) {
-                val top3Keys = finalNearestKeys.getOrNull(i)?.joinToString(",") ?: "N/A"
+                val nearestKey = finalNearestKeys.getOrNull(i) ?: -1
                 Log.d(TAG, "   Point[$i]: x=${String.format("%.4f", finalCoords[i].x)}, y=${String.format("%.4f", finalCoords[i].y)}, " +
                          "vx=${String.format("%.4f", velocities[i].x)}, vy=${String.format("%.4f", velocities[i].y)}, " +
                          "ax=${String.format("%.4f", accelerations[i].x)}, ay=${String.format("%.4f", accelerations[i].y)}, " +
-                         "top3_keys=[$top3Keys]")
+                         "nearest_key=$nearestKey")
             }
         }
 
@@ -993,10 +991,10 @@ class SwipeTrajectoryProcessor {
     /**
      * Detect nearest key for each coordinate using real keyboard layout
      */
-    private fun detectNearestKeys(coordinates: List<PointF>): List<List<Int>> {
+    private fun detectNearestKeys(coordinates: List<PointF>): List<Int> {
         return coordinates.map { point ->
             if (realKeyPositions.isNotEmpty()) {
-                // Use actual keyboard layout positions - find top 3 nearest keys
+                // Use actual keyboard layout positions - find nearest key
                 val distances = realKeyPositions.map { (char, keyPos) ->
                     val dx = point.x - keyPos.x
                     val dy = point.y - keyPos.y
@@ -1004,13 +1002,12 @@ class SwipeTrajectoryProcessor {
                     Pair(char, distance)
                 }
 
-                // Sort by distance and take top 3
-                val top3Keys = distances.sortedBy { it.second }.take(3)
+                // Sort by distance and take closest key
+                val closestKey = distances.minByOrNull { it.second }
 
-                // Convert characters to token indices
-                top3Keys.map { (char, _) ->
-                    if (char in 'a'..'z') (char - 'a') + 4 else 0 // a-z mapping to tokens 4-29
-                }
+                // Convert character to token index
+                val char = closestKey?.first ?: 'a'
+                if (char in 'a'..'z') (char - 'a') + 4 else 0 // a-z mapping to tokens 4-29
             } else {
                 // Enhanced grid detection with proper QWERTY mapping
                 detectKeysFromQwertyGrid(point)
@@ -1019,9 +1016,9 @@ class SwipeTrajectoryProcessor {
     }
 
     /**
-     * Detect top 3 nearest keys using accurate QWERTY grid mapping
+     * Detect nearest key using accurate QWERTY grid mapping
      */
-    private fun detectKeysFromQwertyGrid(point: PointF): List<Int> {
+    private fun detectKeysFromQwertyGrid(point: PointF): Int {
         val normalizedX = point.x / keyboardWidth
         val normalizedY = point.y / keyboardHeight
 
@@ -1047,13 +1044,12 @@ class SwipeTrajectoryProcessor {
             Pair(char, distance)
         }
 
-        // Sort by distance and take top 3
-        val top3Keys = distances.sortedBy { it.second }.take(3)
+        // Find closest key
+        val closestKey = distances.minByOrNull { it.second }
 
-        // Convert characters to token indices
-        return top3Keys.map { (char, _) ->
-            if (char in 'a'..'z') (char - 'a') + 4 else 0 // a-z mapping to tokens 4-29
-        }
+        // Convert character to token index
+        val char = closestKey?.first ?: 'a'
+        return if (char in 'a'..'z') (char - 'a') + 4 else 0 // a-z mapping to tokens 4-29
     }
     
     /**
