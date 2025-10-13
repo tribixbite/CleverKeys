@@ -298,31 +298,36 @@ class OnnxPredictionTest {
     }
 
     private fun runBeamSearch(memory: OnnxTensor, beamSize: Int = 8, maxLen: Int = 20): String {
-        data class Beam(val tokens: MutableList<Int>, var score: Float, var finished: Boolean = false)
+        // EXACTLY matching Python: (last_token, sequence, score)
+        data class Beam(val lastToken: Int, val sequence: List<Int>, val score: Float)
 
-        var beams = listOf(Beam(mutableListOf(SOS_IDX), 0f))
+        // Initialize beams with <sos> token
+        var beams = listOf(Beam(SOS_IDX, listOf(SOS_IDX), 0.0f))
 
         for (step in 0 until maxLen) {
-            if (beams.all { it.finished }) break
-
             val candidates = mutableListOf<Beam>()
 
-            for (beam in beams.filter { !it.finished }) {
-                // Prepare decoder input [1, DECODER_SEQ_LENGTH]
+            for (beam in beams) {
+                // CRITICAL: Pad sequence to DECODER_SEQ_LENGTH (matches Python line 133)
                 val tgtTokens = LongArray(DECODER_SEQ_LENGTH) { PAD_IDX.toLong() }
-                val tgtMask = BooleanArray(DECODER_SEQ_LENGTH) { true }
-
-                for ((i, token) in beam.tokens.withIndex()) {
+                for (i in beam.sequence.indices) {
                     if (i < DECODER_SEQ_LENGTH) {
-                        tgtTokens[i] = token.toLong()
-                        tgtMask[i] = false
+                        tgtTokens[i] = beam.sequence[i].toLong()
                     }
                 }
 
+                // Create target mask (false = valid, true = padded) - matches Python line 138
+                val tgtMask = BooleanArray(DECODER_SEQ_LENGTH) { true }
+                for (i in beam.sequence.indices) {
+                    tgtMask[i] = false  // Mark valid positions
+                }
+
+                // Create src_mask (all zeros = all valid) - matches Python line 142
+                val srcMaskTensor = OnnxTensor.createTensor(env, Array(1) { BooleanArray(MAX_SEQUENCE_LENGTH) { false } })
                 val tgtTokensTensor = OnnxTensor.createTensor(env, Array(1) { tgtTokens })
                 val tgtMaskTensor = OnnxTensor.createTensor(env, Array(1) { tgtMask })
-                val srcMaskTensor = OnnxTensor.createTensor(env, Array(1) { BooleanArray(MAX_SEQUENCE_LENGTH) { false } })
 
+                // Run decoder
                 val decoderInputs = mapOf(
                     "memory" to memory,
                     "target_tokens" to tgtTokensTensor,
@@ -338,42 +343,50 @@ class OnnxPredictionTest {
                 tgtMaskTensor.close()
                 srcMaskTensor.close()
 
-                // Get logits at current position
-                val currentPos = beam.tokens.size - 1
+                // Get logits for last valid position (Python line 155)
+                val currentPos = beam.sequence.size - 1
                 if (currentPos >= 0 && currentPos < DECODER_SEQ_LENGTH) {
                     val vocabLogits = logits[currentPos]
 
-                    // Apply softmax
+                    // Apply softmax (Python line 157)
+                    val probs = FloatArray(vocabLogits.size)
                     val maxLogit = vocabLogits.maxOrNull() ?: 0f
-                    val expValues = vocabLogits.map { exp((it - maxLogit).toDouble()).toFloat() }
-                    val sumExp = expValues.sum()
-                    val probs = expValues.map { it / sumExp }
+                    var sumExp = 0f
+                    for (i in vocabLogits.indices) {
+                        val exp = exp((vocabLogits[i] - maxLogit).toDouble()).toFloat()
+                        probs[i] = exp
+                        sumExp += exp
+                    }
+                    for (i in probs.indices) {
+                        probs[i] = probs[i] / sumExp
+                    }
 
-                    // Get top beamSize tokens
+                    // Get top beam_size tokens (Python line 160)
                     val topIndices = probs.withIndex()
                         .sortedByDescending { it.value }
                         .take(beamSize)
                         .map { it.index }
 
-                    for (tokenId in topIndices) {
-                        val newBeam = Beam(
-                            beam.tokens.toMutableList().apply { add(tokenId) },
-                            beam.score - ln(probs[tokenId].toDouble() + 1e-10).toFloat()
-                        )
-                        if (tokenId == EOS_IDX || tokenId == PAD_IDX) {
-                            newBeam.finished = true
-                        }
-                        candidates.add(newBeam)
+                    for (idx in topIndices) {
+                        val newScore = beam.score - ln(probs[idx].toDouble() + 1e-10).toFloat()
+                        val newSeq = beam.sequence + idx
+                        candidates.add(Beam(idx, newSeq, newScore))
                     }
                 }
             }
 
+            // Select top beams (Python line 168)
             beams = candidates.sortedBy { it.score }.take(beamSize)
+
+            // Check if all beams ended (Python line 171)
+            if (beams.all { it.lastToken == EOS_IDX || it.lastToken == PAD_IDX }) {
+                break
+            }
         }
 
-        // Decode best beam
-        val bestTokens = beams.firstOrNull()?.tokens ?: return ""
-        return bestTokens
+        // Return best beam (Python line 175)
+        val bestBeam = beams.firstOrNull() ?: return ""
+        return bestBeam.sequence
             .drop(1) // Skip SOS
             .takeWhile { it != EOS_IDX && it != PAD_IDX }
             .mapNotNull { IDX_TO_CHAR[it] }
