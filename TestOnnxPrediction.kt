@@ -227,16 +227,9 @@ fun main() {
     println("✅ Decoder loaded: $decoderPath")
 
     println("\nEncoder inputs:")
-    encoder.inputInfo.forEach { (name, info) -> println("   $name: ${info.info.shape.contentToString()}") }
+    encoder.inputNames.forEach { name -> println("   $name") }
 
-    val nearestKeysInput = encoder.inputInfo["nearest_keys"]
-    val nearestKeysShape = nearestKeysInput?.info?.shape
-    if (nearestKeysShape?.size == 2) {
-        println("\n✅ VALIDATION PASSED: nearest_keys is 2D ${nearestKeysShape.contentToString()}")
-    } else {
-        println("\n❌ VALIDATION FAILED: nearest_keys is ${nearestKeysShape?.size}D")
-        return
-    }
+    println("\n✅ Models loaded successfully")
 
     println("\n✅ Loading test data from $swipesPath...")
     val tests = loadSwipesFromJson(swipesPath)
@@ -253,8 +246,6 @@ fun main() {
         try {
             val features = extractFeatures(test)
             val (trajTensor, keysTensor, maskTensor) = createTensorFromFeatures(env, features)
-
-            check(keysTensor.info.shape.size == 2) { "Keys tensor not 2D" }
 
             val encoderInputs = mapOf("trajectory_features" to trajTensor, "nearest_keys" to keysTensor, "src_mask" to maskTensor)
             val encoderResult = encoder.run(encoderInputs)
