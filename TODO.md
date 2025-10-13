@@ -1,8 +1,50 @@
 # Neural Swipe Typing - Implementation Differences Analysis
 
-**Date:** October 11, 2025
+**Date:** October 13, 2025
 **Purpose:** Document every difference between working web demo (swipe.html) and Kotlin app implementation
-**Status:** ✅ **CRITICAL FIXES IMPLEMENTED** - All Priority 1 mismatches resolved (commit 65c4d3c)
+**Status:** ✅ **CRITICAL FIXES IMPLEMENTED** - All Priority 1 mismatches resolved (commit 007c296)
+
+---
+
+## ✅ **FIX #32 - BEAM SEARCH DECODER ALGORITHM (Oct 13, 2025)**
+
+**Issue:** Beam search produced gibberish predictions instead of actual words.
+
+**Symptoms:**
+- "counsel" → "couponsionsticalics" (19 chars instead of stopping early)
+- "now" → "nowshowstopererered" (19 chars, repetitive nonsense)
+- All predictions ran to maxLen=20 instead of stopping when EOS token generated
+
+**Root Cause:**
+- Original Kotlin code used `Beam(tokens: MutableList<Int>, score: Float, finished: Boolean)` data structure
+- Stopping condition checked `if (beams.all { it.finished })` but this never triggered
+- Finished and active beams coexisted, never all finishing simultaneously
+- Python reference uses `(last_token, sequence, score)` tuple structure
+- Python checks `if all(token == 3 or token == 0 for token, _, _ in beams)` - checking the LAST TOKEN field
+
+**Resolution (commit 007c296):**
+- ✅ **Complete rewrite to match Python implementation line-by-line:**
+  - Changed `Beam` from `(tokens, score, finished)` to `(lastToken: Int, sequence: List<Int>, score: Float)`
+  - Removed `finished` flag entirely (Python doesn't use it)
+  - Fixed stopping condition: `beams.all { it.lastToken == EOS_IDX || it.lastToken == PAD_IDX }`
+  - Changed from `MutableList` to immutable `List` for sequence
+  - Added line-by-line comments referencing Python `test_cli_predict.py` implementation
+
+**Validation:**
+- ✅ **CLI Test (run-test.sh):** Predictions now match Python exactly!
+  ```
+  [1/2] Target: 'counsel   ' → Predicted: 'coupons   ' ❌
+  [2/2] Target: 'now       ' → Predicted: 'now       ' ✅
+
+  Total tests: 2
+  Correct predictions: 1
+  Prediction accuracy: 50.0%
+  ```
+- ✅ No more gibberish - predictions are real words
+- ✅ Accuracy matches Python reference (50%)
+- ✅ Applied fix to both `TestOnnxPrediction.kt` and `src/test/kotlin/tribixbite/keyboard2/OnnxPredictionTest.kt`
+
+**Status:** ✅ **COMPLETE** - Beam search now produces actual word predictions
 
 ---
 
