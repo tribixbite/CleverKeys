@@ -48,6 +48,39 @@
 
 ---
 
+## ✅ **CLEANUP - 3D NEAREST_KEYS REMNANTS ELIMINATED (Oct 13, 2025)**
+
+**Issue:** Code still computed 3 nearest keys but only used first one - wasteful and confusing.
+
+**Found in production code:**
+- `TrajectoryFeatures.nearestKeys: List<List<Int>>` - 3D data structure (line 852)
+- `paddingKeys = listOf(0, 0, 0)` - padding for 3 keys (line 872)
+- `detectNearestKeys()` computed top 3 keys (lines 1008, 1051)
+- `createNearestKeysTensor()` extracted first with `getOrNull(0)` (line 535)
+
+**Resolution (commit 6870abe):**
+- ✅ Changed `nearestKeys: List<List<Int>>` → `List<Int>` (2D format)
+- ✅ Updated `detectNearestKeys()` to return `List<Int>` (single key per point)
+- ✅ Updated `detectKeysFromQwertyGrid()` to return `Int` (single key)
+- ✅ Simplified tensor creation to use key directly (removed `getOrNull(0)`)
+- ✅ Fixed padding from `listOf(0,0,0)` to single `0`
+- ✅ Updated logging from "top3_keys" to "nearest_key"
+
+**Benefits:**
+- **66% less computation** (1 key vs 3 keys per point × 150 points = 300 vs 450 calculations)
+- **Clearer code** matching model expectations
+- **No confusing nested lists** - simple `List<Int>` structure
+- **Consistent** with trained model (2D format)
+
+**Validation:**
+- ✅ Clean compilation confirmed
+- ✅ No 3D format references remain in codebase (grep verified)
+- ✅ Test files clean (no List<List<Int>> patterns)
+
+**Status:** ✅ **COMPLETE** - All 3D format remnants eliminated
+
+---
+
 ## ✅ **FIX #31 CORRECTION - 2D NEAREST_KEYS TENSOR (Oct 12, 2025)**
 
 **Issue:** Fix #31 (commit f81ed89) incorrectly changed nearest_keys from 2D to 3D format, incompatible with trained model.
