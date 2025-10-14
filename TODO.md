@@ -48,6 +48,43 @@
 
 ---
 
+## ✅ **FIX #33 - PRODUCTION BEAM SEARCH PAD STOPPING (Oct 13, 2025)**
+
+**Issue:** Calibration predictions produced gibberish - beams didn't stop when generating PAD tokens.
+
+**Symptoms:**
+- SwipeCalibrationActivity showed gibberish predictions
+- Beams continued indefinitely instead of stopping early
+- Production code behaved differently from fixed test code
+
+**Root Cause:**
+- Production beam search only marked beams as finished for EOS_IDX (line 479)
+- Python reference checks for BOTH EOS (3) and PAD (0): `if all(token == 3 or token == 0 for token, _, _ in beams)`
+- Test code Fix #32 already implemented this, but production code was missed
+- Beams generating PAD tokens would never finish, producing gibberish
+
+**Resolution (commit 9a0abf8):**
+- ✅ Added PAD_IDX check to finished condition:
+  ```kotlin
+  if (tokenId == EOS_IDX || tokenId == PAD_IDX) {
+      newBeam.finished = true
+  }
+  ```
+- ✅ Verified tokenizer filters non-letter tokens (EOS, PAD, SOS) correctly
+- ✅ Verified stopping conditions in beam search loop are correct
+
+**Validation:**
+- ✅ Clean compilation confirmed
+- ✅ APK rebuilt successfully (48MB, 9s build time)
+- ✅ Ready for calibration testing
+
+**Files Changed:**
+- `OnnxSwipePredictorImpl.kt:480-481` - Added PAD_IDX to finished check
+
+**Status:** ✅ **COMPLETE** - Production beam search now matches Python reference
+
+---
+
 ## ✅ **CLEANUP - 3D NEAREST_KEYS REMNANTS ELIMINATED (Oct 13, 2025)**
 
 **Issue:** Code still computed 3 nearest keys but only used first one - wasteful and confusing.
