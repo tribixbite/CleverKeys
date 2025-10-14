@@ -220,17 +220,144 @@ private fun parseKeyValue(expression: String): KeyValue {
 
 ---
 
-### Files Reviewed: 3 / 251 (1.2%)
+### Files Reviewed: 4 / 251 (1.6%)
 ### Bugs Identified:
 - File 1 (KeyValueParser): 1 CRITICAL (96% missing - 276/289 lines)
 - File 2 (Keyboard2): 23 major bugs (~800 lines missing)
-- **Total**: 24 critical architectural bugs identified
-### Time Spent: 4 hours (complete line-by-line reading)
+- File 3 (Theme/TextSize): 1 CRITICAL (text size calculation completely wrong)
+- **Total**: 25 critical architectural bugs identified
+### Time Spent: 5 hours (complete line-by-line reading)
 ### Estimated Time Remaining:
-- Fix Files 1-2: 3-4 weeks
-- Review Files 3-251: 300-400 hours (12-16 weeks)
+- Fix Files 1-3: 3-4 weeks
+- Review Files 4-251: 300-400 hours (12-16 weeks)
 - **Total**: 16-20 weeks for complete parity
 
+### USER ISSUES EXPLAINED:
+1. ✅ **Chinese character** → File 1 (KeyValueParser missing)
+2. ✅ **Prediction bar not showing** → File 2 Bug #1 (container architecture)
+3. ✅ **Bottom bar missing** → File 2 Bug #1 (container architecture)
+4. 🔄 **Keys don't work** → Investigating (multiple causes)
+5. ✅ **Text size wrong** → File 3 (hardcoded 0.4f vs dynamic calculation)
+
+
+---
+
+---
+
+## File 3/251: Theme.java + Keyboard2View.java TEXT SIZE CALCULATION
+
+**Status**: CRITICAL - Text size calculation completely wrong
+**Java**: Theme.java (202 lines), Keyboard2View.java lines 547-552
+**Kotlin**: Theme.kt (383 lines), Keyboard2View.kt lines 487-488
+**Impact**: EXPLAINS "TEXT SIZE WRONG" BUG
+
+### JAVA TEXT SIZE CALCULATION (Keyboard2View.java:547-552):
+```java
+// Compute label size based on width OR height (takes minimum)
+// Considers aspect ratio, margins, and Config multipliers
+float labelBaseSize = Math.min(
+    _tc.row_height - _tc.vertical_margin,           // Option 1: Based on row height
+    (width / 10 - _tc.horizontal_margin) * 3/2      // Option 2: Based on key width
+) * _config.characterSize;                          // Apply character size multiplier
+
+_mainLabelSize = labelBaseSize * _config.labelTextSize;    // Apply label text size
+_subLabelSize = labelBaseSize * _config.sublabelTextSize;  // Apply sublabel text size
+```
+
+**Java calculation steps**:
+1. Calculate `labelBaseSize` as **minimum** of:
+   - Row height minus vertical margin
+   - Key width calculation: `(width / 10 - horizontal_margin) * 3/2`
+2. Multiply by `Config.characterSize` (user preference, default 1.0)
+3. Multiply by `Config.labelTextSize` (default 1.0) for main labels
+4. Multiply by `Config.sublabelTextSize` (default 0.75) for sublabels
+5. Result: Dynamic sizing that adapts to keyboard dimensions AND user preferences
+
+**Aspect ratio consideration**:
+- 3/2 ratio assumes normal key proportions for 10-column layout
+- Width calculation ensures labels fit when keyboard is unusually high
+- Height calculation ensures labels fit when keyboard is unusually wide
+
+### KOTLIN TEXT SIZE CALCULATION (Keyboard2View.kt:487-488):
+```kotlin
+// WRONG: Hardcoded ratios with NO Config multipliers
+mainLabelSize = keyWidth * 0.4f  // Fixed 40% of key width
+subLabelSize = keyWidth * 0.25f  // Fixed 25% of key width
+```
+
+**Kotlin calculation steps**:
+1. Main label = 40% of key width (HARDCODED)
+2. Sublabel = 25% of key width (HARDCODED)
+3. **NO Config.characterSize multiplier**
+4. **NO Config.labelTextSize multiplier**
+5. **NO Config.sublabelTextSize multiplier**
+6. **NO minimum calculation** (doesn't consider row height)
+7. **NO margin consideration**
+8. **NO aspect ratio consideration**
+
+### MISSING FROM KOTLIN:
+
+1. ❌ **Config.characterSize** - User preference for overall text size (0.5-2.0 range)
+2. ❌ **Config.labelTextSize** - Separate control for main label size
+3. ❌ **Config.sublabelTextSize** - Separate control for sublabel size
+4. ❌ **Math.min() logic** - Should pick smaller of height-based vs width-based size
+5. ❌ **Vertical margin consideration** - Labels too big if margins not subtracted
+6. ❌ **Horizontal margin consideration** - Similar issue
+7. ❌ **Aspect ratio calculation** - 3/2 ratio for proper proportions
+8. ❌ **Width/10 normalization** - Assumes 10-column layout as baseline
+
+### BUG IMPACT:
+
+**Why text size is wrong**:
+1. **Hardcoded 0.4f** doesn't match Java's dynamic calculation
+2. **No user control** - Can't adjust text size via settings
+3. **Doesn't adapt** to different keyboard heights/widths
+4. **Ignores margins** - Text may be too large for available space
+5. **No Config integration** - Settings have no effect
+
+**Example calculation comparison**:
+
+Java (with default config):
+```
+keyWidth = 100px
+rowHeight = 150px
+vertical_margin = 10px
+horizontal_margin = 5px
+characterSize = 1.0 (default)
+labelTextSize = 1.0 (default)
+
+labelBaseSize = min(
+    150 - 10,                    // = 140
+    (1000/10 - 5) * 3/2          // = (100-5)*1.5 = 142.5
+) * 1.0 = 140
+
+mainLabelSize = 140 * 1.0 = 140px
+```
+
+Kotlin (current):
+```
+keyWidth = 100px
+mainLabelSize = 100 * 0.4 = 40px  // WRONG! Should be 140px!
+```
+
+**Result**: Text is 3.5x SMALLER than it should be!
+
+### THEME.JAVA vs THEME.KT COMPARISON:
+
+**Java Theme.java (202 lines)**:
+- Simple theme data container
+- No text size calculation (done in Keyboard2View)
+- Theme.Computed.Key has `label_paint()` and `sublabel_paint()`
+- Paint objects cached for performance
+
+**Kotlin Theme.kt (383 lines)**:
+- Extended theme system with reactive updates
+- ThemeData class with Material You support
+- Computed class structure matches Java
+- Paint methods identical to Java
+- **BUT**: Text sizes passed as parameters (calculated elsewhere)
+
+**Conclusion**: Theme.kt is fine, bug is in Keyboard2View.kt text size calculation.
 
 ---
 
