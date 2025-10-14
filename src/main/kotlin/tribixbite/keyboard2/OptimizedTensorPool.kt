@@ -289,15 +289,15 @@ class OptimizedTensorPool private constructor(private val ortEnvironment: OrtEnv
     }
 
     private fun createFloatBuffer(sizeBytes: Int): ByteBuffer {
-        return ByteBuffer.allocateDirect(sizeBytes).order(ByteOrder.LITTLE_ENDIAN) // FIX #42: ONNX models require little-endian
+        return ByteBuffer.allocateDirect(sizeBytes).order(ByteOrder.nativeOrder())
     }
 
     private fun createLongBuffer(sizeBytes: Int): ByteBuffer {
-        return ByteBuffer.allocateDirect(sizeBytes).order(ByteOrder.LITTLE_ENDIAN) // FIX #42: ONNX models require little-endian
+        return ByteBuffer.allocateDirect(sizeBytes).order(ByteOrder.nativeOrder())
     }
 
     private fun createBooleanBuffer(sizeBytes: Int): ByteBuffer {
-        return ByteBuffer.allocateDirect(sizeBytes).order(ByteOrder.LITTLE_ENDIAN) // FIX #42: ONNX models require little-endian
+        return ByteBuffer.allocateDirect(sizeBytes).order(ByteOrder.nativeOrder())
     }
 
     private fun calculateSizeBytes(shape: LongArray, dataType: String): Long {

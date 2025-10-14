@@ -1,18 +1,33 @@
 # CleverKeys - Tensor Byte Order Fix
 
-## ✅ FIX #42: Tensor Byte Serialization (IMPLEMENTED)
+## ❌ DEBUGGING: Tensor Format Investigation (NO RESOLUTION YET)
 
-**Changed all ByteOrder.nativeOrder() → ByteOrder.LITTLE_ENDIAN**
+**Attempts Made:**
+1. ✅ ByteOrder change (nativeOrder → LITTLE_ENDIAN): NO EFFECT
+2. ✅ Reverted to nativeOrder (matches CLI test): NO EFFECT
+3. ✅ Fresh FloatBuffer/LongBuffer views (matches CLI test pattern): NO EFFECT
 
-ONNX models expect little-endian byte order, but Android's `nativeOrder()` may use different endianness causing tensor data corruption.
+**Result:** Still 0/2 (0.0%) - "counsel"→"", "now"→"o"
 
-**Files Changed:**
-- `OnnxSwipePredictorImpl.kt` (lines 515, 548): Encoder input tensors
-- `OptimizedTensorPool.kt` (lines 292, 296, 300): Decoder buffer pools
-- `BatchedMemoryOptimizer.kt` (lines 233, 249): Memory optimization buffers
+**Verified Correct from Logs:**
+- Tensor names: trajectory_features, nearest_keys, src_mask ✓
+- Tensor shapes: [1,150,6], [1,150], [1,150] ✓
+- Nearest keys: [6,6,6,25,9,9...] where 6='c' ✓
+- Normalization: (132,146)→(0.367,0.523) for 360×280 ✓
+- Grid detection: matches CLI test ✓
+- Feature extraction: matches CLI test ✓
 
-**Previous Result:** 0/2 (0.0%) - "counsel"→"", "now"→"o"
-**Testing:** APK rebuild required
+**Problem:** Model predicts wrong tokens despite ALL inputs correct
+- Expected first token: c(6)
+- Actual first token: o(18)
+- Beam outputs: "ouuueee", "ouuueeeett", "ouuueeeettt"
+- All filtered by vocabulary → empty result
+
+**Next Investigation Needed:**
+- Compare actual tensor byte values (hex dump) between CLI and Android
+- Check if ONNX model file itself is different
+- Verify model input/output node names match expectations
+- Check if there's float precision differences in calculations
 
 ---
 

@@ -510,27 +510,28 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
      * Create trajectory tensor from features - EXACT Java implementation match
      */
     private fun createTrajectoryTensor(features: SwipeTrajectoryProcessor.TrajectoryFeatures): OnnxTensor {
-        // Create direct buffer exactly like Java implementation for performance
+        // EXACT CLI test pattern: create ByteBuffer, fill via one FloatBuffer view, create tensor with fresh view
         val byteBuffer = java.nio.ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * TRAJECTORY_FEATURES * 4) // 4 bytes per float
-        byteBuffer.order(java.nio.ByteOrder.LITTLE_ENDIAN) // FIX #42: ONNX models require little-endian
-        val buffer = byteBuffer.asFloatBuffer()
+        byteBuffer.order(java.nio.ByteOrder.nativeOrder()) // Match CLI test (line 118)
 
+        // Fill buffer via first FloatBuffer view
+        val fillBuffer = byteBuffer.asFloatBuffer()
         for (i in 0 until MAX_SEQUENCE_LENGTH) {
             val point = features.normalizedCoordinates.getOrNull(i) ?: PointF(0f, 0f)
             val velocity = features.velocities.getOrNull(i) ?: PointF(0f, 0f)
             val acceleration = features.accelerations.getOrNull(i) ?: PointF(0f, 0f)
 
             // Exact 6-feature layout matching web demo: [x, y, vx, vy, ax, ay]
-            buffer.put(point.x)          // Normalized x [0,1]
-            buffer.put(point.y)          // Normalized y [0,1]
-            buffer.put(velocity.x)       // Velocity x component (delta)
-            buffer.put(velocity.y)       // Velocity y component (delta)
-            buffer.put(acceleration.x)   // Acceleration x component (delta of delta)
-            buffer.put(acceleration.y)   // Acceleration y component (delta of delta)
+            fillBuffer.put(point.x)          // Normalized x [0,1]
+            fillBuffer.put(point.y)          // Normalized y [0,1]
+            fillBuffer.put(velocity.x)       // Velocity x component (delta)
+            fillBuffer.put(velocity.y)       // Velocity y component (delta)
+            fillBuffer.put(acceleration.x)   // Acceleration x component (delta of delta)
+            fillBuffer.put(acceleration.y)   // Acceleration y component (delta of delta)
         }
 
-        buffer.rewind()
-        val tensor = OnnxTensor.createTensor(ortEnvironment, buffer, longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), TRAJECTORY_FEATURES.toLong()))
+        // Create tensor with FRESH FloatBuffer view (position=0) - matches CLI test (line 120)
+        val tensor = OnnxTensor.createTensor(ortEnvironment, byteBuffer.asFloatBuffer(), longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), TRAJECTORY_FEATURES.toLong()))
 
         // Track tensor with memory manager
         tensorMemoryManager.trackTensor(tensor, "TrajectoryTensor", longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), TRAJECTORY_FEATURES.toLong()), MAX_SEQUENCE_LENGTH * TRAJECTORY_FEATURES * 4L)
@@ -542,25 +543,25 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
      * Create nearest keys tensor - 2D format matching trained model
      */
     private fun createNearestKeysTensor(features: SwipeTrajectoryProcessor.TrajectoryFeatures): OnnxTensor {
-        // Create 2D tensor [batch=1, sequence=MAX_SEQUENCE_LENGTH]
-        // Model was trained with single nearest key per point
+        // EXACT CLI test pattern: create ByteBuffer, fill via one LongBuffer view, create tensor with fresh view
         val byteBuffer = java.nio.ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * 8) // 8 bytes per long
-        byteBuffer.order(java.nio.ByteOrder.LITTLE_ENDIAN) // FIX #42: ONNX models require little-endian
-        val buffer = byteBuffer.asLongBuffer()
+        byteBuffer.order(java.nio.ByteOrder.nativeOrder()) // Match CLI test (line 123)
 
         // FIX #41: Verify nearest_keys list size matches expected length
         if (features.nearestKeys.size != MAX_SEQUENCE_LENGTH) {
             logD("⚠️ WARNING: nearest_keys size (${features.nearestKeys.size}) != MAX_SEQUENCE_LENGTH ($MAX_SEQUENCE_LENGTH)")
         }
 
+        // Fill buffer via first LongBuffer view
+        val fillBuffer = byteBuffer.asLongBuffer()
         for (i in 0 until MAX_SEQUENCE_LENGTH) {
             if (i < features.nearestKeys.size) {
                 val keyIndex = features.nearestKeys[i]
-                buffer.put(keyIndex.toLong())
+                fillBuffer.put(keyIndex.toLong())
             } else {
                 // Should never reach here if Fix #36 is working
                 logD("⚠️ BUG: Padding nearest_keys with PAD at index $i")
-                buffer.put(PAD_IDX.toLong())
+                fillBuffer.put(PAD_IDX.toLong())
             }
         }
 
@@ -568,8 +569,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         val last10 = features.nearestKeys.takeLast(10)
         logD("   Last 10 nearest keys: $last10")
 
-        buffer.rewind()
-        return OnnxTensor.createTensor(ortEnvironment, buffer, longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong()))
+        // Create tensor with FRESH LongBuffer view (position=0) - matches CLI test (line 125)
+        return OnnxTensor.createTensor(ortEnvironment, byteBuffer.asLongBuffer(), longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong()))
     }
     
     /**
