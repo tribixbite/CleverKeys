@@ -108,20 +108,38 @@ class LayoutsPreference @JvmOverloads constructor(
             // If no saved layouts, load default QWERTY layout
             if (layouts.isEmpty()) {
                 // Try to load latn_qwerty_us as default
-                // Use BuildConfig.LIBRARY_PACKAGE_NAME to get package name dynamically
-                val packageName = try {
-                    // Try to get package name from BuildConfig
-                    Class.forName("tribixbite.keyboard2.BuildConfig").getField("APPLICATION_ID").get(null) as? String
-                } catch (e: Exception) {
-                    // Fallback: use tribixbite.keyboard2 as package name
-                    "tribixbite.keyboard2"
+                android.util.Log.d("LayoutsPreference", "No saved layouts, loading default QWERTY")
+
+                // Try multiple package name variations (debug, release, etc.)
+                val packageNames = listOf(
+                    "tribixbite.keyboard2.debug",  // Debug build
+                    "tribixbite.keyboard2",        // Release build
+                    null                           // Let Android search all packages
+                )
+
+                var qwertyId = 0
+                var usedPackage: String? = null
+
+                for (packageName in packageNames) {
+                    qwertyId = resources.getIdentifier("latn_qwerty_us", "xml", packageName)
+                    if (qwertyId != 0) {
+                        usedPackage = packageName ?: "default"
+                        android.util.Log.d("LayoutsPreference", "✅ Found resource with package: $usedPackage, ID: $qwertyId (0x${qwertyId.toString(16)})")
+                        break
+                    }
                 }
 
-                val qwertyId = resources.getIdentifier("latn_qwerty_us", "xml", packageName)
                 if (qwertyId != 0) {
-                    val qwertyLayout = KeyboardData.load(resources, qwertyId)
-                    layouts.add(qwertyLayout)
+                    try {
+                        val qwertyLayout = KeyboardData.load(resources, qwertyId)
+                        layouts.add(qwertyLayout)
+                        android.util.Log.d("LayoutsPreference", "✅ Loaded QWERTY layout: ${qwertyLayout?.name}")
+                    } catch (e: Exception) {
+                        android.util.Log.e("LayoutsPreference", "Failed to load QWERTY layout", e)
+                        layouts.add(null)
+                    }
                 } else {
+                    android.util.Log.e("LayoutsPreference", "❌ Resource ID not found for latn_qwerty_us in any package")
                     // Fallback: add null for system layout
                     layouts.add(null)
                 }
