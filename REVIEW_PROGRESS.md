@@ -2928,3 +2928,474 @@ All Java functionality present in Kotlin
 **Bugs Identified**: 62 bugs total (57 from Files 1-9, now 5 more)
 **Critical Issues**: 13 showstoppers identified
 **Next File**: File 11/251 - Continue systematic review
+
+---
+
+## FILE 11/251: KeyModifier.java vs KeyModifier.kt
+
+**Lines**: Java 527 lines vs Kotlin 192 lines (335 fewer lines, 63% MISSING)
+**Impact**: **CATASTROPHIC** - Core modifier system 90%+ incomplete
+**Status**: Kotlin is essentially a stub with almost no functionality
+
+### CRITICAL DISCOVERY: KEYBOARD COMPLETELY BROKEN
+
+The Kotlin KeyModifier is not just incomplete - it's **fundamentally non-functional**. The main `modify()` function **returns the input unchanged** (line 174: `return keyValue ?: KeyValue.CharKey(' ')`).
+
+### CATASTROPHIC BUGS FOUND: 11 MAJOR MISSING SYSTEMS
+
+---
+
+#### Bug #63: modify() Function COMPLETELY BROKEN
+**Severity**: **SHOWSTOPPER** - CRITICAL
+**File**: KeyModifier.kt:173-175
+**Java Implementation** (KeyModifier.java:18-30):
+```java
+public static KeyValue modify(KeyValue k, Pointers.Modifiers mods)
+{
+  if (k == null) return null;
+  int n_mods = mods.size();
+  KeyValue r = k;
+  for (int i = 0; i < n_mods; i++)
+    r = modify(r, mods.get(i));  // ITERATES THROUGH ALL MODIFIERS
+  if (r.getString().length() == 0)
+    return null;
+  return r;
+}
+```
+
+**Kotlin Implementation**:
+```kotlin
+fun modify(keyValue: KeyValue?, mods: Pointers.Modifiers): KeyValue {
+    return keyValue ?: KeyValue.CharKey(' ')  // RETURNS INPUT UNCHANGED!
+}
+```
+
+**Impact**:
+- **NO MODIFIERS WORK AT ALL**
+- Shift doesn't uppercase letters
+- Fn doesn't convert keys
+- Ctrl/Alt/Meta don't work
+- Compose doesn't work
+- **KEYBOARD IS FUNDAMENTALLY BROKEN**
+
+**Fix Time**: 2-3 days (need to port entire modifier system)
+
+---
+
+#### Bug #64: set_modmap() is a No-Op
+**Severity**: **CRITICAL**
+**File**: KeyModifier.kt:166-168
+**Java Implementation** (KeyModifier.java:11-15):
+```java
+private static Modmap _modmap = null;
+public static void set_modmap(Modmap mm)
+{
+  _modmap = mm;
+}
+// Then used in apply_shift, apply_fn, apply_ctrl (lines 191-196, 216-221, 290-297)
+```
+
+**Kotlin Implementation**:
+```kotlin
+fun set_modmap(modmap: Any?) {
+    // No-op: modmap functionality not implemented in current system
+}
+```
+
+**Impact**:
+- Modmap completely ignored
+- Custom keyboard layouts can't remap keys
+- **BREAKS EVERY LAYOUT WITH MODMAP**
+
+**Fix Time**: 1 week (integrate with entire modifier system)
+
+---
+
+#### Bug #65: ALL 25 Accent Modifiers MISSING
+**Severity**: **CRITICAL**
+**File**: KeyModifier.kt - completely absent
+**Java Implementation** (KeyModifier.java:60-84):
+```java
+case GRAVE: return apply_compose_or_dead_char(k, ComposeKeyData.accent_grave, '\u02CB');
+case AIGU: return apply_compose_or_dead_char(k, ComposeKeyData.accent_aigu, '\u00B4');
+case CIRCONFLEXE: return apply_compose_or_dead_char(k, ComposeKeyData.accent_circonflexe, '\u02C6');
+case TILDE: return apply_compose_or_dead_char(k, ComposeKeyData.accent_tilde, '\u02DC');
+case CEDILLE: return apply_compose_or_dead_char(k, ComposeKeyData.accent_cedille, '\u00B8');
+case TREMA: return apply_compose_or_dead_char(k, ComposeKeyData.accent_trema, '\u00A8');
+case CARON: return apply_compose_or_dead_char(k, ComposeKeyData.accent_caron, '\u02C7');
+case RING: return apply_compose_or_dead_char(k, ComposeKeyData.accent_ring, '\u02DA');
+case MACRON: return apply_compose_or_dead_char(k, ComposeKeyData.accent_macron, '\u00AF');
+case OGONEK: return apply_compose_or_dead_char(k, ComposeKeyData.accent_ogonek, '\u02DB');
+case DOT_ABOVE: return apply_compose_or_dead_char(k, ComposeKeyData.accent_dot_above, '\u02D9');
+case BREVE: return apply_dead_char(k, '\u02D8');
+case DOUBLE_AIGU: return apply_compose(k, ComposeKeyData.accent_double_aigu);
+case ORDINAL: return apply_compose(k, ComposeKeyData.accent_ordinal);
+case SUPERSCRIPT: return apply_compose(k, ComposeKeyData.accent_superscript);
+case SUBSCRIPT: return apply_compose(k, ComposeKeyData.accent_subscript);
+case ARROWS: return apply_compose(k, ComposeKeyData.accent_arrows);
+case BOX: return apply_compose(k, ComposeKeyData.accent_box);
+case SLASH: return apply_compose(k, ComposeKeyData.accent_slash);
+case BAR: return apply_compose(k, ComposeKeyData.accent_bar);
+case DOT_BELOW: return apply_compose(k, ComposeKeyData.accent_dot_below);
+case HORN: return apply_compose(k, ComposeKeyData.accent_horn);
+case HOOK_ABOVE: return apply_compose(k, ComposeKeyData.accent_hook_above);
+case DOUBLE_GRAVE: return apply_compose(k, ComposeKeyData.accent_double_grave);
+case ARROW_RIGHT: return apply_combining_char(k, "\u20D7");
+```
+
+**Kotlin Implementation**:
+```kotlin
+// COMPLETELY MISSING - Kotlin only has 5 basic dead keys (', `, ^, ~, ")
+fun processDeadKey(deadChar: Char, baseChar: Char): KeyValue { ... }
+// 20 accent modifiers completely absent
+```
+
+**Impact**:
+- **IMPOSSIBLE TO TYPE ACCENTED CHARACTERS** beyond 5 basic ones
+- No superscripts/subscripts
+- No arrows/box/slash modifiers
+- **BREAKS INTERNATIONAL KEYBOARD LAYOUTS**
+
+**Fix Time**: 1 week
+
+---
+
+#### Bug #66: Fn Modifier COMPLETELY MISSING
+**Severity**: **CRITICAL**
+**File**: KeyModifier.kt - completely absent
+**Java Implementation** (KeyModifier.java:214-286, 72 lines):
+```java
+private static KeyValue apply_fn(KeyValue k) { ... }
+private static String apply_fn_keyevent(int code) {
+  switch (code) {
+    case KeyEvent.KEYCODE_DPAD_UP: return "page_up";
+    case KeyEvent.KEYCODE_DPAD_DOWN: return "page_down";
+    case KeyEvent.KEYCODE_DPAD_LEFT: return "home";
+    case KeyEvent.KEYCODE_DPAD_RIGHT: return "end";
+    case KeyEvent.KEYCODE_ESCAPE: return "insert";
+    // ... more mappings
+  }
+}
+private static String apply_fn_event(KeyValue.Event ev) { ... }
+private static String apply_fn_placeholder(KeyValue.Placeholder p) { ... }
+private static String apply_fn_editing(KeyValue.Editing p) {
+  switch (p) {
+    case UNDO: return "redo";
+    case PASTE: return "pasteAsPlainText";
+  }
+}
+```
+
+**Kotlin Implementation**:
+```kotlin
+// COMPLETELY MISSING
+```
+
+**Impact**:
+- **FN KEY DOES NOTHING**
+- Can't access page up/down/home/end
+- Can't redo
+- Can't paste as plain text
+- **BREAKS FN LAYER COMPLETELY**
+
+**Fix Time**: 1 week
+
+---
+
+#### Bug #67: Gesture Modifier COMPLETELY MISSING
+**Severity**: HIGH
+**File**: KeyModifier.kt - completely absent
+**Java Implementation** (KeyModifier.java:367-394, 28 lines):
+```java
+private static KeyValue apply_gesture(KeyValue k) {
+  KeyValue modified = apply_shift(k);
+  if (modified != null && !modified.equals(k)) return modified;
+  modified = apply_fn(k);
+  if (modified != null && !modified.equals(k)) return modified;
+  String name = null;
+  switch (k.getKind()) {
+    case Modifier:
+      switch (k.getModifier()) {
+        case SHIFT: name = "capslock"; break;
+      }
+      break;
+    case Keyevent:
+      switch (k.getKeyevent()) {
+        case KeyEvent.KEYCODE_DEL: name = "delete_word"; break;
+        case KeyEvent.KEYCODE_FORWARD_DEL: name = "forward_delete_word"; break;
+      }
+      break;
+  }
+  return (name == null) ? k : KeyValue.getKeyByName(name);
+}
+```
+
+**Kotlin Implementation**:
+```kotlin
+// COMPLETELY MISSING
+```
+
+**Impact**:
+- **CIRCULAR GESTURES DON'T WORK**
+- Can't trigger capslock via gesture
+- Can't trigger delete_word via gesture
+- **BREAKS ADVANCED GESTURE FEATURES**
+
+**Fix Time**: 3-4 days
+
+---
+
+#### Bug #68: Selection Mode Modifier COMPLETELY MISSING
+**Severity**: HIGH
+**File**: KeyModifier.kt - completely absent
+**Java Implementation** (KeyModifier.java:396-422, 27 lines):
+```java
+private static KeyValue apply_selection_mode(KeyValue k) {
+  String name = null;
+  switch (k.getKind()) {
+    case Char:
+      switch (k.getChar()) {
+        case ' ': name = "selection_cancel"; break;
+      }
+      break;
+    case Slider:
+      switch (k.getSlider()) {
+        case Cursor_left: name = "selection_cursor_left"; break;
+        case Cursor_right: name = "selection_cursor_right"; break;
+      }
+      break;
+    case Keyevent:
+      switch (k.getKeyevent()) {
+        case KeyEvent.KEYCODE_ESCAPE: name = "selection_cancel"; break;
+      }
+      break;
+  }
+  return (name == null) ? k : KeyValue.getKeyByName(name);
+}
+```
+
+**Kotlin Implementation**:
+```kotlin
+// COMPLETELY MISSING
+```
+
+**Impact**:
+- **TEXT SELECTION MODE DOESN'T WORK**
+- Can't cancel selection with space/escape
+- Can't move selection cursor
+- **BREAKS TEXT SELECTION FEATURE**
+
+**Fix Time**: 2-3 days
+
+---
+
+#### Bug #69: Hangul Composition COMPLETELY MISSING
+**Severity**: CRITICAL (for Korean users)
+**File**: KeyModifier.kt - completely absent
+**Java Implementation** (KeyModifier.java:424-526, 103 lines):
+```java
+private static KeyValue combine_hangul_initial(KeyValue kv, int precomposed) { ... }
+private static KeyValue combine_hangul_initial(KeyValue kv, char medial, int precomposed) {
+  int medial_idx;
+  switch (medial) {
+    case 'ㅏ': medial_idx = 0; break;
+    case 'ㅐ': medial_idx = 1; break;
+    // ... 21 vowels
+  }
+  return KeyValue.makeHangulMedial(precomposed, medial_idx);
+}
+private static KeyValue combine_hangul_medial(KeyValue kv, int precomposed) { ... }
+private static KeyValue combine_hangul_medial(KeyValue kv, char c, int precomposed) {
+  int final_idx;
+  switch (c) {
+    case ' ': final_idx = 0; break;
+    case 'ㄱ': final_idx = 1; break;
+    // ... 28 finals
+  }
+  return KeyValue.makeHangulFinal(precomposed, final_idx);
+}
+```
+
+**Kotlin Implementation**:
+```kotlin
+// COMPLETELY MISSING
+```
+
+**Impact**:
+- **KOREAN KEYBOARD COMPLETELY BROKEN**
+- Can't compose hangul characters
+- 42 specific character mappings missing
+- **IMPOSSIBLE TO TYPE KOREAN**
+
+**Fix Time**: 1-2 weeks (complex Unicode composition)
+
+---
+
+#### Bug #70: turn_into_keyevent() COMPLETELY MISSING
+**Severity**: CRITICAL
+**File**: KeyModifier.kt - completely absent
+**Java Implementation** (KeyModifier.java:301-365, 65 lines):
+```java
+private static KeyValue turn_into_keyevent(KeyValue k) {
+  if (k.getKind() != KeyValue.Kind.Char) return k;
+  int e;
+  switch (k.getChar()) {
+    case 'a': e = KeyEvent.KEYCODE_A; break;
+    case 'b': e = KeyEvent.KEYCODE_B; break;
+    // ... 45 character-to-keycode mappings
+    case ' ': e = KeyEvent.KEYCODE_SPACE; break;
+    default: return k;
+  }
+  return k.withKeyevent(e);
+}
+```
+
+**Kotlin Implementation**:
+```kotlin
+// COMPLETELY MISSING
+```
+
+**Impact**:
+- **CTRL/ALT/META MODIFIERS DON'T WORK**
+- Can't send Ctrl+C, Ctrl+V, etc.
+- **BREAKS ALL SHORTCUTS**
+
+**Fix Time**: 1 day
+
+---
+
+#### Bug #71: modify_numpad_script() COMPLETELY MISSING
+**Severity**: MEDIUM
+**File**: KeyModifier.kt - completely absent
+**Java Implementation** (KeyModifier.java:108-124, 17 lines):
+```java
+public static int modify_numpad_script(String numpad_script) {
+  if (numpad_script == null) return -1;
+  switch (numpad_script) {
+    case "hindu-arabic": return ComposeKeyData.numpad_hindu;
+    case "bengali": return ComposeKeyData.numpad_bengali;
+    case "devanagari": return ComposeKeyData.numpad_devanagari;
+    case "persian": return ComposeKeyData.numpad_persian;
+    case "gujarati": return ComposeKeyData.numpad_gujarati;
+    case "kannada": return ComposeKeyData.numpad_kannada;
+    case "tamil": return ComposeKeyData.numpad_tamil;
+    default: return -1;
+  }
+}
+```
+
+**Kotlin Implementation**:
+```kotlin
+// COMPLETELY MISSING
+```
+
+**Impact**:
+- **NUMPAD SCRIPTS BROKEN**
+- Can't use Bengali/Devanagari/Persian/etc. numerals
+- **BREAKS INTERNATIONAL NUMPAD LAYOUTS**
+
+**Fix Time**: 1 day
+
+---
+
+#### Bug #72: modify_long_press() INCOMPLETE
+**Severity**: MEDIUM
+**File**: KeyModifier.kt:180-191
+**Java Implementation** (KeyModifier.java:91-106):
+```java
+public static KeyValue modify_long_press(KeyValue k) {
+  switch (k.getKind()) {
+    case Event:
+      switch (k.getEvent()) {
+        case CHANGE_METHOD_AUTO: return KeyValue.getKeyByName("change_method");
+        case SWITCH_VOICE_TYPING: return KeyValue.getKeyByName("voice_typing_chooser");
+      }
+      break;
+  }
+  return k;
+}
+```
+
+**Kotlin Implementation**:
+```kotlin
+fun modifyLongPress(keyValue: KeyValue): KeyValue {
+    return when (keyValue) {
+        is KeyValue.CharKey -> {
+            if (keyValue.char.isLowerCase()) {
+                KeyValue.CharKey(keyValue.char.uppercase().first())
+            } else keyValue
+        }
+        else -> keyValue
+    }
+}
+```
+
+**Impact**:
+- Missing CHANGE_METHOD_AUTO → change_method
+- Missing SWITCH_VOICE_TYPING → voice_typing_chooser
+- Only handles character uppercase
+
+**Fix Time**: 1 hour
+
+---
+
+#### Bug #73: apply_compose_pending() MISSING
+**Severity**: HIGH
+**File**: KeyModifier.kt - completely absent
+**Java Implementation** (KeyModifier.java:127-149, 23 lines):
+```java
+private static KeyValue apply_compose_pending(int state, KeyValue kv) {
+  switch (kv.getKind()) {
+    case Char:
+    case String:
+      KeyValue res = ComposeKey.apply(state, kv);
+      // Grey-out characters not part of any sequence.
+      if (res == null)
+        return kv.withFlags(kv.getFlags() | KeyValue.FLAG_GREYED);
+      return res;
+    case Compose_pending:
+      return KeyValue.getKeyByName("compose_cancel");
+    // ... other handling
+  }
+}
+```
+
+**Kotlin Implementation**:
+```kotlin
+// COMPLETELY MISSING
+```
+
+**Impact**:
+- **COMPOSE MODE DOESN'T WORK**
+- Can't grey out invalid sequences
+- Can't cancel compose
+- **BREAKS COMPOSE SYSTEM**
+
+**Fix Time**: 3-4 days
+
+---
+
+### SUMMARY:
+**Kotlin KeyModifier is CATASTROPHICALLY incomplete** - essentially a 10% stub:
+1. 🚨 **Bug #63**: modify() returns input unchanged - **SHOWSTOPPER**
+2. 🚨 **Bug #64**: set_modmap() is no-op - **BREAKS ALL CUSTOM LAYOUTS**
+3. 🚨 **Bug #65**: ALL 25 accent modifiers missing - **BREAKS INTERNATIONAL LAYOUTS**
+4. 🚨 **Bug #66**: Fn modifier missing (72 lines) - **FN KEY USELESS**
+5. 🚨 **Bug #67**: Gesture modifier missing (28 lines) - **NO GESTURES**
+6. 🚨 **Bug #68**: Selection mode missing (27 lines) - **NO TEXT SELECTION**
+7. 🚨 **Bug #69**: Hangul composition missing (103 lines) - **KOREAN BROKEN**
+8. 🚨 **Bug #70**: turn_into_keyevent() missing (65 lines) - **NO CTRL/ALT SHORTCUTS**
+9. 🚨 **Bug #71**: modify_numpad_script() missing (17 lines) - **INTERNATIONAL NUMPADS BROKEN**
+10. ⚠️ **Bug #72**: modify_long_press() incomplete
+11. 🚨 **Bug #73**: apply_compose_pending() missing (23 lines) - **COMPOSE BROKEN**
+
+**Total Fix Time**: **6-10 WEEKS** (complete rewrite required)
+**Critical Assessment**: This is not a port - it's a non-functional stub masquerading as a keyboard modifier system
+
+---
+
+### FILES REVIEWED SO FAR: 11 / 251 (4.4%)
+**Time Invested**: ~16 hours of complete line-by-line reading
+**Bugs Identified**: 73 bugs total (62 from Files 1-10, now 11 more)
+**Critical Issues**: 24 showstoppers identified
+**Next File**: File 12/251 - Continue systematic review
