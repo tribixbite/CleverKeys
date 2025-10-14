@@ -1088,38 +1088,39 @@ class SwipeTrajectoryProcessor {
     /**
      * Detect nearest key using accurate QWERTY grid mapping
      */
+    /**
+     * Detect nearest key using grid-based approach with row offsets
+     * MATCHES CLI test logic (TestOnnxPrediction.kt:52-70) that achieves 50% accuracy
+     * FIX #39: Use staggered QWERTY layout (works with any keyboard dimensions)
+     */
     private fun detectKeysFromQwertyGrid(point: PointF): Int {
-        val normalizedX = point.x / keyboardWidth
-        val normalizedY = point.y / keyboardHeight
+        // QWERTY layout (same as CLI test)
+        val row1 = "qwertyuiop"
+        val row2 = "asdfghjkl"
+        val row3 = "zxcvbnm"
 
-        // QWERTY layout mapping with proper key positions
-        val qwertyLayout = mapOf(
-            'q' to PointF(0.05f, 0.17f), 'w' to PointF(0.15f, 0.17f), 'e' to PointF(0.25f, 0.17f),
-            'r' to PointF(0.35f, 0.17f), 't' to PointF(0.45f, 0.17f), 'y' to PointF(0.55f, 0.17f),
-            'u' to PointF(0.65f, 0.17f), 'i' to PointF(0.75f, 0.17f), 'o' to PointF(0.85f, 0.17f),
-            'p' to PointF(0.95f, 0.17f),
-            'a' to PointF(0.10f, 0.50f), 's' to PointF(0.20f, 0.50f), 'd' to PointF(0.30f, 0.50f),
-            'f' to PointF(0.40f, 0.50f), 'g' to PointF(0.50f, 0.50f), 'h' to PointF(0.60f, 0.50f),
-            'j' to PointF(0.70f, 0.50f), 'k' to PointF(0.80f, 0.50f), 'l' to PointF(0.90f, 0.50f),
-            'z' to PointF(0.20f, 0.83f), 'x' to PointF(0.30f, 0.83f), 'c' to PointF(0.40f, 0.83f),
-            'v' to PointF(0.50f, 0.83f), 'b' to PointF(0.60f, 0.83f), 'n' to PointF(0.70f, 0.83f),
-            'm' to PointF(0.80f, 0.83f)
-        )
+        val keyWidth = keyboardWidth / 10f
+        val keyHeight = keyboardHeight / 4f
 
-        // Calculate Euclidean distance to all keys
-        val distances = qwertyLayout.map { (char, keyPos) ->
-            val dx = normalizedX - keyPos.x
-            val dy = normalizedY - keyPos.y
-            val distance = dx * dx + dy * dy
-            Pair(char, distance)
+        // Determine row (0-2)
+        val row = (point.y / keyHeight).toInt().coerceIn(0, 2)
+
+        // Determine column with row-specific offsets
+        val col = when (row) {
+            0 -> (point.x / keyWidth).toInt().coerceIn(0, 9)
+            1 -> ((point.x - keyWidth/2) / keyWidth).toInt().coerceIn(0, 8)
+            else -> ((point.x - keyWidth) / keyWidth).toInt().coerceIn(0, 6)
         }
 
-        // Find closest key
-        val closestKey = distances.minByOrNull { it.second }
+        // Get character from layout
+        val char = when (row) {
+            0 -> row1.getOrNull(col)
+            1 -> row2.getOrNull(col)
+            else -> row3.getOrNull(col)
+        } ?: return 0 // PAD_IDX
 
-        // Convert character to token index
-        val char = closestKey?.first ?: 'a'
-        return if (char in 'a'..'z') (char - 'a') + 4 else 0 // a-z mapping to tokens 4-29
+        // Convert to token index (a=4, z=29)
+        return if (char in 'a'..'z') (char - 'a') + 4 else 0
     }
     
     /**

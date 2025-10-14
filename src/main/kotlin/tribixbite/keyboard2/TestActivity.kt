@@ -41,7 +41,6 @@ class TestActivity : Activity() {
         Config.initGlobalConfig(prefs, resources, null, false)
 
         val engine = NeuralSwipeTypingEngine(this, Config.globalConfig())
-        engine.setKeyboardDimensions(360, 280) // Training dimensions
 
         val initSuccess = engine.initialize()
         if (!initSuccess) {
@@ -51,12 +50,12 @@ class TestActivity : Activity() {
 
         Log.i("TEST", "Engine initialized")
 
-        // Set real QWERTY key positions for 360×280 layout (Fix #38)
-        // MUST be called AFTER initialize() so predictor exists
-        val keyPositions = generateQwertyKeyPositions()
-        Log.i("TEST", "Generated ${keyPositions.size} key positions")
-        Log.i("TEST", "Sample positions: w=${keyPositions['w']}, h=${keyPositions['h']}, a=${keyPositions['a']}")
-        engine.setRealKeyPositions(keyPositions)
+        // Set dimensions AFTER initialize() so predictor exists (Fix #40)
+        engine.setKeyboardDimensions(360, 280) // Training dimensions
+        Log.i("TEST", "Set keyboard dimensions: 360x280")
+
+        // FIX #39: DON'T set real key positions - use grid detection like CLI test
+        // Grid detection now matches CLI logic and should work correctly
 
         // Load test data
         val tests = loadTests()
@@ -120,32 +119,38 @@ class TestActivity : Activity() {
 
     /**
      * Generate QWERTY key center positions for 360×280 layout
-     * Matches training data keyboard layout
+     * EXACTLY matches CLI test logic (TestOnnxPrediction.kt line 52-70)
      */
     private fun generateQwertyKeyPositions(): Map<Char, PointF> {
         val positions = mutableMapOf<Char, PointF>()
 
-        // Standard QWERTY layout
+        // QWERTY layout (same as CLI test)
         val row1 = "qwertyuiop"
         val row2 = "asdfghjkl"
         val row3 = "zxcvbnm"
 
-        val keyWidth = 36f  // 360 / 10
-        val rowHeight = 70f  // 280 / 4
+        val keyWidth = 360.0f / 10
+        val keyHeight = 280.0f / 4
 
-        // Row 1: centered, starts at y=35 (middle of first row)
-        row1.forEachIndexed { i, c ->
-            positions[c] = PointF(keyWidth * i + keyWidth/2, rowHeight/2)
+        // Row 0: no offset (CLI logic: col = x / keyWidth)
+        row1.forEachIndexed { col, c ->
+            val x = col * keyWidth + keyWidth/2
+            val y = keyHeight/2
+            positions[c] = PointF(x, y)
         }
 
-        // Row 2: offset by half key, starts at y=105 (middle of second row)
-        row2.forEachIndexed { i, c ->
-            positions[c] = PointF(keyWidth/2 + keyWidth * i + keyWidth/2, rowHeight + rowHeight/2)
+        // Row 1: offset by keyWidth/2 (CLI logic: col = (x - keyWidth/2) / keyWidth)
+        row2.forEachIndexed { col, c ->
+            val x = keyWidth/2 + col * keyWidth + keyWidth/2
+            val y = keyHeight + keyHeight/2
+            positions[c] = PointF(x, y)
         }
 
-        // Row 3: offset by 1 key, starts at y=175 (middle of third row)
-        row3.forEachIndexed { i, c ->
-            positions[c] = PointF(keyWidth + keyWidth * i + keyWidth/2, rowHeight * 2 + rowHeight/2)
+        // Row 2: offset by keyWidth (CLI logic: col = (x - keyWidth) / keyWidth)
+        row3.forEachIndexed { col, c ->
+            val x = keyWidth + col * keyWidth + keyWidth/2
+            val y = 2 * keyHeight + keyHeight/2
+            positions[c] = PointF(x, y)
         }
 
         return positions
