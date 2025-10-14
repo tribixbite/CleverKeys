@@ -548,15 +548,25 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         byteBuffer.order(java.nio.ByteOrder.nativeOrder())
         val buffer = byteBuffer.asLongBuffer()
 
+        // FIX #41: Verify nearest_keys list size matches expected length
+        if (features.nearestKeys.size != MAX_SEQUENCE_LENGTH) {
+            logD("⚠️ WARNING: nearest_keys size (${features.nearestKeys.size}) != MAX_SEQUENCE_LENGTH ($MAX_SEQUENCE_LENGTH)")
+        }
+
         for (i in 0 until MAX_SEQUENCE_LENGTH) {
             if (i < features.nearestKeys.size) {
                 val keyIndex = features.nearestKeys[i]
                 buffer.put(keyIndex.toLong())
             } else {
-                // Padding
+                // Should never reach here if Fix #36 is working
+                logD("⚠️ BUG: Padding nearest_keys with PAD at index $i")
                 buffer.put(PAD_IDX.toLong())
             }
         }
+
+        // Log last 10 keys to verify repeat-last padding
+        val last10 = features.nearestKeys.takeLast(10)
+        logD("   Last 10 nearest keys: $last10")
 
         buffer.rewind()
         return OnnxTensor.createTensor(ortEnvironment, buffer, longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong()))
