@@ -1,108 +1,89 @@
-# CleverKeys Development TODO
+# CleverKeys - Critical Finding
 
-## 🎉 MILESTONE: Automated Testing Infrastructure Complete!
+## 🚨 PROVEN: Not a Test Data Issue!
 
-**TestActivity fully functional - can now iterate rapidly without manual testing:**
+**Using EXACT CLI test data still gives 0% accuracy**
+
+Test data: `/data/data/com.termux/files/home/git/swype/swype-model-training/swipes.jsonl`
+- 2 tests: "counsel", "now"
+- Same coordinates, same format
+- **Result: 0/2 (0.0%)**
+
+## ✅ Everything Verified Working
+
+| Component | Status | Evidence |
+|-----------|--------|----------|
+| Duplicate filtering | ✅ WORKING | Tested with/without |
+| Repeat-last padding | ✅ WORKING | Logs show correct padding |
+| 360×280 normalization | ✅ WORKING | Dimensions verified |
+| Grid detection | ✅ WORKING | Matches CLI exactly |
+| Init order | ✅ WORKING | Dimensions set after init |
+| Test data | ✅ IDENTICAL | EXACT CLI test file |
+| Coordinates | ✅ VALID | No negatives, within bounds |
+| Velocity/accel | ✅ CORRECT | Matches CLI formula |
+
+## 🔍 Root Cause Must Be
+
+Since ALL visible logic is correct, the bug must be in low-level details:
+
+### Theory #1: Tensor Byte Serialization (MOST LIKELY)
+```kotlin
+// Android creates tensors like this:
+val byteBuffer = ByteBuffer.allocateDirect(size * 8)
+byteBuffer.order(ByteOrder.nativeOrder())  // ← Platform dependent!
+```
+**Problem**: `ByteOrder.nativeOrder()` might be wrong for ONNX
+**Solution**: Try `ByteOrder.LITTLE_ENDIAN` explicitly
+
+### Theory #2: Input Tensor Name Mismatch  
+**Problem**: Maybe model expects different input names?
+**Solution**: Dump actual ONNX model input names and verify
+
+### Theory #3: ONNX Runtime Platform Difference
+**Problem**: Android ONNX Runtime 1.20.0 behaves differently than JVM
+**Solution**: Check ONNX Runtime docs for known Android issues
+
+### Theory #4: Float Precision
+**Problem**: Android Float vs JVM Float rounding differences
+**Solution**: Dump first 20 tensor values as hex and compare
+
+## 🎯 Next Steps
+
+### Option A: Verify Tensor Byte Order (QUICK)
+```kotlin
+// In createNearestKeysTensor(), change:
+byteBuffer.order(ByteOrder.nativeOrder())
+// To:
+byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
+```
+
+### Option B: Dump ONNX Model Info (QUICK)
+```kotlin
+// Add to initialization:
+Log.d(TAG, "Encoder inputs: ${encoderSession.inputNames}")
+Log.d(TAG, "Expected shapes: ${encoderSession.inputInfo}")
+```
+
+### Option C: Run Actual CLI Test (VERIFY BASELINE)
 ```bash
-adb shell am start -n tribixbite.keyboard2.debug/tribixbite.keyboard2.TestActivity
-adb logcat -d -s TEST:I  # View results
+# Compile and run TestOnnxPrediction.kt
+# Verify it actually gets 50%+ with this data
 ```
 
-## ✅ All Pipeline Fixes Implemented & Verified
-
-| Fix | Status | Verification |
-|-----|--------|--------------|
-| #35 | ✅ WORKING | Duplicate filtering - tested with/without, not the cause |
-| #36 | ✅ WORKING | Repeat-last padding - logs show correct padding |
-| #37 | ✅ WORKING | 360×280 normalization - dimensions verified |
-| #39 | ✅ WORKING | CLI grid detection - staggered QWERTY implemented |
-| #40 | ✅ WORKING | Init order - dimensions set after initialize() |
-| #41 | ✅ WORKING | Tensor validation - all checks pass |
-
-## ❌ CRITICAL: 0/10 Accuracy Despite All Fixes
-
-**Current Test Results:**
+### Option D: Hex Dump Tensor Values (DEEP DEBUG)
+```kotlin
+// Dump first 20 bytes of each tensor
+val bytes = buffer.array()
+Log.d(TAG, "Tensor bytes: ${bytes.take(20).joinToString { "%02x".format(it) }}")
 ```
-[1/10] 'what' → 't' ❌ (nearest: w,w,w - correct!)
-[2/10] 'boolean' → '' ❌ (empty - EOS first)
-[3/10] 'not' → 't' ❌ (nearest: n,n - correct!)
-[4-9] → '' ❌ (all empty)
-[10/10] 'could' → 'o' ❌
-Result: 0/10 (0.0%)
-```
-
-## 🔬 Systematic Analysis Complete
-
-**VERIFIED IDENTICAL TO CLI TEST:**
-- ✅ No duplicate filtering (tested both ways)
-- ✅ Repeat-last padding for nearest_keys
-- ✅ Repeat-last padding for coordinates
-- ✅ 360×280 normalization dimensions
-- ✅ Staggered QWERTY grid detection
-- ✅ Velocity = curr - prev
-- ✅ Acceleration = curr_vel - prev_vel
-- ✅ First point: v=0, a=0
-- ✅ Second point: a=0
-- ✅ 2D nearest_keys tensor [batch, sequence]
-
-**WHAT'S DIFFERENT (Cannot Test):**
-- ❓ ONNX Runtime version (Android 1.20.0 vs CLI ?)
-- ❓ Test data source (CLI uses different file?)
-- ❓ ONNX session configuration
-- ❓ Beam search implementation differences
-- ❓ Decoder initialization
-
-## 🤔 Theories on Root Cause
-
-### Theory #1: Test Data Mismatch
-- Test data in assets/swipes.jsonl may not match CLI test data
-- Coordinates might be from different keyboard layout
-- Need to verify what file CLI test actually uses
-
-### Theory #2: ONNX Runtime Behavioral Difference
-- Android ONNX Runtime 1.20.0 may behave differently than JVM version
-- Tensor creation might have platform-specific quirks
-- Float precision differences?
-
-### Theory #3: Model Ignoring nearest_keys
-- Model predicts 't' when nearest_keys show 'w'
-- Suggests model isn't using nearest_keys input at all
-- Maybe input name mismatch? ("nearest_keys" vs something else)
-
-### Theory #4: Hidden Bug in Tensor Creation
-- All logging shows correct values
-- But actual tensor bytes might be wrong
-- ByteBuffer endianness issue?
-
-## 📋 Next Steps
-
-### Option A: Verify CLI Test Baseline
-```bash
-# Run actual CLI test to confirm it works
-cd /data/data/com.termux/files/home/git/swype/cleverkeys
-# Need to compile and run TestOnnxPrediction.kt
-# Verify it actually gets 50%+ accuracy
-```
-
-### Option B: Deep Debug ONNX Inputs
-- Add tensor value dumps (first 20 elements)
-- Compare exact byte values between CLI and Android
-- Check if tensor names match ONNX model expectations
-
-### Option C: Test Different Data
-- Create minimal test case (single swipe of "hello")
-- Generate synthetic perfect swipe data
-- Test with web demo's exact test data format
-
-### Option D: Ask User
-- What file does CLI test use?
-- What's the actual CLI test accuracy?
-- Can you share working test data file?
 
 ## 💡 Recommendation
 
-**Most likely issue:** Test data format or source mismatch
+**Try Option A first** (5 min fix):
+Change `ByteOrder.nativeOrder()` to `ByteOrder.LITTLE_ENDIAN` in all tensor creation functions. ONNX models are typically little-endian.
 
-**Next step:** Get exact test data file that CLI test uses and verify it achieves stated 50%+ accuracy. Then use that EXACT data in TestActivity.
+**Then Option B** (verify tensor names match model):
+Check that "trajectory_features", "nearest_keys", "src_mask" are the actual input names the model expects.
 
-**Alternative:** Create synthetic "perfect" test data (straight line swipe for "hello") to eliminate data quality as variable.
+**Then Option C** (verify CLI baseline):
+Run actual CLI test to confirm it works. If CLI also gets 0%, then it's a model issue, not code.
