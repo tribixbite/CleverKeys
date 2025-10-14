@@ -251,9 +251,9 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                     break  // All beams finished
                 }
 
-                // CRITICAL OPTIMIZATION: Process all active beams in single batch
+                // TEMPORARY FIX: Process beams ONE AT A TIME (like CLI) to isolate batching bug
                 // Returns beamWidth globally-selected beams (already sorted and pruned)
-                val newBeams = processBatchedBeams(activeBeams, memory, srcMaskTensor, decoderSession)
+                val newBeams = processBeamsNonBatched(activeBeams, memory, srcMaskTensor, decoderSession)
 
                 // Separate new finished beams from still-active ones
                 val newFinished = newBeams.filter { it.finished }
@@ -368,6 +368,121 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 newBeamCandidates
             }
         }
+    }
+
+    /**
+     * TEMPORARY: Process beams ONE AT A TIME (like CLI) to test if batching is the issue
+     * This matches the CLI test's beam search logic exactly
+     */
+    private suspend fun processBeamsNonBatched(
+        activeBeams: List<BeamSearchState>,
+        memory: OnnxTensor,
+        srcMaskTensor: OnnxTensor,
+        decoderSession: OrtSession
+    ): List<BeamSearchState> = withContext(Dispatchers.Default) {
+
+        // Collect ALL possible next hypotheses with their GLOBAL scores
+        val allHypotheses = mutableListOf<Triple<Int, Int, Float>>()
+
+        activeBeams.forEachIndexed { beamIndex, beam ->
+            try {
+                // Create tensors for THIS BEAM ONLY (batch size = 1, like CLI)
+                val seqLength = DECODER_SEQ_LENGTH
+
+                // Target tokens: pad to DECODER_SEQ_LENGTH
+                val tokensArray = LongArray(seqLength) { PAD_IDX.toLong() }
+                for (i in beam.tokens.indices) {
+                    if (i < seqLength) {
+                        tokensArray[i] = beam.tokens[i]
+                    }
+                }
+                val tokensTensor = OnnxTensor.createTensor(ortEnvironment, Array(1) { tokensArray })
+
+                // Target mask: false = valid, true = padded
+                val maskArray = BooleanArray(seqLength) { true }
+                for (i in beam.tokens.indices) {
+                    if (i < seqLength) {
+                        maskArray[i] = false
+                    }
+                }
+                val maskTensor = OnnxTensor.createTensor(ortEnvironment, Array(1) { maskArray })
+
+                // Src mask: all zeros (all valid) - matches CLI
+                val memoryShape = memory.info.shape
+                val srcMaskArray = BooleanArray(memoryShape[1].toInt()) { false }
+                val decoderSrcMask = OnnxTensor.createTensor(ortEnvironment, Array(1) { srcMaskArray })
+
+                // Run decoder with batch size = 1
+                val decoderInputs = mapOf(
+                    "memory" to memory,
+                    "target_tokens" to tokensTensor,
+                    "src_mask" to decoderSrcMask,
+                    "target_mask" to maskTensor
+                )
+
+                val result = decoderSession.run(decoderInputs)
+                val logitsTensor = result.get(0) as OnnxTensor
+                val logits = logitsTensor.value as Array<Array<FloatArray>>
+
+                // Get logits for last valid position
+                val currentPos = beam.tokens.size - 1
+                if (currentPos >= 0 && currentPos < logits[0].size) {
+                    val vocabLogits = logits[0][currentPos]
+                    val logProbs = applyLogSoftmax(vocabLogits)
+
+                    // DEBUG: Log top 5 tokens for first beam at first step
+                    if (beamIndex == 0 && currentPos == 0) {
+                        val top5 = logProbs.withIndex().sortedByDescending { it.value }.take(5)
+                        val top5Str = top5.joinToString(", ") { (idx, prob) ->
+                            val char = tokenizer.tokenToChar(idx)
+                            "$char($idx):${String.format("%.3f", prob)}"
+                        }
+                        logDebug("🔍 Step ${currentPos+1}, Beam 0 top 5 tokens: $top5Str")
+                    }
+
+                    // Add ALL tokens to hypothesis pool for global selection
+                    logProbs.forEachIndexed { tokenId, logProb ->
+                        val newScore = beam.score + logProb
+                        allHypotheses.add(Triple(beamIndex, tokenId, newScore))
+                    }
+                }
+
+                // Cleanup
+                result.close()
+                tokensTensor.close()
+                maskTensor.close()
+                decoderSrcMask.close()
+
+            } catch (e: Exception) {
+                logE("❌ Non-batched beam processing failed for beam $beamIndex", e)
+            }
+        }
+
+        // GLOBAL top-k selection: Sort ALL possibilities and take top beamWidth
+        // CRITICAL: logProbs are NEGATIVE, beam.score + logProb accumulates negative values
+        // HIGHER (less negative) scores are BETTER → sort DESCENDING
+        val topHypotheses = allHypotheses.sortedByDescending { it.third }.take(beamWidth)
+
+        // DEBUG: Log selected tokens for first step
+        if (activeBeams.firstOrNull()?.tokens?.size == 1) {
+            val selectedTokens = topHypotheses.map { (_, tokenId, score) ->
+                val char = tokenizer.tokenToChar(tokenId)
+                "$char($tokenId):${String.format("%.3f", score)}"
+            }
+            logDebug("✅ Selected top $beamWidth tokens: ${selectedTokens.joinToString(", ")}")
+        }
+
+        // Construct new beams from globally-selected winners
+        val newBeams = mutableListOf<BeamSearchState>()
+        topHypotheses.forEach { (parentIndex, tokenId, score) ->
+            val parentBeam = activeBeams[parentIndex]
+            val newTokens = (parentBeam.tokens + tokenId.toLong()).toMutableList()
+            val isFinished = (tokenId == EOS_IDX || tokenId == PAD_IDX || newTokens.size >= maxLength)
+            // Use primary constructor: BeamSearchState(tokens, score, finished)
+            newBeams.add(BeamSearchState(newTokens, score, isFinished))
+        }
+
+        newBeams
     }
 
     /**
