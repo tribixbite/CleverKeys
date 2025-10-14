@@ -893,8 +893,16 @@ class SwipeTrajectoryProcessor {
 
         // 4. Pad or truncate to MAX_TRAJECTORY_POINTS
         val finalCoords = padOrTruncate(normalizedCoords, MAX_TRAJECTORY_POINTS)
-        val paddingKey = 0 // PAD_IDX=0 (single key, not 3)
-        val finalNearestKeys = padOrTruncate(nearestKeys, MAX_TRAJECTORY_POINTS, paddingKey)
+
+        // FIX #36: Pad nearest_keys by repeating last key (matches CLI test & training data)
+        // Model was trained expecting last key to repeat, NOT PAD tokens
+        val finalNearestKeys = if (nearestKeys.size >= MAX_TRAJECTORY_POINTS) {
+            nearestKeys.take(MAX_TRAJECTORY_POINTS)
+        } else {
+            val lastKey = nearestKeys.lastOrNull() ?: 0 // Default to PAD_IDX if empty
+            val padding = List(MAX_TRAJECTORY_POINTS - nearestKeys.size) { lastKey }
+            nearestKeys + padding
+        }
 
         // 5. Calculate velocities and accelerations on normalized coords (simple deltas)
         // This logic correctly matches the working web demo
