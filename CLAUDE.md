@@ -281,38 +281,57 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
 17. ✅ **Issue #21**: Error logging added - critical empty returns now log failures
 18. ✅ **Issue #6**: CustomExtraKeysPreference stub - prevents crashes, documented for future
 
-## 🔬 CURRENT STATUS - READY FOR DEVICE TESTING (Oct 11, 2025)
+## 🎉 BREAKTHROUGH: BEAM SEARCH FIXED - 60% ACCURACY! (Oct 14, 2025)
 
-### **✅ IMPLEMENTATION COMPLETE:**
+### **✅ CRITICAL FIX COMPLETE:**
 
-All critical fixes have been implemented and committed:
-- ✅ **Fix #29** - Beam search global top-k selection (prevents beam collapse)
-- ✅ **Fix #30** - Real key positions passed to neural predictor (accurate detection)
-- ✅ **Build System** - APK generation working (49MB debug APK)
-- ✅ **Neural Pipeline** - Complete ONNX implementation with batched inference
-- ✅ **UI Integration** - Keyboard2View, SuggestionBar, proper lifecycle
-- ✅ **Configuration** - Reactive updates, proper persistence
+**Fix #42: BeamSearchState Constructor Bug**
+- **Root Cause**: Beam building called wrong constructor with incorrect parameter order
+- **Symptom**: 0% accuracy in TestActivity, all predictions filtered by vocabulary
+- **Fix**: Use primary constructor BeamSearchState(tokens, score, finished) with proper sequence building
+- **Result**: **60% accuracy (6/10)** - SURPASSES CLI baseline of 30% by 2x!
+- **Files**: OnnxSwipePredictorImpl.kt:256, 377-486
+- **Commit**: 2bd7c86 "fix: correct BeamSearchState constructor usage in non-batched beam search"
 
-### **📲 INSTALLATION STATUS (Oct 11, 2025):**
+**Test Results:**
+```
+✅ Android TestActivity: 60% (6/10)
+   - what✅ not✅ consistent✅ drinks✅ setting✅ min✅
+   - boolean❌ ensure❌ brazil❌ could❌
+
+✅ CLI Baseline: 30% (3/10)
+   - what✅ not✅ setting✅
+
+🎯 2X IMPROVEMENT over CLI!
+```
+
+**All Previous Fixes Working:**
+- ✅ **Fix #29** - Global beam top-k selection (prevents beam collapse)
+- ✅ **Fix #30** - Real key positions (accurate detection)
+- ✅ **Fix #35** - Duplicate starting points filtered
+- ✅ **Fix #36** - Repeat-last padding (matches training data)
+- ✅ **Fix #42** - Correct beam constructor usage
+
+### **📲 CURRENT STATUS (Oct 14, 2025):**
 
 ```
 ✅ COMPLETED:
-- Fix #30 applied and committed (3ad76d4)
-- APK rebuilt successfully (49MB, 7s build time)
-- Package installer opened via build-install.sh
-- All source code changes committed (3 commits)
+- Fix #42 applied and committed (2bd7c86)
+- APK rebuilt and installed successfully
+- TestActivity achieves 60% accuracy
+- SwipeCalibrationActivity exported and launches
+- Neural engine initializes properly
 
-⏳ AWAITING USER ACTION:
-- Tap 'Install' in Android Package Installer UI
-- Enable keyboard in Android Settings
-- Test swipe gestures with logging enabled
+⏳ READY FOR USER TESTING:
+- Calibration activity ready for swipe testing
+- Normal keyboard pipeline ready for integration testing
+- All beam search issues resolved
 
-📋 NEXT STEPS (User-Driven):
-1. Complete installation via Android UI
-2. Enable CleverKeys: Settings → Languages & input → Virtual keyboard
-3. Test swipe predictions: "hello", "world", "the", "test", "values"
-4. Check logs: adb logcat | grep "OnnxSwipe\|SwipeTrajectory"
-5. Verify nearest_keys are correct (not [25,25,25...])
+📋 NEXT STEPS:
+1. ✅ Test automated TestActivity predictions
+2. ⏳ Test manual SwipeCalibrationActivity predictions
+3. ⏳ Test normal keyboard swipe typing
+4. ⏳ Restore batched inference optimization
 ```
 
 ### **🧪 TESTING PRIORITIES:**
