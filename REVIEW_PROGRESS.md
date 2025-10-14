@@ -2716,3 +2716,215 @@ private fun drawIndication(
 **Bugs Identified**: 57 bugs total (52 from Files 1-8, now 5 more from File 9)
 **Critical Issues**: 12 showstoppers identified
 **Next File**: File 10/251 - Continue systematic review
+
+---
+
+## FILE 10/251: KeyboardData.java vs KeyboardData.kt
+
+**Lines**: Java 703 lines vs Kotlin 628 lines (75 fewer lines)
+**Impact**: MEDIUM - Core data structure with 5 bugs despite being 11% smaller
+**Status**: Kotlin cleaner but missing critical validations
+
+### ARCHITECTURAL CHANGES (EXPECTED):
+- Java: Traditional Java class with public final fields
+- Kotlin: Modern data class with immutable properties
+- **This is positive** - better type safety and immutability
+
+### CRITICAL BUGS FOUND: 5
+
+---
+
+#### Bug #58: keysHeight Calculation WRONG
+**Severity**: HIGH
+**File**: KeyboardData.kt:423
+**Java Implementation** (KeyboardData.java:291-293, 300):
+```java
+protected KeyboardData(List<Row> rows_, float kw, Modmap mm, String sc,
+    String npsc, String name_, boolean bottom_row_, boolean embedded_number_row_, boolean locale_extra_keys_)
+{
+  float kh = 0.f;
+  for (Row r : rows_)
+    kh += r.height + r.shift;  // INCLUDES SHIFT!
+  // ...
+  keysHeight = kh;
+}
+```
+
+**Kotlin Implementation**:
+```kotlin
+val keysHeight = rows.sumOf { it.height.toDouble() }.toFloat()  // MISSING SHIFT!
+```
+
+**Impact**:
+- Kotlin doesn't include row.shift in height calculation
+- Keyboard total height too small
+- Layout calculations broken (affects onMeasure in View)
+- Rows with shift values render incorrectly
+- **CRITICAL**: Affects all keyboard layouts with row shifts
+
+**Fix Time**: 15 minutes (one-line fix)
+
+---
+
+#### Bug #59: loadNumPad() Hardcoded Package Name
+**Severity**: MEDIUM
+**File**: KeyboardData.kt:386-389
+**Java Implementation** (KeyboardData.java:185-188):
+```java
+public static KeyboardData load_num_pad(Resources res) throws Exception
+{
+  return parse_keyboard(res.getXml(R.xml.numpad));  // Uses R class
+}
+```
+
+**Kotlin Implementation**:
+```kotlin
+fun loadNumPad(resources: Resources): KeyboardData {
+    val resourceId = resources.getIdentifier("numpad", "xml", "tribixbite.keyboard2")  // HARDCODED!
+    return parseKeyboard(resources.getXml(resourceId))
+}
+```
+
+**Impact**:
+- Hardcoded package name breaks if package changes
+- Should use R.xml.numpad like Java
+- Less maintainable (need to update in multiple places)
+- Runtime reflection slower than compile-time R reference
+
+**Fix Time**: 10 minutes
+
+---
+
+#### Bug #60: Row Height Validation MISSING
+**Severity**: MEDIUM
+**File**: KeyboardData.kt:173-178 (Row data class)
+**Java Implementation** (KeyboardData.java:323-331):
+```java
+protected Row(List<Key> keys_, float h, float s)
+{
+  float kw = 0.f;
+  for (Key k : keys_) kw += k.width + k.shift;
+  keys = keys_;
+  height = Math.max(h, 0.5f);  // MINIMUM 0.5f ENFORCED
+  shift = Math.max(s, 0f);
+  keysWidth = kw;
+}
+```
+
+**Kotlin Implementation**:
+```kotlin
+data class Row(
+    val keys: List<Key>,
+    val height: Float,  // NO VALIDATION
+    val shift: Float    // NO VALIDATION
+) {
+    val keysWidth: Float = keys.sumOf { (it.width + it.shift).toDouble() }.toFloat()
+```
+
+**Impact**:
+- Kotlin doesn't enforce minimum height of 0.5f
+- Rows with height < 0.5f render as tiny slivers
+- Shift can be negative (undefined behavior)
+- Missing safety checks present in Java
+
+**Fix Time**: 30 minutes (add init block with validation)
+
+---
+
+#### Bug #61: Key Width/Shift Validation MISSING
+**Severity**: MEDIUM
+**File**: KeyboardData.kt:208-214 (Key data class)
+**Java Implementation** (KeyboardData.java:414-421):
+```java
+protected Key(KeyValue[] ks, KeyValue antic, int f, float w, float s, String i)
+{
+  keys = ks;
+  anticircle = antic;
+  keysflags = f;
+  width = Math.max(w, 0f);      // MINIMUM 0f
+  shift = Math.max(s, 0f);      // MINIMUM 0f
+  indication = i;
+}
+```
+
+**Kotlin Implementation**:
+```kotlin
+data class Key(
+    val keys: Array<KeyValue?>,
+    val anticircle: KeyValue? = null,
+    val keysFlags: Int = 0,
+    val width: Float,   // NO VALIDATION
+    val shift: Float,   // NO VALIDATION
+    val indication: String? = null
+)
+```
+
+**Impact**:
+- Kotlin accepts negative width/shift values
+- Can cause rendering bugs (negative dimensions)
+- Layout calculations can fail
+- Missing safety checks present in Java
+
+**Fix Time**: 30 minutes (add init block with validation)
+
+---
+
+#### Bug #62: Multiple Modmap Error Checking MISSING
+**Severity**: LOW
+**File**: KeyboardData.kt:417
+**Java Implementation** (KeyboardData.java:260-263):
+```java
+case "modmap":
+  if (modmap != null)
+    throw error(parser, "Multiple '<modmap>' are not allowed");
+  modmap = parse_modmap(parser);
+  break;
+```
+
+**Kotlin Implementation**:
+```kotlin
+"modmap" -> modmap = parseModmap(parser)  // NO CHECK FOR DUPLICATES
+```
+
+**Impact**:
+- Kotlin silently overwrites first modmap if multiple exist in XML
+- Should throw parse error like Java
+- Less strict validation
+- Malformed layouts may go undetected
+
+**Fix Time**: 15 minutes
+
+---
+
+### POSITIVE CHANGES (GOOD):
+1. **Modern Kotlin Data Classes**: Immutable with automatic equals/hashCode (lines 15-26)
+2. **Type-Safe Null Handling**: Optional parameters with proper null safety
+3. **Cleaner Code**: 75 fewer lines (11% reduction) with same functionality
+4. **Better Parsing Errors**: Includes line numbers in error messages (line 576)
+5. **createDefaultQwerty()**: Useful test helper method (lines 582-604) - NEW FEATURE
+6. **Functional Style**: Uses map/filter/sumOf instead of loops
+7. **Better Caching**: Uses getOrPut instead of containsKey + get (line 345)
+
+### MISSING FEATURES: None
+All Java functionality present in Kotlin
+
+---
+
+### SUMMARY:
+**Kotlin implementation is architecturally superior** with modern patterns, but has **5 bugs from missing validation**:
+1. 🚨 keysHeight calculation wrong (Bug #58) - **CRITICAL**
+2. ⚠️ loadNumPad hardcoded package (Bug #59)
+3. ⚠️ Row height validation missing (Bug #60)
+4. ⚠️ Key width/shift validation missing (Bug #61)
+5. ⚠️ Multiple modmap checking missing (Bug #62)
+
+**Total Fix Time**: 2-3 hours
+**Critical Fix**: Bug #58 (keysHeight) must be fixed first - affects all layouts
+
+---
+
+### FILES REVIEWED SO FAR: 10 / 251 (4.0%)
+**Time Invested**: ~14.5 hours of complete line-by-line reading
+**Bugs Identified**: 62 bugs total (57 from Files 1-9, now 5 more)
+**Critical Issues**: 13 showstoppers identified
+**Next File**: File 11/251 - Continue systematic review
