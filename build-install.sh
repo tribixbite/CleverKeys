@@ -9,7 +9,17 @@ echo "CleverKeys Build & Install"
 echo "========================================="
 echo ""
 
-# Step 1: Build APK
+# Step 1: Clean build
+echo "🧹 Cleaning build artifacts..."
+./gradlew clean > /dev/null 2>&1
+
+# Step 2: Generate layouts
+echo "📐 Generating keyboard layouts..."
+if [ -f "gen_layouts.py" ]; then
+    python3 gen_layouts.py > /dev/null 2>&1 || echo "⚠️  Layout generation skipped"
+fi
+
+# Step 3: Build APK
 echo "📦 Building APK..."
 echo ""
 
