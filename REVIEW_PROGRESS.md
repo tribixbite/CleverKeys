@@ -1818,3 +1818,360 @@ swipe_typing_enabled = prefs.getBoolean("swipe_typing_enabled", true)
 **Critical Issues**: 6 showstoppers identified
 **Next File**: File 7/251 - Continue systematic review
 
+
+---
+
+## FILE 7/251: KeyEventHandler.java vs KeyEventHandler.kt
+
+**Status**: SIGNIFICANTLY INCOMPLETE - 22% of functionality missing
+**Lines**: Java 516 lines vs Kotlin 404 lines (112 lines missing)
+**Impact**: CRITICAL - Missing macros, sliders, editing keys, selection management
+
+### CRITICAL MISSING FUNCTIONALITY:
+
+#### BUG #41: No Autocapitalisation Integration (CRITICAL)
+**Java Implementation** (lines 20-21, 35-36, 43-50, 69-70, 216, 225):
+```java
+Autocapitalisation _autocap;
+
+_autocap = new Autocapitalisation(recv.getHandler(),
+    this.new Autocapitalisation_callback());
+
+public void started(EditorInfo info) {
+    _autocap.started(info, _recv.getCurrentInputConnection());
+}
+
+public void selection_updated(int oldSelStart, int newSelStart) {
+    _autocap.selection_updated(oldSelStart, newSelStart);
+}
+
+// Integration in send_keyevent and send_text:
+_autocap.event_sent(eventCode, metaState);
+_autocap.typed(text);
+```
+
+**Kotlin Implementation** (lines 26, 81-90):
+```kotlin
+private var shouldCapitalizeNext = true  // Simple boolean!
+
+// In handleCharacterKey:
+val finalChar = if (shouldCapitalizeNext && char.isLetter()) {
+    char.uppercaseChar()
+} else {
+    char
+}
+shouldCapitalizeNext = finalChar in ".!?"
+```
+
+**Impact**: CRITICAL - Kotlin has no proper autocapitalization
+- No EditorInfo analysis for input type
+- No selection tracking for cursor position
+- No pause/unpause for macros
+- Just checks if char is in ".!?" - naive implementation
+- Missing start of sentence detection
+- Missing field-specific capitalization rules
+
+---
+
+#### BUG #42: Macro Evaluation Missing (CRITICAL)
+**Java Implementation** (lines 385-453):
+```java
+void evaluate_macro(KeyValue[] keys) {
+    mods_changed(Pointers.Modifiers.EMPTY);
+    evaluate_macro_loop(keys, 0, Pointers.Modifiers.EMPTY, _autocap.pause());
+}
+
+void evaluate_macro_loop(KeyValue[] keys, int i, Pointers.Modifiers mods, boolean autocap_paused) {
+    boolean should_delay = false;
+    KeyValue kv = KeyModifier.modify(keys[i], mods);
+    if (kv != null) {
+        if (kv.hasFlagsAny(KeyValue.FLAG_LATCH)) {
+            mods = mods.with_extra_mod(kv);
+        } else {
+            key_down(kv, false);
+            key_up(kv, mods);
+            mods = Pointers.Modifiers.EMPTY;
+        }
+        should_delay = wait_after_macro_key(kv);
+    }
+    i++;
+    if (i >= keys.length) {
+        _autocap.unpause(autocap_paused);
+    } else if (should_delay) {
+        // Add 1000/30ms delay to avoid race conditions
+        _recv.getHandler().postDelayed(() -> 
+            evaluate_macro_loop(keys, i_, mods_, autocap_paused), 1000/30);
+    } else {
+        evaluate_macro_loop(keys, i, mods, autocap_paused);
+    }
+}
+```
+
+**Kotlin Implementation**: COMPLETELY MISSING
+
+**Impact**: CRITICAL - Kotlin can't execute macros at all
+- No multi-key sequences
+- No automated workflows
+- No custom shortcuts
+- Feature completely absent
+
+---
+
+#### BUG #43: Editing Keys Missing (CRITICAL)
+**Java Implementation** (lines 238-258):
+```java
+void handle_editing_key(KeyValue.Editing ev) {
+    switch (ev) {
+        case COPY: if(is_selection_not_empty()) send_context_menu_action(android.R.id.copy); break;
+        case PASTE: send_context_menu_action(android.R.id.paste); break;
+        case CUT: if(is_selection_not_empty()) send_context_menu_action(android.R.id.cut); break;
+        case SELECT_ALL: send_context_menu_action(android.R.id.selectAll); break;
+        case SHARE: send_context_menu_action(android.R.id.shareText); break;
+        case PASTE_PLAIN: send_context_menu_action(android.R.id.pasteAsPlainText); break;
+        case UNDO: send_context_menu_action(android.R.id.undo); break;
+        case REDO: send_context_menu_action(android.R.id.redo); break;
+        case REPLACE: send_context_menu_action(android.R.id.replaceText); break;
+        case ASSIST: send_context_menu_action(android.R.id.textAssist); break;
+        case AUTOFILL: send_context_menu_action(android.R.id.autofill); break;
+        case DELETE_WORD: send_key_down_up(KeyEvent.KEYCODE_DEL, KeyEvent.META_CTRL_ON); break;
+        case FORWARD_DELETE_WORD: send_key_down_up(KeyEvent.KEYCODE_FORWARD_DEL, KeyEvent.META_CTRL_ON); break;
+        case SELECTION_CANCEL: cancel_selection(); break;
+    }
+}
+```
+
+**Kotlin Implementation**: COMPLETELY MISSING (only DELETE_WORD partially implemented in handleBackspace)
+
+**Impact**: CRITICAL - 15 editing operations missing
+- No COPY/PASTE/CUT (clipboard operations)
+- No SELECT_ALL
+- No UNDO/REDO
+- No SHARE text functionality
+- No REPLACE/ASSIST/AUTOFILL
+- Only DELETE_WORD works (in handleBackspace via CTRL)
+
+---
+
+#### BUG #44: Slider Keys Missing (HIGH)
+**Java Implementation** (lines 275-286, 292-373):
+```java
+void handle_slider(KeyValue.Slider s, int r, boolean key_down) {
+    switch (s) {
+        case Cursor_left: move_cursor(-r); break;
+        case Cursor_right: move_cursor(r); break;
+        case Cursor_up: move_cursor_vertical(-r); break;
+        case Cursor_down: move_cursor_vertical(r); break;
+        case Selection_cursor_left: move_cursor_sel(r, true, key_down); break;
+        case Selection_cursor_right: move_cursor_sel(r, false, key_down); break;
+    }
+}
+
+void move_cursor(int d) {
+    // 50 lines of smart cursor movement with selection preservation
+}
+
+void move_cursor_sel(int d, boolean sel_left, boolean key_down) {
+    // 30 lines of selection edge movement
+}
+
+void move_cursor_vertical(int d) {
+    // Vertical cursor movement
+}
+```
+
+**Kotlin Implementation** (lines 322-345):
+```kotlin
+private fun moveCursor(offset: Int) {
+    // Only implements horizontal left/right
+    // Missing: vertical, selection edge movement
+}
+```
+
+**Impact**: HIGH - 4 of 6 slider modes missing
+- ✅ Cursor_left/right (basic left/right works)
+- ❌ Cursor_up/down (vertical movement missing)
+- ❌ Selection_cursor_left/right (selection edge movement missing)
+
+---
+
+#### BUG #45: Selection Management Missing (HIGH)
+**Java Implementation** (lines 462-480):
+```java
+void cancel_selection() {
+    InputConnection conn = _recv.getCurrentInputConnection();
+    ExtractedText et = get_cursor_pos(conn);
+    final int curs = et.selectionStart;
+    if (conn.setSelection(curs, curs))
+        _recv.selection_state_changed(false);
+}
+
+boolean is_selection_not_empty() {
+    InputConnection conn = _recv.getCurrentInputConnection();
+    return (conn.getSelectedText(0) != null);
+}
+```
+
+**Kotlin Implementation**: COMPLETELY MISSING
+
+**Impact**: HIGH - No selection utilities
+- Can't cancel selection
+- Can't check if selection exists
+- COPY/CUT can't check selection state
+- SELECTION_CANCEL editing key won't work
+
+---
+
+#### BUG #46: Context Menu Actions Missing (HIGH)
+**Java Implementation** (lines 229-236):
+```java
+void send_context_menu_action(int id) {
+    InputConnection conn = _recv.getCurrentInputConnection();
+    if (conn == null) return;
+    conn.performContextMenuAction(id);
+}
+```
+
+**Kotlin Implementation**: COMPLETELY MISSING
+
+**Impact**: HIGH - Can't trigger system clipboard/editing operations
+- All editing keys (COPY/PASTE/CUT/etc.) won't work without this
+- No way to invoke system text operations
+
+---
+
+#### BUG #47: Meta Key Sending Missing (HIGH)
+**Java Implementation** (lines 155-193):
+```java
+void sendMetaKey(int eventCode, int meta_flags, boolean down) {
+    if (down) {
+        _meta_state = _meta_state | meta_flags;
+        send_keyevent(KeyEvent.ACTION_DOWN, eventCode, _meta_state);
+    } else {
+        send_keyevent(KeyEvent.ACTION_UP, eventCode, _meta_state);
+        _meta_state = _meta_state & ~meta_flags;
+    }
+}
+
+void sendMetaKeyForModifier(KeyValue kv, boolean down) {
+    switch (kv.getModifier()) {
+        case CTRL: sendMetaKey(KeyEvent.KEYCODE_CTRL_LEFT, META_CTRL_LEFT_ON | META_CTRL_ON, down); break;
+        case ALT: sendMetaKey(KeyEvent.KEYCODE_ALT_LEFT, META_ALT_LEFT_ON | META_ALT_ON, down); break;
+        case SHIFT: sendMetaKey(KeyEvent.KEYCODE_SHIFT_LEFT, META_SHIFT_LEFT_ON | META_SHIFT_ON, down); break;
+        case META: sendMetaKey(KeyEvent.KEYCODE_META_LEFT, META_META_LEFT_ON | META_META_ON, down); break;
+    }
+}
+```
+
+**Kotlin Implementation** (lines 370-382):
+```kotlin
+private fun updateMetaState() {
+    metaState = 0
+    if (hasModifier(KeyValue.Modifier.SHIFT)) metaState = metaState or META_SHIFT_ON
+    if (hasModifier(KeyValue.Modifier.CTRL)) metaState = metaState or META_CTRL_ON
+    if (hasModifier(KeyValue.Modifier.ALT)) metaState = metaState or META_ALT_ON
+}
+```
+
+**Impact**: HIGH - Modifiers not sent as actual key events
+- Java sends DOWN/UP events for modifiers
+- Kotlin only tracks state internally
+- Apps expecting modifier key events won't see them
+- CTRL+C, ALT+F4 etc. won't work in apps
+
+---
+
+#### BUG #48: IReceiver Interface Mismatch (MEDIUM)
+**Java Interface** (lines 493-503):
+```java
+public static interface IReceiver {
+    void handle_event_key(KeyValue.Event ev);
+    void set_shift_state(boolean state, boolean lock);
+    void set_compose_pending(boolean pending);
+    void selection_state_changed(boolean selection_is_ongoing);
+    InputConnection getCurrentInputConnection();
+    Handler getHandler();
+    void handle_text_typed(String text);
+    default void handle_backspace() {}
+}
+```
+
+**Kotlin Interface** (lines 35-45):
+```kotlin
+interface IReceiver {
+    fun getInputConnection(): InputConnection?
+    fun getCurrentInputEditorInfo(): EditorInfo?
+    fun performVibration()
+    fun commitText(text: String)
+    fun performAction(action: Int)
+    fun switchToMainLayout()
+    fun switchToNumericLayout()
+    fun switchToEmojiLayout()
+    fun openSettings()
+}
+```
+
+**Impact**: MEDIUM - Completely different interfaces!
+- Java: 8 methods
+- Kotlin: 10 methods
+- Only 1 method in common (getCurrentInputConnection/getInputConnection)
+- Can't use Java receiver with Kotlin handler or vice versa
+- Missing: handle_event_key, set_shift_state, set_compose_pending, selection_state_changed, handle_text_typed
+- Extra: performVibration, commitText, performAction, switch* methods, openSettings
+
+---
+
+### OTHER DIFFERENCES:
+
+**Java line 100-107**: Backspace triggers handle_backspace() callback
+```java
+if (key.getKeyevent() == KeyEvent.KEYCODE_DEL) {
+    if (_recv instanceof Keyboard2.Receiver) {
+        ((Keyboard2.Receiver)_recv).handle_backspace();
+    }
+}
+```
+
+**Kotlin lines 210-229**: Backspace handled inline with CTRL+backspace support
+- Kotlin has DELETE_WORD implementation (partial Bug #43 fix)
+- But missing callback to receiver
+
+**Java lines 357-365**: can_set_selection() checks for Termux/modifiers
+```java
+boolean can_set_selection(InputConnection conn) {
+    final int system_mods = META_CTRL_ON | META_ALT_ON | META_META_ON;
+    return !_move_cursor_force_fallback && (_meta_state & system_mods) == 0;
+}
+```
+
+**Kotlin**: Missing this check entirely
+- Selection always uses setSelection or fallback
+- No consideration of system modifiers
+
+**Java lines 484-491**: Termux/Godot editor workarounds
+```java
+boolean should_move_cursor_force_fallback(EditorInfo info) {
+    if ((info.inputType & TYPE_MASK_VARIATION & TYPE_TEXT_VARIATION_PASSWORD) != 0)
+        return true;
+    return info.packageName.startsWith("org.godotengine.editor");
+}
+```
+
+**Kotlin lines 387-392**: Simplified to just input type check
+- Missing Godot editor workaround
+- Missing password field check
+
+### ESTIMATED FIX TIME:
+
+**Priority 1 - Critical (macros, editing keys):** 8-10 hours
+**Priority 2 - High (sliders, selection, meta keys):** 6-8 hours
+**Priority 3 - Medium (interface, autocap integration):** 10-12 hours
+**Total:** 24-30 hours for complete KeyEventHandler parity
+
+---
+
+### FILES REVIEWED SO FAR: 7 / 251 (2.8%)
+**Time Invested**: ~10 hours of complete line-by-line reading
+**Bugs Identified**: 51 bugs total (43 from Files 1-6, now 8 more from File 7)
+**Critical Issues**: 9 showstoppers identified
+**Next File**: File 8/251 - Continue systematic review
+
