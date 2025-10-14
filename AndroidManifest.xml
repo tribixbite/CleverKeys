@@ -35,7 +35,7 @@
       </intent-filter>
     </activity>
 
-    <activity android:name="tribixbite.keyboard2.SwipeCalibrationActivity" android:label="@string/pref_swipe_calibration_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true"/>
+    <activity android:name="tribixbite.keyboard2.SwipeCalibrationActivity" android:label="@string/pref_swipe_calibration_title" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true"/>
 
     <activity android:name="tribixbite.keyboard2.NeuralSettingsActivity" android:label="Neural Settings" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true"/>
 
