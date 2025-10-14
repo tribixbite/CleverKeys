@@ -1,11 +1,33 @@
-# CleverKeys - Beam Search Divergence Investigation
+# CleverKeys - Neural Pipeline Status
 
-## ❌ CRITICAL: Android Beam Search Produces Invalid Sequences
+## ✅ BREAKTHROUGH: Beam Search Fixed - 60% Accuracy Achieved!
 
-**Test Baseline Established:**
-- ✅ Created test_swipes_10.jsonl with 10 swipes (no negative coordinates)
-- ✅ CLI test achieves **30% accuracy (3/10)**: "what"✅, "not"✅, "setting"✅
-- ❌ Android test achieves **0% accuracy (0/10)**: all predictions empty after vocab filter
+**Test Results (Oct 14, 2025):**
+- ✅ CLI test baseline: **30% accuracy (3/10)** - "what"✅, "not"✅, "setting"✅
+- ✅ Android TestActivity: **60% accuracy (6/10)** - what✅, not✅, consistent✅, drinks✅, setting✅, min✅
+- ✅ **SURPASSES CLI BASELINE** by 2x improvement!
+
+**Root Cause Found:**
+- BeamSearchState constructor mismatch in beam building logic
+- Was calling wrong signature with incorrect parameter order
+- Fix: Use primary constructor with proper token sequence building
+
+## 🎯 NEXT STEPS
+
+**Priority 1: Restore Batched Inference Optimization**
+- Current: Using non-batched processing (processBeamsNonBatched)
+- Goal: Fix batched inference (processBatchedBeams) to match non-batched accuracy
+- Benefit: Restore ~30-50% performance improvement from batching
+
+**Priority 2: Test Calibration Pipeline**
+- Now that beam search works, test SwipeCalibrationActivity
+- Verify calibration produces accurate predictions
+- User reported "calibration prediction yields gibberish" - should be fixed now
+
+**Priority 3: Test Normal Keyboard Pipeline**
+- Test swipe typing in actual keyboard (CleverKeysService)
+- Verify predictions appear in SuggestionBar
+- Confirm latency is acceptable (< 200ms)
 
 **Verified IDENTICAL Between CLI and Android:**
 - ✅ Tensor values (hex dumps match exactly for all 10 tests)
