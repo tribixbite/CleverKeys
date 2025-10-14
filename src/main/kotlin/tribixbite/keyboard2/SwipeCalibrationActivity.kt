@@ -379,7 +379,9 @@ class SwipeCalibrationActivity : Activity() {
         logD("Keyboard positioned at bottom with height ${keyboardHeight}px")
 
         // Configure neural engine dimensions
-        neuralEngine.setKeyboardDimensions(screenWidth, keyboardHeight)
+        // FIX #37: Use training data dimensions (360x280) instead of actual screen dimensions
+        // Model was trained with 360x280 normalization - using different dimensions breaks gesture shape
+        neuralEngine.setKeyboardDimensions(360, 280)
     }
     
     private fun showNextWord() {
