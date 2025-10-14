@@ -37,7 +37,9 @@ class LayoutsPreference @JvmOverloads constructor(
 
     // Layout values and related properties
     private var values: MutableList<Layout> = mutableListOf()
-    private val layoutDisplayNames: Array<String> get() = values.map { labelOfLayout(it) }.toTypedArray()
+
+    // Layout display names loaded from resources (NOT computed from values to avoid infinite recursion)
+    private lateinit var layoutDisplayNames: Array<String>
 
     companion object {
         const val KEY = "layouts"
@@ -59,8 +61,19 @@ class LayoutsPreference @JvmOverloads constructor(
         @JvmStatic
         fun getLayoutNames(resources: Resources): List<String> {
             if (unsafeLayoutIdsStr == null) {
-                // Hardcoded layout names for compilation
-                unsafeLayoutIdsStr = listOf("system", "qwerty_us", "azerty", "qwertz", "dvorak", "colemak")
+                try {
+                    // Load from R.array.pref_layout_values
+                    val layoutValuesId = resources.getIdentifier("pref_layout_values", "array", null)
+                    if (layoutValuesId != 0) {
+                        unsafeLayoutIdsStr = resources.getStringArray(layoutValuesId).toList()
+                    } else {
+                        // Fallback to minimal set if resource not found
+                        unsafeLayoutIdsStr = listOf("system", "custom")
+                    }
+                } catch (e: Exception) {
+                    // Fallback on error
+                    unsafeLayoutIdsStr = listOf("system", "custom")
+                }
             }
             return unsafeLayoutIdsStr ?: emptyList()
         }
@@ -71,16 +84,24 @@ class LayoutsPreference @JvmOverloads constructor(
          */
         @JvmStatic
         fun layoutIdOfName(resources: Resources, name: String): Int {
-            // Simplified implementation without R.array dependencies
-            return when (name) {
-                "system" -> 0x7f020000  // Example resource ID
-                "qwerty_us" -> 0x7f020001
-                "azerty" -> 0x7f020002
-                "qwertz" -> 0x7f020003
-                "dvorak" -> 0x7f020004
-                "colemak" -> 0x7f020005
-                else -> -1
+            if (unsafeLayoutIdsRes == null) {
+                try {
+                    // Load from R.array.layout_ids TypedArray
+                    val layoutIdsArrayId = resources.getIdentifier("layout_ids", "array", null)
+                    if (layoutIdsArrayId != 0) {
+                        unsafeLayoutIdsRes = resources.obtainTypedArray(layoutIdsArrayId)
+                    }
+                } catch (e: Exception) {
+                    return -1
+                }
             }
+
+            val layoutNames = getLayoutNames(resources)
+            val index = layoutNames.indexOf(name)
+            if (index >= 0 && unsafeLayoutIdsRes != null) {
+                return unsafeLayoutIdsRes!!.getResourceId(index, 0)
+            }
+            return -1
         }
 
         /**
@@ -179,11 +200,29 @@ class LayoutsPreference @JvmOverloads constructor(
 
     init {
         key = KEY
+
+        // Load layout display names from resources (Bug #93 fix)
+        try {
+            val displayNamesId = context.resources.getIdentifier("pref_layout_entries", "array", null)
+            layoutDisplayNames = if (displayNamesId != 0) {
+                context.resources.getStringArray(displayNamesId)
+            } else {
+                // Fallback to layout names if resource not found
+                getLayoutNames(context.resources).toTypedArray()
+            }
+        } catch (e: Exception) {
+            // Fallback on error
+            layoutDisplayNames = arrayOf("System", "Custom")
+        }
     }
 
     override fun onSetInitialValue(restoreValue: Boolean, defaultValue: Any?) {
         super.onSetInitialValue(restoreValue, defaultValue)
-        // Initialize with default values if empty
+
+        // Initialize with default values if empty (Bug #98 fix)
+        if (values.isEmpty()) {
+            values.addAll(DEFAULT)
+        }
     }
 
     /**
@@ -205,13 +244,32 @@ class LayoutsPreference @JvmOverloads constructor(
                 if (layout.parsed?.name?.isNotEmpty() == true) {
                     layout.parsed.name
                 } else {
-                    "Custom Layout"
+                    // Bug #100 fix: Use resource string instead of hardcoded
+                    val stringId = context.resources.getIdentifier("pref_layout_e_custom", "string", null)
+                    if (stringId != 0) {
+                        context.getString(stringId)
+                    } else {
+                        "Custom Layout" // Fallback
+                    }
                 }
             }
             is SystemLayout -> {
-                "System Layout"
+                // Bug #100 fix: Use resource string instead of hardcoded
+                val stringId = context.resources.getIdentifier("pref_layout_e_system", "string", null)
+                if (stringId != 0) {
+                    context.getString(stringId)
+                } else {
+                    "System Layout" // Fallback
+                }
             }
-            else -> "Unknown Layout"
+            else -> {
+                val stringId = context.resources.getIdentifier("pref_layout_e_unknown", "string", null)
+                if (stringId != 0) {
+                    context.getString(stringId)
+                } else {
+                    "Unknown Layout" // Fallback
+                }
+            }
         }
     }
 
@@ -311,11 +369,17 @@ class LayoutsPreference @JvmOverloads constructor(
      */
     private fun readInitialCustomLayout(): String {
         return try {
-            val resources = context.resources
-            // Return empty for now - would need proper resource loading
-            ""
+            // Bug #103 fix: Load latn_qwerty_us as template
+            val qwertyId = context.resources.getIdentifier("latn_qwerty_us", "raw", null)
+            if (qwertyId != 0) {
+                context.resources.openRawResource(qwertyId).use { inputStream ->
+                    Utils.readAllUtf8(inputStream)
+                }
+            } else {
+                "" // Fallback if resource not found
+            }
         } catch (e: Exception) {
-            ""
+            "" // Fallback on error
         }
     }
 
