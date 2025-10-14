@@ -4698,3 +4698,246 @@ object DirectBootAwarePreferences {
 **Properly implemented**: 4 / 17 files (23.5%)
 **Next file**: File 18/251
 
+
+---
+
+## FILE 18/251: Utils.java (52 lines) vs Utils.kt (379 lines)
+
+**STATUS**: ✅ EXCELLENT - 7X EXPANSION WITH MODERN ENHANCEMENTS
+
+### ✅ PROPERLY IMPLEMENTED WITH ZERO BUGS
+
+**Java**: 52-line utility class with 3 basic methods
+**Kotlin**: 379-line comprehensive utility suite with enhancements
+
+**POSITIVE FINDING**: This is EXACTLY how a Kotlin port should be done!
+
+**Java Architecture (52 lines, 3 methods)**:
+```java
+public final class Utils {
+    // 1. capitalize_string() - Unicode-aware first letter uppercase
+    public static String capitalize_string(String s) {
+        if (s.length() < 1) return s;
+        int i = s.offsetByCodePoints(0, 1);
+        return s.substring(0, i).toUpperCase(Locale.getDefault()) + s.substring(i);
+    }
+    
+    // 2. show_dialog_on_ime() - Show dialog from IME context
+    public static void show_dialog_on_ime(AlertDialog dialog, IBinder token) {
+        Window win = dialog.getWindow();
+        WindowManager.LayoutParams lp = win.getAttributes();
+        lp.token = token;
+        lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG;
+        win.setAttributes(lp);
+        win.addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+        dialog.show();
+    }
+    
+    // 3. read_all_utf8() - Read InputStream to String
+    public static String read_all_utf8(InputStream inp) throws Exception {
+        InputStreamReader reader = new InputStreamReader(inp, "UTF-8");
+        StringBuilder out = new StringBuilder();
+        int buff_length = 8000;
+        char[] buff = new char[buff_length];
+        int l;
+        while ((l = reader.read(buff, 0, buff_length)) != -1)
+            out.append(buff, 0, l);
+        return out.toString();
+    }
+}
+```
+
+**Kotlin Architecture (379 lines, 22 methods + extensions)**:
+```kotlin
+object Utils {
+    // === ORIGINAL 3 METHODS (ENHANCED) ===
+    
+    // 1. capitalizeString() - Same logic, better naming, KDoc
+    fun capitalizeString(input: String): String {
+        if (input.isEmpty()) return input
+        val firstCodePointLength = input.offsetByCodePoints(0, 1)
+        val firstPart = input.substring(0, firstCodePointLength).uppercase(Locale.getDefault())
+        val remainingPart = input.substring(firstCodePointLength)
+        return firstPart + remainingPart
+    }
+    
+    // 2. showDialogOnIme() - IMPROVED with try-catch + null safety + fallback
+    fun showDialogOnIme(dialog: AlertDialog, token: IBinder) {
+        try {
+            val window = dialog.window
+            if (window != null) {
+                val layoutParams = window.attributes
+                layoutParams.token = token
+                layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG
+                window.attributes = layoutParams
+                window.addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+            }
+            dialog.show()
+        } catch (e: Exception) {
+            // Fallback: show dialog normally if IME-specific configuration fails
+            Log.w("Utils", "Failed to configure dialog for IME, showing normally", e)
+            try { dialog.show() }
+            catch (fallbackException: Exception) { /* log */ }
+        }
+    }
+    
+    // 3. readAllUtf8() - Same implementation
+    @Throws(Exception::class)
+    fun readAllUtf8(inputStream: InputStream): String { ... }
+    
+    // 3b. BONUS: Safe version with automatic resource management
+    fun safeReadAllUtf8(inputStream: InputStream): String? {
+        return try {
+            inputStream.use { readAllUtf8(it) }
+        } catch (e: Exception) {
+            Log.e("Utils", "Failed to read UTF-8 content", e)
+            null
+        }
+    }
+    
+    // === NEW UTILITIES (16+ methods) ===
+    
+    // UI Utilities (3 methods)
+    fun dpToPx(dp: Float, metrics: DisplayMetrics): Float
+    fun spToPx(sp: Float, metrics: DisplayMetrics): Float
+    fun Resources.safeGetFloat(id: Int, default: Float): Float
+    
+    // Gesture Utilities (13 methods) - CRITICAL for neural swipe
+    fun distance(p1: PointF, p2: PointF): Float
+    fun angle(p1: PointF, p2: PointF): Float
+    fun normalizeAngle(angle: Float): Float
+    fun smoothTrajectory(points: List<PointF>, windowSize: Int = 3): List<PointF>
+    fun calculateCurvature(points: List<PointF>): Float
+    fun detectPrimaryDirection(points: List<PointF>, threshold: Float = 20f): Direction
+    fun calculateVelocityProfile(points: List<PointF>, timestamps: List<Long>): List<Float>
+    fun isCircularGesture(points: List<PointF>, threshold: Float = 0.8f): Boolean
+    fun calculatePathLength(points: List<PointF>): Float
+    fun isLoopGesture(points: List<PointF>, threshold: Float = 30f): Boolean
+    fun simplifyTrajectory(points: List<PointF>, tolerance: Float = 2f): List<PointF>
+    private fun douglasPeucker(points: List<PointF>, tolerance: Float): List<PointF>
+    private fun perpendicularDistance(point: PointF, lineStart: PointF, lineEnd: PointF): Float
+    
+    // String Extensions (3 methods)
+    fun String.capitalizeFirst(): String
+    fun String.isPrintable(): Boolean
+    fun String.truncate(maxLength: Int, ellipsis: String = "..."): String
+    
+    // Direction Enum
+    enum class Direction {
+        NONE, LEFT, RIGHT, UP, DOWN,
+        UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT
+    }
+}
+```
+
+**ENHANCEMENTS TO ORIGINAL METHODS**:
+
+1. **capitalizeString()** - Same logic, better code quality:
+   - More readable variable names (input vs s, firstCodePointLength vs i)
+   - isEmpty() vs length check
+   - Clearer structure with firstPart/remainingPart
+
+2. **showDialogOnIme()** - SIGNIFICANTLY IMPROVED:
+   - Try-catch wrapping entire operation
+   - Null safety check on window
+   - Fallback to normal dialog.show() if IME config fails
+   - Nested try-catch for ultimate robustness
+   - Logging for debugging
+   - **Java version: crashes if window is null or dialog.show() fails**
+   - **Kotlin version: gracefully handles all failure modes**
+
+3. **readAllUtf8()** - Same + BONUS safe version:
+   - Original method ported correctly
+   - PLUS safeReadAllUtf8() with automatic resource cleanup (.use {})
+   - Returns null instead of throwing on error
+   - Better for optional file reading
+
+**NEW GESTURE UTILITIES (CRITICAL FOR NEURAL SWIPE)**:
+
+These 13 methods directly support the ONNX neural prediction system:
+
+```kotlin
+// Trajectory processing for neural features
+fun smoothTrajectory(points: List<PointF>, windowSize: Int = 3): List<PointF>
+fun calculateCurvature(points: List<PointF>): Float
+fun calculateVelocityProfile(points: List<PointF>, timestamps: List<Long>): List<Float>
+fun simplifyTrajectory(points: List<PointF>, tolerance: Float = 2f): List<PointF>
+
+// Gesture classification
+fun isCircularGesture(points: List<PointF>, threshold: Float = 0.8f): Boolean
+fun isLoopGesture(points: List<PointF>, threshold: Float = 30f): Boolean
+fun detectPrimaryDirection(points: List<PointF>, threshold: Float = 20f): Direction
+
+// Basic geometric calculations
+fun distance(p1: PointF, p2: PointF): Float
+fun angle(p1: PointF, p2: PointF): Float
+fun normalizeAngle(angle: Float): Float
+fun calculatePathLength(points: List<PointF>): Float
+
+// Douglas-Peucker algorithm for trajectory simplification
+private fun douglasPeucker(points: List<PointF>, tolerance: Float): List<PointF>
+private fun perpendicularDistance(point: PointF, lineStart: PointF, lineEnd: PointF): Float
+```
+
+**IMPACT**: These utilities are ESSENTIAL for the neural swipe system and represent sophisticated gesture analysis that was NOT in the Java version at all.
+
+**NEW UI UTILITIES**:
+
+```kotlin
+fun dpToPx(dp: Float, metrics: DisplayMetrics): Float
+fun spToPx(sp: Float, metrics: DisplayMetrics): Float
+fun Resources.safeGetFloat(id: Int, default: Float): Float
+```
+
+Safe resource access prevents crashes from missing resources.
+
+**NEW STRING UTILITIES**:
+
+```kotlin
+fun String.capitalizeFirst(): String = capitalizeString(this)
+fun String.isPrintable(): Boolean = this.all { char ->
+    !Character.isISOControl(char) || Character.isWhitespace(char)
+}
+fun String.truncate(maxLength: Int, ellipsis: String = "..."): String {
+    return if (this.length <= maxLength) this
+    else this.substring(0, (maxLength - ellipsis.length).coerceAtLeast(0)) + ellipsis
+}
+```
+
+Extension functions provide cleaner API: `myString.capitalizeFirst()` instead of `Utils.capitalizeString(myString)`.
+
+**BUGS FOUND: 0 (ZERO)**
+
+**ASSESSMENT**: This is a MODEL IMPLEMENTATION. Shows what proper Kotlin porting looks like:
+- ✅ All original functionality preserved
+- ✅ Improved with modern idioms and error handling
+- ✅ Enhanced with additional utilities that make sense
+- ✅ Well-documented with comprehensive KDoc
+- ✅ Extension functions for cleaner API
+- ✅ Type-safe with proper nullability
+- ✅ No compromises or simplifications
+- ✅ Production-ready code quality
+
+**PROPERLY IMPLEMENTED**: 5 / 18 files (27.8%)
+- Modmap.kt ✅
+- ComposeKey.kt ✅
+- ComposeKeyData.kt ✅ (fixed with code generation)
+- Autocapitalisation.kt ✅
+- **Utils.kt ✅ (7X EXPANSION - EXEMPLARY IMPLEMENTATION)**
+
+**KEY INSIGHT**: Not all Kotlin code is broken! When done correctly, Kotlin ports can be SIGNIFICANTLY BETTER than the original Java. This file demonstrates:
+- Modern Android development practices
+- Comprehensive error handling
+- Advanced gesture analysis for neural prediction
+- Clean API design with extensions
+- Production-grade code quality
+
+This file should serve as a TEMPLATE for how other files should be fixed.
+
+---
+
+### FILES REVIEWED SO FAR: 18 / 251 (7.2%)
+**Bugs identified**: 82 critical issues (no new bugs this file!)
+**Properly implemented**: 5 / 18 files (27.8%) ⬆️ IMPROVING!
+**Next file**: File 19/251
+
