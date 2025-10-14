@@ -5227,3 +5227,236 @@ This is NOT a port - it's a complete architectural redesign with:
 **Properly implemented**: 5 / 19 files (26.3%)
 **Next file**: File 20/251
 
+
+---
+
+## FILE 20/251: Logs.java (51 lines) vs Logs.kt (73 lines)
+
+**STATUS**: ⚠️ PARTIAL REDESIGN - Missing specialized debug methods
+
+### BUGS #87-89: Missing Debug Functionality
+
+**Java**: 51-line logging with LogPrinter and specialized debug methods
+**Kotlin**: 73-line standard Log wrapper with level controls
+
+**Java Architecture**:
+```java
+public final class Logs {
+    static final String TAG = "juloo.keyboard2";
+    static LogPrinter _debug_logs = null;
+    
+    // Enable/disable debug logging with LogPrinter
+    public static void set_debug_logs(boolean d) {
+        _debug_logs = d ? new LogPrinter(Log.DEBUG, TAG) : null;
+    }
+    
+    // Specialized startup debugging
+    public static void debug_startup_input_view(EditorInfo info, Config conf) {
+        if (_debug_logs == null) return;
+        info.dump(_debug_logs, "");
+        if (info.extras != null)
+            _debug_logs.println("extras: "+info.extras.toString());
+        _debug_logs.println("swapEnterActionKey: "+conf.swapEnterActionKey);
+        _debug_logs.println("actionLabel: "+conf.actionLabel);
+    }
+    
+    // Config migration logging
+    public static void debug_config_migration(int from_version, int to_version) {
+        debug("Migrating config version from " + from_version + " to " + to_version);
+    }
+    
+    // Generic debug
+    public static void debug(String s) {
+        if (_debug_logs != null)
+            _debug_logs.println(s);
+    }
+    
+    // Exception logging
+    public static void exn(String msg, Exception e) {
+        Log.e(TAG, msg, e);
+    }
+    
+    // Stack trace logging
+    public static void trace() {
+        if (_debug_logs != null)
+            _debug_logs.println(Log.getStackTraceString(new Exception()));
+    }
+}
+```
+
+**Kotlin Architecture**:
+```kotlin
+object Logs {
+    private var debugEnabled = true
+    private var verboseEnabled = false
+    
+    // Config migration (different implementation)
+    fun debug_config_migration(savedVersion: Int, currentVersion: Int) {
+        Log.d("Config", "Migration: $savedVersion → $currentVersion")
+    }
+    
+    // Enable/disable flags
+    fun setDebugEnabled(enabled: Boolean) { debugEnabled = enabled }
+    fun setVerboseEnabled(enabled: Boolean) { verboseEnabled = enabled }
+    
+    // Standard Android log wrappers
+    fun d(tag: String, message: String) {
+        if (debugEnabled) Log.d(tag, message)
+    }
+    
+    fun e(tag: String, message: String, throwable: Throwable? = null) {
+        Log.e(tag, message, throwable)
+    }
+    
+    fun w(tag: String, message: String) { Log.w(tag, message) }
+    fun i(tag: String, message: String) { Log.i(tag, message) }
+    
+    fun v(tag: String, message: String) {
+        if (verboseEnabled) Log.v(tag, message)
+    }
+}
+```
+
+**BUG #87: TAG constant missing**
+
+Java:
+```java
+static final String TAG = "juloo.keyboard2";
+```
+
+Kotlin: ❌ **NO CENTRAL TAG**
+- Must pass tag to every method call
+- Less consistent logging
+- More verbose: `Logs.d("MyClass", "msg")` vs Java's implicit TAG
+
+**BUG #88: debug_startup_input_view() missing (MEDIUM)**
+
+Java:
+```java
+public static void debug_startup_input_view(EditorInfo info, Config conf) {
+    if (_debug_logs == null) return;
+    info.dump(_debug_logs, "");  // Dump all EditorInfo fields
+    if (info.extras != null)
+        _debug_logs.println("extras: "+info.extras.toString());
+    _debug_logs.println("swapEnterActionKey: "+conf.swapEnterActionKey);
+    _debug_logs.println("actionLabel: "+conf.actionLabel);
+}
+```
+
+Kotlin: ❌ **COMPLETELY MISSING**
+
+**IMPACT**: Cannot debug keyboard startup with detailed EditorInfo
+- EditorInfo.dump() shows input type, action, hints, etc.
+- Critical for debugging app compatibility issues
+- Must manually log each field instead
+
+**BUG #89: trace() method missing (LOW)**
+
+Java:
+```java
+public static void trace() {
+    if (_debug_logs != null)
+        _debug_logs.println(Log.getStackTraceString(new Exception()));
+}
+```
+
+Kotlin: ❌ **MISSING**
+
+**IMPACT**: Cannot easily log call stack for debugging
+- Useful for tracing execution paths
+- Alternative: call `e()` with Exception(), but not same convenience
+
+**DIFFERENT: exn() vs e()**
+
+Java:
+```java
+public static void exn(String msg, Exception e) {
+    Log.e(TAG, msg, e);  // Uses central TAG
+}
+```
+
+Kotlin:
+```kotlin
+fun e(tag: String, message: String, throwable: Throwable? = null) {
+    Log.e(tag, message, throwable)  // Requires tag parameter
+}
+```
+
+**Difference**: Kotlin requires passing tag explicitly. More flexible but less convenient.
+
+**DIFFERENT: LogPrinter vs boolean flags**
+
+Java uses LogPrinter:
+```java
+static LogPrinter _debug_logs = null;
+_debug_logs = d ? new LogPrinter(Log.DEBUG, TAG) : null;
+```
+
+Kotlin uses simple flags:
+```kotlin
+private var debugEnabled = true
+private var verboseEnabled = false
+```
+
+Both approaches work. LogPrinter is more sophisticated but overkill for simple needs.
+
+**✅ KOTLIN ENHANCEMENTS (NOT IN JAVA)**:
+
+1. **Additional log levels:**
+```kotlin
+fun w(tag: String, message: String)  // Warning
+fun i(tag: String, message: String)  // Info
+fun v(tag: String, message: String)  // Verbose
+```
+Java only has debug() and exn().
+
+2. **Separate verbose control:**
+```kotlin
+private var verboseEnabled = false
+fun setVerboseEnabled(enabled: Boolean)
+```
+Can enable debug but disable verbose spam.
+
+3. **Optional throwable parameter:**
+```kotlin
+fun e(tag: String, message: String, throwable: Throwable? = null)
+```
+Can log error without exception.
+
+**ASSESSMENT**:
+
+**VERDICT**: ⚠️ **GOOD REDESIGN WITH MINOR GAPS**
+
+**LOSSES (Minor to Medium):**
+- ❌ Central TAG constant (minor inconvenience)
+- ❌ debug_startup_input_view() (medium - harder startup debugging)
+- ❌ trace() method (low - workaround exists)
+- ❌ LogPrinter sophistication (not critical)
+
+**GAINS (Valuable):**
+- ✅ Additional log levels (w, i, v)
+- ✅ Separate verbose control
+- ✅ More flexible API (custom tags)
+- ✅ Optional parameters
+
+**IMPACT**:
+- MEDIUM: Startup debugging harder without debug_startup_input_view()
+- LOW: No central TAG (minor inconvenience)
+- LOW: No trace() (can use e() with Exception)
+
+**RECOMMENDATION**: Add back debug_startup_input_view() for startup debugging. Otherwise acceptable redesign.
+
+**PROPERLY IMPLEMENTED**: Still 5 / 20 files (25.0%)
+- Modmap.kt ✅
+- ComposeKey.kt ✅
+- ComposeKeyData.kt ✅ (fixed)
+- Autocapitalisation.kt ✅
+- Utils.kt ✅
+
+---
+
+### FILES REVIEWED SO FAR: 20 / 251 (8.0%)
+**Bugs identified**: 89 critical issues
+**Properly implemented**: 5 / 20 files (25.0%)
+**Next file**: File 21/251
+
