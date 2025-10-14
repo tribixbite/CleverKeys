@@ -533,6 +533,16 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         // Create tensor with FRESH FloatBuffer view (position=0) - matches CLI test (line 120)
         val tensor = OnnxTensor.createTensor(ortEnvironment, byteBuffer.asFloatBuffer(), longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), TRAJECTORY_FEATURES.toLong()))
 
+        // HEX DUMP: First 30 float values (5 points × 6 features)
+        val readBuffer = byteBuffer.asFloatBuffer()
+        readBuffer.position(0)
+        val hexDump = StringBuilder("🔬 Trajectory tensor hex dump (first 30 floats):\n")
+        for (i in 0 until 30) {
+            val value = readBuffer.get()
+            hexDump.append(String.format("   [%2d] %.6f (0x%08x)\n", i, value, java.lang.Float.floatToRawIntBits(value)))
+        }
+        logD(hexDump.toString())
+
         // Track tensor with memory manager
         tensorMemoryManager.trackTensor(tensor, "TrajectoryTensor", longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), TRAJECTORY_FEATURES.toLong()), MAX_SEQUENCE_LENGTH * TRAJECTORY_FEATURES * 4L)
 
@@ -568,6 +578,16 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         // Log last 10 keys to verify repeat-last padding
         val last10 = features.nearestKeys.takeLast(10)
         logD("   Last 10 nearest keys: $last10")
+
+        // HEX DUMP: First 15 long values
+        val readBuffer = byteBuffer.asLongBuffer()
+        readBuffer.position(0)
+        val hexDump = StringBuilder("🔬 Nearest keys tensor hex dump (first 15 longs):\n")
+        for (i in 0 until 15) {
+            val value = readBuffer.get()
+            hexDump.append(String.format("   [%2d] %d (0x%016x)\n", i, value, value))
+        }
+        logD(hexDump.toString())
 
         // Create tensor with FRESH LongBuffer view (position=0) - matches CLI test (line 125)
         return OnnxTensor.createTensor(ortEnvironment, byteBuffer.asLongBuffer(), longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong()))

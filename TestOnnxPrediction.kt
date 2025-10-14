@@ -117,11 +117,31 @@ fun createTensorFromFeatures(env: OrtEnvironment, features: TrajectoryFeatures):
     val trajBuffer = ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * TRAJECTORY_FEATURES * 4)
     trajBuffer.order(ByteOrder.nativeOrder())
     trajBuffer.asFloatBuffer().put(features.trajectory)
+
+    // HEX DUMP: First 30 float values (5 points × 6 features)
+    val readTrajBuffer = trajBuffer.asFloatBuffer()
+    readTrajBuffer.position(0)
+    println("🔬 CLI Trajectory tensor hex dump (first 30 floats):")
+    for (i in 0 until 30) {
+        val value = readTrajBuffer.get()
+        println(String.format("   [%2d] %.6f (0x%08x)", i, value, java.lang.Float.floatToRawIntBits(value)))
+    }
+
     val trajTensor = OnnxTensor.createTensor(env, trajBuffer.asFloatBuffer(), longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), TRAJECTORY_FEATURES.toLong()))
 
     val keysBuffer = ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * 8)
     keysBuffer.order(ByteOrder.nativeOrder())
     keysBuffer.asLongBuffer().put(features.nearestKeys)
+
+    // HEX DUMP: First 15 long values
+    val readKeysBuffer = keysBuffer.asLongBuffer()
+    readKeysBuffer.position(0)
+    println("🔬 CLI Nearest keys tensor hex dump (first 15 longs):")
+    for (i in 0 until 15) {
+        val value = readKeysBuffer.get()
+        println(String.format("   [%2d] %d (0x%016x)", i, value, value))
+    }
+
     val keysTensor = OnnxTensor.createTensor(env, keysBuffer.asLongBuffer(), longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong()))
 
     val maskData = Array(1) { features.srcMask }

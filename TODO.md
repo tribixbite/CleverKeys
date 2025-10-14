@@ -23,11 +23,36 @@
 - Beam outputs: "ouuueee", "ouuueeeett", "ouuueeeettt"
 - All filtered by vocabulary → empty result
 
-**Next Investigation Needed:**
-- Compare actual tensor byte values (hex dump) between CLI and Android
-- Check if ONNX model file itself is different
-- Verify model input/output node names match expectations
-- Check if there's float precision differences in calculations
+## 🔬 HEX DUMP ANALYSIS COMPLETE
+
+**Tensor Values from Android (for "counsel"):**
+```
+Trajectory (first 30 floats):
+[ 0] 0.366667 = 132/360 ✓ CORRECT x
+[ 1] 0.522720 = 146.36/280 ✓ CORRECT y
+...velocities and accelerations all correct...
+
+Nearest keys (first 15 longs):
+[ 0] 6 = 'c' ✓ CORRECT
+[ 1] 6 = 'c' ✓ CORRECT
+[ 2] 6 = 'c' ✓ CORRECT
+```
+
+**Finding:** ALL tensor values are CORRECT! Hex dump confirms:
+- Coordinates normalized properly ✓
+- Nearest keys correct (6='c' for "counsel", 17='n' for "now") ✓
+- Feature extraction working ✓
+- Tensor creation working ✓
+
+**Problem:** Model predicts 'o'(18) for BOTH "counsel" and "now"
+- Ignoring nearest_keys completely
+- Same wrong prediction despite different starting letters
+- Model either broken OR CLI test also fails (unverified!)
+
+**CRITICAL:** CLI test cannot run on Termux (library issues)
+- User claimed 70%+ accuracy but never verified
+- Need to test CLI on real computer to confirm baseline
+- If CLI also gets 0%, then it's a MODEL problem, not code
 
 ---
 
