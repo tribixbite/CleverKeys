@@ -339,29 +339,48 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     private fun handleSwipeEnd() {
-        if (!isSwipeActive || config?.swipe_typing_enabled != true) return
+        if (!isSwipeActive || config?.swipe_typing_enabled != true) {
+            clearSwipeState()
+            return
+        }
 
         if (swipeTrajectory.size >= 2) {
-            // Create swipe input for neural prediction
-            val duration = if (swipeTimestamps.isNotEmpty()) {
-                swipeTimestamps.last() - swipeTimestamps.first()
-            } else 0L
+            // Calculate path length to distinguish taps from swipes
+            var pathLength = 0f
+            for (i in 1 until swipeTrajectory.size) {
+                val prev = swipeTrajectory[i - 1]
+                val curr = swipeTrajectory[i]
+                val dx = curr.x - prev.x
+                val dy = curr.y - prev.y
+                pathLength += kotlin.math.sqrt(dx * dx + dy * dy)
+            }
 
-            currentSwipeGesture = SwipeInput(
-                coordinates = ArrayList(swipeTrajectory),
-                timestamps = ArrayList(swipeTimestamps),
-                touchedKeys = emptyList()
-            )
+            // Only process as swipe if path is long enough (minimum 10 pixels)
+            // Short paths are taps, not swipes
+            if (pathLength >= 10f) {
+                // Create swipe input for neural prediction
+                val duration = if (swipeTimestamps.isNotEmpty()) {
+                    swipeTimestamps.last() - swipeTimestamps.first()
+                } else 0L
 
-            // Process neural prediction asynchronously via service
-            currentSwipeGesture?.let { gesture ->
-                android.util.Log.d("Keyboard2View", "Swipe gesture completed: ${gesture.coordinates.size} points")
-                // Pass gesture data to service for neural prediction
-                val gestureData = CleverKeysService.SwipeGestureData(
-                    path = gesture.coordinates,
-                    timestamps = gesture.timestamps
+                currentSwipeGesture = SwipeInput(
+                    coordinates = ArrayList(swipeTrajectory),
+                    timestamps = ArrayList(swipeTimestamps),
+                    touchedKeys = emptyList()
                 )
-                keyboardService?.handleSwipeGesture(gestureData)
+
+                // Process neural prediction asynchronously via service
+                currentSwipeGesture?.let { gesture ->
+                    android.util.Log.d("Keyboard2View", "Swipe gesture completed: ${gesture.coordinates.size} points, length: $pathLength px")
+                    // Pass gesture data to service for neural prediction
+                    val gestureData = CleverKeysService.SwipeGestureData(
+                        path = gesture.coordinates,
+                        timestamps = gesture.timestamps
+                    )
+                    keyboardService?.handleSwipeGesture(gestureData)
+                }
+            } else {
+                android.util.Log.d("Keyboard2View", "Gesture too short ($pathLength px), treating as tap")
             }
         }
 
@@ -635,12 +654,33 @@ class Keyboard2View @JvmOverloads constructor(
         isPressed: Boolean,
         tc: Theme.Computed.Key
     ) {
-        val color = if (isPressed) theme.activatedColor else theme.labelColor
-        val paint = tc.labelPaint(false, color, 16f)
-        val text = keyValue.displayString
-        val textY = y + keyHeight / 2f + paint.textSize / 3f
+        // Apply modifiers like shift/compose
+        val modifiedKey = modifyKey(keyValue, pointers.getModifiers()) ?: return
 
-        canvas.drawText(text, x, textY, paint)
+        val textSize = scaleTextSize(modifiedKey, true)
+        val color = labelColor(modifiedKey, isPressed, false)
+        val paint = tc.labelPaint(modifiedKey.hasFlag(KeyValue.Flag.KEY_FONT), color, textSize)
+
+        // Proper vertical centering using paint metrics
+        val textY = (keyHeight - paint.ascent() - paint.descent()) / 2f + y
+
+        canvas.drawText(modifiedKey.displayString, x, textY, paint)
+    }
+
+    enum class Vertical { TOP, CENTER, BOTTOM }
+
+    companion object {
+        val LABEL_POSITION_H = arrayOf(
+            Paint.Align.CENTER, Paint.Align.LEFT, Paint.Align.RIGHT, Paint.Align.LEFT,
+            Paint.Align.RIGHT, Paint.Align.LEFT, Paint.Align.RIGHT,
+            Paint.Align.CENTER, Paint.Align.CENTER
+        )
+
+        val LABEL_POSITION_V = arrayOf(
+            Vertical.CENTER, Vertical.TOP, Vertical.TOP, Vertical.BOTTOM,
+            Vertical.BOTTOM, Vertical.CENTER, Vertical.CENTER, Vertical.TOP,
+            Vertical.BOTTOM
+        )
     }
 
     private fun drawSubLabel(
@@ -650,28 +690,49 @@ class Keyboard2View @JvmOverloads constructor(
         y: Float,
         keyWidth: Float,
         keyHeight: Float,
-        position: Int,
+        subIndex: Int,
         isPressed: Boolean,
         tc: Theme.Computed.Key
     ) {
-        val color = if (isPressed) theme.activatedColor else theme.subLabelColor
-        val paint = tc.subLabelPaint(false, color, 12f, Paint.Align.CENTER)
-        val text = keyValue.displayString
+        val align = LABEL_POSITION_H[subIndex]
+        val vertical = LABEL_POSITION_V[subIndex]
 
-        // Calculate position based on index (1-8 for corners and sides)
-        val (textX, textY) = when (position) {
-            1 -> Pair(x + keyWidth * 0.2f, y + keyHeight * 0.3f)           // Top-left
-            2 -> Pair(x + keyWidth * 0.5f, y + keyHeight * 0.2f)           // Top
-            3 -> Pair(x + keyWidth * 0.8f, y + keyHeight * 0.3f)           // Top-right
-            4 -> Pair(x + keyWidth * 0.9f, y + keyHeight * 0.5f)           // Right
-            5 -> Pair(x + keyWidth * 0.8f, y + keyHeight * 0.8f)           // Bottom-right
-            6 -> Pair(x + keyWidth * 0.5f, y + keyHeight * 0.9f)           // Bottom
-            7 -> Pair(x + keyWidth * 0.2f, y + keyHeight * 0.8f)           // Bottom-left
-            8 -> Pair(x + keyWidth * 0.1f, y + keyHeight * 0.5f)           // Left
-            else -> Pair(x + keyWidth * 0.5f, y + keyHeight * 0.5f)        // Center
+        // Apply modifiers
+        val modifiedKey = modifyKey(keyValue, pointers.getModifiers()) ?: return
+
+        val textSize = scaleTextSize(modifiedKey, false)
+        val color = labelColor(modifiedKey, isPressed, true)
+        val paint = tc.subLabelPaint(
+            modifiedKey.hasFlag(KeyValue.Flag.KEY_FONT),
+            color,
+            textSize,
+            align
+        )
+
+        val subPadding = config?.keyPadding ?: 5f
+
+        // Calculate vertical position
+        var textY = y
+        textY += when (vertical) {
+            Vertical.CENTER -> (keyHeight - paint.ascent() - paint.descent()) / 2f
+            Vertical.TOP -> subPadding - paint.ascent()
+            Vertical.BOTTOM -> keyHeight - subPadding - paint.descent()
         }
 
-        canvas.drawText(text, textX, textY, paint)
+        // Calculate horizontal position
+        var textX = x
+        textX += when (align) {
+            Paint.Align.CENTER -> keyWidth / 2f
+            Paint.Align.LEFT -> subPadding
+            Paint.Align.RIGHT -> keyWidth - subPadding
+            else -> keyWidth / 2f
+        }
+
+        // Limit string keys to 3 characters
+        val label = modifiedKey.displayString
+        val labelLen = if (label.length > 3 && modifiedKey is KeyValue.StringKey) 3 else label.length
+
+        canvas.drawText(label, 0, labelLen, textX, textY, paint)
     }
 
     private fun drawIndication(
@@ -713,6 +774,33 @@ class Keyboard2View @JvmOverloads constructor(
         }
     }
 
+    private fun scaleTextSize(keyValue: KeyValue, isMainLabel: Boolean): Float {
+        val smallerFont = if (keyValue.hasFlag(KeyValue.Flag.SMALLER_FONT)) 0.75f else 1f
+        val labelSize = if (isMainLabel) mainLabelSize else subLabelSize
+        return labelSize * smallerFont
+    }
+
+    private fun labelColor(keyValue: KeyValue, isKeyDown: Boolean, isSubLabel: Boolean): Int {
+        if (isKeyDown) {
+            val flags = pointers.getKeyFlags(keyValue)
+            if (flags != -1) {
+                if ((flags and Pointers.FLAG_P_LOCKED) != 0) {
+                    return theme.lockedColor
+                }
+                return theme.activatedColor
+            }
+        }
+
+        if (keyValue.hasFlag(KeyValue.Flag.SECONDARY) || keyValue.hasFlag(KeyValue.Flag.GREYED)) {
+            if (keyValue.hasFlag(KeyValue.Flag.GREYED)) {
+                return theme.greyedLabelColor
+            }
+            return theme.secondaryLabelColor
+        }
+
+        return if (isSubLabel) theme.subLabelColor else theme.labelColor
+    }
+
     override fun modifyKey(keyValue: KeyValue?, modifiers: Pointers.Modifiers): KeyValue {
         return if (keyValue != null) {
             modifyKeyInternal(keyValue, modifiers)
@@ -724,14 +812,5 @@ class Keyboard2View @JvmOverloads constructor(
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         scope.cancel()
-    }
-
-    // Utility enum for vertical alignment
-    enum class Vertical {
-        TOP, CENTER, BOTTOM
-    }
-
-    companion object {
-        private const val TAG = "Keyboard2View"
     }
 }
