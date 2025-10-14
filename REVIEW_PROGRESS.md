@@ -4941,3 +4941,289 @@ This file should serve as a TEMPLATE for how other files should be fixed.
 **Properly implemented**: 5 / 18 files (27.8%) ⬆️ IMPROVING!
 **Next file**: File 19/251
 
+
+---
+
+## FILE 19/251: Emoji.java (794 lines) vs Emoji.kt (180 lines)
+
+**STATUS**: ⚠️ COMPLEX - ARCHITECTURAL REDESIGN WITH LOSSES AND GAINS
+
+### BUGS #83-86: Missing Core Functionality + Incompatible API
+
+**Java**: 794-line static emoji system with 687-line name mapping
+**Kotlin**: 180-line instance-based system with search/recent features
+
+**ARCHITECTURAL REDESIGN**: Not a port - completely different approach with trade-offs
+
+**Java Architecture (794 lines)**:
+```java
+public class Emoji {
+    private final KeyValue _kv;  // Wraps KeyValue for keyboard integration
+    
+    // Static data structures
+    private final static List<Emoji> _all = new ArrayList<>();
+    private final static List<List<Emoji>> _groups = new ArrayList<>();  // Numeric indices
+    private final static HashMap<String, Emoji> _stringMap = new HashMap<>();
+    
+    // Load from R.raw.emojis (BufferedReader)
+    public static void init(Resources res) { ... }
+    
+    // Core API
+    public KeyValue kv() { return _kv; }
+    public static int getNumGroups() { return _groups.size(); }
+    public static List<Emoji> getEmojisByGroup(int groupIndex) { return _groups.get(groupIndex); }
+    public static Emoji getEmojiByString(String value) { return _stringMap.get(value); }
+    
+    // HUGE emoji name mapper (687 lines, 84% of file)
+    public static String mapOldNameToValue(String name) throws IllegalArgumentException {
+        // Parse ":u1F600:" Unicode codepoint format
+        if (name.matches(":(u[a-fA-F0-9]{4,5})+:")) {
+            StringBuilder sb = new StringBuilder();
+            for (String code : name.replace(":", "").substring(1).split("u")) {
+                sb.append(Character.toChars(Integer.decode("0X" + code)));
+            }
+            return sb.toString();
+        }
+        
+        // 687-line switch statement mapping emoji names to characters
+        switch (name) {
+            case ":grinning:": return "😀";
+            case ":smiley:": return "😃";
+            case ":smile:": return "😄";
+            case ":grin:": return "😁";
+            case ":satisfied:": return "😆";
+            // ... 682 more emoji mappings
+            case ":checkered_flag:": return "🏁";
+            case ":triangular_flag_on_post:": return "🚩";
+            case ":crossed_flags:": return "🎌";
+        }
+        throw new IllegalArgumentException("'" + name + "' is not a valid name");
+    }
+}
+```
+
+**Kotlin Architecture (180 lines)**:
+```kotlin
+class Emoji(private val context: Context) {
+    companion object {
+        private var instance: Emoji? = null
+        fun getInstance(context: Context): Emoji  // Singleton pattern
+    }
+    
+    private val emojis = mutableListOf<EmojiData>()
+    private val emojiGroups = mutableMapOf<String, List<EmojiData>>()  // Named groups
+    
+    data class EmojiData(
+        val emoji: String,
+        val description: String,   // NEW: Human-readable
+        val group: String,          // NEW: Group name not index
+        val keywords: List<String>  // NEW: Search support
+    )
+    
+    // Async loading with coroutines
+    suspend fun loadEmojis(): Boolean = withContext(Dispatchers.IO) {
+        // Load from assets/raw/emojis.txt with CSV parsing
+    }
+    
+    // NEW: Search functionality
+    fun searchEmojis(query: String): List<EmojiData>
+    
+    // NEW: Recent emoji tracking
+    fun getRecentEmojis(context: Context): List<EmojiData>
+    fun recordEmojiUsage(context: Context, emoji: EmojiData)
+    
+    // Compatibility wrappers (different types!)
+    fun getEmojisByGroup(group: String): List<EmojiData>  // By name not index
+    fun getEmojisByGroupIndex(groupIndex: Int): List<EmojiData>  // Index wrapper
+    fun getNumGroups(): Int
+}
+```
+
+**BUG #83: mapOldNameToValue() COMPLETELY MISSING (CRITICAL - 711 lines)**
+
+Java has 687-line emoji name mapping system:
+```java
+// Parse ":smiley:" → "😀"
+// Parse ":u1F600:" → "😀" (Unicode codepoint format)
+// Parse ":heart_eyes:" → "😍"
+// ... 687 total mappings
+```
+
+Kotlin: ❌ **COMPLETELY MISSING**
+
+**IMPACT:**
+- CRITICAL: Custom layouts cannot use emoji names (":smiley:")
+- CRITICAL: Old layout definitions break (backward incompatibility)
+- HIGH: Unicode codepoint format ":u1F600:" not supported
+- Users must copy-paste actual emoji characters instead
+
+**Example breakage:**
+```xml
+<!-- User's custom layout -->
+<key key0=":smiley:" />       <!-- Java: works, Kotlin: fails -->
+<key key0=":u1F600:" />        <!-- Java: works, Kotlin: fails -->
+<key key0="😀" />              <!-- Both: works -->
+```
+
+**BUG #84: getEmojiByString() missing**
+
+Java:
+```java
+private final static HashMap<String, Emoji> _stringMap = new HashMap<>();
+
+public static Emoji getEmojiByString(String value) {
+    return _stringMap.get(value);  // O(1) lookup by emoji character
+}
+```
+
+Kotlin: ❌ **NO EQUIVALENT METHOD**
+- Cannot look up Emoji object by emoji string
+- No HashMap for O(1) lookup
+- Would need linear search through emojis list
+
+**BUG #85: Incompatible group API (HIGH)**
+
+**Java - Numeric group indices:**
+```java
+public static List<Emoji> getEmojisByGroup(int groupIndex) {
+    return _groups.get(groupIndex);  // Groups: 0, 1, 2, 3, 4...
+}
+```
+
+**Kotlin - Named groups:**
+```kotlin
+fun getEmojisByGroup(group: String): List<EmojiData> {
+    return emojiGroups[group] ?: emptyList()  // Groups: "smileys", "animals", "food"...
+}
+```
+
+Kotlin has compatibility wrapper but:
+- Returns `List<EmojiData>` not `List<Emoji>`
+- EmojiData is incompatible with Emoji
+- Group ordering may differ
+
+**BUG #86: KeyValue integration missing (CRITICAL)**
+
+**Java - Returns KeyValue for keyboard:**
+```java
+public class Emoji {
+    private final KeyValue _kv;
+    
+    protected Emoji(String bytecode) {
+        this._kv = new KeyValue(bytecode, KeyValue.Kind.String, 0, 0);
+    }
+    
+    public KeyValue kv() {
+        return _kv;  // Used by keyboard to insert emoji
+    }
+}
+```
+
+**Kotlin - No KeyValue integration:**
+```kotlin
+data class EmojiData(
+    val emoji: String,
+    val description: String,
+    val group: String,
+    val keywords: List<String>
+)
+// ❌ NO kv() method
+// ❌ NO KeyValue wrapper
+// ❌ Cannot be used where Emoji.kv() is expected
+```
+
+**IMPACT**: EmojiGridView and other UI components expect `emoji.kv()` but EmojiData doesn't have it.
+
+**✅ ENHANCEMENTS IN KOTLIN (NOT IN JAVA)**:
+
+1. **Emoji Search (NEW):**
+```kotlin
+fun searchEmojis(query: String): List<EmojiData> {
+    val lowerQuery = query.lowercase()
+    return emojis.filter { emoji ->
+        emoji.description.lowercase().contains(lowerQuery) ||
+        emoji.keywords.any { it.lowercase().contains(lowerQuery) }
+    }.take(20)
+}
+```
+Users can search "smile" to find 😀😃😄😁😊 etc.
+
+2. **Recent Emoji Tracking (NEW):**
+```kotlin
+fun getRecentEmojis(context: Context): List<EmojiData> {
+    // Load from SharedPreferences
+}
+
+fun recordEmojiUsage(context: Context, emoji: EmojiData) {
+    // Update recent list, keep 20 most recent
+}
+```
+Remembers frequently used emojis across sessions.
+
+3. **Async Loading (NEW):**
+```kotlin
+suspend fun loadEmojis(): Boolean = withContext(Dispatchers.IO) {
+    // Non-blocking emoji loading on background thread
+}
+```
+Better startup performance, doesn't block UI.
+
+4. **Richer Data Model (NEW):**
+```kotlin
+data class EmojiData(
+    val emoji: String,
+    val description: String,   // "grinning face"
+    val group: String,          // "smileys & emotion"
+    val keywords: List<String>  // ["happy", "smile", "joy"]
+)
+```
+Java just wraps emoji string in KeyValue, no metadata.
+
+5. **Singleton Pattern (NEW):**
+```kotlin
+companion object {
+    fun getInstance(context: Context): Emoji
+}
+```
+Proper lifecycle management instead of global static state.
+
+**MISSING FROM KOTLIN (614 lines / 77%)**:
+
+1. **mapOldNameToValue() method (711 lines)** - emoji name → character mapping
+2. **getEmojiByString() method** - direct lookup by emoji character
+3. **KeyValue integration** - kv() method for keyboard use
+4. **Static initialization** - init(Resources) method
+5. **HashMap _stringMap** - O(1) emoji lookup
+
+**ASSESSMENT**:
+
+**VERDICT**: ⚠️ **INCOMPLETE REDESIGN**
+
+This is NOT a port - it's a complete architectural redesign with:
+- **LOSSES**: 687 emoji name mappings, KeyValue integration, API compatibility
+- **GAINS**: Search, recent tracking, async loading, better data model
+
+**RECOMMENDATION**: Hybrid approach needed:
+1. Keep Kotlin's enhancements (search, recent, async, data model)
+2. Add back Java's compatibility layer:
+   - Port mapOldNameToValue() (687 lines)
+   - Add getEmojiByString() with HashMap
+   - Add kv() method to EmojiData or wrapper
+   - Support both named groups AND numeric indices
+
+**PROPERLY IMPLEMENTED**: Still 5 / 19 files (26.3%)
+- Modmap.kt ✅
+- ComposeKey.kt ✅
+- ComposeKeyData.kt ✅ (fixed)
+- Autocapitalisation.kt ✅
+- Utils.kt ✅
+
+**TIME TO FIX**: 2-3 days to add compatibility layer + port emoji name mappings
+
+---
+
+### FILES REVIEWED SO FAR: 19 / 251 (7.6%)
+**Bugs identified**: 86 critical issues
+**Properly implemented**: 5 / 19 files (26.3%)
+**Next file**: File 20/251
+
