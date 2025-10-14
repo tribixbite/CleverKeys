@@ -56,7 +56,7 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 21. ✅ **FoldStateTracker.java (62 lines) vs FoldStateTracker.kt+Impl (275 lines) - ✅ EXEMPLARY (4X expansion)**
 22. ✅ **LayoutsPreference.java (302 lines) vs LayoutsPreference.kt (407 lines) - ❌ CATASTROPHIC (16 bugs, infinite recursion crash)**
 
-### **BUGS IDENTIFIED: 107 CRITICAL ISSUES**
+### **BUGS IDENTIFIED: 100 CRITICAL ISSUES (107 found, 7 fixed)**
 
 - File 1: 1 critical (KeyValueParser 96% missing)
 - File 2: 23 critical (Keyboard2 ~800 lines missing)
@@ -79,7 +79,7 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 - File 19: **4 CRITICAL** (Emoji - mapOldNameToValue missing 687 lines, KeyValue integration, API incompatible)
 - File 20: **3 bugs** (Logs - debug_startup_input_view missing, no trace(), no TAG constant)
 - File 21: **2 bugs** (FoldStateTracker - isFoldableDevice missing, Flow vs callback API)
-- File 22: **16 CRITICAL** (LayoutsPreference - infinite recursion crash, data loss, wrong base class, hardcoded IDs)
+- File 22: **16 CRITICAL → 9 REMAINING** (LayoutsPreference - ✅ FIXED 7: infinite recursion, hardcoded IDs/strings, missing init; ⏳ REMAINING: wrong base class, data loss, broken serialization)
 
 ### **TIME INVESTMENT:**
 - **Spent**: 22.5 hours complete line-by-line reading (Files 1-22)
@@ -88,6 +88,22 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 - **✅ Properly Implemented**: 6 / 22 files (27.3%) - Modmap.kt, ComposeKey.kt, ComposeKeyData.kt (fixed), Autocapitalisation.kt, Utils.kt (exemplary), FoldStateTracker.kt (exemplary)
 - **❌ Stub Files**: 3 / 22 files (13.6%) - ExtraKeys.kt (architectural mismatch), DirectBootAwarePreferences.kt, LayoutsPreference.kt (catastrophic)
 - **⚠️ Redesigns**: 2 / 22 files (9.1%) - Emoji.kt (missing compatibility), Logs.kt (missing specialized debug)
+
+## ✅ FIXES APPLIED (Oct 14, 2025 Session)
+
+### **LayoutsPreference.kt - 7 Critical Bugs Fixed:**
+
+1. **Fix #93**: Layout display names initialization - now loads from R.array.pref_layout_entries
+2. **Fix #94**: Hardcoded layout names - now loads from R.array.pref_layout_values
+3. **Fix #95**: Hardcoded resource IDs - now uses TypedArray.getResourceId() dynamic lookup
+4. **Fix #98**: No default initialization - now initializes with DEFAULT on first run
+5. **Fix #99**: Infinite recursion crash - layoutDisplayNames no longer calls labelOfLayout()
+6. **Fix #100**: Hardcoded UI strings - now loads from pref_layout_e_* resources
+7. **Fix #103**: Stub initial layout - now loads R.raw.latn_qwerty_us template
+
+**Impact**: Preference no longer crashes immediately, restores proper resource loading and i18n support.
+
+**Remaining Issues**: Wrong base class (architectural), broken serialization, data loss on save.
 
 ## 🔧 IMMEDIATE FIXES NEEDED (Priority Order)
 
