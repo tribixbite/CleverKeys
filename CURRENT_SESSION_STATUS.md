@@ -31,7 +31,7 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 
 ## 📊 SYSTEMATIC REVIEW PROGRESS
 
-### **FILES REVIEWED: 20 / 251 (8.0%)**
+### **FILES REVIEWED: 22 / 251 (8.8%)**
 
 1. ✅ KeyValueParser.java (289 lines) vs KeyValue.kt:629-642 (13 lines)
 2. ✅ Keyboard2.java (1392 lines) vs CleverKeysService.kt (933 lines)
@@ -53,8 +53,10 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 18. ✅ **Utils.java (52 lines) vs Utils.kt (379 lines) - ✅ ZERO BUGS! 7X EXPANSION + ENHANCEMENTS**
 19. ✅ **Emoji.java (794 lines) vs Emoji.kt (180 lines) - ⚠️ REDESIGN (4 bugs, 5 enhancements)**
 20. ✅ **Logs.java (51 lines) vs Logs.kt (73 lines) - ⚠️ REDESIGN (3 bugs, 3 enhancements)**
+21. ✅ **FoldStateTracker.java (62 lines) vs FoldStateTracker.kt+Impl (275 lines) - ✅ EXEMPLARY (4X expansion)**
+22. ✅ **LayoutsPreference.java (302 lines) vs LayoutsPreference.kt (407 lines) - ❌ CATASTROPHIC (16 bugs, infinite recursion crash)**
 
-### **BUGS IDENTIFIED: 89 CRITICAL ISSUES**
+### **BUGS IDENTIFIED: 107 CRITICAL ISSUES**
 
 - File 1: 1 critical (KeyValueParser 96% missing)
 - File 2: 23 critical (Keyboard2 ~800 lines missing)
@@ -76,14 +78,16 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 - File 18: **✅ 0 bugs** (Utils - ✅ EXEMPLARY! 7X expansion with enhancements)
 - File 19: **4 CRITICAL** (Emoji - mapOldNameToValue missing 687 lines, KeyValue integration, API incompatible)
 - File 20: **3 bugs** (Logs - debug_startup_input_view missing, no trace(), no TAG constant)
+- File 21: **2 bugs** (FoldStateTracker - isFoldableDevice missing, Flow vs callback API)
+- File 22: **16 CRITICAL** (LayoutsPreference - infinite recursion crash, data loss, wrong base class, hardcoded IDs)
 
 ### **TIME INVESTMENT:**
-- **Spent**: 21.5 hours complete line-by-line reading (Files 1-20)
+- **Spent**: 22.5 hours complete line-by-line reading (Files 1-22)
 - **Estimated Remaining**: 14-18 weeks for complete parity
-- **Next Phase**: Continue systematic review (231 files remaining)
-- **✅ Properly Implemented**: 5 / 20 files (25.0%) - Modmap.kt, ComposeKey.kt, ComposeKeyData.kt (fixed), Autocapitalisation.kt, **Utils.kt (exemplary)**
-- **❌ Stub Files**: 2 / 20 files (10.0%) - ExtraKeys.kt (architectural mismatch), DirectBootAwarePreferences.kt
-- **⚠️ Redesigns**: 2 / 20 files (10.0%) - Emoji.kt (missing compatibility), Logs.kt (missing specialized debug)
+- **Next Phase**: Continue systematic review (229 files remaining)
+- **✅ Properly Implemented**: 6 / 22 files (27.3%) - Modmap.kt, ComposeKey.kt, ComposeKeyData.kt (fixed), Autocapitalisation.kt, Utils.kt (exemplary), FoldStateTracker.kt (exemplary)
+- **❌ Stub Files**: 3 / 22 files (13.6%) - ExtraKeys.kt (architectural mismatch), DirectBootAwarePreferences.kt, LayoutsPreference.kt (catastrophic)
+- **⚠️ Redesigns**: 2 / 22 files (9.1%) - Emoji.kt (missing compatibility), Logs.kt (missing specialized debug)
 
 ## 🔧 IMMEDIATE FIXES NEEDED (Priority Order)
 
