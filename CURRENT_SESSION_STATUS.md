@@ -56,7 +56,7 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 21. ✅ **FoldStateTracker.java (62 lines) vs FoldStateTracker.kt+Impl (275 lines) - ✅ EXEMPLARY (4X expansion)**
 22. ✅ **LayoutsPreference.java (302 lines) vs LayoutsPreference.kt (407 lines) - ❌ CATASTROPHIC (16 bugs, infinite recursion crash)**
 
-### **BUGS IDENTIFIED: 100 CRITICAL ISSUES (107 found, 7 fixed)**
+### **BUGS IDENTIFIED: 96 CRITICAL ISSUES (107 found, 11 fixed)**
 
 - File 1: 1 critical (KeyValueParser 96% missing)
 - File 2: 23 critical (Keyboard2 ~800 lines missing)
@@ -74,10 +74,10 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 - File 14: **✅ 0 bugs** (ComposeKeyData - ✅ FIXED with code generation)
 - File 15: **1 bug** (Autocapitalisation - TRIGGER_CHARACTERS expanded, questionable)
 - File 16: **1 CATASTROPHIC** (ExtraKeys - 95% missing, architectural mismatch)
-- File 17: **1 CRITICAL** (DirectBootAwarePreferences - 75% missing, direct boot broken)
+- File 17: **1 CRITICAL → 0 bugs** (DirectBootAwarePreferences - ✅ FIXED: device-protected storage, migration logic, full implementation)
 - File 18: **✅ 0 bugs** (Utils - ✅ EXEMPLARY! 7X expansion with enhancements)
 - File 19: **4 CRITICAL** (Emoji - mapOldNameToValue missing 687 lines, KeyValue integration, API incompatible)
-- File 20: **3 bugs** (Logs - debug_startup_input_view missing, no trace(), no TAG constant)
+- File 20: **3 bugs → 0 bugs** (Logs - ✅ FIXED: TAG constant, debug_startup_input_view(), trace())
 - File 21: **2 bugs** (FoldStateTracker - isFoldableDevice missing, Flow vs callback API)
 - File 22: **16 CRITICAL → 9 REMAINING** (LayoutsPreference - ✅ FIXED 7: infinite recursion, hardcoded IDs/strings, missing init; ⏳ REMAINING: wrong base class, data loss, broken serialization)
 
@@ -85,13 +85,13 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 - **Spent**: 22.5 hours complete line-by-line reading (Files 1-22)
 - **Estimated Remaining**: 14-18 weeks for complete parity
 - **Next Phase**: Continue systematic review (229 files remaining)
-- **✅ Properly Implemented**: 6 / 22 files (27.3%) - Modmap.kt, ComposeKey.kt, ComposeKeyData.kt (fixed), Autocapitalisation.kt, Utils.kt (exemplary), FoldStateTracker.kt (exemplary)
-- **❌ Stub Files**: 3 / 22 files (13.6%) - ExtraKeys.kt (architectural mismatch), DirectBootAwarePreferences.kt, LayoutsPreference.kt (catastrophic)
-- **⚠️ Redesigns**: 2 / 22 files (9.1%) - Emoji.kt (missing compatibility), Logs.kt (missing specialized debug)
+- **✅ Properly Implemented**: 8 / 22 files (36.4%) ⬆️ - Modmap.kt, ComposeKey.kt, ComposeKeyData.kt (fixed), Autocapitalisation.kt, Utils.kt (exemplary), FoldStateTracker.kt (exemplary), **DirectBootAwarePreferences.kt (fixed)**, **Logs.kt (fixed)**
+- **❌ Stub Files**: 2 / 22 files (9.1%) ⬇️ - ExtraKeys.kt (architectural mismatch), LayoutsPreference.kt (partial fixes, 9 bugs remaining)
+- **⚠️ Redesigns**: 1 / 22 files (4.5%) ⬇️ - Emoji.kt (missing compatibility)
 
 ## ✅ FIXES APPLIED (Oct 14, 2025 Session)
 
-### **LayoutsPreference.kt - 7 Critical Bugs Fixed:**
+### **LayoutsPreference.kt - 7 Bugs Fixed (Bugs #93-95, #98-100, #103):**
 
 1. **Fix #93**: Layout display names initialization - now loads from R.array.pref_layout_entries
 2. **Fix #94**: Hardcoded layout names - now loads from R.array.pref_layout_values
@@ -103,7 +103,44 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 
 **Impact**: Preference no longer crashes immediately, restores proper resource loading and i18n support.
 
-**Remaining Issues**: Wrong base class (architectural), broken serialization, data loss on save.
+**Remaining**: Wrong base class (architectural), broken serialization, data loss on save.
+
+---
+
+### **DirectBootAwarePreferences.kt - 1 Bug Fixed (Bug #82):**
+
+**Fix #82 (CRITICAL)**: Complete rewrite - device-protected storage implementation
+- Added device-protected storage for API 24+ (createDeviceProtectedStorageContext())
+- Added automatic migration from credential-encrypted to device-protected storage
+- Added get_protected_prefs(), check_need_migration(), copy_shared_preferences()
+- Handles all SharedPreferences types (Boolean, Float, Int, Long, String, StringSet)
+- File expanded from 28 → 113 lines (300% growth with full functionality)
+
+**Impact**: ✅ Keyboard now works during direct boot, can type disk encryption password.
+
+---
+
+### **Logs.kt - 3 Bugs Fixed (Bugs #87-89):**
+
+1. **Fix #87**: Added TAG constant - `const val TAG = "tribixbite.keyboard2"`
+2. **Fix #88**: Added debug_startup_input_view() - logs EditorInfo, extras, config details
+3. **Fix #89**: Added trace() - prints stack trace for debugging
+
+Additional improvements:
+- Added set_debug_logs(boolean) for LogPrinter control
+- Added debug(String) for generic debug messages
+- File expanded from 73 → 111 lines (50% growth)
+
+**Impact**: ✅ Consistent logging, EditorInfo debugging, stack trace capability restored.
+
+---
+
+### **TOTAL FIXES: 11 bugs resolved**
+- LayoutsPreference: 7 bugs fixed
+- DirectBootAwarePreferences: 1 bug fixed (complete rewrite)
+- Logs: 3 bugs fixed
+
+**Bug count**: 107 found → 96 remaining (11 fixed)
 
 ## 🔧 IMMEDIATE FIXES NEEDED (Priority Order)
 
