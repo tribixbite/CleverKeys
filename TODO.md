@@ -85,6 +85,64 @@
 
 ---
 
+## ⚠️  **MODEL QUALITY ISSUE - LOW PREDICTION ACCURACY (Oct 13, 2025)**
+
+**Issue:** Even with correct beam search implementation, model produces wrong predictions.
+
+**Example from calibration:**
+```
+Target: 'spam'
+Nearest keys (first 10): [22, 22, 22, 22, 22, 22, 22, 22, 7, 7]  # 's', 's', 's'...
+Beam search output: 'aaae', 'aaaee', 'raae'  # Wrong!
+Vocabulary filter: 18 → 0 candidates (all gibberish rejected)
+```
+
+**Root Cause Analysis:**
+1. ✅ **Code is correct:**
+   - Beam search stops on EOS/PAD (Fix #33)
+   - Nearest keys correct (token 22 = 's')
+   - Tokenizer correct (a=4, ..., s=22, ..., z=29)
+   - Test code achieves 50% accuracy matching Python reference
+
+2. ❌ **Model quality is insufficient:**
+   - Model produces token 4 ('a') repeatedly instead of token 22 ('s')
+   - Suggests model isn't properly attending to nearest_keys embedding
+   - Model defaults to common letters when uncertain
+   - 50% accuracy on test data indicates poor training
+
+3. **Possible causes:**
+   - Training data mismatch (static starting points not represented)
+   - Insufficient training iterations
+   - Architecture doesn't properly use nearest_keys feature
+   - Over-representation of 'a' in training vocabulary
+
+**Evidence:**
+- Calibration logs show correct nearest_keys but wrong predictions
+- Test suite shows 50% accuracy (barely better than random)
+- Vocabulary filter correctly rejects all gibberish (18 → 0)
+
+**Recommendations:**
+
+**Short-term (Code fixes):**
+- ✅ Fix #32: Test beam search (DONE)
+- ✅ Fix #33: Production PAD stopping (DONE)
+- ✅ 3D format cleanup (DONE)
+
+**Medium-term (Model improvements):**
+- [ ] Retrain model with better data augmentation
+- [ ] Add attention visualization to debug nearest_keys usage
+- [ ] Increase training iterations (current model appears undertrained)
+- [ ] Balance vocabulary distribution in training data
+
+**Long-term (Architecture):**
+- [ ] Consider adding explicit attention mechanism for nearest_keys
+- [ ] Implement confidence-based fallback to character-by-character prediction
+- [ ] Add ensemble model combining multiple prediction strategies
+
+**Status:** ⚠️  **KNOWN LIMITATION** - Model quality requires retraining, code is correct
+
+---
+
 ## ✅ **CLEANUP - 3D NEAREST_KEYS REMNANTS ELIMINATED (Oct 13, 2025)**
 
 **Issue:** Code still computed 3 nearest keys but only used first one - wasteful and confusing.
