@@ -230,14 +230,11 @@ tasks.register('checkKeyboardLayouts') {
 }
 
 tasks.register('compileComposeSequences') {
-  def out = "srcs/tribixbite.keyboard2/ComposeKeyData.java"
-  println "\nGenerating ${out}"
+  def out = "src/main/kotlin/tribixbite/keyboard2/ComposeKeyData.kt"
+  println "\nGenerating ${out} (4050 compose sequences → 8659 states)"
   exec {
-    def sequences = new File(projectDir, "srcs/compose").listFiles().findAll {
-      !it.name.endsWith(".py") && !it.name.endsWith(".md")
-    }
     workingDir = projectDir
-    commandLine("python", "srcs/compose/compile.py", *sequences)
+    commandLine("python3", "generate_compose_data.py")
     standardOutput = new FileOutputStream("${projectDir}/${out}")
   }
 }
