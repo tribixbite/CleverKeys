@@ -3910,3 +3910,187 @@ File 13 (ComposeKey): 2 MINOR bugs, 0% missing, 2-3 hour fixes
 **Critical Issues**: 24 showstoppers identified
 **✅ PROPERLY IMPLEMENTED FILES**: 2 / 13 (15.4%) - Modmap.kt, ComposeKey.kt
 **Next File**: File 14/251 - Continue systematic review
+
+---
+
+## FILE 14/251: ComposeKeyData.java vs ComposeKeyData.kt
+
+**Lines**: Java 286 lines vs Kotlin 191 lines
+**Impact**: CRITICAL SHOWSTOPPER - 99% of data MISSING
+**Status**: ❌ **INCOMPLETE STUB** - Cannot function
+
+### **🚨 CRITICAL DISCOVERY: DATA FILE IS A STUB!**
+
+This file contains auto-generated Unicode compose sequence data. The Kotlin version is **99% incomplete** with only sample data.
+
+---
+
+### BUG #78: ComposeKeyData arrays TRUNCATED - 99% MISSING
+**Severity**: CRITICAL SHOWSTOPPER
+**File**: ComposeKeyData.kt:26-86
+
+**Java Implementation** (complete):
+```java
+/** This file is generated, see [srcs/compose/compile.py]. */
+public static final char[] states =
+  ("\u0001\u0000acegijklmnoprsuwyz..." +
+   // THOUSANDS of Unicode characters
+   "...").toCharArray();
+
+public static final int[] edges = ...;  // Matching edge data
+
+// 33 named constants
+public static final int accent_aigu = 1;
+public static final int shift = 8426;
+// ... 31 more
+```
+
+**Kotlin Implementation** (99% missing):
+```kotlin
+val states: CharArray = charArrayOf(
+    '\u0001', '\u0000', 'a', 'c', 'e', 'g', 'i', 'j', 'k',
+    // Only ~154 elements
+    '\u2195', '\u2192', '\u2196', '\u2191', '\u2197'
+
+    // ❌ COMMENT ADMITS INCOMPLETENESS:
+    // Note: The actual generated data would be much larger (67K+ tokens)
+    // This is a representative sample showing the structure
+)
+```
+
+**Problems**:
+- **states**: ~154 elements instead of ~8000+
+- **edges**: ~20 elements instead of ~8000+
+- Lines 64-65 explicitly admit: "representative sample"
+- Comments state data "would be much larger"
+
+**Impact**: **CRITICAL SHOWSTOPPER**
+- ComposeKey.apply() fails for 99% of characters
+- Only ~154 sample characters can compose
+- All other accented characters return null
+- **Compose system 99% broken**
+
+---
+
+### BUG #79: Missing 33 named constants
+**Severity**: CRITICAL SHOWSTOPPER
+**File**: ComposeKeyData.kt (entire file - constants missing)
+
+**Java has 33 constants** (lines 253-285):
+```java
+public static final int accent_aigu = 1;
+public static final int accent_arrows = 130;
+public static final int accent_bar = 153;
+public static final int accent_box = 208;
+public static final int accent_caron = 231;
+public static final int accent_cedille = 304;
+public static final int accent_circonflexe = 330;
+public static final int accent_dot_above = 412;
+public static final int accent_dot_below = 541;
+public static final int accent_double_aigu = 596;
+public static final int accent_double_grave = 625;
+public static final int accent_grave = 664;
+public static final int accent_hook_above = 730;
+public static final int accent_horn = 752;
+public static final int accent_macron = 769;
+public static final int accent_ogonek = 824;
+public static final int accent_ordinal = 836;
+public static final int accent_ring = 859;
+public static final int accent_slash = 871;
+public static final int accent_subscript = 911;
+public static final int accent_superscript = 988;
+public static final int accent_tilde = 1144;
+public static final int accent_trema = 1172;
+public static final int compose = 1270;
+public static final int fn = 7683;
+public static final int numpad_bengali = 8279;
+public static final int numpad_devanagari = 8300;
+public static final int numpad_gujarati = 8321;
+public static final int numpad_hindu = 8342;
+public static final int numpad_kannada = 8363;
+public static final int numpad_persian = 8384;
+public static final int numpad_tamil = 8405;
+public static final int shift = 8426;
+```
+
+**Kotlin has ZERO constants**:
+```kotlin
+// ❌ COMPLETELY MISSING!
+```
+
+**Impact**: **CRITICAL SHOWSTOPPER**
+- KeyModifier needs these to apply accents
+- Without constants, can't find accent entry points
+- Can't access Fn layer (fn = 7683)
+- Can't access Shift layer (shift = 8426)
+- Can't use compose mode (compose = 1270)
+- Can't use numpad scripts
+- **Even when KeyModifier is rewritten (Bugs #63-73), it can't work without these**
+
+---
+
+### ✅ IMPROVEMENTS (utility methods)
+
+Despite incomplete data, Kotlin adds:
+
+1. **validateData()** (lines 102-137) - validates state machine integrity
+2. **getDataStatistics()** (lines 142-179) - returns statistics
+3. **ComposeDataStatistics** (lines 184-191) - data class for stats
+4. **Better documentation** - KDoc explaining format
+
+---
+
+### ROOT CAUSE:
+
+Comments reveal intentional stub:
+- Line 42: "// More compose sequences would continue here..."
+- Line 43: "// For brevity, showing representative sample"
+- Line 64: "// The actual generated data would be much larger"
+
+**Generation script not run!**
+
+Java comment (line 2): "This file is generated, see [srcs/compose/compile.py]"
+
+The script was either:
+1. Never run for Kotlin
+2. Run but output not committed
+3. Intentionally stubbed
+
+---
+
+### BUGS SUMMARY:
+
+**2 CRITICAL SHOWSTOPPER bugs:**
+- **Bug #78:** 99% of data missing (~154 vs ~8000 elements)
+- **Bug #79:** All 33 named constants missing
+
+**Improvements:**
+- ✅ validateData(), getDataStatistics(), ComposeDataStatistics
+- ✅ Better documentation
+
+---
+
+### ASSESSMENT:
+
+**Feature Parity**: 0% (stub file)
+
+**Functionality**: BROKEN (placeholder)
+
+**Fix Required**: Run generation script
+
+**Fix Time**:
+- If script works: 30 minutes
+- If script needs porting: 2-4 hours
+- If script broken: 1-2 days
+
+**Priority**: CRITICAL - blocks ALL compose/accent functionality
+
+---
+
+### FILES REVIEWED SO FAR: 14 / 251 (5.6%)
+**Time Invested**: ~18 hours complete line-by-line reading
+**Bugs Identified**: 77 bugs total (2 CRITICAL new)
+**Critical Issues**: 26 showstoppers (2 new)
+**✅ PROPERLY IMPLEMENTED**: 2 / 14 (14.3%)
+**❌ STUB FILES**: 1 / 14 (7.1%) - ComposeKeyData.kt
+**Next File**: File 15/251
