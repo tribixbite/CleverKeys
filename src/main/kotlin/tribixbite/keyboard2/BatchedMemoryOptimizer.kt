@@ -230,7 +230,7 @@ class BatchedMemoryOptimizer(private val ortEnvironment: OrtEnvironment) {
         // Pre-allocate direct buffers
         repeat(8) {
             val buffer = ByteBuffer.allocateDirect(MAX_BATCH_SIZE * MEMORY_TENSOR_SIZE * 4)
-                .order(ByteOrder.nativeOrder())
+                .order(ByteOrder.LITTLE_ENDIAN) // FIX #42: ONNX models require little-endian
             directBufferPool.offer(buffer)
         }
 
@@ -246,7 +246,7 @@ class BatchedMemoryOptimizer(private val ortEnvironment: OrtEnvironment) {
                 // Buffer too small, return to pool and create new
                 directBufferPool.offer(buffer)
             }
-        } ?: ByteBuffer.allocateDirect(sizeBytes).order(ByteOrder.nativeOrder())
+        } ?: ByteBuffer.allocateDirect(sizeBytes).order(ByteOrder.LITTLE_ENDIAN) // FIX #42: ONNX models require little-endian
     }
 
     private fun releaseDirectBuffer(buffer: ByteBuffer) {

@@ -512,7 +512,7 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     private fun createTrajectoryTensor(features: SwipeTrajectoryProcessor.TrajectoryFeatures): OnnxTensor {
         // Create direct buffer exactly like Java implementation for performance
         val byteBuffer = java.nio.ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * TRAJECTORY_FEATURES * 4) // 4 bytes per float
-        byteBuffer.order(java.nio.ByteOrder.nativeOrder())
+        byteBuffer.order(java.nio.ByteOrder.LITTLE_ENDIAN) // FIX #42: ONNX models require little-endian
         val buffer = byteBuffer.asFloatBuffer()
 
         for (i in 0 until MAX_SEQUENCE_LENGTH) {
@@ -545,7 +545,7 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         // Create 2D tensor [batch=1, sequence=MAX_SEQUENCE_LENGTH]
         // Model was trained with single nearest key per point
         val byteBuffer = java.nio.ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * 8) // 8 bytes per long
-        byteBuffer.order(java.nio.ByteOrder.nativeOrder())
+        byteBuffer.order(java.nio.ByteOrder.LITTLE_ENDIAN) // FIX #42: ONNX models require little-endian
         val buffer = byteBuffer.asLongBuffer()
 
         // FIX #41: Verify nearest_keys list size matches expected length
