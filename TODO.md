@@ -85,61 +85,110 @@
 
 ---
 
-## ⚠️  **MODEL QUALITY ISSUE - LOW PREDICTION ACCURACY (Oct 13, 2025)**
+## ✅ **FIX #34 - DUPLICATE STARTING POINTS CAUSE EOS PREDICTION (Oct 13, 2025)**
 
-**Issue:** Even with correct beam search implementation, model produces wrong predictions.
+**Issue:** Calibration predictions produced gibberish ('aaae', 'g', 'i') instead of correct words ('spam', 'rude', 'rogue').
 
-**Example from calibration:**
+**Initial Misdiagnosis:**
+- Initially blamed "model quality" (50% accuracy)
+- User corrected: "no the model actually has 70% or higher accuracy theres a bug with your decoding implementation"
+- Prompted investigation for code bug instead of accepting model limitation
+
+**Symptoms:**
 ```
-Target: 'spam'
-Nearest keys (first 10): [22, 22, 22, 22, 22, 22, 22, 22, 7, 7]  # 's', 's', 's'...
-Beam search output: 'aaae', 'aaaee', 'raae'  # Wrong!
-Vocabulary filter: 18 → 0 candidates (all gibberish rejected)
+Target: 'rude'
+Nearest keys (first 10): [21, 21, 21, 21, 21, 21, 21, 21, 21, 21]  # All 'r' - correct!
+First 10 points: x=364.92188, y=150.33691 (IDENTICAL for 10+ points)
+
+Model output top 5 tokens:
+  (3):-0.229  ← EOS token HIGHEST score!
+  e(8):-2.260
+  i(12):-2.987
+  r(21):-4.224  ← Correct letter ranked 4th
+
+Beam search selects: (3) EOS
+Sequence ends immediately → empty or single-char prediction
 ```
 
-**Root Cause Analysis:**
-1. ✅ **Code is correct:**
-   - Beam search stops on EOS/PAD (Fix #33)
-   - Nearest keys correct (token 22 = 's')
-   - Tokenizer correct (a=4, ..., s=22, ..., z=29)
-   - Test code achieves 50% accuracy matching Python reference
+**Root Cause:**
+1. Android touch input reports duplicate coordinates at swipe start (10+ identical points)
+2. Feature extraction calculates velocity/acceleration from coordinate deltas
+3. Duplicate points → zero velocity (dx=0, dy=0) for 10+ timesteps
+4. Zero velocity → zero acceleration for 10+ timesteps
+5. Model interprets zero motion as tap gesture, not swipe → outputs EOS immediately
+6. Beam search correctly selects highest scoring token (EOS), sequence ends
+7. Result: Empty prediction or single random character
 
-2. ❌ **Model quality is insufficient:**
-   - Model produces token 4 ('a') repeatedly instead of token 22 ('s')
-   - Suggests model isn't properly attending to nearest_keys embedding
-   - Model defaults to common letters when uncertain
-   - 50% accuracy on test data indicates poor training
+**Resolution:**
+- ✅ **Added filterDuplicateStartingPoints() in OnnxSwipePredictorImpl.kt**
+  - Filters consecutive duplicate coordinates at trajectory start
+  - Uses 1-pixel threshold for "same" coordinate detection
+  - Keeps first unique point, removes duplicates until coordinates change
+  - Ensures non-zero velocities for model input
 
-3. **Possible causes:**
-   - Training data mismatch (static starting points not represented)
-   - Insufficient training iterations
-   - Architecture doesn't properly use nearest_keys feature
-   - Over-representation of 'a' in training vocabulary
+**Files Changed:**
+- `OnnxSwipePredictorImpl.kt:875-885` - Added filtering before normalization
+- `OnnxSwipePredictorImpl.kt:892` - Use filteredCoords for nearest keys detection
+- `OnnxSwipePredictorImpl.kt:940` - Use filteredCoords.size for actualLength
+- `OnnxSwipePredictorImpl.kt:1014-1039` - New filterDuplicateStartingPoints() function
 
-**Evidence:**
-- Calibration logs show correct nearest_keys but wrong predictions
-- Test suite shows 50% accuracy (barely better than random)
-- Vocabulary filter correctly rejects all gibberish (18 → 0)
+**Implementation:**
+```kotlin
+// OnnxSwipePredictorImpl.kt:881-892
+fun extractFeatures(coordinates: List<PointF>, timestamps: List<Long>): TrajectoryFeatures {
+    // ...keyboard dimension check...
 
-**Recommendations:**
+    // Filter duplicate starting points (FIX #34)
+    val filteredCoords = filterDuplicateStartingPoints(coordinates)
+    if (filteredCoords.size < coordinates.size) {
+        Log.d(TAG, "🔧 Filtered ${coordinates.size - filteredCoords.size} duplicate starting points")
+    }
 
-**Short-term (Code fixes):**
-- ✅ Fix #32: Test beam search (DONE)
-- ✅ Fix #33: Production PAD stopping (DONE)
-- ✅ 3D format cleanup (DONE)
+    // Normalize and process filtered coordinates
+    val normalizedCoords = normalizeCoordinates(filteredCoords)
+    val nearestKeys = detectNearestKeys(filteredCoords)
+    // ...rest of feature extraction...
+}
 
-**Medium-term (Model improvements):**
-- [ ] Retrain model with better data augmentation
-- [ ] Add attention visualization to debug nearest_keys usage
-- [ ] Increase training iterations (current model appears undertrained)
-- [ ] Balance vocabulary distribution in training data
+private fun filterDuplicateStartingPoints(coordinates: List<PointF>): List<PointF> {
+    if (coordinates.isEmpty()) return coordinates
 
-**Long-term (Architecture):**
-- [ ] Consider adding explicit attention mechanism for nearest_keys
-- [ ] Implement confidence-based fallback to character-by-character prediction
-- [ ] Add ensemble model combining multiple prediction strategies
+    val threshold = 1f // 1 pixel tolerance
+    val filtered = mutableListOf(coordinates[0])
 
-**Status:** ⚠️  **KNOWN LIMITATION** - Model quality requires retraining, code is correct
+    // Skip consecutive duplicates until coordinates start changing
+    var i = 1
+    while (i < coordinates.size) {
+        val prev = filtered.last()
+        val curr = coordinates[i]
+
+        val dx = kotlin.math.abs(curr.x - prev.x)
+        val dy = kotlin.math.abs(curr.y - prev.y)
+
+        if (dx > threshold || dy > threshold) {
+            // Found first moving point - keep it and all remaining points
+            filtered.addAll(coordinates.subList(i, coordinates.size))
+            break
+        }
+        i++
+    }
+
+    return filtered
+}
+```
+
+**Validation Plan:**
+- [ ] Rebuild APK with Fix #34
+- [ ] Test calibration with debug logging:
+  - Check how many duplicate points filtered
+  - Verify model no longer outputs EOS first
+  - Confirm predictions match expected words
+- [ ] Expected results:
+  - "🔧 Filtered 10-15 duplicate starting points"
+  - Model top token should be correct letter (not EOS)
+  - Predictions: 'spam', 'rude', 'rogue' (not 'aaae', 'g', 'i')
+
+**Status:** ✅ **CODE COMPLETE** - Ready for testing
 
 ---
 

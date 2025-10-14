@@ -878,12 +878,18 @@ class SwipeTrajectoryProcessor {
             Log.w(TAG, "⚠️ Using default keyboard dimensions (1080x400). Key detection may be inaccurate. Ensure setKeyboardDimensions() is called.")
         }
 
-        // 2. Normalize coordinates FIRST (0-1 range) - matches web demo
-        val normalizedCoords = normalizeCoordinates(coordinates)
+        // 2. Filter duplicate starting points (FIX #34: prevents EOS prediction on static starts)
+        val filteredCoords = filterDuplicateStartingPoints(coordinates)
+        if (filteredCoords.size < coordinates.size) {
+            Log.d(TAG, "🔧 Filtered ${coordinates.size - filteredCoords.size} duplicate starting points (${coordinates.size} → ${filteredCoords.size})")
+        }
 
-        // 3. Detect nearest keys from the original, un-normalized coordinates
+        // 3. Normalize coordinates FIRST (0-1 range) - matches web demo
+        val normalizedCoords = normalizeCoordinates(filteredCoords)
+
+        // 4. Detect nearest keys from the filtered, un-normalized coordinates
         // This is more accurate as it uses the raw pixel data
-        val nearestKeys = detectNearestKeys(coordinates)
+        val nearestKeys = detectNearestKeys(filteredCoords)
 
         // 4. Pad or truncate to MAX_TRAJECTORY_POINTS
         val finalCoords = padOrTruncate(normalizedCoords, MAX_TRAJECTORY_POINTS)
@@ -931,7 +937,7 @@ class SwipeTrajectoryProcessor {
             velocities = velocities,
             accelerations = accelerations,
             nearestKeys = finalNearestKeys,
-            actualLength = coordinates.size.coerceAtMost(MAX_TRAJECTORY_POINTS),
+            actualLength = filteredCoords.size.coerceAtMost(MAX_TRAJECTORY_POINTS),
             normalizedCoordinates = finalCoords
         )
     }
@@ -996,6 +1002,42 @@ class SwipeTrajectoryProcessor {
         }
     }
     
+    /**
+     * Filter duplicate starting points to prevent zero velocity (FIX #34)
+     *
+     * When touch starts, Android may report same coordinates multiple times before
+     * finger movement is detected. This causes zero velocity/acceleration features,
+     * making the model interpret the gesture as a tap instead of a swipe.
+     *
+     * Strategy: Remove consecutive duplicates from the start of the trajectory
+     */
+    private fun filterDuplicateStartingPoints(coordinates: List<PointF>): List<PointF> {
+        if (coordinates.isEmpty()) return coordinates
+
+        val threshold = 1f // 1 pixel tolerance for "same" coordinate
+        val filtered = mutableListOf(coordinates[0])
+
+        // Skip consecutive duplicates at the start
+        var i = 1
+        while (i < coordinates.size) {
+            val prev = filtered.last()
+            val curr = coordinates[i]
+
+            val dx = kotlin.math.abs(curr.x - prev.x)
+            val dy = kotlin.math.abs(curr.y - prev.y)
+
+            // If this point is different from the last kept point, keep it and all remaining points
+            if (dx > threshold || dy > threshold) {
+                // Add this point and all remaining points
+                filtered.addAll(coordinates.subList(i, coordinates.size))
+                break
+            }
+            i++
+        }
+
+        return filtered
+    }
+
     /**
      * Normalize coordinates to [0, 1] range
      */
