@@ -455,6 +455,16 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 val vocabLogits = batchedLogits[batchIndex][currentPos]
                 val logProbs = applyLogSoftmax(vocabLogits)
 
+                // DEBUG: Log top 5 tokens for first beam at first step
+                if (batchIndex == 0 && currentPos == 0) {
+                    val top5 = logProbs.withIndex().sortedByDescending { it.value }.take(5)
+                    val top5Str = top5.joinToString(", ") { (idx, prob) ->
+                        val char = tokenizer.tokenToChar(idx)
+                        "$char($idx):${String.format("%.3f", prob)}"
+                    }
+                    logDebug("🔍 Step ${currentPos+1}, Beam 0 top 5 tokens: $top5Str")
+                }
+
                 // CRITICAL FIX: Consider EVERY possible next token for global selection
                 // This prevents beam collapse by allowing lower-scoring beams with
                 // high-probability tokens to compete with higher-scoring beams
@@ -467,6 +477,15 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
 
         // GLOBAL top-k selection: Sort ALL possibilities and take top beamWidth
         val topHypotheses = allHypotheses.sortedByDescending { it.third }.take(beamWidth)
+
+        // DEBUG: Log selected tokens for first step
+        if (activeBeams.firstOrNull()?.tokens?.size == 1) {
+            val selectedTokens = topHypotheses.map { (_, tokenId, score) ->
+                val char = tokenizer.tokenToChar(tokenId)
+                "$char($tokenId):${String.format("%.3f", score)}"
+            }
+            logDebug("✅ Selected top $beamWidth tokens: ${selectedTokens.joinToString(", ")}")
+        }
 
         // Construct new beam generation from globally-selected winners
         val newBeams = mutableListOf<BeamSearchState>()
