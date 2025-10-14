@@ -427,7 +427,8 @@ class Keyboard2View @JvmOverloads constructor(
                 // Extract character from key
                 val keyValue = key.keys[0]
                 if (keyValue != null) {
-                    val char = keyValue.toString().firstOrNull()
+                    // Type-safe character extraction from CharKey
+                    val char = (keyValue as? KeyValue.CharKey)?.char
                     if (char != null && char.isLetter()) {
                         keyPositions[char.lowercaseChar()] = PointF(centerX, centerY)
                     }
