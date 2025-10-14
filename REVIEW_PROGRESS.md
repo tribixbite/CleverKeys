@@ -1,28 +1,168 @@
 ## SYSTEMATIC REVIEW PROGRESS
 
-### File 1/251: KeyValueParser.java (MISSING)
-**Status**: CRITICAL - Completely missing from Kotlin
-**Lines**: 289 lines of parsing logic
-**Impact**: HIGH - Explains layout parsing failures, Chinese character bug
+### File 1/251: KeyValueParser.java (COMPLETELY MISSING)
+**Status**: CRITICAL SHOWSTOPPER - Completely missing from Kotlin
+**Lines**: 289 lines vs 13 lines (96% MISSING)
+**Impact**: CRITICAL - Explains Chinese character bug, layout parsing failures
 
-**What it does**:
-- Parses key definitions from XML strings
-- Supports multiple syntaxes: 'symbol:action', ':kind attr:payload', 'plain string'
-- Handles quoted strings with escaping
-- Parses macros (multi-key sequences)
-- Parses keyevent codes
-- Parses flags (dim, small)
-- Old syntax compatibility
+**Java Implementation** (KeyValueParser.java - 289 lines):
+```java
+// Main parser supporting 5 syntax modes:
+static public KeyValue parse(String input) throws ParseError {
+    // 1. Symbol:Action syntax → "a:char:b" (a displays, inputs b)
+    // 2. Symbol:Macro syntax → "a:b,c,d" (multi-key sequence)
+    // 3. Old :kind syntax → ":str flags=dim,small symbol='X':'text'"
+    // 4. Plain string → "hello" (simple string key)
+    // 5. Quoted string → "'Don\\'t'" (with escaping)
 
-**Current Kotlin Implementation**:
-- KeyValue.kt:629 has parseKeyValue() but SEVERELY INCOMPLETE
-- Missing: attribute parsing (flags, symbol)
-- Missing: macro parsing
-- Missing: quoted string handling with escaping
-- Missing: old syntax (:str, :char, :keyevent)
-- Missing: comprehensive error handling
+    int symbol_ends = 0;
+    while (symbol_ends < input_len && input.charAt(symbol_ends) != ':')
+        symbol_ends++;
 
-**ACTION REQUIRED**: Port complete KeyValueParser.java to KeyValueParser.kt
+    if (symbol_ends == 0) // Old syntax starting with ':'
+        return Starting_with_colon.parse(input);
+    if (symbol_ends == input_len) // Plain string
+        return KeyValue.makeStringKey(input);
+
+    String symbol = input.substring(0, symbol_ends);
+    KeyValue first_key = parse_key_def(m);
+
+    if (!parse_comma(m)) // Single key with symbol
+        return first_key.withSymbol(symbol);
+
+    // Macro: parse all comma-separated keys
+    ArrayList<KeyValue> keydefs = new ArrayList<KeyValue>();
+    keydefs.add(first_key);
+    do { keydefs.add(parse_key_def(m)); }
+    while (parse_comma(m));
+    return KeyValue.makeMacro(symbol, keydefs.toArray(...), 0);
+}
+
+// Regex patterns for complex parsing:
+static Pattern KEYDEF_TOKEN = "'|,|keyevent:|(?:[^\\\\',]+|\\\\.)+";
+static Pattern QUOTED_PAT = "((?:[^'\\\\]+|\\\\')*)'";
+static Pattern WORD_PAT = "[a-zA-Z0-9_]+|.";
+
+// Old syntax parser (inner class - 128 lines):
+final static class Starting_with_colon {
+    static public KeyValue parse(String str) throws ParseError {
+        String symbol = null;
+        int flags = 0;
+
+        // Parse kind (:str, :char, :keyevent)
+        String kind = m.group(1);
+
+        // Parse attributes (flags=dim,small symbol='X')
+        while (match(m, ATTR_PAT)) {
+            String attr_name = m.group(1);
+            String attr_value = parseSingleQuotedString(m);
+            switch (attr_name) {
+                case "flags": flags = parseFlags(attr_value, m); break;
+                case "symbol": symbol = attr_value; break;
+                default: parseError("Unknown attribute", m);
+            }
+        }
+
+        // Parse payload
+        String payload = parseSingleQuotedString(m);
+
+        switch (kind) {
+            case "str":
+                return KeyValue.makeStringKey(payload, flags)
+                    .withSymbol(symbol);
+            case "char":
+                return KeyValue.makeCharKey(payload.charAt(0), symbol, flags);
+            case "keyevent":
+                int eventcode = Integer.parseInt(payload);
+                return KeyValue.keyeventKey(symbol, eventcode, flags);
+        }
+    }
+
+    // Flag parsing
+    static int parseFlags(String s, Matcher m) throws ParseError {
+        int flags = 0;
+        for (String f : s.split(",")) {
+            switch (f) {
+                case "dim": flags |= KeyValue.FLAG_SECONDARY; break;
+                case "small": flags |= KeyValue.FLAG_SMALLER_FONT; break;
+                default: parseError("Unknown flag", m);
+            }
+        }
+        return flags;
+    }
+}
+
+// Helper methods:
+static KeyValue parse_key_def(Matcher m) { ... }          // 14 lines
+static KeyValue parse_string_keydef(Matcher m) { ... }    // 7 lines
+static KeyValue parse_keyevent_keydef(Matcher m) { ... }  // 10 lines
+static boolean parse_comma(Matcher m) { ... }             // 9 lines
+static String remove_escaping(String s) { ... }           // 14 lines
+static void parseError(...) { ... }                       // 17 lines
+```
+
+**Current Kotlin Implementation** (KeyValue.kt:629-642 - ONLY 13 LINES):
+```kotlin
+private fun parseKeyValue(expression: String): KeyValue {
+    // Simple parser for basic key expressions
+    // Can be extended for more complex parsing  ← COMMENT LIES! NOT EXTENDED!
+    return when {
+        expression.startsWith("char:") -> {
+            val char = expression.substring(5).firstOrNull() ?: ' '
+            makeCharKey(char)
+        }
+        expression.startsWith("string:") -> {
+            makeStringKey(expression.substring(7))
+        }
+        else -> makeStringKey(expression)  // ← BUG: Chinese char appears here!
+    }
+}
+```
+
+**MISSING FROM KOTLIN** (276 lines / 96% of functionality):
+1. ❌ **Symbol parsing** - "a:char:b" syntax not supported
+2. ❌ **Macro parsing** - "a:b,c,d" multi-key sequences broken
+3. ❌ **Old syntax** - ":str flags=dim,small:'text'" completely ignored
+4. ❌ **Attribute parsing** - "flags=dim,small" not parsed
+5. ❌ **Symbol attribute** - "symbol='X'" not parsed
+6. ❌ **Quoted strings** - "'Don\\'t'" escaping broken
+7. ❌ **Regex patterns** - No KEYDEF_TOKEN, QUOTED_PAT, WORD_PAT
+8. ❌ **Error handling** - No ParseError exceptions
+9. ❌ **Comma parsing** - No macro sequence support
+10. ❌ **Escape removal** - "\\\\" sequences not handled
+11. ❌ **Keyevent parsing** - "keyevent:123" not supported
+12. ❌ **Flag parsing** - "dim", "small" flags ignored
+13. ❌ **Inner class Starting_with_colon** - 128 lines completely missing
+
+**WHY CHINESE CHARACTER APPEARS**:
+```xml
+<!-- Layout XML contains: -->
+<key key0=":str flags=dim,small symbol='某':'某个字符'" />
+
+<!-- Java parser: -->
+1. Detects old syntax (starts with ':')
+2. Calls Starting_with_colon.parse()
+3. Parses kind='str', flags=[dim,small], symbol='某', payload='某个字符'
+4. Returns KeyValue.makeStringKey("某个字符", flags).withSymbol("某")
+5. ✅ Key displays "某" symbol, inputs "某个字符"
+
+<!-- Kotlin "parser": -->
+1. Doesn't start with "char:" → SKIP
+2. Doesn't start with "string:" → SKIP
+3. Falls through to else case
+4. Returns makeStringKey(ENTIRE RAW XML TEXT)
+5. ❌ Key displays ":str flags=dim,small symbol='某':'某个字符'"
+```
+
+**ACTION REQUIRED**: Port complete KeyValueParser.java → KeyValueParser.kt
+**Estimated Time**: 2-3 days
+- Create new KeyValueParser.kt file
+- Port all 289 lines with Kotlin idioms
+- Create ParseError exception class
+- Port Starting_with_colon inner class
+- Port all regex patterns
+- Extensive testing with real layout XMLs
+- Fix all existing keys using old syntax
 
 ---
 
@@ -80,10 +220,16 @@
 
 ---
 
-### Files Reviewed: 1 / 251 (0.4%)
-### Bugs Identified: 4 major bugs from missing KeyValueParser alone
-### Time Spent: 2 hours
-### Estimated Time Remaining: 300-500 hours (12-20 weeks)
+### Files Reviewed: 3 / 251 (1.2%)
+### Bugs Identified:
+- File 1 (KeyValueParser): 1 CRITICAL (96% missing - 276/289 lines)
+- File 2 (Keyboard2): 23 major bugs (~800 lines missing)
+- **Total**: 24 critical architectural bugs identified
+### Time Spent: 4 hours (complete line-by-line reading)
+### Estimated Time Remaining:
+- Fix Files 1-2: 3-4 weeks
+- Review Files 3-251: 300-400 hours (12-16 weeks)
+- **Total**: 16-20 weeks for complete parity
 
 
 ---
