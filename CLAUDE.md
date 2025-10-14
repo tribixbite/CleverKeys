@@ -334,6 +334,28 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
 4. ⏳ Restore batched inference optimization
 ```
 
+### **🧹 REPOSITORY CLEANUP (Oct 14, 2025):**
+
+**✅ Git History Cleaned:**
+- Removed all large build artifacts from commit history
+- Eliminated 486MB APK files, 96MB JAR files, build cache
+- Repo size reduced to 30MB (was containing 486MB+ artifacts)
+- Added comprehensive .gitignore for build/, .gradle/, *.apk, *.dex
+- Force-pushed cleaned history to origin/main
+- All commits preserved, only large files removed
+
+**Files Removed from History:**
+- build/ directory (APKs, DEX, compiled classes, intermediates)
+- cli-test/build/ directory (distribution ZIPs, JARs)
+- onnxruntime-*.jar files (96MB - now only in lib/)
+- All Gradle cache and incremental build files
+
+**Remaining Essential Files:**
+- ONNX models: 5-7MB each (swipe_model, swipe_decoder)
+- ONNX runtime native: 17MB (libonnxruntime.so arm64)
+- Build tools: 6MB (aapt2.elf)
+- Total .git size: 30MB ✅
+
 ### **🧪 TESTING PRIORITIES:**
 
 **Priority 1: Neural Prediction Accuracy**
