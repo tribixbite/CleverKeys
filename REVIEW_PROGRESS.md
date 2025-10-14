@@ -1235,3 +1235,312 @@ private int getUserKeyboardHeightPercent() {
 **Architecture Changes Needed**: 5 major changes
 **Time to Fix**: 2-3 weeks (not 3-4 days)
 
+
+---
+
+## FILE 5/251: SuggestionBar.java vs SuggestionBar.kt
+
+**Status**: CRITICAL INCOMPLETE - 73% of functionality missing
+**Lines**: Java 304 lines vs Kotlin 82 lines (222 lines missing)
+**Impact**: HIGH - Basic UI only, missing theme integration, opacity control, debug features
+
+### JAVA IMPLEMENTATION ANALYSIS (SuggestionBar.java - 304 lines):
+
+#### Complete Feature List:
+1. **Theme Integration** (lines 26, 41-49, 58, 96-105, 136-141, 184-196, 242-250)
+   - Accepts Theme object in constructor
+   - Uses theme.labelColor for text
+   - Uses theme.subLabelColor for dividers
+   - Uses theme.colorKey for background
+   - Uses theme.activatedColor for first suggestion highlight
+   - Fallbacks to white/cyan/dark grey if theme missing
+
+2. **Opacity Control** (lines 28, 169-173, 178-197)
+   ```java
+   private int _opacity = 90; // default 90% opacity
+   
+   public void setOpacity(int opacity) {
+       _opacity = Math.max(0, Math.min(100, opacity));
+       updateBackgroundOpacity();
+   }
+   
+   private void updateBackgroundOpacity() {
+       int alpha = (_opacity * 255) / 100;
+       int backgroundColor = _theme.colorKey;
+       backgroundColor = Color.argb(alpha, Color.red(backgroundColor), 
+                                    Color.green(backgroundColor), 
+                                    Color.blue(backgroundColor));
+       setBackgroundColor(backgroundColor);
+   }
+   ```
+
+3. **Always Visible Mode** (lines 29, 156-163, 261-268)
+   ```java
+   private boolean _alwaysVisible = true; // Prevents UI rerendering
+   
+   public void setAlwaysVisible(boolean alwaysVisible) {
+       _alwaysVisible = alwaysVisible;
+       if (_alwaysVisible) {
+           setVisibility(View.VISIBLE);
+       }
+   }
+   
+   // In setSuggestionsWithScores():
+   if (_alwaysVisible) {
+       setVisibility(View.VISIBLE); // Keep visible to prevent rerendering
+   } else {
+       setVisibility(_currentSuggestions.isEmpty() ? View.GONE : View.VISIBLE);
+   }
+   ```
+
+4. **Debug Score Display** (lines 27, 147-150, 232-236)
+   ```java
+   private boolean _showDebugScores = false;
+   
+   public void setShowDebugScores(boolean show) {
+       _showDebugScores = show;
+   }
+   
+   // In setSuggestionsWithScores():
+   if (_showDebugScores && i < _currentScores.size()) {
+       int score = _currentScores.get(i);
+       suggestion = suggestion + "\n" + score;  // Show score below word
+   }
+   ```
+
+5. **Score Tracking** (lines 24, 210-220)
+   ```java
+   private List<Integer> _currentScores;
+   
+   public void setSuggestionsWithScores(List<String> suggestions, List<Integer> scores) {
+       _currentSuggestions.clear();
+       _currentScores.clear();
+       if (suggestions != null) {
+           _currentSuggestions.addAll(suggestions);
+           if (scores != null && scores.size() == suggestions.size()) {
+               _currentScores.addAll(scores);
+           }
+       }
+       // ... update display
+   }
+   ```
+
+6. **TextView-based UI** (lines 88-126)
+   - Uses TextView (not Button) for cleaner look
+   - Weight-based layout (equal space distribution)
+   - Max 2 lines per suggestion
+   - Custom padding dpToPx(8) all around
+   - Center gravity alignment
+
+7. **Visual Dividers** (lines 79-84, 128-142)
+   ```java
+   private View createDivider(Context context) {
+       View divider = new View(context);
+       divider.setLayoutParams(new LinearLayout.LayoutParams(
+           dpToPx(1), ViewGroup.LayoutParams.MATCH_PARENT));
+       divider.setBackgroundColor(Color.argb(100, Color.red(_theme.subLabelColor), ...));
+       return divider;
+   }
+   ```
+
+8. **First Suggestion Highlighting** (lines 242-251)
+   ```java
+   if (i == 0) {
+       textView.setTypeface(Typeface.DEFAULT_BOLD);
+       textView.setTextColor(_theme.activatedColor != 0 ? _theme.activatedColor : Color.CYAN);
+   } else {
+       textView.setTypeface(Typeface.DEFAULT);
+       textView.setTextColor(_theme.labelColor != 0 ? _theme.labelColor : Color.WHITE);
+   }
+   ```
+
+9. **getCurrentSuggestions() Getter** (lines 292-295)
+   ```java
+   public List<String> getCurrentSuggestions() {
+       return new ArrayList<>(_currentSuggestions);
+   }
+   ```
+
+10. **Three Constructor Overloads** (lines 36-60)
+    - `SuggestionBar(Context)` - basic
+    - `SuggestionBar(Context, Theme)` - with theme
+    - `SuggestionBar(Context, AttributeSet)` - XML inflation
+
+11. **Smart Visibility Management** (lines 260-268, 274-279)
+    ```java
+    public void clearSuggestions() {
+        // ALWAYS show empty instead of hiding - prevents UI disappearing
+        setSuggestions(new ArrayList<>());
+        Log.d("SuggestionBar", "clearSuggestions - showing empty list");
+    }
+    ```
+
+### KOTLIN IMPLEMENTATION ANALYSIS (SuggestionBar.kt - 82 lines):
+
+#### What's Actually Implemented:
+1. **Basic Button-based UI** (lines 28-47)
+   - 5 buttons with equal weight
+   - Hardcoded padding (16, 8, 16, 8)
+   - Transparent background, white text
+   - Simple click listeners
+
+2. **Basic setSuggestions()** (lines 52-64)
+   - Sets button text
+   - Shows/hides buttons based on availability
+   - No scores, no styling, no highlighting
+
+3. **Basic clearSuggestions()** (lines 69-75)
+   - Sets empty text
+   - Hides all buttons (NOT always visible like Java)
+
+4. **Single Constructor** (line 13)
+   - Only accepts Context, no theme support
+
+### MISSING FUNCTIONALITY IN KOTLIN:
+
+#### BUG #24: No Theme Integration
+**Java**: Full theme support with colors from Theme object
+**Kotlin**: Hardcoded Color.WHITE and Color.TRANSPARENT
+**Impact**: CRITICAL - Doesn't match keyboard theme, looks broken in dark/light themes
+
+#### BUG #25: No Opacity Control
+**Java**: setOpacity(0-100) with updateBackgroundOpacity()
+**Kotlin**: No opacity control at all
+**Impact**: HIGH - User can't customize suggestion bar appearance
+
+#### BUG #26: No Always Visible Mode
+**Java**: setAlwaysVisible(true) prevents UI rerendering flicker
+**Kotlin**: Always hides when empty (causes flicker)
+**Impact**: HIGH - Causes visible UI flicker when suggestions clear and reappear
+
+#### BUG #27: No Debug Score Display
+**Java**: setShowDebugScores(true) shows confidence scores below words
+**Kotlin**: No score display capability
+**Impact**: MEDIUM - Can't debug prediction quality
+
+#### BUG #28: No Score Tracking
+**Java**: setSuggestionsWithScores(words, scores) tracks both
+**Kotlin**: Only setSuggestions(words), no score parameter
+**Impact**: MEDIUM - Can't display or utilize confidence scores
+
+#### BUG #29: Button vs TextView UI
+**Java**: Uses TextView for cleaner, text-focused appearance
+**Kotlin**: Uses Button which adds unnecessary button styling
+**Impact**: MEDIUM - Different visual appearance, less polished
+
+#### BUG #30: No Visual Dividers
+**Java**: Dividers between each suggestion using theme.subLabelColor
+**Kotlin**: No dividers, suggestions run together visually
+**Impact**: MEDIUM - Harder to distinguish individual suggestions
+
+#### BUG #31: No First Suggestion Highlighting
+**Java**: Bold + cyan/activated color for first suggestion
+**Kotlin**: All suggestions look identical
+**Impact**: MEDIUM - User doesn't know which is best prediction
+
+#### BUG #32: No getCurrentSuggestions() Getter
+**Java**: Public getter returns copy of current suggestions
+**Kotlin**: No way to query current suggestions
+**Impact**: LOW - Service can't check what's displayed
+
+#### BUG #33: Missing Constructor Overloads
+**Java**: 3 constructors (Context, Context+Theme, Context+AttributeSet)
+**Kotlin**: 1 constructor (Context only)
+**Impact**: HIGH - Can't integrate with theme system or inflate from XML
+
+#### BUG #34: Different clearSuggestions() Behavior
+**Java**: Shows empty list (keeps bar visible to prevent rerendering)
+**Kotlin**: Hides all buttons (causes visibility flicker)
+**Impact**: HIGH - Causes UI jumping when predictions come/go rapidly
+
+### CODE COMPARISON - setSuggestions():
+
+**Java (lines 223-258)**: 36 lines
+```java
+for (int i = 0; i < _suggestionViews.size(); i++) {
+    TextView textView = _suggestionViews.get(i);
+    if (i < _currentSuggestions.size()) {
+        String suggestion = _currentSuggestions.get(i);
+        
+        // Add debug score if enabled
+        if (_showDebugScores && i < _currentScores.size()) {
+            int score = _currentScores.get(i);
+            suggestion = suggestion + "\n" + score;
+        }
+        
+        textView.setText(suggestion);
+        textView.setVisibility(View.VISIBLE);
+        
+        // Highlight first suggestion
+        if (i == 0) {
+            textView.setTypeface(Typeface.DEFAULT_BOLD);
+            textView.setTextColor(_theme.activatedColor);
+        } else {
+            textView.setTypeface(Typeface.DEFAULT);
+            textView.setTextColor(_theme.labelColor);
+        }
+    } else {
+        textView.setText("");
+        textView.setVisibility(View.GONE);
+    }
+}
+
+// Smart visibility management
+if (_alwaysVisible) {
+    setVisibility(View.VISIBLE);
+} else {
+    setVisibility(_currentSuggestions.isEmpty() ? View.GONE : View.VISIBLE);
+}
+```
+
+**Kotlin (lines 52-64)**: 13 lines
+```kotlin
+fun setSuggestions(words: List<String>) {
+    logD("Setting ${words.size} suggestions")
+    
+    suggestionButtons.forEachIndexed { index, button ->
+        if (index < words.size) {
+            button.text = words[index]
+            button.visibility = VISIBLE
+        } else {
+            button.text = ""
+            button.visibility = GONE
+        }
+    }
+}
+```
+
+### PRIORITY FIXES NEEDED:
+
+**PRIORITY 1 - CRITICAL (breaks theme integration):**
+1. ✅ Add Theme constructor parameter
+2. ✅ Use theme colors instead of hardcoded white/transparent
+3. ✅ Implement setAlwaysVisible() to prevent flicker
+4. ✅ Add constructor overloads for theme integration
+
+**PRIORITY 2 - HIGH (missing important features):**
+5. ✅ Add setOpacity() and updateBackgroundOpacity()
+6. ✅ Implement setSuggestionsWithScores() with score parameter
+7. ✅ Add first suggestion highlighting (bold + color)
+8. ✅ Fix clearSuggestions() to keep bar visible
+
+**PRIORITY 3 - MEDIUM (polish and debugging):**
+9. ✅ Add setShowDebugScores() and score display
+10. ✅ Add visual dividers between suggestions
+11. ✅ Switch from Button to TextView for cleaner UI
+12. ✅ Add getCurrentSuggestions() getter
+
+**ESTIMATED TIME TO FIX**:
+- Priority 1: 2-3 hours
+- Priority 2: 2-3 hours
+- Priority 3: 2-3 hours
+- **Total: 6-9 hours for complete SuggestionBar parity**
+
+---
+
+### FILES REVIEWED SO FAR: 5 / 251 (2.0%)
+**Time Invested**: ~6 hours of complete line-by-line reading
+**Bugs Identified**: 34 bugs total (26 from File 2, now 11 more from File 5)
+**Critical Issues**: 5 showstoppers identified
+**Next File**: File 6/251 - Continue systematic review
+
