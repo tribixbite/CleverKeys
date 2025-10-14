@@ -248,12 +248,12 @@ fun runBeamSearch(env: OrtEnvironment, decoder: OrtSession, memory: OnnxTensor, 
 
 fun main() {
     println("=".repeat(70))
-    println("Kotlin Standalone Test - ONNX Swipe Recognition (No APK)")
+    println("Kotlin CLI Test - 10 Valid Swipes (No Negative Coordinates)")
     println("=".repeat(70))
 
     val encoderPath = "assets/models/swipe_model_character_quant.onnx"
     val decoderPath = "assets/models/swipe_decoder_character_quant.onnx"
-    val swipesPath = "../swype-model-training/swipes.jsonl"
+    val swipesPath = "test_swipes_10.jsonl"
 
     if (!File(encoderPath).exists()) {
         println("❌ ERROR: Encoder not found at $encoderPath")

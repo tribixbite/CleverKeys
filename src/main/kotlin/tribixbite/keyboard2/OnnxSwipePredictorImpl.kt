@@ -476,6 +476,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         }
 
         // GLOBAL top-k selection: Sort ALL possibilities and take top beamWidth
+        // CRITICAL: logProbs are NEGATIVE, beam.score + logProb accumulates negative values
+        // HIGHER (less negative) scores are BETTER → sort DESCENDING
         val topHypotheses = allHypotheses.sortedByDescending { it.third }.take(beamWidth)
 
         // DEBUG: Log selected tokens for first step

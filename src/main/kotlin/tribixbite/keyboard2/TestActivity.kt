@@ -88,20 +88,26 @@ class TestActivity : Activity() {
 
     private fun loadTests(): List<TestData> {
         return try {
-            assets.open("swipes.jsonl").bufferedReader().readLines().mapNotNull { line ->
+            assets.open("test_swipes.jsonl").bufferedReader().readLines().mapNotNull { line ->
                 try {
                     val json = JSONObject(line)
                     val word = json.getString("word")
-                    val xArr = json.getJSONArray("x_coords")
-                    val yArr = json.getJSONArray("y_coords")
+                    val curve = json.getJSONObject("curve")
+                    val xArr = curve.getJSONArray("x")
+                    val yArr = curve.getJSONArray("y")
+                    val tArr = curve.getJSONArray("t")
 
                     val points = (0 until xArr.length()).map { i ->
                         PointF(xArr.getDouble(i).toFloat(), yArr.getDouble(i).toFloat())
                     }
 
-                    val timestamps = List(points.size) { it * 16L }
+                    val timestamps = (0 until tArr.length()).map { i ->
+                        tArr.getLong(i)
+                    }
+
                     TestData(word, points, timestamps)
                 } catch (e: Exception) {
+                    Log.e("TEST", "Failed to parse line: ${e.message}")
                     null
                 }
             }
