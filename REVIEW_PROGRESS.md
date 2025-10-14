@@ -4450,3 +4450,251 @@ Kotlin: No conditional logic
 **Properly implemented**: 3 / 16 files (18.8%)
 **Next file**: File 17/251
 
+
+---
+
+## FILE 17/251: DirectBootAwarePreferences.java (88 lines) vs DirectBootAwarePreferences.kt (28 lines)
+
+**STATUS**: ❌ CRITICAL - 75%+ MISSING, DIRECT BOOT BROKEN
+
+### BUG #82: DirectBootAwarePreferences 75% missing (CRITICAL SHOWSTOPPER)
+
+**Java**: 88-line device-protected storage system for Android Direct Boot
+**Kotlin**: 28-line stub using regular shared preferences (NOT protected storage)
+
+**ANDROID DIRECT BOOT CONTEXT**:
+- Android 7.0+ feature allowing apps to run before device unlock
+- **Device Encrypted Storage**: Available during direct boot
+- **Credential Encrypted Storage**: Default, only after unlock
+- **Use Case**: IME must work to type password/PIN to unlock device
+- **Without this**: User cannot use custom keyboard during boot
+
+**Java Architecture**:
+```java
+@TargetApi(24)
+public final class DirectBootAwarePreferences {
+    // Get preferences from device-protected storage on API 24+
+    public static SharedPreferences get_shared_preferences(Context context) {
+        if (VERSION.SDK_INT < 24)
+            return PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences prefs = get_protected_prefs(context);
+        check_need_migration(context, prefs);
+        return prefs;
+    }
+    
+    // Create device-protected context and get SharedPreferences
+    static SharedPreferences get_protected_prefs(Context context) {
+        String pref_name = PreferenceManager.getDefaultSharedPreferencesName(context);
+        return context.createDeviceProtectedStorageContext()
+            .getSharedPreferences(pref_name, Context.MODE_PRIVATE);
+    }
+    
+    // Check if migration needed from credential to device storage
+    static void check_need_migration(Context app_context, SharedPreferences protected_prefs) {
+        if (!protected_prefs.getBoolean("need_migration", true)) return;
+        
+        SharedPreferences prefs;
+        try {
+            prefs = PreferenceManager.getDefaultSharedPreferences(app_context);
+        } catch (Exception e) {
+            // Device locked, migrate later
+            return;
+        }
+        
+        prefs.edit().putBoolean("need_migration", false).apply();
+        copy_shared_preferences(prefs, protected_prefs);
+    }
+    
+    // Type-safe copying of all preference types
+    static void copy_shared_preferences(SharedPreferences src, SharedPreferences dst) {
+        SharedPreferences.Editor e = dst.edit();
+        Map<String, ?> entries = src.getAll();
+        for (String k : entries.keySet()) {
+            Object v = entries.get(k);
+            if (v instanceof Boolean) e.putBoolean(k, (Boolean)v);
+            else if (v instanceof Float) e.putFloat(k, (Float)v);
+            else if (v instanceof Integer) e.putInt(k, (Integer)v);
+            else if (v instanceof Long) e.putLong(k, (Long)v);
+            else if (v instanceof String) e.putString(k, (String)v);
+            else if (v instanceof Set) e.putStringSet(k, (Set<String>)v);
+        }
+        e.apply();
+    }
+    
+    // Copy preferences to protected storage
+    public static void copy_preferences_to_protected_storage(Context context, SharedPreferences src) {
+        if (VERSION.SDK_INT >= 24)
+            copy_shared_preferences(src, get_protected_prefs(context));
+    }
+}
+```
+
+**Kotlin Architecture**:
+```kotlin
+object DirectBootAwarePreferences {
+    private const val PREF_NAME = "keyboard_preferences"
+    
+    fun get_shared_preferences(context: Context): SharedPreferences {
+        return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        // ❌ Uses credential-encrypted storage (default)
+        // ❌ NOT accessible during direct boot
+    }
+    
+    fun copy_preferences_to_protected_storage(context: Context, prefs: SharedPreferences) {
+        // NO-OP: "simplified implementation"
+        // ❌ Does nothing at all
+    }
+}
+```
+
+**MISSING FROM KOTLIN (60 lines / 68%)**:
+
+1. **API version check (2 lines)** - Fallback for pre-API 24:
+   ```java
+   if (VERSION.SDK_INT < 24)
+       return PreferenceManager.getDefaultSharedPreferences(context);
+   ```
+
+2. **get_protected_prefs() method (7 lines)** - Create device-protected context:
+   ```java
+   static SharedPreferences get_protected_prefs(Context context) {
+       String pref_name = PreferenceManager.getDefaultSharedPreferencesName(context);
+       return context.createDeviceProtectedStorageContext()
+           .getSharedPreferences(pref_name, Context.MODE_PRIVATE);
+   }
+   ```
+   - **KEY METHOD**: createDeviceProtectedStorageContext() switches to device-encrypted storage
+   - Kotlin just uses regular getSharedPreferences() (credential-encrypted)
+
+3. **check_need_migration() method (17 lines)** - First-run migration:
+   ```java
+   static void check_need_migration(Context app_context, SharedPreferences protected_prefs) {
+       if (!protected_prefs.getBoolean("need_migration", true)) return;
+       
+       SharedPreferences prefs;
+       try {
+           prefs = PreferenceManager.getDefaultSharedPreferences(app_context);
+       } catch (Exception e) {
+           // Device locked, migrate later
+           return;
+       }
+       
+       prefs.edit().putBoolean("need_migration", false).apply();
+       copy_shared_preferences(prefs, protected_prefs);
+   }
+   ```
+   - Handles first launch after upgrade
+   - Copies settings from credential to device storage
+   - Exception handling for locked device state
+
+4. **copy_shared_preferences() method (22 lines)** - Type-safe copying:
+   ```java
+   static void copy_shared_preferences(SharedPreferences src, SharedPreferences dst) {
+       SharedPreferences.Editor e = dst.edit();
+       Map<String, ?> entries = src.getAll();
+       for (String k : entries.keySet()) {
+           Object v = entries.get(k);
+           if (v instanceof Boolean) e.putBoolean(k, (Boolean)v);
+           else if (v instanceof Float) e.putFloat(k, (Float)v);
+           else if (v instanceof Integer) e.putInt(k, (Integer)v);
+           else if (v instanceof Long) e.putLong(k, (Long)v);
+           else if (v instanceof String) e.putString(k, (String)v);
+           else if (v instanceof Set) e.putStringSet(k, (Set<String>)v);
+       }
+       e.apply();
+   }
+   ```
+   - Type-preserving copy (not just toString())
+   - Handles all SharedPreferences types correctly
+
+5. **Proper preference name resolution**:
+   - Java: `PreferenceManager.getDefaultSharedPreferencesName(context)`
+     - Returns: `{package_name}_preferences`
+     - Example: `tribixbite.keyboard2_preferences`
+   - Kotlin: Hardcoded `"keyboard_preferences"`
+     - Wrong name, won't match existing preferences
+     - Migration will fail silently
+
+**IMPACT ASSESSMENT**:
+
+1. **CRITICAL SHOWSTOPPER**: Keyboard won't work during direct boot
+   - User cannot type disk encryption password on startup
+   - Must use system keyboard (defeats purpose of custom keyboard)
+   - PRIMARY USE CASE for many users on encrypted devices
+   - Android feature explicitly designed for this scenario
+
+2. **CRITICAL**: Settings lost after reboot on encrypted devices
+   - Preferences in credential-encrypted storage
+   - Not accessible until device unlocked
+   - Keyboard falls back to hardcoded defaults
+   - Loses ALL user configuration every boot
+
+3. **HIGH**: Migration from default storage never happens
+   - Existing users' settings won't transfer
+   - Settings appear "lost" after app update to Kotlin version
+   - No automatic recovery path
+
+4. **HIGH**: Hardcoded preference name breaks compatibility
+   - Java: `tribixbite.keyboard2_preferences` (system default)
+   - Kotlin: `keyboard_preferences` (wrong)
+   - Even if migration worked, wrong filename
+   - Settings won't be found
+
+5. **MEDIUM**: No exception handling for locked device
+   - Migration crash if attempted while locked
+   - Should defer gracefully until unlock
+
+**DIRECT BOOT FLOW COMPARISON**:
+
+**Java (CORRECT)**:
+```
+1. Boot starts, device locked
+2. Android launches keyboard in direct boot mode
+3. Keyboard calls get_shared_preferences()
+4. Creates device-protected context
+5. Reads settings from device-encrypted storage
+6. Keyboard works with user's custom settings
+7. User types password using custom keyboard
+8. Device unlocks
+```
+
+**Kotlin (BROKEN)**:
+```
+1. Boot starts, device locked
+2. Android launches keyboard in direct boot mode
+3. Keyboard calls get_shared_preferences()
+4. Tries to read from credential-encrypted storage
+5. Storage not accessible (device locked)
+6. Keyboard falls back to hardcoded defaults
+7. User forced to use system keyboard OR
+   suffers with broken default settings
+8. Device unlocks
+9. Keyboard now reads settings (too late)
+```
+
+**STORAGE TYPES**:
+
+| Storage Type | API | Accessible When | Use Case |
+|--------------|-----|-----------------|----------|
+| **Device Encrypted** | 24+ | Always (even during direct boot) | IME settings, alarms |
+| **Credential Encrypted** | All | Only after user unlocks device | Sensitive data, user content |
+
+**Kotlin uses Credential Encrypted (wrong) instead of Device Encrypted (correct)**
+
+**PROPERLY IMPLEMENTED**: Still 4 / 17 files (23.5%)
+- Modmap.kt ✅
+- ComposeKey.kt ✅
+- ComposeKeyData.kt ✅ (fixed)
+- Autocapitalisation.kt ✅
+
+**ASSESSMENT**: This is a critical Android platform integration feature that is completely non-functional. The Kotlin version does not understand Android's Direct Boot architecture at all. This will cause severe UX issues on any device with disk encryption (most modern Android devices).
+
+**TIME TO PORT**: 3-4 hours for complete implementation with migration testing
+
+---
+
+### FILES REVIEWED SO FAR: 17 / 251 (6.8%)
+**Bugs identified**: 82 critical issues
+**Properly implemented**: 4 / 17 files (23.5%)
+**Next file**: File 18/251
+
