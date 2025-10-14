@@ -636,7 +636,7 @@ class Keyboard2View @JvmOverloads constructor(
     ) {
         val color = if (isPressed) theme.activatedColor else theme.labelColor
         val paint = tc.labelPaint(false, color, 16f)
-        val text = keyValue.toString()
+        val text = keyValue.displayString
         val textY = y + keyHeight / 2f + paint.textSize / 3f
 
         canvas.drawText(text, x, textY, paint)
@@ -655,7 +655,7 @@ class Keyboard2View @JvmOverloads constructor(
     ) {
         val color = if (isPressed) theme.activatedColor else theme.subLabelColor
         val paint = tc.subLabelPaint(false, color, 12f, Paint.Align.CENTER)
-        val text = keyValue.toString()
+        val text = keyValue.displayString
 
         // Calculate position based on index (1-8 for corners and sides)
         val (textX, textY) = when (position) {
