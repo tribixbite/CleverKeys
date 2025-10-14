@@ -817,7 +817,14 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 OptimizedVocabulary.CandidateWord(candidate.word, candidate.confidence)
             }, createSwipeStats())
             logDebug("📋 Vocabulary filter: ${candidates.size} → ${result.size} candidates")
-            result
+
+            // FALLBACK: If vocab filter removes ALL candidates, return top 3 raw beam search results
+            if (result.isEmpty() && candidates.isNotEmpty()) {
+                logDebug("⚠️ Vocabulary filter removed all candidates - returning top 3 raw predictions")
+                candidates.take(3).map { OptimizedVocabulary.FilteredPrediction(it.word, it.confidence) }
+            } else {
+                result
+            }
         } else {
             candidates.map { OptimizedVocabulary.FilteredPrediction(it.word, it.confidence) }
         }
@@ -955,8 +962,20 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
      * Cleanup resources with complete memory management and tensor pool
      */
     fun cleanup() {
-        encoderSession?.close()
-        decoderSession?.close()
+        try {
+            encoderSession?.close()
+            encoderSession = null
+        } catch (e: IllegalStateException) {
+            logDebug("Encoder session already closed")
+        }
+
+        try {
+            decoderSession?.close()
+            decoderSession = null
+        } catch (e: IllegalStateException) {
+            logDebug("Decoder session already closed")
+        }
+
         onnxExecutor.shutdown()
 
         // Cleanup optimized tensor pool
