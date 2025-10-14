@@ -582,3 +582,69 @@ grep -r "Unresolved reference" build/
 - Proper error handling without compromise implementations
 
 The CleverKeys Kotlin implementation is architecturally complete with sophisticated algorithms and requires only compilation error resolution and runtime validation to achieve full functionality.
+## 🔬 AUTOMATED TESTING STATUS (Oct 14, 2025)
+
+### **✅ TESTACTIVITY IMPLEMENTED AND WORKING:**
+- Automated test via `adb shell am start -n tribixbite.keyboard2.debug/tribixbite.keyboard2.TestActivity`
+- Loads 10 test swipes from assets/swipes.jsonl
+- Runs predictions and logs results to logcat
+- **Can now iterate on fixes without manual user testing!**
+
+### **✅ ALL PIPELINE FIXES VERIFIED WORKING:**
+
+**Fix #35:** Duplicate starting points filtered ✓
+- Filters consecutive duplicates at swipe start
+- Ensures non-zero velocities for proper recognition
+
+**Fix #36:** Repeat-last padding ✓
+- nearest_keys padded by repeating last key (NOT PAD tokens)
+- VERIFIED: Last 10 keys all identical in logs
+- Matches CLI test & training data expectations
+
+**Fix #37:** Training dimensions (360×280) ✓
+- Normalization uses keyboardWidth/Height = 360×280
+- Matches training data coordinate space
+
+**Fix #39:** CLI grid detection ✓
+- Staggered QWERTY layout with row offsets
+- Row 0: no offset, Row 1: +keyWidth/2, Row 2: +keyWidth
+- Dynamic (works with any keyboard size)
+
+**Fix #40:** Initialization order ✓
+- setKeyboardDimensions() called AFTER initialize()
+- Predictor must exist before dimensions can be set
+
+**Fix #41:** Tensor validation logging ✓
+- Verifies nearest_keys tensor has correct size & padding
+- All validation passes - no bugs detected
+
+### **❌ CRITICAL ISSUE: 0/10 ACCURACY DESPITE ALL FIXES:**
+
+**Test Results:**
+```
+[1/10] 'what' → 't' ❌ (nearest keys correct: w,w,w but predicts 't')
+[2/10] 'boolean' → '' ❌ (empty - EOS predicted first)
+[3/10] 'not' → 't' ❌ (nearest keys correct: n,n but predicts 't')
+[4-9] → '' ❌ (all empty - EOS predicted first)
+[10/10] 'could' → 'o' ❌
+Result: 0/10 (0.0%)
+```
+
+**Observations:**
+- Nearest keys partially correct (tests #1, #3 have correct first letters)
+- Many predictions empty (EOS token scoring highest)
+- Model appears to ignore nearest_keys input
+- User claims "model has 70%+ accuracy" but seeing 0%
+
+**Possible Causes:**
+1. Test data format doesn't match training data
+2. ONNX Runtime behavioral difference (Android vs CLI)
+3. Hidden bug in feature extraction or tensor creation
+4. Beam search implementation issue
+5. Model file version mismatch
+
+**Next Steps:**
+- Compare exact CLI test implementation vs Android line-by-line
+- Check if test data coordinates match training data expectations
+- Verify ONNX Runtime versions match
+- Test with different beam search parameters
