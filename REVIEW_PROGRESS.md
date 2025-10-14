@@ -6968,3 +6968,412 @@ private fun observeClipboardHistory() {
 - Add lifecycle hooks
 - Keep Flow-based updates as enhancement
 
+
+---
+
+## FILE 25/251: ClipboardHistoryService.java (194 lines) vs ClipboardHistoryService.kt (363 lines)
+
+**QUALITY**: ⚠️ **HIGH-QUALITY MODERNIZATION WITH CRITICAL COMPATIBILITY BREAKS** (6 bugs, 10 enhancements)
+
+### SUMMARY
+
+**Java Implementation (194 lines)**:
+- Static service singleton pattern
+- Synchronous blocking operations
+- Callback-based notifications (OnClipboardHistoryChange)
+- Snake_case method naming
+- SQLite ClipboardDatabase integration
+- TTL-based expiration (5 minutes)
+- Configurable size limits
+
+**Kotlin Implementation (363 lines - 87% expansion)**:
+- Object singleton + ServiceImpl class
+- Coroutine-based async operations
+- Flow/StateFlow reactive updates
+- CamelCase method naming
+- Mutex-protected thread safety
+- Periodic cleanup task (30 seconds)
+- Extension functions for formatting
+- Entry caching for performance
+- Sensitive content detection
+
+### ARCHITECTURAL COMPARISON
+
+| Feature | Java | Kotlin | Status |
+|---------|------|--------|--------|
+| Singleton pattern | Static field | Object + ServiceImpl | ✅ IMPROVED |
+| Threading | Synchronous blocking | Async suspend functions | ⚠️ BREAKS CALLERS |
+| Notifications | Callback interface | Flow/StateFlow | ⚠️ BREAKS CALLERS |
+| Method naming | snake_case | camelCase | ⚠️ BREAKS CALLERS |
+| Database access | Direct calls | Lazy initialization | ⚠️ BLOCKING INIT |
+| Thread safety | None | Mutex-protected | ✅ ENHANCEMENT |
+| Cleanup | Manual | Periodic (30s) | ✅ ENHANCEMENT |
+| Entry caching | No | Yes (StateFlow) | ✅ ENHANCEMENT |
+| Sensitive detection | No | Yes (extension fns) | ✅ ENHANCEMENT |
+| Error handling | No | Try-catch | ✅ ENHANCEMENT |
+
+### BUG #125 (CRITICAL): Missing synchronous getService() wrapper
+
+**Java (line 22) - Synchronous**:
+```java
+public static ClipboardHistoryService get_service(Context ctx)
+{
+  if (VERSION.SDK_INT <= 11)
+    return null;
+  if (_service == null)
+    _service = new ClipboardHistoryService(ctx);
+  return _service;
+}
+
+// Called synchronously throughout codebase:
+ClipboardHistoryService service = ClipboardHistoryService.get_service(ctx);
+if (service != null) {
+    service.clear_expired_and_get_history();
+}
+```
+
+**Kotlin (line 54) - Async suspend**:
+```kotlin
+suspend fun getService(ctx: Context): ClipboardHistoryServiceImpl? {
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.HONEYCOMB) {
+        return null
+    }
+
+    return serviceMutex.withLock {
+        _service ?: ClipboardHistoryServiceImpl(ctx).also { _service = it }
+    }
+}
+```
+
+**Impact**: CRITICAL COMPATIBILITY BREAK
+- Non-suspend callers CANNOT call getService()
+- ClipboardHistoryView.java line 27: `_service = ClipboardHistoryService.get_service(ctx);`
+- Will cause compilation error: "Suspend function 'getService' should be called only from a coroutine or another suspend function"
+
+**Fix needed**: Add synchronous wrapper
+```kotlin
+fun getServiceSync(ctx: Context): ClipboardHistoryServiceImpl? {
+    return runBlocking { getService(ctx) }
+}
+```
+
+---
+
+### BUG #126 (HIGH): Missing callback-based notification support
+
+**Java (line 139)**:
+```java
+public void set_on_clipboard_history_change(OnClipboardHistoryChange l) { _listener = l; }
+
+// ClipboardHistoryView.java line 30:
+_service.set_on_clipboard_history_change(this);
+```
+
+**Kotlin**: Missing completely
+- Only has Flow-based subscribeToHistoryChanges() (line 258)
+- No callback setter method
+
+**Impact**: HIGH - Legacy callback code broken
+- ClipboardHistoryView expects set_on_clipboard_history_change()
+- Flow subscription requires coroutine scope
+- Incompatible with Java callback pattern
+
+**Fix needed**: Add callback support
+```kotlin
+private var _legacyListener: OnClipboardHistoryChange? = null
+
+fun setOnClipboardHistoryChange(listener: OnClipboardHistoryChange?) {
+    _legacyListener = listener
+}
+
+// In _historyChanges.tryEmit(Unit), also call:
+_legacyListener?.onClipboardHistoryChange()
+```
+
+---
+
+### BUG #127 (HIGH): Inconsistent API naming breaks all call sites
+
+**Java - snake_case**:
+```java
+on_startup(Context, ClipboardPasteCallback)
+get_service(Context)
+set_history_enabled(boolean)
+clear_expired_and_get_history()
+remove_history_entry(String)
+add_current_clip()
+set_on_clipboard_history_change(OnClipboardHistoryChange)
+```
+
+**Kotlin - camelCase**:
+```kotlin
+onStartup(Context, ClipboardPasteCallback)
+getService(Context)
+setHistoryEnabled(Boolean)
+clearExpiredAndGetHistory()
+removeHistoryEntry(String)
+addCurrentClip()
+// Missing: setOnClipboardHistoryChange()
+```
+
+**Impact**: HIGH - ALL EXISTING CALLERS BREAK
+- Every call site using snake_case will fail to compile
+- Requires updating entire codebase or providing aliases
+
+**Fix needed**: Provide snake_case aliases
+```kotlin
+@Deprecated("Use onStartup", ReplaceWith("onStartup(ctx, cb)"))
+suspend fun on_startup(ctx: Context, cb: ClipboardPasteCallback) = onStartup(ctx, cb)
+
+// ... for all methods
+```
+
+---
+
+### BUG #128 (MEDIUM): Blocking initialization in lazy property
+
+**Kotlin (line 102)**:
+```kotlin
+private val database by lazy { runBlocking { ClipboardDatabase.getInstance(context) } }
+```
+
+**Impact**: DEFEATS ASYNC PATTERNS
+- runBlocking() blocks the thread on first access
+- Defeats entire purpose of coroutine-based architecture
+- Can cause ANR (Application Not Responding) if called from UI thread
+
+**Fix needed**: Remove lazy, initialize in init block
+```kotlin
+private lateinit var database: ClipboardDatabase
+
+init {
+    scope.launch {
+        database = ClipboardDatabase.getInstance(context)
+        database.cleanupExpiredEntries()
+        refreshEntryCache()
+    }
+}
+```
+
+---
+
+### BUG #129 (LOW): Different method name - clear_expired_and_get_history
+
+**Java (line 73)**:
+```java
+public List<String> clear_expired_and_get_history()
+{
+  _database.cleanupExpiredEntries();
+  return _database.getActiveClipboardEntries();
+}
+```
+
+**Kotlin (line 142)**:
+```kotlin
+suspend fun clearExpiredAndGetHistory(): List<String> = operationMutex.withLock {
+    database.cleanupExpiredEntries()
+    val entries = database.getActiveClipboardEntries().getOrElse { emptyList() }
+    _clipboardEntries.value = entries
+    entries
+}
+```
+
+**Impact**: Call site compatibility break (same as Bug #127)
+
+---
+
+### BUG #130 (LOW): Interface moved from inner to top-level
+
+**Java (line 157-160) - Inner interface**:
+```java
+public static interface OnClipboardHistoryChange
+{
+  public void on_clipboard_history_change();
+}
+
+// Usage:
+public class ClipboardHistoryView implements ClipboardHistoryService.OnClipboardHistoryChange
+```
+
+**Kotlin (line 313-315) - Top-level interface**:
+```kotlin
+interface OnClipboardHistoryChange {
+    fun onClipboardHistoryChange()  // Note: camelCase
+}
+
+// Usage:
+class ClipboardHistoryView : OnClipboardHistoryChange
+```
+
+**Impact**: LOW - Qualified names differ
+- `ClipboardHistoryService.OnClipboardHistoryChange` → `OnClipboardHistoryChange`
+- Method name changed: `on_clipboard_history_change()` → `onClipboardHistoryChange()`
+- Import statements will differ
+
+---
+
+### ENHANCEMENTS IN KOTLIN
+
+1. **Coroutine-based async operations** (lines 8-12, 43, 54, 68, 142, etc.):
+```kotlin
+suspend fun getService(ctx: Context): ClipboardHistoryServiceImpl?
+suspend fun onStartup(ctx: Context, cb: ClipboardPasteCallback)
+suspend fun clearExpiredAndGetHistory(): List<String>
+```
+- All database operations are non-blocking
+- Better UI responsiveness
+- Prevents ANR (Application Not Responding)
+
+2. **Flow-based reactive updates** (lines 106-112, 258-269):
+```kotlin
+private val _historyChanges = MutableSharedFlow<Unit>(
+    replay = 0,
+    extraBufferCapacity = 1,
+    onBufferOverflow = BufferOverflow.DROP_OLDEST
+)
+
+fun subscribeToHistoryChanges(): Flow<List<String>> {
+    return historyChanges
+        .onStart { emit(Unit) }
+        .flatMapLatest { /* ... */ }
+        .flowOn(Dispatchers.IO)
+        .distinctUntilChanged()
+}
+```
+- Modern reactive programming pattern
+- Automatic updates when history changes
+- Better than callback-based approach
+
+3. **StateFlow for entry caching** (lines 114-115, 274):
+```kotlin
+private val _clipboardEntries = MutableStateFlow<List<String>>(emptyList())
+val clipboardEntries: StateFlow<List<String>> = _clipboardEntries.asStateFlow()
+
+fun getClipboardEntriesFlow(): StateFlow<List<String>> = clipboardEntries
+```
+- Cached entries reduce database queries
+- Real-time state updates
+- UI can observe StateFlow directly
+
+4. **Mutex-based thread safety** (lines 36, 117, 142, 153, 184, 208, 217):
+```kotlin
+private val serviceMutex = Mutex()
+private val operationMutex = Mutex()
+
+suspend fun clearExpiredAndGetHistory(): List<String> = operationMutex.withLock {
+    // Thread-safe database access
+}
+```
+- Prevents race conditions
+- Better than Java's lack of synchronization
+- Proper coroutine-based locking
+
+5. **Periodic cleanup task** (lines 129-136):
+```kotlin
+scope.launch {
+    while (isActive) {
+        delay(30_000)
+        database.cleanupExpiredEntries()
+        refreshEntryCache()
+    }
+}
+```
+- Automatic maintenance every 30 seconds
+- Java only cleans on explicit calls
+- Keeps database lean
+
+6. **Extension functions for formatting** (lines 331-363):
+```kotlin
+fun String.formatForClipboard(): String {
+    val preview = if (length > 50) take(47) + "..." else this
+    val type = when {
+        matches(Regex("https?://.*")) -> "URL"
+        matches(Regex("\\d+")) -> "Number"
+        matches(Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")) -> "Email"
+        contains('\n') -> "Multi-line"
+        else -> "Text"
+    }
+    return "$preview ($type, ${length} chars)"
+}
+```
+- Rich clipboard preview with type detection
+- Not in Java version
+
+7. **Sensitive content detection** (lines 346-353):
+```kotlin
+fun String.isSensitiveContent(): Boolean {
+    val lowerContent = lowercase()
+    val sensitivePatterns = listOf(
+        "password", "passwd", "pwd", "pin", "secret", "token", "key",
+        "credit card", "ssn", "social security"
+    )
+    return sensitivePatterns.any { pattern -> lowerContent.contains(pattern) }
+}
+```
+- Security feature - detects passwords, credit cards, etc.
+- Not in Java version
+
+8. **Content sanitization** (lines 358-363):
+```kotlin
+fun String.sanitizeForDisplay(): String {
+    return if (isSensitiveContent()) {
+        "*** Sensitive content (${length} chars) ***"
+    } else {
+        formatForClipboard()
+    }
+}
+```
+- Hides sensitive data in UI
+- Security enhancement
+
+9. **Better error handling** (lines 297-303):
+```kotlin
+private inner class SystemClipboardListener : ClipboardManager.OnPrimaryClipChangedListener {
+    override fun onPrimaryClipChanged() {
+        scope.launch {
+            try {
+                addCurrentClip()
+            } catch (e: Exception) {
+                android.util.Log.w("ClipboardHistory", "Error processing clipboard change", e)
+            }
+        }
+    }
+}
+```
+- Java version has no error handling
+- Prevents crashes from clipboard issues
+
+10. **Entry caching for performance** (lines 279-282):
+```kotlin
+private suspend fun refreshEntryCache() {
+    val entries = database.getActiveClipboardEntries().getOrElse { emptyList() }
+    _clipboardEntries.value = entries
+}
+```
+- Reduces database queries
+- StateFlow provides cached access
+
+---
+
+### VERDICT: ⚠️ HIGH-QUALITY MODERNIZATION (6 bugs, 10 major enhancements)
+
+**This is an EXCELLENT modernization with modern Kotlin patterns, but has critical compatibility breaks:**
+- Missing synchronous getService() wrapper (Bug #125)
+- Missing callback support (Bug #126)
+- Inconsistent API naming (Bug #127)
+- Blocking lazy initialization (Bug #128)
+- All existing call sites will break
+
+**Properly Implemented Features**: 90% (extensive enhancements)
+
+**Recommendation**: KEEP MODERNIZATION, ADD COMPATIBILITY LAYER
+- Add synchronous wrapper methods for getService()
+- Add callback support alongside Flow
+- Provide snake_case method aliases or update all callers
+- Fix blocking lazy initialization
+- Document migration path for existing code
+
+**This is the OPPOSITE of ClipboardHistoryView:**
+- ClipboardHistoryView: Wrong architecture, broken functionality
+- ClipboardHistoryService: Correct architecture, excellent enhancements, just needs compatibility fixes
+
