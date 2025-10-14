@@ -476,7 +476,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
             newBeam.tokens.add(tokenId.toLong())
             newBeam.score = score  // Use the globally-computed score
 
-            if (tokenId == EOS_IDX) {
+            // CRITICAL: Mark beam as finished for BOTH EOS and PAD (matches Python reference)
+            if (tokenId == EOS_IDX || tokenId == PAD_IDX) {
                 newBeam.finished = true
             }
 
