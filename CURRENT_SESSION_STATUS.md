@@ -31,7 +31,7 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 
 ## 📊 SYSTEMATIC REVIEW PROGRESS
 
-### **FILES REVIEWED: 23 / 251 (9.2%)**
+### **FILES REVIEWED: 24 / 251 (9.6%)**
 
 1. ✅ KeyValueParser.java (289 lines) vs KeyValue.kt:629-642 (13 lines)
 2. ✅ Keyboard2.java (1392 lines) vs CleverKeysService.kt (933 lines)
@@ -56,8 +56,9 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 21. ✅ **FoldStateTracker.java (62 lines) vs FoldStateTracker.kt+Impl (275 lines) - ✅ EXEMPLARY (4X expansion)**
 22. ✅ **LayoutsPreference.java (302 lines) vs LayoutsPreference.kt (407 lines) - ⚠️ PARTIAL FIX (7 of 16 bugs fixed)**
 23. ✅ **ClipboardPinView.java (140 lines) vs ClipboardPinView.kt (225 lines) - ⚠️ MIXED (5 bugs, 5 enhancements)**
+24. ✅ **ClipboardHistoryView.java (125 lines) vs ClipboardHistoryView.kt (185 lines) - ❌ CATASTROPHIC (12 bugs, wrong base class)**
 
-### **BUGS IDENTIFIED: 101 CRITICAL ISSUES (112 found, 11 fixed)**
+### **BUGS IDENTIFIED: 113 CRITICAL ISSUES (124 found, 11 fixed)**
 
 - File 1: 1 critical (KeyValueParser 96% missing)
 - File 2: 23 critical (Keyboard2 ~800 lines missing)
@@ -82,14 +83,16 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 - File 21: **2 bugs** (FoldStateTracker - isFoldableDevice missing, Flow vs callback API)
 - File 22: **16 CRITICAL → 9 REMAINING** (LayoutsPreference - ✅ FIXED 7: infinite recursion, hardcoded IDs/strings, missing init; ⏳ REMAINING: wrong base class, data loss, broken serialization)
 - File 23: **5 bugs** (ClipboardPinView - programmatic layout workaround, hardcoded strings/emojis, missing Utils.show_dialog_on_ime, but 5 enhancements: async ops, duplicate prevention, cleanup)
+- File 24: **12 CATASTROPHIC** (ClipboardHistoryView - wrong base class LinearLayout→NonScrollListView, missing AttributeSet, no adapter, broken pin/paste, missing lifecycle, wrong API calls)
 
 ### **TIME INVESTMENT:**
-- **Spent**: 23.5 hours complete line-by-line reading (Files 1-23)
+- **Spent**: 24 hours complete line-by-line reading (Files 1-24)
 - **Estimated Remaining**: 14-18 weeks for complete parity
-- **Next Phase**: Continue systematic review (228 files remaining)
-- **✅ Properly Implemented**: 8 / 23 files (34.8%) - Modmap.kt, ComposeKey.kt, ComposeKeyData.kt (fixed), Autocapitalisation.kt, Utils.kt (exemplary), FoldStateTracker.kt (exemplary), **DirectBootAwarePreferences.kt (fixed)**, **Logs.kt (fixed)**
-- **⚠️ Mixed Quality**: 2 / 23 files (8.7%) - Emoji.kt (4 bugs, 5 enhancements), ClipboardPinView.kt (5 bugs, 5 enhancements)
-- **❌ Stub Files**: 2 / 23 files (8.7%) - ExtraKeys.kt (architectural mismatch), LayoutsPreference.kt (partial fixes, 9 bugs remaining)
+- **Next Phase**: Continue systematic review (227 files remaining)
+- **✅ Properly Implemented**: 8 / 24 files (33.3%) - Modmap.kt, ComposeKey.kt, ComposeKeyData.kt (fixed), Autocapitalisation.kt, Utils.kt (exemplary), FoldStateTracker.kt (exemplary), **DirectBootAwarePreferences.kt (fixed)**, **Logs.kt (fixed)**
+- **⚠️ Mixed Quality**: 2 / 24 files (8.3%) - Emoji.kt (4 bugs, 5 enhancements), ClipboardPinView.kt (5 bugs, 5 enhancements)
+- **❌ Stub Files**: 2 / 24 files (8.3%) - ExtraKeys.kt (architectural mismatch), LayoutsPreference.kt (partial fixes, 9 bugs remaining)
+- **💀 Catastrophic**: 1 / 24 files (4.2%) - ClipboardHistoryView.kt (wrong base class, broken architecture)
 
 ## ✅ FIXES APPLIED (Oct 14, 2025 Session)
 

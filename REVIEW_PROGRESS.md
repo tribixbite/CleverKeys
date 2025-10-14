@@ -6576,3 +6576,395 @@ fun cleanup() {
 **Mixed quality**: 1 / 23 files (4.3%) - ClipboardPinView.kt
 **Next file**: File 24/251
 
+
+---
+
+## FILE 24/251: ClipboardHistoryView.java (125 lines) vs ClipboardHistoryView.kt (185 lines)
+
+**QUALITY**: ❌ **CATASTROPHIC ARCHITECTURAL MISMATCH** (12 critical bugs)
+
+### SUMMARY
+
+**Java Implementation (125 lines)**:
+- Extends NonScrollListView (custom ListView)
+- Implements ClipboardHistoryService.OnClipboardHistoryChange
+- Uses proper adapter pattern (BaseAdapter)
+- Inflates XML layout (R.layout.clipboard_history_entry)
+- Integrates with ClipboardPinView for pinning
+- Proper lifecycle (onWindowVisibilityChanged)
+
+**Kotlin Implementation (185 lines)**:
+- Extends LinearLayout (❌ WRONG BASE CLASS)
+- Missing AttributeSet constructor (❌ CANNOT INFLATE FROM XML)
+- No adapter (manual view creation)
+- Programmatic layout creation
+- Broken pin functionality (wrong API)
+- Missing paste functionality
+- Flow-based reactive updates (✅ enhancement)
+
+### ARCHITECTURAL COMPARISON
+
+| Feature | Java | Kotlin | Status |
+|---------|------|--------|--------|
+| Base class | NonScrollListView | LinearLayout | ❌ WRONG |
+| Constructor | (Context, AttributeSet) | (Context) | ❌ MISSING ATTRS |
+| Adapter | ClipboardEntriesAdapter | None | ❌ MISSING |
+| Layout | XML inflation | Programmatic | ❌ WORKAROUND |
+| Pin functionality | Finds ClipboardPinView | Wrong API | ❌ BROKEN |
+| Paste functionality | paste_entry() | Missing | ❌ MISSING |
+| Lifecycle | onWindowVisibilityChanged | Missing | ❌ MISSING |
+| Data refresh | update_data() | Different purpose | ❌ BROKEN |
+| Reactive updates | Callback | Flow | ✅ ENHANCEMENT |
+
+### BUG #113 (CRITICAL): Wrong base class - architectural mismatch
+
+**Java (line 15)**:
+```java
+public final class ClipboardHistoryView extends NonScrollListView
+  implements ClipboardHistoryService.OnClipboardHistoryChange
+{
+  List<String> _history;
+  ClipboardHistoryService _service;
+  ClipboardEntriesAdapter _adapter;
+```
+
+**Kotlin (lines 15-23)**:
+```kotlin
+class ClipboardHistoryView(context: Context) : LinearLayout(context) {
+    
+    companion object {
+        private const val TAG = "ClipboardHistoryView"
+    }
+    
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var onItemSelected: ((String) -> Unit)? = null
+```
+
+**Impact**: COMPLETELY DIFFERENT ARCHITECTURE
+- NonScrollListView provides ListView functionality (adapter, item views, scrolling)
+- LinearLayout requires manual view creation and management
+- Breaks entire component contract
+- Cannot be used as drop-in replacement
+
+---
+
+### BUG #114 (HIGH): Missing AttributeSet constructor parameter
+
+**Java (line 22)**:
+```java
+public ClipboardHistoryView(Context ctx, AttributeSet attrs)
+{
+  super(ctx, attrs);
+  _history = Collections.EMPTY_LIST;
+  _adapter = this.new ClipboardEntriesAdapter();
+  _service = ClipboardHistoryService.get_service(ctx);
+  if (_service != null)
+  {
+    _service.set_on_clipboard_history_change(this);
+    _history = _service.clear_expired_and_get_history();
+  }
+  setAdapter(_adapter);
+}
+```
+
+**Kotlin (line 15)**:
+```kotlin
+class ClipboardHistoryView(context: Context) : LinearLayout(context) {
+```
+
+**Impact**: CANNOT BE INFLATED FROM XML
+- XML layout inflation requires AttributeSet constructor
+- Must be created programmatically only
+- Breaks normal Android view lifecycle
+
+---
+
+### BUG #115 (HIGH): Missing adapter pattern
+
+**Java (lines 72-124) - Proper Adapter**:
+```java
+class ClipboardEntriesAdapter extends BaseAdapter
+{
+  public ClipboardEntriesAdapter() {}
+  
+  @Override
+  public int getCount() { return _history.size(); }
+  @Override
+  public Object getItem(int pos) { return _history.get(pos); }
+  @Override
+  public long getItemId(int pos) { return _history.get(pos).hashCode(); }
+  
+  @Override
+  public View getView(final int pos, View v, ViewGroup _parent)
+  {
+    if (v == null)
+      v = View.inflate(getContext(), R.layout.clipboard_history_entry, null);
+    ((TextView)v.findViewById(R.id.clipboard_entry_text))
+      .setText(_history.get(pos));
+    v.findViewById(R.id.clipboard_entry_addpin).setOnClickListener(
+        new View.OnClickListener()
+        {
+          @Override
+          public void onClick(View v) { pin_entry(pos); }
+        });
+    v.findViewById(R.id.clipboard_entry_paste).setOnClickListener(
+        new View.OnClickListener()
+        {
+          @Override
+          public void onClick(View v) { paste_entry(pos); }
+        });
+    return v;
+  }
+}
+```
+
+**Kotlin (lines 108-161) - Manual View Creation**:
+```kotlin
+private fun updateHistoryDisplay(items: List<String>) {
+    val container = findViewById<LinearLayout>(android.R.id.list) ?: return
+    container.removeAllViews()
+
+    items.forEach { item ->
+        container.addView(createHistoryItemView(item))
+    }
+}
+
+private fun createHistoryItemView(item: String): View {
+    return LinearLayout(context).apply {
+        orientation = HORIZONTAL
+        setPadding(16, 8, 16, 8)
+        setBackgroundColor(Color.TRANSPARENT)
+
+        // ... creates views manually
+    }
+}
+```
+
+**Impact**: LESS EFFICIENT
+- No view recycling (creates new views every time)
+- Higher memory usage for large histories
+- Breaks ListView optimization pattern
+
+---
+
+### BUG #116 (MEDIUM): Hardcoded header text
+
+**Kotlin (lines 42-47)**:
+```kotlin
+addView(TextView(context).apply {
+    text = "📋 Clipboard History"
+    textSize = 18f
+    setPadding(16, 16, 16, 8)
+    setTypeface(typeface, android.graphics.Typeface.BOLD)
+})
+```
+
+**Expected**: Should use R.string resource for localization
+
+---
+
+### BUG #117 (MEDIUM): Hardcoded button text
+
+**Kotlin (lines 67-86)**:
+```kotlin
+addView(Button(context).apply {
+    text = "Clear All"  // ❌ Hardcoded
+    // ...
+})
+
+addView(Button(context).apply {
+    text = "Close"  // ❌ Hardcoded
+    // ...
+})
+```
+
+**Expected**: Should use R.string.clipboard_clear_all, R.string.close, etc.
+
+---
+
+### BUG #118 (HIGH): Broken pin functionality
+
+**Java (lines 38-44) - Correct Implementation**:
+```java
+public void pin_entry(int pos)
+{
+  ClipboardPinView v = (ClipboardPinView)((ViewGroup)getParent().getParent()).findViewById(R.id.clipboard_pin_view);
+  String clip = _history.get(pos);
+  v.add_entry(clip);
+  _service.remove_history_entry(clip);
+}
+```
+
+**Kotlin (lines 138-147) - Wrong Implementation**:
+```kotlin
+addView(Button(context).apply {
+    text = "📍"
+    textSize = 12f
+    setPadding(8, 4, 8, 4)
+    setOnClickListener {
+        scope.launch {
+            ClipboardHistoryService.getService(context)?.setPinnedStatus(item, true)
+            // ❌ WRONG API - should find ClipboardPinView and call add_entry()
+        }
+    }
+})
+```
+
+**Impact**: PIN FUNCTIONALITY BROKEN
+- setPinnedStatus() API doesn't exist in Java version
+- Should find ClipboardPinView and call add_entry()
+- Won't add item to pin view
+
+---
+
+### BUG #119 (MEDIUM): Hardcoded emoji icons
+
+**Kotlin (lines 139, 151)**:
+```kotlin
+text = "📍"  // Pin button
+// ...
+text = "🗑️"  // Delete button
+```
+
+**Java**: Uses proper drawable resources from XML layout
+
+---
+
+### BUG #120 (HIGH): Missing paste functionality
+
+**Java (lines 47-50)**:
+```java
+public void paste_entry(int pos)
+{
+  ClipboardHistoryService.paste(_history.get(pos));
+}
+```
+
+**Kotlin**: Missing completely
+- Has onItemSelected callback (line 132)
+- But no paste_entry() method
+- Java wires up paste button to paste_entry() (lines 96-101)
+
+**Impact**: PASTE BUTTON BROKEN
+- Cannot paste clipboard entries
+- Core functionality missing
+
+---
+
+### BUG #121 (MEDIUM): Hardcoded toast message
+
+**Kotlin (line 73)**:
+```kotlin
+Toast.makeText(context, "Clipboard history cleared", Toast.LENGTH_SHORT).show()
+```
+
+**Expected**: Should use R.string.clipboard_cleared
+
+---
+
+### BUG #122 (HIGH): Missing update_data() implementation
+
+**Java (lines 65-70)**:
+```java
+void update_data()
+{
+  _history = _service.clear_expired_and_get_history();
+  _adapter.notifyDataSetChanged();
+  invalidate();
+}
+```
+
+**Kotlin**: Has updateHistoryDisplay(items: List<String>) (lines 108-115)
+- Takes items as parameter (different purpose)
+- No method to refresh from service
+- Breaks manual refresh
+
+---
+
+### BUG #123 (HIGH): Missing lifecycle hook
+
+**Java (lines 58-63)**:
+```java
+@Override
+protected void onWindowVisibilityChanged(int visibility)
+{
+  if (visibility == View.VISIBLE)
+    update_data();
+}
+```
+
+**Kotlin**: Missing completely
+
+**Impact**: STALE DATA
+- Doesn't refresh when view becomes visible
+- Shows outdated clipboard history
+
+---
+
+### BUG #124 (CRITICAL): Non-existent API usage
+
+**Kotlin (line 144)**:
+```kotlin
+ClipboardHistoryService.getService(context)?.setPinnedStatus(item, true)
+```
+
+**Java ClipboardHistoryService API**:
+- No setPinnedStatus() method exists
+- Should find ClipboardPinView and call add_entry()
+
+**Impact**: WILL CRASH AT RUNTIME
+- Calls non-existent method
+- Completely broken functionality
+
+---
+
+### ENHANCEMENTS IN KOTLIN
+
+1. **Flow-based reactive updates** (lines 92-103):
+```kotlin
+private fun observeClipboardHistory() {
+    scope.launch {
+        val service = ClipboardHistoryService.getService(context)
+        service?.subscribeToHistoryChanges()
+            ?.flowOn(Dispatchers.Default)
+            ?.collect { historyItems ->
+                withContext(Dispatchers.Main) {
+                    updateHistoryDisplay(historyItems)
+                }
+            }
+    }
+}
+```
+
+2. **Async operations with coroutines**: All service calls are non-blocking
+
+3. **cleanup() method** (lines 183-185): Proper resource cleanup
+
+4. **show() and hide() methods** (lines 166-178): Convenience methods
+
+5. **Clear All button** (lines 67-78): New functionality
+
+6. **Text truncation** (line 128): Limits display to 100 chars
+
+---
+
+### VERDICT: ❌ CATASTROPHIC (12 bugs, 0 properly implemented)
+
+**This is NOT a port - it's a complete rewrite that BREAKS ALL CORE FUNCTIONALITY:**
+- Wrong base class (NonScrollListView → LinearLayout)
+- Missing adapter pattern
+- Broken pin functionality (wrong API)
+- Missing paste functionality
+- Missing lifecycle hooks
+- Cannot be inflated from XML
+
+**Properly Implemented**: 0 / 12 features (0%)
+
+**Recommendation**: PORT THE JAVA FILE CORRECTLY
+- Use NonScrollListView as base class
+- Add AttributeSet constructor
+- Implement proper adapter pattern
+- Port pin_entry() and paste_entry() correctly
+- Add lifecycle hooks
+- Keep Flow-based updates as enhancement
+
