@@ -1,27 +1,41 @@
-# CleverKeys - Tensor Byte Order Fix
+# CleverKeys - Beam Search Divergence Investigation
 
-## ❌ DEBUGGING: Tensor Format Investigation (NO RESOLUTION YET)
+## ❌ CRITICAL: Android Beam Search Produces Invalid Sequences
 
-**Attempts Made:**
-1. ✅ ByteOrder change (nativeOrder → LITTLE_ENDIAN): NO EFFECT
-2. ✅ Reverted to nativeOrder (matches CLI test): NO EFFECT
-3. ✅ Fresh FloatBuffer/LongBuffer views (matches CLI test pattern): NO EFFECT
+**Test Baseline Established:**
+- ✅ Created test_swipes_10.jsonl with 10 swipes (no negative coordinates)
+- ✅ CLI test achieves **30% accuracy (3/10)**: "what"✅, "not"✅, "setting"✅
+- ❌ Android test achieves **0% accuracy (0/10)**: all predictions empty after vocab filter
 
-**Result:** Still 0/2 (0.0%) - "counsel"→"", "now"→"o"
+**Verified IDENTICAL Between CLI and Android:**
+- ✅ Tensor values (hex dumps match exactly for all 10 tests)
+- ✅ Nearest keys detection (hex dumps match)
+- ✅ Feature extraction (coordinates, velocities, accelerations)
+- ✅ Encoder inputs (trajectory_features, nearest_keys, src_mask)
+- ✅ First token predictions (both predict t(23):-0.562 for "what")
 
-**Verified Correct from Logs:**
-- Tensor names: trajectory_features, nearest_keys, src_mask ✓
-- Tensor shapes: [1,150,6], [1,150], [1,150] ✓
-- Nearest keys: [6,6,6,25,9,9...] where 6='c' ✓
-- Normalization: (132,146)→(0.367,0.523) for 360×280 ✓
-- Grid detection: matches CLI test ✓
-- Feature extraction: matches CLI test ✓
+**Result:** Android gets 0/10 (0.0%) - ALL predictions filtered out by vocabulary
 
-**Problem:** Model predicts wrong tokens despite ALL inputs correct
-- Expected first token: c(6)
-- Actual first token: o(18)
-- Beam outputs: "ouuueee", "ouuueeeett", "ouuueeeettt"
-- All filtered by vocabulary → empty result
+**Root Cause Located:**
+The issue is NOT in feature extraction or encoder, but in the BEAM SEARCH DECODER:
+- CLI beam search: Produces valid words ("what", "not", "setting")
+- Android beam search: Produces sequences filtered out by vocabulary (0 valid)
+- Beam search returns 20-23 candidates, but vocabulary filter reduces to 0
+
+**Evidence from Logs:**
+```
+Android Test 1 ("what"):
+🔍 Step 1, Beam 0 top 5 tokens: t(23):-0.562, r(21):-1.384, (3):-1.842...
+✅ Beam search returned 22 candidates
+📋 Vocabulary filter: 22 → 0 candidates
+Result: '' (empty)
+
+CLI Test 1 ("what"):
+First token: t(23):-0.562 (IDENTICAL to Android)
+Final result: "what" ✅ (valid vocabulary word)
+```
+
+**Hypothesis:** Android beam search loop is producing repetitive/garbage sequences instead of exploring diverse paths like CLI does
 
 ## 🔬 HEX DUMP ANALYSIS COMPLETE
 
@@ -106,9 +120,31 @@ byteBuffer.order(ByteOrder.LITTLE_ENDIAN) // ← ONNX standard
 **Problem**: Android Float vs JVM Float rounding differences
 **Solution**: Dump first 20 tensor values as hex and compare
 
-## 🎯 Next Steps
+## 🎯 Next Steps - Focus on Beam Search Divergence
 
-### Option A: Verify Tensor Byte Order (QUICK)
+### PRIORITY: Compare Decoder Invocation Between CLI and Android
+
+The beam search algorithms differ in critical ways:
+
+**CLI Beam Search (TestOnnxPrediction.kt):**
+- Processes beams ONE AT A TIME (loop over beams)
+- Creates fresh src_mask tensor for EACH beam: `Array(1) { BooleanArray(MAX_SEQUENCE_LENGTH) { false } }`
+- Decoder runs with batch size = 1 for each beam
+- Global candidate pool, then sort and prune
+
+**Android Beam Search (OnnxSwipePredictorImpl.kt):**
+- Processes ALL beams in SINGLE BATCH (batched inference optimization)
+- Creates src_mask ONCE for entire batch: `Array(batchSize) { BooleanArray(memoryShape[1].toInt()) { false } }`
+- Decoder runs with batch size = N (all active beams)
+- Global candidate pool, then sort and prune
+
+**Suspected Issue:**
+The batched decoder invocation might be causing incorrect results. Possible causes:
+1. Memory tensor expansion for batching (expandedMemory) may be incorrect
+2. Target mask batching may have shape/indexing issues
+3. Decoder output processing may have batch indexing bugs
+
+### Option A: Test Non-Batched Beam Search (QUICK TEST)
 ```kotlin
 // In createNearestKeysTensor(), change:
 byteBuffer.order(ByteOrder.nativeOrder())
@@ -138,11 +174,21 @@ Log.d(TAG, "Tensor bytes: ${bytes.take(20).joinToString { "%02x".format(it) }}")
 
 ## 💡 Recommendation
 
-**Try Option A first** (5 min fix):
-Change `ByteOrder.nativeOrder()` to `ByteOrder.LITTLE_ENDIAN` in all tensor creation functions. ONNX models are typically little-endian.
+**URGENT: Disable batched inference temporarily** (5 min test):
+Modify Android beam search to process beams ONE AT A TIME like CLI does. This will confirm if batching is the issue.
 
-**Then Option B** (verify tensor names match model):
-Check that "trajectory_features", "nearest_keys", "src_mask" are the actual input names the model expects.
+```kotlin
+// In runBeamSearch(), replace processBatchedBeams() with:
+activeBeams.forEach { beam ->
+    // Process single beam with batch size = 1 (like CLI)
+    val result = decoderSession.run(mapOf(...))
+    // Add candidates to pool
+}
+```
 
-**Then Option C** (verify CLI baseline):
-Run actual CLI test to confirm it works. If CLI also gets 0%, then it's a model issue, not code.
+If this fixes the predictions, then the batched inference optimization has a bug.
+
+**Then investigate batching bugs**:
+1. Check memory tensor expansion logic
+2. Verify target mask indexing for batches
+3. Validate decoder output array indexing
