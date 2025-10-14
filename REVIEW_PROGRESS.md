@@ -4094,3 +4094,359 @@ The script was either:
 **✅ PROPERLY IMPLEMENTED**: 2 / 14 (14.3%)
 **❌ STUB FILES**: 1 / 14 (7.1%) - ComposeKeyData.kt
 **Next File**: File 15/251
+
+---
+
+## FILE 15/251: Autocapitalisation.java vs Autocapitalisation.kt
+
+**Lines**: Java 203 lines vs Kotlin 275 lines (35% more)
+**Impact**: LOW - 1 minor functionality change
+**Status**: ✅ **EXCELLENT IMPLEMENTATION** with improvements
+
+### BUG #80: TRIGGER_CHARACTERS expanded beyond Java
+**Severity**: MEDIUM (functionality change)
+**File**: Autocapitalisation.kt:36
+
+**Java Implementation** (lines 171-180):
+```java
+boolean is_trigger_character(char c)
+{
+  switch (c)
+  {
+    case ' ':  // ONLY SPACE
+      return true;
+    default:
+      return false;
+  }
+}
+```
+
+**Kotlin Implementation**:
+```kotlin
+private val TRIGGER_CHARACTERS = setOf(' ', '.', '!', '?', '\n')
+```
+
+**Problem**: Kotlin adds 4 trigger characters not in Java
+
+**Impact**: MEDIUM - Changes auto-cap behavior
+- Capitalizes after `.`, `!`, `?`, `\n`
+- Java only capitalizes after space
+- May capitalize incorrectly (e.g., "Dr.", "vs.", URLs)
+- **This is a feature addition, not bug-for-bug compatibility**
+
+**Discussion**: These additions make sense for sentence-based capitalization. This appears intentional, not a bug. Should be:
+1. Documented as intentional enhancement, OR
+2. Reverted to Java behavior for parity, OR
+3. Made configurable
+
+**Fix**: 5 minutes (revert to `setOf(' ')` if desired)
+
+---
+
+### ✅ IMPROVEMENTS (6 major):
+
+**1. Coroutine Integration + Error Handling**
+```kotlin
+private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+private val delayedCallback = Runnable {
+    scope.launch {
+        try {
+            // caps mode update
+        } catch (e: Exception) {
+            android.util.Log.w("Autocapitalisation", "Error", e)
+        }
+    }
+}
+```
+- Async processing with coroutines
+- Try-catch error handling
+- Java has NO error handling
+
+**2. Resource Cleanup Method**
+```kotlin
+fun cleanup() {
+    scope.cancel()
+    handler.removeCallbacks(delayedCallback)
+    inputConnection = null
+}
+```
+- Proper cleanup when no longer needed
+- Prevents memory leaks
+- Java has NO cleanup
+
+**3. Callback Cancellation**
+```kotlin
+handler.removeCallbacks(delayedCallback)  // Cancel pending
+handler.postDelayed(delayedCallback, CALLBACK_DELAY_MS)
+```
+- Cancels pending callbacks before scheduling
+- Prevents callback buildup
+- Java doesn't cancel
+
+**4. Named Constants**
+```kotlin
+const val SUPPORTED_CAPS_MODES = ...
+private const val CALLBACK_DELAY_MS = 50L
+private val TRIGGER_CHARACTERS = setOf(...)
+private val SUPPORTED_INPUT_VARIATIONS = setOf(...)
+```
+- No magic numbers
+- Set for O(1) lookup instead of switch
+- More maintainable
+
+**5. Enabled Guards**
+- Kotlin adds `if (!isEnabled) return` in typed(), eventSent(), selectionUpdated()
+- Prevents unnecessary work when disabled
+- Better performance
+
+**6. Comprehensive Documentation**
+- Class-level KDoc
+- Method-level KDoc for all public methods
+- @param and return value docs
+- Java has minimal comments
+
+---
+
+### CORE FUNCTIONALITY: 100% CORRECT
+
+All Java methods properly implemented:
+- ✅ started(), typed(), eventSent(), stop()
+- ✅ pause(), unpause(), selectionUpdated()
+- ✅ All state management correct
+- ✅ All callback logic correct
+
+---
+
+### BUGS SUMMARY:
+
+**1 bug (questionable):**
+- **Bug #80:** TRIGGER_CHARACTERS expanded (MEDIUM)
+  - Adds `.!?\n` to trigger list
+  - Intentional enhancement or revert?
+
+**6 major improvements:**
+- ✅ Coroutines + error handling
+- ✅ Cleanup method
+- ✅ Callback cancellation
+- ✅ Named constants
+- ✅ Enabled guards
+- ✅ Documentation
+
+---
+
+### ASSESSMENT:
+
+**Code Quality**: EXCELLENT (best reviewed file!)
+
+**Feature Parity**: 95% (one intentional change)
+
+**Robustness**: EXCELLENT (better than Java)
+
+**Fix Priority**: LOW (consider keeping enhancement)
+
+**Fix Time**: 5 minutes if reverting
+
+---
+
+### FILES REVIEWED SO FAR: 15 / 251 (6.0%)
+**Time Invested**: ~18.5 hours complete line-by-line reading
+**Bugs Identified**: 78 bugs total (1 new minor)
+**Critical Issues**: 24 showstoppers
+**✅ PROPERLY IMPLEMENTED**: 3 / 15 (20.0%) - Modmap, ComposeKey, Autocapitalisation
+**Next File**: File 16/251
+
+---
+
+## FILE 16/251: ExtraKeys.java (150 lines) vs ExtraKeys.kt (18 lines)
+
+**STATUS**: ❌ CATASTROPHIC - 95%+ MISSING IMPLEMENTATION
+
+### BUG #81: ExtraKeys system 95%+ missing (CATASTROPHIC)
+
+**Java**: 150-line system for dynamically adding extra keys to layouts
+**Kotlin**: 18-line enum of key types (COMPLETELY DIFFERENT DESIGN)
+
+**Java Architecture**:
+```java
+public final class ExtraKeys {
+    Collection<ExtraKey> _ks;  // List of keys to potentially add
+    
+    // Parse "key1:alt1@pos1|key2:alt2@pos2" format
+    public static ExtraKeys parse(String script, String str);
+    
+    // Merge duplicate keys from multiple sources
+    public static ExtraKeys merge(List<ExtraKeys> kss);
+    
+    // Add appropriate keys to keyboard based on query
+    public void compute(Map<KeyValue, KeyboardData.PreferredPos> dst, Query q);
+    
+    static class ExtraKey {
+        final KeyValue kv;           // Key to add
+        final String script;         // Script filter (e.g., "latn")
+        final List<KeyValue> alternatives;  // Don't add if all present
+        final KeyValue next_to;      // Positioning hint
+        
+        void compute(...);           // Add key if conditions met
+        ExtraKey merge_with(ExtraKey k2);  // Merge duplicates
+        static ExtraKey parse(String str, String script);
+    }
+    
+    static class Query {
+        final String script;         // Current layout script
+        final Set<KeyValue> present; // Keys already on layout
+    }
+}
+```
+
+**Kotlin Architecture**:
+```kotlin
+enum class ExtraKeys {
+    NONE, CUSTOM, FUNCTION;
+    
+    companion object {
+        fun fromString(value: String): ExtraKeys {
+            return when (value) {
+                "custom" -> CUSTOM
+                "function" -> FUNCTION
+                else -> NONE
+            }
+        }
+    }
+}
+```
+
+**MISSING FROM KOTLIN (132 lines / 88%)**:
+
+1. **ExtraKey inner class (65 lines)** - Individual key specification with:
+   - KeyValue to add
+   - Script filter (language-specific)
+   - Alternatives list (don't add if alternatives present)
+   - Positioning hint (add next to another key)
+   - compute() logic with alternative selection
+   - merge_with() for combining duplicates
+   - parse() for "key:alt1:alt2@next_to" format
+
+2. **Query class (14 lines)** - Context for deciding which keys to add:
+   - Current layout script
+   - Set of keys already present
+
+3. **parse() method (8 lines)** - Parse "|"-separated extra key list:
+   ```java
+   // Parse "f11_placeholder@f12_placeholder|esc@`"
+   String[] ks = str.split("\\|");
+   for (int i = 0; i < ks.length; i++)
+       dst.add(ExtraKey.parse(ks[i], script));
+   ```
+
+4. **merge() method (13 lines)** - Merge extra keys from multiple sources:
+   ```java
+   // Combine keys, generalizing scripts on conflict
+   Map<KeyValue, ExtraKey> merged_keys = new HashMap<>();
+   for (ExtraKeys ks : kss)
+       for (ExtraKey k : ks._ks) {
+           ExtraKey k2 = merged_keys.get(k.kv);
+           if (k2 != null) k = k.merge_with(k2);
+           merged_keys.put(k.kv, k);
+       }
+   ```
+
+5. **compute() method (7 lines)** - Add keys to layout:
+   ```java
+   public void compute(Map<KeyValue, KeyboardData.PreferredPos> dst, Query q) {
+       for (ExtraKey k : _ks)
+           k.compute(dst, q);
+   }
+   ```
+
+6. **Alternative selection logic (ExtraKey.compute lines 86-98)**:
+   ```java
+   // Use alternative if it's the only one and kv not present
+   boolean use_alternative = (alternatives.size() == 1 && !dst.containsKey(kv));
+   
+   // Add key if script matches and alternatives not all present
+   if ((q.script == null || script == null || q.script.equals(script))
+       && (alternatives.size() == 0 || !q.present.containsAll(alternatives))) {
+       KeyValue kv_ = use_alternative ? alternatives.get(0) : kv;
+       
+       // Apply positioning hint
+       KeyboardData.PreferredPos pos = KeyboardData.PreferredPos.DEFAULT;
+       if (next_to != null) {
+           pos = new KeyboardData.PreferredPos(pos);
+           pos.next_to = next_to;
+       }
+       dst.put(kv_, pos);
+   }
+   ```
+
+**IMPACT ASSESSMENT**:
+
+1. **CRITICAL SHOWSTOPPER**: User cannot add custom keys to layouts
+   - Settings option "Add keys to keyboard" completely broken
+   - Cannot customize which keys appear on keyboard
+
+2. **CRITICAL**: Language-specific key insertion broken
+   - Cannot add script-specific keys (e.g., accents for French)
+   - Multi-language support severely damaged
+
+3. **HIGH**: Alternative key system non-functional
+   - Cannot prefer dead key over composed character when both available
+   - Example: Prefer `accent_aigu` over `é` if accent already present
+   - User loses fine-grained control over key selection
+
+4. **HIGH**: Key positioning hints unavailable
+   - Cannot specify where extra keys should appear
+   - Example: Cannot place F11 next to F12, or Esc next to backtick
+   - Layout customization severely limited
+
+5. **MEDIUM**: Cannot parse extra key preferences
+   - Settings string format "key:alt@pos|key2" not understood
+   - User preferences silently ignored
+
+**USAGE EXAMPLES**:
+
+**Example 1: Add F-keys with positioning**
+```
+Java: "f11_placeholder@f12_placeholder|esc@`"
+→ Adds F11 next to F12, adds Esc next to backtick
+
+Kotlin: Cannot parse at all (no parse method)
+→ User preference silently ignored
+```
+
+**Example 2: French accent handling**
+```
+Java: "accent_aigu:é@e"
+→ If accent_aigu already present, use it
+→ Otherwise add é next to e
+
+Kotlin: Cannot handle alternatives system
+→ Both keys might be added, or neither
+```
+
+**Example 3: Conditional key addition**
+```
+Java Query: script="latn", present={a,b,c,é}
+Extra key: "accent_aigu:é" (script="latn")
+→ accent_aigu not added (é alternative already present)
+
+Kotlin: No conditional logic
+→ Cannot make intelligent decisions about which keys to add
+```
+
+**PROPERLY IMPLEMENTED**: Still 3 / 16 files (18.8%)
+- Modmap.kt ✅
+- ComposeKey.kt ✅
+- Autocapitalisation.kt ✅
+
+**ASSESSMENT**: This is an architectural catastrophe. The Kotlin version is not a "port" at all - it's a completely different enum-based system that cannot handle dynamic key insertion. To fix this properly would require porting the entire 150-line Java system with all three classes (ExtraKeys, ExtraKey, Query) and all parsing/merging/computation logic.
+
+**TIME TO PORT**: 1-2 days for complete implementation with testing
+
+---
+
+### FILES REVIEWED SO FAR: 16 / 251 (6.4%)
+**Bugs identified**: 81 critical issues
+**Properly implemented**: 3 / 16 files (18.8%)
+**Next file**: File 17/251
+

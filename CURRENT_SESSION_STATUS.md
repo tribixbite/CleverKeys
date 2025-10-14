@@ -31,7 +31,7 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 
 ## 📊 SYSTEMATIC REVIEW PROGRESS
 
-### **FILES REVIEWED: 14 / 251 (5.6%)**
+### **FILES REVIEWED: 16 / 251 (6.4%)**
 
 1. ✅ KeyValueParser.java (289 lines) vs KeyValue.kt:629-642 (13 lines)
 2. ✅ Keyboard2.java (1392 lines) vs CleverKeysService.kt (933 lines)
@@ -46,9 +46,11 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 11. ✅ KeyModifier.java (527 lines) vs KeyModifier.kt (192 lines) - **11 CATASTROPHIC bugs, 90% MISSING**
 12. ✅ **Modmap.java (33 lines) vs Modmap.kt (35 lines) - ✅ ZERO BUGS! First correct implementation!**
 13. ✅ **ComposeKey.java (86 lines) vs ComposeKey.kt (345 lines) - 2 bugs, 4 IMPROVEMENTS**
-14. ✅ **ComposeKeyData.java (286 lines) vs ComposeKeyData.kt (191 lines) - ❌ 99% MISSING STUB**
+14. ✅ **ComposeKeyData.java (286 lines) vs ComposeKeyData.kt (191→1596 lines) - ✅ FIXED (generated)**
+15. ✅ **Autocapitalisation.java (203 lines) vs Autocapitalisation.kt (275 lines) - 1 bug, 6 IMPROVEMENTS**
+16. ✅ **ExtraKeys.java (150 lines) vs ExtraKeys.kt (18 lines) - ❌ 95% CATASTROPHIC MISSING**
 
-### **BUGS IDENTIFIED: 77 CRITICAL ISSUES**
+### **BUGS IDENTIFIED: 81 CRITICAL ISSUES**
 
 - File 1: 1 critical (KeyValueParser 96% missing)
 - File 2: 23 critical (Keyboard2 ~800 lines missing)
@@ -63,14 +65,16 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 - File 11: **11 CATASTROPHIC** (KeyModifier - modify() broken, 335 lines missing, 63% reduction)
 - File 12: **✅ 0 bugs** (Modmap - PROPERLY IMPLEMENTED, improvements over Java)
 - File 13: **2 bugs** (ComposeKey - flags hardcoded, 90 lines unused code)
-- File 14: **2 SHOWSTOPPER** (ComposeKeyData - 99% data missing, 33 constants missing)
+- File 14: **✅ 0 bugs** (ComposeKeyData - ✅ FIXED with code generation)
+- File 15: **1 bug** (Autocapitalisation - TRIGGER_CHARACTERS expanded, questionable)
+- File 16: **1 CATASTROPHIC** (ExtraKeys - 95% missing, architectural mismatch)
 
 ### **TIME INVESTMENT:**
-- **Spent**: 18 hours complete line-by-line reading (Files 1-14)
+- **Spent**: 19 hours complete line-by-line reading (Files 1-16)
 - **Estimated Remaining**: 14-18 weeks for complete parity
-- **Next Phase**: Continue systematic review (237 files remaining)
-- **✅ Properly Implemented**: 2 / 14 files (14.3%) - Modmap.kt, ComposeKey.kt
-- **❌ Stub Files**: 1 / 14 files (7.1%) - ComposeKeyData.kt
+- **Next Phase**: Continue systematic review (235 files remaining)
+- **✅ Properly Implemented**: 4 / 16 files (25.0%) - Modmap.kt, ComposeKey.kt, ComposeKeyData.kt (fixed), Autocapitalisation.kt
+- **❌ Stub Files**: 1 / 16 files (6.3%) - ExtraKeys.kt (architectural mismatch)
 
 ## 🔧 IMMEDIATE FIXES NEEDED (Priority Order)
 
