@@ -293,6 +293,38 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
 - **Files**: OnnxSwipePredictorImpl.kt:256, 377-486
 - **Commit**: 2bd7c86 "fix: correct BeamSearchState constructor usage in non-batched beam search"
 
+**Fix #43: ONNX Session Double-Close Crash**
+- **Root Cause**: cleanup() called session.close() without checking if already closed
+- **Symptom**: "Trying to close an already closed OrtSession" crash on keyboard service restart
+- **Fix**: Added try-catch blocks around encoder/decoder session.close() calls
+- **Files**: OnnxSwipePredictorImpl.kt:957-983
+
+**Fix #44: Vocabulary Filter Too Aggressive**
+- **Root Cause**: Vocabulary filter removed ALL predictions when beam search produced valid but non-dictionary words
+- **Symptom**: Calibration returned empty predictions despite beam search producing 'dressing' → 'dression'
+- **Fix**: Added fallback to return top 3 raw beam search results when filter returns 0 candidates
+- **Files**: OnnxSwipePredictorImpl.kt:809-836
+
+**Fix #45: Layout Loading Failure**
+- **Root Cause**: resources.getIdentifier() used hardcoded package name, failed for debug builds (.debug suffix)
+- **Symptom**: "No keyboard layouts available in Config" - keyboard wouldn't display
+- **Fix**: Try multiple package name variations (debug, release, null for auto-detect)
+- **Files**: LayoutsPreference.kt:108-146
+
+**Fix #46: Keys Showing Debug Text**
+- **Root Cause**: drawLabel() and drawSubLabel() used keyValue.toString() instead of displayString
+- **Symptom**: Keys showed "CharKey(char=a, displayString=a)" instead of just "a"
+- **Fix**: Changed to keyValue.displayString in both methods
+- **Files**: Keyboard2View.kt:639, 658
+
+**Fix #47: CharKey Extraction Bug (CRITICAL)**
+- **Root Cause**: getRealKeyPositions() used keyValue.toString().firstOrNull() which returned 'C' (first char of "CharKey(...)")
+- **Symptom**: Key position mapping completely broken - 'a' mapped as 'C', 'b' mapped as 'C', etc.
+- **Fix**: Changed to type-safe cast (keyValue as? KeyValue.CharKey)?.char
+- **Impact**: CRITICAL - key positions now map correctly, should dramatically improve neural accuracy
+- **Files**: Keyboard2View.kt:430-431
+- **Commit**: c612ae3 "fix: correct CharKey extraction in getRealKeyPositions (Fix #47)"
+
 **Test Results:**
 ```
 ✅ Android TestActivity: 60% (6/10)
@@ -311,6 +343,11 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
 - ✅ **Fix #35** - Duplicate starting points filtered
 - ✅ **Fix #36** - Repeat-last padding (matches training data)
 - ✅ **Fix #42** - Correct beam constructor usage
+- ✅ **Fix #43** - ONNX cleanup crash (double-close prevented)
+- ✅ **Fix #44** - Vocabulary filter fallback (returns raw predictions)
+- ✅ **Fix #45** - Layout loading (debug package name)
+- ✅ **Fix #46** - Key rendering (displayString not toString)
+- ✅ **Fix #47** - CharKey extraction bug (key position mapping)
 
 ### **📲 CURRENT STATUS (Oct 14, 2025):**
 
