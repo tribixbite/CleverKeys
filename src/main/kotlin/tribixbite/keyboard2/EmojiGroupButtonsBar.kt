@@ -26,29 +26,23 @@ class EmojiGroupButtonsBar : LinearLayout {
 
     private var emojiGrid: EmojiGridView? = null
     private val emoji by lazy { Emoji.getInstance(context) }
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
+    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
         setupGroupButtons()
     }
 
     /**
      * Initialize emoji groups and create buttons
+     * Bug #253 fix: Synchronous initialization like Java (no coroutines needed)
      */
     private fun setupGroupButtons() {
         orientation = HORIZONTAL
 
-        scope.launch {
-            try {
-                // Initialize emoji system
-                if (emoji.loadEmojis()) {
-                    withContext(Dispatchers.Main) {
-                        createGroupButtons()
-                    }
-                }
-            } catch (e: Exception) {
-                logE("Failed to setup emoji group buttons", e)
-            }
+        try {
+            // Emoji system already initialized via getInstance
+            createGroupButtons()
+        } catch (e: Exception) {
+            logE("Failed to setup emoji group buttons", e)
         }
     }
 
@@ -96,12 +90,13 @@ class EmojiGroupButtonsBar : LinearLayout {
 
     /**
      * Individual emoji group button
+     * Bug #254 fix: Use ContextThemeWrapper for proper button styling
      */
     private inner class EmojiGroupButton(
         context: Context,
         private val groupId: Int,
         symbol: String
-    ) : Button(context), View.OnTouchListener {
+    ) : Button(ContextThemeWrapper(context, R.style.emojiTypeButton), null, 0), View.OnTouchListener {
 
         init {
             text = symbol
@@ -124,13 +119,6 @@ class EmojiGroupButtonsBar : LinearLayout {
      */
     fun setEmojiGrid(grid: EmojiGridView) {
         emojiGrid = grid
-    }
-
-    /**
-     * Cleanup coroutines
-     */
-    fun cleanup() {
-        scope.cancel()
     }
 
     private fun logE(message: String, throwable: Throwable? = null) {
