@@ -17,6 +17,7 @@ class PerformanceProfiler(private val context: Context) {
     
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val performanceData = mutableListOf<PerformanceMetric>()
+    private val dataLock = Any()
     private val metricsFlow = MutableSharedFlow<PerformanceMetric>()
     
     /**
@@ -43,36 +44,42 @@ class PerformanceProfiler(private val context: Context) {
     
     /**
      * Measure operation performance
+     * Bug #178 fix: Thread-safe access to performanceData
      */
     suspend fun <T> measureOperation(operation: String, metadata: Map<String, Any> = emptyMap(), block: suspend () -> T): T {
         val result: T
         val duration = measureTimeMillis {
             result = block()
         }
-        
+
         val metric = PerformanceMetric(operation, duration, metadata = metadata)
-        performanceData.add(metric)
-        metricsFlow.emit(metric)
-        
-        // Keep only recent data (last 1000 metrics)
-        if (performanceData.size > 1000) {
-            performanceData.removeAt(0)
+        synchronized(dataLock) {
+            performanceData.add(metric)
+
+            // Keep only recent data (last 1000 metrics)
+            if (performanceData.size > 1000) {
+                performanceData.removeAt(0)
+            }
         }
-        
+        metricsFlow.emit(metric)
+
         logD("$operation: ${duration}ms")
         return result
     }
     
     /**
      * Get performance statistics
+     * Bug #178 fix: Thread-safe access to performanceData
      */
     fun getStats(operation: String): PerformanceStats? {
-        val operationMetrics = performanceData.filter { it.operation == operation }
+        val operationMetrics = synchronized(dataLock) {
+            performanceData.filter { it.operation == operation }
+        }
         if (operationMetrics.isEmpty()) return null
-        
+
         val durations = operationMetrics.map { it.durationMs }
         val last10 = operationMetrics.takeLast(10).map { it.durationMs }
-        
+
         return PerformanceStats(
             operation = operation,
             totalCalls = operationMetrics.size,
@@ -82,12 +89,15 @@ class PerformanceProfiler(private val context: Context) {
             last10Average = if (last10.isNotEmpty()) last10.average() else 0.0
         )
     }
-    
+
     /**
      * Get all tracked operations
+     * Bug #178 fix: Thread-safe access to performanceData
      */
     fun getAllOperations(): List<String> {
-        return performanceData.map { it.operation }.distinct()
+        return synchronized(dataLock) {
+            performanceData.map { it.operation }.distinct()
+        }
     }
     
     /**
@@ -121,9 +131,12 @@ class PerformanceProfiler(private val context: Context) {
     
     /**
      * Clear performance data
+     * Bug #178 fix: Thread-safe access to performanceData
      */
     fun clearData() {
-        performanceData.clear()
+        synchronized(dataLock) {
+            performanceData.clear()
+        }
         logD("Performance data cleared")
     }
     
@@ -140,10 +153,14 @@ class PerformanceProfiler(private val context: Context) {
     
     /**
      * Export performance data
+     * Bug #178 fix: Thread-safe access to performanceData
      */
     suspend fun exportData(): String = withContext(Dispatchers.Default) {
         val json = org.json.JSONArray()
-        performanceData.forEach { metric ->
+        val dataCopy = synchronized(dataLock) {
+            performanceData.toList()
+        }
+        dataCopy.forEach { metric ->
             val obj = org.json.JSONObject().apply {
                 put("operation", metric.operation)
                 put("duration_ms", metric.durationMs)
