@@ -1,3 +1,16 @@
+# ⚠️ MISSION: 100% FEATURE PARITY LINE-BY-LINE REVIEW ⚠️
+
+**CRITICAL INSTRUCTIONS - READ EVERY TIME:**
+- **GOAL**: Achieve 100% feature parity between 251 Java files and Kotlin implementation
+- **METHOD**: Line-by-line comparison, document EVERY missing feature, method, field
+- **NOT JUST BUGS**: Track missing features, incomplete implementations, architectural gaps
+- **TRACK**: For each Java file, list EVERY method/field and check if Kotlin has it
+- **FILES**: 251 Java files total, systematic review in progress
+- **STATUS**: See CURRENT_SESSION_STATUS.md for latest progress (Files 1-69/251 reviewed)
+- **DO NOT**: Focus only on bugs - focus on MISSING FEATURES and INCOMPLETE IMPLEMENTATIONS
+
+---
+
         win.setAttributes(lp);
         win.addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
         dialog.show();
