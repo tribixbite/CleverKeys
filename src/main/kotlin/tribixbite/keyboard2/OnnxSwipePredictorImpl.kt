@@ -1324,6 +1324,10 @@ class SwipeTrajectoryProcessor {
         realKeyPositions = keyPositions
         logD("Real key positions updated: ${keyPositions.size} keys")
     }
+
+    private fun logD(message: String) {
+        Log.d(TAG, message)
+    }
 }
 
 /**
