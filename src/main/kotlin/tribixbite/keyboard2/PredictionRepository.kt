@@ -162,6 +162,28 @@ class PredictionRepository(
         fun onPredictionError(error: String)
     }
     
+    companion object {
+        private const val TAG = "PredictionRepository"
+    }
+
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
+
+    private fun logE(message: String, throwable: Throwable) {
+        android.util.Log.e(TAG, message, throwable)
+    }
+
+    /**
+     * Measure execution time in nanoseconds with result
+     */
+    private inline fun <T> measureTimeNanos(block: () -> T): Pair<T, Long> {
+        val startTime = System.nanoTime()
+        val result = block()
+        val duration = System.nanoTime() - startTime
+        return Pair(result, duration)
+    }
+
     /**
      * Statistics for monitoring
      */

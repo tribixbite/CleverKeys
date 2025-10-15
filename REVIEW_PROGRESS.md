@@ -8966,3 +8966,205 @@ fun isSimilarTo(other: CacheKey, distanceThreshold: Float = 50f): Boolean {  // 
 
 **Assessment**: Good core caching logic with reasonable similarity matching, but thread safety issue is critical blocker for production use. Inefficient eviction is minor concern given small cache size.
 
+---
+
+## File 48/251: PredictionRepository.kt
+
+**Lines:** 190
+**Status:** ⚠️ **MIXED** - Good coroutine architecture but has critical bugs and non-functional stats
+
+### Purpose
+Modern coroutine-based prediction repository that replaces AsyncPredictionHandler with structured concurrency, eliminating HandlerThread complexity.
+
+### Architecture Overview
+- Structured concurrency with CoroutineScope + SupervisorJob
+- Channel-based prediction request queue with backpressure
+- Flow-based reactive predictions with debouncing
+- Callback interface for Java interoperability
+- Automatic prediction cancellation for latest-request-wins behavior
+- Statistics tracking (currently non-functional)
+
+### Implementation Quality
+
+**Purpose:**
+- Replace complex AsyncPredictionHandler (HandlerThread + Message queue + callbacks)
+- Modern coroutine-based async prediction handling
+- Reactive Flow for continuous gesture recognition
+- Performance monitoring
+
+**Design:**
+- Clean separation: requestPrediction (API) → predictionRequests (channel) → processRequest (worker)
+- Automatic cancellation of stale predictions
+- Debouncing and deduplication in Flow
+- Exception handling with try-catch in all paths
+
+### Issues Identified
+
+**Bug #189 (CRITICAL - FIXED)**: Undefined logging functions
+- **Location**: Lines 78, 90, 94, 97, 141
+- **Issue**: Calls `logD()` and `logE()` without implementation
+- **Impact**: Compilation error - code won't build
+- **Fix Applied**:
+```kotlin
+companion object {
+    private const val TAG = "PredictionRepository"
+}
+
+private fun logD(message: String) {
+    android.util.Log.d(TAG, message)
+}
+
+private fun logE(message: String, throwable: Throwable) {
+    android.util.Log.e(TAG, message, throwable)
+}
+```
+- **Status**: ✅ FIXED
+
+**Bug #190 (CRITICAL - FIXED)**: Undefined measureTimeNanos function
+- **Location**: Lines 91-93
+- **Issue**: Calls non-existent `measureTimeNanos()` function:
+```kotlin
+val (result, duration) = measureTimeNanos {
+    neuralEngine.predict(input)
+}
+```
+- **Impact**: Compilation error - not a standard library function
+- **Fix Applied**: Implemented custom inline function:
+```kotlin
+private inline fun <T> measureTimeNanos(block: () -> T): Pair<T, Long> {
+    val startTime = System.nanoTime()
+    val result = block()
+    val duration = System.nanoTime() - startTime
+    return Pair(result, duration)
+}
+```
+- **Status**: ✅ FIXED
+
+**Bug #191 (HIGH)**: Thread-unsafe statistics fields
+- **Location**: Lines 175-177 (declaration), 88-100 (predict usage), 182-188 (getStats)
+- **Issue**: Mutable stats updated from multiple coroutines without synchronization:
+```kotlin
+private var totalPredictions = 0           // ❌ Not thread-safe
+private var totalTime = 0L                 // ❌ Not thread-safe
+private var successfulPredictions = 0      // ❌ Not thread-safe
+
+suspend fun predict(input: SwipeInput): PredictionResult {
+    // Would be called from multiple coroutines
+    totalPredictions++  // ❌ Race condition (if stats were actually updated)
+}
+
+fun getStats(): PredictionStats {
+    return PredictionStats(
+        totalPredictions = totalPredictions,  // ❌ Concurrent read
+        averageTimeMs = totalTime.toDouble() / totalPredictions,
+        successRate = successfulPredictions.toDouble() / totalPredictions
+    )
+}
+```
+- **Impact**: Data races, incorrect statistics
+- **Similar To**: Bug #178 (PerformanceProfiler), Bug #184 (PredictionCache)
+- **Fix**: Use AtomicInteger/AtomicLong or synchronized block
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #192 (MEDIUM)**: Statistics completely non-functional
+- **Location**: Lines 88-100 (predict method), 175-177 (stats fields)
+- **Issue**: Stats fields declared but NEVER incremented anywhere:
+```kotlin
+private var totalPredictions = 0
+private var totalTime = 0L
+private var successfulPredictions = 0
+
+suspend fun predict(input: SwipeInput): PredictionResult {
+    val (result, duration) = measureTimeNanos {
+        neuralEngine.predict(input)
+    }
+    // ❌ MISSING: totalPredictions++, totalTime += duration, successfulPredictions++
+    result  // Returns without updating stats
+}
+```
+- **Impact**: getStats() always returns zeros, monitoring feature doesn't work
+- **Fix**: Add stats tracking in predict() method
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #193 (MEDIUM)**: pendingRequests calculation mutates channel
+- **Location**: Line 187
+- **Issue**: tryReceive() REMOVES item while just reading stats:
+```kotlin
+fun getStats(): PredictionStats {
+    return PredictionStats(
+        ...
+        pendingRequests = predictionRequests.tryReceive().let { 0 }  // ❌ Mutates channel!
+    )
+}
+```
+- **Impact**: Calling getStats() removes pending request from queue, breaks processing
+- **Comment Says**: "Approximate" but actually hardcoded to 0
+- **Fix**: Track pending count separately or use channel.isEmpty (non-mutating)
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #194 (MEDIUM)**: Unbounded channel capacity
+- **Location**: Line 23
+- **Issue**: `Channel<PredictionRequest>(Channel.UNLIMITED)` allows unbounded growth:
+```kotlin
+private val predictionRequests = Channel<PredictionRequest>(Channel.UNLIMITED)
+```
+- **Impact**: If requests arrive faster than processing, memory grows without limit
+- **Risk**: OutOfMemoryError under heavy load
+- **Better**: Use Channel.BUFFERED (64 capacity) or fixed reasonable capacity
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #195 (LOW)**: Wrong cancellation target
+- **Location**: Lines 51-63
+- **Issue**: Cancels send job, not actual prediction processing:
+```kotlin
+fun requestPrediction(input: SwipeInput): Deferred<PredictionResult> {
+    currentPredictionJob?.cancel()  // ❌ Cancels the send job
+
+    currentPredictionJob = scope.launch {
+        predictionRequests.send(request)  // Just sends to channel
+    }
+
+    return deferred
+}
+```
+- **Problem**: Prediction processing happens in init{} collector (lines 38-43)
+- **Impact**: Doesn't actually cancel ongoing predictions, just prevents queue insertion
+- **Fix**: Track and cancel the actual processing job, not the send job
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #196 (LOW)**: Loss of exception context in callback
+- **Location**: Lines 160-163
+- **Issue**: PredictionCallback.onPredictionError takes String instead of Throwable:
+```kotlin
+interface PredictionCallback {
+    fun onPredictionsReady(words: List<String>, scores: List<Int>)
+    fun onPredictionError(error: String)  // ❌ Loses exception type and stack trace
+}
+```
+- **Impact**: Caller can't inspect exception type, can't log stack traces
+- **Better**: Pass Throwable or Exception
+- **Status**: ⏳ DOCUMENTED
+
+### Strengths
+
+1. ✅ Clean coroutine-based architecture (eliminates HandlerThread complexity)
+2. ✅ Structured concurrency with SupervisorJob
+3. ✅ Channel-based request processing with backpressure
+4. ✅ Flow-based reactive predictions with debouncing (50ms)
+5. ✅ Automatic deduplication (distinctUntilChanged)
+6. ✅ Proper exception handling in all async paths
+7. ✅ Callback interface for Java interop
+8. ✅ cleanup() method cancels scope and pending requests
+9. ✅ Uses Dispatchers.Default for CPU-bound work
+10. ✅ Error recovery with catch in Flow
+
+### Weaknesses
+
+1. ❌ Thread-unsafe statistics (Bug #191)
+2. ❌ Non-functional statistics (Bug #192)
+3. ❌ getStats() mutates channel (Bug #193)
+4. ⚠️ Unbounded channel capacity (Bug #194)
+5. ⚠️ Wrong cancellation logic (Bug #195)
+
+**Assessment**: Excellent modern architecture that properly replaces HandlerThread with coroutines, but statistics feature is completely broken and has thread safety issues. Core prediction flow is solid.
+
