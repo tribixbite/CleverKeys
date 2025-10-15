@@ -281,6 +281,18 @@ class ProductionInitializer(private val context: Context) {
         }
     }
     
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
+
+    private fun logE(message: String, throwable: Throwable? = null) {
+        if (throwable != null) {
+            android.util.Log.e(TAG, message, throwable)
+        } else {
+            android.util.Log.e(TAG, message)
+        }
+    }
+
     /**
      * Cleanup initializer
      */
