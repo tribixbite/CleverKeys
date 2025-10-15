@@ -70,63 +70,76 @@ class PredictionCache(
     )
 
     private val cache = mutableListOf<CacheEntry>()
+    private val cacheLock = Any()
 
     /**
      * Get cached prediction if similar gesture exists
+     * Bug #184 fix: Thread-safe access with synchronization
      */
     fun get(coordinates: List<PointF>): PredictionResult? {
         val queryKey = CacheKey.fromCoordinates(coordinates) ?: return null
 
-        // Find similar entry in cache
-        val entry = cache.find { it.key.isSimilarTo(queryKey) }
+        synchronized(cacheLock) {
+            // Find similar entry in cache
+            val entry = cache.find { it.key.isSimilarTo(queryKey) }
 
-        if (entry != null) {
-            // Update access time (LRU)
-            entry.lastAccessTime = System.currentTimeMillis()
-            logD("Cache hit! Returning cached prediction")
-            return entry.result
+            if (entry != null) {
+                // Update access time (LRU)
+                entry.lastAccessTime = System.currentTimeMillis()
+                logD("Cache hit! Returning cached prediction")
+                return entry.result
+            }
+
+            return null
         }
-
-        return null
     }
 
     /**
      * Put prediction result in cache
+     * Bug #184 fix: Thread-safe access with synchronization
      */
     fun put(coordinates: List<PointF>, result: PredictionResult) {
         val key = CacheKey.fromCoordinates(coordinates) ?: return
 
-        // Remove similar existing entry if present
-        cache.removeAll { it.key.isSimilarTo(key) }
+        synchronized(cacheLock) {
+            // Remove similar existing entry if present
+            cache.removeAll { it.key.isSimilarTo(key) }
 
-        // Add new entry
-        cache.add(CacheEntry(key, result))
+            // Add new entry
+            cache.add(CacheEntry(key, result))
 
-        // Evict oldest if cache is full (LRU)
-        if (cache.size > maxSize) {
-            val oldest = cache.minByOrNull { it.lastAccessTime }
-            oldest?.let { cache.remove(it) }
+            // Evict oldest if cache is full (LRU)
+            if (cache.size > maxSize) {
+                val oldest = cache.minByOrNull { it.lastAccessTime }
+                oldest?.let { cache.remove(it) }
+            }
+
+            logD("Cached prediction (cache size: ${cache.size})")
         }
-
-        logD("Cached prediction (cache size: ${cache.size})")
     }
 
     /**
      * Clear all cached predictions
+     * Bug #184 fix: Thread-safe access with synchronization
      */
     fun clear() {
-        cache.clear()
-        logD("Prediction cache cleared")
+        synchronized(cacheLock) {
+            cache.clear()
+            logD("Prediction cache cleared")
+        }
     }
 
     /**
      * Get current cache statistics
+     * Bug #184 fix: Thread-safe access with synchronization
      */
     fun getStats(): CacheStats {
-        return CacheStats(
-            size = cache.size,
-            maxSize = maxSize
-        )
+        synchronized(cacheLock) {
+            return CacheStats(
+                size = cache.size,
+                maxSize = maxSize
+            )
+        }
     }
 
     data class CacheStats(
