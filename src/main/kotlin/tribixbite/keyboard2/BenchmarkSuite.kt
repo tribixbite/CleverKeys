@@ -514,4 +514,8 @@ class BenchmarkSuite(private val context: Context) {
     fun cleanup() {
         scope.cancel()
     }
+
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
 }
