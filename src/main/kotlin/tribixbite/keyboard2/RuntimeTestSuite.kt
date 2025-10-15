@@ -371,7 +371,7 @@ class RuntimeTestSuite(private val context: Context) {
         
         return buildString {
             appendLine("🧪 CleverKeys Runtime Test Report")
-            appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date())}")
+            appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date())}")
             appendLine()
             appendLine("📊 Overall Results:")
             appendLine("   Passed: $passedTests/${results.size} (${(passedTests * 100 / results.size)}%)")

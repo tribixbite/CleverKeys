@@ -10,6 +10,12 @@ data class PredictionResult(
     val words: List<String>,
     val scores: List<Int> // Scores as integers (0-1000 range)
 ) {
+    init {
+        require(words.size == scores.size) {
+            "Words and scores must have same size: ${words.size} != ${scores.size}"
+        }
+    }
+
     /**
      * Check if result has any predictions
      */

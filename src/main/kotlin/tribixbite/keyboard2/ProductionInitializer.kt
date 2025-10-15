@@ -240,7 +240,7 @@ class ProductionInitializer(private val context: Context) {
         return buildString {
             appendLine("🚀 CleverKeys Production Initialization Report")
             appendLine("Status: ${if (result.success) "✅ SUCCESS" else "❌ FAILURE"}")
-            appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date())}")
+            appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date())}")
             appendLine()
             
             // Performance metrics
