@@ -8108,3 +8108,70 @@ for (keyName in extraKeys) {
 
 **Assessment:** ✅ EXEMPLARY - Sophisticated, well-documented, comprehensive extra keys system. Only minor i18n issue.
 
+
+---
+
+## File 33/251: IntSlideBarPreference.kt (108 lines)
+
+**Status**: ✅ **FIXED** - 1 critical bug fixed, 1 minor issue documented
+
+### Bugs Found and Fixed
+
+**Bug #142 (CRITICAL)**: String.format crash when summary lacks format specifier
+- **Location**: Line 104 (original)
+- **Issue**: `String.format(initialSummary, value)` throws IllegalFormatException if summary text doesn't contain %s or %d
+- **Example**: Summary "Font size" + value 14 → CRASH (no %d to substitute)
+- **Impact**: App crashes when opening preference dialog if XML doesn't use format specifier in summary
+- **Fix**: Wrapped in try-catch, falls back to "$summary: $value" format
+- **Status**: ✅ FIXED
+
+### Additional Issue Identified (Not Fixed)
+
+**Bug #143 (LOW)**: Hardcoded padding in pixels instead of dp
+- **Location**: Line 39
+- **Issue**: `setPadding(48, 40, 48, 40)` uses raw pixel values
+- **Impact**: Inconsistent padding across different screen densities
+- **Recommendation**: Use `TypedValue.applyDimension()` or dp conversion
+- **Status**: ⏳ DOCUMENTED (low priority - functional, just not perfect)
+
+### Implementation Quality
+
+**Strengths:**
+1. **Proper DialogPreference subclass**: Correct Android preference pattern
+2. **SeekBar integration**: Implements OnSeekBarChangeListener properly
+3. **Persistence**: Correctly uses persistInt/getPersistedInt
+4. **Parent removal**: Lines 98-100 prevent "view already has parent" errors
+5. **Min/max support**: Custom attributes for value range
+6. **Live updates**: Updates text as slider moves (onProgressChanged)
+7. **Dialog handling**: Persists on positive, reverts on negative (lines 88-95)
+
+**Code Changes:**
+```kotlin
+// BEFORE (Bug #142 - CRASH RISK):
+private fun updateText() {
+    val formattedValue = String.format(initialSummary, seekBar.progress + min)
+    textView.text = formattedValue
+    summary = formattedValue
+}
+// ❌ Crashes if summary = "Font size" (no %d)
+
+// AFTER (Bug #142 fix):
+private fun updateText() {
+    val currentValue = seekBar.progress + min
+    val formattedValue = try {
+        String.format(initialSummary, currentValue)
+    } catch (e: java.util.IllegalFormatException) {
+        if (initialSummary.isNotEmpty()) {
+            "$initialSummary: $currentValue"
+        } else {
+            currentValue.toString()
+        }
+    }
+    textView.text = formattedValue
+    summary = formattedValue
+}
+// ✅ Graceful fallback to "Summary: 14" format
+```
+
+**Assessment**: Well-implemented integer slider preference with proper Android patterns. Critical crash bug fixed.
+

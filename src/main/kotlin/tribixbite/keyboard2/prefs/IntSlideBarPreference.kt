@@ -101,7 +101,18 @@ class IntSlideBarPreference(
     }
 
     private fun updateText() {
-        val formattedValue = String.format(initialSummary, seekBar.progress + min)
+        // Bug #142 fix: Handle summary with or without format specifier
+        val currentValue = seekBar.progress + min
+        val formattedValue = try {
+            String.format(initialSummary, currentValue)
+        } catch (e: java.util.IllegalFormatException) {
+            // No format specifier in summary - just append value
+            if (initialSummary.isNotEmpty()) {
+                "$initialSummary: $currentValue"
+            } else {
+                currentValue.toString()
+            }
+        }
         textView.text = formattedValue
         summary = formattedValue
     }
