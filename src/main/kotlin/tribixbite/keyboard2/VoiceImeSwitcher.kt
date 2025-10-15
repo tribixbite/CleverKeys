@@ -65,4 +65,12 @@ class VoiceImeSwitcher(private val context: Context) {
     fun processVoiceResults(data: Intent?): List<String> {
         return data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) ?: emptyList()
     }
+
+    private fun logW(message: String) {
+        android.util.Log.w(TAG, message)
+    }
+
+    private fun logE(message: String, throwable: Throwable) {
+        android.util.Log.e(TAG, message, throwable)
+    }
 }
