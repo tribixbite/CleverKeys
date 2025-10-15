@@ -83,12 +83,13 @@ class EmojiGroupButtonsBar : LinearLayout {
 
     /**
      * Get the emoji grid view (lazy initialization)
+     * Bug #134 fix: Use correct R.id.emoji_grid instead of android.R.id.list
      */
     private fun getEmojiGrid(): EmojiGridView? {
         if (emojiGrid == null) {
             // Find the emoji grid in the parent hierarchy
             val parentGroup = parent as? ViewGroup
-            emojiGrid = parentGroup?.findViewById(android.R.id.list)
+            emojiGrid = parentGroup?.findViewById(R.id.emoji_grid) // Bug #134 fix
         }
         return emojiGrid
     }

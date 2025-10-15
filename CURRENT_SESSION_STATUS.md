@@ -31,7 +31,7 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 
 ## 📊 SYSTEMATIC REVIEW PROGRESS
 
-### **FILES REVIEWED: 28 / 251 (11.2%)**
+### **FILES REVIEWED: 29 / 251 (11.6%)**
 
 1. ✅ KeyValueParser.java (289 lines) vs KeyValue.kt:629-642 (13 lines)
 2. ✅ Keyboard2.java (1392 lines) vs CleverKeysService.kt (933 lines)
@@ -61,8 +61,9 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 26. ✅ **ClipboardDatabase.java (371 lines) vs ClipboardDatabase.kt (485 lines) - ✅ EXEMPLARY (0 bugs, 10 enhancements)**
 27. ✅ **ClipboardHistoryCheckBox.java (23 lines) vs ClipboardHistoryCheckBox.kt (36 lines) - ✅ GOOD (1 bug → FIXED)**
 28. ✅ **CustomLayoutEditDialog.java (138 lines) vs CustomLayoutEditDialog.kt (314 lines) - ✅ EXCELLENT (2 bugs → FIXED, 9 enhancements)**
+29. ✅ **EmojiGroupButtonsBar.kt (137 lines) - ✅ GOOD (1 bug → FIXED)**
 
-### **BUGS IDENTIFIED: 119 CRITICAL ISSUES (133 found, 14 fixed)**
+### **BUGS IDENTIFIED: 119 CRITICAL ISSUES (134 found, 15 fixed)**
 
 - File 1: 1 critical (KeyValueParser 96% missing)
 - File 2: 23 critical (Keyboard2 ~800 lines missing)
@@ -92,12 +93,13 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 - File 26: **0 bugs** (ClipboardDatabase - ✅ EXEMPLARY: Result<T>, mutex, backup migration, 10 enhancements)
 - File 27: **1 bug → 0 bugs** (ClipboardHistoryCheckBox - ✅ FIXED: GlobalScope leak → view-scoped coroutine)
 - File 28: **2 bugs → 0 bugs** (CustomLayoutEditDialog - ✅ FIXED: hardcoded strings, 9 MAJOR enhancements: OK disable, monospace, hints, validators)
+- File 29: **1 bug → 0 bugs** (EmojiGroupButtonsBar - ✅ FIXED: wrong resource ID android.R.id.list → R.id.emoji_grid)
 
 ### **TIME INVESTMENT:**
-- **Spent**: 28 hours complete line-by-line reading (Files 1-28)
+- **Spent**: 29 hours complete line-by-line reading (Files 1-29)
 - **Estimated Remaining**: 14-18 weeks for complete parity
-- **Next Phase**: Continue systematic review (223 files remaining)
-- **✅ Properly Implemented**: 11 / 28 files (39.3%) - Modmap.kt, ComposeKey.kt, ComposeKeyData.kt (fixed), Autocapitalisation.kt, Utils.kt (exemplary), FoldStateTracker.kt (exemplary), **DirectBootAwarePreferences.kt (fixed)**, **Logs.kt (fixed)**, **ClipboardDatabase.kt (exemplary)**, **ClipboardHistoryCheckBox.kt (fixed)**, **CustomLayoutEditDialog.kt (fixed)**
+- **Next Phase**: Continue systematic review (222 files remaining)
+- **✅ Properly Implemented**: 12 / 29 files (41.4%) - Modmap.kt, ComposeKey.kt, ComposeKeyData.kt (fixed), Autocapitalisation.kt, Utils.kt (exemplary), FoldStateTracker.kt (exemplary), **DirectBootAwarePreferences.kt (fixed)**, **Logs.kt (fixed)**, **ClipboardDatabase.kt (exemplary)**, **ClipboardHistoryCheckBox.kt (fixed)**, **CustomLayoutEditDialog.kt (fixed)**, **EmojiGroupButtonsBar.kt (fixed)**
 - **⚠️ Mixed Quality**: 3 / 28 files (10.7%) - Emoji.kt (4 bugs, 5 enhancements), ClipboardPinView.kt (5 bugs, 5 enhancements), ClipboardHistoryService.kt (6 bugs, 10 enhancements)
 - **❌ Stub Files**: 2 / 28 files (7.1%) - ExtraKeys.kt (architectural mismatch), LayoutsPreference.kt (partial fixes, 9 bugs remaining)
 - **💀 Catastrophic**: 1 / 28 files (3.6%) - ClipboardHistoryView.kt (wrong base class, broken architecture)
