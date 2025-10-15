@@ -436,6 +436,22 @@ class RuntimeValidator(private val context: Context) {
         }
     }
     
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
+
+    private fun logW(message: String) {
+        android.util.Log.w(TAG, message)
+    }
+
+    private fun logE(message: String, throwable: Throwable? = null) {
+        if (throwable != null) {
+            android.util.Log.e(TAG, message, throwable)
+        } else {
+            android.util.Log.e(TAG, message)
+        }
+    }
+
     /**
      * Cleanup validator
      */
