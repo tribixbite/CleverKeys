@@ -374,7 +374,8 @@ class RuntimeTestSuite(private val context: Context) {
             appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date())}")
             appendLine()
             appendLine("📊 Overall Results:")
-            appendLine("   Passed: $passedTests/${results.size} (${(passedTests * 100 / results.size)}%)")
+            val percentage = if (results.isNotEmpty()) (passedTests * 100 / results.size) else 0
+            appendLine("   Passed: $passedTests/${results.size} ($percentage%)")
             appendLine("   Total Time: ${totalTime}ms")
             appendLine()
             

@@ -102,7 +102,7 @@ class PerformanceProfiler(private val context: Context) {
         val operations = getAllOperations()
         return buildString {
             appendLine("📊 Performance Report")
-            appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date())}")
+            appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date())}")
             appendLine()
             
             operations.forEach { operation ->
