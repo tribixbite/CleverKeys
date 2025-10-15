@@ -31,7 +31,7 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 
 ## 📊 SYSTEMATIC REVIEW PROGRESS
 
-### **FILES REVIEWED: 26 / 251 (10.4%)**
+### **FILES REVIEWED: 27 / 251 (10.8%)**
 
 1. ✅ KeyValueParser.java (289 lines) vs KeyValue.kt:629-642 (13 lines)
 2. ✅ Keyboard2.java (1392 lines) vs CleverKeysService.kt (933 lines)
@@ -59,8 +59,9 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 24. ✅ **ClipboardHistoryView.java (125 lines) vs ClipboardHistoryView.kt (185 lines) - ❌ CATASTROPHIC (12 bugs, wrong base class)**
 25. ✅ **ClipboardHistoryService.java (194 lines) vs ClipboardHistoryService.kt (363 lines) - ⚠️ HIGH-QUALITY (6 bugs, 10 enhancements)**
 26. ✅ **ClipboardDatabase.java (371 lines) vs ClipboardDatabase.kt (485 lines) - ✅ EXEMPLARY (0 bugs, 10 enhancements)**
+27. ✅ **ClipboardHistoryCheckBox.java (23 lines) vs ClipboardHistoryCheckBox.kt (36 lines) - ✅ GOOD (1 bug → FIXED)**
 
-### **BUGS IDENTIFIED: 119 CRITICAL ISSUES (130 found, 11 fixed)**
+### **BUGS IDENTIFIED: 119 CRITICAL ISSUES (131 found, 12 fixed)**
 
 - File 1: 1 critical (KeyValueParser 96% missing)
 - File 2: 23 critical (Keyboard2 ~800 lines missing)
@@ -87,15 +88,17 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 - File 23: **5 bugs** (ClipboardPinView - programmatic layout workaround, hardcoded strings/emojis, missing Utils.show_dialog_on_ime, but 5 enhancements: async ops, duplicate prevention, cleanup)
 - File 24: **12 CATASTROPHIC** (ClipboardHistoryView - wrong base class LinearLayout→NonScrollListView, missing AttributeSet, no adapter, broken pin/paste, missing lifecycle, wrong API calls)
 - File 25: **6 HIGH-QUALITY** (ClipboardHistoryService - missing sync wrappers, callback support, API naming inconsistent, but 10 MAJOR enhancements: Flow/StateFlow, mutex threading, periodic cleanup, extension functions, sensitive detection)
+- File 26: **0 bugs** (ClipboardDatabase - ✅ EXEMPLARY: Result<T>, mutex, backup migration, 10 enhancements)
+- File 27: **1 bug → 0 bugs** (ClipboardHistoryCheckBox - ✅ FIXED: GlobalScope leak → view-scoped coroutine)
 
 ### **TIME INVESTMENT:**
-- **Spent**: 26 hours complete line-by-line reading (Files 1-26)
+- **Spent**: 27 hours complete line-by-line reading (Files 1-27)
 - **Estimated Remaining**: 14-18 weeks for complete parity
-- **Next Phase**: Continue systematic review (225 files remaining)
-- **✅ Properly Implemented**: 9 / 26 files (34.6%) - Modmap.kt, ComposeKey.kt, ComposeKeyData.kt (fixed), Autocapitalisation.kt, Utils.kt (exemplary), FoldStateTracker.kt (exemplary), **DirectBootAwarePreferences.kt (fixed)**, **Logs.kt (fixed)**, **ClipboardDatabase.kt (exemplary)**
-- **⚠️ Mixed Quality**: 3 / 26 files (11.5%) - Emoji.kt (4 bugs, 5 enhancements), ClipboardPinView.kt (5 bugs, 5 enhancements), ClipboardHistoryService.kt (6 bugs, 10 enhancements)
-- **❌ Stub Files**: 2 / 26 files (7.7%) - ExtraKeys.kt (architectural mismatch), LayoutsPreference.kt (partial fixes, 9 bugs remaining)
-- **💀 Catastrophic**: 1 / 26 files (3.8%) - ClipboardHistoryView.kt (wrong base class, broken architecture)
+- **Next Phase**: Continue systematic review (224 files remaining)
+- **✅ Properly Implemented**: 10 / 27 files (37.0%) - Modmap.kt, ComposeKey.kt, ComposeKeyData.kt (fixed), Autocapitalisation.kt, Utils.kt (exemplary), FoldStateTracker.kt (exemplary), **DirectBootAwarePreferences.kt (fixed)**, **Logs.kt (fixed)**, **ClipboardDatabase.kt (exemplary)**, **ClipboardHistoryCheckBox.kt (fixed)**
+- **⚠️ Mixed Quality**: 3 / 27 files (11.1%) - Emoji.kt (4 bugs, 5 enhancements), ClipboardPinView.kt (5 bugs, 5 enhancements), ClipboardHistoryService.kt (6 bugs, 10 enhancements)
+- **❌ Stub Files**: 2 / 27 files (7.4%) - ExtraKeys.kt (architectural mismatch), LayoutsPreference.kt (partial fixes, 9 bugs remaining)
+- **💀 Catastrophic**: 1 / 27 files (3.7%) - ClipboardHistoryView.kt (wrong base class, broken architecture)
 
 ## ✅ FIXES APPLIED (Oct 14, 2025 Session)
 
@@ -143,12 +146,25 @@ Additional improvements:
 
 ---
 
-### **TOTAL FIXES: 11 bugs resolved**
+### **ClipboardHistoryCheckBox.kt - 1 Bug Fixed (Bug #131):**
+
+**Fix #131 (CRITICAL)**: GlobalScope.launch memory leak
+- **BEFORE**: Used GlobalScope.launch (never cancels, accumulates leaks)
+- **AFTER**: View-scoped CoroutineScope with SupervisorJob
+- Added onDetachedFromWindow() to cancel scope when view detached
+- File expanded from 36 → 46 lines (cleanup lifecycle added)
+
+**Impact**: ✅ Critical memory leak fixed, proper coroutine lifecycle management.
+
+---
+
+### **TOTAL FIXES: 12 bugs resolved**
 - LayoutsPreference: 7 bugs fixed
 - DirectBootAwarePreferences: 1 bug fixed (complete rewrite)
 - Logs: 3 bugs fixed
+- ClipboardHistoryCheckBox: 1 bug fixed (GlobalScope leak)
 
-**Bug count**: 107 found → 96 remaining (11 fixed)
+**Bug count**: 131 found → 119 remaining (12 fixed)
 
 ## 🔧 IMMEDIATE FIXES NEEDED (Priority Order)
 

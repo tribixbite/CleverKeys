@@ -11,8 +11,12 @@ import kotlinx.coroutines.*
  *
  * Automatically syncs with global configuration and updates the
  * clipboard history service when toggled by the user.
+ *
+ * Bug #131 fix: Replaced GlobalScope with view-scoped coroutine to prevent leaks
  */
 class ClipboardHistoryCheckBox : CheckBox, CompoundButton.OnCheckedChangeListener {
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
         initialize()
@@ -30,8 +34,13 @@ class ClipboardHistoryCheckBox : CheckBox, CompoundButton.OnCheckedChangeListene
 
     override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
         // Update clipboard history service when toggled
-        GlobalScope.launch {
+        scope.launch {
             ClipboardHistoryService.setHistoryEnabled(isChecked)
         }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        scope.cancel() // Cleanup coroutine scope when view is detached
     }
 }
