@@ -912,4 +912,32 @@ class SwipeCalibrationActivity : Activity() {
             return px in x..(x + width) && py in y..(y + height)
         }
     }
+
+    // Utility functions
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
+
+    private fun logE(message: String, throwable: Throwable) {
+        android.util.Log.e(TAG, message, throwable)
+    }
+
+    private fun logW(message: String) {
+        android.util.Log.w(TAG, message)
+    }
+
+    private fun toast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun longToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
+    private inline fun <T> measureTimeNanos(block: () -> T): Pair<T, Long> {
+        val startTime = System.nanoTime()
+        val result = block()
+        val duration = System.nanoTime() - startTime
+        return Pair(result, duration)
+    }
 }
