@@ -293,4 +293,16 @@ class TensorMemoryManager(private val ortEnvironment: OrtEnvironment) {
         
         logD("Tensor memory manager cleaned up")
     }
+
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
+
+    private fun logW(message: String) {
+        android.util.Log.w(TAG, message)
+    }
+
+    private fun logE(message: String, throwable: Throwable) {
+        android.util.Log.e(TAG, message, throwable)
+    }
 }
