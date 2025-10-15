@@ -29,8 +29,8 @@ data class SwipeMLData(
      */
     data class TracePoint(
         val x: Float, // Normalized [0, 1]
-        val y: Float, // Normalized [0, 1] 
-        val tDeltaMs: Long // Time delta from gesture start
+        val y: Float, // Normalized [0, 1]
+        val tDeltaMs: Long // Time delta from previous point (0 for first point)
     )
     
     /**
@@ -39,23 +39,41 @@ data class SwipeMLData(
     fun addRawPoint(rawX: Float, rawY: Float, timestamp: Long) {
         val normalizedX = rawX / screenWidthPx
         val normalizedY = rawY / screenHeightPx
-        
-        // Calculate time delta from first point
-        val tDeltaMs = if (tracePoints.isEmpty()) 0L 
-        else timestamp - (timestampUtc - tracePoints.first().tDeltaMs)
-        
-        tracePoints.add(TracePoint(normalizedX, normalizedY, tDeltaMs))
+
+        // Calculate time delta from previous point (0 for first point)
+        val deltaMs = if (tracePoints.isEmpty()) {
+            0L
+        } else {
+            // Sum up previous deltas to get absolute time, then calculate new delta
+            val lastAbsoluteTime = tracePoints.sumOf { it.tDeltaMs }
+            timestamp - (timestampUtc + lastAbsoluteTime)
+        }
+
+        tracePoints.add(TracePoint(normalizedX, normalizedY, deltaMs))
     }
     
     /**
      * Add a registered key that was touched during swipe
+     * Avoids consecutive duplicates
      */
     fun addRegisteredKey(key: String) {
-        if (key.isNotBlank()) {
-            registeredKeys.add(key)
+        val normalizedKey = key.lowercase()
+        // Avoid consecutive duplicates
+        if (normalizedKey.isNotBlank() &&
+            (registeredKeys.isEmpty() || registeredKeys.last() != normalizedKey)) {
+            registeredKeys.add(normalizedKey)
         }
     }
     
+    /**
+     * Set keyboard dimensions for accurate position tracking
+     */
+    fun setKeyboardDimensions(screenWidth: Int, keyboardHeight: Int, keyboardOffsetY: Int) {
+        this.keyboardOffsetY = keyboardOffsetY
+        // Note: screenWidth and keyboardHeight are already set in constructor
+        // This method mainly records the Y offset for position normalization
+    }
+
     /**
      * Convert to JSON for export/storage
      */
@@ -106,7 +124,80 @@ data class SwipeMLData(
     val averageVelocity: Float by lazy {
         if (duration > 0) pathLength / duration else 0f
     }
-    
+
+    /**
+     * Validate data quality before storage
+     */
+    fun isValid(): Boolean {
+        // Must have at least 2 points for a valid swipe
+        if (tracePoints.size < 2)
+            return false
+
+        // Must have at least 2 registered keys
+        if (registeredKeys.size < 2)
+            return false
+
+        // Target word must not be empty
+        if (targetWord.isEmpty())
+            return false
+
+        // Check for reasonable normalized values
+        for (point in tracePoints) {
+            if (point.x < 0 || point.x > 1 || point.y < 0 || point.y > 1)
+                return false
+        }
+
+        return true
+    }
+
+    /**
+     * Calculate statistics for this swipe
+     */
+    fun calculateStatistics(): SwipeStatistics? {
+        if (tracePoints.size < 2)
+            return null
+
+        var totalDistance = 0f
+        var totalTime = 0L
+
+        for (i in 1 until tracePoints.size) {
+            val prev = tracePoints[i - 1]
+            val curr = tracePoints[i]
+
+            val dx = curr.x - prev.x
+            val dy = curr.y - prev.y
+            totalDistance += kotlin.math.sqrt(dx * dx + dy * dy)
+            totalTime += curr.tDeltaMs
+        }
+
+        // Calculate straightness ratio
+        val start = tracePoints[0]
+        val end = tracePoints[tracePoints.size - 1]
+        val directDistance = kotlin.math.sqrt(
+            kotlin.math.pow(end.x - start.x, 2) + kotlin.math.pow(end.y - start.y, 2)
+        )
+        val straightnessRatio = if (totalDistance > 0) directDistance / totalDistance else 0f
+
+        return SwipeStatistics(
+            pointCount = tracePoints.size,
+            totalDistance = totalDistance,
+            totalTimeMs = totalTime,
+            straightnessRatio = straightnessRatio,
+            keyCount = registeredKeys.size
+        )
+    }
+
+    /**
+     * Statistics for analysis
+     */
+    data class SwipeStatistics(
+        val pointCount: Int,
+        val totalDistance: Float,
+        val totalTimeMs: Long,
+        val straightnessRatio: Float,
+        val keyCount: Int
+    )
+
     companion object {
         /**
          * Create from JSON object
