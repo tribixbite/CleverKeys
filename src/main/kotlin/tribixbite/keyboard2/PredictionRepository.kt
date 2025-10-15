@@ -3,6 +3,8 @@ package tribixbite.keyboard2
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -84,13 +86,17 @@ class PredictionRepository(
     
     /**
      * Suspend function for direct coroutine usage
+     * Bug #192 fix: Now tracks statistics
      */
     suspend fun predict(input: SwipeInput): PredictionResult = withContext(Dispatchers.Default) {
+        totalPredictions.incrementAndGet()
         try {
             logD("🚀 Starting neural prediction for ${input.coordinates.size} points")
             val (result, duration) = measureTimeNanos {
                 neuralEngine.predict(input)
             }
+            totalTime.addAndGet(duration)
+            successfulPredictions.incrementAndGet()
             logD("🧠 Neural prediction completed in ${duration / 1_000_000}ms")
             result
         } catch (e: Exception) {
@@ -190,23 +196,28 @@ class PredictionRepository(
     data class PredictionStats(
         val totalPredictions: Int,
         val averageTimeMs: Double,
-        val successRate: Double,
-        val pendingRequests: Int
+        val successRate: Double
     )
-    
-    private var totalPredictions = 0
-    private var totalTime = 0L
-    private var successfulPredictions = 0
-    
+
+    // Bug #191 fix: Thread-safe statistics with atomic operations
+    private val totalPredictions = AtomicInteger(0)
+    private val totalTime = AtomicLong(0L)
+    private val successfulPredictions = AtomicInteger(0)
+
     /**
      * Get performance statistics
+     * Bug #191 fix: Thread-safe read
+     * Bug #193 fix: Removed pendingRequests (was mutating channel)
      */
     fun getStats(): PredictionStats {
+        val total = totalPredictions.get()
+        val time = totalTime.get()
+        val successful = successfulPredictions.get()
+
         return PredictionStats(
-            totalPredictions = totalPredictions,
-            averageTimeMs = if (totalPredictions > 0) totalTime.toDouble() / totalPredictions / 1_000_000 else 0.0,
-            successRate = if (totalPredictions > 0) successfulPredictions.toDouble() / totalPredictions else 0.0,
-            pendingRequests = predictionRequests.tryReceive().let { 0 } // Approximate
+            totalPredictions = total,
+            averageTimeMs = if (total > 0) time.toDouble() / total / 1_000_000 else 0.0,
+            successRate = if (total > 0) successful.toDouble() / total else 0.0
         )
     }
 }
