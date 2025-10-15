@@ -210,7 +210,20 @@ class OptimizedVocabularyImpl(private val context: Context) {
     }
     
     fun isLoaded(): Boolean = isLoaded
-    
+
+    // Logging functions
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
+
+    private fun logE(message: String, throwable: Throwable) {
+        android.util.Log.e(TAG, message, throwable)
+    }
+
+    private fun logW(message: String) {
+        android.util.Log.w(TAG, message)
+    }
+
     /**
      * Data classes for predictions and stats
      */
