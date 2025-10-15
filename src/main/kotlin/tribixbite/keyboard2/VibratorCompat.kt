@@ -62,4 +62,8 @@ class VibratorCompat(private val context: Context) {
      */
     val hasVibrator: Boolean
         get() = vibrator?.hasVibrator() ?: false
+
+    private fun logE(message: String, throwable: Throwable) {
+        android.util.Log.e("VibratorCompat", message, throwable)
+    }
 }
