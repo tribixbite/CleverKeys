@@ -5,15 +5,18 @@ package tribixbite.keyboard2
  */
 enum class NumberLayout {
     PIN, NUMBER, NUMPAD;
-    
+
     companion object {
-        fun of_string(name: String): NumberLayout {
-            return when (name) {
+        fun fromString(name: String): NumberLayout {
+            return when (name.lowercase()) {
                 "pin" -> PIN
                 "number" -> NUMBER
                 "numpad" -> NUMPAD
                 else -> PIN
             }
         }
+
+        @Deprecated("Use fromString instead", ReplaceWith("fromString(name)"))
+        fun of_string(name: String): NumberLayout = fromString(name)
     }
 }
