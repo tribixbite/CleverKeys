@@ -7911,3 +7911,79 @@ private fun getEmojiGrid(): EmojiGridView? {
 
 **Assessment**: Well-implemented with proper Kotlin patterns and modern Android practices.
 
+
+---
+
+## File 30/251: EmojiGridView.kt (182 lines)
+
+**Status**: ✅ **FIXED** - 1 CRITICAL bug found and fixed, 2 additional issues documented
+
+### Bugs Found and Fixed
+
+**Bug #135 (CRITICAL)**: Missing onDetachedFromWindow() - coroutine scope never canceled automatically
+- **Location**: Lines 26, 176-178
+- **Issue**: Has CoroutineScope and cleanup() method but cleanup() is never called automatically
+- **Impact**: Memory leak - coroutines continue running after view is detached from window
+- **Fix**: Added onDetachedFromWindow() override that calls scope.cancel()
+- **Status**: ✅ FIXED
+
+### Additional Issues Identified (Not Fixed)
+
+**Bug #136 (MEDIUM)**: Inconsistent group API - two different methods with different parameter types
+- **Location**: Lines 78 (showGroup), 153 (setEmojiGroup)
+- **Issue**: showGroup(String) takes group name, setEmojiGroup(Int) takes group index
+- **Impact**: Confusing API, unclear which method to use when
+- **Recommendation**: Standardize on one approach or rename for clarity (e.g., showGroupByName/showGroupByIndex)
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #137 (LOW)**: Missing accessibility announcement on emoji selection
+- **Location**: Line 138 (performClick)
+- **Issue**: No announceForAccessibility() call when emoji is selected
+- **Impact**: Screen readers won't announce emoji selection to visually impaired users
+- **Recommendation**: Add announceForAccessibility(emojiData.emoji) after performClick()
+- **Status**: ⏳ DOCUMENTED
+
+### Implementation Quality
+
+**Strengths**:
+1. **Proper coroutine scope**: Uses view-scoped CoroutineScope (not GlobalScope)
+2. **Now has lifecycle management**: ✅ FIXED - onDetachedFromWindow() added
+3. **Async emoji loading**: All emoji operations use coroutines with proper dispatchers
+4. **Error handling**: Try-catch blocks around async operations
+5. **Custom emoji button**: Efficient custom View instead of heavy Button widgets
+6. **Touch feedback**: Visual feedback on press (highlight)
+7. **Proper grid layout**: Uses GridLayout with proper sizing
+
+**Code Changes**:
+```kotlin
+// BEFORE (Bug #135):
+/**
+ * Cleanup
+ */
+fun cleanup() {
+    scope.cancel()
+}
+// ❌ cleanup() must be called manually, never happens automatically
+
+// AFTER (Bug #135 fix):
+/**
+ * Cleanup coroutines when view is detached
+ * Bug #135 fix: Automatic cleanup instead of manual cleanup() call
+ */
+override fun onDetachedFromWindow() {
+    super.onDetachedFromWindow()
+    scope.cancel()
+}
+
+/**
+ * Manual cleanup (deprecated - use onDetachedFromWindow)
+ */
+@Deprecated("Cleanup is now automatic via onDetachedFromWindow()", ReplaceWith(""))
+fun cleanup() {
+    scope.cancel()
+}
+// ✅ Now automatic via Android lifecycle
+```
+
+**Assessment**: Well-implemented emoji grid with modern Kotlin patterns. Critical memory leak fixed. Two minor issues remain (API inconsistency, accessibility).
+

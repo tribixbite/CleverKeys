@@ -171,8 +171,18 @@ class EmojiGridView(context: Context) : GridLayout(context) {
     }
 
     /**
-     * Cleanup
+     * Cleanup coroutines when view is detached
+     * Bug #135 fix: Automatic cleanup instead of manual cleanup() call
      */
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        scope.cancel()
+    }
+
+    /**
+     * Manual cleanup (deprecated - use onDetachedFromWindow)
+     */
+    @Deprecated("Cleanup is now automatic via onDetachedFromWindow()", ReplaceWith(""))
     fun cleanup() {
         scope.cancel()
     }
