@@ -223,4 +223,12 @@ class SwipePredictionService(
         fun onPredictionsReady(words: List<String>, scores: List<Int>)
         fun onPredictionError(error: String)
     }
+
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
+
+    private fun logE(message: String, throwable: Throwable) {
+        android.util.Log.e(TAG, message, throwable)
+    }
 }
