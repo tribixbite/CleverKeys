@@ -43,7 +43,7 @@ object CustomLayoutEditDialog {
 
         val dialogBuilder = AlertDialog.Builder(context)
             .setView(input)
-            .setTitle("Custom layout")
+            .setTitle(R.string.pref_custom_layout_title) // Bug #132 fix: Use resource string
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 callback.onSelect(input.text.toString())
             }
@@ -51,7 +51,7 @@ object CustomLayoutEditDialog {
 
         // Add remove button for existing layouts
         if (allowRemove) {
-            dialogBuilder.setNeutralButton("Remove layout") { _, _ ->
+            dialogBuilder.setNeutralButton(R.string.pref_layouts_remove_custom) { _, _ -> // Bug #133 fix: Use resource string
                 callback.onSelect(null)
             }
         }
