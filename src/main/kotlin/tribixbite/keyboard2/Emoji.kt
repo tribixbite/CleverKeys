@@ -177,4 +177,12 @@ class Emoji(private val context: Context) {
     fun getFirstEmojiOfGroup(groupIndex: Int): EmojiData? {
         return getEmojisByGroupIndex(groupIndex).firstOrNull()
     }
+
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
+
+    private fun logE(message: String, throwable: Throwable) {
+        android.util.Log.e(TAG, message, throwable)
+    }
 }
