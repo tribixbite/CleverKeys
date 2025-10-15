@@ -8041,3 +8041,70 @@ Fixing hardcoded strings in a disabled stub feature would require:
 
 **Assessment:** ✅ SAFE STUB - Properly implemented placeholder that prevents crashes and provides good UX.
 
+
+---
+
+## File 32/251: ExtraKeysPreference.kt (336 lines)
+
+**Status**: ✅ **EXCELLENT** - 1 medium i18n issue, otherwise exemplary implementation
+
+### Implementation Quality
+
+**Strengths:**
+1. **Comprehensive extra keys**: 85+ keys (accents, symbols, functions, editing, formatting)
+2. **Dynamic preference generation**: Automatically creates checkboxes for all keys
+3. **Preferred positioning**: Smart placement logic for common keys (cut/copy/paste near x/c/v)
+4. **Rich descriptions**: Detailed descriptions with key combinations (e.g., "End  —  fn + right")
+5. **Default selections**: Sensible defaults (voice_typing, tab, esc enabled by default)
+6. **Theme integration**: Applies keyboard font to preference titles (line 334)
+7. **Multi-line support**: Uses isSingleLineTitle = false on API 26+ (lines 324-326)
+8. **Clean separation**: Static utility functions in companion object
+9. **Type safety**: Strongly typed KeyValue and PreferredPos
+10. **Proper inheritance**: Extends PreferenceCategory appropriately
+
+### Single Issue Identified (Not Fixed)
+
+**Bug #141 (MEDIUM)**: Hardcoded key descriptions - not localizable
+- **Location**: Lines 104-131 (keyDescription function)
+- **Issue**: ~30 key descriptions hardcoded in English:
+  - "Caps Lock", "Change Input Method", "Compose"
+  - "Copy", "Cut", "Paste", "Undo", "Redo"
+  - "Page Up", "Page Down", "Home", "End"
+  - "Zero Width Joiner", "Non-Breaking Space", etc.
+- **Impact**: App cannot be localized to other languages for these descriptions
+- **Scope**: Would require adding ~30 string resources across all translations
+- **Status**: ⏳ DOCUMENTED (large scope - defer to i18n cleanup phase)
+
+**Recommendation**: Fix during dedicated i18n pass. Functionality is perfect, only localization missing.
+
+### Code Highlights
+
+**Smart Preferred Positioning:**
+```kotlin
+// Places cut/copy/paste/undo near their mnemonic keys
+"cut" -> createPreferredPos("x", 2, 2, true)
+"copy" -> createPreferredPos("c", 2, 3, true)
+"paste" -> createPreferredPos("v", 2, 4, true)
+"undo" -> createPreferredPos("z", 2, 1, true)
+```
+
+**Rich Key Descriptions:**
+```kotlin
+// Adds helpful key combination info
+"end" -> "End  —  fn + right"
+"home" -> "Home  —  fn + left"
+"pasteAsPlainText" -> "Paste as Plain Text  —  fn + paste"
+```
+
+**Dynamic Preference Creation:**
+```kotlin
+for (keyName in extraKeys) {
+    val checkboxPref = ExtraKeyCheckBoxPreference(
+        context, keyName, defaultChecked(keyName)
+    )
+    addPreference(checkboxPref)
+}
+```
+
+**Assessment:** ✅ EXEMPLARY - Sophisticated, well-documented, comprehensive extra keys system. Only minor i18n issue.
+
