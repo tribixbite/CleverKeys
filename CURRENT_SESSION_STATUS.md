@@ -31,7 +31,7 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 
 ## 📊 SYSTEMATIC REVIEW PROGRESS
 
-### **FILES REVIEWED: 40 / 251 (15.9%)**
+### **FILES REVIEWED: 43 / 251 (17.1%)**
 
 1. ✅ KeyValueParser.java (289 lines) vs KeyValue.kt:629-642 (13 lines)
 2. ✅ Keyboard2.java (1392 lines) vs CleverKeysService.kt (933 lines)
@@ -73,8 +73,11 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 38. ✅ **NonScrollListView.kt (56 lines) - ✅ EXEMPLARY (0 bugs)**
 39. ✅ **NeuralConfig.kt (96 lines) - ⚠️ GOOD (1 medium bug documented)**
 40. ✅ **NumberLayout.kt (18 lines) - ✅ GOOD (2 low-priority issues documented)**
+41. ✅ **OnnxSwipePredictor.kt (89 lines) - ✅ PROPERLY IMPLEMENTED (3 low-priority issues)**
+42. ✅ **OnnxSwipePredictorImpl.kt (1331 lines) - ✅ EXCELLENT (6 minor issues, 1 fixed)**
+43. ✅ **OptimizedTensorPool.kt (404 lines) - ✅ EXCELLENT (4 minor issues)**
 
-### **BUGS IDENTIFIED: 131 ISSUES (156 found, 21 fixed, 4 stub-only)**
+### **BUGS IDENTIFIED: 143 ISSUES (169 found, 22 fixed, 4 stub-only)**
 
 - File 1: 1 critical (KeyValueParser 96% missing)
 - File 2: 23 critical (Keyboard2 ~800 lines missing)
@@ -115,12 +118,15 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 - File 37: **1 low-priority issue** (LayoutModifier - ⚠️ SAFE STUB: empty methods, harmless, could add TODO comments)
 - File 38: **0 bugs** (NonScrollListView - ✅ EXEMPLARY: clean utility class, well-documented, properly attributed, no issues)
 - File 39: **1 medium bug** (NeuralConfig - ⏳ DOCUMENTED: copy() method doesn't create true independent copy, shares same SharedPreferences backing store; not used anywhere so minimal impact)
+- File 41: **3 bugs** (OnnxSwipePredictor - LOW: redundant debugLogger field, misleading stub documentation, undocumented singleton lifecycle)
+- File 42: **6 bugs → 5 bugs** (OnnxSwipePredictorImpl - ✅ FIXED Bug #165: undefined logD() function; ⏳ REMAINING: orphaned comment, runBlocking in cleanup, code duplication, hardcoded thresholds, excessive logging)
+- File 43: **4 bugs** (OptimizedTensorPool - MEDIUM: runBlocking in close(); LOW: useTensor runBlocking, large buffers, buffer position not reset)
 
 ### **TIME INVESTMENT:**
 - **Spent**: 39 hours complete line-by-line reading (Files 1-39)
 - **Estimated Remaining**: 14-18 weeks for complete parity
-- **Next Phase**: Continue systematic review (212 files remaining)
-- **✅ Properly Implemented**: 21 / 39 files (53.8%) - Modmap.kt, ComposeKey.kt, ComposeKeyData.kt (fixed), Autocapitalisation.kt, Utils.kt (exemplary), FoldStateTracker.kt (exemplary), **DirectBootAwarePreferences.kt (fixed)**, **Logs.kt (fixed)**, **ClipboardDatabase.kt (exemplary)**, **ClipboardHistoryCheckBox.kt (fixed)**, **CustomLayoutEditDialog.kt (fixed)**, **EmojiGroupButtonsBar.kt (fixed)**, **EmojiGridView.kt (fixed)**, **CustomExtraKeysPreference.kt (safe stub)**, **ExtraKeysPreference.kt (exemplary)**, **IntSlideBarPreference.kt (fixed)**, **SlideBarPreference.kt (fixed)**, **MigrationTool.kt (fixed)**, **LauncherActivity.kt (fixed)**, **LayoutModifier.kt (safe stub)**, **NonScrollListView.kt (exemplary)**
+- **Next Phase**: Continue systematic review (208 files remaining)
+- **✅ Properly Implemented**: 24 / 43 files (55.8%) - Modmap.kt, ComposeKey.kt, ComposeKeyData.kt (fixed), Autocapitalisation.kt, Utils.kt (exemplary), FoldStateTracker.kt (exemplary), **DirectBootAwarePreferences.kt (fixed)**, **Logs.kt (fixed)**, **ClipboardDatabase.kt (exemplary)**, **ClipboardHistoryCheckBox.kt (fixed)**, **CustomLayoutEditDialog.kt (fixed)**, **EmojiGroupButtonsBar.kt (fixed)**, **EmojiGridView.kt (fixed)**, **CustomExtraKeysPreference.kt (safe stub)**, **ExtraKeysPreference.kt (exemplary)**, **IntSlideBarPreference.kt (fixed)**, **SlideBarPreference.kt (fixed)**, **MigrationTool.kt (fixed)**, **LauncherActivity.kt (fixed)**, **LayoutModifier.kt (safe stub)**, **NonScrollListView.kt (exemplary)**, **OnnxSwipePredictor.kt**, **OnnxSwipePredictorImpl.kt (excellent, 1 fix)**, **OptimizedTensorPool.kt (excellent)**
 - **⚠️ Mixed Quality**: 3 / 28 files (10.7%) - Emoji.kt (4 bugs, 5 enhancements), ClipboardPinView.kt (5 bugs, 5 enhancements), ClipboardHistoryService.kt (6 bugs, 10 enhancements)
 - **❌ Stub Files**: 2 / 28 files (7.1%) - ExtraKeys.kt (architectural mismatch), LayoutsPreference.kt (partial fixes, 9 bugs remaining)
 - **💀 Catastrophic**: 1 / 28 files (3.6%) - ClipboardHistoryView.kt (wrong base class, broken architecture)

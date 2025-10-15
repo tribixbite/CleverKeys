@@ -8632,3 +8632,179 @@ fun of_string(name: String): NumberLayout {
 
 **Assessment**: ✅ GOOD - Simple, functional enum with minor style/robustness issues that don't affect current usage.
 
+
+
+---
+
+## File 41/251: OnnxSwipePredictor.kt (89 lines)
+
+**Status**: ✅ **PROPERLY IMPLEMENTED** - Pure delegation wrapper, 3 low-priority issues
+
+### Implementation Quality
+
+**Purpose:**
+- Facade wrapper around OnnxSwipePredictorImpl
+- Provides singleton pattern via getInstance()
+- Delegates all method calls to realPredictor
+
+**Architecture:**
+- Both OnnxSwipePredictor AND OnnxSwipePredictorImpl are singletons
+- Pure delegation pattern - no logic beyond forwarding calls
+- Stable public API layer over implementation
+
+### Issues Identified (Not Fixed)
+
+**Bug #157 (LOW)**: Redundant debugLogger field
+- **Location**: Lines 23, 77-79
+- **Issue**: Field stored but never used in this class, only passed through to realPredictor
+- **Impact**: Minor code smell, wastes 4-8 bytes per instance
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #158 (LOW)**: Misleading stub documentation
+- **Location**: Lines 7-8
+- **Issue**: Comment says "Kotlin stub" and "would need full ONNX integration" but implementation EXISTS in OnnxSwipePredictorImpl
+- **Impact**: Confusing for developers
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #159 (LOW)**: Undocumented singleton lifecycle
+- **Location**: Lines 85-88
+- **Issue**: cleanup() doesn't destroy singleton instance - initialize() can be called multiple times
+- **Impact**: Unclear lifecycle management
+- **Status**: ⏳ DOCUMENTED
+
+**Assessment**: Clean delegation wrapper with good thread-safe singleton. Could be simplified by using OnnxSwipePredictorImpl directly.
+
+---
+
+## File 42/251: OnnxSwipePredictorImpl.kt (1331 lines)
+
+**Status**: ✅ **EXCELLENT** - Core neural prediction, 6 minor issues, 1 fixed
+
+### Implementation Quality
+
+**Purpose:**
+- Complete ONNX-based neural swipe predictor
+- Transformer encoder-decoder architecture
+- Beam search with global top-k selection
+- Feature extraction: trajectory, velocities, accelerations, nearest keys
+
+**Architecture - Three Classes:**
+1. **OnnxSwipePredictorImpl** (lines 16-1016): Main predictor with beam search
+2. **SwipeTrajectoryProcessor** (lines 1021-1327): Feature extraction
+3. **SwipeTokenizer** (separate file - orphaned comment at end)
+
+### Issues Identified
+
+**Bug #160 (LOW)**: Orphaned JavaDoc comment at end of file
+- **Location**: Lines 1328-1331
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #161 (LOW)**: runBlocking in cleanup() can block indefinitely
+- **Location**: Lines 982-984
+- **Issue**: Uses runBlocking without timeout for tensor pool cleanup
+- **Impact**: Cleanup could hang application shutdown
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #162 (MEDIUM)**: Code duplication (batched vs non-batched beam processing)
+- **Location**: Lines 306-371 and 377-486
+- **Issue**: ~180 lines of duplicated beam search logic
+- **Impact**: Maintainability - bugs need fixing in both places
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #163 (LOW)**: Hardcoded early stopping thresholds
+- **Location**: Line 276
+- **Issue**: Magic numbers (step >= 10, finishedBeams.size >= 3)
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #164 (LOW)**: Excessive debug logging with emoji
+- **Location**: Throughout file
+- **Impact**: Performance overhead in production
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #165 (MEDIUM)**: Undefined logD() function in SwipeTrajectoryProcessor
+- **Location**: Lines 1320, 1325
+- **Issue**: Calls logD() but function not defined
+- **Impact**: Compilation error
+- **Status**: ✅ **FIXED** - Added private logD() function delegating to Log.d()
+
+### Strengths
+
+1. ✅ Complete ONNX Runtime integration (encoder + decoder models)
+2. ✅ Sophisticated beam search with global top-k selection
+3. ✅ Tensor memory pooling for 50-70% speedup
+4. ✅ Direct buffer usage for performance
+5. ✅ Proper resource cleanup with try-catch
+6. ✅ Extensive documentation with fix references (#34, #36, #39, #41)
+7. ✅ Feature extraction: normalization, velocity, acceleration
+8. ✅ Duplicate point filtering (lines 1189-1214)
+9. ✅ QWERTY grid detection with row offsets (lines 1263-1291)
+10. ✅ Vocabulary filtering with fallback (lines 814-830)
+
+**Assessment**: Sophisticated, production-quality neural prediction code. Only minor issues, one compilation fix applied.
+
+---
+
+## File 43/251: OptimizedTensorPool.kt (404 lines)
+
+**Status**: ✅ **EXCELLENT** - High-performance pooling, 4 minor issues
+
+### Implementation Quality
+
+**Purpose:**
+- Tensor and buffer pooling for ONNX Runtime optimization
+- Eliminates allocation overhead in beam search loops
+- Achieves 50-70% speedup
+
+**Architecture:**
+- Two-tier pooling: Tensor pool (managed, reused) + Buffer pool (one-time initialization)
+- Thread-safe with Mutex
+- AutoCloseable pattern for automatic cleanup
+- Usage statistics tracking
+
+### Issues Identified (Not Fixed)
+
+**Bug #166 (MEDIUM)**: runBlocking in close() can block indefinitely
+- **Location**: Lines 383-387
+- **Issue**: PooledTensorHandle.close() uses runBlocking to release tensor
+- **Impact**: Called from try-finally blocks - blocking can hang application
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #167 (LOW)**: useTensor extension uses runBlocking in suspend context
+- **Location**: Lines 393-404
+- **Issue**: Suspend function calls close() which uses runBlocking
+- **Impact**: Inefficient - should await releaseTensor() directly
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #168 (LOW)**: Large buffers might not fit back in pool
+- **Location**: Lines 140-150
+- **Issue**: acquireFloatBuffer() creates arbitrarily large buffers, but pool has fixed capacity
+- **Impact**: Edge case memory leak if many large buffers created
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #169 (LOW)**: Buffer position not explicitly reset before view creation
+- **Location**: Lines 215-225
+- **Issue**: buffer.asFloatBuffer() creates view from current position, not explicitly reset
+- **Impact**: Currently safe but fragile
+- **Status**: ⏳ DOCUMENTED
+
+### Strengths
+
+1. ✅ Sophisticated tensor pooling with reuse tracking (MAX_REUSE_COUNT=1000)
+2. ✅ Buffer pre-allocation for common sizes (48 buffers)
+3. ✅ Thread-safe with Mutex
+4. ✅ Usage statistics tracking (hit rate, acquisitions)
+5. ✅ AutoCloseable pattern for automatic cleanup
+6. ✅ Extension function for convenient usage
+7. ✅ Proper tensor disposal when pool full or exhausted
+8. ✅ Size validation for buffer reuse
+9. ✅ Support for float, long, boolean tensors
+10. ✅ Comprehensive logging
+
+**Buffer Pool Design (clever!):**
+- Buffers are pre-allocated during initialization (48 buffers)
+- Buffers "graduate" into tensors, which are then managed by tensor pool
+- Buffers NOT returned to buffer pool (by design - tensors keep them)
+- This is intentional and efficient - buffer pool is initialization-only
+
+**Assessment**: Sophisticated performance optimization with clean design and minimal bugs.
+
