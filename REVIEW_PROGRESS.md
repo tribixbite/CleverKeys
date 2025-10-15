@@ -8175,3 +8175,81 @@ private fun updateText() {
 
 **Assessment**: Well-implemented integer slider preference with proper Android patterns. Critical crash bug fixed.
 
+
+---
+
+## File 34/251: SlideBarPreference.kt (136 lines)
+
+**Status**: ✅ **FIXED** - 2 critical bugs fixed, 1 minor issue documented
+
+### Bugs Found and Fixed
+
+**Bug #144 (CRITICAL)**: String.format crash when summary lacks format specifier
+- **Location**: Line 116 (original)
+- **Issue**: Identical to Bug #142 - `String.format(initialSummary, value)` crashes if no %f/%s
+- **Impact**: App crashes when opening preference dialog
+- **Fix**: Wrapped in try-catch with graceful fallback to "$summary: $value"
+- **Status**: ✅ FIXED
+
+**Bug #145 (CRITICAL)**: Division by zero when max == min
+- **Location**: Lines 88, 102 (original)
+- **Issue**: `((value - min) / (max - min) * STEPS)` divides by zero if max == min
+- **Example**: min=0.0, max=0.0 → (0.0 - 0.0) / (0.0 - 0.0) = NaN
+- **Impact**: seekBar.progress = NaN.toInt() → unexpected behavior or crash
+- **Fix**: Check `if (max > min)` before division, return 0 otherwise
+- **Status**: ✅ FIXED (both locations)
+
+### Additional Issue Identified (Not Fixed)
+
+**Bug #146 (LOW)**: Hardcoded padding in pixels instead of dp
+- **Location**: Line 45
+- **Issue**: Identical to Bug #143 - `setPadding(48, 40, 48, 40)` uses raw pixels
+- **Impact**: Inconsistent padding across screen densities
+- **Status**: ⏳ DOCUMENTED (low priority)
+
+### Implementation Quality
+
+**Strengths:**
+1. **Float value support**: Proper DialogPreference for float values with 100 steps
+2. **Safe attribute parsing**: parseFloatAttribute handles null and exceptions
+3. **Type-flexible default values**: parseFloatValue handles Float, String, Number
+4. **Parent removal**: Prevents "view already has parent" errors
+5. **Proper persistence**: Uses persistFloat/getPersistedFloat
+6. **Smooth slider**: 100 steps (STEPS constant) for fine-grained control
+
+**Code Changes:**
+```kotlin
+// BEFORE (Bug #144 - CRASH):
+private fun updateText() {
+    val formattedValue = String.format(initialSummary, value)
+    textView.text = formattedValue
+    summary = formattedValue
+}
+
+// BEFORE (Bug #145 - DIVISION BY ZERO):
+val progress = ((value - min) / (max - min) * STEPS).toInt()
+
+// AFTER (Both bugs fixed):
+private fun updateText() {
+    val formattedValue = try {
+        String.format(initialSummary, value)
+    } catch (e: java.util.IllegalFormatException) {
+        if (initialSummary.isNotEmpty()) {
+            "$initialSummary: $value"
+        } else {
+            value.toString()
+        }
+    }
+    textView.text = formattedValue
+    summary = formattedValue
+}
+
+val progress = if (max > min) {
+    ((value - min) / (max - min) * STEPS).toInt()
+} else {
+    0
+}
+```
+
+**Assessment**: Well-implemented float slider preference with proper patterns. Two critical bugs fixed.
+

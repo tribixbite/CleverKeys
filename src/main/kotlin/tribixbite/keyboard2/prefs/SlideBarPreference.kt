@@ -85,7 +85,12 @@ class SlideBarPreference(
             persistFloat(value)
         }
 
-        val progress = ((value - min) / (max - min) * STEPS).toInt()
+        // Bug #145 fix: Handle division by zero when max == min
+        val progress = if (max > min) {
+            ((value - min) / (max - min) * STEPS).toInt()
+        } else {
+            0
+        }
         seekBar.progress = progress
         updateText()
     }
@@ -99,7 +104,12 @@ class SlideBarPreference(
             persistFloat(value)
         } else {
             val persistedValue = getPersistedFloat(min)
-            val progress = ((persistedValue - min) / (max - min) * STEPS).toInt()
+            // Bug #145 fix: Handle division by zero when max == min
+            val progress = if (max > min) {
+                ((persistedValue - min) / (max - min) * STEPS).toInt()
+            } else {
+                0
+            }
             seekBar.progress = progress
             value = persistedValue
         }
@@ -113,7 +123,17 @@ class SlideBarPreference(
     }
 
     private fun updateText() {
-        val formattedValue = String.format(initialSummary, value)
+        // Bug #144 fix: Handle summary with or without format specifier
+        val formattedValue = try {
+            String.format(initialSummary, value)
+        } catch (e: java.util.IllegalFormatException) {
+            // No format specifier in summary - just append value
+            if (initialSummary.isNotEmpty()) {
+                "$initialSummary: $value"
+            } else {
+                value.toString()
+            }
+        }
         textView.text = formattedValue
         summary = formattedValue
     }
