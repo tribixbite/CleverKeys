@@ -8808,3 +8808,161 @@ fun of_string(name: String): NumberLayout {
 
 **Assessment**: Sophisticated performance optimization with clean design and minimal bugs.
 
+---
+
+## File 47/251: PredictionCache.kt
+
+**Lines:** 136
+**Status:** ⚠️ **MIXED** - Good core logic but has critical thread safety issue
+
+### Purpose
+LRU cache for neural prediction results to avoid redundant ONNX inference by caching based on gesture similarity.
+
+### Architecture Overview
+- Simple LRU cache with gesture similarity matching
+- CacheKey encodes gesture characteristics: start point, end point, length, average point
+- Similarity matching uses distance thresholds and length ratios
+- Default max size: 20 entries (configurable)
+- No external dependencies beyond standard Android libraries
+
+### Implementation Quality
+
+**Purpose:**
+- Cache prediction results to avoid redundant ONNX model inference
+- Match gestures using similarity algorithm (distance + length)
+- LRU eviction when cache full
+
+**Design:**
+- CacheKey: Compact representation with 4 features (start, end, length, average)
+- Similarity matching: 20% length tolerance + distance thresholds
+- Simple list-based LRU (not LinkedHashMap)
+
+### Issues Identified
+
+**Bug #183 (CRITICAL - FIXED)**: Undefined logD() function
+- **Location**: Lines 86, 111, 119
+- **Issue**: Calls `logD()` without implementation
+- **Impact**: Compilation error - code won't build
+- **Fix Applied**:
+```kotlin
+companion object {
+    private const val TAG = "PredictionCache"
+}
+
+private fun logD(message: String) {
+    android.util.Log.d(TAG, message)
+}
+```
+- **Status**: ✅ FIXED
+
+**Bug #184 (HIGH)**: Thread-unsafe cache access
+- **Location**: Line 72 (declaration), lines 77-120 (all methods)
+- **Issue**: Mutable list accessed from multiple methods without synchronization:
+```kotlin
+private val cache = mutableListOf<CacheEntry>()  // ❌ Not thread-safe
+
+fun get(coordinates: List<PointF>): PredictionResult? {
+    val entry = cache.find { it.key.isSimilarTo(queryKey) }  // Line 81 - concurrent read
+    entry.lastAccessTime = System.currentTimeMillis()  // Line 85 - concurrent write
+    return entry.result
+}
+
+fun put(coordinates: List<PointF>, result: PredictionResult) {
+    cache.removeAll { it.key.isSimilarTo(key) }  // Line 100 - concurrent modification
+    cache.add(CacheEntry(key, result))  // Line 103 - concurrent add
+    if (cache.size > maxSize) {
+        val oldest = cache.minByOrNull { it.lastAccessTime }
+        oldest?.let { cache.remove(it) }  // Line 108 - concurrent remove
+    }
+}
+
+fun clear() {
+    cache.clear()  // Line 118 - concurrent clear
+}
+```
+- **Impact**: ConcurrentModificationException if get/put/clear called from multiple coroutines simultaneously
+- **Similar To**: Bug #178 (PerformanceProfiler thread safety issue)
+- **Fix**: Wrap with Collections.synchronizedList() or use Mutex
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #185 (MEDIUM)**: Inefficient LRU eviction algorithm
+- **Location**: Lines 106-109
+- **Issue**: Uses O(n) scan to find oldest entry for eviction:
+```kotlin
+if (cache.size > maxSize) {
+    val oldest = cache.minByOrNull { it.lastAccessTime }  // ❌ O(n) scan
+    oldest?.let { cache.remove(it) }
+}
+```
+- **Impact**: Performance degradation on every cache insertion (minor since maxSize=20)
+- **Better Approach**: Use LinkedHashMap with accessOrder=true for O(1) eviction
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #186 (LOW)**: Mutable PointF stored in CacheKey
+- **Location**: Lines 15-18 (CacheKey data class definition)
+- **Issue**: CacheKey stores android.graphics.PointF which is mutable:
+```kotlin
+private data class CacheKey(
+    val startPoint: PointF,      // ❌ Mutable class
+    val endPoint: PointF,        // ❌ Mutable class
+    val length: Int,
+    val averagePoint: PointF     // ❌ Mutable class
+)
+```
+- **Impact**: If PointF instances mutated after cache key creation, cache key becomes invalid
+- **Low Severity**: PointF instances typically not reused, so mutation unlikely
+- **Fix**: Copy PointF values to immutable fields or create immutable Point data class
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #187 (LOW)**: Missing cache effectiveness metrics
+- **Location**: Lines 125-135 (getStats method)
+- **Issue**: CacheStats only tracks size, not hit/miss rates:
+```kotlin
+fun getStats(): CacheStats {
+    return CacheStats(
+        size = cache.size,
+        maxSize = maxSize  // ❌ No hitCount, missCount, hitRate
+    )
+}
+```
+- **Impact**: Cannot measure cache effectiveness or tune thresholds
+- **Enhancement**: Add hitCount, missCount, hitRate fields to track performance
+- **Status**: ⏳ DOCUMENTED
+
+**Bug #188 (LOW)**: Hardcoded similarity thresholds
+- **Location**: Line 44 (distanceThreshold=50f), lines 46-47 (lengthRatio 0.8/1.2)
+- **Issue**: Fixed thresholds don't scale with keyboard dimensions or DPI:
+```kotlin
+fun isSimilarTo(other: CacheKey, distanceThreshold: Float = 50f): Boolean {  // ❌ Hardcoded
+    val lengthRatio = length.toFloat() / other.length.toFloat()
+    if (lengthRatio < 0.8f || lengthRatio > 1.2f) return false  // ❌ Hardcoded 20%
+
+    return startDist < distanceThreshold &&
+           endDist < distanceThreshold &&
+           avgDist < distanceThreshold
+}
+```
+- **Impact**: May cache too aggressively (high false positives) or miss valid hits (low recall) on different screen sizes
+- **Better**: Make thresholds configurable or scale with keyboard dimensions
+- **Status**: ⏳ DOCUMENTED
+
+### Strengths
+
+1. ✅ Clean separation of CacheKey creation and similarity logic
+2. ✅ Reasonable similarity algorithm (distance + length ratio)
+3. ✅ Simple LRU implementation (update access time on hit)
+4. ✅ Removes duplicate entries before adding new (prevents duplicates)
+5. ✅ Handles edge cases (coords.size < 2)
+6. ✅ Statistics tracking for monitoring
+7. ✅ Clear API (get/put/clear/getStats)
+8. ✅ Lightweight implementation (136 lines)
+
+### Weaknesses
+
+1. ❌ Thread safety critical issue (Bug #184)
+2. ❌ Inefficient LRU eviction (Bug #185)
+3. ⚠️ Hardcoded thresholds not DPI-aware (Bug #188)
+4. ⚠️ Missing hit/miss metrics (Bug #187)
+
+**Assessment**: Good core caching logic with reasonable similarity matching, but thread safety issue is critical blocker for production use. Inefficient eviction is minor concern given small cache size.
+

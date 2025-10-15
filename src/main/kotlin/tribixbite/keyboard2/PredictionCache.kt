@@ -133,4 +133,12 @@ class PredictionCache(
         val size: Int,
         val maxSize: Int
     )
+
+    companion object {
+        private const val TAG = "PredictionCache"
+    }
+
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
 }
