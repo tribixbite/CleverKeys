@@ -305,6 +305,10 @@ class BatchedMemoryOptimizer(private val ortEnvironment: OrtEnvironment) {
         val activePools: Int,
         val memoryOptimizationSavings: Long
     )
+
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
 }
 
 /**
