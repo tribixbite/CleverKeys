@@ -69,6 +69,10 @@ class SwipeTokenizer {
     }
     
     val vocabularySize: Int get() = VOCAB_SIZE
+
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
 }
 
 /**
