@@ -434,6 +434,10 @@ class RuntimeTestSuite(private val context: Context) {
         }
     }
     
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
+
     /**
      * Cleanup test suite
      */
