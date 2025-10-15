@@ -314,4 +314,13 @@ class MigrationTool(private val context: Context) {
     fun cleanup() {
         scope.cancel()
     }
+
+    // Bug #147 fix: Add missing log functions
+    private fun logD(message: String) {
+        Logs.d(TAG, message)
+    }
+
+    private fun logE(message: String, throwable: Throwable? = null) {
+        Logs.e(TAG, message, throwable)
+    }
 }
