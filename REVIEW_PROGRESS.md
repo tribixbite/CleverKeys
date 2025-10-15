@@ -8327,3 +8327,85 @@ private fun logE(message: String, throwable: Throwable? = null) {
 
 **Assessment**: Excellent migration tool with comprehensive features. Critical compilation error fixed.
 
+
+---
+
+## File 36/251: LauncherActivity.kt (412 lines)
+
+**Status**: ✅ **FIXED** - 1 medium bug fixed, 2 minor issues documented
+
+### Bugs Found and Fixed
+
+**Bug #150 (MEDIUM)**: Unsafe cast in launch_imepicker - poor error handling
+- **Location**: Line 233 (original)
+- **Issue**: `getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager` uses unsafe cast
+- **Details**: getSystemService can return null, unsafe cast throws ClassCastException
+- **Original behavior**: Exception caught by try-catch but error message misleading ("Error launching IME picker" instead of "Service not available")
+- **Fix**: Changed to safe cast `as?` with explicit null check and clear error message
+- **Status**: ✅ FIXED
+
+### Additional Issues Identified (Not Fixed)
+
+**Bug #151 (LOW)**: Unnecessary coroutine usage in 4 functions
+- **Location**: Lines 216, 232, 248, 264
+- **Functions**: launch_imesettings, launch_imepicker, launch_neural_settings, launch_calibration
+- **Issue**: All use `scope.launch` for non-blocking operations (startActivity, showInputMethodPicker)
+- **Details**: These are onClick handlers already on main thread, coroutines add overhead without benefit
+- **Impact**: Tiny performance overhead, not harmful
+- **Status**: ⏳ DOCUMENTED (code smell, not critical)
+
+**Bug #152 (LOW)**: Hardcoded pixel padding in fallback UI
+- **Location**: Line 341
+- **Issue**: `setPadding(32, 32, 32, 32)` uses raw pixels instead of dp conversion
+- **Impact**: Inconsistent padding across screen densities
+- **Status**: ⏳ DOCUMENTED (same as bugs #143, #146)
+
+### Implementation Quality
+
+**Strengths:**
+1. **Comprehensive launcher**: Setup guidance, keyboard testing, settings access, key event monitoring
+2. **Animation management**: Handler-based animation cycling with proper lifecycle (start/stop)
+3. **Proper lifecycle**: Coroutine scope canceled in onDestroy (line 83)
+4. **Error handling**: All public functions wrapped in try-catch with user-friendly error messages
+5. **Fallback UI**: Programmatic UI creation if layout inflation fails (line 338-374)
+6. **API version checks**: Proper Build.VERSION.SDK_INT checks (lines 94, 368)
+7. **Resource ID lookup**: Safe resource identifier lookup with fallbacks
+8. **Neural testing**: Built-in neural prediction test with cleanup in finally block (line 326)
+9. **Key event listener**: Custom listener for API 28+ with modifier key display
+10. **Coroutine cleanup**: Proper resource cleanup in finally blocks
+
+**Features:**
+- Animated swipe demonstrations with automatic cycling
+- Interactive keyboard test area with key event display
+- One-click access to IME settings, keyboard picker, neural settings, calibration
+- Built-in neural prediction test with visual results
+- Modifier key detection (Alt, Shift, Ctrl, Meta)
+
+**Code Changes:**
+```kotlin
+// BEFORE (Bug #150 - UNSAFE CAST):
+fun launch_imepicker(view: View) {
+    scope.launch {
+        try {
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showInputMethodPicker()
+            // ❌ If service is null, ClassCastException with misleading error
+```
+
+```kotlin
+// AFTER (Bug #150 fix - SAFE CAST):
+fun launch_imepicker(view: View) {
+    scope.launch {
+        try {
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager
+            if (imm == null) {
+                Log.e(TAG, "Input method service not available")
+                showError("Keyboard service not available")
+                return@launch
+            }
+            imm.showInputMethodPicker()
+            // ✅ Clear error message if service unavailable
+```
+
+**Assessment**: Well-implemented launcher activity with comprehensive features, proper error handling, and good lifecycle management. One unsafe cast fixed.
+

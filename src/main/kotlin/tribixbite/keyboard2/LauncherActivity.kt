@@ -230,7 +230,13 @@ class LauncherActivity : Activity(), Handler.Callback {
     fun launch_imepicker(view: View) {
         scope.launch {
             try {
-                val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                // Bug #150 fix: Use safe cast to handle null service gracefully
+                val imm = getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager
+                if (imm == null) {
+                    Log.e(TAG, "Input method service not available")
+                    showError("Keyboard service not available")
+                    return@launch
+                }
                 imm.showInputMethodPicker()
                 Log.d(TAG, "Launched IME picker")
             } catch (e: Exception) {
