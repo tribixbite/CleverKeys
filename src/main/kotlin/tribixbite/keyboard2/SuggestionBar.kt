@@ -80,4 +80,8 @@ class SuggestionBar(context: Context) : LinearLayout(context) {
     fun setOnSuggestionSelectedListener(listener: (String) -> Unit) {
         onSuggestionSelected = listener
     }
+
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
 }
