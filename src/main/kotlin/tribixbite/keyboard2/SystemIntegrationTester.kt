@@ -434,4 +434,15 @@ class SystemIntegrationTester(private val context: Context) {
             false
         }
     }
+
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
+    }
+
+    private inline fun <T> measureTimeMillis(block: () -> T): Pair<T, Long> {
+        val startTime = System.currentTimeMillis()
+        val result = block()
+        val duration = System.currentTimeMillis() - startTime
+        return Pair(result, duration)
+    }
 }
