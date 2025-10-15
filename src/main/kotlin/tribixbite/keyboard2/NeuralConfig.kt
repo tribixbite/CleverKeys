@@ -42,7 +42,18 @@ class NeuralConfig(private val prefs: SharedPreferences) {
     
     /**
      * Copy current settings
+     *
+     * WARNING (Bug #154): This is NOT a true independent copy!
+     * The returned NeuralConfig shares the same SharedPreferences backing store,
+     * so changes to the "copy" will affect the original and vice versa.
+     *
+     * Currently unused in codebase. Consider removing or creating a proper
+     * data class snapshot if true independent copy is needed.
      */
+    @Deprecated(
+        message = "Not a true copy - shares same SharedPreferences backing store",
+        level = DeprecationLevel.WARNING
+    )
     fun copy(): NeuralConfig {
         val copy = NeuralConfig(prefs)
         copy.neuralPredictionEnabled = this.neuralPredictionEnabled
