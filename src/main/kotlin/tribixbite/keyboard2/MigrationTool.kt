@@ -4,20 +4,19 @@ import android.content.Context
 import android.content.SharedPreferences
 import kotlinx.coroutines.*
 import org.json.JSONObject
+import java.util.Locale
 
 /**
  * Migration tool for transitioning from Java to Kotlin CleverKeys
  * Preserves user settings, training data, and customizations
  */
 class MigrationTool(private val context: Context) {
-    
+
     companion object {
         private const val TAG = "MigrationTool"
         private const val JAVA_PACKAGE = "tribixbite.keyboard2"
         private const val MIGRATION_COMPLETED_KEY = "kotlin_migration_completed"
     }
-    
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     
     /**
      * Migration result
@@ -279,7 +278,7 @@ class MigrationTool(private val context: Context) {
         return buildString {
             appendLine("🔄 CleverKeys Migration Report")
             appendLine("Status: ${if (result.success) "✅ SUCCESS" else "❌ FAILURE"}")
-            appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date())}")
+            appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(java.util.Date())}")
             appendLine()
             
             appendLine("📊 Migration Statistics:")
@@ -306,13 +305,6 @@ class MigrationTool(private val context: Context) {
                 appendLine("   Please review errors and restore from backup if needed.")
             }
         }
-    }
-    
-    /**
-     * Cleanup migration tool
-     */
-    fun cleanup() {
-        scope.cancel()
     }
 
     // Bug #147 fix: Add missing log functions
