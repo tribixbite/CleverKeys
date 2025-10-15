@@ -8509,3 +8509,64 @@ override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
 
 **Assessment**: ✅ EXEMPLARY - Clean, well-documented utility class following Android best practices. No bugs, no issues.
 
+
+---
+
+## File 39/251: NeuralConfig.kt (96 lines)
+
+**Status**: ⚠️ **1 MEDIUM BUG** - copy() method doesn't create true independent copy
+
+### Bugs Found
+
+**Bug #154 (MEDIUM)**: copy() method shares same SharedPreferences backing store
+- **Location**: Lines 46-53
+- **Issue**: Creates new NeuralConfig with same `prefs` object, then copies values
+- **Problem**: Since properties are delegated to SharedPreferences, both "original" and "copy" read/write to the same backing store
+- **Code flow**:
+  ```kotlin
+  val copy = NeuralConfig(prefs)  // Same SharedPreferences!
+  copy.beamWidth = this.beamWidth  // Reads from prefs, writes to same prefs
+  ```
+- **Impact**: Changes to "copy" will modify "original" because they share the same SharedPreferences
+- **Expected behavior**: copy() should create independent snapshot that can be modified without affecting original
+- **Current usage**: Not used anywhere in codebase (grep found no calls to copy())
+- **Fix needed**: Either create data class without delegation, or document that this is not a true copy
+- **Status**: ⏳ DOCUMENTED (not used currently, but API is misleading)
+
+### Implementation Quality
+
+**Strengths:**
+1. **Clean property delegation**: Custom ReadWriteProperty implementations for automatic persistence
+2. **Type-safe properties**: BooleanPreference, IntPreference, FloatPreference delegate classes
+3. **Validation**: validate() method clamps values to acceptable ranges with coerceIn()
+4. **Range definitions**: Clear beamWidthRange (1..16), maxLengthRange (10..50), confidenceRange (0.0..1.0)
+5. **Reset functionality**: resetToDefaults() properly resets all values
+6. **Immediate persistence**: Each property setter calls apply() for async persistence
+7. **Inner classes**: Delegation classes have access to outer prefs instance
+
+**Property Delegation Pattern:**
+```kotlin
+// Declaration
+var beamWidth: Int by IntPreference("neural_beam_width", 8)
+
+// Inner class handles persistence
+private inner class IntPreference(...) : ReadWriteProperty<Any?, Int> {
+    override fun getValue(...): Int = prefs.getInt(key, defaultValue)
+    override fun setValue(..., value: Int) = prefs.edit().putInt(key, value).apply()
+}
+```
+
+**Why apply() is correct:**
+- Lines 66, 80, 94 use `apply()` for asynchronous persistence
+- This is Android best practice - faster than `commit()` 
+- Acceptable because config changes don't need immediate synchronous persistence
+
+**No Other Issues Found:**
+- ✅ Proper validation with coerceIn()
+- ✅ Sensible default values (beamWidth=8, maxLength=35, confidence=0.1)
+- ✅ Type-safe property access
+- ✅ Clean Kotlin property delegation pattern
+- ✅ No null safety issues
+
+**Assessment**: Well-implemented configuration class with clean Kotlin patterns. One misleading API (copy() method) that doesn't create true independent copy, but it's not used anywhere so impact is minimal.
+
