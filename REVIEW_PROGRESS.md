@@ -8447,3 +8447,65 @@ This is an **intentional stub file** with empty implementations:
 
 **Assessment**: ✅ SAFE STUB - Properly designed placeholder. Empty methods return correct default values (unchanged layouts). No bugs, no crashes. Could add TODO comments for clarity.
 
+
+---
+
+## File 38/251: NonScrollListView.kt (56 lines)
+
+**Status**: ✅ **PROPERLY IMPLEMENTED** - No bugs found
+
+### Implementation Quality
+
+**Purpose:**
+- A non-scrollable ListView for embedding inside ScrollView
+- Common Android pattern for settings screens
+- Properly credited: Dedaniya HirenKumar (StackOverflow)
+
+**Strengths:**
+1. **Clear documentation**: Explanation of purpose and technique (lines 10-17)
+2. **Complete constructors**: All three constructor signatures for flexibility
+   - Programmatic creation: `Context`
+   - XML inflation: `Context, AttributeSet?`
+   - XML with style: `Context, AttributeSet?, Int`
+3. **Safe null handling**: Uses `layoutParams?.let` (line 53)
+4. **Performance optimization**: Bit shift `shr 2` instead of division (line 44)
+5. **Proper inheritance**: Marked `open` for extensibility (line 19)
+6. **Commented code**: Explains the bit shift performance trick (line 44)
+
+**Implementation Details:**
+```kotlin
+// Override onMeasure to expand ListView to full content height
+override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    // Integer.MAX_VALUE shr 2 is performance-optimized division by 4
+    // Prevents overflow while allowing ListView to measure full content
+    val customHeightMeasureSpec = MeasureSpec.makeMeasureSpec(
+        Integer.MAX_VALUE shr 2,
+        MeasureSpec.AT_MOST
+    )
+    
+    super.onMeasure(widthMeasureSpec, customHeightMeasureSpec)
+    
+    // Update layout params to measured height (safe null check)
+    layoutParams?.let { params ->
+        params.height = measuredHeight
+    }
+}
+```
+
+**Why This Works:**
+- Normal ListView scrolls when content exceeds viewport
+- This forces ListView to measure at maximum height
+- Then sets layoutParams.height to actual content height
+- Result: ListView expands to show all items, parent ScrollView handles scrolling
+
+**No Issues Found:**
+- ✅ No unsafe casts
+- ✅ No null pointer risks
+- ✅ No hardcoded values
+- ✅ No resource leaks
+- ✅ Proper Android lifecycle
+- ✅ Well-documented
+- ✅ Properly attributed
+
+**Assessment**: ✅ EXEMPLARY - Clean, well-documented utility class following Android best practices. No bugs, no issues.
+
