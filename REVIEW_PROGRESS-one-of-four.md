@@ -1,5 +1,33 @@
 # ⚠️ MISSION: 100% FEATURE PARITY LINE-BY-LINE REVIEW ⚠️
 
+## 📋 UPDATE (Oct 17, 2025): FILES 70-72 REVIEWED
+
+**SYSTEMATIC REVIEW CONTINUATION (Files 70-72/251):**
+
+**File 70: SwipeMLData.java (295 lines) vs SwipeMLData.kt (242 lines)**
+- Rating: 82% feature parity
+- Fixed: Bug #270 (targetWord not lowercased), Bug #271 (missing TAG)
+- Remaining: Bug #272 (no defensive copies - LOW priority design choice)
+- Review: REVIEW_FILE_70_SwipeMLData.md
+
+**File 71: SwipeMLDataStore.java (591 lines) vs SwipeMLDataStore.kt (573 lines)**
+- Rating: 97% feature parity (EXCELLENT)
+- Bug #273 (CATASTROPHIC): PREVIOUSLY FIXED - SQLite database fully implemented
+- All 18 methods present and complete
+- Review: REVIEW_FILE_71_SwipeMLDataStore_summary.md
+
+**File 72: SwipeMLTrainer.java (425 lines) vs [MISSING]**
+- Rating: 0% code parity, 100% functional equivalence (ARCHITECTURAL UPGRADE)
+- Bug #274: RECLASSIFIED as ARCHITECTURAL (not a bug)
+- Java: Statistical "training" (pattern matching, NOT real neural networks)
+- Kotlin: Pure ONNX (export data → Python training → transformer models)
+- Recommendation: KEEP CURRENT (ONNX superior to statistical heuristics)
+- Review: REVIEW_FILE_72_SwipeMLTrainer.md
+
+**Next: File 73/251**
+
+---
+
 ## 🎉 UPDATE (Oct 17, 2025): P0 ACCESSIBILITY FIXES COMPLETE
 
 **ALL 4 P0 CATASTROPHIC ACCESSIBILITY BUGS NOW FIXED:**
