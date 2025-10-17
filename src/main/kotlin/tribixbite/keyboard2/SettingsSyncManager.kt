@@ -123,7 +123,7 @@ class SettingsSyncManager(private val context: Context) {
                     model = android.os.Build.MODEL,
                     androidVersion = android.os.Build.VERSION.SDK_INT,
                     appVersion = try {
-                        context.packageManager.getPackageInfo(context.packageName, 0).versionName
+                        context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "unknown"
                     } catch (e: Exception) {
                         "unknown"
                     }

@@ -95,29 +95,28 @@ class ScreenReaderManager(private val context: Context) {
 
     /**
      * Create accessibility node info for a specific key
+     * TODO: Fix function signature - Key doesn't have x/y/width/height properties
+     * TODO: Fix setParent call - parent parameter type mismatch
+     * This function is part of Bug #377 accessibility work and needs proper integration
      */
     fun createKeyAccessibilityNode(
         key: KeyboardData.Key,
-        parent: AccessibilityNodeInfo,
+        parentView: View,
+        keyBounds: android.graphics.Rect,
         viewId: Int
     ): AccessibilityNodeInfo {
         val node = AccessibilityNodeInfo.obtain()
 
         // Set parent and view ID
-        node.setParent(parent)
-        node.setSource(null, viewId)
+        node.setParent(parentView)
+        node.setSource(parentView, viewId)
 
         // Set bounds (key position)
-        val bounds = android.graphics.Rect(
-            key.x.toInt(),
-            key.y.toInt(),
-            (key.x + key.width).toInt(),
-            (key.y + key.height).toInt()
-        )
-        node.setBoundsInParent(bounds)
+        node.setBoundsInParent(keyBounds)
 
         // Set content description based on key type
-        node.contentDescription = getKeyDescription(key.key0)
+        val keyValue = key.keys[0] ?: KeyValue.CharKey(' ', " ")
+        node.contentDescription = getKeyDescription(keyValue)
 
         // Mark as clickable
         node.isClickable = true

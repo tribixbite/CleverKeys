@@ -1,6 +1,8 @@
 package tribixbite.keyboard2.ml
 
 import android.graphics.PointF
+import kotlin.math.pow
+import kotlin.math.sqrt
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.*
@@ -222,9 +224,9 @@ data class SwipeMLData(
         // Calculate straightness ratio
         val start = tracePoints[0]
         val end = tracePoints[tracePoints.size - 1]
-        val directDistance = kotlin.math.sqrt(
-            kotlin.math.pow(end.x - start.x, 2) + kotlin.math.pow(end.y - start.y, 2)
-        )
+        val dx = (end.x - start.x).toDouble()
+        val dy = (end.y - start.y).toDouble()
+        val directDistance = sqrt(dx * dx + dy * dy).toFloat()
         val straightnessRatio = if (totalDistance > 0) directDistance / totalDistance else 0f
 
         return SwipeStatistics(
