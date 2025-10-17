@@ -51,6 +51,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     private var configManager: ConfigurationManager? = null
     private var typingPredictionEngine: TypingPredictionEngine? = null
     private var voiceGuidanceEngine: VoiceGuidanceEngine? = null
+    private var screenReaderManager: ScreenReaderManager? = null
     
     // Configuration and state
     private var config: Config? = null
@@ -224,6 +225,17 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
                 } else {
                     logD("Voice guidance disabled in settings")
                 }
+
+                // Initialize screen reader manager (Bug #377 CATASTROPHIC)
+                screenReaderManager = ScreenReaderManager(this@CleverKeysService).apply {
+                    // Update state to detect TalkBack
+                    updateScreenReaderState()
+                    if (isScreenReaderActive()) {
+                        logD("✅ Screen reader (TalkBack) detected and initialized")
+                    } else {
+                        logD("Screen reader not active")
+                    }
+                }
             } catch (e: Exception) {
                 logE("Failed to initialize accessibility engines", e)
             }
@@ -238,6 +250,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             receiver = object : KeyEventHandler.IReceiver {
             override fun getInputConnection(): InputConnection? = currentInputConnection
             override fun getCurrentInputEditorInfo(): EditorInfo? = currentInputEditorInfo
+            override fun getKeyboardView(): android.view.View? = keyboardView
             override fun performVibration() {
                 if (config?.vibrate_custom == true) {
                     keyboardView?.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
@@ -294,7 +307,8 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
                 }
             },
             typingPredictionEngine = typingPredictionEngine,
-            voiceGuidanceEngine = voiceGuidanceEngine
+            voiceGuidanceEngine = voiceGuidanceEngine,
+            screenReaderManager = screenReaderManager
         )
     }
     

@@ -17,11 +17,13 @@ import tribixbite.keyboard2.R
  * Kotlin implementation with null safety and modern patterns
  * Includes tap typing prediction integration (Fix for Bug #359)
  * Includes voice guidance for blind users (Fix for Bug #368)
+ * Includes screen reader integration for TalkBack (Fix for Bug #377)
  */
 class KeyEventHandler(
     private val receiver: IReceiver,
     private val typingPredictionEngine: TypingPredictionEngine? = null,
-    private val voiceGuidanceEngine: VoiceGuidanceEngine? = null
+    private val voiceGuidanceEngine: VoiceGuidanceEngine? = null,
+    private val screenReaderManager: ScreenReaderManager? = null
 ) : Config.IKeyEventHandler, ClipboardPasteCallback {
 
     companion object {
@@ -47,6 +49,7 @@ class KeyEventHandler(
     interface IReceiver {
         fun getInputConnection(): InputConnection?
         fun getCurrentInputEditorInfo(): EditorInfo?
+        fun getKeyboardView(): android.view.View? // For screen reader announcements
         fun performVibration()
         fun commitText(text: String)
         fun performAction(action: Int)
@@ -62,6 +65,11 @@ class KeyEventHandler(
 
         // Voice guidance for blind users (Fix for Bug #368)
         voiceGuidanceEngine?.speakKey(value)
+
+        // Screen reader announcement for TalkBack (Fix for Bug #377)
+        receiver.getKeyboardView()?.let { view ->
+            screenReaderManager?.announceKeyPress(view, value)
+        }
 
         when (value) {
             is KeyValue.CharKey -> handleCharacterKey(value.char, is_swipe)
@@ -476,6 +484,11 @@ class KeyEventHandler(
 
         // Announce suggestions for blind users (Fix for Bug #368)
         voiceGuidanceEngine?.announceSuggestions(suggestionWords)
+
+        // Announce suggestions for screen reader users (Fix for Bug #377)
+        receiver.getKeyboardView()?.let { view ->
+            screenReaderManager?.announceSuggestions(view, suggestionWords)
+        }
     }
 
     /**
