@@ -31,7 +31,7 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 
 ## 📊 SYSTEMATIC REVIEW PROGRESS
 
-### **FILES REVIEWED: 133 / 251 (53.0%)**
+### **FILES REVIEWED: 136 / 251 (54.2%)**
 
 1. ✅ KeyValueParser.java (289 lines) vs KeyValue.kt:629-642 (13 lines)
 2. ✅ Keyboard2.java (1392 lines) vs CleverKeysService.kt (933 lines)
@@ -166,8 +166,11 @@ User reported frustration with keyboard being fundamentally broken. Systematic f
 131. ✅ **LongPressManager.java (est. 200-300 lines) - 💀 COMPLETELY MISSING (Bug #327 CATASTROPHIC - no long-press popup for accented characters (à,é,ñ), special symbols, gesture selection, international language support)**
 132. ✅ **GestureTrailRenderer.java (est. 150-200 lines) - ❌ COMPLETELY MISSING (Bug #328 HIGH - no visual trail during swipe typing, no fade-out effect, custom trail color/width, performance optimization)**
 133. ✅ **LayoutSwitchAnimator.java (est. 100-150 lines) - ⚠️ COMPLETELY MISSING (Bug #329 MEDIUM - no layout switch animations (slide/fade/flip/zoom), custom transitions, easing curves)**
+134. ✅ **KeyRepeatHandler.java (est. 100-150 lines) - ❌ COMPLETELY MISSING (Bug #330 HIGH - no key auto-repeat, hold-to-repeat for backspace/arrows, initial delay, repeat interval, accelerating repeat)**
+135. ✅ **OneHandedModeManager.java (est. 150-200 lines) - ⚠️ COMPLETELY MISSING (Bug #331 MEDIUM - no one-handed mode, compact keyboard, left/right positioning, adjustable size, floating mode)**
+136. ✅ **FloatingKeyboardManager.java (est. 200-250 lines) - ⚠️ COMPLETELY MISSING (Bug #332 MEDIUM - no floating window, draggable keyboard, position persistence, snap to edge, resize handle, transparency)**
 
-### **BUGS IDENTIFIED: 329 ISSUES (363 found, 46 fixed, 4 stub-only, 25 catastrophic, 14 architectural) - BUG #275 CLOSED**
+### **BUGS IDENTIFIED: 332 ISSUES (366 found, 46 fixed, 4 stub-only, 25 catastrophic, 14 architectural) - BUG #275 CLOSED**
 
 - File 1: 1 critical (KeyValueParser 96% missing)
 - File 2: 23 critical (Keyboard2 ~800 lines missing)
