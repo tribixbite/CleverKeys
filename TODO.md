@@ -21,15 +21,16 @@
 - Restored batched processing (30-50% performance improvement)
 - Status: ✅ FIXED - batched inference now enabled
 
-**Priority 2: Test Calibration Pipeline**
-- Now that beam search works, test SwipeCalibrationActivity
-- Verify calibration produces accurate predictions
-- User reported "calibration prediction yields gibberish" - should be fixed now
+**⏸️ Priority 2: Test Calibration Pipeline (BLOCKED)**
+- ❌ **BUILD BROKEN** - ~50 compilation errors from Oct 17 accessibility features
+- Missing imports: Bundle, pow, ComposeKeyData references
+- Files affected: CleverKeysService, ScreenReaderManager, VoiceGuidanceEngine, SwipeMLData, others
+- Fix #48 changes are correct - errors are pre-existing
+- **Action Required**: Fix compilation errors before testing can proceed
 
-**Priority 3: Test Normal Keyboard Pipeline**
-- Test swipe typing in actual keyboard (CleverKeysService)
-- Verify predictions appear in SuggestionBar
-- Confirm latency is acceptable (< 200ms)
+**Priority 3: Test Normal Keyboard Pipeline (BLOCKED)**
+- Blocked by build failures
+- Cannot test until compilation succeeds
 
 **Verified IDENTICAL Between CLI and Android:**
 - ✅ Tensor values (hex dumps match exactly for all 10 tests)
