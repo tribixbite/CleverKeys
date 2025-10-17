@@ -49,6 +49,8 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     private var predictionPipeline: NeuralPredictionPipeline? = null
     private var performanceProfiler: PerformanceProfiler? = null
     private var configManager: ConfigurationManager? = null
+    private var typingPredictionEngine: TypingPredictionEngine? = null
+    private var voiceGuidanceEngine: VoiceGuidanceEngine? = null
     
     // Configuration and state
     private var config: Config? = null
@@ -62,6 +64,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             // Initialize components in dependency order
             initializeConfiguration()
             loadDefaultKeyboardLayout()
+            initializeAccessibilityEngines()
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -97,6 +100,8 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         predictionPipeline?.cleanup()
         performanceProfiler?.cleanup()
         configManager?.cleanup()
+        typingPredictionEngine?.cleanup()
+        voiceGuidanceEngine?.cleanup()
     }
     
     /**
@@ -187,12 +192,50 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         performanceProfiler = PerformanceProfiler(this)
         logD("Performance profiler initialized")
     }
-    
+
+    /**
+     * Initialize accessibility engines (Fix for Bugs #359, #368)
+     */
+    private fun initializeAccessibilityEngines() {
+        serviceScope.launch {
+            try {
+                // Initialize tap typing prediction engine (Bug #359 CATASTROPHIC)
+                typingPredictionEngine = TypingPredictionEngine(this@CleverKeysService).apply {
+                    val success = initialize()
+                    if (success) {
+                        logD("✅ Tap typing prediction engine initialized")
+                    } else {
+                        logE("Failed to initialize tap typing prediction engine")
+                    }
+                }
+
+                // Initialize voice guidance engine (Bug #368 CATASTROPHIC)
+                val prefs = DirectBootAwarePreferences.get_shared_preferences(this@CleverKeysService)
+                if (prefs.getBoolean("voice_guidance_enabled", false)) {
+                    voiceGuidanceEngine = VoiceGuidanceEngine(this@CleverKeysService).apply {
+                        initialize { success ->
+                            if (success) {
+                                logD("✅ Voice guidance engine initialized")
+                            } else {
+                                logE("Failed to initialize voice guidance engine")
+                            }
+                        }
+                    }
+                } else {
+                    logD("Voice guidance disabled in settings")
+                }
+            } catch (e: Exception) {
+                logE("Failed to initialize accessibility engines", e)
+            }
+        }
+    }
+
     /**
      * Initialize key event handler
      */
     private fun initializeKeyEventHandler() {
-        keyEventHandler = KeyEventHandler(object : KeyEventHandler.IReceiver {
+        keyEventHandler = KeyEventHandler(
+            receiver = object : KeyEventHandler.IReceiver {
             override fun getInputConnection(): InputConnection? = currentInputConnection
             override fun getCurrentInputEditorInfo(): EditorInfo? = currentInputEditorInfo
             override fun performVibration() {
@@ -249,8 +292,10 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
                 } catch (e: Exception) {
                     logE("Failed to open settings", e)
                 }
-            }
-        })
+            },
+            typingPredictionEngine = typingPredictionEngine,
+            voiceGuidanceEngine = voiceGuidanceEngine
+        )
     }
     
     /**

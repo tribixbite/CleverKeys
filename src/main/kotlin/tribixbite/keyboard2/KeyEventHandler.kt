@@ -16,10 +16,12 @@ import tribixbite.keyboard2.R
  * Key event handler for processing keyboard input
  * Kotlin implementation with null safety and modern patterns
  * Includes tap typing prediction integration (Fix for Bug #359)
+ * Includes voice guidance for blind users (Fix for Bug #368)
  */
 class KeyEventHandler(
     private val receiver: IReceiver,
-    private val typingPredictionEngine: TypingPredictionEngine? = null
+    private val typingPredictionEngine: TypingPredictionEngine? = null,
+    private val voiceGuidanceEngine: VoiceGuidanceEngine? = null
 ) : Config.IKeyEventHandler, ClipboardPasteCallback {
 
     companion object {
@@ -57,6 +59,9 @@ class KeyEventHandler(
     
     override fun key_down(value: KeyValue, is_swipe: Boolean) {
         logD("Key down: $value (swipe: $is_swipe)")
+
+        // Voice guidance for blind users (Fix for Bug #368)
+        voiceGuidanceEngine?.speakKey(value)
 
         when (value) {
             is KeyValue.CharKey -> handleCharacterKey(value.char, is_swipe)
@@ -468,6 +473,9 @@ class KeyEventHandler(
         // Update suggestion bar
         val suggestionWords = predictions.map { it.word }
         receiver.updateSuggestions(suggestionWords)
+
+        // Announce suggestions for blind users (Fix for Bug #368)
+        voiceGuidanceEngine?.announceSuggestions(suggestionWords)
     }
 
     /**
