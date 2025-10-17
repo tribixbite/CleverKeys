@@ -15,19 +15,29 @@ import tribixbite.keyboard2.R
 /**
  * Key event handler for processing keyboard input
  * Kotlin implementation with null safety and modern patterns
+ * Includes tap typing prediction integration (Fix for Bug #359)
  */
-class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler, ClipboardPasteCallback {
-    
+class KeyEventHandler(
+    private val receiver: IReceiver,
+    private val typingPredictionEngine: TypingPredictionEngine? = null
+) : Config.IKeyEventHandler, ClipboardPasteCallback {
+
     companion object {
         private const val TAG = "KeyEventHandler"
+        private const val MAX_CONTEXT_WORDS = 10
     }
-    
+
     // State management
     private var shouldCapitalizeNext = true
     private var mods = Pointers.Modifiers.EMPTY
     private var metaState = 0
     private var moveCursorForceFallback = false
     private var inputConnection: InputConnection? = null
+
+    // Tap typing prediction state (Fix for Bug #359)
+    private var currentWord = StringBuilder()
+    private val contextWords = mutableListOf<String>()
+    private var lastPredictionUpdate = 0L
     
     /**
      * Receiver interface for key events
@@ -42,6 +52,7 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
         fun switchToNumericLayout()
         fun switchToEmojiLayout()
         fun openSettings()
+        fun updateSuggestions(suggestions: List<String>) {} // Default empty implementation for tap typing predictions
     }
     
     override fun key_down(value: KeyValue, is_swipe: Boolean) {
@@ -77,7 +88,7 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
      */
     private fun handleCharacterKey(char: Char, isSwipe: Boolean) {
         val inputConnection = receiver.getInputConnection() ?: return
-        
+
         val finalChar = if (shouldCapitalizeNext && char.isLetter()) {
             char.uppercaseChar()
         } else {
@@ -89,6 +100,18 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
         // Update capitalization state
         shouldCapitalizeNext = finalChar in ".!?"
         receiver.performVibration()
+
+        // Update tap typing predictions (Fix for Bug #359)
+        if (!isSwipe && typingPredictionEngine != null) {
+            if (finalChar.isLetterOrDigit() || finalChar == '\'') {
+                // Add to current word
+                currentWord.append(finalChar.lowercaseChar())
+                updateTapTypingPredictions()
+            } else if (finalChar.isWhitespace() || finalChar in ".,!?;:") {
+                // Word completed - add to context
+                finishCurrentWord()
+            }
+        }
     }
     
     /**
@@ -215,17 +238,30 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
         if (!selectedText.isNullOrEmpty()) {
             inputConnection.commitText("", 1)
             receiver.performVibration()
+            // Clear current word on selection delete
+            currentWord.clear()
+            updateTapTypingPredictions()
             return
         }
 
         // Check for ctrl modifier to delete whole word
         if (hasModifier(KeyValue.Modifier.CTRL)) {
             deleteWord(inputConnection)
+            currentWord.clear()
         } else {
             inputConnection.deleteSurroundingText(1, 0)
+            // Remove last character from current word
+            if (currentWord.isNotEmpty()) {
+                currentWord.deleteCharAt(currentWord.length - 1)
+            }
         }
 
         receiver.performVibration()
+
+        // Update tap typing predictions (Fix for Bug #359)
+        if (typingPredictionEngine != null) {
+            updateTapTypingPredictions()
+        }
     }
 
     /**
@@ -305,6 +341,11 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
         inputConnection.commitText(" ", 1)
         // Don't change capitalization state after space
         receiver.performVibration()
+
+        // Finish current word and update predictions (Fix for Bug #359)
+        if (typingPredictionEngine != null) {
+            finishCurrentWord()
+        }
     }
     
     /**
@@ -399,6 +440,80 @@ class KeyEventHandler(private val receiver: IReceiver) : Config.IKeyEventHandler
     override fun started(info: android.view.inputmethod.EditorInfo?) {
         // Initialize keyboard state for new input session
         inputConnection = receiver.getInputConnection()
+    }
+
+    // Tap typing prediction helpers (Fix for Bug #359)
+
+    /**
+     * Update tap typing predictions based on current input
+     */
+    private fun updateTapTypingPredictions() {
+        val engine = typingPredictionEngine ?: return
+
+        // Throttle updates (max once per 50ms to avoid lag)
+        val now = System.currentTimeMillis()
+        if (now - lastPredictionUpdate < 50) return
+        lastPredictionUpdate = now
+
+        val predictions = if (currentWord.isNotEmpty()) {
+            // Get autocomplete + context predictions
+            val contextString = contextWords.takeLast(2).joinToString(" ")
+            engine.predictWithPrefix(contextString, currentWord.toString(), 5)
+        } else {
+            // Get next-word predictions based on context
+            val contextString = contextWords.takeLast(2).joinToString(" ")
+            engine.predictNextWords(contextString, 5)
+        }
+
+        // Update suggestion bar
+        val suggestionWords = predictions.map { it.word }
+        receiver.updateSuggestions(suggestionWords)
+    }
+
+    /**
+     * Finish current word and add to context
+     */
+    private fun finishCurrentWord() {
+        if (currentWord.isNotEmpty()) {
+            // Add completed word to context
+            contextWords.add(currentWord.toString())
+
+            // Limit context size
+            if (contextWords.size > MAX_CONTEXT_WORDS) {
+                contextWords.removeAt(0)
+            }
+
+            // Clear current word
+            currentWord.clear()
+        }
+
+        // Update predictions for next word
+        updateTapTypingPredictions()
+    }
+
+    /**
+     * Accept a prediction suggestion
+     */
+    fun acceptSuggestion(suggestion: String) {
+        val inputConnection = receiver.getInputConnection() ?: return
+
+        // Delete current word
+        if (currentWord.isNotEmpty()) {
+            inputConnection.deleteSurroundingText(currentWord.length, 0)
+            currentWord.clear()
+        }
+
+        // Commit suggestion
+        inputConnection.commitText(suggestion, 1)
+
+        // Add to context
+        contextWords.add(suggestion)
+        if (contextWords.size > MAX_CONTEXT_WORDS) {
+            contextWords.removeAt(0)
+        }
+
+        // Update predictions for next word
+        updateTapTypingPredictions()
     }
 }
 
