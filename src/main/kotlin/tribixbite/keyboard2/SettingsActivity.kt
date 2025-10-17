@@ -61,7 +61,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var debugEnabled by mutableStateOf(false)
     private var clipboardHistoryEnabled by mutableStateOf(true)
     private var autoCapitalizationEnabled by mutableStateOf(true)
-    
+
+    // Accessibility settings (Bug #373, #368, #377)
+    private var stickyKeysEnabled by mutableStateOf(false)
+    private var stickyKeysTimeout by mutableStateOf(5000) // milliseconds
+    private var voiceGuidanceEnabled by mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -161,6 +166,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
             "auto_capitalization_enabled" -> {
                 autoCapitalizationEnabled = prefs.getBoolean(key, true)
+            }
+            "sticky_keys_enabled" -> {
+                stickyKeysEnabled = prefs.getBoolean(key, false)
+            }
+            "sticky_keys_timeout_ms" -> {
+                stickyKeysTimeout = prefs.getInt(key, 5000)
+            }
+            "voice_guidance_enabled" -> {
+                voiceGuidanceEnabled = prefs.getBoolean(key, false)
             }
         }
     }
@@ -312,6 +326,58 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         vibrationEnabled = it
                         saveSetting("vibration_enabled", it)
                     }
+                )
+            }
+
+            // Accessibility Section (Fix for Bug #373, #368, #377)
+            SettingsSection("♿ Accessibility") {
+                SettingsSwitch(
+                    title = "Sticky Keys",
+                    description = "Enable single-handed typing with modifier latching (OFF → LATCHED → LOCKED)",
+                    checked = stickyKeysEnabled,
+                    onCheckedChange = {
+                        stickyKeysEnabled = it
+                        saveSetting("sticky_keys_enabled", it)
+                    }
+                )
+
+                if (stickyKeysEnabled) {
+                    SettingsSlider(
+                        title = "Sticky Keys Timeout",
+                        description = "Auto-release delay for latched modifiers (1-10 seconds)",
+                        value = (stickyKeysTimeout / 1000f),
+                        valueRange = 1f..10f,
+                        steps = 9,
+                        onValueChange = {
+                            stickyKeysTimeout = (it * 1000).toInt()
+                            saveSetting("sticky_keys_timeout_ms", stickyKeysTimeout)
+                        },
+                        displayValue = "${stickyKeysTimeout / 1000}s"
+                    )
+                }
+
+                SettingsSwitch(
+                    title = "Voice Guidance",
+                    description = "Speak keys aloud for blind users (requires TTS)",
+                    checked = voiceGuidanceEnabled,
+                    onCheckedChange = {
+                        voiceGuidanceEnabled = it
+                        saveSetting("voice_guidance_enabled", it)
+
+                        // Show restart prompt
+                        if (it) {
+                            Toast.makeText(this@SettingsActivity,
+                                "Voice guidance will activate on keyboard restart",
+                                Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+
+                Text(
+                    text = "✓ Screen Reader (TalkBack) support is always enabled",
+                    fontSize = 12.sp,
+                    color = ComposeColor.Gray,
+                    modifier = Modifier.padding(top = 8.dp)
                 )
             }
 
@@ -576,6 +642,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         debugEnabled = prefs.getBoolean("debug_enabled", false)
         clipboardHistoryEnabled = prefs.getBoolean("clipboard_history_enabled", true)
         autoCapitalizationEnabled = prefs.getBoolean("auto_capitalization_enabled", true)
+        stickyKeysEnabled = prefs.getBoolean("sticky_keys_enabled", false)
+        stickyKeysTimeout = prefs.getInt("sticky_keys_timeout_ms", 5000)
+        voiceGuidanceEnabled = prefs.getBoolean("voice_guidance_enabled", false)
     }
 
     private fun saveSetting(key: String, value: Any) {
@@ -686,6 +755,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     editor.putBoolean("debug_enabled", false)
                     editor.putBoolean("clipboard_history_enabled", true)
                     editor.putBoolean("auto_capitalization_enabled", true)
+                    editor.putBoolean("sticky_keys_enabled", false)
+                    editor.putInt("sticky_keys_timeout_ms", 5000)
+                    editor.putBoolean("voice_guidance_enabled", false)
 
                     editor.apply()
 
