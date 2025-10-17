@@ -1,0 +1,19 @@
+Warning: Sequence collide: 'ng = ŋ' and 'ng~ = n͠g'
+Warning: Sequence collide: 'Ij = Ĳ' and 'Ij = Ĳ'
+Warning: Sequence C+C = ℂ has no lower case equivalent C+c (but c+c = č exists)
+Warning: Sequence C+E = ₠ has no lower case equivalent C+e (but c+e = ě exists)
+Warning: Sequence C+O = © has no lower case equivalent C+o (but c+o = ǒ exists)
+Warning: Sequence F+U = 🖕 has no lower case equivalent F+u
+Warning: Sequence O+A = Ⓐ has no lower case equivalent O+a (but o+a = å exists)
+Warning: Sequence O+Y = ☮ has no lower case equivalent O+y (but o+y = ẙ exists)
+Warning: Sequence P+P = ¶ has no lower case equivalent P+p
+Warning: Sequence R+O = ® has no lower case equivalent R+o
+Warning: Sequence U+A = Ă is not the same as U+a = ă (but u+a = ă exists)
+Warning: Sequence U+E = Ĕ is not the same as U+e = ĕ (but u+e = ĕ exists)
+Warning: Sequence U+G = Ğ is not the same as U+g = ğ (but u+g = ğ exists)
+Warning: Sequence U+I = Ĭ is not the same as U+i = ĭ (but u+i = ĭ exists)
+Warning: Sequence U+O = Ŏ is not the same as U+o = ŏ (but u+o = ŏ exists)
+Warning: Sequence U+U = Ŭ is not the same as U+u = ŭ (but u+u = ŭ exists)
+✅ Generated ComposeKeyData.kt: 4050 sequences → 8659 states
+   Entry points: 33 (accent_aigu, accent_arrows, accent_bar, accent_box, accent_caron...)
+   Dropped 548 sequences, 16 warnings

@@ -65,6 +65,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             // Initialize components in dependency order
             initializeConfiguration()
             loadDefaultKeyboardLayout()
+            initializeComposeKeyData()
             initializeAccessibilityEngines()
             initializeKeyEventHandler()
             initializePerformanceProfiler()
@@ -402,6 +403,20 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             }
         } catch (e: Exception) {
             logE("Failed to load keyboard layout", e)
+        }
+    }
+
+    /**
+     * Initialize ComposeKeyData from binary assets file
+     * Must be called after configuration is initialized
+     */
+    private fun initializeComposeKeyData() {
+        try {
+            ComposeKeyData.initialize(this)
+            logD("✅ ComposeKeyData initialized (${ComposeKeyData.states.size} states)")
+        } catch (e: Exception) {
+            logE("Failed to initialize ComposeKeyData", e)
+            // Non-critical - compose key feature will be unavailable
         }
     }
 
