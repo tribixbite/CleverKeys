@@ -305,7 +305,8 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
                 } catch (e: Exception) {
                     logE("Failed to open settings", e)
                 }
-            },
+            }
+        },
             typingPredictionEngine = typingPredictionEngine,
             voiceGuidanceEngine = voiceGuidanceEngine,
             screenReaderManager = screenReaderManager
