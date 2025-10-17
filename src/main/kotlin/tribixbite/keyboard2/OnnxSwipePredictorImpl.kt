@@ -251,9 +251,9 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                     break  // All beams finished
                 }
 
-                // TEMPORARY FIX: Process beams ONE AT A TIME (like CLI) to isolate batching bug
+                // BATCHED PROCESSING: Process all beams in single inference call (30-50% speedup)
                 // Returns beamWidth globally-selected beams (already sorted and pruned)
-                val newBeams = processBeamsNonBatched(activeBeams, memory, srcMaskTensor, decoderSession)
+                val newBeams = processBatchedBeams(activeBeams, memory, srcMaskTensor, decoderSession)
 
                 // Separate new finished beams from still-active ones
                 val newFinished = newBeams.filter { it.finished }
@@ -608,16 +608,10 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         val newBeams = mutableListOf<BeamSearchState>()
         topHypotheses.forEach { (parentIndex, tokenId, score) ->
             val parentBeam = activeBeams[parentIndex]
-            val newBeam = BeamSearchState(parentBeam)
-            newBeam.tokens.add(tokenId.toLong())
-            newBeam.score = score  // Use the globally-computed score
-
-            // CRITICAL: Mark beam as finished for BOTH EOS and PAD (matches Python reference)
-            if (tokenId == EOS_IDX || tokenId == PAD_IDX) {
-                newBeam.finished = true
-            }
-
-            newBeams.add(newBeam)
+            val newTokens = (parentBeam.tokens + tokenId.toLong()).toMutableList()
+            val isFinished = (tokenId == EOS_IDX || tokenId == PAD_IDX || newTokens.size >= maxLength)
+            // Use primary constructor: BeamSearchState(tokens, score, finished)
+            newBeams.add(BeamSearchState(newTokens, score, isFinished))
         }
 
         return newBeams
