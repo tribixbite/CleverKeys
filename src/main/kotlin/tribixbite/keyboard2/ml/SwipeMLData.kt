@@ -8,12 +8,12 @@ import java.util.*
 /**
  * ML data model for swipe typing training data
  * Captures normalized swipe traces with metadata for neural network training
- * 
+ *
  * Kotlin data class with JSON serialization and builder pattern
  */
 data class SwipeMLData(
     val traceId: String = UUID.randomUUID().toString(),
-    val targetWord: String,
+    private val _targetWord: String,
     val timestampUtc: Long = System.currentTimeMillis(),
     val screenWidthPx: Int,
     val screenHeightPx: Int,
@@ -23,7 +23,56 @@ data class SwipeMLData(
     val registeredKeys: MutableList<String> = mutableListOf(),
     var keyboardOffsetY: Int = 0
 ) {
-    
+
+    companion object {
+        private const val TAG = "SwipeMLData"
+
+        /**
+         * Create from JSON object
+         */
+        fun fromJson(json: JSONObject): SwipeMLData {
+            val metadata = json.getJSONObject("metadata")
+
+            val data = SwipeMLData(
+                traceId = json.getString("trace_id"),
+                _targetWord = json.getString("target_word"),
+                timestampUtc = metadata.getLong("timestamp_utc"),
+                screenWidthPx = metadata.getInt("screen_width_px"),
+                screenHeightPx = metadata.getInt("screen_height_px"),
+                keyboardHeightPx = metadata.getInt("keyboard_height_px"),
+                collectionSource = metadata.getString("collection_source")
+            )
+
+            // Load trace points
+            val pointsArray = json.getJSONArray("trace_points")
+            for (i in 0 until pointsArray.length()) {
+                val point = pointsArray.getJSONObject(i)
+                data.tracePoints.add(TracePoint(
+                    x = point.getDouble("x").toFloat(),
+                    y = point.getDouble("y").toFloat(),
+                    tDeltaMs = point.getLong("t_delta_ms")
+                ))
+            }
+
+            // Load registered keys
+            val keysArray = json.getJSONArray("registered_keys")
+            for (i in 0 until keysArray.length()) {
+                data.registeredKeys.add(keysArray.getString(i))
+            }
+
+            if (metadata.has("keyboard_offset_y")) {
+                data.keyboardOffsetY = metadata.getInt("keyboard_offset_y")
+            }
+
+            return data
+        }
+    }
+
+    /**
+     * Target word in lowercase for ML consistency (Fix for Bug #270)
+     */
+    val targetWord: String = _targetWord.lowercase()
+
     /**
      * Normalized trace point with timing
      */
@@ -197,46 +246,4 @@ data class SwipeMLData(
         val straightnessRatio: Float,
         val keyCount: Int
     )
-
-    companion object {
-        /**
-         * Create from JSON object
-         */
-        fun fromJson(json: JSONObject): SwipeMLData {
-            val metadata = json.getJSONObject("metadata")
-            
-            val data = SwipeMLData(
-                traceId = json.getString("trace_id"),
-                targetWord = json.getString("target_word"),
-                timestampUtc = metadata.getLong("timestamp_utc"),
-                screenWidthPx = metadata.getInt("screen_width_px"),
-                screenHeightPx = metadata.getInt("screen_height_px"),
-                keyboardHeightPx = metadata.getInt("keyboard_height_px"),
-                collectionSource = metadata.getString("collection_source")
-            )
-            
-            // Load trace points
-            val pointsArray = json.getJSONArray("trace_points")
-            for (i in 0 until pointsArray.length()) {
-                val point = pointsArray.getJSONObject(i)
-                data.tracePoints.add(TracePoint(
-                    x = point.getDouble("x").toFloat(),
-                    y = point.getDouble("y").toFloat(),
-                    tDeltaMs = point.getLong("t_delta_ms")
-                ))
-            }
-            
-            // Load registered keys
-            val keysArray = json.getJSONArray("registered_keys")
-            for (i in 0 until keysArray.length()) {
-                data.registeredKeys.add(keysArray.getString(i))
-            }
-            
-            if (metadata.has("keyboard_offset_y")) {
-                data.keyboardOffsetY = metadata.getInt("keyboard_offset_y")
-            }
-            
-            return data
-        }
-    }
 }
