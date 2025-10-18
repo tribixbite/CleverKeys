@@ -1,5 +1,25 @@
 # CLAUDE.md - CleverKeys Development Context
 
+## 🚨 **SYSTEMATIC REVIEW INSTRUCTIONS - ALWAYS CHECK FIRST!**
+
+**BEFORE STARTING ANY SESSION:**
+1. **CHECK @CURRENT_SESSION_STATUS.md** - Shows Files 1-77/251 reviewed (30.7% complete)
+2. **CHECK @REVIEW_PROGRESS-one-of-four.md** - Contains detailed file-by-file comparison results
+3. **NOTE**: Additional review documents exist:
+   - REVIEW_PROGRESS-two-of-four.md
+   - REVIEW_PROGRESS-three-of-four.md
+   - REVIEW_PROGRESS-four-of-four.md
+4. **PROCEED** with systematic Java-to-Kotlin feature parity review starting from next unreviewed file
+5. **FIX SIMULTANEOUSLY** when bugs are found that can be fixed immediately (don't just document)
+
+**REVIEW PROCESS:**
+- Compare Java file vs Kotlin equivalent line-by-line
+- Document missing features, architectural changes, bugs
+- Classify as: COMPLETE, MISSING, ARCHITECTURAL REPLACEMENT, STUB
+- Create REVIEW_FILE_XX_FileName.md for each file reviewed
+- Update CURRENT_SESSION_STATUS.md with progress
+- Commit after each file review completion
+
 ## 🚨 CRITICAL DEVELOPMENT PRINCIPLES
 
 **IMPLEMENTATION STANDARDS (PERMANENT MEMORY):**
@@ -26,10 +46,10 @@ CleverKeys is a **complete Kotlin rewrite** of Unexpected Keyboard featuring:
 - **Reactive programming** with coroutines and Flow streams
 - **Enterprise-grade** error handling and validation
 
-## 📊 SYSTEMATIC REVIEW STATUS (Latest: Oct 15, 2025)
+## 📊 SYSTEMATIC REVIEW STATUS (Latest: Oct 18, 2025)
 
 **Java-to-Kotlin Comparison Review:**
-- **Java Files Reviewed**: 69/71 (97.2% complete)
+- **Java Files Reviewed**: 77/251 (30.7% complete)
 - **Total Bugs Documented**: 265 (see REVIEW_PROGRESS-four-of-four.md)
 - **Key Findings**:
   - ✅ Pure ONNX architectural approach validated
