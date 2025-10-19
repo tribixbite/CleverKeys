@@ -12,13 +12,14 @@
 4. **PROCEED** with systematic Java-to-Kotlin feature parity review starting from next unreviewed file
 5. **FIX SIMULTANEOUSLY** when bugs are found that can be fixed immediately (don't just document)
 
-**REVIEW PROCESS:**
+**REVIEW PROCESS (SUSTAINABLE APPROACH):**
 - Compare Java file vs Kotlin equivalent line-by-line
 - Document missing features, architectural changes, bugs
 - Classify as: COMPLETE, MISSING, ARCHITECTURAL REPLACEMENT, STUB
-- Create REVIEW_FILE_XX_FileName.md for each file reviewed
+- **APPEND reviews to REVIEW_PROGRESS-[one-four]-of-four.md** (NOT individual files)
 - Update CURRENT_SESSION_STATUS.md with progress
 - Commit after each file review completion
+- **DO NOT** create individual REVIEW_FILE_XX_FileName.md files (causes bloat)
 
 ## 🚨 CRITICAL DEVELOPMENT PRINCIPLES
 
