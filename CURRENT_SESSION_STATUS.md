@@ -65,10 +65,10 @@
 ### **📊 ACCESSIBILITY BUG COUNT UPDATE:**
 
 **Bug Count (Oct 19 - Latest):**
-- Total: 404 issues (455 found, 53 fixed, 4 stub-only)
-- P0 Catastrophic: **22 remaining** (was 23, fixed Bug #266 ExtraKeys)
+- Total: 403 issues (456 found, 54 fixed, 4 stub-only)
+- P0 Catastrophic: **21 remaining** (was 23, fixed Bug #266 ExtraKeys, #268 GestureClassifier)
 - High Priority: **Decreased by 1** (fixed Bug #267 Gesture)
-- Fixed this session: **Bug #266 (ExtraKeys - P0), Bug #267 (Gesture - HIGH)** (1 P0 + 1 HIGH)
+- Fixed this session: **Bug #266 (ExtraKeys - P0), #267 (Gesture - HIGH), #268 (GestureClassifier - P0)** (2 P0 + 1 HIGH)
 - Previous session: **Bug #270, #271, #359, #368, #373, #377** (4 P0 + 2 medium/low)
 
 **Remaining P0 Priorities (23):**
@@ -245,7 +245,27 @@
 - Rating: 0% → 100% feature parity after fix
 - Detailed review: REVIEW_FILE_84_Gesture.md
 
-**Next file: File 85/251 - GestureClassifier.java**
+**File 85/251 COMPLETE + FIXED: GestureClassifier.java vs GestureClassifier.kt (Bug #268) ✅**
+- Java: 83 lines (unified TAP vs SWIPE classifier)
+- Kotlin: 0 lines → **CATASTROPHIC BUG - 100% missing functionality**
+- Bug #268: Complete GestureClassifier missing (P0 CATASTROPHIC)
+- Missing: TAP/SWIPE classification, dynamic threshold, time threshold, single source of truth
+- Java features: "Single source of truth for gesture classification" (eliminates race conditions)
+- Kotlin before: COMPLETELY MISSING (no file)
+- **FIX APPLIED**: Created GestureClassifier.kt (147 lines) with complete system
+  - Added GestureType enum (TAP, SWIPE)
+  - Added GestureData data class (hasLeftStartingKey, totalDistance, timeElapsed, keyWidth)
+  - Implemented classify() with dynamic threshold (keyWidth/2)
+  - Implemented MAX_TAP_DURATION_MS = 150L time threshold
+  - Added dpToPx() utility for density conversion
+- Algorithm: SWIPE if (left key AND (distance >= keyWidth/2 OR time > 150ms))
+- Usage verified: Pointers.java line 203 "_gestureClassifier.classify(gestureData)" - CRITICAL!
+- Impact: TAP vs SWIPE detection completely broken, race conditions, false positives/negatives
+- Severity: CATASTROPHIC - keyboard fundamentally broken without this
+- Rating: 0% → 100% feature parity after fix
+- Detailed review: REVIEW_FILE_85_GestureClassifier.md
+
+**Next file: File 86/251 - ImprovedSwipeGestureRecognizer.java**
 
 ## 🎉 BREAKTHROUGH: ALL 5 USER ISSUES EXPLAINED!
 
