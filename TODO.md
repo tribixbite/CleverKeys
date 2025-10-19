@@ -1,223 +1,87 @@
-# CleverKeys - Neural Pipeline Status
+# CleverKeys Implementation TODO
 
-## ✅ BREAKTHROUGH: Beam Search Fixed - 60% Accuracy Achieved!
+**Current Progress: 101/251 files reviewed (40.2%)**
 
-**Test Results (Oct 14, 2025):**
-- ✅ CLI test baseline: **30% accuracy (3/10)** - "what"✅, "not"✅, "setting"✅
-- ✅ Android TestActivity: **60% accuracy (6/10)** - what✅, not✅, consistent✅, drinks✅, setting✅, min✅
-- ✅ **SURPASSES CLI BASELINE** by 2x improvement!
+## Bug Summary by Severity
 
-**Root Cause Found:**
-- BeamSearchState constructor mismatch in beam building logic
-- Was calling wrong signature with incorrect parameter order
-- Fix: Use primary constructor with proper token sequence building
+| Priority | Count | Status |
+|----------|-------|--------|
+| P0 - CATASTROPHIC | 13 | 1 fixed, 12 remaining |
+| P1 - CRITICAL | 6 | 1 fixed, 5 remaining |
+| P2 - HIGH | 12 | 0 fixed, 12 remaining |
+| P3 - MEDIUM | 8 | 0 fixed, 8 remaining |
+| P4 - LOW | 4 | 0 fixed, 4 remaining |
+| **TOTAL BUGS** | **43** | **2 fixed, 41 remaining** |
+| Architectural | 5 | All intentional upgrades |
 
-## 🎯 NEXT STEPS
+## Quick Links to TODO Lists
 
-**✅ Priority 1: Restore Batched Inference Optimization (COMPLETE - Fix #48)**
-- Fixed: processBatchedResults() was using wrong constructor (copy constructor)
-- Solution: Apply same Fix #42 pattern - use primary constructor BeamSearchState(tokens, score, finished)
-- Changed lines 607-621 in OnnxSwipePredictorImpl.kt
-- Restored batched processing (30-50% performance improvement)
-- Status: ✅ FIXED - batched inference now enabled
+### By Priority
+1. **[TODO_CRITICAL_BUGS.md](TODO_CRITICAL_BUGS.md)** - 19 P0/P1 bugs (URGENT)
+2. **[TODO_HIGH_PRIORITY.md](TODO_HIGH_PRIORITY.md)** - 12 P2 bugs
+3. **[TODO_MEDIUM_LOW.md](TODO_MEDIUM_LOW.md)** - 12 P3/P4 bugs
+4. **[TODO_ARCHITECTURAL.md](TODO_ARCHITECTURAL.md)** - 5 intentional upgrades
 
-**✅ Priority 2: Fix Compilation Errors (COMPLETE - Fixes #49-54)**
-- ✅ **Fix #49-52**: Missing imports resolved (Bundle, pow, sqrt, type mismatches)
-- ✅ **Fix #53**: Generator script stdout corruption - escaped `/*.json` in doc comment
-- ✅ **Fix #54**: JVM bytecode limit exceeded - changed to binary resource file
-- Files fixed: VoiceGuidanceEngine, SwipeMLData, ScreenReaderManager, SettingsSyncManager, SwipeCalibrationActivity
-- ComposeKeyData now loads 8659 states from 51KB binary asset at runtime
-- Status: ✅ BUILD SUCCESSFUL - ready for calibration testing
+### By Component
+- **[REVIEW_TODO_CORE.md](REVIEW_TODO_CORE.md)** - 150+ core files remaining
+- **[REVIEW_TODO_GESTURES.md](REVIEW_TODO_GESTURES.md)** - 5 gesture files remaining
+- **[REVIEW_TODO_NEURAL.md](REVIEW_TODO_NEURAL.md)** - 12 neural files remaining
+- **[REVIEW_TODO_ML_DATA.md](REVIEW_TODO_ML_DATA.md)** - 4 ML data files remaining
+- **[REVIEW_TODO_LAYOUT.md](REVIEW_TODO_LAYOUT.md)** - 7 layout files remaining
 
-**⏳ Priority 3: Test Calibration & Normal Keyboard Pipeline (READY)**
-- ✅ Build successful - no blocking compilation errors
-- ⏳ Action: Rebuild APK and test on device
-- ⏳ Test calibration swipe predictions
-- ⏳ Test normal keyboard swipe typing
-- ⏳ Verify Fix #48 (batched inference optimization) performance improvement
+## Top Priority Fixes (Start Here)
 
-**Verified IDENTICAL Between CLI and Android:**
-- ✅ Tensor values (hex dumps match exactly for all 10 tests)
-- ✅ Nearest keys detection (hex dumps match)
-- ✅ Feature extraction (coordinates, velocities, accelerations)
-- ✅ Encoder inputs (trajectory_features, nearest_keys, src_mask)
-- ✅ First token predictions (both predict t(23):-0.562 for "what")
+### IMMEDIATE (P0)
+1. **Bug #273**: Training data lost on app close → needs persistent DB
+2. **Bug #257**: LanguageDetector missing → add multi-language support
+3. **Bug #258**: LoopGestureDetector missing → add loop gestures
+4. **Bug #259**: NgramModel missing → add n-gram predictions
 
-**Result:** Android gets 0/10 (0.0%) - ALL predictions filtered out by vocabulary
+### CRITICAL (P1)
+5. **Bug #124**: ClipboardHistoryView broken API
+6. **Bug #125**: Missing getService() wrapper
+7. **Bug #78**: 99% of compose keys missing (14,900 entries)
+8. **Bug #82**: DirectBootAwarePreferences 75% incomplete
 
-**Root Cause Located:**
-The issue is NOT in feature extraction or encoder, but in the BEAM SEARCH DECODER:
-- CLI beam search: Produces valid words ("what", "not", "setting")
-- Android beam search: Produces sequences filtered out by vocabulary (0 valid)
-- Beam search returns 20-23 candidates, but vocabulary filter reduces to 0
+## Files Reviewed (101 total)
 
-**Evidence from Logs:**
-```
-Android Test 1 ("what"):
-🔍 Step 1, Beam 0 top 5 tokens: t(23):-0.562, r(21):-1.384, (3):-1.842...
-✅ Beam search returned 22 candidates
-📋 Vocabulary filter: 22 → 0 candidates
-Result: '' (empty)
+### Core System (4 files)
+- File 2: Keyboard2.java vs CleverKeysService.kt
+- File 3: Theme.java (TEXT SIZE issues)
+- File 4: Pointers.java vs Pointers.kt
+- File 1: KeyValueParser.java (needs review - 96% missing)
 
-CLI Test 1 ("what"):
-First token: t(23):-0.562 (IDENTICAL to Android)
-Final result: "what" ✅ (valid vocabulary word)
-```
+### UI & Activities (14 files)
+- Files 29-42: Emoji, Preferences, Launcher, Neural, ONNX, Tensor, Prediction, R, Resources
 
-**Hypothesis:** Android beam search loop is producing repetitive/garbage sequences instead of exploring diverse paths like CLI does
+### ML & Data (10 files)
+- Files 59-69: Language, Loop, Ngram, SwipeEngine, Scorer, Predictor, Utils, Voice, Templates
+- Files 70-72: ML Data, Store, Trainer
 
-## 🔬 HEX DUMP ANALYSIS COMPLETE
+### Gesture & Input (6 files)  
+- Files 73, 75-77, 80-81: Async, Trace, CGR, Swipe, Enhanced, Predictor
 
-**Tensor Values from Android (for "counsel"):**
-```
-Trajectory (first 30 floats):
-[ 0] 0.366667 = 132/360 ✓ CORRECT x
-[ 1] 0.522720 = 146.36/280 ✓ CORRECT y
-...velocities and accelerations all correct...
+### Configuration (2 files)
+- Files 82-85: ExtraKeys, Gaussian, InputConnection, KeyboardLayout
 
-Nearest keys (first 15 longs):
-[ 0] 6 = 'c' ✓ CORRECT
-[ 1] 6 = 'c' ✓ CORRECT
-[ 2] 6 = 'c' ✓ CORRECT
-```
+### Testing & Tools (4 files)
+- Files 86-101: Browser, Pipeline, Data, Tokenizer, Detector, Service, Settings, Activities, Memory, Accessibility, Error
 
-**Finding:** ALL tensor values are CORRECT! Hex dump confirms:
-- Coordinates normalized properly ✓
-- Nearest keys correct (6='c' for "counsel", 17='n' for "now") ✓
-- Feature extraction working ✓
-- Tensor creation working ✓
+## Documentation
+- **[REVIEW_COMPLETED.md](REVIEW_COMPLETED.md)** - Complete archive (32,655 lines)
+- **[CURRENT_SESSION_STATUS.md](CURRENT_SESSION_STATUS.md)** - Latest session status
+- **[CLAUDE.md](CLAUDE.md)** - Project context & instructions
 
-**Problem:** Model predicts 'o'(18) for BOTH "counsel" and "now"
-- Ignoring nearest_keys completely
-- Same wrong prediction despite different starting letters
-- Model either broken OR CLI test also fails (unverified!)
+## Next Steps
 
-**CRITICAL:** CLI test cannot run on Termux (library issues)
-- User claimed 70%+ accuracy but never verified
-- Need to test CLI on real computer to confirm baseline
-- If CLI also gets 0%, then it's a MODEL problem, not code
+1. Fix P0 bugs (Bug #273, #257, #258, #259)
+2. Fix P1 bugs (Bug #124, #125, #78, #82)
+3. Continue systematic review (Files 102-251)
+4. Fix P2 HIGH priority bugs
+5. Fix P3/P4 MEDIUM/LOW bugs as time permits
 
 ---
 
-## 🚨 PROVEN: Not a Test Data Issue!
-
-**Using EXACT CLI test data still gives 0% accuracy**
-
-Test data: `/data/data/com.termux/files/home/git/swype/swype-model-training/swipes.jsonl`
-- 2 tests: "counsel", "now"
-- Same coordinates, same format
-- **Previous Result: 0/2 (0.0%)**
-
-## ✅ Everything Verified Working
-
-| Component | Status | Evidence |
-|-----------|--------|----------|
-| Duplicate filtering | ✅ WORKING | Tested with/without |
-| Repeat-last padding | ✅ WORKING | Logs show correct padding |
-| 360×280 normalization | ✅ WORKING | Dimensions verified |
-| Grid detection | ✅ WORKING | Matches CLI exactly |
-| Init order | ✅ WORKING | Dimensions set after init |
-| Test data | ✅ IDENTICAL | EXACT CLI test file |
-| Coordinates | ✅ VALID | No negatives, within bounds |
-| Velocity/accel | ✅ CORRECT | Matches CLI formula |
-
-## 🔍 Root Cause Must Be
-
-Since ALL visible logic is correct, the bug must be in low-level details:
-
-### ✅ Theory #1: Tensor Byte Serialization (FIXED - FIX #42)
-```kotlin
-// BEFORE (WRONG):
-byteBuffer.order(ByteOrder.nativeOrder())  // ← Platform dependent!
-
-// AFTER (FIXED):
-byteBuffer.order(ByteOrder.LITTLE_ENDIAN) // ← ONNX standard
-```
-**Problem**: `ByteOrder.nativeOrder()` was wrong for ONNX
-**Solution**: ✅ Changed all 7 usages to `ByteOrder.LITTLE_ENDIAN`
-**Status**: APK rebuild pending, test results needed
-
-### Theory #2: Input Tensor Name Mismatch  
-**Problem**: Maybe model expects different input names?
-**Solution**: Dump actual ONNX model input names and verify
-
-### Theory #3: ONNX Runtime Platform Difference
-**Problem**: Android ONNX Runtime 1.20.0 behaves differently than JVM
-**Solution**: Check ONNX Runtime docs for known Android issues
-
-### Theory #4: Float Precision
-**Problem**: Android Float vs JVM Float rounding differences
-**Solution**: Dump first 20 tensor values as hex and compare
-
-## 🎯 Next Steps - Focus on Beam Search Divergence
-
-### PRIORITY: Compare Decoder Invocation Between CLI and Android
-
-The beam search algorithms differ in critical ways:
-
-**CLI Beam Search (TestOnnxPrediction.kt):**
-- Processes beams ONE AT A TIME (loop over beams)
-- Creates fresh src_mask tensor for EACH beam: `Array(1) { BooleanArray(MAX_SEQUENCE_LENGTH) { false } }`
-- Decoder runs with batch size = 1 for each beam
-- Global candidate pool, then sort and prune
-
-**Android Beam Search (OnnxSwipePredictorImpl.kt):**
-- Processes ALL beams in SINGLE BATCH (batched inference optimization)
-- Creates src_mask ONCE for entire batch: `Array(batchSize) { BooleanArray(memoryShape[1].toInt()) { false } }`
-- Decoder runs with batch size = N (all active beams)
-- Global candidate pool, then sort and prune
-
-**Suspected Issue:**
-The batched decoder invocation might be causing incorrect results. Possible causes:
-1. Memory tensor expansion for batching (expandedMemory) may be incorrect
-2. Target mask batching may have shape/indexing issues
-3. Decoder output processing may have batch indexing bugs
-
-### Option A: Test Non-Batched Beam Search (QUICK TEST)
-```kotlin
-// In createNearestKeysTensor(), change:
-byteBuffer.order(ByteOrder.nativeOrder())
-// To:
-byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
-```
-
-### Option B: Dump ONNX Model Info (QUICK)
-```kotlin
-// Add to initialization:
-Log.d(TAG, "Encoder inputs: ${encoderSession.inputNames}")
-Log.d(TAG, "Expected shapes: ${encoderSession.inputInfo}")
-```
-
-### Option C: Run Actual CLI Test (VERIFY BASELINE)
-```bash
-# Compile and run TestOnnxPrediction.kt
-# Verify it actually gets 50%+ with this data
-```
-
-### Option D: Hex Dump Tensor Values (DEEP DEBUG)
-```kotlin
-// Dump first 20 bytes of each tensor
-val bytes = buffer.array()
-Log.d(TAG, "Tensor bytes: ${bytes.take(20).joinToString { "%02x".format(it) }}")
-```
-
-## 💡 Recommendation
-
-**URGENT: Disable batched inference temporarily** (5 min test):
-Modify Android beam search to process beams ONE AT A TIME like CLI does. This will confirm if batching is the issue.
-
-```kotlin
-// In runBeamSearch(), replace processBatchedBeams() with:
-activeBeams.forEach { beam ->
-    // Process single beam with batch size = 1 (like CLI)
-    val result = decoderSession.run(mapOf(...))
-    // Add candidates to pool
-}
-```
-
-If this fixes the predictions, then the batched inference optimization has a bug.
-
-**Then investigate batching bugs**:
-1. Check memory tensor expansion logic
-2. Verify target mask indexing for batches
-3. Validate decoder output array indexing
+**Last Updated**: Oct 19, 2025
+**Review Progress**: 101/251 files (40.2%)
+**Bugs**: 41 remaining, 2 fixed
