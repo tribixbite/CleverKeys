@@ -9473,3 +9473,954 @@ Resource access helper with fallbacks to prevent crashes from wrong resource IDs
 
 **Assessment**: Well-intentioned defensive programming that MASKS the real problem. This file exists because R.kt has wrong IDs. Should be deleted after R.kt is fixed.
 
+## File 59/251: LanguageDetector.java (313 lines) - MISSING IN KOTLIN
+
+**QUALITY**: 💀 **CATASTROPHIC** - Entire sophisticated language detection system missing
+
+### SUMMARY
+
+**Java Implementation (313 lines)**:
+- Character frequency analysis for 4 languages (English, Spanish, French, German)
+- Common word pattern matching with 20 words per language
+- Weighted scoring: 60% character frequency + 40% common words
+- Confidence threshold filtering (0.6 minimum)
+- Minimum text length validation (10 characters)
+- Support for word list detection
+- Statistical correlation calculation
+
+**Kotlin Implementation**:
+- ❌ **COMPLETELY MISSING** - File does not exist
+
+### BUG #257 (CATASTROPHIC): Entire LanguageDetector system missing
+
+**Java Components (313 lines)**:
+1. **Character Frequency Maps** (lines 47-129):
+   - English: 'e'(12.7%), 't'(9.1%), 'a'(8.2%), etc.
+   - Spanish: 'a'(12.5%), 'e'(12.2%), 'o'(8.7%), etc.
+   - French: 'e'(14.7%), 's'(7.9%), 'a'(7.6%), etc.
+   - German: 'e'(17.4%), 'n'(9.8%), 's'(7.3%), etc.
+
+2. **Common Word Lists** (lines 61, 83, 105, 127):
+   - 20 common words per language for pattern matching
+   - Examples: English {"the", "be", "to", "of", "and"...}
+
+3. **Detection Algorithms** (lines 136-287):
+   - `detectLanguage(String text)`: Main detection API
+   - `detectLanguageFromWords(List<String> words)`: Word-based detection
+   - `calculateLanguageScore()`: Weighted combination (lines 203-210)
+   - `calculateCharacterFrequencyScore()`: Statistical analysis (lines 215-257)
+   - `calculateCommonWordScore()`: Word matching (lines 262-287)
+
+4. **Utility Methods** (lines 292-312):
+   - `getSupportedLanguages()`: Returns supported language codes
+   - `isLanguageSupported()`: Language availability check
+   - `setConfidenceThreshold()`: Configuration (stub method)
+
+**Impact**: ❌ CATASTROPHIC - AUTOMATIC LANGUAGE SWITCHING BROKEN
+- Cannot detect language from user typing
+- BigramModel cannot switch language contexts
+- Multi-language users cannot benefit from contextual predictions
+- User must manually switch languages
+
+**Use Cases Lost**:
+- Bilingual/multilingual users (Spanish + English, French + English, etc.)
+- Automatic language context switching
+- Smart predictions based on detected language
+- Reduced prediction quality for multi-language users
+
+**Files Affected**:
+- BigramModel (Bug #255) would use this for language switching
+- NeuralSwipeEngine could benefit from language-aware predictions
+- User experience degraded for multi-language keyboards
+
+**Implementation Complexity**: HIGH
+- Requires linguistic data (character frequencies per language)
+- Statistical analysis algorithms
+- Threshold tuning for accuracy
+- 313 lines of language-specific patterns and logic
+
+### VERDICT: 💀 CATASTROPHIC (Bug #257)
+
+**Missing**: 100% (313 lines, 0 lines implemented)
+
+**Recommendation**: IMPLEMENT IMMEDIATELY
+- Critical for multi-language keyboard users
+- Essential for BigramModel language switching
+- Could use external library (e.g., Apache Tika LanguageIdentifier) or implement from scratch
+- Requires linguistic datasets and testing
+
+**Assessment**: Another catastrophic missing system. LanguageDetector is essential for multi-language support and contextual predictions. Without it, bilingual users have significantly degraded experience.
+
+**Related Missing Components**:
+- Bug #255: BigramModel (uses LanguageDetector)
+- Bug #256: KeyboardSwipeRecognizer (could benefit from language context)
+- These 3 systems form the intelligent prediction stack
+
+**Total Missing Systems Count**: 5 major systems
+1. KeyValueParser (Bug #1) - 96% missing
+2. ExtraKeys (Bug #) - 95% missing  
+3. BigramModel (Bug #255) - 100% missing
+4. KeyboardSwipeRecognizer (Bug #256) - 100% missing
+5. LanguageDetector (Bug #257) - 100% missing
+
+
+---
+
+## File 60/251: LoopGestureDetector.java (346 lines) - MISSING IN KOTLIN
+
+**QUALITY**: 💀 **CATASTROPHIC** - Entire loop gesture detection system missing
+
+### SUMMARY
+
+**Java Implementation (346 lines)**:
+- Detects loop gestures for repeated letters (e.g., "hello", "book", "coffee")
+- Analyzes swipe paths for circular patterns around keys
+- Calculates geometric center, radius, and angle traversal
+- Validates loop properties (radius bounds, angle thresholds)
+- Estimates repeat count based on loop completeness
+- Applies detected loops to modify key sequence
+
+**Kotlin Implementation**:
+- ❌ **COMPLETELY MISSING** - File does not exist
+
+### BUG #258 (CATASTROPHIC): Entire LoopGestureDetector system missing
+
+**Java Components (346 lines)**:
+
+1. **Loop Data Structure** (lines 39-76):
+   - `Loop` class with startIndex, endIndex, center, radius, totalAngle
+   - `isClockwise()`: Determines loop direction
+   - `getRepeatCount()`: Estimates repeat count (2-3 based on angle)
+   - Full loop (360°) = 2 occurrences, 1.5 loops (520°) = 3 occurrences
+
+2. **Loop Detection Algorithm** (lines 87-156):
+   - `detectLoops()`: Main detection API (lines 94-115)
+   - Scans path with MIN_LOOP_POINTS = 8 window
+   - `detectLoopAtPoint()`: Finds closure points within CLOSURE_THRESHOLD (30px)
+   - Calculates loop properties: center, average radius, total angle
+   - Validates: MIN_LOOP_RADIUS (15px), MAX_LOOP_RADIUS_FACTOR (1.5x key size)
+   - Angle validation: MIN_LOOP_ANGLE (270°) to MAX_LOOP_ANGLE (450°)
+
+3. **Geometric Calculations** (lines 161-219):
+   - `calculateCenter()`: Geometric center of points
+   - `calculateAverageRadius()`: Mean distance from center
+   - `calculateTotalAngle()`: Total angle traversed (clockwise/counter-clockwise)
+   - Angle normalization to [-π, π] then converted to degrees
+
+4. **Pattern Application** (lines 278-324):
+   - `applyLoops()`: Modifies key sequence with repeated letters
+   - Maps loop positions to character sequence
+   - Inserts repeated characters based on loop count
+   - Preserves non-looped characters
+
+5. **Word Pattern Validation** (lines 330-345):
+   - `matchesLoopPattern()`: Validates loops match word structure
+   - Finds repeated letter positions in word
+   - Checks if detected loops align with expected repeats
+
+**Impact**: ❌ CATASTROPHIC - REPEATED LETTER TYPING BROKEN
+- Users cannot easily type words with double letters ("book", "hello", "coffee")
+- Loop gestures don't work at all
+- Must manually tap twice for repeated letters (terrible UX)
+- Significantly degrades swipe typing experience
+
+**Use Cases Lost**:
+- Words like: hello, book, coffee, letter, success, happy, etc.
+- Any word with consecutive identical letters
+- Natural circular gestures for emphasis
+- Quick double-letter input
+
+**Missing Features**:
+- Loop geometry detection (center, radius, angle)
+- Clockwise/counter-clockwise detection
+- Repeat count estimation
+- Loop validation logic
+- Key sequence modification
+- Pattern matching for known words
+
+**Files Affected**:
+- KeyboardSwipeRecognizer (Bug #256) would integrate this
+- Neural prediction could benefit from loop detection
+- User experience severely degraded without this feature
+
+**Implementation Complexity**: HIGH
+- Requires geometric analysis (circles, angles, radii)
+- Path segmentation algorithms
+- Angle normalization and wrap-around handling
+- Key position mapping
+- Pattern matching heuristics
+- 346 lines of specialized gesture recognition
+
+### VERDICT: 💀 CATASTROPHIC (Bug #258)
+
+**Missing**: 100% (346 lines, 0 lines implemented)
+
+**Recommendation**: IMPLEMENT IMMEDIATELY FOR PRODUCTION USE
+- Critical for natural swipe typing experience
+- Users expect loop gestures for repeated letters
+- Standard feature in modern swipe keyboards
+- Relatively self-contained module (can implement independently)
+
+**Assessment**: Another critical missing gesture recognition system. LoopGestureDetector is essential for typing common words with repeated letters. Without it, users must manually tap repeatedly, severely degrading the swipe typing experience.
+
+**Related Missing Components**:
+- Bug #255: BigramModel (uses contextual predictions)
+- Bug #256: KeyboardSwipeRecognizer (would integrate loop detection)
+- Bug #257: LanguageDetector (multi-language support)
+- Bug #258: LoopGestureDetector (repeated letter gestures)
+
+**Total Missing Gesture/Prediction Systems Count**: 6
+1. KeyValueParser (Bug #1) - 96% missing
+2. ExtraKeys - 95% missing
+3. BigramModel (Bug #255) - 100% missing
+4. KeyboardSwipeRecognizer (Bug #256) - 100% missing
+5. LanguageDetector (Bug #257) - 100% missing
+6. LoopGestureDetector (Bug #258) - 100% missing
+
+
+---
+
+## File 61/251: NgramModel.java (350 lines) - MISSING IN KOTLIN
+
+**QUALITY**: 💀 **CATASTROPHIC** - Entire N-gram language model missing
+
+**Java Implementation**: 350 lines with unigram/bigram/trigram probabilities for English
+**Kotlin Implementation**: ❌ **COMPLETELY MISSING**
+
+### BUG #259 (CATASTROPHIC): Entire NgramModel system missing
+
+**Components**:
+- Unigram, bigram, trigram probability maps (lines 28-42)
+- Start/end character probabilities
+- Common English patterns (e.g., "th":0.037, "the":0.030)
+- Weighted scoring: TRIGRAM(60%) + BIGRAM(30%) + UNIGRAM(10%)
+- Should provide 15-25% accuracy improvement
+
+**Impact**: ❌ CATASTROPHIC - NO STATISTICAL LANGUAGE MODELING
+- Neural predictions lack contextual probability weighting
+- Common letter sequences not prioritized ("th", "he", "in", "the", "and")
+- No start/end character probability modeling
+- Prediction accuracy reduced by 15-25%
+
+**Missing**: 100% (350 lines)
+
+### VERDICT: 💀 CATASTROPHIC (Bug #259)
+
+**Total Missing/Changed Prediction Systems: 11**
+1. BigramModel (Bug #255) - MISSING
+2. KeyboardSwipeRecognizer (Bug #256) - MISSING
+3. LanguageDetector (Bug #257) - MISSING
+4. LoopGestureDetector (Bug #258) - MISSING
+5. NgramModel (Bug #259) - MISSING
+6. SwipeTypingEngine (Bug #260) - REPLACED by pure ONNX
+7. SwipeScorer (Bug #261) - REPLACED by neural confidence
+8. WordPredictor (Bug #262) - REPLACED by pure ONNX
+9. UserAdaptationManager (Bug #263) - MISSING
+
+---
+
+## File 62/251: SwipeTypingEngine.java (258 lines) vs NeuralSwipeEngine.kt (174 lines)
+
+**STATUS**: 🔴 **MASSIVE FEATURE LOSS** - Multi-strategy orchestration → Single ONNX predictor
+
+**LINE-BY-LINE FEATURE COMPARISON:**
+
+### **JAVA FIELDS (lines 16-20):**
+```java
+private final KeyboardSwipeRecognizer _cgrRecognizer;    // LINE 16
+private final WordPredictor _sequencePredictor;          // LINE 17
+private final SwipeDetector _swipeDetector;              // LINE 18
+private final SwipeScorer _scorer;                       // LINE 19
+private Config _config;                                  // LINE 20
+```
+**KOTLIN EQUIVALENT:**
+- ❌ MISSING: _cgrRecognizer (CGR prediction strategy)
+- ❌ MISSING: _sequencePredictor (dictionary fallback)
+- ❌ MISSING: _swipeDetector (input classification)
+- ❌ MISSING: _scorer (hybrid scoring system)
+- ✅ HAS: config field
+
+**FEATURES LOST**: 4 entire prediction strategies/components
+
+---
+
+### **JAVA CONSTRUCTOR (lines 23-37):**
+```java
+public SwipeTypingEngine(android.content.Context context, WordPredictor sequencePredictor, Config config)
+{
+  _cgrRecognizer = new KeyboardSwipeRecognizer(context);
+  _sequencePredictor = sequencePredictor;
+  _swipeDetector = new SwipeDetector();
+  _scorer = new SwipeScorer();
+  _config = config;
+  if (_sequencePredictor != null) _sequencePredictor.setConfig(config);
+}
+```
+**KOTLIN EQUIVALENT (lines 11-14):**
+```kotlin
+class NeuralSwipeEngine(
+    private val context: Context,
+    private val config: Config
+)
+```
+**FEATURES LOST**:
+- ❌ No WordPredictor parameter
+- ❌ No CGR recognizer initialization
+- ❌ No SwipeDetector initialization
+- ❌ No SwipeScorer initialization
+- ❌ No setConfig propagation to multiple predictors
+
+---
+
+### **JAVA METHOD: setKeyboardDimensions() (lines 42-48):**
+```java
+public void setKeyboardDimensions(float width, float height)
+{
+  if (_cgrRecognizer != null)
+    _cgrRecognizer.setKeyboardDimensions(width, height);
+}
+```
+**KOTLIN EQUIVALENT (lines 110-115):**
+```kotlin
+fun setKeyboardDimensions(width: Int, height: Int) {
+    neuralPredictor?.setKeyboardDimensions(width, height)
+}
+```
+**FEATURES CHANGED**:
+- ✅ HAS: setKeyboardDimensions method
+- ⚠️ DIFFERENT: Passes to ONNX predictor instead of CGR recognizer
+- ⚠️ TYPE: Float → Int
+
+---
+
+### **JAVA METHOD: setRealKeyPositions() (lines 53-59):**
+```java
+public void setRealKeyPositions(java.util.Map<Character, android.graphics.PointF> realPositions)
+{
+  if (_cgrRecognizer != null)
+    _cgrRecognizer.setRealKeyPositions(realPositions);
+}
+```
+**KOTLIN EQUIVALENT (lines 120-125):**
+```kotlin
+fun setRealKeyPositions(keyPositions: Map<Char, PointF>) {
+    neuralPredictor?.setRealKeyPositions(keyPositions)
+}
+```
+**FEATURES CHANGED**:
+- ✅ HAS: setRealKeyPositions method
+- ⚠️ DIFFERENT: Passes to ONNX predictor instead of CGR recognizer
+
+---
+
+### **JAVA METHOD: setConfig() (lines 64-72):**
+```java
+public void setConfig(Config config)
+{
+  _config = config;
+  if (_sequencePredictor != null)
+    _sequencePredictor.setConfig(config);
+  _scorer.setConfig(config);
+}
+```
+**KOTLIN EQUIVALENT (lines 94-97):**
+```kotlin
+fun setConfig(newConfig: Config) {
+    neuralPredictor?.setConfig(newConfig)
+}
+```
+**FEATURES LOST**:
+- ❌ No config propagation to WordPredictor (_sequencePredictor)
+- ❌ No config propagation to SwipeScorer (_scorer)
+- ⚠️ Only propagates to single ONNX predictor
+
+---
+
+### **JAVA METHOD: predict() - MAIN PREDICTION (lines 77-102):**
+```java
+public WordPredictor.PredictionResult predict(SwipeInput input)
+{
+  // Classify the input
+  SwipeDetector.SwipeClassification classification = _swipeDetector.classifyInput(input);
+
+  // FORCE KeyboardSwipeRecognizer path for consistency with calibration
+  if (!classification.isSwipe) {
+    // Regular typing - use sequence predictor only
+    return _sequencePredictor.predictWordsWithScores(input.keySequence);
+  }
+
+  // ALWAYS use KeyboardSwipeRecognizer for swipes (like calibration page)
+  return hybridPredict(input, classification);
+}
+```
+**KOTLIN EQUIVALENT (lines 55-82):**
+```kotlin
+fun predict(input: SwipeInput): PredictionResult {
+    if (!isInitialized) runBlocking { initialize() }
+    val predictor = neuralPredictor ?: return PredictionResult.empty
+    return try {
+        val (result, duration) = measureTimeNanos {
+            runBlocking { predictor.predict(input) }
+        }
+        result
+    } catch (e: Exception) {
+        PredictionResult.empty
+    }
+}
+```
+**FEATURES LOST**:
+- ❌ NO SwipeDetector.classifyInput() - No input quality classification
+- ❌ NO classification.isSwipe check - Treats all input as swipe
+- ❌ NO _sequencePredictor.predictWordsWithScores() fallback for regular typing
+- ❌ NO hybridPredict() - No CGR + dictionary combination
+- ❌ NO classification-based routing
+
+---
+
+### **JAVA METHOD: hybridPredict() (lines 107-189) - 82 LINES:**
+```java
+private WordPredictor.PredictionResult hybridPredict(SwipeInput input,
+                                                     SwipeDetector.SwipeClassification classification)
+{
+  List<ScoredCandidate> allCandidates = new ArrayList<>();
+
+  // Get CGR predictions using working KeyboardSwipeRecognizer
+  if (_cgrRecognizer != null && input.coordinates.size() > 2) {
+    List<KeyboardSwipeRecognizer.RecognitionResult> cgrResults =
+      _cgrRecognizer.recognizeSwipe(input.coordinates, new ArrayList<>());
+
+    for (KeyboardSwipeRecognizer.RecognitionResult result : cgrResults) {
+      allCandidates.add(new ScoredCandidate(result.word, (float)result.totalScore, "CGR"));
+    }
+  }
+
+  // Sort by KeyboardSwipeRecognizer totalScore
+  Collections.sort(allCandidates, ...);
+
+  // Convert to result format with swipe-specific filtering
+  List<String> words = new ArrayList<>();
+  List<Integer> scores = new ArrayList<>();
+
+  int maxResults = _config.swipe_typing_enabled ? 10 : 5;
+  for (ScoredCandidate candidate : allCandidates) {
+    // DESIGN SPEC: Swipe predictions must be ≥3 characters minimum
+    if (candidate.word.length() < 3) continue;
+    words.add(candidate.word);
+    scores.add((int)candidate.finalScore);
+    if (++resultCount >= maxResults) break;
+  }
+
+  return new WordPredictor.PredictionResult(words, scores);
+}
+```
+**KOTLIN EQUIVALENT:**
+- ❌ **COMPLETELY MISSING** - No hybridPredict() method at all
+- ❌ NO CGR recognizer calls
+- ❌ NO ScoredCandidate creation
+- ❌ NO multi-source candidate merging
+- ❌ NO scoring from multiple predictors
+- ❌ NO result filtering (≥3 character minimum)
+- ❌ NO maxResults based on config.swipe_typing_enabled
+- ❌ NO logging of CGR results
+- ❌ NO error handling for CGR failures
+
+**FEATURES LOST**: 82 lines of hybrid prediction logic
+
+---
+
+### **JAVA METHOD: enhancedSequencePredict() (lines 194-225) - 31 LINES:**
+```java
+private WordPredictor.PredictionResult enhancedSequencePredict(SwipeInput input,
+                                                               SwipeDetector.SwipeClassification classification)
+{
+  WordPredictor.PredictionResult result = _sequencePredictor.predictWordsWithScores(input.keySequence);
+
+  List<String> filteredWords = new ArrayList<>();
+  List<Integer> adjustedScores = new ArrayList<>();
+
+  for (int i = 0; i < result.words.size(); i++) {
+    String word = result.words.get(i);
+    if (word.length() < 3) continue;  // Skip short words
+
+    int baseScore = result.scores.get(i);
+    float adjustment = 1.0f + (classification.confidence * 0.5f);
+    filteredWords.add(word);
+    adjustedScores.add((int)(baseScore * adjustment));
+  }
+
+  return new WordPredictor.PredictionResult(filteredWords, adjustedScores);
+}
+```
+**KOTLIN EQUIVALENT:**
+- ❌ **COMPLETELY MISSING** - No enhancedSequencePredict() method
+- ❌ NO dictionary-based fallback prediction
+- ❌ NO confidence-based score adjustment
+- ❌ NO short word filtering (< 3 characters)
+- ❌ NO WordPredictor integration
+
+**FEATURES LOST**: 31 lines of enhanced sequence prediction
+
+---
+
+### **JAVA HELPER METHOD: findCandidate() (lines 230-238):**
+```java
+private ScoredCandidate findCandidate(List<ScoredCandidate> candidates, String word)
+{
+  for (ScoredCandidate c : candidates)
+    if (c.word.equals(word)) return c;
+  return null;
+}
+```
+**KOTLIN EQUIVALENT:**
+- ❌ **COMPLETELY MISSING** - No findCandidate() helper
+
+---
+
+### **JAVA INNER CLASS: ScoredCandidate (lines 243-257):**
+```java
+public static class ScoredCandidate
+{
+  public String word;
+  public float score;
+  public float finalScore;
+  public String source;
+
+  public ScoredCandidate(String word, float score, String source) {
+    this.word = word;
+    this.score = score;
+    this.finalScore = score;
+    this.source = source;
+  }
+}
+```
+**KOTLIN EQUIVALENT:**
+- ❌ **COMPLETELY MISSING** - No ScoredCandidate data class
+- ❌ NO score tracking from multiple sources
+- ❌ NO finalScore calculation
+- ❌ NO source attribution ("CGR", "Dictionary", etc.)
+
+---
+
+### **KOTLIN-ONLY FEATURES (not in Java):**
+```kotlin
+suspend fun initialize(): Boolean                              // LINE 30
+suspend fun predictAsync(input: SwipeInput): PredictionResult  // LINE 87
+fun setNeuralConfig(neuralConfig: NeuralConfig)               // LINE 102
+fun setDebugLogger(logger: ((String) -> Unit)?)               // LINE 130
+val isReady: Boolean                                          // LINE 138
+suspend fun getStats(): PredictionStats                       // LINE 143
+data class PredictionStats(...)                               // LINES 158-163
+fun cleanup()                                                 // LINE 168
+```
+**NEW FEATURES**: 8 Kotlin-specific additions
+
+---
+
+## **SUMMARY: File 62/251**
+
+**JAVA: SwipeTypingEngine.java - 258 lines**
+- 4 predictor components (CGR, WordPredictor, SwipeDetector, SwipeScorer)
+- 3 major methods (predict, hybridPredict, enhancedSequencePredict)
+- 1 helper method (findCandidate)
+- 1 data class (ScoredCandidate)
+- Multi-strategy prediction with fallbacks
+
+**KOTLIN: NeuralSwipeEngine.kt - 174 lines**
+- 1 predictor component (ONNX neural predictor)
+- 2 major methods (predict, predictAsync)
+- 8 utility methods (initialize, setters, getStats, cleanup)
+- 1 data class (PredictionStats)
+- Single-strategy prediction, NO fallbacks
+
+**FEATURES LOST**:
+- ❌ 4 predictor components (CGR, WordPredictor, SwipeDetector, SwipeScorer)
+- ❌ hybridPredict() method (82 lines)
+- ❌ enhancedSequencePredict() method (31 lines)
+- ❌ findCandidate() helper
+- ❌ ScoredCandidate class
+- ❌ Input quality classification
+- ❌ Multi-strategy routing
+- ❌ CGR fallback for calibration consistency
+- ❌ Dictionary fallback for regular typing
+- ❌ Result filtering (≥3 characters)
+- ❌ maxResults based on config
+- ❌ Score adjustment based on classification confidence
+
+**TOTAL MISSING**: ~145 lines of functionality
+
+**VERDICT**: ⚠️ **INTENTIONAL ARCHITECTURAL SIMPLIFICATION**
+- Kotlin replaced multi-strategy orchestration with pure ONNX
+- Success depends entirely on ONNX model quality
+- NO fallback strategies if ONNX fails or has low accuracy
+
+---
+
+## File 63/251: SwipeScorer.java (263 lines) vs NONE IN KOTLIN
+
+**STATUS**: 🔴 **COMPLETELY MISSING** - Sophisticated 8-weight scoring system absent
+
+**JAVA: SwipeScorer.java - 263 lines with 9 scoring factors**
+**KOTLIN: NONE - No SwipeScorer.kt file exists**
+
+**FEATURES LOST (ALL 263 LINES - 100%):**
+
+### **Main Scoring Method:**
+- ❌ calculateFinalScore() - Applies 8 configurable weights (67 lines)
+
+### **Helper Methods (9 total):**
+- ❌ calculateLocationAccuracy() - Character match scoring (25 lines)
+- ❌ isSubsequence() - Ordered match detection (11 lines)
+- ❌ getWordFrequencyFactor() - Common word boosting (21 lines)
+- ❌ calculateVelocityScore() - Velocity CV calculation (35 lines)
+- ❌ matchesFirstLetter() - First letter validation (7 lines)
+- ❌ matchesLastLetter() - Last letter validation (7 lines)
+- ❌ applyWeight() - Exponential weight scaling (9 lines)
+- ❌ getQualityMultiplier() - Quality-based adjustment (15 lines)
+- ❌ setConfig() - Config integration (3 lines)
+
+### **Configurable Weights (8 from Config):**
+- ❌ swipe_confidence_shape_weight - Shape matching multiplier
+- ❌ swipe_confidence_location_weight - Location accuracy weight
+- ❌ swipe_confidence_frequency_weight - Word frequency boost
+- ❌ swipe_confidence_velocity_weight - Velocity consistency reward
+- ❌ swipe_first_letter_weight - First letter match bonus
+- ❌ swipe_last_letter_weight - Last letter match bonus
+- ❌ swipe_endpoint_bonus_weight - Both endpoints bonus
+- ❌ swipe_require_endpoints - Strict mode penalty (0.1x if endpoints don't match)
+
+### **Scoring Features:**
+- ❌ Shape matching (DTW distance correlation)
+- ❌ Location accuracy (character matches)
+- ❌ Word frequency (common word detection)
+- ❌ Velocity consistency (coefficient of variation)
+- ❌ First letter matching
+- ❌ Last letter matching
+- ❌ Endpoint bonus (both match)
+- ❌ Swipe quality multiplier (HIGH:1.2x, MEDIUM:1.0x, LOW:0.8x, NOT_SWIPE:0.5x)
+- ❌ Strict endpoint filtering
+
+**KOTLIN REPLACEMENT:**
+- ONNX beam search outputs raw log probabilities ONLY
+- No weighted scoring
+- No configurable adjustments
+- No endpoint prioritization
+- No velocity rewards
+- Pure neural scores with ZERO configurability
+
+**VERDICT**: 🔴 **COMPLETE FEATURE LOSS (263 lines / 100%)**
+
+---
+
+## File 64/251: WordPredictor.java (782 lines) - ARCHITECTURAL DIFFERENCE
+
+**QUALITY**: ⚠️ **ARCHITECTURAL** - Dictionary matching replaced by pure ONNX
+
+**Java Implementation**: 782 lines with dictionary, bigrams, language detection, user adaptation
+**Kotlin Implementation**: ❌ **INTENTIONALLY REPLACED** by pure ONNX neural prediction
+
+### BUG #262 (ARCHITECTURAL): Dictionary-based prediction replaced by neural prediction
+
+**Java Components**:
+- Dictionary management with frequency weights (lines 19-196)
+- Adjacent keys map for QWERTY layout (lines 211-256)
+- BigramModel integration for contextual prediction (lines 22-36)
+- LanguageDetector integration (lines 23, 115-146)
+- UserAdaptationManager integration (lines 30, 54-57, 395-449)
+- Two-pass prioritized matching system (lines 345-524):
+  - PRIORITY: First AND last character match
+  - SECONDARY: Partial endpoint match (first OR last)
+  - OTHER: Standard swipe candidates
+- Prefix-based matching for regular typing (lines 461-478)
+- Swipe-specific scoring with endpoint weights (lines 383-456)
+- Context-aware prediction with bigram reranking (lines 271-325)
+- Edit distance calculation with adjacency consideration (lines 594-632)
+- User frequency adaptation (lines 395-449, 468-474)
+- Language detection and auto-switching (lines 115-130)
+- Recent words tracking for language context (lines 89-110)
+
+**Kotlin Architecture**:
+- OnnxSwipePredictorImpl: Pure neural prediction with ONNX encoder/decoder
+- No dictionary files or frequency weights
+- No language detection or user adaptation
+- Beam search algorithm for candidate generation
+- Vocabulary filtering for valid words
+
+**Impact**: ⚠️ ARCHITECTURAL DESIGN CHOICE
+- ✅ PRO: No need to maintain dictionaries or frequency data
+- ✅ PRO: Neural model learns patterns implicitly
+- ✅ PRO: Simpler codebase (782 lines → 0 lines)
+- ❌ CON: No explicit user adaptation/learning
+- ❌ CON: No multi-language support or detection
+- ❌ CON: No fallback for out-of-vocabulary words
+- ❌ CON: No contextual reranking with bigrams
+- ❌ CON: Cannot add new words without retraining model
+
+**Missing Features**:
+1. Dictionary management (lines 19-196)
+2. Frequency-based ranking (lines 181, 434, 477)
+3. BigramModel contextual prediction (lines 271-325)
+4. LanguageDetector auto-switching (lines 115-130)
+5. UserAdaptationManager frequency learning (lines 395-449)
+6. Adjacent keys adjacency checking (lines 211-256, 637-641)
+7. Edit distance with adjacency consideration (lines 594-632)
+8. Recent words context tracking (lines 89-110)
+9. Manual language detection API (lines 135-138)
+10. Configuration weight system (swipe_first_letter_weight, swipe_last_letter_weight, swipe_endpoint_bonus_weight, swipe_require_endpoints)
+
+**Missing**: 100% (782 lines) - All dictionary/language/adaptation logic
+
+**Recommendation**: EVALUATE PRODUCTION ACCURACY
+- If ONNX accuracy < Java hybrid: Consider adding dictionary fallback
+- Monitor user complaints about missing words or language issues
+- Consider implementing UserAdaptationManager separately for frequency learning
+
+**Assessment**: This is the most significant architectural difference. The Java version has a sophisticated 782-line prediction engine with dictionaries, language detection, bigrams, and user adaptation. The Kotlin version relies entirely on the ONNX neural model. This is a high-risk simplification that depends completely on model quality.
+
+---
+
+## File 65/251: UserAdaptationManager.java (291 lines) - MISSING IN KOTLIN
+
+**QUALITY**: 💀 **CATASTROPHIC** - Entire user learning system missing
+
+**Java Implementation**: 291 lines with selection tracking, frequency adaptation, persistent storage
+**Kotlin Implementation**: ❌ **COMPLETELY MISSING**
+
+### BUG #263 (CATASTROPHIC): User adaptation/learning system missing
+
+**Java Components**:
+- Word selection history tracking (lines 58-84)
+- Adaptation multiplier calculation (lines 90-112)
+  - Boosts frequently selected words by up to 2x
+  - Formula: 1.0 + (relativeFrequency × 0.3 × 10)
+  - Minimum 5 selections before activation
+- Persistent storage with SharedPreferences (lines 208-248)
+- Automatic pruning of old words (lines 253-267)
+  - Max 1000 tracked words
+  - Removes bottom 20% when limit reached
+- Periodic reset every 30 days (lines 272-282)
+- Debug statistics with top 10 words (lines 177-203)
+- Singleton pattern for global access (lines 35-42)
+
+**Kotlin Implementation**: ❌ NONE - No user learning whatsoever
+
+**Impact**: ❌ CATASTROPHIC - NO PERSONALIZATION
+- Keyboard never learns user preferences
+- Frequently typed words don't get priority
+- No adaptation to user's vocabulary
+- Same prediction quality for all users
+- No improvement over time with usage
+- User-specific jargon/names never prioritized
+
+**Example Impact**:
+- User types "kubernetes" 100 times → Never gets priority
+- User types "sarah" (name) 50 times → Never boosted
+- Common words like "the" weighted same as rare words
+- No personalization: Day 1 = Day 100 predictions
+
+**Missing Features**:
+1. recordSelection() - Track user's word choices (lines 58-84)
+2. getAdaptationMultiplier() - Boost frequency for selected words (lines 90-112)
+3. Persistent storage across app restarts (lines 208-248)
+4. Pruning to prevent unbounded memory growth (lines 253-267)
+5. Periodic reset to prevent stale data (lines 272-282)
+6. Statistics and debugging (lines 177-203)
+7. Enable/disable toggle (lines 143-155)
+8. Manual reset capability (lines 160-172)
+
+**Missing**: 100% (291 lines)
+
+**Recommendation**: IMPLEMENT FOR USER SATISFACTION
+- User learning is a standard feature in modern keyboards
+- Critical for personalizing predictions to individual users
+- Improves prediction accuracy by 20-30% for frequent words
+- Simple to implement with SharedPreferences
+- Could be added alongside ONNX predictions (not mutually exclusive)
+
+**Assessment**: The complete absence of user adaptation is a major functionality gap. Even with perfect ONNX accuracy, the keyboard cannot improve or personalize over time. This makes the user experience static and impersonal compared to keyboards that learn user preferences.
+
+---
+
+**Total Architectural Differences: 4**
+1. SwipeTypingEngine (Bug #260) - Multi-strategy orchestration → Pure ONNX
+2. SwipeScorer (Bug #261) - Hybrid scoring → Neural confidence
+3. WordPredictor (Bug #262) - Dictionary/language/adaptation → Pure ONNX
+4. UserAdaptationManager (Bug #263) - User learning/personalization → NONE
+
+**CRITICAL ASSESSMENT**: The Kotlin rewrite made a fundamental architectural bet:
+- **Java**: Multi-strategy hybrid (CGR + dictionary + bigrams + scoring + user learning)
+- **Kotlin**: Pure ONNX neural prediction (single strategy, no fallbacks)
+
+This is **HIGH RISK** because:
+1. No fallback if ONNX fails or has low accuracy
+2. No user adaptation/learning over time
+3. No multi-language support
+4. Cannot add new words without model retraining
+5. Success depends entirely on ONNX model quality
+
+**Recommendation**: Monitor production metrics closely:
+- If ONNX accuracy ≥ Java hybrid: Architecture is validated
+- If ONNX accuracy < Java hybrid: Consider adding fallback strategies
+
+---
+
+## File 66/251: Utils.java (52 lines) vs Utils.kt (379 lines)
+
+**QUALITY**: ✅ **EXCELLENT** - All functionality present + major enhancements
+
+**Java Implementation**: 52 lines with basic utilities
+**Kotlin Implementation**: ✅ **379 lines with comprehensive gesture utilities**
+
+**Comparison**:
+- capitalize_string() → capitalizeString() ✅
+- show_dialog_on_ime() → showDialogOnIme() ✅ ENHANCED (error handling)
+- read_all_utf8() → readAllUtf8() ✅ ENHANCED
+- NEW: safeReadAllUtf8() - Safe resource management
+- NEW: dpToPx(), spToPx() - UI conversion utilities
+- NEW: distance(), angle(), normalizeAngle() - Gesture mathematics
+- NEW: smoothTrajectory() - Trajectory smoothing
+- NEW: calculateCurvature() - Curvature analysis
+- NEW: detectPrimaryDirection() - Direction detection
+- NEW: calculateVelocityProfile() - Velocity analysis
+- NEW: isCircularGesture() - Circle detection
+- NEW: calculatePathLength() - Path measurement
+- NEW: isLoopGesture() - Loop detection
+- NEW: simplifyTrajectory() - Douglas-Peucker algorithm
+- NEW: Extension functions - Kotlin idiomatic patterns
+
+**Assessment**: Rare case where Kotlin has significantly MORE functionality than Java. The gesture utilities are comprehensive and well-designed.
+
+---
+
+## File 67/251: VibratorCompat.java (46 lines) vs VibratorCompat.kt (69 lines)
+
+**QUALITY**: ⚠️ **FUNCTIONAL DIFFERENCE** - Modernized but missing Config integration
+
+**Comparison**:
+- Java: Static methods with Config.vibrate_custom and Config.vibrate_duration
+- Java: Falls back to View.performHapticFeedback() when custom disabled
+- Kotlin: Instance-based with modern VibratorManager API (Android S+)
+- Kotlin: No Config integration, no View.performHapticFeedback() fallback
+- Kotlin: Cleaner but less configurable
+
+**Assessment**: Design choice - Kotlin version is more modern but less configurable.
+
+---
+
+## File 68/251: VoiceImeSwitcher.java (152 lines) - FUNCTIONAL BUG IN KOTLIN
+
+**QUALITY**: ❌ **HIGH SEVERITY** - Completely different implementation that doesn't work correctly
+
+**Java Implementation**: 152 lines with IME enumeration, chooser dialog, persistent storage
+**Kotlin Implementation**: ❌ **75 lines with wrong approach**
+
+### BUG #264 (HIGH): VoiceImeSwitcher doesn't actually switch to voice IME
+
+**Java Implementation (CORRECT)**:
+- Enumerates available voice IMEs using InputMethodManager (lines 104-112)
+- Shows AlertDialog chooser for voice IME selection (lines 56-77)
+- Stores last-used voice IME in SharedPreferences (lines 21-22, 66-69)
+- Calls switchInputMethod() to actually switch to voice IME (lines 79-85)
+- Detects when to show chooser based on known IMEs (lines 31-42)
+- Handles SDK version differences for API 28+ (lines 81-84)
+
+**Kotlin Implementation (WRONG)**:
+- Launches RecognizerIntent.ACTION_RECOGNIZE_SPEECH activity (lines 30-40)
+- Checks if speech recognition is available (lines 21-25)
+- Returns speech recognition results (lines 65-67)
+- **DOES NOT enumerate voice IMEs**
+- **DOES NOT switch to voice IME keyboard**
+- **DOES NOT show chooser dialog**
+- **DOES NOT store preferences**
+
+**Impact**: ❌ HIGH - VOICE INPUT BROKEN
+- Voice button doesn't switch to voice IME keyboard
+- Launches external speech recognition activity instead
+- May not work correctly from IME context
+- User cannot choose preferred voice input method
+- No memory of last-used voice IME
+- Violates Android IME design patterns
+
+**Root Cause**: Kotlin implementation uses quick hack (speech recognition intent) instead of proper IME switching
+
+**Missing Features**:
+1. get_voice_ime_list() - Enumerate voice IMEs (lines 104-112)
+2. choose_voice_ime_and_update_prefs() - Show chooser dialog (lines 56-77)
+3. switch_input_method() - Actually switch IME (lines 79-85)
+4. SharedPreferences storage (PREF_LAST_USED, PREF_KNOWN_IMES)
+5. IME class with display name formatting (lines 126-151)
+6. get_ime_by_id() - Find IME by ID (lines 87-94)
+7. serialize_ime_ids() - Track known IMEs (lines 115-124)
+
+**Missing**: ~80% (122 out of 152 lines of core logic)
+
+**Recommendation**: REIMPLEMENT WITH CORRECT APPROACH
+- Use InputMethodManager.getEnabledInputMethodList()
+- Enumerate IMEs with mode == "voice"
+- Show chooser dialog using Utils.showDialogOnIme()
+- Store preferences for last-used voice IME
+- Call InputMethodService.switchInputMethod()
+- Follow Java implementation pattern exactly
+
+**Assessment**: This is a significant functional regression. The Kotlin version doesn't actually implement voice IME switching at all - it's a placeholder implementation using speech recognition. This will not work properly for users who have dedicated voice input keyboards installed.
+
+---
+
+## File 69/251: WordGestureTemplateGenerator.java (406 lines) - ARCHITECTURAL DIFFERENCE
+
+**QUALITY**: ⚠️ **ARCHITECTURAL** - Template generation replaced by ONNX training
+
+**Java Implementation**: 406 lines with template generation from dictionary words
+**Kotlin Implementation**: ❌ **INTENTIONALLY REPLACED** by ONNX model training
+
+### BUG #265 (ARCHITECTURAL): Gesture template generation replaced by neural training
+
+**Java Components**:
+- Dynamic keyboard coordinate mapping (lines 44-122)
+- Dictionary loading with frequency weights (lines 125-192)
+- Template generation from word strings (lines 194-253)
+- Template caching for performance (lines 25-26, 33-34)
+- Uses actual keyboard dimensions for accuracy (lines 44-52)
+- QWERTY layout with proper row offsets (lines 63-122)
+- Integration with KeyboardSwipeRecognizer for CGR matching
+
+**Kotlin Architecture**:
+- ONNX model trained offline on gesture data
+- No runtime template generation
+- Model implicitly learns gesture patterns
+- No dictionary dependency for templates
+
+**Impact**: ⚠️ ARCHITECTURAL DESIGN CHOICE
+- ✅ PRO: No runtime template generation overhead
+- ✅ PRO: Model learns optimal patterns from data
+- ✅ PRO: No need to maintain dictionary files
+- ❌ CON: Cannot add new words without retraining
+- ❌ CON: No dynamic adaptation to keyboard layout changes
+- ❌ CON: No frequency-based template prioritization
+
+**Related Components**:
+- Bug #256: KeyboardSwipeRecognizer (uses templates)
+- Bug #262: WordPredictor (provides dictionary)
+
+**Missing**: N/A - Replaced by offline ONNX training
+
+**Recommendation**: CURRENT DESIGN IS INTENTIONAL
+- Template generation is part of CGR approach
+- ONNX model replaces need for runtime templates
+- Consider offline template generation for model training validation
+
+**Assessment**: WordGestureTemplateGenerator is a key component of the CGR (Character-Gesture Recognition) system that the Kotlin version intentionally removed. The ONNX neural approach doesn't need runtime template generation because patterns are learned during training. This is consistent with the architectural decision to replace CGR with pure ONNX.
+
+---
+
+**REVIEW PROGRESS UPDATE**:
+- **Files Reviewed**: 69/251 (27.5%)
+- **Bugs Found**: 265 total
+  - Catastrophic: ~10 (missing core systems)
+  - High: ~5 (functional regressions)
+  - Medium: ~20 (quality issues)
+  - Low: ~10 (code cleanup)
+  - Architectural: ~10 (intentional design changes)
+- **Architectural Changes Documented**: CGR→ONNX transition, multi-strategy→single-strategy
+
+---
+
