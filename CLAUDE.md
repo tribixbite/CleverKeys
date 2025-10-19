@@ -3,23 +3,33 @@
 ## 🚨 **SYSTEMATIC REVIEW INSTRUCTIONS - ALWAYS CHECK FIRST!**
 
 **BEFORE STARTING ANY SESSION:**
-1. **CHECK @CURRENT_SESSION_STATUS.md** - Shows Files 1-77/251 reviewed (30.7% complete)
-2. **CHECK @REVIEW_PROGRESS-one-of-four.md** - Contains detailed file-by-file comparison results
-3. **NOTE**: Additional review documents exist:
-   - REVIEW_PROGRESS-two-of-four.md
-   - REVIEW_PROGRESS-three-of-four.md
-   - REVIEW_PROGRESS-four-of-four.md
-4. **PROCEED** with systematic Java-to-Kotlin feature parity review starting from next unreviewed file
-5. **FIX SIMULTANEOUSLY** when bugs are found that can be fixed immediately (don't just document)
+1. **CHECK @CURRENT_SESSION_STATUS.md** - Shows Files 85/251 reviewed (33.9% complete)
+2. **CHECK component-based review files:**
+   - @REVIEW_GESTURES_INPUT.md (gesture recognition, touch input)
+   - @REVIEW_LAYOUT_CUSTOMIZATION.md (extra keys, layouts, preferences)
+   - @REVIEW_NEURAL_PREDICTION.md (ONNX, ML prediction, dictionaries)
+   - @REVIEW_ML_TRAINING_DATA.md (training data, personalization)
+   - (4 more component files to be created as needed)
+3. **PROCEED** with systematic Java-to-Kotlin feature parity review starting from next unreviewed file
+4. **FIX SIMULTANEOUSLY** when bugs are found that can be fixed immediately (don't just document)
 
-**REVIEW PROCESS (SUSTAINABLE APPROACH):**
+**REVIEW PROCESS (COMPONENT-BASED ORGANIZATION):**
 - Compare Java file vs Kotlin equivalent line-by-line
 - Document missing features, architectural changes, bugs
 - Classify as: COMPLETE, MISSING, ARCHITECTURAL REPLACEMENT, STUB
-- **APPEND reviews to REVIEW_PROGRESS-[one-four]-of-four.md** (NOT individual files)
+- **APPEND reviews to appropriate component file:**
+  - Gesture/input → REVIEW_GESTURES_INPUT.md
+  - Layout/keys → REVIEW_LAYOUT_CUSTOMIZATION.md
+  - Neural/ML → REVIEW_NEURAL_PREDICTION.md
+  - Training data → REVIEW_ML_TRAINING_DATA.md
+  - Core system → REVIEW_CORE_SYSTEM.md (create when needed)
+  - UI/activities → REVIEW_UI_ACTIVITIES.md (create when needed)
+  - Clipboard → REVIEW_CLIPBOARD_COMPOSE.md (create when needed)
+  - Performance → REVIEW_PERFORMANCE_MISC.md (create when needed)
 - Update CURRENT_SESSION_STATUS.md with progress
 - Commit after each file review completion
 - **DO NOT** create individual REVIEW_FILE_XX_FileName.md files (causes bloat)
+- **BENEFIT:** Related bugs grouped together, easier navigation, balanced file sizes
 
 ## 🚨 CRITICAL DEVELOPMENT PRINCIPLES
 
