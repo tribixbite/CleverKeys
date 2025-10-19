@@ -606,6 +606,24 @@ data class KeyboardData(
 }
 
 /**
+ * Preferred position for placing extra keys on the keyboard.
+ *
+ * Used by ExtraKeys system to specify where dynamically added keys should appear.
+ */
+data class PreferredPos(
+    /** Place this key next to the specified key (null = no preference) */
+    var nextTo: KeyValue? = null
+) {
+    companion object {
+        /** Default position (no specific preference) */
+        val DEFAULT = PreferredPos(nextTo = null)
+
+        /** Place anywhere possible */
+        val ANYWHERE = PreferredPos(nextTo = null)
+    }
+}
+
+/**
  * Interface for key transformation operations
  */
 fun interface MapKey {
