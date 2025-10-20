@@ -30,6 +30,22 @@ This file tracks bugs and missing features in the core keyboard logic (parsing, 
 
 ---
 
+## 📋 REVIEW STATUS (From REVIEW_TODO_CORE.md - UPDATED)
+
+**Progress**: 141/251 files reviewed (56.2%)
+**Remaining**: 110 files (43.8%)
+
+**Next Review Files**: Files 142-251
+- Systematic review continuing from File 142
+- See `docs/COMPLETE_REVIEW_STATUS.md` for full timeline
+
+**Files Needing Review**:
+- [ ] Files 142-170 (next batch of 29 files)
+- [ ] Files 171-220 (50 files)
+- [ ] Files 221-251 (31 files)
+
+---
+
 ## 🟢 CORE SYSTEM BUGS
 
 - File 1: 1 critical (KeyValueParser 96% missing)
