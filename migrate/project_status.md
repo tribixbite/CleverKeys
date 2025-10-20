@@ -23,11 +23,12 @@
   - TODO_ARCHITECTURAL.md → docs/specs/architectural-decisions.md (6 ADRs)
   - REVIEW_TODO_{CORE,NEURAL,GESTURES,LAYOUT,ML_DATA}.md → component files
 - ✅ Phase 2 Complete: All 13 TODO files consolidated/archived
-- 🔄 Phase 3: Creating critical specs (1/3 complete)
-  - ✅ docs/specs/gesture-system.md (548 lines - Bug #267)
-  - ⏳ docs/specs/layout-system.md
-  - ⏳ docs/specs/neural-prediction.md
-- ⏳ Phase 4: Archive historical docs
+- ✅ Phase 3 Complete: Created 3 critical specs (1,894 lines total)
+  - ✅ docs/specs/gesture-system.md (548 lines - Bug #267 HIGH)
+  - ✅ docs/specs/layout-system.md (798 lines - Bug #266 CATASTROPHIC)
+  - ✅ docs/specs/neural-prediction.md (636 lines - Bugs #273-277)
+  - ✅ docs/specs/architectural-decisions.md (223 lines - 6 ADRs)
+- 🔄 Phase 4: Archive historical docs (in progress)
 - ⏳ Phase 5: Update CLAUDE.md
 
 ---
