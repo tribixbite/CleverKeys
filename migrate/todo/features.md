@@ -2,7 +2,29 @@
 
 This file tracks missing user-facing features.
 
-## 🔴 HIGH PRIORITY BUGS (From TODO_HIGH_PRIORITY.md)
+## 🔴 HIGH PRIORITY BUGS
+
+### Multi-Language Support (Files 142-149)
+- [ ] **Bug #346**: LocaleManager.java missing (File 144)
+  - Impact: NO locale formatting, hardcoded separators, no RTL support
+  - File: LocaleManager.java (150-250 lines) → COMPLETELY MISSING
+
+- [ ] **Bug #350**: CharacterSetManager.java missing (File 148)
+  - Impact: NO character set detection, no transliteration
+  - File: CharacterSetManager.java (250-350 lines) → COMPLETELY MISSING
+
+- [ ] **Bug #351**: UnicodeNormalizer.java missing (File 149)
+  - Impact: Autocorrect fails on accented characters (café vs café)
+  - File: UnicodeNormalizer.java (150-250 lines) → COMPLETELY MISSING
+
+### Translation (MEDIUM)
+- [ ] **Bug #348**: TranslationEngine.java missing (File 146)
+  - Impact: NO inline translation, no Google Translate integration
+  - File: TranslationEngine.java (300-400 lines) → COMPLETELY MISSING
+
+---
+
+## 🔴 HIGH PRIORITY BUGS (Previously Documented)
 
 ### Clipboard & History (8 bugs)
 - [ ] **Bug #114**: Missing AttributeSet constructor parameter

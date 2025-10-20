@@ -36,8 +36,26 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 ### **P0 - CATASTROPHIC (System Breaking) - 13 Bugs**
 
 #### Core Systems Missing
+
+**Multi-Language Support (Files 142-149)**
+- [ ] **Bug #344**: LanguageManager.java missing (File 142)
+  - Impact: NO language switching, only English supported
+  - File: LanguageManager.java (300-400 lines) → COMPLETELY MISSING
+
+- [ ] **Bug #345**: DictionaryLoader.java missing (File 143)
+  - Impact: NO async dictionary loading, no user dictionary
+  - File: DictionaryLoader.java (250-350 lines) → COMPLETELY MISSING
+
+- [ ] **Bug #347**: IMELanguageSelector.java missing (File 145)
+  - Impact: NO language selection UI, no globe key menu
+  - File: IMELanguageSelector.java (200-300 lines) → COMPLETELY MISSING
+
+- [ ] **Bug #349**: RTLLanguageHandler.java missing (File 147)
+  - Impact: Arabic/Hebrew text BROKEN, ~429M users blocked
+  - File: RTLLanguageHandler.java (200-300 lines) → COMPLETELY MISSING
+
 - [ ] **Bug #257**: LanguageDetector system missing (File 59)
-  - Impact: No multi-language support
+  - Impact: No automatic language detection
   - File: LanguageDetector.java (313 lines) → MISSING
 
 - [ ] **Bug #258**: LoopGestureDetector system missing (File 60)
