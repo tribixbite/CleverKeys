@@ -28,8 +28,22 @@
   - ✅ docs/specs/layout-system.md (798 lines - Bug #266 CATASTROPHIC)
   - ✅ docs/specs/neural-prediction.md (636 lines - Bugs #273-277)
   - ✅ docs/specs/architectural-decisions.md (223 lines - 6 ADRs)
-- 🔄 Phase 4: Archive historical docs (in progress)
-- ⏳ Phase 5: Update CLAUDE.md
+- ✅ Phase 4 Complete: Archived 8 historical files
+  - 4 REVIEW_FILE_*.md → docs/history/reviews/
+  - 4 summary/analysis files → docs/history/
+- ✅ Phase 5 Complete: Updated CLAUDE.md
+  - Session startup protocol (5 steps)
+  - Navigation guide (17 essential files)
+  - Spec-driven development workflow
+
+**🎉 ALL 5 PHASES COMPLETE**
+
+**Result**: 66 markdown files systematically organized
+- Single source of truth for each information type
+- Specs for major systems (gesture, layout, neural)
+- TODOs by component (critical/core/features/neural/ui/settings)
+- Historical docs preserved in docs/history/
+- Clear navigation via TABLE_OF_CONTENTS.md
 
 ---
 
