@@ -23,6 +23,19 @@ This file tracks issues related to the swipe prediction and ONNX machine learnin
 
 ---
 
+## 📋 NEURAL PREDICTION FILES STATUS (From REVIEW_TODO_NEURAL.md)
+
+**Files Reviewed**: See Files 41-50, 57-65, 67-100 in core review
+**Key Findings**:
+- Pure ONNX architecture (no CGR system)
+- 6 architectural replacements (intentional - see `docs/specs/architectural-decisions.md`)
+- 5+ CATASTROPHIC missing files (BigramModel, NgramModel, etc.)
+
+**Remaining Java Files Needing Review**:
+- [ ] Additional prediction-related files in Files 142-251
+
+---
+
 ## 🟢 ONNX PIPELINE BUGS
 
 - File 41: **3 bugs** (OnnxSwipePredictor - LOW: redundant debugLogger field, misleading stub documentation, undocumented singleton lifecycle)
