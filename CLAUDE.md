@@ -1,20 +1,35 @@
 # CLAUDE.md - CleverKeys Development Context
 
-## 🚨 **SYSTEMATIC REVIEW INSTRUCTIONS - ALWAYS CHECK FIRST!**
+## 🚨 **SESSION STARTUP PROTOCOL - ALWAYS CHECK FIRST!**
 
 **BEFORE STARTING ANY SESSION:**
-1.  **CHECK `migrate/project_status.md`** - This file tracks the overall status of the project.
-2.  **CHECK `migrate/completed_reviews.md`** - This file contains detailed file-by-file comparison results from previous reviews.
-3.  **CHECK `memory/todo.md`** - This file contains the comprehensive list of outstanding work required to achieve full feature parity.
-4.  **PROCEED** with the systematic Java-to-Kotlin feature parity review, guided by the `todo.md` and the file structure mapping below.
-5.  **FIX SIMULTANEOUSLY** when bugs are found that can be fixed immediately (don't just document).
+1.  **CHECK `migrate/project_status.md`** - Current milestone and consolidation status
+2.  **CHECK `docs/TABLE_OF_CONTENTS.md`** - Master navigation for all 66+ files
+3.  **CHECK `docs/COMPLETE_REVIEW_STATUS.md`** - Review progress: 141/251 files (56.2%)
+4.  **CHECK `migrate/todo/critical.md`** - P0 catastrophic bugs (15 remaining)
+5.  **CHECK `docs/specs/`** - Feature specifications (gesture, layout, neural systems)
+
+**CURRENT FOCUS (2025-10-20):**
+- ✅ Fix #51-53 COMPLETE (keys working, container fixed, text sizing)
+- ✅ Documentation consolidated (66 files → organized structure)
+- ✅ 3 critical specs created (gesture, layout, neural prediction)
+- 🔄 Resume systematic review at File 142/251 (110 files remaining)
+- 🔄 Fix P0 bugs as discovered
+
+**SPEC-DRIVEN DEVELOPMENT WORKFLOW:**
+1. **Check Spec**: Is there a spec in `docs/specs/` for this feature?
+2. **Create Spec**: If missing, create from `docs/specs/SPEC_TEMPLATE.md`
+3. **Implement**: Follow spec's implementation plan (with TODOs at top)
+4. **Test**: Use spec's testing strategy
+5. **Update**: Mark TODOs complete, update status
+6. **Commit**: Reference spec in commit message
 
 **REVIEW PROCESS:**
-- Compare the original Java file from `Unexpected-Keyboard` with its Kotlin equivalent in this repository.
-- Use the **Feature & File Structure Mapping** guide below to locate corresponding files.
-- Document missing features, architectural changes, and bugs.
-- Update `memory/todo.md` with any new findings.
-- Commit after each significant feature implementation or bug fix.
+- Compare Java file from `Unexpected-Keyboard` with Kotlin equivalent
+- Use Feature & File Structure Mapping below to locate files
+- Document in `migrate/todo/` by component (critical/core/features/neural/ui)
+- Create specs for major systems in `docs/specs/`
+- Commit after each file review or bug fix
 
 ---
 
@@ -29,12 +44,38 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
 
 ---
 
-## 📋 **CURRENT STATUS & GUIDES**
+## 📋 **CURRENT STATUS & NAVIGATION**
 
-- **Primary Goal**: Achieve 100% feature parity with the original `Unexpected-Keyboard`.
-- **Outstanding Tasks**: See **`memory/todo.md`** for a detailed, prioritized list of missing features and bugs.
-- **Historical Logs**: See **`migrate/claude_history.md`** for a detailed archive of past development, bug fixes, and milestones.
-- **Build Status**: The APK builds successfully, and the core neural prediction pipeline is functional. The immediate focus is on implementing the remaining user-facing features.
+**Review Progress**: 141/251 files (56.2% complete)
+**Bugs Documented**: 337 total (25 catastrophic, 12 high, 11 medium, 3 low, 46 fixed)
+**Build Status**: ✅ APK builds successfully (49MB)
+
+**📁 NAVIGATION GUIDE:**
+
+### Essential Files (Check First)
+1. **`migrate/project_status.md`** - Current milestone, consolidation status
+2. **`docs/TABLE_OF_CONTENTS.md`** - Master file index (66 files tracked)
+3. **`docs/COMPLETE_REVIEW_STATUS.md`** - Full review timeline (Files 1-141)
+
+### TODO Lists (By Component)
+4. **`migrate/todo/critical.md`** - P0 catastrophic bugs (15 remaining)
+5. **`migrate/todo/core.md`** - Core keyboard logic bugs
+6. **`migrate/todo/features.md`** - Missing user features
+7. **`migrate/todo/neural.md`** - ONNX pipeline bugs
+8. **`migrate/todo/settings.md`** - Settings system bugs
+9. **`migrate/todo/ui.md`** - UI/UX bugs
+
+### Feature Specifications (Spec-Driven Development)
+10. **`docs/specs/SPEC_TEMPLATE.md`** - Template for new specs
+11. **`docs/specs/gesture-system.md`** - Gesture recognition (Bug #267)
+12. **`docs/specs/layout-system.md`** - ExtraKeys customization (Bug #266)
+13. **`docs/specs/neural-prediction.md`** - ONNX pipeline (Bugs #273-277)
+14. **`docs/specs/architectural-decisions.md`** - 6 ADRs (ONNX, coroutines, etc.)
+
+### Historical Reference
+15. **`docs/history/`** - Archived analysis, roadmaps, migration docs (19 files)
+16. **`docs/history/reviews/`** - Individual file reviews (Files 82-85)
+17. **`migrate/claude_history.md`** - Development timeline
 
 ---
 
