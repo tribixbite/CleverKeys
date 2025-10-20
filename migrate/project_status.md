@@ -1,6 +1,23 @@
 # Project Status
 
-## Latest Session (Oct 20, 2025)
+## Latest Session (Oct 20, 2025) - Part 2
+
+### ✅ BUG FIXES: #270, #271 COMPLETE
+
+**Bug #270 - Time Delta Calculation** ✅ FIXED
+- Added `lastAbsoluteTimestamp` field to SwipeMLData.kt
+- Matches Java implementation pattern
+- Training data timestamps now accurate
+
+**Bug #271 - Consecutive Duplicates** ✅ ALREADY FIXED
+- Line 114 already prevents consecutive duplicates
+- Identical behavior to Java version
+
+**Status**: 2 HIGH priority bugs resolved (11 P0 bugs remaining)
+
+---
+
+## Latest Session (Oct 20, 2025) - Part 1
 
 ### ✅ DOCUMENTATION ORGANIZATION COMPLETE
 
