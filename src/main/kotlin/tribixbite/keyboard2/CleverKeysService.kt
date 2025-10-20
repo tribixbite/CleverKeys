@@ -4,6 +4,8 @@ import android.content.SharedPreferences
 import android.graphics.PointF
 import android.inputmethodservice.InputMethodService
 import android.util.Log
+import android.content.Intent
+import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
@@ -112,8 +114,16 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     private fun initializeConfiguration() {
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
         prefs.registerOnSharedPreferenceChangeListener(this)
-        
-        Config.initGlobalConfig(prefs, resources, null, false)
+
+        // Initialize KeyEventHandler before Config (Fix #51)
+        keyEventHandler = KeyEventHandler(
+            receiver = Receiver(),
+            typingPredictionEngine = typingPredictionEngine,
+            voiceGuidanceEngine = voiceGuidanceEngine,
+            screenReaderManager = screenReaderManager
+        )
+
+        Config.initGlobalConfig(prefs, resources, keyEventHandler, false)
         config = Config.globalConfig()
         neuralConfig = NeuralConfig(prefs)
 
@@ -1006,4 +1016,61 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         val timestamps: List<Long>,
         val detectedKeys: List<String> = emptyList()
     )
+
+    /**
+     * Receiver implementation for KeyEventHandler (Fix #51)
+     * Handles callbacks from the key event processing system
+     */
+    inner class Receiver : KeyEventHandler.IReceiver {
+        override fun getInputConnection(): InputConnection? = currentInputConnection
+
+        override fun getCurrentInputEditorInfo(): EditorInfo? = currentInputEditorInfo
+
+        override fun getKeyboardView(): android.view.View? = keyboardView
+
+        override fun performVibration() {
+            // Haptic feedback handled by Keyboard2View
+            keyboardView?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        }
+
+        override fun commitText(text: String) {
+            currentInputConnection?.commitText(text, 1)
+        }
+
+        override fun performAction(action: Int) {
+            currentInputConnection?.performEditorAction(action)
+        }
+
+        override fun switchToMainLayout() {
+            // TODO: Implement layout switching
+            logD("switchToMainLayout() called - not yet implemented")
+        }
+
+        override fun switchToNumericLayout() {
+            // TODO: Implement layout switching
+            logD("switchToNumericLayout() called - not yet implemented")
+        }
+
+        override fun switchToEmojiLayout() {
+            // TODO: Implement layout switching
+            logD("switchToEmojiLayout() called - not yet implemented")
+        }
+
+        override fun openSettings() {
+            // Launch settings activity
+            try {
+                val intent = Intent(this@CleverKeysService, SettingsActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                startActivity(intent)
+            } catch (e: Exception) {
+                logE("Failed to open settings", e)
+            }
+        }
+
+        override fun updateSuggestions(suggestions: List<String>) {
+            // Update suggestion bar with tap typing predictions
+            suggestionBar?.setSuggestions(suggestions)
+        }
+    }
 }

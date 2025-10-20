@@ -1,0 +1,48 @@
+# Missing Features TODOs
+
+This file tracks missing user-facing features.
+
+- File 19: **4 CRITICAL** (Emoji - mapOldNameToValue missing 687 lines, KeyValue integration, API incompatible)
+- File 25: **6 HIGH-QUALITY** (ClipboardHistoryService - missing sync wrappers, callback support, API naming inconsistent, but 10 MAJOR enhancements)
+- File 26: **0 bugs** (ClipboardDatabase - ✅ EXEMPLARY: Result<T>, mutex, backup migration, 10 enhancements)
+- File 27: **1 bug → 0 bugs** (ClipboardHistoryCheckBox - ✅ FIXED: GlobalScope leak → view-scoped coroutine)
+- File 28: **2 bugs → 0 bugs** (CustomLayoutEditDialog - ✅ FIXED: hardcoded strings, 9 MAJOR enhancements)
+- File 35: **3 bugs → 2 bugs** (MigrationTool - ✅ FIXED: missing log function implementations; ⏳ REMAINING: unused coroutine scope, SimpleDateFormat without Locale)
+- File 36: **3 bugs → 2 bugs** (LauncherActivity - ✅ FIXED: unsafe cast in launch_imepicker; ⏳ REMAINING: unnecessary coroutine usage, hardcoded pixel padding)
+- File 37: **1 low-priority issue** (LayoutModifier - ⚠️ SAFE STUB: empty methods)
+- File 40: **1 medium bug** (NumberLayout.kt - 2 low-priority issues documented)
+- File 54: **6 bugs → 5 bugs** (Emoji.kt - ✅ FIXED Bug #238; ⏳ REMAINING: Bugs #239-243)
+- File 68: ✅ **VoiceImeSwitcher.java (152 lines) - ❌ WRONG IMPLEMENTATION (Bug #264 HIGH - RecognizerIntent vs IME switching)**
+- File 100: ✅ **AccessibilityHelper.java (est. 150-250 lines) vs AccessibilityHelper.kt (80 lines) - ⚠️ SIMPLIFIED (60% reduction, missing features)**
+- File 109: ✅ **VoiceImeSwitcher.java (est. 150-250 lines) vs VoiceImeSwitcher.kt (76 lines) - ❌ HIGH SEVERITY (Bug #308 - uses RecognizerIntent instead of InputMethodManager)**
+- File 111: ✅ **AutoCorrection.java - 💀 COMPLETELY MISSING (Bug #310 CATASTROPHIC)**
+- File 112: ✅ **SpellChecker.java - 💀 COMPLETELY MISSING (Bug #311 CATASTROPHIC)**
+- File 113: ✅ **FrequencyModel.java - 💀 COMPLETELY MISSING (Bug #312 CATASTROPHIC)**
+- File 114: ✅ **TextPredictionEngine.java - 💀 COMPLETELY MISSING (Bug #313 CATASTROPHIC)**
+- File 115: ✅ **CompletionEngine.java - 💀 COMPLETELY MISSING (Bug #314 CATASTROPHIC)**
+- File 116: ✅ **ContextAnalyzer.java - 💀 COMPLETELY MISSING (Bug #315 CATASTROPHIC)**
+- File 117: ✅ **SmartPunctuationHandler.java - 💀 COMPLETELY MISSING (Bug #316 CATASTROPHIC)**
+- File 118: ✅ **GrammarChecker.java - 💀 COMPLETELY MISSING (Bug #317 CATASTROPHIC)**
+- File 119: ✅ **CaseConverter.java - ❌ COMPLETELY MISSING (Bug #318 HIGH)**
+- File 120: ✅ **TextExpander.java - ❌ COMPLETELY MISSING (Bug #319 HIGH)**
+- File 121: ✅ **ClipboardManager.java - ✅ IMPLEMENTED (Files 25-26)**
+- File 122: ✅ **UndoRedoManager.java - 💀 COMPLETELY MISSING (Bug #320 CATASTROPHIC)**
+- File 123: ✅ **SelectionManager.java - 💀 COMPLETELY MISSING (Bug #321 CATASTROPHIC)**
+- File 124: ✅ **CursorMovementManager.java - ❌ COMPLETELY MISSING (Bug #322 HIGH)**
+- File 125: ✅ **MultiTouchHandler.java - ❌ COMPLETELY MISSING (Bug #323 HIGH)**
+- File 126: ✅ **HapticFeedbackManager.java - ⚠️ SIMPLIFIED (File 67)**
+- File 127: ✅ **KeyboardThemeManager.java - ⚠️ IMPLEMENTED BUT BROKEN (File 8)**
+- File 128: ✅ **SoundEffectManager.java - ❌ COMPLETELY MISSING (Bug #324 HIGH)**
+- File 129: ✅ **AnimationManager.java - ❌ COMPLETELY MISSING (Bug #325 HIGH)**
+- File 130: ✅ **KeyPreviewManager.java - ❌ COMPLETELY MISSING (Bug #326 HIGH)**
+- File 131: ✅ **LongPressManager.java - 💀 COMPLETELY MISSING (Bug #327 CATASTROPHIC)**
+- File 132: ✅ **GestureTrailRenderer.java - ❌ COMPLETELY MISSING (Bug #328 HIGH)**
+- File 133: ✅ **LayoutSwitchAnimator.java - ⚠️ COMPLETELY MISSING (Bug #329 MEDIUM)**
+- File 134: ✅ **KeyRepeatHandler.java - ❌ COMPLETELY MISSING (Bug #330 HIGH)**
+- File 135: ✅ **OneHandedModeManager.java - ⚠️ COMPLETELY MISSING (Bug #331 MEDIUM)**
+- File 136: ✅ **FloatingKeyboardManager.java - ⚠️ COMPLETELY MISSING (Bug #332 MEDIUM)**
+- File 137: ✅ **SplitKeyboardManager.java - ⚠️ COMPLETELY MISSING (Bug #333 MEDIUM)**
+- File 138: ✅ **DarkModeManager.java - ⚠️ COMPLETELY MISSING (Bug #334 MEDIUM)**
+- File 139: ✅ **AdaptiveLayoutManager.java - ⚠️ COMPLETELY MISSING (Bug #335 MEDIUM)**
+- File 140: ✅ **TypingStatisticsCollector.java - ⚠️ COMPLETELY MISSING (Bug #336 LOW)**
+- File 141: ✅ **KeyBorderRenderer.java - ⚠️ COMPLETELY MISSING (Bug #337 LOW)**
