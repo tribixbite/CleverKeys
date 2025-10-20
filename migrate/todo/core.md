@@ -2,6 +2,36 @@
 
 This file tracks bugs and missing features in the core keyboard logic (parsing, event handling, etc.).
 
+## 🟠 MEDIUM PRIORITY BUGS (From TODO_MEDIUM_LOW.md)
+
+### Configuration (2 bugs)
+- [ ] **Bug #75**: CharKey flags hardcoded to emptySet()
+  - File: ComposeKey.kt (File 13)
+  - Impact: Some compose key flags lost
+  - Severity: MEDIUM
+
+- [ ] **Bug #80**: TRIGGER_CHARACTERS expanded beyond Java
+  - File: ComposeKeyData.kt (File 14)
+  - Impact: Functionality change (may be intentional)
+  - Severity: MEDIUM
+
+## 🟡 LOW PRIORITY BUGS (From TODO_MEDIUM_LOW.md)
+
+### Code Quality (2 bugs)
+- [ ] **Bug #77**: LegacyComposeSystem - 90 lines of UNUSED dead code
+  - File: ComposeKey.kt (File 13)
+  - Impact: Code bloat only
+  - Severity: LOW
+
+- [ ] **Bug #272**: TracePoint comment incorrect
+  - File: SwipeMLData.kt (File 70)
+  - Impact: Documentation only
+  - Severity: LOW
+
+---
+
+## 🟢 CORE SYSTEM BUGS
+
 - File 1: 1 critical (KeyValueParser 96% missing)
 - File 2: 23 critical (Keyboard2 ~800 lines missing)
 - File 4: 1 critical (Config.handler = null)

@@ -2,6 +2,52 @@
 
 This file tracks UI-related bugs and missing features (theming, suggestion bar, layouts).
 
+## 🟠 MEDIUM PRIORITY BUGS (From TODO_MEDIUM_LOW.md)
+
+### UI Internationalization (4 bugs)
+- [ ] **Bug #116**: Hardcoded header text
+  - File: ClipboardPinView.kt (File 23)
+  - Impact: No i18n support
+  - Severity: MEDIUM
+
+- [ ] **Bug #117**: Hardcoded button text
+  - File: ClipboardPinView.kt (File 23)
+  - Impact: No i18n support
+  - Severity: MEDIUM
+
+- [ ] **Bug #119**: Hardcoded emoji icons
+  - File: ClipboardPinView.kt (File 23)
+  - Impact: No customization
+  - Severity: MEDIUM
+
+- [ ] **Bug #121**: Hardcoded toast message
+  - File: ClipboardHistoryCheckBox.kt (File 27)
+  - Impact: No i18n support
+  - Severity: MEDIUM
+
+### Performance (1 bug)
+- [ ] **Bug #128**: Blocking initialization in lazy property
+  - File: ClipboardHistoryService.kt (File 25)
+  - Impact: Potential ANR (Application Not Responding)
+  - Severity: MEDIUM
+
+## 🟡 LOW PRIORITY BUGS (From TODO_MEDIUM_LOW.md)
+
+### API Consistency (2 bugs)
+- [ ] **Bug #129**: Different method name - clear_expired_and_get_history
+  - File: ClipboardHistoryService.kt (File 25)
+  - Impact: API naming inconsistency
+  - Severity: LOW
+
+- [ ] **Bug #130**: Interface moved from inner to top-level
+  - File: ClipboardHistoryService.kt (File 25)
+  - Impact: Minor architectural difference
+  - Severity: LOW
+
+---
+
+## 🟢 UI SYSTEM BUGS
+
 - File 3: 1 critical (text size calculation)
 - File 5: 11 critical (SuggestionBar 73% missing, no theme integration)
 - File 8: 1 critical (Theme XML loading broken)
