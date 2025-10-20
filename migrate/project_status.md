@@ -22,8 +22,11 @@
   - TODO_MEDIUM_LOW.md → core.md, ui.md (12 bugs)
   - TODO_ARCHITECTURAL.md → docs/specs/architectural-decisions.md (6 ADRs)
   - REVIEW_TODO_{CORE,NEURAL,GESTURES,LAYOUT,ML_DATA}.md → component files
-- 🔄 Phase 2: Large TODOs remaining (TODO.md, TODONOW.md, ISSUES.md, MISSING_FEATURES.md)
-- ⏳ Phase 3: Create critical specs (gesture-system.md, etc.)
+- ✅ Phase 2 Complete: All 13 TODO files consolidated/archived
+- 🔄 Phase 3: Creating critical specs (1/3 complete)
+  - ✅ docs/specs/gesture-system.md (548 lines - Bug #267)
+  - ⏳ docs/specs/layout-system.md
+  - ⏳ docs/specs/neural-prediction.md
 - ⏳ Phase 4: Archive historical docs
 - ⏳ Phase 5: Update CLAUDE.md
 
