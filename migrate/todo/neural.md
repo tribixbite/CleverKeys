@@ -4,16 +4,18 @@ This file tracks issues related to the swipe prediction and ONNX machine learnin
 
 ## 🔴 HIGH PRIORITY BUGS (From TODO_HIGH_PRIORITY.md)
 
-### ML & Training Data (3 bugs)
-- [ ] **Bug #270**: addRawPoint() incorrect time delta calculation
+### ML & Training Data (1 bug)
+- [x] **Bug #270**: addRawPoint() incorrect time delta calculation ✅ FIXED
   - File: SwipeMLData.kt (File 70)
-  - Impact: Training data timestamps wrong
+  - Impact: Training data timestamps wrong → NOW ACCURATE
   - Severity: HIGH
+  - Fix: Track lastAbsoluteTimestamp field instead of recalculating from sum
 
-- [ ] **Bug #271**: addRegisteredKey() doesn't avoid consecutive duplicates
+- [x] **Bug #271**: addRegisteredKey() doesn't avoid consecutive duplicates ✅ ALREADY FIXED
   - File: SwipeMLData.kt (File 70)
-  - Impact: Noisy training data
+  - Impact: Noisy training data → NOW CLEAN
   - Severity: HIGH
+  - Fix: Line 114 checks `registeredKeys.last() != normalizedKey`
 
 - [ ] **Bug #277**: Multi-language support missing
   - File: DictionaryManager.java → OptimizedVocabularyImpl.kt (File 79)

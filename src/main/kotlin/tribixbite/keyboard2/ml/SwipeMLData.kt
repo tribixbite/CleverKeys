@@ -25,6 +25,13 @@ data class SwipeMLData(
     val registeredKeys: MutableList<String> = mutableListOf(),
     var keyboardOffsetY: Int = 0
 ) {
+    // Track last absolute timestamp for delta calculation (Bug #270 fix)
+    private var lastAbsoluteTimestamp: Long = 0L
+        get() {
+            // Lazy initialization: first access returns timestampUtc
+            if (field == 0L) field = timestampUtc
+            return field
+        }
 
     companion object {
         private const val TAG = "SwipeMLData"
@@ -66,6 +73,12 @@ data class SwipeMLData(
                 data.keyboardOffsetY = metadata.getInt("keyboard_offset_y")
             }
 
+            // Reconstruct last absolute timestamp from deltas (Bug #270 fix)
+            data.lastAbsoluteTimestamp = data.timestampUtc
+            for (point in data.tracePoints) {
+                data.lastAbsoluteTimestamp += point.tDeltaMs
+            }
+
             return data
         }
     }
@@ -86,19 +99,17 @@ data class SwipeMLData(
     
     /**
      * Add a raw trace point (will be normalized)
+     * Bug #270 fix: Track lastAbsoluteTimestamp properly instead of recalculating
      */
     fun addRawPoint(rawX: Float, rawY: Float, timestamp: Long) {
         val normalizedX = rawX / screenWidthPx
         val normalizedY = rawY / screenHeightPx
 
-        // Calculate time delta from previous point (0 for first point)
-        val deltaMs = if (tracePoints.isEmpty()) {
-            0L
-        } else {
-            // Sum up previous deltas to get absolute time, then calculate new delta
-            val lastAbsoluteTime = tracePoints.sumOf { it.tDeltaMs }
-            timestamp - (timestampUtc + lastAbsoluteTime)
-        }
+        // Calculate time delta from last absolute timestamp
+        val deltaMs = timestamp - lastAbsoluteTimestamp
+
+        // Update last absolute timestamp for next point
+        lastAbsoluteTimestamp = timestamp
 
         tracePoints.add(TracePoint(normalizedX, normalizedY, deltaMs))
     }
