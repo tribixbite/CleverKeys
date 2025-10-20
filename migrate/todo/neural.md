@@ -2,6 +2,29 @@
 
 This file tracks issues related to the swipe prediction and ONNX machine learning pipeline.
 
+## 🔴 HIGH PRIORITY BUGS (From TODO_HIGH_PRIORITY.md)
+
+### ML & Training Data (3 bugs)
+- [ ] **Bug #270**: addRawPoint() incorrect time delta calculation
+  - File: SwipeMLData.kt (File 70)
+  - Impact: Training data timestamps wrong
+  - Severity: HIGH
+
+- [ ] **Bug #271**: addRegisteredKey() doesn't avoid consecutive duplicates
+  - File: SwipeMLData.kt (File 70)
+  - Impact: Noisy training data
+  - Severity: HIGH
+
+- [ ] **Bug #277**: Multi-language support missing
+  - File: DictionaryManager.java → OptimizedVocabularyImpl.kt (File 79)
+  - Impact: Only English supported
+  - Severity: HIGH
+  - Note: Missing user dictionary support and language switching
+
+---
+
+## 🟢 ONNX PIPELINE BUGS
+
 - File 41: **3 bugs** (OnnxSwipePredictor - LOW: redundant debugLogger field, misleading stub documentation, undocumented singleton lifecycle)
 - File 42: **6 bugs → 5 bugs** (OnnxSwipePredictorImpl - ✅ FIXED Bug #165: undefined logD(); ⏳ REMAINING: orphaned comment, runBlocking in cleanup, code duplication, hardcoded thresholds, excessive logging)
 - File 43: **4 bugs** (OptimizedTensorPool - MEDIUM: runBlocking in close(); LOW: useTensor runBlocking, large buffers, buffer position not reset)

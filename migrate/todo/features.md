@@ -2,6 +2,60 @@
 
 This file tracks missing user-facing features.
 
+## 🔴 HIGH PRIORITY BUGS (From TODO_HIGH_PRIORITY.md)
+
+### Clipboard & History (8 bugs)
+- [ ] **Bug #114**: Missing AttributeSet constructor parameter
+  - File: ClipboardHistoryView.kt (File 24)
+  - Impact: Custom view attributes broken
+  - Severity: HIGH
+
+- [ ] **Bug #115**: Missing adapter pattern
+  - File: ClipboardHistoryView.kt (File 24)
+  - Impact: No data binding
+  - Severity: HIGH
+
+- [ ] **Bug #118**: Broken pin functionality
+  - File: ClipboardPinView.kt (File 23)
+  - Impact: Cannot pin clipboard items
+  - Severity: HIGH
+
+- [ ] **Bug #120**: Missing paste functionality
+  - File: ClipboardPinView.kt (File 23)
+  - Impact: Cannot paste from pinned items
+  - Severity: HIGH
+
+- [ ] **Bug #122**: Missing update_data() implementation
+  - File: ClipboardHistoryCheckBox.kt (File 27)
+  - Impact: UI doesn't update
+  - Severity: HIGH
+
+- [ ] **Bug #123**: Missing lifecycle hook
+  - File: ClipboardHistoryCheckBox.kt (File 27)
+  - Impact: Memory leaks possible
+  - Severity: HIGH
+
+- [ ] **Bug #126**: Missing callback-based notification support
+  - File: ClipboardHistoryService.kt (File 25)
+  - Impact: UI can't react to changes
+  - Severity: HIGH
+
+- [ ] **Bug #127**: Inconsistent API naming breaks all call sites
+  - File: ClipboardHistoryService.kt (File 25)
+  - Impact: All existing code broken
+  - Severity: HIGH
+
+### Voice Input (1 bug)
+- [ ] **Bug #264**: VoiceImeSwitcher doesn't actually switch to voice IME
+  - File: VoiceImeSwitcher.kt (File 68, reviewed as File 109)
+  - Impact: Launches speech recognizer instead of switching IME
+  - Severity: HIGH
+  - Needs: Proper IME switching implementation using InputMethodManager
+
+---
+
+## 🟢 FEATURE PARITY TRACKING
+
 - File 19: **4 CRITICAL** (Emoji - mapOldNameToValue missing 687 lines, KeyValue integration, API incompatible)
 - File 25: **6 HIGH-QUALITY** (ClipboardHistoryService - missing sync wrappers, callback support, API naming inconsistent, but 10 MAJOR enhancements)
 - File 26: **0 bugs** (ClipboardDatabase - ✅ EXEMPLARY: Result<T>, mutex, backup migration, 10 enhancements)
