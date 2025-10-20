@@ -484,8 +484,16 @@ class Keyboard2View @JvmOverloads constructor(
         val tc = config?.let { Theme.Computed(theme, it, keyWidth, kbd) } ?: return
         themeComputed = tc
 
-        mainLabelSize = keyWidth * 0.4f // Default label size ratio
-        subLabelSize = keyWidth * 0.25f // Default sublabel size ratio
+        // Fix #53: Dynamic text size calculation matching Java implementation
+        // labelBaseSize = min(row_height - vertical_margin, (width/10 - horizontal_margin) * 3/2) * characterSize
+        val cfg = config ?: return
+        val labelBaseSize = minOf(
+            tc.rowHeight - tc.verticalMargin,
+            (keyWidth - tc.horizontalMargin) * 1.5f
+        ) * cfg.characterSize
+
+        mainLabelSize = labelBaseSize * cfg.labelTextSize
+        subLabelSize = labelBaseSize * cfg.sublabelTextSize
 
         // Calculate total height
         val naturalHeight = kbd.keysHeight * tc.rowHeight + (config?.marginTop ?: 0f) + marginBottom

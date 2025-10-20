@@ -46,6 +46,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     private var neuralEngine: NeuralSwipeEngine? = null
     private var predictionService: SwipePredictionService? = null
     private var suggestionBar: SuggestionBar? = null
+    private var inputViewContainer: android.widget.LinearLayout? = null // Fix #52
     private var neuralConfig: NeuralConfig? = null
     private var keyEventHandler: KeyEventHandler? = null
     private var predictionPipeline: NeuralPredictionPipeline? = null
@@ -432,9 +433,10 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
 
     /**
      * Android requires this method to create the keyboard view
+     * Fix #52: Create container with suggestion bar + keyboard view
      */
     override fun onCreateInputView(): View? {
-        logD("onCreateInputView() called - creating keyboard view")
+        logD("onCreateInputView() called - creating container with keyboard + suggestions")
 
         val currentConfig = config ?: run {
             logE("Configuration not available for input view creation")
@@ -442,32 +444,56 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         }
 
         return try {
+            // Create keyboard view
             logD("Creating Keyboard2View...")
-
-            val view = Keyboard2View(this).apply {
-                // Set configuration first
+            val kbView = Keyboard2View(this).apply {
                 setViewConfig(currentConfig)
-                logD("Config set on view")
-
-                // Link view to service for swipe gesture processing
                 setKeyboardService(this@CleverKeysService)
-                logD("Service linked to view")
 
-                // Set the loaded keyboard layout
                 currentLayout?.let { layout ->
                     setKeyboard(layout)
                     logD("Layout set on view: ${layout.name}")
-                } ?: logW("No keyboard layout available to set on view")
+                } ?: logW("No keyboard layout available")
 
-                // Apply keyboard height setting
                 setKeyboardHeightPercent(currentConfig.keyboardHeightPercent)
             }
+            keyboardView = kbView
 
-            // Store the view for later access
-            keyboardView = view
+            // Create suggestion bar
+            logD("Creating SuggestionBar...")
+            val sugBar = SuggestionBar(this).apply {
+                setOnSuggestionSelectedListener { word ->
+                    logD("User selected suggestion: '$word'")
+                    currentInputConnection?.commitText(word + " ", 1)
+                }
+            }
+            suggestionBar = sugBar
 
-            logD("✅ Keyboard view created successfully")
-            view
+            // Create container (Fix #52: LinearLayout with suggestion bar on top)
+            logD("Creating LinearLayout container...")
+            val container = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+
+                // Add suggestion bar on top (40dp height)
+                val suggestionParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    (40 * resources.displayMetrics.density).toInt()
+                )
+                sugBar.layoutParams = suggestionParams
+                addView(sugBar)
+
+                // Add keyboard view below (fills remaining space)
+                val keyboardParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                kbView.layoutParams = keyboardParams
+                addView(kbView)
+            }
+            inputViewContainer = container
+
+            logD("✅ Container created successfully with suggestion bar + keyboard view")
+            container
 
         } catch (e: Exception) {
             logE("Failed to create keyboard input view", e)
@@ -476,26 +502,12 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     }
 
     /**
-     * Create suggestion bar for word predictions
+     * Create suggestion bar - NO LONGER USED (Fix #52: integrated into onCreateInputView)
+     * Keeping for compatibility but returns null
      */
     override fun onCreateCandidatesView(): View? {
-        logD("onCreateCandidatesView() called - creating suggestion bar")
-
-        return try {
-            val bar = SuggestionBar(this).apply {
-                // Handle suggestion selection - commit the selected word
-                setOnSuggestionSelectedListener { word ->
-                    logD("User selected suggestion: '$word'")
-                    currentInputConnection?.commitText(word + " ", 1)
-                }
-            }
-            suggestionBar = bar
-            logD("✅ Suggestion bar created successfully")
-            bar
-        } catch (e: Exception) {
-            logE("Failed to create suggestion bar", e)
-            null
-        }
+        logD("onCreateCandidatesView() called - returning null (integrated into input view)")
+        return null
     }
 
     /**
