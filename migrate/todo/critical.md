@@ -53,9 +53,10 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - File: UserAdaptationManager.java (291 lines) → MISSING
 
 #### ML Training & Data
-- [ ] **Bug #273**: Training data stored in memory (File 71)
-  - Impact: **DATA LOST WHEN APP CLOSES**
-  - File: SwipeMLDataStore.java → Needs persistent database
+- [x] **Bug #273**: Training data stored in memory (File 71) ✅ **FIXED**
+  - Impact: **DATA LOST WHEN APP CLOSES** → NOW PERSISTED
+  - File: SwipeMLDataStore.kt → ✅ Complete SQLite implementation (574 lines)
+  - Features: Async operations, export/import, batch transactions, statistics
 
 - [ ] **Bug #274**: ML training system missing (File 72)
   - Impact: Cannot train on user data
