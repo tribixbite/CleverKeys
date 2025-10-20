@@ -54,6 +54,49 @@ This file tracks missing user-facing features.
 
 ---
 
+## 📋 GESTURE RECOGNITION STATUS (From REVIEW_TODO_GESTURES.md)
+
+**Files Reviewed**: Files 76-77, 80, 83-85 (gesture system)
+**Key Findings**:
+- Gesture.java (File 84) - **HIGH PRIORITY** - Needs implementation
+- FoldStateTracker enhanced with +344% expansion
+- ContinuousGestureRecognizer replaced by ONNX (architectural)
+
+**Remaining Java Files Needing Review**:
+- [ ] SwipeGestureRecognizer.java
+- [ ] ImprovedSwipeGestureRecognizer.java
+- [ ] LoopGestureDetector.java (Bug #258 - CATASTROPHIC)
+
+---
+
+## 📋 LAYOUT CUSTOMIZATION STATUS (From REVIEW_TODO_LAYOUT.md)
+
+**Files Reviewed**: Files 12, 37, 40, 82 (layout system)
+**Key Findings**:
+- ExtraKeys.java (File 82) - ✅ FIXED (Bug #266)
+- LayoutModifier.java (File 37) - Safe stubs
+- DirectBootAwarePreferences - ✅ FIXED (Bug #81)
+
+**Remaining Java Files Needing Review**:
+- [ ] Additional layout files in Files 142-251
+
+---
+
+## 📋 ML TRAINING DATA STATUS (From REVIEW_TODO_ML_DATA.md)
+
+**Files Reviewed**: Files 65, 70-72, 89 (training data)
+**Key Findings**:
+- SwipeMLData.java (File 70) - 49% missing (Bug #270-272)
+- SwipeMLDataStore.java (File 71) - ✅ FIXED (Bug #273 - SQLite)
+- SwipeMLTrainer.java (File 72) - ARCHITECTURAL (external training)
+- UserAdaptationManager.java (File 65) - Bug #263 CATASTROPHIC
+
+**Remaining Java Files Needing Review**:
+- [ ] PersonalizationManager.java
+- [ ] SwipePruner.java
+
+---
+
 ## 🟢 FEATURE PARITY TRACKING
 
 - File 19: **4 CRITICAL** (Emoji - mapOldNameToValue missing 687 lines, KeyValue integration, API incompatible)
