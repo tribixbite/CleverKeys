@@ -33,9 +33,9 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 
 ## 🔧 REMAINING CRITICAL FIXES
 
-### **P0 - CATASTROPHIC (System Breaking) - 24 Bugs Remaining (26 total, 2 fixed this session)**
+### **P0 - CATASTROPHIC (System Breaking) - 30 Bugs Remaining (32 total, 2 fixed this session)**
 
-**NOTE**: Some bugs below (#310-314, #352-353, #371, #375) were identified from ESTIMATED missing features (Files 150-251 not yet reviewed). However, these have been CONFIRMED as real issues through code inspection. Bugs #371 and #375 are now FIXED.
+**NOTE**: Bugs #310-314, #352-359, #371, #375 were initially from ESTIMATES (Files 150-251), but are now CONFIRMED through actual file review (Files 150-157 completed). Bugs #371 and #375 are FIXED.
 
 #### Prediction & Autocorrection (Files 111-115 - ESTIMATED, but confirmed missing)
 - [ ] **Bug #310**: AutoCorrection system missing (File 111)
@@ -65,8 +65,34 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 
 - [ ] **Bug #353**: VoiceTypingEngine missing (File 151)
   - Impact: NO voice typing integration (launches external app instead)
-  - File: VoiceTypingEngine.java (~350-450 lines) → COMPLETELY MISSING
+  - File: VoiceTypingEngine.java (~350-450 lines) → WRONG IMPLEMENTATION
+  - Current: VoiceImeSwitcher.kt (76 lines) - launches external app only
   - Note: Bug #308 (VoiceImeSwitcher) launches wrong app
+
+- [ ] **Bug #354**: MacroExpander missing (File 152)
+  - Impact: NO text macro/shortcut expansion (e.g., "brb" → "be right back")
+  - File: MacroExpander.java (~300-400 lines) → COMPLETELY MISSING
+  - Missing: User-defined shortcuts, multi-line macros, variables (date/time)
+
+- [ ] **Bug #355**: ShortcutManager missing (File 153)
+  - Impact: NO keyboard shortcuts management (Ctrl+X, Alt+E, etc.)
+  - File: ShortcutManager.java (~250-350 lines) → COMPLETELY MISSING
+  - Missing: Custom key combinations, quick-access tools
+
+- [ ] **Bug #356**: GestureTypingCustomizer missing (File 154)
+  - Impact: NO gesture typing personalization (sensitivity, speed adjustments)
+  - File: GestureTypingCustomizer.java (~300-350 lines) → COMPLETELY MISSING
+  - Missing: User calibration, personal gesture models
+
+- [ ] **Bug #357**: ContinuousInputManager missing (File 155)
+  - Impact: NO hybrid tap+swipe typing (cannot seamlessly switch modes)
+  - File: ContinuousInputManager.java (~350-400 lines) → COMPLETELY MISSING
+  - Missing: Multi-modal input, context-aware method selection
+
+- [ ] **Bug #358**: OneHandedModeManager missing (File 156)
+  - Impact: NO one-handed mode (large phone users + accessibility issue)
+  - File: OneHandedModeManager.java (~250-300 lines) → COMPLETELY MISSING
+  - Missing: Keyboard position shift (left/right), thumb-zone optimization
 
 #### Accessibility (Files 167-177) - LEGAL REQUIREMENT
 - [x] **Bug #371**: Switch Access missing (File 169) ✅ **FIXED**
@@ -156,7 +182,7 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Impact: Call sites can't access service
   - File: ClipboardHistoryService.kt
 
-### **P1 - CRITICAL (Major Features Broken) - 2 Bugs**
+### **P1 - CRITICAL (Major Features Broken) - 3 Bugs**
 
 - [ ] **Bug #113**: Wrong base class - architectural mismatch
   - File: ClipboardHistoryView.kt
@@ -164,7 +190,12 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 - [ ] **Bug #131**: GlobalScope.launch memory leak ✅ FIXED
   - File: ClipboardHistoryCheckBox.kt
 
-**Total P0/P1**: 15 bugs (1 fixed, 14 remaining)
+- [ ] **Bug #359**: ThumbModeOptimizer missing (File 157)
+  - Impact: NO thumb-zone keyboard optimization (poor ergonomics on large devices)
+  - File: ThumbModeOptimizer.java (~200-250 lines) → COMPLETELY MISSING
+  - Missing: Thumb reach layout, curved/arc adaptation, ergonomic positioning
+
+**Total P0/P1**: 33 bugs (2 fixed, 31 remaining)
 
 ### **PRIORITY 2: CRITICAL MISSING FILES**
 

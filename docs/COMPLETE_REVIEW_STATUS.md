@@ -1,7 +1,7 @@
 # Complete Review Status - CleverKeys Java→Kotlin Feature Parity
 
-**Last Updated**: 2025-10-20
-**Total Progress**: 150/251 files reviewed (59.8%)
+**Last Updated**: 2025-10-21
+**Total Progress**: 157/251 files reviewed (62.9%)
 
 ## 📊 Review Timeline
 
@@ -9,9 +9,9 @@
 **Period**: Sept-Oct 2025
 **Status**: COMPLETED and consolidated into TODO lists
 
-**Bugs Found**: 351 confirmed from actual reviews (Files 1-149)
-- 💀 Catastrophic: 25 bugs (Files 1-149)
-- ❌ High: 12 bugs
+**Bugs Found**: 359 confirmed from actual reviews (Files 1-157)
+- 💀 Catastrophic: 32 bugs (7 new from Files 150-157)
+- ❌ High: 13 bugs (1 new from Files 150-157)
 - ⚠️ Medium: 11 bugs
 - 🔧 Low: 3 bugs
 - ✅ Fixed: 48 bugs (#270, #271, #273, #359, #371, #373, #375, #377, and 40 others)
@@ -125,15 +125,30 @@ Files reviewed:
 
 **Impact**: CleverKeys is English-only. All multi-language support missing.
 
-### Current Status: Files 150-251 (NOT YET REVIEWED)
+#### Batch 6: Files 150-157 (Advanced Input Methods)
+**Status**: ✅ Documented in docs/history/reviews/REVIEW_FILES_150-157.md
+
+Files reviewed:
+- 150: HandwritingRecognizer - COMPLETELY MISSING (Bug #352 CATASTROPHIC)
+- 151: VoiceTypingEngine → VoiceImeSwitcher - WRONG IMPLEMENTATION (Bug #353 CATASTROPHIC)
+- 152: MacroExpander - COMPLETELY MISSING (Bug #354 CATASTROPHIC)
+- 153: ShortcutManager - COMPLETELY MISSING (Bug #355 CATASTROPHIC)
+- 154: GestureTypingCustomizer - COMPLETELY MISSING (Bug #356 CATASTROPHIC)
+- 155: ContinuousInputManager - COMPLETELY MISSING (Bug #357 CATASTROPHIC)
+- 156: OneHandedModeManager - COMPLETELY MISSING (Bug #358 CATASTROPHIC)
+- 157: ThumbModeOptimizer - COMPLETELY MISSING (Bug #359 HIGH)
+
+**Impact**: 0% feature parity for advanced input methods. All modern keyboard features missing.
+
+### Current Status: Files 158-251 (NOT YET REVIEWED)
 **Status**: ⏳ ESTIMATED ONLY (git commits are estimates, not actual reviews)
-**Count**: 101 files remaining (40.2%)
+**Count**: 94 files remaining (37.5%)
 
 **CORRECTION**: Earlier git commits (f5c9003c through 5ce0101e from Oct 17) documented ESTIMATED bugs for Files 150-251, but these were NOT actual Java→Kotlin file comparisons. They were projections based on typical keyboard features.
 
 **Actual Review Status**:
-- Files 1-149: ✅ REVIEWED (actual Java→Kotlin comparison)
-- Files 150-251: ⏳ NOT YET REVIEWED (only estimates)
+- Files 1-157: ✅ REVIEWED (actual Java→Kotlin comparison)
+- Files 158-251: ⏳ NOT YET REVIEWED (only estimates)
 
 **Estimated Categories (Files 150-251)**:
 - Files 150-157: Advanced Input Methods (handwriting, voice, macros)
@@ -142,9 +157,9 @@ Files reviewed:
 - Files 178-205: Integration, DevTools, Utilities
 - Files 206-251: Tests, legacy, platform-specific
 
-**Estimated Bugs #352-453**: These bug numbers were assigned to ESTIMATED missing features, not confirmed through actual file review. Some bugs from this range (#371, #375, #310-314) were subsequently confirmed and fixed based on known missing features.
+**Estimated Bugs #360-453**: These bug numbers were assigned to ESTIMATED missing features, not confirmed through actual file review. Bugs #352-359 are now CONFIRMED from Files 150-157 review. Some bugs from the estimated range (#371, #375, #310-314) were also subsequently confirmed.
 
-**Next Steps**: Continue systematic review starting at File 150
+**Next Steps**: Continue systematic review starting at File 158
 
 ## 🗂️ Where Review Data Lives
 
