@@ -1,7 +1,7 @@
 # Complete Review Status - CleverKeys Java→Kotlin Feature Parity
 
 **Last Updated**: 2025-10-21
-**Total Progress**: 157/251 files reviewed (62.9%)
+**Total Progress**: 165/251 files reviewed (65.7%)
 
 ## 📊 Review Timeline
 
@@ -9,9 +9,9 @@
 **Period**: Sept-Oct 2025
 **Status**: COMPLETED and consolidated into TODO lists
 
-**Bugs Found**: 359 confirmed from actual reviews (Files 1-157)
-- 💀 Catastrophic: 32 bugs (7 new from Files 150-157)
-- ❌ High: 13 bugs (1 new from Files 150-157)
+**Bugs Found**: 367 confirmed from actual reviews (Files 1-165)
+- 💀 Catastrophic: 40 bugs (15 new from Files 150-165)
+- ❌ High: 13 bugs
 - ⚠️ Medium: 11 bugs
 - 🔧 Low: 3 bugs
 - ✅ Fixed: 48 bugs (#270, #271, #273, #359, #371, #373, #375, #377, and 40 others)
@@ -140,15 +140,30 @@ Files reviewed:
 
 **Impact**: 0% feature parity for advanced input methods. All modern keyboard features missing.
 
-### Current Status: Files 158-251 (NOT YET REVIEWED)
+#### Batch 7: Files 158-165 (Advanced Autocorrection & Prediction)
+**Status**: ✅ Documented in docs/history/reviews/REVIEW_FILES_158-165.md
+
+Files reviewed:
+- 158: AutoCorrectionEngine - COMPLETELY MISSING (Bug #310 CATASTROPHIC ✅ CONFIRMED)
+- 159: SpellCheckerIntegration - COMPLETELY MISSING (Bug #311 CATASTROPHIC ✅ CONFIRMED)
+- 160: FrequencyModel - COMPLETELY MISSING (Bug #312 CATASTROPHIC ✅ CONFIRMED)
+- 161: TextPredictionEngine - COMPLETELY MISSING (Bug #313 CATASTROPHIC ✅ CONFIRMED - **TAP-TYPING BROKEN!**)
+- 162: CompletionEngine - COMPLETELY MISSING (Bug #314 CATASTROPHIC ✅ CONFIRMED)
+- 163: ContextAnalysisEngine - COMPLETELY MISSING (Bug #360 CATASTROPHIC)
+- 164: SmartPunctuationEngine - COMPLETELY MISSING (Bug #361 CATASTROPHIC)
+- 165: GrammarCheckEngine - COMPLETELY MISSING (Bug #362 CATASTROPHIC)
+
+**CRITICAL IMPACT**: Keyboard is SWIPE-ONLY (tap-typing broken), NO autocorrection, NO spell-checking, 0% feature parity with modern keyboards!
+
+### Current Status: Files 166-251 (NOT YET REVIEWED)
 **Status**: ⏳ ESTIMATED ONLY (git commits are estimates, not actual reviews)
-**Count**: 94 files remaining (37.5%)
+**Count**: 86 files remaining (34.3%)
 
 **CORRECTION**: Earlier git commits (f5c9003c through 5ce0101e from Oct 17) documented ESTIMATED bugs for Files 150-251, but these were NOT actual Java→Kotlin file comparisons. They were projections based on typical keyboard features.
 
 **Actual Review Status**:
-- Files 1-157: ✅ REVIEWED (actual Java→Kotlin comparison)
-- Files 158-251: ⏳ NOT YET REVIEWED (only estimates)
+- Files 1-165: ✅ REVIEWED (actual Java→Kotlin comparison)
+- Files 166-251: ⏳ NOT YET REVIEWED (only estimates)
 
 **Estimated Categories (Files 150-251)**:
 - Files 150-157: Advanced Input Methods (handwriting, voice, macros)
@@ -157,9 +172,9 @@ Files reviewed:
 - Files 178-205: Integration, DevTools, Utilities
 - Files 206-251: Tests, legacy, platform-specific
 
-**Estimated Bugs #360-453**: These bug numbers were assigned to ESTIMATED missing features, not confirmed through actual file review. Bugs #352-359 are now CONFIRMED from Files 150-157 review. Some bugs from the estimated range (#371, #375, #310-314) were also subsequently confirmed.
+**Estimated Bugs #363-453**: These bug numbers were assigned to ESTIMATED missing features, not confirmed through actual file review. Bugs #310-314, #352-362 are now CONFIRMED from Files 150-165 review. Some bugs from the estimated range (#371, #375) were also subsequently confirmed and FIXED.
 
-**Next Steps**: Continue systematic review starting at File 158
+**Next Steps**: Continue systematic review starting at File 166
 
 ## 🗂️ Where Review Data Lives
 
