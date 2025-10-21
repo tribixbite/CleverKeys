@@ -35,7 +35,9 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 
 ### **P0 - CATASTROPHIC (System Breaking) - 24 Bugs Remaining (26 total, 2 fixed this session)**
 
-#### Prediction & Autocorrection (Files 111-115)
+**NOTE**: Some bugs below (#310-314, #352-353, #371, #375) were identified from ESTIMATED missing features (Files 150-251 not yet reviewed). However, these have been CONFIRMED as real issues through code inspection. Bugs #371 and #375 are now FIXED.
+
+#### Prediction & Autocorrection (Files 111-115 - ESTIMATED, but confirmed missing)
 - [ ] **Bug #310**: AutoCorrection system missing (File 111)
   - Impact: NO autocorrection, typos not fixed
   - File: AutoCorrectionEngine.java (~400 lines) → COMPLETELY MISSING
