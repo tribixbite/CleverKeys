@@ -33,7 +33,47 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 
 ## 🔧 REMAINING CRITICAL FIXES
 
-### **P0 - CATASTROPHIC (System Breaking) - 13 Bugs**
+### **P0 - CATASTROPHIC (System Breaking) - 26 Bugs**
+
+#### Prediction & Autocorrection (Files 111-115)
+- [ ] **Bug #310**: AutoCorrection system missing (File 111)
+  - Impact: NO autocorrection, typos not fixed
+  - File: AutoCorrectionEngine.java (~400 lines) → COMPLETELY MISSING
+
+- [ ] **Bug #311**: SpellChecker integration missing (File 112)
+  - Impact: NO spell checking, no red underlines
+  - File: SpellCheckerIntegration.java (~350 lines) → COMPLETELY MISSING
+
+- [ ] **Bug #312**: FrequencyModel missing (File 113)
+  - Impact: NO word frequency tracking, poor predictions
+  - File: FrequencyModel.java (~300 lines) → COMPLETELY MISSING
+
+- [ ] **Bug #313**: TextPrediction engine missing (File 114)
+  - Impact: NO tap-typing predictions (swipe-only keyboard!)
+  - File: TextPredictionEngine.java (~450 lines) → COMPLETELY MISSING
+
+- [ ] **Bug #314**: Completion system missing (File 115)
+  - Impact: NO word completion suggestions
+  - File: CompletionEngine.java (~350 lines) → COMPLETELY MISSING
+
+#### Advanced Input Methods (Files 150-153)
+- [ ] **Bug #352**: HandwritingRecognizer missing (File 150)
+  - Impact: NO handwriting recognition, 1.3B Chinese users cannot draw characters
+  - File: HandwritingRecognizer.java (~400-500 lines) → COMPLETELY MISSING
+
+- [ ] **Bug #353**: VoiceTypingEngine missing (File 151)
+  - Impact: NO voice typing integration (launches external app instead)
+  - File: VoiceTypingEngine.java (~350-450 lines) → COMPLETELY MISSING
+  - Note: Bug #308 (VoiceImeSwitcher) launches wrong app
+
+#### Accessibility (Files 167-177) - LEGAL REQUIREMENT
+- [ ] **Bug #371**: Switch Access missing (File 169)
+  - Impact: Quadriplegic users CANNOT use keyboard (ADA/WCAG violation)
+  - File: SwitchAccessSupport.java (~250-350 lines) → COMPLETELY MISSING
+
+- [ ] **Bug #375**: Mouse Keys missing (File 173)
+  - Impact: Severely disabled users CANNOT interact with UI
+  - File: MouseKeysEmulation.java (~200-300 lines) → COMPLETELY MISSING
 
 #### Core Systems Missing
 
