@@ -11,6 +11,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import tribixbite.keyboard2.ui.SuggestionBarM3Wrapper
 
 // CleverKeys specific classes - all in same package
 
@@ -45,7 +46,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     private var keyboardView: Keyboard2View? = null
     private var neuralEngine: NeuralSwipeEngine? = null
     private var predictionService: SwipePredictionService? = null
-    private var suggestionBar: SuggestionBar? = null
+    private var suggestionBar: SuggestionBarM3Wrapper? = null
     private var inputViewContainer: android.widget.LinearLayout? = null // Fix #52
     private var neuralConfig: NeuralConfig? = null
     private var keyEventHandler: KeyEventHandler? = null
@@ -459,9 +460,9 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             }
             keyboardView = kbView
 
-            // Create suggestion bar
-            logD("Creating SuggestionBar...")
-            val sugBar = SuggestionBar(this).apply {
+            // Create Material 3 suggestion bar
+            logD("Creating Material 3 SuggestionBar...")
+            val sugBar = SuggestionBarM3Wrapper(this).apply {
                 setOnSuggestionSelectedListener { word ->
                     logD("User selected suggestion: '$word'")
                     currentInputConnection?.commitText(word + " ", 1)
