@@ -16,6 +16,8 @@ import android.view.WindowMetrics
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.*
+import tribixbite.keyboard2.animation.AnimationManager
+import tribixbite.keyboard2.theme.keyboardColors
 
 /**
  * Main keyboard view for CleverKeys with neural swipe prediction
@@ -69,15 +71,25 @@ class Keyboard2View @JvmOverloads constructor(
     private var keyboardHeightPercent = 35 // Default 35%
     private var calculatedHeight = 0
 
-    // Paint objects for rendering
+    // Paint objects for rendering (Phase 2.2: Use theme color instead of hardcoded)
     private val swipeTrailPaint = Paint().apply {
-        color = 0xFF1976D2.toInt()
         strokeWidth = 3.0f
         style = Paint.Style.STROKE
         isAntiAlias = true
         strokeCap = Paint.Cap.ROUND
         strokeJoin = Paint.Join.ROUND
         alpha = 180
+        // Color will be set from theme in updateSwipeTrailColor()
+    }
+
+    /**
+     * Update swipe trail color from theme (Phase 2.2).
+     * Called when theme is available.
+     */
+    private fun updateSwipeTrailColor() {
+        // Use Material 3 primary color for swipe trail
+        swipeTrailPaint.color = theme.labelColor // Use theme's label color as fallback
+        // TODO: Use keyboardColors().swipeTrail when Compose context available
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -85,12 +97,18 @@ class Keyboard2View @JvmOverloads constructor(
     // Parent service reference
     private var keyboardService: CleverKeysService? = null
 
+    // Animation manager for Material Motion (Phase 2.2)
+    private var animationManager: AnimationManager? = null
+
     init {
         initialize(attrs)
     }
 
     private fun initialize(attrs: AttributeSet?) {
         theme = Theme(context, attrs)
+
+        // Update swipe trail color from theme (Phase 2.2)
+        updateSwipeTrailColor()
 
         // Pointers will be initialized when config is set via setViewConfig()
 
@@ -137,6 +155,12 @@ class Keyboard2View @JvmOverloads constructor(
             } catch (e: Exception) {
                 android.util.Log.e("Keyboard2View", "Failed to initialize pointers", e)
             }
+        }
+
+        // Initialize AnimationManager for Material Motion (Phase 2.2)
+        if (animationManager == null) {
+            animationManager = AnimationManager(context)
+            android.util.Log.d("Keyboard2View", "AnimationManager initialized for key animations")
         }
     }
 
@@ -820,5 +844,9 @@ class Keyboard2View @JvmOverloads constructor(
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         scope.cancel()
+
+        // Cleanup AnimationManager (Phase 2.2)
+        animationManager?.release()
+        animationManager = null
     }
 }
