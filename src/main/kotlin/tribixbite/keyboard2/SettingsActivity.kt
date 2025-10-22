@@ -284,8 +284,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
 
                 SettingsSlider(
-                    title = "Keyboard Height",
-                    description = "Adjust keyboard height as percentage of screen (20-60%).",
+                    title = stringResource(R.string.settings_keyboard_height_title),
+                    description = stringResource(R.string.settings_keyboard_height_desc),
                     value = keyboardHeight.toFloat(),
                     valueRange = 20f..60f,
                     steps = 40,
@@ -293,15 +293,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         keyboardHeight = it.toInt()
                         saveSetting("keyboard_height_percent", keyboardHeight)
                     },
-                    displayValue = "${keyboardHeight}%"
+                    displayValue = stringResource(R.string.settings_keyboard_height_value, keyboardHeight)
                 )
             }
 
             // Input Behavior Section
-            SettingsSection("📝 Input Behavior") {
+            SettingsSection(stringResource(R.string.settings_section_input)) {
                 SettingsSwitch(
-                    title = "Auto-Capitalization",
-                    description = "Automatically capitalize words at sentence start",
+                    title = stringResource(R.string.settings_auto_capitalization_title),
+                    description = stringResource(R.string.settings_auto_capitalization_desc),
                     checked = autoCapitalizationEnabled,
                     onCheckedChange = {
                         autoCapitalizationEnabled = it
@@ -310,8 +310,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
 
                 SettingsSwitch(
-                    title = "Clipboard History",
-                    description = "Remember copied text for easy access",
+                    title = stringResource(R.string.settings_clipboard_history_title),
+                    description = stringResource(R.string.settings_clipboard_history_desc),
                     checked = clipboardHistoryEnabled,
                     onCheckedChange = {
                         clipboardHistoryEnabled = it
@@ -320,8 +320,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
 
                 SettingsSwitch(
-                    title = "Vibration Feedback",
-                    description = "Vibrate when keys are pressed",
+                    title = stringResource(R.string.settings_vibration_title),
+                    description = stringResource(R.string.settings_vibration_desc),
                     checked = vibrationEnabled,
                     onCheckedChange = {
                         vibrationEnabled = it
@@ -331,10 +331,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
 
             // Accessibility Section (Fix for Bug #373, #368, #377)
-            SettingsSection("♿ Accessibility") {
+            SettingsSection(stringResource(R.string.settings_section_accessibility)) {
                 SettingsSwitch(
-                    title = "Sticky Keys",
-                    description = "Enable single-handed typing with modifier latching (OFF → LATCHED → LOCKED)",
+                    title = stringResource(R.string.settings_sticky_keys_title),
+                    description = stringResource(R.string.settings_sticky_keys_desc),
                     checked = stickyKeysEnabled,
                     onCheckedChange = {
                         stickyKeysEnabled = it
@@ -344,8 +344,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                 if (stickyKeysEnabled) {
                     SettingsSlider(
-                        title = "Sticky Keys Timeout",
-                        description = "Auto-release delay for latched modifiers (1-10 seconds)",
+                        title = stringResource(R.string.settings_sticky_keys_timeout_title),
+                        description = stringResource(R.string.settings_sticky_keys_timeout_desc),
                         value = (stickyKeysTimeout / 1000f),
                         valueRange = 1f..10f,
                         steps = 9,
@@ -353,13 +353,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             stickyKeysTimeout = (it * 1000).toInt()
                             saveSetting("sticky_keys_timeout_ms", stickyKeysTimeout)
                         },
-                        displayValue = "${stickyKeysTimeout / 1000}s"
+                        displayValue = stringResource(R.string.settings_sticky_keys_timeout_value, stickyKeysTimeout / 1000)
                     )
                 }
 
                 SettingsSwitch(
-                    title = "Voice Guidance",
-                    description = "Speak keys aloud for blind users (requires TTS)",
+                    title = stringResource(R.string.settings_voice_guidance_title),
+                    description = stringResource(R.string.settings_voice_guidance_desc),
                     checked = voiceGuidanceEnabled,
                     onCheckedChange = {
                         voiceGuidanceEnabled = it
@@ -368,14 +368,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         // Show restart prompt
                         if (it) {
                             Toast.makeText(this@SettingsActivity,
-                                "Voice guidance will activate on keyboard restart",
+                                getString(R.string.settings_voice_guidance_toast),
                                 Toast.LENGTH_SHORT).show()
                         }
                     }
                 )
 
                 Text(
-                    text = "✓ Screen Reader (TalkBack) support is always enabled",
+                    text = stringResource(R.string.settings_screen_reader_note),
                     fontSize = 12.sp,
                     color = ComposeColor.Gray,
                     modifier = Modifier.padding(top = 8.dp)
@@ -383,10 +383,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
 
             // Advanced Section
-            SettingsSection("🔧 Advanced") {
+            SettingsSection(stringResource(R.string.settings_section_advanced)) {
                 SettingsSwitch(
-                    title = "Debug Information",
-                    description = "Show detailed logging and performance metrics",
+                    title = stringResource(R.string.settings_debug_title),
+                    description = stringResource(R.string.settings_debug_desc),
                     checked = debugEnabled,
                     onCheckedChange = {
                         debugEnabled = it
@@ -398,12 +398,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     onClick = { openCalibration() },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("🧪 Swipe Calibration")
+                    Text(stringResource(R.string.settings_calibration_button))
                 }
             }
 
             // Version and Actions Section
-            SettingsSection("📋 Information & Actions") {
+            SettingsSection(stringResource(R.string.settings_section_info)) {
                 VersionInfoCard()
 
                 Row(
@@ -417,14 +417,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             containerColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                     ) {
-                        Text("🔄 Reset All")
+                        Text(stringResource(R.string.settings_reset_button))
                     }
 
                     Button(
                         onClick = { checkForUpdates() },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("📥 Check Updates")
+                        Text(stringResource(R.string.settings_updates_button))
                     }
                 }
             }
@@ -611,7 +611,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "📱 Version Information",
+                    text = stringResource(R.string.settings_version_title),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 16.sp
@@ -620,9 +620,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                 val versionInfo = loadVersionInfo()
                 Text(
-                    text = "Build: ${versionInfo.getProperty("build_number", "unknown")}\n" +
-                           "Commit: ${versionInfo.getProperty("commit", "unknown")}\n" +
-                           "Built: ${versionInfo.getProperty("build_date", "unknown")}",
+                    text = stringResource(R.string.settings_version_build, versionInfo.getProperty("build_number", "unknown")) + "\n" +
+                           stringResource(R.string.settings_version_commit, versionInfo.getProperty("commit", "unknown")) + "\n" +
+                           stringResource(R.string.settings_version_date, versionInfo.getProperty("build_date", "unknown")),
                     color = ComposeColor.Gray,
                     fontSize = 12.sp,
                     lineHeight = 16.sp
@@ -669,7 +669,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Error saving setting: $key = $value", e)
                 Toast.makeText(this@SettingsActivity,
-                    "Error saving setting: ${e.message}",
+                    getString(R.string.settings_toast_error_saving, e.message ?: ""),
                     Toast.LENGTH_SHORT).show()
             }
         }
@@ -738,9 +738,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private fun resetAllSettings() {
         lifecycleScope.launch {
             android.app.AlertDialog.Builder(this@SettingsActivity)
-                .setTitle("Reset Settings")
-                .setMessage("This will reset all settings to defaults. Continue?")
-                .setPositiveButton("Reset") { _, _ ->
+                .setTitle(getString(R.string.settings_reset_dialog_title))
+                .setMessage(getString(R.string.settings_reset_dialog_message))
+                .setPositiveButton(getString(R.string.settings_reset_dialog_confirm)) { _, _ ->
                     // Reset all settings to safe defaults
                     val editor = prefs.edit()
                     editor.clear()
@@ -766,13 +766,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     loadCurrentSettings()
 
                     Toast.makeText(this@SettingsActivity,
-                        "All settings reset to defaults",
+                        getString(R.string.settings_toast_reset_success),
                         Toast.LENGTH_SHORT).show()
 
                     // Recreate activity to refresh UI
                     recreate()
                 }
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(android.R.string.cancel, null)
                 .show()
         }
     }
@@ -810,7 +810,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Error checking for updates", e)
                 Toast.makeText(this@SettingsActivity,
-                    "Error checking for updates: ${e.message}",
+                    getString(R.string.settings_toast_error_update, e.message ?: ""),
                     Toast.LENGTH_SHORT).show()
             }
         }
@@ -818,25 +818,20 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     private fun showUpdateDialog(apkFile: File) {
         android.app.AlertDialog.Builder(this)
-            .setTitle("Update Available")
-            .setMessage("APK found at:\n${apkFile.name}\n\nSize: ${apkFile.length() / 1024} KB")
-            .setPositiveButton("Install") { _, _ ->
+            .setTitle(getString(R.string.settings_update_dialog_title))
+            .setMessage(getString(R.string.settings_update_dialog_message, apkFile.name, apkFile.length() / 1024))
+            .setPositiveButton(getString(R.string.settings_update_dialog_install)) { _, _ ->
                 installUpdate(apkFile)
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
 
     private fun showNoUpdateDialog() {
         android.app.AlertDialog.Builder(this)
-            .setTitle("No Updates Found")
-            .setMessage("Place APK file in one of these locations:\n\n" +
-                       "• /sdcard/Download/cleverkeys-debug.apk\n" +
-                       "• /sdcard/Download/tribixbite.keyboard2.debug.apk\n" +
-                       "• /sdcard/unexpected/debug-kb.apk\n\n" +
-                       "Or run from Termux:\n" +
-                       "  ./install.sh")
-            .setPositiveButton("OK", null)
+            .setTitle(getString(R.string.settings_no_update_dialog_title))
+            .setMessage(getString(R.string.settings_no_update_dialog_message))
+            .setPositiveButton(android.R.string.ok, null)
             .show()
     }
 
@@ -882,12 +877,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 startActivity(fallbackIntent)
 
                 Toast.makeText(this,
-                    "Opening installer (copied to Downloads)",
+                    getString(R.string.settings_toast_install_copied),
                     Toast.LENGTH_SHORT).show()
 
             } catch (fallbackError: Exception) {
                 Toast.makeText(this,
-                    "Install failed: ${e.message}\nTry installing manually from file manager",
+                    getString(R.string.settings_toast_install_failed, e.message ?: ""),
                     Toast.LENGTH_LONG).show()
             }
         }
@@ -923,7 +918,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Title
             val title = TextView(this).apply {
-                text = "⚙️ CleverKeys Settings"
+                text = getString(R.string.settings_legacy_title)
                 textSize = 24f
                 setPadding(0, 0, 0, 24)
                 setTextColor(android.graphics.Color.WHITE)
@@ -932,7 +927,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Neural prediction toggle
             val neuralSwitch = Switch(this).apply {
-                text = "Enable Neural Swipe Prediction"
+                text = getString(R.string.settings_legacy_neural_switch)
                 isChecked = neuralPredictionEnabled
                 setPadding(0, 16, 0, 16)
                 setOnCheckedChangeListener { _, isChecked ->
@@ -944,7 +939,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Beam width setting
             val beamWidthLabel = TextView(this).apply {
-                text = "Beam Width: $beamWidth"
+                text = getString(R.string.settings_legacy_beam_width, beamWidth)
                 setPadding(0, 16, 0, 8)
                 setTextColor(android.graphics.Color.WHITE)
             }
@@ -957,7 +952,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                         beamWidth = progress + 1
-                        beamWidthLabel.text = "Beam Width: $beamWidth"
+                        beamWidthLabel.text = getString(R.string.settings_legacy_beam_width, beamWidth)
                     }
                     override fun onStartTrackingTouch(seekBar: SeekBar?) {}
                     override fun onStopTrackingTouch(seekBar: SeekBar?) {
@@ -969,7 +964,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Open advanced neural settings button
             val advancedButton = Button(this).apply {
-                text = "🔧 Advanced Neural Settings"
+                text = getString(R.string.settings_legacy_advanced_button)
                 setOnClickListener {
                     openNeuralSettings()
                 }
@@ -978,7 +973,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Calibration button
             val calibrationButton = Button(this).apply {
-                text = "📊 Neural Calibration"
+                text = getString(R.string.settings_legacy_calibration_button)
                 setOnClickListener {
                     openCalibration()
                 }
@@ -987,7 +982,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // System info
             val versionInfo = TextView(this).apply {
-                text = "CleverKeys v2.0 (Kotlin)\n\nNote: Compose UI unavailable. Using legacy settings."
+                text = getString(R.string.settings_legacy_version)
                 setPadding(0, 32, 0, 0)
                 textSize = 12f
                 setTextColor(android.graphics.Color.GRAY)
@@ -1001,7 +996,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Failed to create legacy UI", e)
             // If even this fails, show error and close
-            Toast.makeText(this, "Settings UI failed to load: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.settings_legacy_error, e.message ?: ""), Toast.LENGTH_LONG).show()
             finish()
         }
     }
