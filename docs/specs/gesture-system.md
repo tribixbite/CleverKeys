@@ -33,7 +33,18 @@
   - Manual testing of all 4 gesture types
   - Estimated Time: 2-3 hours
 
-**Total Estimated Time**: 8-12 hours (1-2 days)
+- [ ] **Bug #268**: GestureClassifier Missing (CATASTROPHIC)
+  - Implement unified tap vs swipe classification
+  - Add GestureType enum (TAP/SWIPE)
+  - Add GestureData class (hasLeftStartingKey, totalDistance, timeElapsed, keyWidth)
+  - Implement classify() method with dynamic threshold (keyWidth/2)
+  - Add MAX_TAP_DURATION constant (150ms)
+  - Add dpToPx utility
+  - File: GestureClassifier.kt (~83 lines from Java)
+  - Impact: Keyboard cannot reliably distinguish taps from swipes without this
+  - Estimated Time: 2-3 hours
+
+**Total Estimated Time**: 10-15 hours (2 days)
 
 ---
 
