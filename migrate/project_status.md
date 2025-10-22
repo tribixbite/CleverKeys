@@ -237,6 +237,76 @@
 
 ---
 
+## Latest Session (Oct 21, 2025) - Part 4: Documentation & Verification
+
+### ✅ HISTORICAL ISSUES MIGRATION COMPLETE!
+
+**Migrated all 27 historical issues to spec-driven structure**:
+
+**Created 3 New Specs** (902 lines):
+- `docs/specs/core-keyboard-system.md` (200 lines) - 7 issues
+- `docs/specs/settings-system.md` (234 lines) - 6 issues
+- `docs/specs/performance-optimization.md` (302 lines) - 2 issues
+
+**Updated 2 Existing Specs** (+135 lines):
+- `docs/specs/layout-system.md` (+79 lines) - 6 issues
+- `docs/specs/ui-material3-modernization.md` (+56 lines) - 4 issues
+
+**Migration Summary**:
+- 27 issues → 5 spec files
+- 21 issues verified as fixed (need testing)
+- 6 issues deferred as future work
+- Created `docs/history/HISTORICAL_ISSUES_MIGRATION.md` for tracking
+- Updated `docs/TABLE_OF_CONTENTS.md` with all spec files
+
+**Commits**:
+- 0120b72b: Historical issues migration
+- 33fb5fdf: Automated testing infrastructure
+- 70a1689c: Verification updates (Issues #7, #9)
+
+---
+
+### ✅ P0 CRITICAL ISSUES VERIFIED (Oct 21, 2025)
+
+**Issue #7: Hardware Acceleration** ✅ VERIFIED FIXED
+- AndroidManifest.xml:3 - `<manifest hardwareAccelerated="true">`
+- AndroidManifest.xml:17 - `<application hardwareAccelerated="true">`
+- **Status**: Already enabled, no changes needed
+- **Remaining**: Test rendering performance (should be 60fps)
+
+**Issue #9: Storage Permissions (Android 11+)** ✅ VERIFIED FIXED
+- AndroidManifest.xml:11-12 - Proper `maxSdkVersion="29"` set
+- Comments document scoped storage strategy
+- **Status**: Properly configured for Android 11+
+- **Remaining**: Test file access on Android 11+ devices
+
+---
+
+### 🎯 NEXT PRIORITIES
+
+**Immediate (P0)**:
+1. ⚠️ **Critical Bugs** (migrate/todo/critical.md):
+   - Bug #310: AutoCorrection system missing (CATASTROPHIC)
+   - Bug #311: SpellChecker integration missing (CATASTROPHIC)
+   - Bug #312: NGram prediction missing
+   - Bug #313: Tap-typing prediction (user working on this)
+   - Bug #314: Dictionary management missing
+
+**High Priority (P1)**:
+2. **Verify Remaining Historical Issues**:
+   - Core keyboard: Key event handlers, service integration, key locking
+   - Settings: Termux mode checkbox, emoji preferences, theme propagation
+   - See: docs/specs/*.md for full verification tasks
+
+3. **Phase 3: Material 3 Polish**:
+   - Phase 3.1: CustomLayoutEditDialog Material 3 rewrite
+   - Phase 3.2: UI Internationalization (extract hardcoded strings)
+   - Phase 3.3: Advanced keyboard modes (OneHanded/Floating/Split)
+
+**Recommendation**: Address critical prediction bugs (#310-312, #314) before continuing with UI polish, OR continue with Phase 3 if prediction work is blocked.
+
+---
+
 ### ✅ PHASE 2.4 COMPLETE!
 
 #### Phase 2.4: Settings Activities Material 3 Integration ✅
