@@ -163,4 +163,15 @@
     <string name="pref_clipboard_history_enabled_summary">Remember recently copied text</string>
     <string name="pref_clipboard_history_limit_title">History limit</string>
     <string name="pref_clipboard_history_limit_summary">Maximum number of clipboard entries to keep (%s)</string>
+
+    <!-- Custom Layout Editor Dialog (Material 3) -->
+    <string name="custom_layout_editor_title">Custom Layout Editor</string>
+    <string name="custom_layout_editor_hint">Enter keyboard layout definition…\n\nExample:\nq w e r t y\na s d f g h\nz x c v b n</string>
+    <string name="custom_layout_error_empty">Layout cannot be empty</string>
+    <string name="custom_layout_error_no_rows">Layout must contain at least one row</string>
+    <string name="custom_layout_error_line_too_long">Line too long: maximum 100 characters per line</string>
+    <string name="custom_layout_error_too_many_rows">Too many rows: maximum 10 rows allowed</string>
+    <string name="custom_layout_error_too_many_keys">Row %1$d: Too many keys (maximum 20 per row)</string>
+    <string name="custom_layout_error_invalid_key">Row %1$d: Invalid key format \'%2$s\'</string>
+    <string name="custom_layout_error_invalid_chars">Invalid characters found: %1$s</string>
 </resources>

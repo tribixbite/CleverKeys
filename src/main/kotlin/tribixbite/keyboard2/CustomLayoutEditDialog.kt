@@ -14,12 +14,18 @@ import tribixbite.keyboard2.R
 /**
  * Custom layout editor dialog with modern Kotlin improvements
  *
- * Features:
+ * **Usage**: Used by legacy XML-based PreferenceActivity screens (LayoutsPreference).
+ * For new Compose-based settings screens, use CustomLayoutEditDialogM3 instead.
+ *
+ * **Features**:
  * - Line numbering for easy navigation
  * - Real-time validation with throttled updates
  * - Improved error handling and user feedback
  * - Modern coroutine-based text change handling
  * - Enhanced UI with better accessibility
+ *
+ * **Status**: Active (still used by XML preference system)
+ * **Material 3 Alternative**: ui/CustomLayoutEditDialogM3.kt
  */
 object CustomLayoutEditDialog {
 
