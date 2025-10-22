@@ -50,16 +50,16 @@
 | **EmojiGridView.kt** | ~180 | ❌ GridLayout | ❌ No M3 | P1 | File 55 (8 bugs) |
 | **EmojiGroupButtonsBar.kt** | ~120 | ❌ LinearLayout | ❌ No M3 | P1 | File 56 (3 bugs) |
 | **CustomLayoutEditDialog.kt** | ~200 | ❌ AlertDialog | ❌ No M3 | P2 | Unknown |
-| **SwipeCalibrationActivity.kt** | 942 | ✅ M3 Compose | ✅ Complete | ✓ DONE | 0 |
+| **SwipeCalibrationActivity.kt** | 942 | ❌ View-based | ❌ No M3 | P2 | 0 |
 | **NeuralBrowserActivity.kt** | 538 | △ Basic compose | △ Partial | P2 | File 86 |
 | **NeuralSettingsActivity.kt** | ~300 | △ Basic compose | △ Partial | P2 | Unknown |
 | **LauncherActivity.kt** | ~150 | ❌ Basic | ❌ No M3 | P3 | Unknown |
 | **TestActivity.kt** | 164 | ✅ M3 Compose | ✅ Complete | ✓ DONE | 0 |
 
 **Statistics**:
-- ✅ Complete M3: 3/14 (21.4%)
+- ✅ Complete M3: 2/14 (14.3%)
 - △ Partial M3: 3/14 (21.4%)
-- ❌ No M3: 8/14 (57.1%)
+- ❌ No M3: 9/14 (64.3%)
 
 ---
 
