@@ -1,0 +1,37 @@
+════════════════════════════════════════════════════════════════
+  CleverKeys Material 3 Activities - Automated Testing Suite
+════════════════════════════════════════════════════════════════
+
+
+[0;34m[INFO][0m Step 1: Building APK...
+
+For more on this, please refer to https://docs.gradle.org/8.7/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 10s
+36 actionable tasks: 9 executed, 27 up-to-date
+[0;32m[✓][0m APK built successfully
+[0;32m[✓][0m APK ready (49M): build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
+
+[0;34m[INFO][0m Step 2: Checking device connection...
+[0;32m[✓][0m Device connected: 192.168.1.247:36531
+
+[0;34m[INFO][0m Step 3: Installing APK...
+[0;32m[✓][0m APK installed successfully
+
+[0;34m[INFO][0m Step 4: Clearing logcat...
+[0;32m[✓][0m Logcat cleared
+
+════════════════════════════════════════════════════════════════
+  Beginning Activity Tests
+════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────
+[0;34m[INFO][0m Testing: Launcher Activity
+────────────────────────────────────────────────────────────────
+[0;34m[INFO][0m Launching .LauncherActivity...
+[0;32m[✓][0m Activity launched successfully
+[1;33m[!][0m Activity may not be in foreground (check manually)
+[0;32m[✓][0m No crashes detected
+[0;34m[INFO][0m Taking screenshot...
+[0;32m[✓][0m Screenshot saved: test-screenshots/screenshot__LauncherActivity.png
+[0;32m[✓][0m Launcher Activity test completed

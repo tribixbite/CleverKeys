@@ -13,8 +13,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import tribixbite.keyboard2.R
 import tribixbite.keyboard2.theme.keyboardColors
 
 /**
@@ -81,20 +84,20 @@ fun ClipboardHistoryViewM3(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Clipboard History") },
+                title = { Text(stringResource(R.string.clipboard_history_title)) },
                 actions = {
                     // Clear all button
                     IconButton(onClick = { viewModel.clearAll() }) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Clear all"
+                            contentDescription = stringResource(R.string.clipboard_clear_all)
                         )
                     }
                     // Close button
                     IconButton(onClick = onClose) {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = "Close"
+                            contentDescription = stringResource(R.string.clipboard_close)
                         )
                     }
                 },
@@ -209,7 +212,7 @@ private fun ClipboardCard(
             // Metadata
             if (entry.lineCount > 1) {
                 Text(
-                    text = "${entry.lineCount} lines",
+                    text = stringResource(R.string.clipboard_item_lines, entry.lineCount),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp)
@@ -231,7 +234,9 @@ private fun ClipboardCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Star,
-                        contentDescription = if (entry.isPinned) "Unpin" else "Pin",
+                        contentDescription = stringResource(
+                            if (entry.isPinned) R.string.clipboard_unpin else R.string.clipboard_pin
+                        ),
                         tint = if (entry.isPinned) {
                             MaterialTheme.colorScheme.primary
                         } else {
@@ -247,7 +252,7 @@ private fun ClipboardCard(
                 ) {
                     Icon(
                         Icons.Default.Add,
-                        contentDescription = "Paste",
+                        contentDescription = stringResource(R.string.clipboard_paste),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -259,7 +264,7 @@ private fun ClipboardCard(
                 ) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Delete",
+                        contentDescription = stringResource(R.string.clipboard_delete),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -288,13 +293,13 @@ private fun EmptyClipboardState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No clipboard history",
+            text = stringResource(R.string.clipboard_empty_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Copy text to see it here",
+            text = stringResource(R.string.clipboard_empty_message),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )

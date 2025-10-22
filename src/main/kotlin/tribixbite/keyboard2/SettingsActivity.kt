@@ -18,6 +18,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -188,24 +190,24 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         ) {
             // Header
             Text(
-                text = "⚙️ CleverKeys Settings",
+                text = stringResource(R.string.settings_title),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = "Configure your keyboard settings for optimal typing experience.",
+                text = stringResource(R.string.settings_description),
                 fontSize = 14.sp,
                 color = ComposeColor.Gray,
                 lineHeight = 20.sp
             )
 
             // Neural Prediction Section
-            SettingsSection("🧠 Neural Prediction") {
+            SettingsSection(stringResource(R.string.settings_section_neural)) {
                 SettingsSwitch(
-                    title = "Enable Neural Swipe Prediction",
-                    description = "Use ONNX neural networks for accurate swipe prediction",
+                    title = stringResource(R.string.settings_neural_enable_title),
+                    description = stringResource(R.string.settings_neural_enable_desc),
                     checked = neuralPredictionEnabled,
                     onCheckedChange = {
                         neuralPredictionEnabled = it
@@ -215,8 +217,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                 if (neuralPredictionEnabled) {
                     SettingsSlider(
-                        title = "Beam Width",
-                        description = "Number of prediction candidates (1-32). Higher = more accurate.",
+                        title = stringResource(R.string.settings_neural_beam_width_title),
+                        description = stringResource(R.string.settings_neural_beam_width_desc),
                         value = beamWidth.toFloat(),
                         valueRange = 1f..32f,
                         steps = 31,
@@ -228,8 +230,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     )
 
                     SettingsSlider(
-                        title = "Maximum Word Length",
-                        description = "Maximum characters in predicted words (10-50).",
+                        title = stringResource(R.string.settings_neural_max_length_title),
+                        description = stringResource(R.string.settings_neural_max_length_desc),
                         value = maxLength.toFloat(),
                         valueRange = 10f..50f,
                         steps = 40,
@@ -241,8 +243,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     )
 
                     SettingsSlider(
-                        title = "Confidence Threshold",
-                        description = "Minimum confidence for predictions (0.0-1.0).",
+                        title = stringResource(R.string.settings_neural_confidence_title),
+                        description = stringResource(R.string.settings_neural_confidence_desc),
                         value = confidenceThreshold,
                         valueRange = 0.0f..1.0f,
                         steps = 100,
@@ -257,17 +259,22 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         onClick = { openNeuralSettings() },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("🔧 Advanced Neural Settings")
+                        Text(stringResource(R.string.settings_neural_advanced_button))
                     }
                 }
             }
 
             // Appearance Section
-            SettingsSection("🎨 Appearance") {
+            SettingsSection(stringResource(R.string.settings_section_appearance)) {
                 SettingsDropdown(
-                    title = "Theme",
-                    description = "Choose keyboard appearance theme",
-                    options = listOf("System", "Light", "Dark", "Black"),
+                    title = stringResource(R.string.settings_theme_title),
+                    description = stringResource(R.string.settings_theme_desc),
+                    options = listOf(
+                        stringResource(R.string.settings_theme_system),
+                        stringResource(R.string.settings_theme_light),
+                        stringResource(R.string.settings_theme_dark),
+                        stringResource(R.string.settings_theme_black)
+                    ),
                     selectedIndex = getThemeIndex(currentTheme),
                     onSelectionChange = { index ->
                         val newTheme = getThemeFromIndex(index)

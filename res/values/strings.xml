@@ -174,4 +174,147 @@
     <string name="custom_layout_error_too_many_keys">Row %1$d: Too many keys (maximum 20 per row)</string>
     <string name="custom_layout_error_invalid_key">Row %1$d: Invalid key format \'%2$s\'</string>
     <string name="custom_layout_error_invalid_chars">Invalid characters found: %1$s</string>
+
+    <!-- Clipboard History View (Material 3) -->
+    <string name="clipboard_history_title">Clipboard History</string>
+    <string name="clipboard_clear_all">Clear all</string>
+    <string name="clipboard_close">Close</string>
+    <string name="clipboard_item_lines">%1$d lines</string>
+    <string name="clipboard_pin">Pin</string>
+    <string name="clipboard_unpin">Unpin</string>
+    <string name="clipboard_paste">Paste</string>
+    <string name="clipboard_delete">Delete</string>
+    <string name="clipboard_empty_title">No clipboard history</string>
+    <string name="clipboard_empty_message">Copy text to see it here</string>
+
+    <!-- Emoji Grid View (Material 3) -->
+    <string name="emoji_loading">Loading emojis…</string>
+    <string name="emoji_error_unknown">Unknown error</string>
+    <string name="emoji_error_dismiss">Dismiss</string>
+    <string name="emoji_empty">No emojis found</string>
+
+    <!-- Neural Settings Activity (Material 3) -->
+    <string name="neural_settings_title">Neural Prediction Parameters</string>
+    <string name="neural_settings_description">Configure ONNX neural network parameters for swipe prediction.\nChanges apply immediately to the prediction engine.</string>
+    <string name="neural_section_core">Core Prediction Parameters</string>
+    <string name="neural_beam_width_title">Beam Width</string>
+    <string name="neural_beam_width_desc">Number of prediction candidates to consider (1-32). Higher = more accurate but slower.</string>
+    <string name="neural_max_length_title">Maximum Word Length</string>
+    <string name="neural_max_length_desc">Maximum characters in predicted words (10-50). Affects memory usage.</string>
+    <string name="neural_confidence_title">Confidence Threshold</string>
+    <string name="neural_confidence_desc">Minimum confidence for predictions (0.0-1.0). Lower = more suggestions.</string>
+    <string name="neural_section_advanced">Advanced Parameters</string>
+    <string name="neural_temperature_title">Temperature Scaling</string>
+    <string name="neural_temperature_desc">Controls prediction diversity (0.1-2.0). Lower = focused, higher = diverse.</string>
+    <string name="neural_repetition_title">Repetition Penalty</string>
+    <string name="neural_repetition_desc">Penalty for repeated characters (1.0-2.0). Higher = less repetitive.</string>
+    <string name="neural_topk_title">Top-K Filtering</string>
+    <string name="neural_topk_desc">Consider only top K tokens (1-100). Lower = focused, higher = diverse.</string>
+    <string name="neural_section_performance">Performance Options</string>
+    <string name="neural_batch_size_title">Batch Size</string>
+    <string name="neural_batch_size_desc">Number of predictions processed together (1-16). Higher = more efficient.</string>
+    <string name="neural_timeout_title">Prediction Timeout (ms)</string>
+    <string name="neural_timeout_desc">Maximum time for predictions (50-1000ms). Lower = more responsive.</string>
+    <string name="neural_enable_batching_title">Enable Batched Inference</string>
+    <string name="neural_enable_batching_desc">Process multiple predictions together for better performance</string>
+    <string name="neural_enable_caching_title">Enable Prediction Caching</string>
+    <string name="neural_enable_caching_desc">Cache predictions to avoid duplicate computations</string>
+    <string name="neural_reset_button">Reset to Defaults</string>
+    <string name="neural_save_button">Save &amp; Apply</string>
+    <string name="neural_performance_impact_title">Performance Impact</string>
+    <string name="neural_performance_impact_desc">• Higher beam width = better accuracy, slower speed\n• Lower confidence threshold = more suggestions\n• Batching improves throughput for multiple predictions\n• Caching reduces repeated computation overhead</string>
+    <string name="neural_toast_error_update">Error updating neural configuration: %1$s</string>
+    <string name="neural_toast_reset">Reset to default neural parameters</string>
+    <string name="neural_toast_save_success">Parameters saved and applied to neural engine</string>
+    <string name="neural_toast_error_apply">Error applying parameters: %1$s</string>
+
+    <!-- Settings Activity (Material 3) -->
+    <string name="settings_title">⚙️ CleverKeys Settings</string>
+    <string name="settings_description">Configure your keyboard settings for optimal typing experience.</string>
+
+    <!-- Neural Prediction Section -->
+    <string name="settings_section_neural">🧠 Neural Prediction</string>
+    <string name="settings_neural_enable_title">Enable Neural Swipe Prediction</string>
+    <string name="settings_neural_enable_desc">Use ONNX neural networks for accurate swipe prediction</string>
+    <string name="settings_neural_beam_width_title">Beam Width</string>
+    <string name="settings_neural_beam_width_desc">Number of prediction candidates (1-32). Higher = more accurate.</string>
+    <string name="settings_neural_max_length_title">Maximum Word Length</string>
+    <string name="settings_neural_max_length_desc">Maximum characters in predicted words (10-50).</string>
+    <string name="settings_neural_confidence_title">Confidence Threshold</string>
+    <string name="settings_neural_confidence_desc">Minimum confidence for predictions (0.0-1.0).</string>
+    <string name="settings_neural_advanced_button">🔧 Advanced Neural Settings</string>
+
+    <!-- Appearance Section -->
+    <string name="settings_section_appearance">🎨 Appearance</string>
+    <string name="settings_theme_title">Theme</string>
+    <string name="settings_theme_desc">Choose keyboard appearance theme</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_black">Black</string>
+    <string name="settings_keyboard_height_title">Keyboard Height</string>
+    <string name="settings_keyboard_height_desc">Adjust keyboard height as percentage of screen (20-60%).</string>
+    <string name="settings_keyboard_height_value">%1$d%%</string>
+
+    <!-- Input Behavior Section -->
+    <string name="settings_section_input">📝 Input Behavior</string>
+    <string name="settings_auto_capitalization_title">Auto-Capitalization</string>
+    <string name="settings_auto_capitalization_desc">Automatically capitalize words at sentence start</string>
+    <string name="settings_clipboard_history_title">Clipboard History</string>
+    <string name="settings_clipboard_history_desc">Remember copied text for easy access</string>
+    <string name="settings_vibration_title">Vibration Feedback</string>
+    <string name="settings_vibration_desc">Vibrate when keys are pressed</string>
+
+    <!-- Accessibility Section -->
+    <string name="settings_section_accessibility">♿ Accessibility</string>
+    <string name="settings_sticky_keys_title">Sticky Keys</string>
+    <string name="settings_sticky_keys_desc">Enable single-handed typing with modifier latching (OFF → LATCHED → LOCKED)</string>
+    <string name="settings_sticky_keys_timeout_title">Sticky Keys Timeout</string>
+    <string name="settings_sticky_keys_timeout_desc">Auto-release delay for latched modifiers (1-10 seconds)</string>
+    <string name="settings_sticky_keys_timeout_value">%1$ds</string>
+    <string name="settings_voice_guidance_title">Voice Guidance</string>
+    <string name="settings_voice_guidance_desc">Speak keys aloud for blind users (requires TTS)</string>
+    <string name="settings_voice_guidance_toast">Voice guidance will activate on keyboard restart</string>
+    <string name="settings_screen_reader_note">✓ Screen Reader (TalkBack) support is always enabled</string>
+
+    <!-- Advanced Section -->
+    <string name="settings_section_advanced">🔧 Advanced</string>
+    <string name="settings_debug_title">Debug Information</string>
+    <string name="settings_debug_desc">Show detailed logging and performance metrics</string>
+    <string name="settings_calibration_button">🧪 Swipe Calibration</string>
+
+    <!-- Information & Actions Section -->
+    <string name="settings_section_info">📋 Information &amp; Actions</string>
+    <string name="settings_version_title">📱 Version Information</string>
+    <string name="settings_version_build">Build: %1$s</string>
+    <string name="settings_version_commit">Commit: %1$s</string>
+    <string name="settings_version_date">Built: %1$s</string>
+    <string name="settings_reset_button">🔄 Reset All</string>
+    <string name="settings_updates_button">📥 Check Updates</string>
+
+    <!-- Dialog Messages -->
+    <string name="settings_reset_dialog_title">Reset Settings</string>
+    <string name="settings_reset_dialog_message">This will reset all settings to defaults. Continue?</string>
+    <string name="settings_reset_dialog_confirm">Reset</string>
+    <string name="settings_update_dialog_title">Update Available</string>
+    <string name="settings_update_dialog_message">APK found at:\n%1$s\n\nSize: %2$d KB</string>
+    <string name="settings_update_dialog_install">Install</string>
+    <string name="settings_no_update_dialog_title">No Updates Found</string>
+    <string name="settings_no_update_dialog_message">Place APK file in one of these locations:\n\n• /sdcard/Download/cleverkeys-debug.apk\n• /sdcard/Download/tribixbite.keyboard2.debug.apk\n• /sdcard/unexpected/debug-kb.apk\n\nOr run from Termux:\n  ./install.sh</string>
+
+    <!-- Toast Messages -->
+    <string name="settings_toast_error_saving">Error saving setting: %1$s</string>
+    <string name="settings_toast_reset_success">All settings reset to defaults</string>
+    <string name="settings_toast_error_update">Error checking for updates: %1$s</string>
+    <string name="settings_toast_install_copied">Opening installer (copied to Downloads)</string>
+    <string name="settings_toast_install_failed">Install failed: %1$s\nTry installing manually from file manager</string>
+
+    <!-- Legacy UI (fallback) -->
+    <string name="settings_legacy_title">⚙️ CleverKeys Settings</string>
+    <string name="settings_legacy_neural_switch">Enable Neural Swipe Prediction</string>
+    <string name="settings_legacy_beam_width">Beam Width: %1$d</string>
+    <string name="settings_legacy_advanced_button">🔧 Advanced Neural Settings</string>
+    <string name="settings_legacy_calibration_button">📊 Neural Calibration</string>
+    <string name="settings_legacy_version">CleverKeys v2.0 (Kotlin)\n\nNote: Compose UI unavailable. Using legacy settings.</string>
+    <string name="settings_legacy_error">Settings UI failed to load: %1$s</string>
 </resources>

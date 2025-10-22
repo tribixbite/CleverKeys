@@ -16,12 +16,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tribixbite.keyboard2.Emoji
+import tribixbite.keyboard2.R
 
 /**
  * Material 3 emoji grid with LazyVerticalGrid
@@ -76,7 +79,7 @@ fun EmojiGridViewM3(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "Loading emojis...",
+                            text = stringResource(R.string.emoji_loading),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
@@ -101,7 +104,7 @@ fun EmojiGridViewM3(
                             color = MaterialTheme.colorScheme.error
                         )
                         Text(
-                            text = errorMessage ?: "Unknown error",
+                            text = errorMessage ?: stringResource(R.string.emoji_error_unknown),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error,
                             textAlign = TextAlign.Center
@@ -109,7 +112,7 @@ fun EmojiGridViewM3(
                         TextButton(
                             onClick = { viewModel.clearError() }
                         ) {
-                            Text("Dismiss")
+                            Text(stringResource(R.string.emoji_error_dismiss))
                         }
                     }
                 }
@@ -132,7 +135,7 @@ fun EmojiGridViewM3(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
                         Text(
-                            text = "No emojis found",
+                            text = stringResource(R.string.emoji_empty),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )

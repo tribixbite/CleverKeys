@@ -15,6 +15,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,26 +79,26 @@ class NeuralSettingsActivity : ComponentActivity() {
         ) {
             // Header
             Text(
-                text = "Neural Prediction Parameters",
+                text = stringResource(R.string.neural_settings_title),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = "Configure ONNX neural network parameters for swipe prediction.\nChanges apply immediately to the prediction engine.",
+                text = stringResource(R.string.neural_settings_description),
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp
             )
 
             // Core Parameters Section
-            ParameterSection("Core Prediction Parameters") {
+            ParameterSection(stringResource(R.string.neural_section_core)) {
 
                 // Beam Width
                 ParameterSlider(
-                    title = "Beam Width",
-                    description = "Number of prediction candidates to consider (1-32). Higher = more accurate but slower.",
+                    title = stringResource(R.string.neural_beam_width_title),
+                    description = stringResource(R.string.neural_beam_width_desc),
                     value = beamWidth.toFloat(),
                     valueRange = 1f..32f,
                     steps = 31,
@@ -109,8 +111,8 @@ class NeuralSettingsActivity : ComponentActivity() {
 
                 // Max Length
                 ParameterSlider(
-                    title = "Maximum Word Length",
-                    description = "Maximum characters in predicted words (10-50). Affects memory usage.",
+                    title = stringResource(R.string.neural_max_length_title),
+                    description = stringResource(R.string.neural_max_length_desc),
                     value = maxLength.toFloat(),
                     valueRange = 10f..50f,
                     steps = 40,
@@ -123,8 +125,8 @@ class NeuralSettingsActivity : ComponentActivity() {
 
                 // Confidence Threshold
                 ParameterSlider(
-                    title = "Confidence Threshold",
-                    description = "Minimum confidence for predictions (0.0-1.0). Lower = more suggestions.",
+                    title = stringResource(R.string.neural_confidence_title),
+                    description = stringResource(R.string.neural_confidence_desc),
                     value = confidenceThreshold,
                     valueRange = 0.0f..1.0f,
                     steps = 100,
@@ -137,12 +139,12 @@ class NeuralSettingsActivity : ComponentActivity() {
             }
 
             // Advanced Parameters Section
-            ParameterSection("Advanced Parameters") {
+            ParameterSection(stringResource(R.string.neural_section_advanced)) {
 
                 // Temperature Scaling
                 ParameterSlider(
-                    title = "Temperature Scaling",
-                    description = "Controls prediction diversity (0.1-2.0). Lower = focused, higher = diverse.",
+                    title = stringResource(R.string.neural_temperature_title),
+                    description = stringResource(R.string.neural_temperature_desc),
                     value = temperatureScaling,
                     valueRange = 0.1f..2.0f,
                     steps = 95,
@@ -155,8 +157,8 @@ class NeuralSettingsActivity : ComponentActivity() {
 
                 // Repetition Penalty
                 ParameterSlider(
-                    title = "Repetition Penalty",
-                    description = "Penalty for repeated characters (1.0-2.0). Higher = less repetitive.",
+                    title = stringResource(R.string.neural_repetition_title),
+                    description = stringResource(R.string.neural_repetition_desc),
                     value = repetitionPenalty,
                     valueRange = 1.0f..2.0f,
                     steps = 100,
@@ -169,8 +171,8 @@ class NeuralSettingsActivity : ComponentActivity() {
 
                 // Top-K
                 ParameterSlider(
-                    title = "Top-K Filtering",
-                    description = "Consider only top K tokens (1-100). Lower = focused, higher = diverse.",
+                    title = stringResource(R.string.neural_topk_title),
+                    description = stringResource(R.string.neural_topk_desc),
                     value = topK.toFloat(),
                     valueRange = 1f..100f,
                     steps = 99,
@@ -183,12 +185,12 @@ class NeuralSettingsActivity : ComponentActivity() {
             }
 
             // Performance Options Section
-            ParameterSection("Performance Options") {
+            ParameterSection(stringResource(R.string.neural_section_performance)) {
 
                 // Batch Size
                 ParameterSlider(
-                    title = "Batch Size",
-                    description = "Number of predictions processed together (1-16). Higher = more efficient.",
+                    title = stringResource(R.string.neural_batch_size_title),
+                    description = stringResource(R.string.neural_batch_size_desc),
                     value = batchSize.toFloat(),
                     valueRange = 1f..16f,
                     steps = 15,
@@ -201,8 +203,8 @@ class NeuralSettingsActivity : ComponentActivity() {
 
                 // Timeout
                 ParameterSlider(
-                    title = "Prediction Timeout (ms)",
-                    description = "Maximum time for predictions (50-1000ms). Lower = more responsive.",
+                    title = stringResource(R.string.neural_timeout_title),
+                    description = stringResource(R.string.neural_timeout_desc),
                     value = timeoutMs.toFloat(),
                     valueRange = 50f..1000f,
                     steps = 95,
@@ -221,12 +223,12 @@ class NeuralSettingsActivity : ComponentActivity() {
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Enable Batched Inference",
+                            text = stringResource(R.string.neural_enable_batching_title),
                             color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 16.sp
                         )
                         Text(
-                            text = "Process multiple predictions together for better performance",
+                            text = stringResource(R.string.neural_enable_batching_desc),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp
                         )
@@ -248,12 +250,12 @@ class NeuralSettingsActivity : ComponentActivity() {
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Enable Prediction Caching",
+                            text = stringResource(R.string.neural_enable_caching_title),
                             color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 16.sp
                         )
                         Text(
-                            text = "Cache predictions to avoid duplicate computations",
+                            text = stringResource(R.string.neural_enable_caching_desc),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp
                         )
@@ -277,14 +279,14 @@ class NeuralSettingsActivity : ComponentActivity() {
                     onClick = { resetToDefaults() },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Reset to Defaults")
+                    Text(stringResource(R.string.neural_reset_button))
                 }
 
                 Button(
                     onClick = { saveAndApplyParameters() },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Save & Apply")
+                    Text(stringResource(R.string.neural_save_button))
                 }
             }
 
@@ -299,16 +301,13 @@ class NeuralSettingsActivity : ComponentActivity() {
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Performance Impact",
+                        text = stringResource(R.string.neural_performance_impact_title),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "• Higher beam width = better accuracy, slower speed\n" +
-                               "• Lower confidence threshold = more suggestions\n" +
-                               "• Batching improves throughput for multiple predictions\n" +
-                               "• Caching reduces repeated computation overhead",
+                        text = stringResource(R.string.neural_performance_impact_desc),
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         fontSize = 12.sp,
                         lineHeight = 16.sp
@@ -411,7 +410,7 @@ class NeuralSettingsActivity : ComponentActivity() {
             } catch (e: Exception) {
                 android.util.Log.e("NeuralSettings", "Error updating configuration", e)
                 Toast.makeText(this@NeuralSettingsActivity,
-                    "Error updating neural configuration: ${e.message}",
+                    getString(R.string.neural_toast_error_update, e.message ?: ""),
                     Toast.LENGTH_SHORT).show()
             }
         }
@@ -431,7 +430,7 @@ class NeuralSettingsActivity : ComponentActivity() {
 
         updateNeuralParameters()
 
-        Toast.makeText(this, "Reset to default neural parameters", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.neural_toast_reset), Toast.LENGTH_SHORT).show()
     }
 
     private fun saveAndApplyParameters() {
@@ -443,12 +442,12 @@ class NeuralSettingsActivity : ComponentActivity() {
                 android.util.Log.d("NeuralSettings", "Applying new neural parameters")
 
                 Toast.makeText(this@NeuralSettingsActivity,
-                    "Parameters saved and applied to neural engine", Toast.LENGTH_LONG).show()
+                    getString(R.string.neural_toast_save_success), Toast.LENGTH_LONG).show()
                 finish()
             } catch (e: Exception) {
                 android.util.Log.e("NeuralSettings", "Error saving and applying", e)
                 Toast.makeText(this@NeuralSettingsActivity,
-                    "Error applying parameters: ${e.message}", Toast.LENGTH_SHORT).show()
+                    getString(R.string.neural_toast_error_apply, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }
