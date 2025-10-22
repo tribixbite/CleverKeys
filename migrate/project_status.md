@@ -307,6 +307,50 @@
 
 ---
 
+## Latest Session (Oct 21, 2025) - Part 5: Material 3 Phase 3.1 Complete
+
+### ✅ PHASE 3.1 COMPLETE! - CustomLayoutEditDialog Material 3
+
+**Created**: CustomLayoutEditDialogM3.kt (328 lines)
+- Full Material 3 Compose rewrite of legacy AlertDialog-based editor
+- Real-time validation with 500ms throttle
+- Monospace font for code editing
+- Material You theming support
+- Complete i18n with string resources
+- Accessibility support
+- Preview function for development
+
+**String Resources Added** (+9 strings to res/values/strings.xml):
+- custom_layout_editor_title: "Custom Layout Editor"
+- custom_layout_editor_hint: Multi-line hint with example
+- 7 validation error messages (empty, no rows, line too long, etc.)
+- All error messages support i18n and localization
+
+**Documentation Updates**:
+- CustomLayoutEditDialog.kt: Added usage notes (legacy XML screens)
+- CustomLayoutEditDialogM3.kt: Added usage notes (Compose screens)
+- Clear separation between old and new implementations
+
+**Features**:
+- Context-aware validators using R.string references
+- Composable helper: rememberLayoutValidator()
+- Remove button for existing layouts (optional)
+- Android system strings reused (OK, Cancel from android.R.string)
+- Full Material 3 design (Dialog, Surface, TextField, Buttons)
+
+**Status**:
+✅ Compilation: BUILD SUCCESSFUL
+✅ All hardcoded strings extracted
+✅ Phase 3.1 COMPLETE
+
+**Commit**: b4cb2eb7 - feat: add Material 3 CustomLayoutEditDialog (Phase 3.1)
+
+**Next**:
+- Phase 3.2: Extract remaining hardcoded strings (Settings, other dialogs)
+- Phase 3.3: Advanced keyboard modes (OneHanded/Floating/Split)
+
+---
+
 ### ✅ PHASE 2.4 COMPLETE!
 
 #### Phase 2.4: Settings Activities Material 3 Integration ✅
