@@ -125,6 +125,8 @@
 |------|---------|--------|
 | `ONNX_DECODE_PIPELINE.md` | ONNX pipeline docs | ✅ Active |
 | `md_audit.txt` | MD files audit list | ✅ Active |
+| `HISTORICAL_ISSUES_MIGRATION.md` | Issues migration log | ✅ Created 2025-10-21 |
+| `issues-summary-historical-ARCHIVED-2025-10-21.md` | Original issues (archived) | 📚 Archived |
 
 ## 📊 Review Progress
 
