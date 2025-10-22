@@ -141,6 +141,62 @@
 
 ---
 
+## ⚠️ ADDITIONAL KNOWN ISSUES (From Historical Review)
+
+### HIGH PRIORITY Issues
+
+**✅ Issue #11: Missing Error Feedback**
+- **File**: `src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt:507`
+- **Status**: ⚠️ NEEDS VERIFICATION
+- **Original Problem**: `// TODO: Implement user-visible error feedback`
+- **Impact**: Users don't see errors when predictions fail
+- **Action Required**:
+  - [ ] Review CleverKeysService.kt:507
+  - [ ] Implement Snackbar for transient errors
+  - [ ] Implement Toast for critical errors
+  - [ ] Use Material 3 Snackbar component
+  - [ ] Test error scenarios (model load failure, prediction timeout, etc.)
+  - [ ] Add user-friendly error messages (not technical stack traces)
+
+### MEDIUM PRIORITY Issues
+
+**✅ Issue #15: Theme Propagation Incomplete**
+- **File**: `src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt:654`
+- **Status**: ⚠️ NEEDS VERIFICATION (Duplicate of settings-system.md issue)
+- **Original Problem**: `// TODO: Propagate theme changes to active UI components`
+- **Impact**: Theme changes may not apply until restart
+- **Action Required**: See settings-system.md for full details
+  - [ ] Review CleverKeysService.kt:654
+  - [ ] Implement theme update notification system
+  - [ ] Test theme switching without restart
+
+**✅ Issue #18: ConfigurationManager Theme Application**
+- **File**: `src/main/kotlin/tribixbite/keyboard2/ConfigurationManager.kt:306`
+- **Status**: ⚠️ NEEDS VERIFICATION (Duplicate of settings-system.md issue)
+- **Original Problem**: `// TODO: Fix Theme.initialize(context).applyThemeToView(view, theme)`
+- **Impact**: Theme not fully applied to all UI components
+- **Action Required**: See settings-system.md for full details
+  - [ ] Review ConfigurationManager.kt:306
+  - [ ] Fix theme application to all views
+  - [ ] Verify Material 3 theming works correctly
+
+### LOW PRIORITY Issues
+
+**Issue #24: Hardcoded Strings**
+- **File**: `src/main/kotlin/tribixbite/keyboard2/CustomLayoutEditDialog.kt:46,54`
+- **Status**: FUTURE WORK
+- **Problem**: Hardcoded "Custom layout" and "Remove layout" strings
+- **Impact**: Cannot localize/translate these strings
+- **Action Required** (Future):
+  - [ ] Create string resources in res/values/strings.xml
+  - [ ] Add: `<string name="custom_layout">Custom layout</string>`
+  - [ ] Add: `<string name="remove_layout">Remove layout</string>`
+  - [ ] Replace hardcoded strings with `getString(R.string.custom_layout)`
+  - [ ] Prepare for full i18n/localization effort
+- **Note**: This is part of larger i18n effort (Bugs #116, #117, #119, #121 above)
+
+---
+
 ## 🎨 MATERIAL 3 DESIGN SYSTEM
 
 ### Color System

@@ -10,6 +10,85 @@
 
 ## TODOs
 
+### ⚠️ KNOWN ISSUES (From Historical Review)
+
+#### CRITICAL Issues (Fixed)
+
+**✅ Issue #2: Missing ExtraKeysPreference Implementation**
+- **File**: `src/main/kotlin/tribixbite/keyboard2/Config.kt:295`
+- **Status**: ⚠️ NEEDS VERIFICATION
+- **Original Problem**: `extra_keys_param = emptyMap() // TODO: Fix ExtraKeysPreference.get_extra_keys(prefs)`
+- **Impact**: Extra keys feature completely non-functional
+- **Action Required**:
+  - [ ] Verify ExtraKeysPreference.get_extra_keys() is implemented
+  - [ ] Test extra keys loading from preferences
+  - [ ] Test extra keys saving to preferences
+  - [ ] Verify integration with Config.kt
+  - Related to Task 1-2 below (ExtraKeys system implementation)
+
+**✅ Issue #4: CustomLayoutEditor Save/Load Stubs**
+- **File**: `src/main/kotlin/tribixbite/keyboard2/CustomLayoutEditor.kt:121-127`
+- **Status**: ⚠️ NEEDS VERIFICATION
+- **Original Problem**: Save and load functions just show toast with "TODO"
+- **Impact**: Custom layouts cannot be persisted
+- **Action Required**:
+  - [ ] Review CustomLayoutEditor.kt lines 121-127
+  - [ ] Implement save to SharedPreferences or JSON file
+  - [ ] Implement load from storage
+  - [ ] Test custom layout persistence across app restarts
+  - [ ] Add validation for malformed layout data
+
+**✅ Issue #6: CustomExtraKeysPreference Not Implemented**
+- **File**: `src/main/kotlin/tribixbite/keyboard2/prefs/CustomExtraKeysPreference.kt`
+- **Status**: ✅ STUB CREATED (Full implementation pending)
+- **Current State**: Minimal stub to prevent crashes
+  - Returns emptyMap() from get() method
+  - Displays "Feature coming soon" when clicked
+  - Disabled to prevent user confusion
+- **Future Work**:
+  - [ ] Key picker dialog with all available keys
+  - [ ] Position configuration UI
+  - [ ] JSON persistence implementation
+  - [ ] Visual keyboard preview
+- Related to Tasks 1-2 below
+
+### LOW PRIORITY Issues
+
+**Issue #25: Test Layout Interface Not Implemented**
+- **File**: `src/main/kotlin/tribixbite/keyboard2/CustomLayoutEditor.kt:143-144`
+- **Status**: FUTURE WORK
+- **Problem**: `toast("Test layout (TODO: Implement test interface)")`
+- **Impact**: Cannot preview custom layouts before saving
+- **Action Required** (Future):
+  - [ ] Create test/preview activity for custom layouts
+  - [ ] Show full keyboard with custom layout applied
+  - [ ] Allow user to type test text
+  - [ ] Provide "Save" or "Discard" options
+
+**Issue #26: Key Editing Dialog Not Implemented**
+- **File**: `src/main/kotlin/tribixbite/keyboard2/CustomLayoutEditor.kt:223`
+- **Status**: FUTURE WORK
+- **Problem**: `// TODO: Open key editing dialog`
+- **Impact**: Cannot edit individual keys in custom layouts
+- **Action Required** (Future):
+  - [ ] Create key properties dialog
+  - [ ] Allow editing: label, keyValue, width, behavior
+  - [ ] Support multi-tap keys
+  - [ ] Support swipe actions per key
+
+**Issue #27: Add Key to Layout Not Implemented**
+- **File**: `src/main/kotlin/tribixbite/keyboard2/CustomLayoutEditor.kt:267`
+- **Status**: FUTURE WORK
+- **Problem**: `// TODO: Add key to layout`
+- **Impact**: Cannot add new keys to custom layouts
+- **Action Required** (Future):
+  - [ ] Implement key insertion logic
+  - [ ] Support inserting at specific position
+  - [ ] Adjust surrounding key widths automatically
+  - [ ] Validate layout integrity after insertion
+
+---
+
 **Implementation Tasks**:
 - [ ] **Task 1**: Port ExtraKeys.kt complete system (150 lines from Java)
   - ExtraKey data class (kv, script, alternatives, nextTo)

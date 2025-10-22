@@ -107,21 +107,26 @@
 ### `/docs/` Documentation Directory
 
 #### Specifications (`/docs/specs/`)
-*TO BE CREATED - Following CustomCamera pattern*
+*Spec-driven development - All major systems documented*
 | File | Purpose | Status |
 |------|---------|--------|
-| `SPEC_TEMPLATE.md` | Template for new specs | 📝 To create |
-| `core-keyboard-system.md` | Core keyboard spec | 📝 To create |
-| `neural-prediction.md` | ONNX prediction spec | 📝 To create |
-| `gesture-recognition.md` | Gesture system spec | 📝 To create |
-| `layout-customization.md` | Layout engine spec | 📝 To create |
-| `settings-system.md` | Settings architecture | 📝 To create |
+| `SPEC_TEMPLATE.md` | Template for new specs | ✅ Active |
+| `core-keyboard-system.md` | Core keyboard operations | ✅ Created 2025-10-21 |
+| `settings-system.md` | Settings & preferences | ✅ Created 2025-10-21 |
+| `performance-optimization.md` | Performance & monitoring | ✅ Created 2025-10-21 |
+| `layout-system.md` | Layout & extra keys | ✅ Updated 2025-10-21 |
+| `neural-prediction.md` | ONNX prediction pipeline | ✅ Active |
+| `gesture-system.md` | Gesture recognition | ✅ Active |
+| `ui-material3-modernization.md` | Material 3 UI | ✅ Updated 2025-10-21 |
+| `architectural-decisions.md` | ADR log | ✅ Active |
 
 #### History (`/docs/history/`)
 | File | Purpose | Status |
 |------|---------|--------|
-| `ONNX_DECODE_PIPELINE.md` | ONNX pipeline docs | ✅ Existing |
-| `md_audit.txt` | MD files audit list | ✅ Created |
+| `ONNX_DECODE_PIPELINE.md` | ONNX pipeline docs | ✅ Active |
+| `md_audit.txt` | MD files audit list | ✅ Active |
+| `HISTORICAL_ISSUES_MIGRATION.md` | Issues migration log | ✅ Created 2025-10-21 |
+| `issues-summary-historical-ARCHIVED-2025-10-21.md` | Original issues (archived) | 📚 Archived |
 
 ## 📊 Review Progress
 
