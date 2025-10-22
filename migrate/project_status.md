@@ -289,7 +289,25 @@
 - NeuralSettingsActivity: Already Compose, now with KeyboardTheme
 - SettingsActivity: Already Compose, now with KeyboardTheme
 
-**Status**: ✅ Compiles successfully, ready for testing
+**Status**: ✅ Compiles successfully, tested successfully
+
+**Automated Testing** (Oct 21, 2025):
+- Created `test-activities.sh` - Automated ADB testing infrastructure (211 lines)
+- Updated `AndroidManifest.xml` - Exported all activities for ADB access
+- Tested all 5 activities via ADB on Samsung SM-S938U1
+- **Results**: ✅ All activities launched successfully (5/5)
+  - LauncherActivity: ✅ PASS
+  - SettingsActivity: ✅ PASS (Material 3 theme applied)
+  - NeuralSettingsActivity: ✅ PASS (Material 3 theme applied)
+  - NeuralBrowserActivityM3: ✅ PASS (new Compose rewrite working)
+  - SwipeCalibrationActivity: ✅ PASS (legacy, not yet Material 3)
+- **Crash Analysis**: ✅ No crashes detected (logcat verification)
+- **Screenshots**: 5 screenshots captured (total 858KB)
+- **Test Report**: `test-results-summary.md` created
+
+**Material 3 Coverage**: 4/5 activities (80%)
+- ✅ SettingsActivity, NeuralSettingsActivity, NeuralBrowserActivityM3, LauncherActivity
+- 🔜 SwipeCalibrationActivity (legacy View-based, future Material 3 rewrite)
 
 ---
 
