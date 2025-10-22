@@ -27,6 +27,7 @@ import java.io.File
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.Properties
+import tribixbite.keyboard2.theme.KeyboardTheme
 
 /**
  * Modern settings activity for CleverKeys.
@@ -97,14 +98,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
         try {
             setContent {
-                MaterialTheme(
-                    colorScheme = darkColorScheme(
-                        primary = ComposeColor(0xFF6200EE),
-                        background = ComposeColor.Black,
-                        surface = ComposeColor(0xFF121212),
-                        onSurface = ComposeColor.White
-                    )
-                ) {
+                KeyboardTheme(darkTheme = true) {
                     SettingsScreen()
                 }
             }
@@ -187,7 +181,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(ComposeColor.Black)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp)
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -197,7 +191,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 text = "⚙️ CleverKeys Settings",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = ComposeColor.White
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
@@ -413,7 +407,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         onClick = { resetAllSettings() },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = ComposeColor(0xFF424242)
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                     ) {
                         Text("🔄 Reset All")
@@ -439,7 +433,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = ComposeColor(0xFF1E1E1E)
+                containerColor = MaterialTheme.colorScheme.surface
             ),
             shape = RoundedCornerShape(8.dp)
         ) {
@@ -451,7 +445,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     text = title,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = ComposeColor.White
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 content()
             }
@@ -473,7 +467,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    color = ComposeColor.White,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 16.sp
                 )
                 Text(
@@ -507,12 +501,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             ) {
                 Text(
                     text = title,
-                    color = ComposeColor.White,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 16.sp
                 )
                 Text(
                     text = displayValue,
-                    color = ComposeColor(0xFF6200EE),
+                    color = MaterialTheme.colorScheme.primary,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -531,9 +525,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 valueRange = valueRange,
                 steps = steps,
                 colors = SliderDefaults.colors(
-                    thumbColor = ComposeColor(0xFF6200EE),
-                    activeTrackColor = ComposeColor(0xFF6200EE),
-                    inactiveTrackColor = ComposeColor(0xFF424242)
+                    thumbColor = MaterialTheme.colorScheme.primary,
+                    activeTrackColor = MaterialTheme.colorScheme.primary,
+                    inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             )
         }
@@ -552,7 +546,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         Column {
             Text(
                 text = title,
-                color = ComposeColor.White,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 16.sp
             )
             Text(
@@ -612,7 +606,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 Text(
                     text = "📱 Version Information",
                     fontWeight = FontWeight.Bold,
-                    color = ComposeColor.White,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 16.sp
                 )
                 Spacer(modifier = Modifier.height(8.dp))

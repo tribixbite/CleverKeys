@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import tribixbite.keyboard2.theme.KeyboardTheme
 
 /**
  * Modern neural prediction parameter settings activity.
@@ -55,14 +56,7 @@ class NeuralSettingsActivity : ComponentActivity() {
         loadSavedParameters()
 
         setContent {
-            MaterialTheme(
-                colorScheme = darkColorScheme(
-                    primary = ComposeColor(0xFF6200EE),
-                    background = ComposeColor.Black,
-                    surface = ComposeColor(0xFF121212),
-                    onSurface = ComposeColor.White
-                )
-            ) {
+            KeyboardTheme(darkTheme = true) {
                 NeuralSettingsScreen()
             }
         }
@@ -76,7 +70,7 @@ class NeuralSettingsActivity : ComponentActivity() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(ComposeColor.Black)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp)
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -86,13 +80,13 @@ class NeuralSettingsActivity : ComponentActivity() {
                 text = "Neural Prediction Parameters",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = ComposeColor.White
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
                 text = "Configure ONNX neural network parameters for swipe prediction.\nChanges apply immediately to the prediction engine.",
                 fontSize = 14.sp,
-                color = ComposeColor.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp
             )
 
@@ -228,12 +222,12 @@ class NeuralSettingsActivity : ComponentActivity() {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "Enable Batched Inference",
-                            color = ComposeColor.White,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 16.sp
                         )
                         Text(
                             text = "Process multiple predictions together for better performance",
-                            color = ComposeColor.Gray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp
                         )
                     }
@@ -255,12 +249,12 @@ class NeuralSettingsActivity : ComponentActivity() {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "Enable Prediction Caching",
-                            color = ComposeColor.White,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 16.sp
                         )
                         Text(
                             text = "Cache predictions to avoid duplicate computations",
-                            color = ComposeColor.Gray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp
                         )
                     }
@@ -279,12 +273,9 @@ class NeuralSettingsActivity : ComponentActivity() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
+                OutlinedButton(
                     onClick = { resetToDefaults() },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = ComposeColor(0xFF424242)
-                    )
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text("Reset to Defaults")
                 }
@@ -301,7 +292,7 @@ class NeuralSettingsActivity : ComponentActivity() {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = ComposeColor(0xFF1E1E1E)
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             ) {
                 Column(
@@ -310,7 +301,7 @@ class NeuralSettingsActivity : ComponentActivity() {
                     Text(
                         text = "Performance Impact",
                         fontWeight = FontWeight.Bold,
-                        color = ComposeColor.White
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -318,7 +309,7 @@ class NeuralSettingsActivity : ComponentActivity() {
                                "• Lower confidence threshold = more suggestions\n" +
                                "• Batching improves throughput for multiple predictions\n" +
                                "• Caching reduces repeated computation overhead",
-                        color = ComposeColor.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         fontSize = 12.sp,
                         lineHeight = 16.sp
                     )
@@ -335,9 +326,10 @@ class NeuralSettingsActivity : ComponentActivity() {
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = ComposeColor(0xFF1E1E1E)
+                containerColor = MaterialTheme.colorScheme.surface
             ),
-            shape = RoundedCornerShape(8.dp)
+            shape = RoundedCornerShape(8.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
@@ -347,7 +339,7 @@ class NeuralSettingsActivity : ComponentActivity() {
                     text = title,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = ComposeColor.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 content()
             }
@@ -372,12 +364,12 @@ class NeuralSettingsActivity : ComponentActivity() {
             ) {
                 Text(
                     text = title,
-                    color = ComposeColor.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 16.sp
                 )
                 Text(
                     text = displayValue,
-                    color = ComposeColor(0xFF6200EE),
+                    color = MaterialTheme.colorScheme.primary,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -385,7 +377,7 @@ class NeuralSettingsActivity : ComponentActivity() {
 
             Text(
                 text = description,
-                color = ComposeColor.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
@@ -394,12 +386,7 @@ class NeuralSettingsActivity : ComponentActivity() {
                 value = value,
                 onValueChange = onValueChange,
                 valueRange = valueRange,
-                steps = steps,
-                colors = SliderDefaults.colors(
-                    thumbColor = ComposeColor(0xFF6200EE),
-                    activeTrackColor = ComposeColor(0xFF6200EE),
-                    inactiveTrackColor = ComposeColor(0xFF424242)
-                )
+                steps = steps
             )
         }
     }
