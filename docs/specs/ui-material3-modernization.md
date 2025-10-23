@@ -61,14 +61,15 @@
 | Component | Lines | Integration | Material 3 | Priority | Hardcoded Colors |
 |-----------|-------|-------------|------------|----------|------------------|
 | **CleverKeysService.kt** | ? | ✅ Integrated | ✅ Uses M3 | ✓ DONE | 0 (uses SuggestionBarM3Wrapper) |
-| **SettingsActivity.kt** | 935 | ✅ M3 Compose | △ Partial | P1 | 6 (ComposeColor.Gray/White) |
+| **SettingsActivity.kt** | 935 | ✅ M3 Compose | ✅ Complete | ✓ DONE | 0 (FIXED 2025-10-23) |
 | **NeuralSettingsActivity.kt** | 484 | ✅ M3 Compose | ✅ Complete | ✓ DONE | 0 (uses MaterialTheme) |
 | **TestActivity.kt** | 164 | ✅ M3 Compose | ✅ Complete | ✓ DONE | 0 |
-| **Theme.kt** | ~400 | ❌ Still in use | ❌ No M3 | P0 | 20+ (fallback colors) |
-| **Keyboard2View.kt** | ~800 | ❌ Uses Theme.kt | ❌ No M3 | P0 | ? (uses old Theme line 108) |
+| **Theme.kt** | ~400 | ⚠️ Still in use | ❌ No M3 | P1 | 20+ (fallback colors, legacy) |
+| **Keyboard2View.kt** | ~800 | ✅ M3 Integrated | ✅ Complete | ✓ DONE | 0 (FIXED 2025-10-23) |
 | **SuggestionBar.kt** | 87 | ⚠️ NOT USED | ❌ No M3 | DELETE | 2 (Color.TRANSPARENT, Color.WHITE) |
 | **SwipeCalibrationActivity.kt** | 942 | ❌ View-based | ❌ No M3 | P1 | 14+ (extensive hardcoded) |
-| **NeuralBrowserActivity.kt** | 538 | △ M3 exists | △ Verify | P2 | 3 (0xFF2D2D2D, 0xFF1A1A1A) |
+| **NeuralBrowserActivity.kt** | 538 | ⚠️ LEGACY | ❌ No M3 | P2 | 3 (0xFF2D2D2D, 0xFF1A1A1A) |
+| **neural/NeuralBrowserActivityM3.kt** | 27KB | ✅ Registered | ✅ Complete | ✓ DONE | 5 (data viz colors) |
 | **ClipboardHistoryView.kt** | ~250 | △ M3 created | △ Verify | P1 | ? (ClipboardHistoryViewM3 exists) |
 | **EmojiGridView.kt** | ~180 | ❌ GridLayout | ❌ No M3 | P2 | 1 (0x22FFFFFF line 133) |
 | **CustomLayoutEditDialog.kt** | ~200 | ❌ AlertDialog | ❌ No M3 | P2 | 1 (0x80FFFFFF line 170) |
@@ -76,11 +77,11 @@
 | **EmojiGroupButtonsBar.kt** | ~120 | ❌ LinearLayout | ❌ No M3 | P2 | ? |
 | **LauncherActivity.kt** | ~150 | ❌ Basic | ❌ No M3 | P3 | ? |
 
-**Updated Statistics**:
-- ✅ **Complete M3**: 4/14 (28.6%) - CleverKeysService, NeuralSettingsActivity, TestActivity, (SettingsActivity partial)
-- △ **Partial M3/Verify**: 3/14 (21.4%) - SettingsActivity (6 hardcoded), NeuralBrowserActivityM3 (unverified), ClipboardHistoryViewM3 (unverified)
-- ❌ **No M3**: 7/14 (50.0%) - Theme.kt, Keyboard2View, SwipeCalibration, EmojiGrid, CustomLayoutEdit, ClipboardPin, EmojiGroupButtons, Launcher
-- 🗑️ **Delete**: 1/14 (7.1%) - SuggestionBar.kt (superseded, not used)
+**Updated Statistics** (2025-10-23):
+- ✅ **Complete M3**: 6/15 (40.0%) - CleverKeysService, NeuralSettingsActivity, TestActivity, SettingsActivity (FIXED ✅), Keyboard2View (FIXED ✅), NeuralBrowserActivityM3 (VERIFIED ✅)
+- △ **Partial M3/Verify**: 1/15 (6.7%) - ClipboardHistoryViewM3 (unverified)
+- ❌ **No M3**: 7/15 (46.7%) - Theme.kt (still in use), SwipeCalibration, NeuralBrowserActivity (legacy), EmojiGrid, CustomLayoutEdit, ClipboardPin, EmojiGroupButtons, Launcher
+- 🗑️ **Delete**: 1/15 (6.7%) - SuggestionBar.kt (superseded, not used)
 
 ### Hardcoded Colors Audit (2025-10-23)
 
