@@ -1,8 +1,9 @@
 # UI Material 3 Modernization Specification
 
-**Status**: 📝 PLANNING
+**Status**: 🔄 IN PROGRESS (Phase 1 Infrastructure: ✅ COMPLETE)
 **Priority**: P1 HIGH
 **Created**: 2025-10-21
+**Last Updated**: 2025-10-23
 **Owner**: CleverKeys Core Team
 
 ---
@@ -11,13 +12,18 @@
 
 **Objective**: Modernize CleverKeys UI to Material Design 3 (Material You) for consistent, accessible, and beautiful user experience across all components.
 
-**Current State**: Mixed implementation
-- ✅ SettingsActivity: Already using Material 3 (Compose + Material3)
-- ⚠️ Theme.kt: Basic Android theming (NOT Material 3)
-- ❌ SuggestionBar: Plain buttons with hardcoded styling
-- ❌ Other views: Legacy XML-based or programmatic layouts
-- ❌ No animation system
-- ❌ No dynamic color (Material You)
+**Current State**: Material 3 infrastructure complete, partial component integration
+- ✅ **Phase 1 Infrastructure**: 100% COMPLETE (7 M3 files created)
+  - MaterialThemeManager.kt (279 lines) - Dynamic color, theme persistence
+  - KeyboardColorScheme.kt (157 lines) - Semantic color tokens
+  - KeyboardTheme.kt (132 lines) - Composable wrapper
+  - SuggestionBarM3.kt (~200 lines) - M3 suggestion bar (fixes 11 bugs)
+  - SuggestionBarM3Wrapper.kt (96 lines) - View integration bridge
+  - ClipboardHistoryViewM3.kt (307 lines) - M3 clipboard UI
+  - AnimationManager.kt - Material motion animations
+- ✅ **Integrated Components**: CleverKeysService, SettingsActivity, NeuralSettingsActivity, TestActivity
+- △ **Partial Integration**: SettingsActivity (has hardcoded colors), NeuralBrowserActivityM3 (exists, unverified)
+- ❌ **Not Integrated**: Keyboard2View (uses old Theme.kt), SwipeCalibrationActivity (14+ hardcoded colors), Theme.kt (still in use)
 
 **Target State**: Complete Material 3 implementation
 - Material 3 design language across all components
@@ -37,29 +43,111 @@
 
 ## 📊 CURRENT STATE ANALYSIS
 
-### UI Components Inventory (14 files)
+### UI Components Inventory (14 legacy + 7 M3 infrastructure = 21 files)
 
-| Component | Lines | Current State | Material 3 | Priority | Bugs |
-|-----------|-------|---------------|------------|----------|------|
-| **SettingsActivity.kt** | 935 | ✅ M3 Compose | ✅ Complete | ✓ DONE | 0 |
-| **Theme.kt** | ~400 | ⚠️ Basic theming | ❌ No M3 | P0 | File 8 |
-| **SuggestionBar.kt** | 87 | ❌ Plain buttons | ❌ No M3 | P0 | File 5 (11 bugs) |
-| **Keyboard2View.kt** | ~800 | ❌ Custom canvas | △ Partial | P1 | File 9 (5 bugs) |
-| **ClipboardHistoryView.kt** | ~250 | ❌ LinearLayout | ❌ No M3 | P0 | File 24 (12 bugs) |
-| **ClipboardPinView.kt** | ~200 | ❌ Programmatic | ❌ No M3 | P1 | File 23 (5 bugs) |
-| **EmojiGridView.kt** | ~180 | ❌ GridLayout | ❌ No M3 | P1 | File 55 (8 bugs) |
-| **EmojiGroupButtonsBar.kt** | ~120 | ❌ LinearLayout | ❌ No M3 | P1 | File 56 (3 bugs) |
-| **CustomLayoutEditDialog.kt** | ~200 | ❌ AlertDialog | ❌ No M3 | P2 | Unknown |
-| **SwipeCalibrationActivity.kt** | 942 | ❌ View-based | ❌ No M3 | P2 | 0 |
-| **NeuralBrowserActivity.kt** | 538 | △ Basic compose | △ Partial | P2 | File 86 |
-| **NeuralSettingsActivity.kt** | ~300 | △ Basic compose | △ Partial | P2 | Unknown |
-| **LauncherActivity.kt** | ~150 | ❌ Basic | ❌ No M3 | P3 | Unknown |
+#### Material 3 Infrastructure (Phase 1 - ✅ COMPLETE)
+| Component | Lines | Status | Notes |
+|-----------|-------|--------|-------|
+| **theme/MaterialThemeManager.kt** | 279 | ✅ Created | Dynamic color, theme persistence |
+| **theme/KeyboardColorScheme.kt** | 157 | ✅ Created | Semantic color tokens |
+| **theme/KeyboardTheme.kt** | 132 | ✅ Created | Composable wrapper |
+| **ui/SuggestionBarM3.kt** | ~200 | ✅ Created | Fixes 11 bugs from SuggestionBar.kt |
+| **ui/SuggestionBarM3Wrapper.kt** | 96 | ✅ Created | View integration bridge |
+| **ui/ClipboardHistoryViewM3.kt** | 307 | ✅ Created | M3 clipboard UI |
+| **animation/AnimationManager.kt** | ? | ✅ Created | Material motion animations |
+| **neural/NeuralBrowserActivityM3.kt** | 27KB | ✅ Created | M3 neural browser (unverified integration) |
+
+#### Legacy Components Integration Status
+| Component | Lines | Integration | Material 3 | Priority | Hardcoded Colors |
+|-----------|-------|-------------|------------|----------|------------------|
+| **CleverKeysService.kt** | ? | ✅ Integrated | ✅ Uses M3 | ✓ DONE | 0 (uses SuggestionBarM3Wrapper) |
+| **SettingsActivity.kt** | 935 | ✅ M3 Compose | △ Partial | P1 | 6 (ComposeColor.Gray/White) |
+| **NeuralSettingsActivity.kt** | 484 | ✅ M3 Compose | ✅ Complete | ✓ DONE | 0 (uses MaterialTheme) |
 | **TestActivity.kt** | 164 | ✅ M3 Compose | ✅ Complete | ✓ DONE | 0 |
+| **Theme.kt** | ~400 | ❌ Still in use | ❌ No M3 | P0 | 20+ (fallback colors) |
+| **Keyboard2View.kt** | ~800 | ❌ Uses Theme.kt | ❌ No M3 | P0 | ? (uses old Theme line 108) |
+| **SuggestionBar.kt** | 87 | ⚠️ NOT USED | ❌ No M3 | DELETE | 2 (Color.TRANSPARENT, Color.WHITE) |
+| **SwipeCalibrationActivity.kt** | 942 | ❌ View-based | ❌ No M3 | P1 | 14+ (extensive hardcoded) |
+| **NeuralBrowserActivity.kt** | 538 | △ M3 exists | △ Verify | P2 | 3 (0xFF2D2D2D, 0xFF1A1A1A) |
+| **ClipboardHistoryView.kt** | ~250 | △ M3 created | △ Verify | P1 | ? (ClipboardHistoryViewM3 exists) |
+| **EmojiGridView.kt** | ~180 | ❌ GridLayout | ❌ No M3 | P2 | 1 (0x22FFFFFF line 133) |
+| **CustomLayoutEditDialog.kt** | ~200 | ❌ AlertDialog | ❌ No M3 | P2 | 1 (0x80FFFFFF line 170) |
+| **ClipboardPinView.kt** | ~200 | ❌ Programmatic | ❌ No M3 | P2 | ? |
+| **EmojiGroupButtonsBar.kt** | ~120 | ❌ LinearLayout | ❌ No M3 | P2 | ? |
+| **LauncherActivity.kt** | ~150 | ❌ Basic | ❌ No M3 | P3 | ? |
 
-**Statistics**:
-- ✅ Complete M3: 2/14 (14.3%)
-- △ Partial M3: 3/14 (21.4%)
-- ❌ No M3: 9/14 (64.3%)
+**Updated Statistics**:
+- ✅ **Complete M3**: 4/14 (28.6%) - CleverKeysService, NeuralSettingsActivity, TestActivity, (SettingsActivity partial)
+- △ **Partial M3/Verify**: 3/14 (21.4%) - SettingsActivity (6 hardcoded), NeuralBrowserActivityM3 (unverified), ClipboardHistoryViewM3 (unverified)
+- ❌ **No M3**: 7/14 (50.0%) - Theme.kt, Keyboard2View, SwipeCalibration, EmojiGrid, CustomLayoutEdit, ClipboardPin, EmojiGroupButtons, Launcher
+- 🗑️ **Delete**: 1/14 (7.1%) - SuggestionBar.kt (superseded, not used)
+
+### Hardcoded Colors Audit (2025-10-23)
+
+**SwipeCalibrationActivity.kt** (14+ instances):
+```
+Line 229: setBackgroundColor(Color.BLACK)
+Line 235, 267, 314: setTextColor(0xFF00d4ff.toInt())
+Line 242: setTextColor(Color.GRAY)
+Line 249: setTextColor(Color.CYAN)
+Line 256, 295, 324, 334, 501, 530: setTextColor(Color.WHITE)
+Line 286: createButton("Skip Word", 0xFFFF5722.toInt())
+Line 287: createButton("Next Word", 0xFF4CAF50.toInt())
+Line 288: createButton("Export Data", 0xFF2196F3.toInt())
+Line 289: createButton("Playground", 0xFF4CAF50.toInt())
+Line 323: setBackgroundColor(0xFF4CAF50.toInt())
+Line 335: setBackgroundColor(0xFF1A1A1A.toInt())
+Line 351: setBackgroundColor(Color.BLACK)
+Line 554: setTextColor(0xFF4CAF50.toInt())
+Line 684: color = 0xFF2B2B2B.toInt()
+Line 690: color = 0xFF1A1A1A.toInt()
+Line 697: color = Color.WHITE
+Line 704: color = Color.CYAN
+Line 714: color = Color.GREEN
+Line 730: setBackgroundColor(Color.BLACK)
+```
+
+**Theme.kt** (20+ instances):
+```
+Line 98: getThemeColor(..., 0xFF2B2B2B.toInt())
+Line 99: getThemeColor(..., Color.WHITE)
+Line 100: getThemeColor(..., Color.BLACK)
+Line 112: swipeTrailColor = 0xFF00D4FF.toInt()
+Line 117: getThemeColor(..., Color.LTGRAY)
+Line 118: getThemeColor(..., Color.BLACK)
+Line 119: getThemeColor(..., Color.WHITE)
+Line 131: swipeTrailColor = 0xFF1976D2.toInt()
+Line 172-187: Color.rgb() extensive hardcoded colors
+Line 239: swipeTrailColor = 0xFF00D4FF.toInt()
+Line 240: errorColor = 0xFFFF5722.toInt()
+Line 241: successColor = 0xFF4CAF50.toInt()
+```
+
+**SettingsActivity.kt** (6 instances):
+```
+Line 202, 380, 482, 524, 561, 626: color = ComposeColor.Gray
+Line 579: focusedTextColor = ComposeColor.White
+Line 580: unfocusedTextColor = ComposeColor.White
+Line 607: containerColor = ComposeColor(0xFF2A2A2A)
+```
+
+**NeuralBrowserActivity.kt** (3 instances):
+```
+Line 63, 72, 83: setBackgroundColor(0xFF2D2D2D/0xFF1A1A1A.toInt())
+```
+
+**NeuralBrowserActivityM3.kt** (5 instances):
+```
+Line 319-322: Color(0xFF4CAF50/0xFFFFEB3B/0xFFFF9800/0xFFF44336)
+Line 338: Color(0xFF4CAF50).copy(alpha = 0.2f)
+```
+
+**Other Files**:
+- **SuggestionBar.kt**: Line 32 (Color.TRANSPARENT), Line 33 (Color.WHITE)
+- **EmojiGridView.kt**: Line 133 (0x22FFFFFF)
+- **CustomLayoutEditDialog.kt**: Line 170 (0x80FFFFFF)
+
+**Total**: 48+ hardcoded color instances across 8 files
 
 ---
 
