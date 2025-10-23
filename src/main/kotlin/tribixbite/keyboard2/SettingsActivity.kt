@@ -199,7 +199,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             Text(
                 text = stringResource(R.string.settings_description),
                 fontSize = 14.sp,
-                color = ComposeColor.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp
             )
 
@@ -377,7 +377,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 Text(
                     text = stringResource(R.string.settings_screen_reader_note),
                     fontSize = 12.sp,
-                    color = ComposeColor.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
@@ -479,7 +479,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
                 Text(
                     text = description,
-                    color = ComposeColor.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp
                 )
             }
@@ -521,7 +521,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             Text(
                 text = description,
-                color = ComposeColor.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
@@ -558,7 +558,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             )
             Text(
                 text = description,
-                color = ComposeColor.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
@@ -576,8 +576,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         .menuAnchor()
                         .fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = ComposeColor.White,
-                        unfocusedTextColor = ComposeColor.White
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
 
@@ -604,7 +604,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = ComposeColor(0xFF2A2A2A)
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
             )
         ) {
             Column(
@@ -623,7 +623,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     text = stringResource(R.string.settings_version_build, versionInfo.getProperty("build_number", "unknown")) + "\n" +
                            stringResource(R.string.settings_version_commit, versionInfo.getProperty("commit", "unknown")) + "\n" +
                            stringResource(R.string.settings_version_date, versionInfo.getProperty("build_date", "unknown")),
-                    color = ComposeColor.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     lineHeight = 16.sp
                 )

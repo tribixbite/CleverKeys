@@ -16,8 +16,12 @@ import android.view.WindowMetrics
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.*
+import androidx.compose.ui.graphics.toArgb
 import tribixbite.keyboard2.animation.AnimationManager
+import tribixbite.keyboard2.theme.MaterialThemeManager
+import tribixbite.keyboard2.theme.KeyboardColorScheme
 import tribixbite.keyboard2.theme.keyboardColors
+import android.content.res.Configuration
 
 /**
  * Main keyboard view for CleverKeys with neural swipe prediction
@@ -46,7 +50,14 @@ class Keyboard2View @JvmOverloads constructor(
 
     // Config will be set by CleverKeysService via setViewConfig()
     private var config: Config? = null
-    private lateinit var theme: Theme
+
+    // Material 3 theme management
+    private var materialThemeManager: MaterialThemeManager? = null
+    private var keyboardColors: KeyboardColorScheme? = null
+    private var isDarkMode = false
+
+    // Legacy theme support (deprecated, to be removed)
+    @Deprecated("Use materialThemeManager and keyboardColors instead")
     private var themeComputed: Theme.Computed? = null
 
     // Neural swipe state
@@ -83,13 +94,12 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /**
-     * Update swipe trail color from theme (Phase 2.2).
+     * Update swipe trail color from Material 3 theme.
      * Called when theme is available.
      */
     private fun updateSwipeTrailColor() {
-        // Use Material 3 primary color for swipe trail
-        swipeTrailPaint.color = theme.labelColor // Use theme's label color as fallback
-        // TODO: Use keyboardColors().swipeTrail when Compose context available
+        // Use Material 3 swipe trail color
+        swipeTrailPaint.color = keyboardColors?.swipeTrail?.toArgb() ?: android.graphics.Color.CYAN
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -105,7 +115,14 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     private fun initialize(attrs: AttributeSet?) {
-        theme = Theme(context, attrs)
+        // Initialize Material 3 theme manager
+        materialThemeManager = MaterialThemeManager(context)
+
+        // Detect dark mode from system configuration
+        isDarkMode = (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
+        // Get keyboard color scheme from Material 3 theme
+        keyboardColors = materialThemeManager?.getKeyboardColorScheme(isDarkMode)
 
         // Update swipe trail color from theme (Phase 2.2)
         updateSwipeTrailColor()
@@ -168,11 +185,17 @@ class Keyboard2View @JvmOverloads constructor(
         if (Build.VERSION.SDK_INT < 21) return
 
         val window = getParentWindow(context)
-        window?.navigationBarColor = theme.colorNavBar
+
+        // Use Material 3 surface color for navigation bar
+        val navBarColor = materialThemeManager?.getColorScheme(isDarkMode)?.surface?.toArgb()
+            ?: if (isDarkMode) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+
+        window?.navigationBarColor = navBarColor
 
         if (Build.VERSION.SDK_INT >= 26) {
             var uiFlags = systemUiVisibility
-            if (theme.isLightNavBar) {
+            // Light navigation bar for light theme
+            if (!isDarkMode) {
                 uiFlags = uiFlags or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
             } else {
                 uiFlags = uiFlags and View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
@@ -505,7 +528,9 @@ class Keyboard2View @JvmOverloads constructor(
         keyWidth = keyboardWidth / kbd.keysWidth
 
         // Create theme computed values
-        val tc = config?.let { Theme.Computed(theme, it, keyWidth, kbd) } ?: return
+        // TODO: Refactor Theme.Computed to use Material 3 colors directly
+        val legacyTheme = Theme(context, null)
+        val tc = config?.let { Theme.Computed(legacyTheme, it, keyWidth, kbd) } ?: return
         themeComputed = tc
 
         // Fix #53: Dynamic text size calculation matching Java implementation
@@ -784,7 +809,11 @@ class Keyboard2View @JvmOverloads constructor(
             if (isLocked || isLatched) {
                 val indicatorSize = keyWidth * 0.1f
                 val paint = Paint().apply {
-                    color = if (isLocked) theme.activatedColor else theme.secondaryLabelColor
+                    color = if (isLocked) {
+                        keyboardColors?.keyActivated?.toArgb() ?: android.graphics.Color.YELLOW
+                    } else {
+                        keyboardColors?.keySecondaryLabel?.toArgb() ?: android.graphics.Color.GRAY
+                    }
                     style = Paint.Style.FILL
                     alpha = if (isLocked) 255 else 180
                 }
@@ -817,20 +846,26 @@ class Keyboard2View @JvmOverloads constructor(
             val flags = pointers.getKeyFlags(keyValue)
             if (flags != -1) {
                 if ((flags and Pointers.FLAG_P_LOCKED) != 0) {
-                    return theme.lockedColor
+                    return keyboardColors?.keyLocked?.toArgb() ?: android.graphics.Color.YELLOW
                 }
-                return theme.activatedColor
+                return keyboardColors?.keyActivated?.toArgb() ?: android.graphics.Color.rgb(255, 165, 0)
             }
         }
 
         if (keyValue.hasFlag(KeyValue.Flag.SECONDARY) || keyValue.hasFlag(KeyValue.Flag.GREYED)) {
             if (keyValue.hasFlag(KeyValue.Flag.GREYED)) {
-                return theme.greyedLabelColor
+                // Use secondary label with lower alpha for greyed keys
+                return keyboardColors?.keySecondaryLabel?.copy(alpha = 0.5f)?.toArgb()
+                    ?: android.graphics.Color.GRAY
             }
-            return theme.secondaryLabelColor
+            return keyboardColors?.keySecondaryLabel?.toArgb() ?: android.graphics.Color.GRAY
         }
 
-        return if (isSubLabel) theme.subLabelColor else theme.labelColor
+        return if (isSubLabel) {
+            keyboardColors?.keySubLabel?.toArgb() ?: android.graphics.Color.LTGRAY
+        } else {
+            keyboardColors?.keyLabel?.toArgb() ?: android.graphics.Color.WHITE
+        }
     }
 
     override fun modifyKey(keyValue: KeyValue?, modifiers: Pointers.Modifiers): KeyValue {
