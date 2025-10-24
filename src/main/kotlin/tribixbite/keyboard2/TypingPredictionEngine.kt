@@ -11,6 +11,7 @@ import java.util.Locale
  * Tap typing prediction engine with n-gram models and frequency-based predictions
  * Provides next-word predictions and autocomplete for regular tap typing
  * Fix for Bug #359 (CATASTROPHIC): NO tap typing predictions
+ * Enhanced with autocorrection (Fix for Bug #310)
  */
 class TypingPredictionEngine(private val context: Context) {
 
@@ -19,6 +20,7 @@ class TypingPredictionEngine(private val context: Context) {
         private const val MAX_PREDICTIONS = 5
         private const val MIN_WORD_FREQUENCY = 10
         private const val MIN_PREFIX_LENGTH = 1
+        private const val MIN_WORD_LENGTH_FOR_AUTOCORRECT = 3  // Enable autocorrect for words 3+ chars
     }
 
     // Word frequency map (word -> frequency count)
@@ -32,6 +34,9 @@ class TypingPredictionEngine(private val context: Context) {
 
     // Prefix trie for fast autocomplete
     private val prefixTrie = TrieNode()
+
+    // Autocorrection engine (Fix for Bug #310)
+    private val autoCorrectionEngine = AutoCorrectionEngine()
 
     private var isInitialized = false
 
@@ -93,21 +98,60 @@ class TypingPredictionEngine(private val context: Context) {
 
     /**
      * Get autocomplete predictions for partial word
+     * Enhanced with autocorrection (Fix for Bug #310)
      */
     fun autocompleteWord(prefix: String, maxResults: Int = MAX_PREDICTIONS): List<PredictionResult> {
         if (!isInitialized || prefix.length < MIN_PREFIX_LENGTH) return emptyList()
 
         val lowerPrefix = prefix.lowercase(Locale.getDefault())
-        val completions = findCompletions(lowerPrefix)
 
-        return completions
+        // Try prefix matching first (traditional autocomplete)
+        val completionsList = findCompletions(lowerPrefix)
+        val prefixCompletions = completionsList
             .sortedByDescending { wordFrequencies[it] ?: 0 }
             .take(maxResults)
             .map { word ->
                 val frequency = wordFrequencies[word] ?: 0
-                val confidence = calculateConfidence(frequency, completions.size)
+                val confidence = calculateConfidence(frequency, completionsList.size)
                 PredictionResult(word, confidence, PredictionSource.AUTOCOMPLETE)
             }
+
+        // If we have enough prefix completions, return them
+        if (prefixCompletions.size >= maxResults) {
+            return prefixCompletions
+        }
+
+        // If word is long enough and we don't have many prefix matches,
+        // add autocorrection suggestions (Fix for Bug #310)
+        if (lowerPrefix.length >= MIN_WORD_LENGTH_FOR_AUTOCORRECT) {
+            val dictionaryWords = wordFrequencies.keys.toList()
+            val corrections = autoCorrectionEngine.getSuggestions(
+                typedWord = lowerPrefix,
+                dictionary = dictionaryWords,
+                maxSuggestions = maxResults
+            )
+
+            // Convert autocorrection suggestions to PredictionResults
+            val correctionResults = corrections.map { suggestion ->
+                PredictionResult(
+                    word = suggestion.word,
+                    confidence = suggestion.confidence,
+                    source = if (suggestion.isExactMatch) {
+                        PredictionSource.AUTOCOMPLETE
+                    } else {
+                        PredictionSource.AUTOCORRECT  // New source type
+                    }
+                )
+            }
+
+            // Merge prefix completions and corrections, remove duplicates, and take top N
+            return (prefixCompletions + correctionResults)
+                .distinctBy { it.word }
+                .sortedByDescending { it.confidence }
+                .take(maxResults)
+        }
+
+        return prefixCompletions
     }
 
     /**
@@ -161,10 +205,11 @@ class TypingPredictionEngine(private val context: Context) {
     )
 
     enum class PredictionSource {
-        TRIGRAM,    // Based on previous 2 words
-        BIGRAM,     // Based on previous 1 word
-        FREQUENCY,  // Based on word frequency only
-        AUTOCOMPLETE // Based on prefix matching
+        TRIGRAM,      // Based on previous 2 words
+        BIGRAM,       // Based on previous 1 word
+        FREQUENCY,    // Based on word frequency only
+        AUTOCOMPLETE, // Based on prefix matching
+        AUTOCORRECT   // Based on edit distance correction (Fix for Bug #310)
     }
 
     // Private helper methods
