@@ -319,6 +319,11 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
                     logE("Failed to open settings", e)
                 }
             }
+            override fun updateSuggestions(suggestions: List<String>) {
+                // Update suggestion bar with tap-typing predictions (Fix for Bug #313)
+                suggestionBar?.setSuggestions(suggestions)
+                logD("Tap typing predictions: ${suggestions.joinToString(", ")}")
+            }
         },
             typingPredictionEngine = typingPredictionEngine,
             voiceGuidanceEngine = voiceGuidanceEngine,
