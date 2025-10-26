@@ -514,6 +514,7 @@ class KeyEventHandler(
 
     /**
      * Accept a prediction suggestion
+     * Includes user adaptation tracking (Fix for Bug #312)
      */
     fun acceptSuggestion(suggestion: String) {
         val inputConnection = receiver.getInputConnection() ?: return
@@ -526,6 +527,9 @@ class KeyEventHandler(
 
         // Commit suggestion
         inputConnection.commitText(suggestion, 1)
+
+        // Record user selection for adaptation (Fix for Bug #312)
+        typingPredictionEngine?.recordUserSelection(suggestion)
 
         // Add to context
         contextWords.add(suggestion)

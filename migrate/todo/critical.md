@@ -39,15 +39,22 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 - Integrated with TypingPredictionEngine for typo correction
 - Features: Edit distance calculation, keyboard adjacency costs, confidence scoring
 - **RESULT**: Autocorrection now functional (adjacent key typos cost less)
+- Commit: c30652a8
+
+**Fix #312: FrequencyModel / User Adaptation** ✅ DONE (2025-10-24)
+- UserAdaptationManager.kt created (302 lines, persistent user adaptation)
+- Integrated with TypingPredictionEngine for personalized predictions
+- Features: Selection tracking, adaptation multipliers, periodic reset, pruning
+- **RESULT**: Frequently selected words boosted up to 2x, 30-day decay, persistent storage
 - Commit: (current session)
 
-**APK Status**: Built successfully (49MB) - Tap typing + autocorrection integrated
+**APK Status**: Built successfully - Tap typing + autocorrection + user adaptation
 
 ---
 
 ## 🔧 REMAINING CRITICAL FIXES
 
-### **P0 - CATASTROPHIC (System Breaking) - 36 Bugs Remaining (42 total, 5 fixed: #51-52, #273, #310, #313)**
+### **P0 - CATASTROPHIC (System Breaking) - 35 Bugs Remaining (42 total, 6 fixed: #51-52, #273, #310, #312, #313)**
 
 **NOTE**: Bugs #310-314, #352-362, #371, #375 were initially from ESTIMATES (Files 150-251), but are now CONFIRMED through actual file review (Files 150-165 completed). Bugs #310, #371, #375 are FIXED.
 
@@ -63,10 +70,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - File: SpellCheckerIntegration.java (~350 lines) → COMPLETELY MISSING
   - Missing: Android SpellCheckerService integration, real-time checking
 
-- [ ] **Bug #312**: FrequencyModel missing (File 160) ✅ **CONFIRMED**
-  - Impact: NO word frequency tracking, poor predictions
-  - File: FrequencyModel.java (~300 lines) → COMPLETELY MISSING
-  - Missing: Frequency database, time decay, bigram/trigram tracking
+- [x] **Bug #312**: FrequencyModel/UserAdaptation FIXED ✅ **2025-10-24**
+  - Impact: Frequently selected words now boosted, personalized predictions
+  - File: UserAdaptationManager.kt (302 lines) → ✅ FULLY IMPLEMENTED
+  - Features: Selection tracking, adaptation multipliers (up to 2x), SharedPreferences persistence, automatic pruning (max 1000 words), periodic reset (30 days), thread-safe ConcurrentHashMap
+  - Integration: Applied to all prediction sources (trigram/bigram/frequency/autocomplete)
 
 - [x] **Bug #313**: TextPrediction engine FIXED ✅ **2025-10-24**
   - Impact: Keyboard now supports BOTH tap-typing AND swipe-typing

@@ -38,6 +38,9 @@ class TypingPredictionEngine(private val context: Context) {
     // Autocorrection engine (Fix for Bug #310)
     private val autoCorrectionEngine = AutoCorrectionEngine()
 
+    // User adaptation manager (Fix for Bug #312)
+    private val userAdaptationManager = UserAdaptationManager.getInstance(context)
+
     private var isInitialized = false
 
     /**
@@ -320,9 +323,11 @@ class TypingPredictionEngine(private val context: Context) {
             ?.sortedByDescending { it.value }
             ?.take(maxResults)
             ?.map { (word, count) ->
+                val baseConfidence = calculateConfidence(count, 100)
+                val adaptedConfidence = applyUserAdaptation(word, baseConfidence)
                 PredictionResult(
                     word = word,
-                    confidence = calculateConfidence(count, 100),
+                    confidence = adaptedConfidence,
                     source = PredictionSource.TRIGRAM
                 )
             } ?: emptyList()
@@ -336,9 +341,11 @@ class TypingPredictionEngine(private val context: Context) {
             ?.sortedByDescending { it.value }
             ?.take(maxResults)
             ?.map { (word, count) ->
+                val baseConfidence = calculateConfidence(count, 50)
+                val adaptedConfidence = applyUserAdaptation(word, baseConfidence)
                 PredictionResult(
                     word = word,
-                    confidence = calculateConfidence(count, 50),
+                    confidence = adaptedConfidence,
                     source = PredictionSource.BIGRAM
                 )
             } ?: emptyList()
@@ -352,9 +359,11 @@ class TypingPredictionEngine(private val context: Context) {
             .sortedByDescending { it.value }
             .take(maxResults)
             .map { (word, frequency) ->
+                val baseConfidence = calculateConfidence(frequency, 1000)
+                val adaptedConfidence = applyUserAdaptation(word, baseConfidence)
                 PredictionResult(
                     word = word,
-                    confidence = calculateConfidence(frequency, 1000),
+                    confidence = adaptedConfidence,
                     source = PredictionSource.FREQUENCY
                 )
             }
@@ -413,6 +422,32 @@ class TypingPredictionEngine(private val context: Context) {
     }
 
     /**
+     * Apply user adaptation multiplier to boost frequently selected words
+     * Fix for Bug #312: User-specific frequency tracking
+     */
+    private fun applyUserAdaptation(word: String, baseConfidence: Float): Float {
+        val multiplier = userAdaptationManager.getAdaptationMultiplier(word)
+        val adaptedConfidence = baseConfidence * multiplier
+        return adaptedConfidence.coerceIn(0f, 1f)
+    }
+
+    /**
+     * Record that user selected a word
+     * Updates user adaptation model for personalized predictions
+     * Fix for Bug #312: User selection tracking
+     */
+    fun recordUserSelection(word: String) {
+        userAdaptationManager.recordSelection(word)
+    }
+
+    /**
+     * Get user adaptation statistics for debugging
+     */
+    fun getUserAdaptationStats(): String {
+        return userAdaptationManager.getAdaptationStats()
+    }
+
+    /**
      * Trie node for prefix-based autocomplete
      */
     private class TrieNode {
@@ -428,6 +463,7 @@ class TypingPredictionEngine(private val context: Context) {
         wordFrequencies.clear()
         bigramModel.clear()
         trigramModel.clear()
+        userAdaptationManager.cleanup()  // Fix for Bug #312: Persist user adaptation data
         isInitialized = false
     }
 }
