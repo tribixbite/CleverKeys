@@ -56,7 +56,9 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     private var typingPredictionEngine: TypingPredictionEngine? = null
     private var voiceGuidanceEngine: VoiceGuidanceEngine? = null
     private var screenReaderManager: ScreenReaderManager? = null
-    
+    private var spellCheckerManager: SpellCheckerManager? = null
+    private var spellCheckHelper: SpellCheckHelper? = null
+
     // Configuration and state
     private var config: Config? = null
     private var currentLayout: KeyboardData? = null
@@ -71,6 +73,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeAccessibilityEngines()
+            initializeSpellChecker()
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -108,6 +111,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         configManager?.cleanup()
         typingPredictionEngine?.cleanup()
         voiceGuidanceEngine?.cleanup()
+        spellCheckerManager?.cleanup()
     }
     
     /**
@@ -117,15 +121,17 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
         prefs.registerOnSharedPreferenceChangeListener(this)
 
-        // Initialize KeyEventHandler before Config (Fix #51)
-        keyEventHandler = KeyEventHandler(
+        // Create temporary placeholder handler for Config initialization (Fix #51)
+        // The real handler will be set later in initializeKeyEventHandler()
+        val placeholderHandler = KeyEventHandler(
             receiver = Receiver(),
-            typingPredictionEngine = typingPredictionEngine,
-            voiceGuidanceEngine = voiceGuidanceEngine,
-            screenReaderManager = screenReaderManager
+            typingPredictionEngine = null,
+            voiceGuidanceEngine = null,
+            screenReaderManager = null,
+            spellCheckHelper = null
         )
 
-        Config.initGlobalConfig(prefs, resources, keyEventHandler, false)
+        Config.initGlobalConfig(prefs, resources, placeholderHandler, false)
         config = Config.globalConfig()
         neuralConfig = NeuralConfig(prefs)
 
@@ -256,6 +262,28 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
     }
 
     /**
+     * Initialize spell checker integration (Fix for Bug #311)
+     */
+    private fun initializeSpellChecker() {
+        try {
+            // Initialize spell checker manager
+            spellCheckerManager = SpellCheckerManager(this).apply {
+                initialize()
+                logD("✅ Spell checker manager initialized")
+            }
+
+            // Initialize spell check helper
+            spellCheckerManager?.let { manager ->
+                spellCheckHelper = SpellCheckHelper(manager)
+                logD("✅ Spell check helper initialized")
+            }
+        } catch (e: Exception) {
+            logE("Failed to initialize spell checker", e)
+            // Non-fatal - keyboard can work without spell checking
+        }
+    }
+
+    /**
      * Initialize key event handler
      */
     private fun initializeKeyEventHandler() {
@@ -327,8 +355,14 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         },
             typingPredictionEngine = typingPredictionEngine,
             voiceGuidanceEngine = voiceGuidanceEngine,
-            screenReaderManager = screenReaderManager
+            screenReaderManager = screenReaderManager,
+            spellCheckHelper = spellCheckHelper
         )
+
+        // Re-initialize Config with the fully-initialized handler (Fix #51, #311)
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        Config.initGlobalConfig(prefs, resources, keyEventHandler, false)
+        config = Config.globalConfig()
     }
     
     /**

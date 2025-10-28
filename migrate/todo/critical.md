@@ -2,8 +2,8 @@
 
 This file lists showstopper bugs and immediate fixes required to get the keyboard functional.
 
-**Last Updated**: 2025-10-20
-**Status**: Fix #51-53 ✅ COMPLETE (Keys working, container fixed, text sizing dynamic)
+**Last Updated**: 2025-10-24
+**Status**: Fix #311 ✅ COMPLETE (Spell checking integrated, red underlines functional)
 
 ---
 
@@ -26,6 +26,13 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 - Matches Java algorithm using characterSize, labelTextSize, sublabelTextSize
 - **RESULT**: Text sizes scale properly
 - Commit: 491ec469
+
+**Fix #311: SpellChecker Integration** ✅ DONE (2025-10-24)
+- SpellCheckerManager.kt created (335 lines, debounced spell checking)
+- SpellCheckHelper.kt created (300 lines, SuggestionSpan application)
+- Integrated with KeyEventHandler (triggers on space/punctuation)
+- **RESULT**: Real-time spell checking with red underlines (Android TextServicesManager)
+- Commit: (current session)
 
 **Fix #313: Tap-Typing Prediction Engine** ✅ DONE (2025-10-24)
 - TypingPredictionEngine.kt already existed (389 lines, full n-gram implementation)
@@ -54,7 +61,7 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 
 ## 🔧 REMAINING CRITICAL FIXES
 
-### **P0 - CATASTROPHIC (System Breaking) - 35 Bugs Remaining (42 total, 6 fixed: #51-52, #273, #310, #312, #313)**
+### **P0 - CATASTROPHIC (System Breaking) - 34 Bugs Remaining (42 total, 7 fixed: #51-52, #273, #310-313)**
 
 **NOTE**: Bugs #310-314, #352-362, #371, #375 were initially from ESTIMATES (Files 150-251), but are now CONFIRMED through actual file review (Files 150-165 completed). Bugs #310, #371, #375 are FIXED.
 
@@ -65,10 +72,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Features: Levenshtein distance, keyboard adjacency awareness, confidence scoring
   - Integration: Integrated with TypingPredictionEngine.autocompleteWord()
 
-- [ ] **Bug #311**: SpellChecker integration missing (File 159) ✅ **CONFIRMED**
-  - Impact: NO spell checking, no red underlines
-  - File: SpellCheckerIntegration.java (~350 lines) → COMPLETELY MISSING
-  - Missing: Android SpellCheckerService integration, real-time checking
+- [x] **Bug #311**: SpellChecker integration FIXED ✅ **2025-10-24**
+  - Impact: Real-time spell checking now functional with red underlines for misspelled words
+  - Files: SpellCheckerManager.kt (335 lines), SpellCheckHelper.kt (300 lines) → ✅ FULLY IMPLEMENTED
+  - Features: Android TextServicesManager integration, debounced spell checking, SuggestionSpan support, word/sentence checking, locale support
+  - Integration: Integrated with KeyEventHandler (triggers on space/punctuation), CleverKeysService initialization
 
 - [x] **Bug #312**: FrequencyModel/UserAdaptation FIXED ✅ **2025-10-24**
   - Impact: Frequently selected words now boosted, personalized predictions

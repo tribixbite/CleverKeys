@@ -18,12 +18,14 @@ import tribixbite.keyboard2.R
  * Includes tap typing prediction integration (Fix for Bug #359)
  * Includes voice guidance for blind users (Fix for Bug #368)
  * Includes screen reader integration for TalkBack (Fix for Bug #377)
+ * Includes spell checking integration (Fix for Bug #311)
  */
 class KeyEventHandler(
     private val receiver: IReceiver,
     private val typingPredictionEngine: TypingPredictionEngine? = null,
     private val voiceGuidanceEngine: VoiceGuidanceEngine? = null,
-    private val screenReaderManager: ScreenReaderManager? = null
+    private val screenReaderManager: ScreenReaderManager? = null,
+    private val spellCheckHelper: SpellCheckHelper? = null
 ) : Config.IKeyEventHandler, ClipboardPasteCallback {
 
     companion object {
@@ -121,8 +123,9 @@ class KeyEventHandler(
                 currentWord.append(finalChar.lowercaseChar())
                 updateTapTypingPredictions()
             } else if (finalChar.isWhitespace() || finalChar in ".,!?;:") {
-                // Word completed - add to context
+                // Word completed - add to context and check spelling (Fix for Bug #311)
                 finishCurrentWord()
+                spellCheckHelper?.checkLastWord(inputConnection)
             }
         }
     }
@@ -359,6 +362,9 @@ class KeyEventHandler(
         if (typingPredictionEngine != null) {
             finishCurrentWord()
         }
+
+        // Check spelling of the last word (Fix for Bug #311)
+        spellCheckHelper?.checkLastWord(inputConnection)
     }
     
     /**
