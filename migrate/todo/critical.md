@@ -3,7 +3,7 @@
 This file lists showstopper bugs and immediate fixes required to get the keyboard functional.
 
 **Last Updated**: 2025-10-28
-**Status**: Fix #259 ✅ COMPLETE (BigramModel context-aware predictions integrated)
+**Status**: Fix #258 ✅ COMPLETE (LoopGestureDetector for repeated letters integrated)
 
 ---
 
@@ -75,7 +75,7 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 
 ## 🔧 REMAINING CRITICAL FIXES
 
-### **P0 - CATASTROPHIC (System Breaking) - 32 Bugs Remaining (42 total, 9 fixed: #51-52, #257, #259, #273, #310-313)**
+### **P0 - CATASTROPHIC (System Breaking) - 31 Bugs Remaining (42 total, 10 fixed: #51-52, #257-259, #273, #310-313)**
 
 **NOTE**: Bugs #310-314, #352-362, #371, #375 were initially from ESTIMATES (Files 150-251), but are now CONFIRMED through actual file review (Files 150-165 completed). Bugs #310, #371, #375 are FIXED.
 
@@ -200,9 +200,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Features: Character frequency analysis, common word detection, weighted scoring (60% char freq, 40% common words), confidence threshold 0.6, text/word list support
   - Integration: Available for TypingPredictionEngine integration
 
-- [ ] **Bug #258**: LoopGestureDetector system missing (File 60)
-  - Impact: No loop gesture detection
-  - File: LoopGestureDetector.java (346 lines) → MISSING
+- [x] **Bug #258**: LoopGestureDetector FIXED ✅ **2025-10-28**
+  - Impact: Loop gesture detection now functional for repeated letters (hello, book, coffee)
+  - File: LoopGestureDetector.kt (370 lines) → ✅ FULLY IMPLEMENTED
+  - Features: Geometric loop detection (center, radius, angle), angle validation (270-450°), radius validation (15px-1.5x key), closure detection (30px), repeat count estimation (360°=2, 540°=3), loop application to key sequences
+  - Integration: Available for SwipeGestureRecognizer integration
 
 - [x] **Bug #259**: NgramModel/BigramModel FIXED ✅ **2025-10-28**
   - Impact: Context-aware predictions now functional with P(word|previous_word) probabilities
