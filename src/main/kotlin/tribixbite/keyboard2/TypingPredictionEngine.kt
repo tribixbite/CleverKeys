@@ -41,6 +41,9 @@ class TypingPredictionEngine(private val context: Context) {
     // User adaptation manager (Fix for Bug #312)
     private val userAdaptationManager = UserAdaptationManager.getInstance(context)
 
+    // BigramModel for context-aware predictions (Fix for Bug #259)
+    private val bigramModelContext = BigramModel.getInstance()
+
     private var isInitialized = false
 
     /**
@@ -342,7 +345,10 @@ class TypingPredictionEngine(private val context: Context) {
             ?.take(maxResults)
             ?.map { (word, count) ->
                 val baseConfidence = calculateConfidence(count, 50)
-                val adaptedConfidence = applyUserAdaptation(word, baseConfidence)
+                // Apply BigramModel context multiplier (Fix for Bug #259)
+                val contextMultiplier = bigramModelContext.getContextMultiplier(word, listOf(w1))
+                val contextAwareConfidence = baseConfidence * contextMultiplier
+                val adaptedConfidence = applyUserAdaptation(word, contextAwareConfidence)
                 PredictionResult(
                     word = word,
                     confidence = adaptedConfidence,
@@ -400,7 +406,10 @@ class TypingPredictionEngine(private val context: Context) {
 
         return predictions.map { pred ->
             val bigramBoost = bigramCounts[pred.word]?.let { it / 10.0f } ?: 0f
-            pred.copy(confidence = pred.confidence + bigramBoost)
+            // Apply BigramModel context multiplier for smarter re-ranking (Fix for Bug #259)
+            val contextMultiplier = bigramModelContext.getContextMultiplier(pred.word, listOf(previousWord))
+            val boostedConfidence = (pred.confidence + bigramBoost) * contextMultiplier
+            pred.copy(confidence = boostedConfidence)
         }.sortedByDescending { it.confidence }
     }
 

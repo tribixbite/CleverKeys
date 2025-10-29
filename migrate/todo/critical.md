@@ -3,7 +3,7 @@
 This file lists showstopper bugs and immediate fixes required to get the keyboard functional.
 
 **Last Updated**: 2025-10-28
-**Status**: Fix #257 ✅ COMPLETE (Language detection integrated, 4 languages supported)
+**Status**: Fix #259 ✅ COMPLETE (BigramModel context-aware predictions integrated)
 
 ---
 
@@ -75,7 +75,7 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 
 ## 🔧 REMAINING CRITICAL FIXES
 
-### **P0 - CATASTROPHIC (System Breaking) - 33 Bugs Remaining (42 total, 8 fixed: #51-52, #257, #273, #310-313)**
+### **P0 - CATASTROPHIC (System Breaking) - 32 Bugs Remaining (42 total, 9 fixed: #51-52, #257, #259, #273, #310-313)**
 
 **NOTE**: Bugs #310-314, #352-362, #371, #375 were initially from ESTIMATES (Files 150-251), but are now CONFIRMED through actual file review (Files 150-165 completed). Bugs #310, #371, #375 are FIXED.
 
@@ -204,9 +204,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Impact: No loop gesture detection
   - File: LoopGestureDetector.java (346 lines) → MISSING
 
-- [ ] **Bug #259**: NgramModel system missing (File 61)
-  - Impact: No n-gram prediction
-  - File: NgramModel.java (350 lines) → MISSING
+- [x] **Bug #259**: NgramModel/BigramModel FIXED ✅ **2025-10-28**
+  - Impact: Context-aware predictions now functional with P(word|previous_word) probabilities
+  - File: BigramModel.kt (551 lines) → ✅ FULLY IMPLEMENTED
+  - Features: 4-language support (en, es, fr, de), interpolation smoothing (λ=0.95), context multipliers (0.1-10.0x), user adaptation, file loading
+  - Integration: Integrated with TypingPredictionEngine (predictFromBigram, rerankWithBigram)
 
 - [ ] **Bug #263**: UserAdaptationManager missing (File 65)
   - Impact: No personalization/learning
