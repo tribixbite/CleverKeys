@@ -28,10 +28,17 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 - Commit: 491ec469
 
 **Fix #257: LanguageDetector** ✅ DONE (2025-10-28)
-- LanguageDetector.kt created (320 lines, character frequency + common word analysis)
+- LanguageDetector.kt created (335 lines, character frequency + common word analysis)
 - Supports 4 languages: English, Spanish, French, German
 - Character frequency analysis (60% weight) + common word detection (40% weight)
 - **RESULT**: Automatic language detection with 0.6 confidence threshold
+- Commit: (current session)
+
+**Fix #361: Autocapitalisation** ✅ PARTIAL (2025-10-28)
+- Autocapitalisation.kt created (256 lines, smart capitalization)
+- Sentence & word capitalization with editor callbacks
+- Cursor position tracking, input type detection (messages/names/emails)
+- **RESULT**: Smart capitalization now functional (partial fix for SmartPunctuation)
 - Commit: (current session)
 
 **Fix #311: SpellChecker Integration** ✅ DONE (2025-10-24)
@@ -108,10 +115,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - File: ContextAnalysisEngine.java (~400 lines) → COMPLETELY MISSING
   - Missing: Sentence boundary detection, input field type detection, semantic analysis
 
-- [ ] **Bug #361**: SmartPunctuation engine missing (File 164) ✅ **CONFIRMED**
-  - Impact: NO smart punctuation (double-space to period, quote pairing, etc.)
-  - File: SmartPunctuationEngine.java (~300 lines) → COMPLETELY MISSING
-  - Missing: Auto-punctuation, bracket matching, context-aware spacing
+- [ ] **Bug #361**: SmartPunctuation PARTIAL FIX ✅ **2025-10-28** (Autocapitalisation complete, other features pending)
+  - Impact: Autocapitalisation now functional (sentences, words, input types)
+  - File: Autocapitalisation.kt (241 lines) → ✅ IMPLEMENTED (partial)
+  - Implemented: Smart capitalization (sentences, words), cursor tracking, delayed callbacks, input type detection
+  - Still Missing: Auto-punctuation (double-space to period), quote/bracket pairing, context-aware spacing
 
 - [ ] **Bug #362**: GrammarCheck engine missing (File 165) ✅ **CONFIRMED**
   - Impact: NO grammar checking (your/you're, subject-verb agreement, etc.)

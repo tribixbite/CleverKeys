@@ -1,129 +1,95 @@
 package tribixbite.keyboard2
 
 import android.os.Handler
+import android.os.Looper
 import android.text.InputType
 import android.text.TextUtils
+import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
-import android.view.KeyEvent
-import kotlinx.coroutines.*
-import tribixbite.keyboard2.Config
 
 /**
- * Automatic capitalization system for CleverKeys.
- * Intelligently manages shift state based on cursor position, text content, and editor type.
+ * Smart auto-capitalization for sentences and words.
  *
  * Features:
- * - Context-aware capitalization (sentences, words)
- * - Cursor movement detection
- * - Editor type validation
- * - Reactive shift state management
- * - Coroutine-based asynchronous processing
+ * - Sentence capitalization (after periods, newlines)
+ * - Word capitalization (for proper names)
+ * - Cursor position tracking
+ * - Input type detection (messages, names, emails)
+ * - Delayed callbacks to wait for editor updates
+ *
+ * Fix for Bug #361 (partial): SmartPunctuation - Autocapitalisation component
  */
 class Autocapitalisation(
-    private val handler: Handler,
+    private val handler: Handler = Handler(Looper.getMainLooper()),
     private val callback: Callback
 ) {
+
     companion object {
-        /** Supported caps modes for auto-capitalization */
-        const val SUPPORTED_CAPS_MODES = InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
-                                        InputType.TYPE_TEXT_FLAG_CAP_WORDS
-
-        /** Delay for caps mode update to allow editor processing */
-        private const val CALLBACK_DELAY_MS = 50L
-
-        /** Characters that trigger auto-capitalization */
-        private val TRIGGER_CHARACTERS = setOf(' ', '.', '!', '?', '\n')
-
-        /** Input types that support auto-capitalization updates */
-        private val SUPPORTED_INPUT_VARIATIONS = setOf(
-            InputType.TYPE_TEXT_VARIATION_LONG_MESSAGE,
-            InputType.TYPE_TEXT_VARIATION_NORMAL,
-            InputType.TYPE_TEXT_VARIATION_PERSON_NAME,
-            InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE,
-            InputType.TYPE_TEXT_VARIATION_EMAIL_SUBJECT,
-            InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT
-        )
+        private val SUPPORTED_CAPS_MODES =
+            InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
+            InputType.TYPE_TEXT_FLAG_CAP_WORDS
     }
 
-    // State management
-    private var isEnabled = false
+    private var enabled = false
     private var shouldEnableShift = false
     private var shouldDisableShift = false
     private var shouldUpdateCapsMode = false
 
-    // Input connection and configuration
     private var inputConnection: InputConnection? = null
     private var capsMode = 0
+
+    /** Keep track of the cursor to recognize cursor movements from typing */
     private var cursor = 0
 
-    // Coroutine scope for async operations
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
     /**
-     * Callback interface for shift state updates.
+     * Callback interface for shift state updates
      */
     interface Callback {
-        /**
-         * Update shift state based on auto-capitalization logic.
-         * @param shouldEnable Whether shift should be enabled
-         * @param shouldDisable Whether shift should be disabled
-         */
         fun updateShiftState(shouldEnable: Boolean, shouldDisable: Boolean)
     }
 
     /**
-     * Initialize auto-capitalization for a new input session.
-     * Must be called before any other operations.
-     *
-     * @param editorInfo Editor information from the input method
-     * @param inputConnection Connection to the target editor
+     * Start autocapitalisation for a new input session
+     * [started] does initialisation work and must be called before any other event
      */
-    fun started(editorInfo: EditorInfo, inputConnection: InputConnection) {
-        this.inputConnection = inputConnection
-        this.capsMode = editorInfo.inputType and TextUtils.CAP_MODE_SENTENCES
+    fun started(info: EditorInfo, ic: InputConnection) {
+        inputConnection = ic
+        capsMode = info.inputType and TextUtils.CAP_MODE_SENTENCES
 
         val config = Config.globalConfig()
         if (!config.autocapitalisation || capsMode == 0) {
-            isEnabled = false
+            enabled = false
             return
         }
 
-        isEnabled = true
-        shouldEnableShift = editorInfo.initialCapsMode != 0
-        shouldUpdateCapsMode = shouldUpdateStateOnStart(editorInfo.inputType)
-
+        enabled = true
+        shouldEnableShift = (info.initialCapsMode != 0)
+        shouldUpdateCapsMode = startedShouldUpdateState(info.inputType)
         callbackNow(true)
     }
 
     /**
-     * Process typed characters for auto-capitalization.
-     * @param text Character sequence that was typed
+     * Handle text typed by the user
      */
     fun typed(text: CharSequence) {
-        if (!isEnabled) return
-
         for (i in text.indices) {
             typeOneChar(text[i])
         }
-        scheduleCallback(false)
+        callback(false)
     }
 
     /**
-     * Handle key events that affect capitalization.
-     * @param keyCode Key code of the event
-     * @param metaState Meta state of the key event
+     * Handle key events sent to the editor
      */
-    fun eventSent(keyCode: Int, metaState: Int) {
-        if (!isEnabled) return
-
-        if (metaState != 0) {
+    fun eventSent(code: Int, meta: Int) {
+        if (meta != 0) {
             shouldEnableShift = false
             shouldUpdateCapsMode = false
             return
         }
 
-        when (keyCode) {
+        when (code) {
             KeyEvent.KEYCODE_DEL -> {
                 if (cursor > 0) cursor--
                 shouldUpdateCapsMode = true
@@ -132,12 +98,11 @@ class Autocapitalisation(
                 shouldUpdateCapsMode = true
             }
         }
-
-        scheduleCallback(true)
+        callback(true)
     }
 
     /**
-     * Stop auto-capitalization and reset state.
+     * Stop autocapitalisation
      */
     fun stop() {
         shouldEnableShift = false
@@ -146,99 +111,79 @@ class Autocapitalisation(
     }
 
     /**
-     * Temporarily pause auto-capitalization.
-     * @return Previous enabled state for restoration
+     * Pause auto capitalisation until [unpause()] is called
+     * Returns whether autocapitalisation was enabled before pausing
      */
     fun pause(): Boolean {
-        val wasEnabled = isEnabled
+        val wasEnabled = enabled
         stop()
-        isEnabled = false
+        enabled = false
         return wasEnabled
     }
 
     /**
-     * Resume auto-capitalization after pause.
-     * @param wasEnabled Previous enabled state from pause()
+     * Continue auto capitalisation after [pause()] was called
+     * Argument is the output of [pause()]
      */
     fun unpause(wasEnabled: Boolean) {
-        isEnabled = wasEnabled
+        enabled = wasEnabled
         shouldUpdateCapsMode = true
         callbackNow(true)
     }
 
     /**
-     * Handle cursor position updates.
-     * @param oldCursor Previous cursor position
-     * @param newCursor New cursor position
+     * Handle selection/cursor updates
+     * Called when the cursor position changes
      */
     fun selectionUpdated(oldCursor: Int, newCursor: Int) {
-        if (!isEnabled) return
+        if (newCursor == cursor) { // Just typing
+            return
+        }
 
-        // If cursor hasn't moved, it's just typing
-        if (newCursor == cursor) return
-
-        // Check if input was cleared
-        if (newCursor == 0 && inputConnection != null) {
-            val textAfterCursor = inputConnection?.getTextAfterCursor(1, 0)
-            if (textAfterCursor?.isEmpty() == true) {
-                shouldUpdateCapsMode = true
+        if (newCursor == 0) {
+            // Detect whether the input box has been cleared
+            val ic = inputConnection
+            if (ic != null) {
+                val textAfter = ic.getTextAfterCursor(1, 0)
+                if (textAfter != null && textAfter.toString() == "") {
+                    shouldUpdateCapsMode = true
+                }
             }
         }
 
         cursor = newCursor
         shouldEnableShift = false
-        scheduleCallback(true)
+        callback(true)
     }
 
     /**
-     * Process a single typed character.
+     * Delayed callback to update shift state
+     * Runs after a short delay to wait for the editor to handle events
      */
-    private fun typeOneChar(char: Char) {
-        cursor++
-
-        if (isTriggerCharacter(char)) {
-            shouldUpdateCapsMode = true
-        } else {
-            shouldEnableShift = false
+    private val delayedCallback = Runnable {
+        if (shouldUpdateCapsMode) {
+            val ic = inputConnection
+            if (ic != null) {
+                shouldEnableShift = enabled && (ic.getCursorCapsMode(capsMode) != 0)
+                shouldUpdateCapsMode = false
+            }
         }
+        callback.updateShiftState(shouldEnableShift, shouldDisableShift)
     }
 
     /**
-     * Check if character triggers auto-capitalization.
+     * Update the shift state if [shouldUpdateCapsMode] is true, then call callback
+     * This is done after a short delay to wait for the editor to handle events
      */
-    private fun isTriggerCharacter(char: Char): Boolean {
-        return char in TRIGGER_CHARACTERS
-    }
-
-    /**
-     * Check if input type should update caps mode on start.
-     */
-    private fun shouldUpdateStateOnStart(inputType: Int): Boolean {
-        val inputClass = inputType and InputType.TYPE_MASK_CLASS
-        val variation = inputType and InputType.TYPE_MASK_VARIATION
-
-        if (inputClass != InputType.TYPE_CLASS_TEXT) {
-            return false
-        }
-
-        return variation in SUPPORTED_INPUT_VARIATIONS
-    }
-
-    /**
-     * Schedule delayed callback to update shift state.
-     */
-    private fun scheduleCallback(mightDisable: Boolean) {
+    private fun callback(mightDisable: Boolean) {
         shouldDisableShift = mightDisable
-
-        // Cancel any pending callback
-        handler.removeCallbacks(delayedCallback)
-
-        // Schedule new callback with delay
-        handler.postDelayed(delayedCallback, CALLBACK_DELAY_MS)
+        // The callback must be delayed because getCursorCapsMode would sometimes
+        // be called before the editor finished handling the previous event
+        handler.postDelayed(delayedCallback, 50)
     }
 
     /**
-     * Execute callback immediately without delay.
+     * Like [callback] but runs immediately
      */
     private fun callbackNow(mightDisable: Boolean) {
         shouldDisableShift = mightDisable
@@ -246,30 +191,65 @@ class Autocapitalisation(
     }
 
     /**
-     * Delayed callback for updating caps mode and notifying callback.
+     * Handle typing a single character
      */
-    private val delayedCallback = Runnable {
-        scope.launch {
-            try {
-                if (shouldUpdateCapsMode && inputConnection != null) {
-                    val currentCapsMode = inputConnection?.getCursorCapsMode(capsMode) ?: 0
-                    shouldEnableShift = isEnabled && currentCapsMode != 0
-                    shouldUpdateCapsMode = false
-                }
-
-                callback.updateShiftState(shouldEnableShift, shouldDisableShift)
-            } catch (e: Exception) {
-                // Handle any input connection errors gracefully
-                android.util.Log.w("Autocapitalisation", "Error updating caps mode", e)
-            }
+    private fun typeOneChar(c: Char) {
+        cursor++
+        if (isTriggerCharacter(c)) {
+            shouldUpdateCapsMode = true
+        } else {
+            shouldEnableShift = false
         }
     }
 
     /**
-     * Cleanup resources when autocapitalization is no longer needed.
+     * Check if character should trigger capitalization update
+     * Currently only space triggers (after sentence-ending punctuation)
+     */
+    private fun isTriggerCharacter(c: Char): Boolean {
+        return when (c) {
+            ' ' -> true
+            else -> false
+        }
+    }
+
+    /**
+     * Whether the caps state should be updated when input starts
+     * [inputType] is the field from the editor info object
+     */
+    private fun startedShouldUpdateState(inputType: Int): Boolean {
+        val class_ = inputType and InputType.TYPE_MASK_CLASS
+        val variation = inputType and InputType.TYPE_MASK_VARIATION
+
+        if (class_ != InputType.TYPE_CLASS_TEXT) {
+            return false
+        }
+
+        return when (variation) {
+            InputType.TYPE_TEXT_VARIATION_LONG_MESSAGE,
+            InputType.TYPE_TEXT_VARIATION_NORMAL,
+            InputType.TYPE_TEXT_VARIATION_PERSON_NAME,
+            InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE,
+            InputType.TYPE_TEXT_VARIATION_EMAIL_SUBJECT,
+            InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT -> true
+            else -> false
+        }
+    }
+
+    /**
+     * Check if autocapitalisation is enabled
+     */
+    fun isEnabled(): Boolean = enabled
+
+    /**
+     * Get current shift state
+     */
+    fun shouldShiftBeEnabled(): Boolean = shouldEnableShift
+
+    /**
+     * Cleanup resources
      */
     fun cleanup() {
-        scope.cancel()
         handler.removeCallbacks(delayedCallback)
         inputConnection = null
     }
