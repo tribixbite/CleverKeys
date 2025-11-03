@@ -1,6 +1,166 @@
 # Project Status
 
-## Latest Session (Nov 3, 2025) - USER PERSONALIZATION & LEARNING SYSTEM 🎯
+## Latest Session (Nov 3, 2025) - BACKUP/RESTORE & PERSONALIZATION SYSTEM 💾
+
+### ✅ NEW FEATURE: BackupRestoreManager Implemented!
+
+**BackupRestoreManager.kt (596 lines)** - Configuration backup/restore system:
+- **Problem**: No way to backup keyboard settings, users lose config on reinstall
+- **Solution**: JSON export/import with Storage Access Framework (SAF) for Android 15+
+- **Result**: Complete backup/restore with validation and version tolerance ✅
+
+**Implementation**:
+- ✅ BackupRestoreManager.kt (596 lines) - Complete backup/restore system
+  * JSON export/import of SharedPreferences
+  * Metadata tracking (app version, screen dimensions, export date)
+  * Storage Access Framework (SAF) compatibility
+  * Version-tolerant parsing with extensive validation
+  * Special handling for JSON-string preferences
+  * Type detection (boolean, int, float, string, StringSet)
+  * Screen size mismatch detection
+  * Internal preference filtering
+
+**Export Metadata Format**:
+```json
+{
+  "metadata": {
+    "app_version": "1.1.51",
+    "version_code": 51,
+    "export_date": "2025-11-03T00:36:15",
+    "screen_width": 1080,
+    "screen_height": 2400,
+    "screen_density": 3.0,
+    "android_version": 34
+  },
+  "preferences": { ... }
+}
+```
+
+**Validation Ranges**:
+```kotlin
+// Opacity values
+"keyboard_opacity" -> 0..100
+
+// Keyboard height percentages
+"keyboard_height" -> 10..100              // Portrait
+"keyboard_height_landscape" -> 20..65    // Landscape
+
+// Margins and spacing
+"margin_bottom_portrait" -> 0..200 dp
+
+// Neural network parameters
+"neural_beam_width" -> 1..16
+"neural_max_length" -> 10..50
+
+// Character size
+"character_size" -> 0.75f..1.5f
+
+// Auto-correction
+"autocorrect_confidence_min_frequency" -> 100..5000
+"autocorrect_char_match_threshold" -> 0.5f..0.9f
+```
+
+**Key Methods**:
+1. **exportConfig(uri, prefs)**: Export all settings to JSON file
+2. **importConfig(uri, prefs)**: Import with validation and type detection
+3. **validateIntPreference(key, value)**: Range validation for integers
+4. **validateFloatPreference(key, value)**: Range validation for floats
+5. **validateStringPreference(key, value)**: Pattern validation for strings
+6. **ImportResult.hasScreenSizeMismatch()**: Detect screen size differences
+
+**JSON-String Preferences** (special handling):
+```kotlin
+// These are stored as JSON strings in SharedPreferences
+"layouts"           // List<Layout> as JSON
+"extra_keys"        // Map<KeyValue, PreferredPos> as JSON
+"custom_extra_keys" // Map<KeyValue, PreferredPos> as JSON
+
+// Handles both old (double-encoded) and new (native) formats
+```
+
+**Internal Preferences** (skipped in backup):
+```kotlin
+"version"                   // Internal version tracking
+"current_layout_portrait"   // Device-specific state
+"current_layout_landscape"  // Device-specific state
+```
+
+**Type Detection Logic**:
+```kotlin
+// SharedPreferences throws ClassCastException if types mismatch
+// Must use correct type when importing:
+
+isFloatPreference("character_size")      // Store as Float
+isFloatPreference("key_vertical_margin") // Store as Float
+
+isIntegerStoredAsString("some_key")      // Parse string to Int
+isStringSetPreference("some_key")        // Parse array to StringSet
+```
+
+**Import Result Statistics**:
+```kotlin
+data class ImportResult(
+    importedCount: Int,        // Successfully imported preferences
+    skippedCount: Int,         // Skipped (invalid/internal) preferences
+    sourceVersion: String,     // Backup app version
+    sourceScreenWidth: Int,    // Backup screen width
+    sourceScreenHeight: Int,   // Backup screen height
+    currentScreenWidth: Int,   // Current screen width
+    currentScreenHeight: Int,  // Current screen height
+    importedKeys: Set<String>, // List of imported keys
+    skippedKeys: Set<String>   // List of skipped keys
+)
+```
+
+**Advantages**:
+- **SAF Compatible**: Uses Storage Access Framework for Android 15+
+- **Version Tolerant**: Handles old and new preference formats
+- **Type Safe**: Prevents ClassCastException with correct type detection
+- **Validated**: All values checked against valid ranges
+- **Informative**: Tracks imported/skipped keys, screen mismatch
+- **Forward Compatible**: Unknown preferences allowed (version tolerance)
+
+**Integration Points**:
+- **SettingsActivity**: Add backup/restore buttons
+- **ACTION_CREATE_DOCUMENT**: Export configuration
+- **ACTION_OPEN_DOCUMENT**: Import configuration
+- **SharedPreferences**: Direct access to all settings
+
+**Example Usage**:
+```kotlin
+val manager = BackupRestoreManager(context)
+val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+
+// Export configuration
+val exportUri = /* URI from ACTION_CREATE_DOCUMENT */
+manager.exportConfig(exportUri, prefs) // Exported 47 preferences
+
+// Import configuration
+val importUri = /* URI from ACTION_OPEN_DOCUMENT */
+val result = manager.importConfig(importUri, prefs)
+// ImportResult(importedCount=45, skippedCount=2, ...)
+
+// Check for screen size mismatch
+if (result.hasScreenSizeMismatch()) {
+    showWarning("Backup from different screen size: ${result.sourceScreenWidth}x${result.sourceScreenHeight}")
+}
+```
+
+**Dependencies**:
+- Added Gson 2.10.1 for JSON serialization
+
+**Statistics**:
+- Files Created: 1 (BackupRestoreManager.kt) + 1 dependency (build.gradle)
+- Lines Added: 596 production lines
+- Validation Methods: 3 (int, float, string)
+- Validated Preferences: 30+ preference keys
+- JSON Handling: Old and new format support
+
+**Commit**: 83791935
+
+---
+
+## Previous Session (Nov 3, 2025) - USER PERSONALIZATION & LEARNING SYSTEM 🎯
 
 ### ✅ NEW FEATURE: PersonalizationManager Implemented!
 
