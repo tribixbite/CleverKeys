@@ -22,6 +22,9 @@ dependencies {
   // ONNX Runtime for neural swipe prediction (upgraded for boolean tensor support)
   implementation "com.microsoft.onnxruntime:onnxruntime-android:1.20.0"
 
+  // Gson for JSON serialization/deserialization (backup/restore functionality)
+  implementation "com.google.code.gson:gson:2.10.1"
+
   testImplementation "junit:junit:4.13.2"
   testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
 
