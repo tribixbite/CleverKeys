@@ -1,10 +1,23 @@
 # Project Status
 
-**Porting Progress: 144/252 Java files reviewed and ported (57.1%)**
+**Porting Progress: 145/252 Java files reviewed and ported (57.5%)**
 
-## Latest Session (Nov 4, 2025) - UI COMPONENTS & KEY DETECTION 🎯
+## Latest Session (Nov 4, 2025) - LEGACY CGR SYSTEM & UI COMPONENTS 🎯
 
-### ✅ NEW FEATURE: SuggestionBar Implemented! (File #144/252)
+### ✅ NEW FEATURE: ContinuousSwipeGestureRecognizer + CGR Stub (File #145/252) [LEGACY]
+
+**ContinuousSwipeGestureRecognizer.kt (320 lines)** + **ContinuousGestureRecognizer.kt (67 lines stub)** - Legacy gesture recognizer:
+- **Status**: ⚠️ DEPRECATED - Uses OLD CGR library replaced with ONNX
+- **Implementation**: Complete port with background threading, prediction throttling, callbacks
+- **Stub**: Minimal ContinuousGestureRecognizer.kt stub to allow compilation
+- **Active System**: neural/OnnxSwipePredictorImpl.kt + SwipeDetector.kt
+- **Result**: Ported for completeness, marked deprecated, not used in active codebase ✅
+
+**Commit**: dc8bf052
+
+---
+
+### ✅ PREVIOUS FEATURE: SuggestionBar Implemented! (File #144/252)
 
 **SuggestionBar.kt (335 lines)** - Dynamic word suggestion display component:
 - **Problem**: Need flexible UI component to display variable-count word suggestions
