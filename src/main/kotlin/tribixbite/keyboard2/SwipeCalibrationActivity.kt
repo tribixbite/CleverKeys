@@ -582,11 +582,11 @@ class SwipeCalibrationActivity : Activity() {
         
         // Record ML data
         val mlData = SwipeMLData(
-            _targetWord = currentWord,
+            targetWord = currentWord,
             collectionSource = "neural_calibration",
-            screenWidthPx = screenWidth,
-            screenHeightPx = screenHeight,
-            keyboardHeightPx = keyboardHeight
+            screenWidth = screenWidth,
+            screenHeight = screenHeight,
+            keyboardHeight = keyboardHeight
         )
         
         // Add trace points with timestamps
