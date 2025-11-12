@@ -1,7 +1,7 @@
 # Complete Review Status - CleverKeys Java→Kotlin Feature Parity
 
-**Last Updated**: 2025-10-21
-**Total Progress**: 165/251 files reviewed (65.7%)
+**Last Updated**: 2025-11-12
+**Total Progress**: 175/251 files reviewed (69.7%)
 
 ## 📊 Review Timeline
 
@@ -9,11 +9,11 @@
 **Period**: Sept-Oct 2025
 **Status**: COMPLETED and consolidated into TODO lists
 
-**Bugs Found**: 367 confirmed from actual reviews (Files 1-165)
-- 💀 Catastrophic: 40 bugs (15 new from Files 150-165)
-- ❌ High: 13 bugs
+**Bugs Found**: 383 confirmed from actual reviews (Files 1-175)
+- 💀 Catastrophic: 44 bugs (4 new from Files 166-175: #457, #458, #466, #467)
+- ❌ High: 17 bugs (4 new from Files 166-175: #455, #456, #462, #463)
 - ⚠️ Medium: 11 bugs
-- 🔧 Low: 3 bugs
+- 🔧 Low: 11 bugs (8 new from Files 166-175: #459, #464, #465, #468, #469, #470, plus 2 existing)
 - ✅ Fixed: 48 bugs (#270, #271, #273, #359, #371, #373, #375, #377, and 40 others)
 
 **Note**: Bugs #352-453 from git commits were ESTIMATES for Files 150-251, not confirmed through actual file review. However, some estimated bugs (#371, #375, #310-314) were subsequently confirmed as real issues and addressed.
@@ -155,15 +155,39 @@ Files reviewed:
 
 **CRITICAL IMPACT**: Keyboard is SWIPE-ONLY (tap-typing broken), NO autocorrection, NO spell-checking, 0% feature parity with modern keyboards!
 
-### Current Status: Files 166-251 (NOT YET REVIEWED)
+#### Batch 8: Files 166-175 (Clipboard & Compose Systems)
+**Status**: ✅ Reviewed in current session (2025-11-12)
+
+Files reviewed:
+- 166: Autocapitalisation - COMPLETE ✅ (100% parity + 3 enhancements: getter methods, cleanup)
+- 167: BackupRestoreManager - COMPLETE ✅ (100% parity + 1 enhancement: extra index)
+- 168: BigramModel - COMPLETE ✅ (100% parity + bug fix: French duplicate unigram)
+- 169: ClipboardDatabase - 🚨 INCOMPLETE (Bug #455 missing getPinnedEntries(), Bug #456 wrong query logic)
+- 170: ClipboardHistoryCheckBox - COMPLETE ✅ (100% parity + lifecycle cleanup)
+- 171: ClipboardHistoryService - 🚨 CATASTROPHIC (Bug #457 TTL 5min not 7 days, Bug #458 destroys data, Bug #459 missing lifecycle)
+- 172: ClipboardHistoryView - 🚨 INCOMPLETE (Bug #462 not XML-inflatable, Bug #463 missing search, Bug #465 no view recycling)
+- 173: ClipboardPinView - 🚨 CATASTROPHIC (Bug #466 uses SharedPreferences not database, Bug #467 missing refresh method)
+- 174: ComposeKey - COMPLETE ✅ (100% parity + 7 utility methods + legacy compose system)
+- 175: ComposeKeyData - COMPLETE ✅ (100% parity + MAJOR ARCHITECTURAL UPGRADE: binary loading, validation, statistics)
+
+**Key Findings**:
+- 6/10 files with 100% parity or better
+- 4/10 files with CATASTROPHIC/HIGH bugs (clipboard system)
+- 16 new bugs documented (Bug #455-#470)
+- ComposeKeyData shows exemplary architectural upgrade (binary file loading avoids JVM 64KB limit)
+- ClipboardHistoryService has critical data retention bug (5 minutes vs 7 days!)
+
+**Impact**: Clipboard functionality severely broken - data loss after 5 minutes, wrong storage system for pins, missing search feature.
+
+### Current Status: Files 176-251 (NOT YET REVIEWED)
 **Status**: ⏳ ESTIMATED ONLY (git commits are estimates, not actual reviews)
-**Count**: 86 files remaining (34.3%)
+**Count**: 76 files remaining (30.3%)
 
 **CORRECTION**: Earlier git commits (f5c9003c through 5ce0101e from Oct 17) documented ESTIMATED bugs for Files 150-251, but these were NOT actual Java→Kotlin file comparisons. They were projections based on typical keyboard features.
 
 **Actual Review Status**:
-- Files 1-165: ✅ REVIEWED (actual Java→Kotlin comparison)
-- Files 166-251: ⏳ NOT YET REVIEWED (only estimates)
+- Files 1-175: ✅ REVIEWED (actual Java→Kotlin comparison)
+- Files 176-251: ⏳ NOT YET REVIEWED (only estimates)
 
 **Estimated Categories (Files 150-251)**:
 - Files 150-157: Advanced Input Methods (handwriting, voice, macros)
@@ -172,9 +196,9 @@ Files reviewed:
 - Files 178-205: Integration, DevTools, Utilities
 - Files 206-251: Tests, legacy, platform-specific
 
-**Estimated Bugs #363-453**: These bug numbers were assigned to ESTIMATED missing features, not confirmed through actual file review. Bugs #310-314, #352-362 are now CONFIRMED from Files 150-165 review. Some bugs from the estimated range (#371, #375) were also subsequently confirmed and FIXED.
+**Estimated Bugs #363-453**: These bug numbers were assigned to ESTIMATED missing features, not confirmed through actual file review. Bugs #310-314, #352-362 are now CONFIRMED from Files 150-165 review. Bugs #455-470 are now CONFIRMED from Files 166-175 review. Some bugs from the estimated range (#371, #375) were also subsequently confirmed and FIXED.
 
-**Next Steps**: Continue systematic review starting at File 166
+**Next Steps**: Continue systematic review starting at File 176
 
 ## 🗂️ Where Review Data Lives
 
@@ -219,9 +243,14 @@ git log --all --grep="File [0-9]*/251" --oneline
 
 ## 📋 Consolidated Bug List
 
-**Total Bugs**: 337 documented (371 found, 46 fixed, 25 catastrophic)
+**Total Bugs**: 383 documented from actual reviews (Files 1-175)
+- 💀 Catastrophic: 44 bugs
+- ❌ High: 17 bugs
+- ⚠️ Medium: 11 bugs
+- 🔧 Low: 11 bugs
+- ✅ Fixed: 48 bugs
 
-### Catastrophic (25 bugs)
+### Catastrophic (44 bugs)
 - AutoCorrection system
 - SpellChecker integration
 - Frequency tracking
@@ -233,9 +262,13 @@ git log --all --grep="File [0-9]*/251" --oneline
 - UndoRedo functionality
 - Selection handling
 - LongPress system
-- + 14 architectural transitions
+- **Bug #457**: ClipboardHistoryService TTL 5 minutes (should be 7 days!) - DATA LOSS
+- **Bug #458**: ClipboardHistoryService destroys all data when disabled
+- **Bug #466**: ClipboardPinView uses SharedPreferences instead of database
+- **Bug #467**: ClipboardPinView missing refresh_pinned_items() method
+- + 29 other architectural transitions and missing systems
 
-### High Priority (12 bugs)
+### High Priority (17 bugs)
 - CaseConverter
 - TextExpander
 - CursorMovement
@@ -246,7 +279,11 @@ git log --all --grep="File [0-9]*/251" --oneline
 - GestureTrail
 - KeyRepeat
 - VoiceIME
-- + 2 more
+- **Bug #455**: ClipboardDatabase missing getPinnedEntries() method
+- **Bug #456**: ClipboardDatabase wrong query logic (returns pinned + non-pinned)
+- **Bug #462**: ClipboardHistoryView not XML-inflatable (no AttributeSet constructor)
+- **Bug #463**: ClipboardHistoryView missing search filter functionality
+- + 3 more
 
 ### Medium Priority (11 bugs)
 - LayoutAnimator
@@ -257,10 +294,16 @@ git log --all --grep="File [0-9]*/251" --oneline
 - AdaptiveLayout
 - + 5 more
 
-### Low Priority (3 bugs)
+### Low Priority (11 bugs)
 - TypingStats
 - KeyBorderRenderer
-- + 1 more
+- **Bug #459**: ClipboardHistoryService missing listener lifecycle methods
+- **Bug #464**: ClipboardHistoryView missing delete/edit functionality
+- **Bug #465**: ClipboardHistoryView no view recycling (inefficient)
+- **Bug #468**: ClipboardPinView no duplicate detection
+- **Bug #469**: ClipboardPinView no size limit
+- **Bug #470**: ClipboardPinView no persistence validation
+- + 3 more
 
 ## 🎯 Next Steps
 
@@ -273,14 +316,17 @@ git log --all --grep="File [0-9]*/251" --oneline
 ### Current Work (In Progress)
 1. ✅ Integrated Files 142-149 bugs into tracking
 2. ✅ Fixed critical accessibility bugs (#371, #375)
-3. ✅ Corrected review status (150/251, not 251/251)
-4. ⏳ Resume systematic review at File 150/251
+3. ✅ Corrected review status (175/251 complete)
+4. ✅ Completed Files 166-175 review (Clipboard & Compose systems)
+5. ⏳ Resume systematic review at File 176/251
 
 ### Short Term (Next 3 Sessions)
-1. Resume systematic Java→Kotlin review (Files 150-170)
-2. Fix remaining P0 CATASTROPHIC bugs (24 remaining)
-3. Add autocorrection/spell-check (Bugs #310-311 - confirmed missing)
-4. Add tap-typing prediction (Bug #313 - keyboard currently swipe-only!)
+1. Resume systematic Java→Kotlin review (Files 176-200)
+2. Fix remaining P0 CATASTROPHIC bugs (44 total, 4 new from clipboard system)
+3. Fix clipboard data retention bug (#457 - 5min TTL should be 7 days!)
+4. Fix clipboard storage inconsistency (#466 - pins use SharedPreferences instead of database)
+5. Add autocorrection/spell-check (Bugs #310-311 - confirmed missing)
+6. Add tap-typing prediction (Bug #313 - keyboard currently swipe-only!)
 
 ### Medium Term (Next Month)
 1. Complete systematic review to File 200/251 (80%)
