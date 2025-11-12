@@ -1,7 +1,7 @@
 # Complete Review Status - CleverKeys Java→Kotlin Feature Parity
 
 **Last Updated**: 2025-11-12
-**Total Progress**: 175/251 files reviewed (69.7%)
+**Total Progress**: 181/251 files reviewed (72.1%)
 
 ## 📊 Review Timeline
 
@@ -9,11 +9,11 @@
 **Period**: Sept-Oct 2025
 **Status**: COMPLETED and consolidated into TODO lists
 
-**Bugs Found**: 383 confirmed from actual reviews (Files 1-175)
-- 💀 Catastrophic: 44 bugs (4 new from Files 166-175: #457, #458, #466, #467)
-- ❌ High: 17 bugs (4 new from Files 166-175: #455, #456, #462, #463)
+**Bugs Found**: 391 confirmed from actual reviews (Files 1-181)
+- 💀 Catastrophic: 52 bugs (4 from Files 166-175: #457, #458, #466, #467; 8 from Files 176-181: #471-#478)
+- ❌ High: 17 bugs (4 from Files 166-175: #455, #456, #462, #463)
 - ⚠️ Medium: 11 bugs
-- 🔧 Low: 11 bugs (8 new from Files 166-175: #459, #464, #465, #468, #469, #470, plus 2 existing)
+- 🔧 Low: 11 bugs (8 from Files 166-175: #459, #464, #465, #468, #469, #470, plus 3 existing)
 - ✅ Fixed: 48 bugs (#270, #271, #273, #359, #371, #373, #375, #377, and 40 others)
 
 **Note**: Bugs #352-453 from git commits were ESTIMATES for Files 150-251, not confirmed through actual file review. However, some estimated bugs (#371, #375, #310-314) were subsequently confirmed as real issues and addressed.
@@ -179,9 +179,30 @@ Files reviewed:
 
 **Impact**: Clipboard functionality severely broken - data loss after 5 minutes, wrong storage system for pins, missing search feature.
 
-### Current Status: Files 176-251 (NOT YET REVIEWED)
+#### Batch 9: Files 176-181 (CGR Legacy & Dictionary Systems)
+**Status**: ✅ Reviewed in current session (2025-11-12)
+
+Files reviewed:
+- 176: ComprehensiveTraceAnalyzer - ✅ ARCHITECTURAL (711 lines → absent, CGR→ONNX transition intentional)
+- 177: Config - 🚨 INCOMPLETE (8 CATASTROPHIC bugs #471-#478: 27 missing properties including prediction weights, autocorrect config, swipe scoring, neural versioning)
+- 178: ContinuousGestureRecognizer - ✅ ARCHITECTURAL (1181 lines → 66-line stub, 94.4% reduction, CGR→ONNX)
+- 179: ContinuousSwipeGestureRecognizer - ✅ ARCHITECTURAL (382 lines → 332-line stub, 13% reduction, 100% parity in stub)
+- 180: CustomLayoutEditDialog - COMPLETE ✅ (100% parity + MASSIVE enhancements: 138 lines → 321 lines, 2.3× larger, validation helpers, line numbers, accessibility)
+- 181: DictionaryManager - COMPLETE ✅ (100% parity + 6 new methods: getUserWords(), getLoadedLanguages(), isLanguageLoaded(), unloadLanguage(), getStats(), cleanup(); 34% larger)
+
+**Key Findings**:
+- 4/6 files with 100% parity or intentional architectural improvements
+- 1/6 file (Config) with CATASTROPHIC bugs (27 missing properties)
+- 3/6 files are intentional CGR→ONNX architectural replacements (@Deprecated stubs)
+- 8 new bugs documented (Bug #471-#478, all in Config.kt)
+- CustomLayoutEditDialog shows exemplary Kotlin enhancements (2.3× larger with validation, line numbers, accessibility)
+- DictionaryManager upgraded from WordPredictor → TypingPredictionEngine with 6 new utility methods
+
+**Impact**: Config missing critical prediction/autocorrect settings (27 properties); CGR system intentionally replaced with ONNX (not bugs).
+
+### Current Status: Files 182-251 (NOT YET REVIEWED)
 **Status**: ⏳ ESTIMATED ONLY (git commits are estimates, not actual reviews)
-**Count**: 76 files remaining (30.3%)
+**Count**: 70 files remaining (27.9%)
 
 **CORRECTION**: Earlier git commits (f5c9003c through 5ce0101e from Oct 17) documented ESTIMATED bugs for Files 150-251, but these were NOT actual Java→Kotlin file comparisons. They were projections based on typical keyboard features.
 
