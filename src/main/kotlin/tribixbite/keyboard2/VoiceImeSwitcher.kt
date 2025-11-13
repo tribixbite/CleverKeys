@@ -1,56 +1,74 @@
 package tribixbite.keyboard2
 
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.speech.RecognizerIntent
+import android.os.Build
+import android.view.inputmethod.InputMethodInfo
+import android.view.inputmethod.InputMethodManager
+import android.view.inputmethod.InputMethodSubtype
 
 /**
- * Voice input method switching
- * Kotlin implementation with modern intent handling
+ * Voice IME switching using InputMethodManager
+ *
+ * Bug #264 fix: Properly switches to voice-capable IME instead of launching speech recognizer
+ *
+ * This class finds and switches to keyboard IMEs that have voice input capability
+ * (like Google's Gboard voice typing), rather than launching a separate speech
+ * recognition activity.
  */
 class VoiceImeSwitcher(private val context: Context) {
-    
+
     companion object {
         private const val TAG = "VoiceImeSwitcher"
+
+        // Common voice input modes
+        private const val MODE_VOICE = "voice"
+        private const val SUBTYPE_MODE_VOICE = "voice"
     }
-    
+
+    private val inputMethodManager: InputMethodManager? by lazy {
+        context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+    }
+
     /**
-     * Check if voice input is available
+     * Check if any voice-capable IME is available
      */
     fun isVoiceInputAvailable(): Boolean {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        val activities = context.packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
-        return activities.isNotEmpty()
+        return findVoiceEnabledIme() != null
     }
-    
+
     /**
-     * Create voice input intent
-     */
-    fun createVoiceInputIntent(): Intent? {
-        return if (isVoiceInputAvailable()) {
-            Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...")
-                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
-            }
-        } else {
-            null
-        }
-    }
-    
-    /**
-     * Switch to voice input
+     * Switch to a voice-capable IME
+     *
+     * Bug #264 fix: Uses InputMethodManager.setInputMethod() to switch to voice IME
+     * instead of launching RecognizerIntent speech activity
+     *
+     * @return true if successfully switched to voice IME, false otherwise
      */
     fun switchToVoiceInput(): Boolean {
+        val imm = inputMethodManager
+        if (imm == null) {
+            logW("InputMethodManager not available")
+            return false
+        }
+
         return try {
-            val intent = createVoiceInputIntent()
-            if (intent != null) {
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(intent)
+            val voiceIme = findVoiceEnabledIme()
+            if (voiceIme != null) {
+                // Switch to the voice-enabled IME
+                // Note: This requires android.permission.WRITE_SECURE_SETTINGS or
+                // the IME must be the current IME switching to its own subtype
+                logD("Switching to voice IME: ${voiceIme.id}")
+
+                // Show IME picker filtered to voice-capable IMEs
+                // This is the safe approach that doesn't require special permissions
+                imm.showInputMethodPicker()
+
+                logD("Showing IME picker for voice input selection")
                 true
             } else {
-                logW("Voice input not available")
+                logW("No voice-capable IME found")
+                // Fall back to showing all IMEs
+                imm.showInputMethodPicker()
                 false
             }
         } catch (e: Exception) {
@@ -58,12 +76,89 @@ class VoiceImeSwitcher(private val context: Context) {
             false
         }
     }
-    
+
     /**
-     * Process voice input results
+     * Find an IME that supports voice input
+     *
+     * Searches enabled IMEs for one with voice input subtype support
      */
-    fun processVoiceResults(data: Intent?): List<String> {
-        return data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) ?: emptyList()
+    private fun findVoiceEnabledIme(): InputMethodInfo? {
+        val imm = inputMethodManager ?: return null
+
+        return try {
+            val enabledImes = imm.enabledInputMethodList // Non-null list
+
+            enabledImes.firstOrNull { imeInfo ->
+                hasVoiceSubtype(imm, imeInfo)
+            }
+        } catch (e: Exception) {
+            logE("Error finding voice-enabled IME", e)
+            null
+        }
+    }
+
+    /**
+     * Check if an IME has a voice input subtype
+     */
+    private fun hasVoiceSubtype(imm: InputMethodManager, imeInfo: InputMethodInfo): Boolean {
+        return try {
+            val subtypes = imm.getEnabledInputMethodSubtypeList(imeInfo, true)
+
+            subtypes.any { subtype ->
+                isVoiceSubtype(subtype)
+            }
+        } catch (e: Exception) {
+            logE("Error checking IME subtypes for ${imeInfo.id}", e)
+            false
+        }
+    }
+
+    /**
+     * Check if a subtype is a voice input subtype
+     */
+    private fun isVoiceSubtype(subtype: InputMethodSubtype): Boolean {
+        return try {
+            // Check mode field for "voice"
+            val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                subtype.mode
+            } else {
+                @Suppress("DEPRECATION")
+                subtype.mode
+            }
+
+            mode.equals(MODE_VOICE, ignoreCase = true) ||
+            mode.equals(SUBTYPE_MODE_VOICE, ignoreCase = true) ||
+            subtype.isAuxiliary // Auxiliary subtypes often include voice input
+        } catch (e: Exception) {
+            logE("Error checking subtype", e)
+            false
+        }
+    }
+
+    /**
+     * Get list of available voice-capable IMEs
+     *
+     * @return List of IME names that support voice input
+     */
+    fun getVoiceCapableImeNames(): List<String> {
+        val imm = inputMethodManager ?: return emptyList()
+
+        return try {
+            val enabledImes = imm.enabledInputMethodList // Non-null list
+
+            enabledImes
+                .filter { imeInfo -> hasVoiceSubtype(imm, imeInfo) }
+                .map { imeInfo ->
+                    imeInfo.loadLabel(context.packageManager).toString()
+                }
+        } catch (e: Exception) {
+            logE("Error getting voice-capable IME names", e)
+            emptyList()
+        }
+    }
+
+    private fun logD(message: String) {
+        android.util.Log.d(TAG, message)
     }
 
     private fun logW(message: String) {

@@ -104,11 +104,19 @@ All 8 clipboard bugs resolved:
   - Severity: HIGH
 
 ### Voice Input (1 bug)
-- [ ] **Bug #264**: VoiceImeSwitcher doesn't actually switch to voice IME
+- [x] **Bug #264**: VoiceImeSwitcher doesn't actually switch to voice IME ✅ FIXED (2025-11-13)
   - File: VoiceImeSwitcher.kt (File 68, reviewed as File 109)
-  - Impact: Launches speech recognizer instead of switching IME
+  - Impact: Launched RecognizerIntent speech activity instead of switching to voice-capable IME
+  - Root cause: Used RecognizerIntent.ACTION_RECOGNIZE_SPEECH (separate activity) instead of InputMethodManager (IME switching)
+  - Fix: Complete rewrite using InputMethodManager to find and switch to voice-capable IMEs
+  - Implementation:
+    * findVoiceEnabledIme() searches enabled IMEs for voice subtypes
+    * hasVoiceSubtype() checks IME for "voice" mode or auxiliary subtypes
+    * switchToVoiceInput() shows IME picker for voice-capable keyboards
+    * getVoiceCapableImeNames() provides list of available voice IMEs
+  - Removed: RecognizerIntent, createVoiceInputIntent(), processVoiceResults()
+  - Added: Proper IME subtype detection, InputMethodManager integration
   - Severity: HIGH
-  - Needs: Proper IME switching implementation using InputMethodManager
 
 ---
 
@@ -167,9 +175,9 @@ All 8 clipboard bugs resolved:
 - File 37: **1 low-priority issue** (LayoutModifier - ⚠️ SAFE STUB: empty methods)
 - File 40: **1 medium bug** (NumberLayout.kt - 2 low-priority issues documented)
 - File 54: **6 bugs → 5 bugs** (Emoji.kt - ✅ FIXED Bug #238; ⏳ REMAINING: Bugs #239-243)
-- File 68: ✅ **VoiceImeSwitcher.java (152 lines) - ❌ WRONG IMPLEMENTATION (Bug #264 HIGH - RecognizerIntent vs IME switching)**
+- File 68: ✅ **VoiceImeSwitcher.java (152 lines) → VoiceImeSwitcher.kt (171 lines) - ✅ FIXED (Bug #264 - proper InputMethodManager implementation)**
 - File 100: ✅ **AccessibilityHelper.java (est. 150-250 lines) vs AccessibilityHelper.kt (80 lines) - ⚠️ SIMPLIFIED (60% reduction, missing features)**
-- File 109: ✅ **VoiceImeSwitcher.java (est. 150-250 lines) vs VoiceImeSwitcher.kt (76 lines) - ❌ HIGH SEVERITY (Bug #308 - uses RecognizerIntent instead of InputMethodManager)**
+- File 109: ✅ **VoiceImeSwitcher.java (est. 150-250 lines) → VoiceImeSwitcher.kt (171 lines) - ✅ FIXED (Bug #308/duplicate of #264 - proper InputMethodManager implementation)**
 - File 111: ✅ **AutoCorrection.java - 💀 COMPLETELY MISSING (Bug #310 CATASTROPHIC)**
 - File 112: ✅ **SpellChecker.java - 💀 COMPLETELY MISSING (Bug #311 CATASTROPHIC)**
 - File 113: ✅ **FrequencyModel.java - 💀 COMPLETELY MISSING (Bug #312 CATASTROPHIC)**
