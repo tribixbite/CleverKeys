@@ -96,6 +96,7 @@ class CleverKeysService : InputMethodService(),
     private var gestureTypingCustomizer: GestureTypingCustomizer? = null  // Bug #356 fix
     private var continuousInputManager: ContinuousInputManager? = null  // Bug #357 fix
     private var handwritingRecognizer: HandwritingRecognizer? = null  // Bug #352 fix
+    private var voiceTypingEngine: VoiceTypingEngine? = null  // Bug #353 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -149,6 +150,7 @@ class CleverKeysService : InputMethodService(),
             initializeGestureTypingCustomizer()  // Bug #356 fix
             initializeContinuousInputManager()  // Bug #357 fix
             initializeHandwritingRecognizer()  // Bug #352 fix
+            initializeVoiceTypingEngine()  // Bug #353 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -219,6 +221,7 @@ class CleverKeysService : InputMethodService(),
             gestureTypingCustomizer?.release()  // Bug #356 - release gesture typing customizer resources
             continuousInputManager?.release()  // Bug #357 - release continuous input manager resources
             handwritingRecognizer?.release()  // Bug #352 - release handwriting recognizer resources
+            voiceTypingEngine?.release()  // Bug #353 - release voice typing engine resources
         }
         serviceScope.cancel()
     }
@@ -1095,6 +1098,21 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize handwriting recognizer", e)
             // Non-fatal - keyboard can work without handwriting recognition
+        }
+    }
+
+    /**
+     * Initialize voice typing engine for speech-to-text.
+     * Bug #353 fix - Provides actual voice recognition within keyboard.
+     */
+    private fun initializeVoiceTypingEngine() {
+        try {
+            voiceTypingEngine = VoiceTypingEngine(context = this)
+
+            logD("✅ VoiceTypingEngine initialized (Bug #353)")
+        } catch (e: Exception) {
+            logE("Failed to initialize voice typing engine", e)
+            // Non-fatal - keyboard can work without voice typing
         }
     }
 

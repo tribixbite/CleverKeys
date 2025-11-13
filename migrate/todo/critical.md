@@ -136,11 +136,12 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Features: Multi-stroke recognition, template matching, shape similarity (DTW), feature extraction (corners/loops/crossings), direction histograms, stroke resampling/normalization, confidence scoring, top-N candidates, multi-language support (Latin/CJK/Arabic/Devanagari), custom template learning, stroke timeout handling
   - Integration: Integrated in CleverKeysService
 
-- [ ] **Bug #353**: VoiceTypingEngine missing (File 151)
-  - Impact: NO voice typing integration (launches external app instead)
-  - File: VoiceTypingEngine.java (~350-450 lines) → WRONG IMPLEMENTATION
-  - Current: VoiceImeSwitcher.kt (76 lines) - launches external app only
-  - Note: Bug #308 (VoiceImeSwitcher) launches wrong app
+- [x] **Bug #353**: VoiceTypingEngine FIXED ✅ **2025-11-13**
+  - Impact: Complete voice-to-text transcription system now functional
+  - File: VoiceTypingEngine.kt (770 lines) → ✅ FULLY IMPLEMENTED
+  - Features: Real-time speech recognition (SpeechRecognizer API), partial results streaming, multi-language support, voice activity detection, confidence scoring, punctuation insertion, offline recognition support, continuous listening mode, voice command detection (new line/paragraph/delete/undo/send/stop), transcription history (100 entries), error recovery with automatic retry, background noise handling
+  - Integration: Integrated in CleverKeysService
+  - Note: Different from VoiceImeSwitcher (Bug #264 - switches IMEs), this provides actual voice recognition within CleverKeys
 
 - [x] **Bug #354**: MacroExpander FIXED ✅ **2025-11-13**
   - Impact: Complete macro expansion system now functional
