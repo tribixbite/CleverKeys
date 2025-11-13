@@ -106,6 +106,7 @@ class CleverKeysService : InputMethodService(),
     private var keyboardSwipeRecognizer: KeyboardSwipeRecognizer? = null  // Bug #256 fix
     private var bigramModel: BigramModel? = null  // Bug #255 fix - contextual word prediction
     private var ngramModel: NgramModel? = null  // Bug #259 fix
+    private var wordPredictor: WordPredictor? = null  // Bug #262 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -127,6 +128,7 @@ class CleverKeysService : InputMethodService(),
             initializeKeyboardSwipeRecognizer()  // Bug #256 fix - Bayesian swipe recognition
             initializeBigramModel()  // Bug #255 fix - contextual word prediction
             initializeNgramModel()  // Bug #259 fix
+            initializeWordPredictor()  // Bug #262 fix
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -559,6 +561,25 @@ class CleverKeysService : InputMethodService(),
             logD("✅ NgramModel initialized (Bug #259)")
         } catch (e: Exception) {
             logE("Failed to initialize n-gram model", e)
+        }
+    }
+
+    /**
+     * Initialize word predictor (Bug #262 fix).
+     */
+    private fun initializeWordPredictor() {
+        try {
+            config?.let { cfg ->
+                wordPredictor = WordPredictor(context = this, config = cfg)
+
+                // TODO: WordPredictor expects tribixbite.keyboard2.data.BigramModel
+                // but we integrated tribixbite.keyboard2.BigramModel (different class)
+                // For now, pass null - predictions work without bigram context
+
+                logD("✅ WordPredictor initialized (Bug #262)")
+            }
+        } catch (e: Exception) {
+            logE("Failed to initialize word predictor", e)
         }
     }
 
