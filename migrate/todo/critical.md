@@ -246,9 +246,12 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - File: ComprehensiveTraceAnalyzer.java (710 lines) → MISSING
 
 #### Configuration & Data
-- [ ] **Bug #78**: ComposeKeyData arrays TRUNCATED (99% missing)
-  - Impact: Most compose key combinations unavailable
-  - File: ComposeKeyData.kt - Missing ~14,900/15,000 entries
+- [x] **Bug #78**: ComposeKeyData arrays TRUNCATED (99% missing) ✅ FIXED (code generation)
+  - Impact: Was missing ~14,900/15,000 entries → Now has 8659 states for 33 entry points
+  - File: ComposeKeyData.kt (193 lines) + assets/compose_data.bin (51KB)
+  - Fix: Generated from Unexpected-Keyboard compose/*.json files via generate_compose_data.py
+  - Implementation: Binary data loaded from assets/compose_data.bin at runtime (avoids 64KB method limit)
+  - Status: ✅ COMPLETE - proper code generation approach
 
 - [ ] **Bug #79**: Missing 33 named constants
   - Impact: Cannot reference compose keys by name

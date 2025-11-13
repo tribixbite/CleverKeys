@@ -63,7 +63,7 @@ This file tracks bugs and missing features in the core keyboard logic (parsing, 
 - File 11: **11 CATASTROPHIC** (KeyModifier - modify() broken, 335 lines missing, 63% reduction)
 - File 12: **✅ 0 bugs** (Modmap - PROPERLY IMPLEMENTED, improvements over Java)
 - File 13: **1 bug** (ComposeKey - ✅ FIXED Bug #75 flags hardcoded; ⏳ REMAINING: 90 lines unused code)
-- File 14: **✅ 0 bugs** (ComposeKeyData - ✅ FIXED with code generation)
+- File 14: **✅ 0 bugs** (ComposeKeyData - ✅ FIXED with code generation: Bug #78 FIXED - 8659 states loaded from compose_data.bin)
 - File 15: **0 bugs** (Autocapitalisation - ❌ Bug #80 FALSE: trigger logic identical to Java)
 - File 16: **1 CATASTROPHIC** (ExtraKeys - 95% missing, architectural mismatch)
 - File 17: **1 CRITICAL → 0 bugs** (DirectBootAwarePreferences - ✅ FIXED: device-protected storage, migration logic, full implementation)
