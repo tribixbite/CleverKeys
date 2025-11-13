@@ -120,6 +120,7 @@ class CleverKeysService : InputMethodService(),
     private var clipboardSyncManager: ClipboardSyncManager? = null  // Bug #380 fix - clipboard cross-device sync
     private var stickyKeysManager: StickyKeysManager? = null  // Bug #373 fix - accessibility (ADA/WCAG)
     private var runtimeValidator: RuntimeValidator? = null  // Runtime validation for models and assets
+    private var foldStateTracker: FoldStateTracker? = null  // Foldable device state tracking
 
     // Configuration and state
     private var config: Config? = null
@@ -155,6 +156,7 @@ class CleverKeysService : InputMethodService(),
             initializeClipboardSyncManager()  // Bug #380 fix - clipboard cross-device sync
             initializeStickyKeysManager()  // Bug #373 fix - accessibility (ADA/WCAG)
             initializeRuntimeValidator()  // Runtime validation for models and assets
+            initializeFoldStateTracker()  // Foldable device state tracking
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -282,6 +284,7 @@ class CleverKeysService : InputMethodService(),
             clipboardSyncManager?.stopAutoSync()  // Bug #380 - stop clipboard sync
             stickyKeysManager?.cleanup()  // Bug #373 - cleanup sticky keys manager
             runtimeValidator?.cleanup()  // Cleanup runtime validator
+            foldStateTracker?.cleanup()  // Cleanup fold state tracker
             serviceScope.launch {
                 neuralSwipeTypingEngine?.cleanup()  // Bug #275 dependency - cleanup is suspend function
             }
@@ -966,6 +969,30 @@ class CleverKeysService : InputMethodService(),
             logD("   - 460 lines of validation logic")
         } catch (e: Exception) {
             logE("Failed to initialize runtime validator", e)
+        }
+    }
+
+    private fun initializeFoldStateTracker() {
+        try {
+            foldStateTracker = FoldStateTracker(context = this).apply {
+                // Observe fold state changes
+                serviceScope.launch {
+                    getFoldStateFlow().collect { isUnfolded ->
+                        logD("Fold state changed: ${if (isUnfolded) "UNFOLDED" else "FOLDED"}")
+                        // TODO: Adjust keyboard layout/size based on fold state
+                    }
+                }
+            }
+
+            val currentState = if (foldStateTracker?.isUnfolded() == true) "UNFOLDED" else "FOLDED"
+            logD("✅ FoldStateTracker initialized (current: $currentState)")
+            logD("   - WindowManager API integration (Android R+)")
+            logD("   - Display metrics fallback (older devices)")
+            logD("   - Device-specific fold detection (Samsung, Pixel)")
+            logD("   - Reactive fold state updates via StateFlow")
+            logD("   - 274 lines of fold tracking logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize fold state tracker", e)
         }
     }
 
