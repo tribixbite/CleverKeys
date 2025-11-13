@@ -109,6 +109,7 @@ class CleverKeysService : InputMethodService(),
     private var wordPredictor: WordPredictor? = null  // Bug #262 fix
     private var languageDetector: LanguageDetector? = null  // Bug #257 fix
     private var userAdaptationManager: UserAdaptationManager? = null  // Bug #263 fix
+    private var swipeMLTrainer: tribixbite.keyboard2.ml.SwipeMLTrainer? = null  // Bug #274 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -133,6 +134,7 @@ class CleverKeysService : InputMethodService(),
             initializeWordPredictor()  // Bug #262 fix
             initializeLanguageDetector()  // Bug #257 fix
             initializeUserAdaptationManager()  // Bug #263 fix
+            initializeSwipeMLTrainer()  // Bug #274 fix
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -254,6 +256,7 @@ class CleverKeysService : InputMethodService(),
             imeLanguageSelector?.release()  // Bug #347 - release IME language selector resources
             languageManager?.release()  // Bug #344 - release language manager resources
             userAdaptationManager?.cleanup()  // Bug #263 - release user adaptation manager resources
+            swipeMLTrainer?.shutdown()  // Bug #274 - release swipe ML trainer resources
         }
         serviceScope.cancel()
     }
@@ -619,6 +622,22 @@ class CleverKeysService : InputMethodService(),
             logD("✅ UserAdaptationManager initialized (Bug #263)")
         } catch (e: Exception) {
             logE("Failed to initialize user adaptation manager", e)
+        }
+    }
+
+    /**
+     * Initialize swipe ML trainer (Bug #274 fix).
+     */
+    private fun initializeSwipeMLTrainer() {
+        try {
+            swipeMLTrainer = tribixbite.keyboard2.ml.SwipeMLTrainer(context = this)
+
+            // Optional: Set up training listener for UI feedback
+            // swipeMLTrainer?.setTrainingListener(object : SwipeMLTrainer.TrainingListener { ... })
+
+            logD("✅ SwipeMLTrainer initialized (Bug #274)")
+        } catch (e: Exception) {
+            logE("Failed to initialize swipe ML trainer", e)
         }
     }
 
