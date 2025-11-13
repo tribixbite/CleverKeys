@@ -72,6 +72,7 @@ class CleverKeysService : InputMethodService(),
     private var keyRepeatHandler: KeyRepeatHandler? = null
     private var layoutSwitchAnimator: LayoutSwitchAnimator? = null
     private var oneHandedModeManager: OneHandedModeManager? = null
+    private var floatingKeyboardManager: FloatingKeyboardManager? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -101,6 +102,7 @@ class CleverKeysService : InputMethodService(),
             initializeKeyRepeatHandler()    // Bug #330 fix
             initializeLayoutSwitchAnimator()  // Bug #329 fix
             initializeOneHandedModeManager()  // Bug #331 fix
+            initializeFloatingKeyboardManager()  // Bug #332 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -147,6 +149,7 @@ class CleverKeysService : InputMethodService(),
             keyRepeatHandler?.release()    // Bug #330 - release key repeat handler resources
             layoutSwitchAnimator?.release()  // Bug #329 - release layout animator resources
             oneHandedModeManager?.release()  // Bug #331 - release one-handed mode manager resources
+            floatingKeyboardManager?.release()  // Bug #332 - release floating keyboard manager resources
         }
         serviceScope.cancel()
     }
@@ -610,6 +613,29 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize one-handed mode manager", e)
             // Non-fatal - keyboard can work in full-width mode
+        }
+    }
+
+    /**
+     * Bug #332 fix: Initialize floating keyboard manager
+     *
+     * Creates manager for floating/detachable keyboard that can be freely
+     * positioned anywhere on screen with drag-to-move support.
+     */
+    private fun initializeFloatingKeyboardManager() {
+        try {
+            // TODO: Get enabled state from user preferences
+            val floatingEnabled = false  // Default to disabled (docked mode)
+
+            floatingKeyboardManager = FloatingKeyboardManager(
+                context = this,
+                enabled = floatingEnabled
+            )
+
+            logD("✅ Floating keyboard manager initialized (enabled=$floatingEnabled)")
+        } catch (e: Exception) {
+            logE("Failed to initialize floating keyboard manager", e)
+            // Non-fatal - keyboard can work in docked mode
         }
     }
 
