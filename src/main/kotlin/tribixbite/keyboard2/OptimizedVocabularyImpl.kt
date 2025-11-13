@@ -19,6 +19,7 @@ class OptimizedVocabularyImpl(
     /**
      * Configuration for vocabulary tuning
      * Bug #173 fix: Make hardcoded limits configurable
+     * Bug #171 fix: Add OOV handling configuration
      */
     data class VocabularyConfig(
         val maxWords: Int = 150_000,
@@ -30,7 +31,9 @@ class OptimizedVocabularyImpl(
         val longWordLengthThreshold: Int = 12,
         val longWordPenalty: Float = 0.5f,
         val swipePathLengthDivisor: Float = 50f,
-        val typingSpeedMultiplier: Float = 0.15f
+        val typingSpeedMultiplier: Float = 0.15f,
+        val oovPenalty: Float = 0.3f, // Penalty for out-of-vocabulary words (vs filtering them out)
+        val oovMinConfidence: Float = 0.5f // Minimum neural confidence to keep OOV predictions
     )
     
     // Vocabulary data structures
@@ -137,22 +140,34 @@ class OptimizedVocabularyImpl(
     
     /**
      * Filter and rank neural predictions
+     * Bug #171 fix: Keep OOV predictions with penalty instead of filtering them out
      */
     fun filterPredictions(rawPredictions: List<CandidateWord>, swipeStats: SwipeStats): List<FilteredPrediction> {
         if (!isLoaded) {
             logW("Vocabulary not loaded, returning raw predictions")
             return rawPredictions.map { FilteredPrediction(it.word, it.confidence) }
         }
-        
+
         return rawPredictions.mapNotNull { candidate ->
             val word = candidate.word.lowercase()
-            val frequency = wordFrequencies[word] ?: return@mapNotNull null
-            
+            val frequency = wordFrequencies[word]
+
+            // Handle OOV (out-of-vocabulary) words
+            val vocabularyScore = if (frequency != null) {
+                // In-vocabulary: apply frequency-based scoring
+                calculateVocabularyScore(word, frequency)
+            } else {
+                // OOV: keep if neural confidence is high enough, apply penalty
+                if (candidate.confidence < config.oovMinConfidence) {
+                    return@mapNotNull null // Filter out low-confidence OOV words
+                }
+                config.oovPenalty // Penalty for OOV (default 0.3 = 70% reduction)
+            }
+
             // Calculate combined score
-            val vocabularyScore = calculateVocabularyScore(word, frequency)
             val contextScore = calculateContextScore(word, swipeStats)
             val combinedScore = candidate.confidence * vocabularyScore * contextScore
-            
+
             FilteredPrediction(word, combinedScore)
         }.sortedByDescending { it.score }
     }
