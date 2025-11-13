@@ -101,39 +101,47 @@ class ExtraKeysPreference @JvmOverloads constructor(
          */
         @JvmStatic
         fun keyDescription(resources: Resources, name: String): String? {
-            var description = when (name) {
-                "capslock" -> "Caps Lock"
-                "change_method" -> "Change Input Method"
-                "compose" -> "Compose"
-                "copy" -> "Copy"
-                "cut" -> "Cut"
-                "end" -> "End"
-                "home" -> "Home"
-                "page_down" -> "Page Down"
-                "page_up" -> "Page Up"
-                "paste" -> "Paste"
-                "pasteAsPlainText" -> "Paste as Plain Text"
-                "redo" -> "Redo"
-                "delete_word" -> "Delete Word"
-                "forward_delete_word" -> "Forward Delete Word"
-                "selectAll" -> "Select All"
-                "subscript" -> "Subscript"
-                "superscript" -> "Superscript"
-                "switch_greekmath" -> "Greek Math"
-                "undo" -> "Undo"
-                "voice_typing" -> "Voice Typing"
-                "ª" -> "Feminine Ordinal"
-                "º" -> "Masculine Ordinal"
-                "switch_clipboard" -> "Clipboard"
-                "zwj" -> "Zero Width Joiner"
-                "zwnj" -> "Zero Width Non-Joiner"
-                "nbsp" -> "Non-Breaking Space"
-                "nnbsp" -> "Narrow Non-Breaking Space"
+            // Get resource ID for key description
+            val descriptionId = when (name) {
+                "capslock" -> R.string.key_descr_capslock
+                "change_method" -> R.string.key_descr_change_method
+                "compose" -> R.string.key_descr_compose
+                "copy" -> R.string.key_descr_copy
+                "cut" -> R.string.key_descr_cut
+                "end" -> R.string.key_descr_end
+                "home" -> R.string.key_descr_home
+                "page_down" -> R.string.key_descr_page_down
+                "page_up" -> R.string.key_descr_page_up
+                "paste" -> R.string.key_descr_paste
+                "pasteAsPlainText" -> R.string.key_descr_pasteAsPlainText
+                "redo" -> R.string.key_descr_redo
+                "delete_word" -> R.string.key_descr_delete_word
+                "forward_delete_word" -> R.string.key_descr_forward_delete_word
+                "selectAll" -> R.string.key_descr_selectAll
+                "subscript" -> R.string.key_descr_subscript
+                "superscript" -> R.string.key_descr_superscript
+                "switch_greekmath" -> R.string.key_descr_switch_greekmath
+                "undo" -> R.string.key_descr_undo
+                "voice_typing" -> R.string.key_descr_voice_typing
+                "ª" -> R.string.key_descr_ª
+                "º" -> R.string.key_descr_º
+                "switch_clipboard" -> R.string.key_descr_clipboard
+                "zwj" -> R.string.key_descr_zwj
+                "zwnj" -> R.string.key_descr_zwnj
+                "nbsp" -> R.string.key_descr_nbsp
+                "nnbsp" -> R.string.key_descr_nnbsp
                 else -> when {
-                    name.startsWith("accent_") -> "Dead Key"
-                    name.startsWith("combining_") -> "Combining Character"
-                    else -> null
+                    name.startsWith("accent_") -> R.string.key_descr_dead_key
+                    name.startsWith("combining_") -> R.string.key_descr_combining
+                    else -> 0
                 }
+            }
+
+            // Get localized string from resources
+            var description = if (descriptionId != 0) {
+                resources.getString(descriptionId)
+            } else {
+                null
             }
 
             // Add additional info for certain keys
