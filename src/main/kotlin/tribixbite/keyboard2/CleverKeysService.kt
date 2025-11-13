@@ -114,6 +114,7 @@ class CleverKeysService : InputMethodService(),
     private var asyncPredictionHandler: AsyncPredictionHandler? = null  // Bug #275 fix - async prediction processing
     private var inputConnectionManager: InputConnectionManager? = null  // Advanced input connection management
     private var personalizationManager: PersonalizationManager? = null  // Word frequency tracking and bigram learning
+    private var longPressManager: LongPressManager? = null  // Bug #327 fix - long-press behavior
 
     // Configuration and state
     private var config: Config? = null
@@ -143,6 +144,7 @@ class CleverKeysService : InputMethodService(),
             initializeAsyncPredictionHandler()  // Bug #275 fix - async prediction processing
             initializeInputConnectionManager()  // Advanced input connection management
             initializePersonalizationManager()  // Word frequency tracking and bigram learning
+            initializeLongPressManager()  // Bug #327 fix - long-press behavior
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -771,6 +773,62 @@ class CleverKeysService : InputMethodService(),
             logD("   - 326 lines of personalized learning")
         } catch (e: Exception) {
             logE("Failed to initialize personalization manager", e)
+        }
+    }
+
+    /**
+     * Initialize long-press manager (Bug #327 fix - CATASTROPHIC).
+     * Manages long-press behavior for keyboard keys.
+     *
+     * Features:
+     * - Long-press detection with configurable delay (500ms default)
+     * - Popup showing alternate characters (accents, symbols, etc.)
+     * - Touch tracking for alternate character selection
+     * - Auto-repeat for certain keys (backspace, arrows, 50ms intervals)
+     * - Cancellation on touch movement (30px threshold)
+     * - Vibration feedback integration
+     */
+    private fun initializeLongPressManager() {
+        try {
+            // Create stub callback for integration (full implementation comes with feature wiring)
+            val callback = object : LongPressManager.Callback {
+                override fun onLongPress(key: KeyValue, x: Float, y: Float): Boolean {
+                    // TODO: Show popup with alternate characters
+                    logD("Long press on key: ${key.displayString}")
+                    return false  // Stub - will show popup in full implementation
+                }
+
+                override fun onAutoRepeat(key: KeyValue) {
+                    // TODO: Handle auto-repeat (backspace, arrows)
+                    logD("Auto-repeat: ${key.displayString}")
+                }
+
+                override fun onAlternateSelected(key: KeyValue, alternate: KeyValue) {
+                    // TODO: Input alternate character
+                    logD("Alternate selected: ${key.displayString} → ${alternate.displayString}")
+                }
+
+                override fun performVibration() {
+                    // TODO: Trigger vibration through VibratorCompat
+                    logD("Vibration requested")
+                }
+            }
+
+            longPressManager = LongPressManager(
+                callback = callback,
+                longPressDelay = 500L,
+                autoRepeatDelay = 400L,
+                autoRepeatInterval = 50L
+            )
+
+            logD("✅ LongPressManager initialized (Bug #327)")
+            logD("   - Long-press delay: 500ms")
+            logD("   - Auto-repeat delay: 400ms, interval: 50ms")
+            logD("   - Movement threshold: 30px")
+            logD("   - 353 lines of long-press behavior")
+            logD("   - ⚠️ Stub callback (full implementation pending)")
+        } catch (e: Exception) {
+            logE("Failed to initialize long-press manager", e)
         }
     }
 
