@@ -8,7 +8,7 @@ This file tracks bugs and TODOs for the settings and preferences UI.
 - File 32: **0 bugs** (ExtraKeysPreference - ✅ FIXED Bug #639: replaced ~30 hardcoded descriptions with R.string resources; commit 4cf39084)
 - File 33: **0 bugs** (IntSlideBarPreference - ✅ FIXED Bug #146: String.format crash, hardcoded padding → density-independent pixels; commit 3d1ee849)
 - File 34: **0 bugs** (SlideBarPreference - ✅ FIXED Bug #147: String.format crash, division by zero, hardcoded padding → dp; commit 3d1ee849)
-- File 39: **1 medium bug** (NeuralConfig - ⏳ DOCUMENTED: copy() method doesn't create true independent copy)
+- File 39: **1 medium bug → 0 bugs** (NeuralConfig - ✅ FIXED Bug #154: replaced misleading copy() with toSnapshot() returning immutable ConfigSnapshot data class)
 - File 82: ✅ **ExtraKeysPreference.java (est. 300-400 lines) vs ExtraKeysPreference.kt (337 lines) + ExtraKeys.kt (18 lines) - ✅ EXCELLENT**
 - File 92: ✅ **SwipeAdvancedSettings.java (est. 400-500 lines) vs SwipeAdvancedSettings.kt (282 lines) - ✅ EXCELLENT**
 - File 97: ✅ **SettingsActivity.java (est. 700-900 lines) vs SettingsActivity.kt (935 lines) - ✅ EXCELLENT**

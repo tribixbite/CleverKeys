@@ -39,30 +39,32 @@ class NeuralConfig(private val prefs: SharedPreferences) {
         maxLength = 35
         confidenceThreshold = 0.1f
     }
-    
+
     /**
-     * Copy current settings
+     * Create independent snapshot of current settings
+     * Bug #154 fix: Removed misleading copy() method (shared backing store)
      *
-     * WARNING (Bug #154): This is NOT a true independent copy!
-     * The returned NeuralConfig shares the same SharedPreferences backing store,
-     * so changes to the "copy" will affect the original and vice versa.
-     *
-     * Currently unused in codebase. Consider removing or creating a proper
-     * data class snapshot if true independent copy is needed.
+     * Use toSnapshot() to get a true independent copy as a data class:
+     * val snapshot = config.toSnapshot()
      */
-    @Deprecated(
-        message = "Not a true copy - shares same SharedPreferences backing store",
-        level = DeprecationLevel.WARNING
+    fun toSnapshot(): ConfigSnapshot = ConfigSnapshot(
+        neuralPredictionEnabled = neuralPredictionEnabled,
+        beamWidth = beamWidth,
+        maxLength = maxLength,
+        confidenceThreshold = confidenceThreshold
     )
-    fun copy(): NeuralConfig {
-        val copy = NeuralConfig(prefs)
-        copy.neuralPredictionEnabled = this.neuralPredictionEnabled
-        copy.beamWidth = this.beamWidth
-        copy.maxLength = this.maxLength
-        copy.confidenceThreshold = this.confidenceThreshold
-        return copy
-    }
-    
+
+    /**
+     * Immutable snapshot of neural configuration
+     * Bug #154 fix: True independent copy (no shared backing store)
+     */
+    data class ConfigSnapshot(
+        val neuralPredictionEnabled: Boolean,
+        val beamWidth: Int,
+        val maxLength: Int,
+        val confidenceThreshold: Float
+    )
+
     // Property delegation classes for automatic SharedPreferences sync
     private inner class BooleanPreference(
         private val key: String, 
