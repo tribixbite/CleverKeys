@@ -332,7 +332,7 @@ class RuntimeValidator(private val context: Context) {
     fun generateValidationReport(report: ValidationReport): String {
         return buildString {
             appendLine("🔍 CleverKeys Runtime Validation Report")
-            appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date())}")
+            appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date())}")
             appendLine()
             
             // Overall status

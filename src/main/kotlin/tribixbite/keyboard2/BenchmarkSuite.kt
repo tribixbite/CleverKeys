@@ -459,7 +459,7 @@ class BenchmarkSuite(private val context: Context) {
     fun generateBenchmarkReport(suite: BenchmarkSuiteResult): String {
         return buildString {
             appendLine("🏁 CleverKeys Performance Benchmark Report")
-            appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date())}")
+            appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date())}")
             appendLine("Device: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
             appendLine("Android: API ${android.os.Build.VERSION.SDK_INT}")
             appendLine()
