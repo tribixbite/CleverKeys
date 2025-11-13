@@ -173,7 +173,7 @@ class ClipboardPinView : NonScrollListView {
                 // Paste button
                 addView(Button(context).apply {
                     id = android.R.id.button1
-                    text = "📋"
+                    text = context.getString(R.string.clipboard_paste)
                     textSize = 12f
                     setPadding(8, 4, 8, 4)
                 })
@@ -181,7 +181,7 @@ class ClipboardPinView : NonScrollListView {
                 // Remove button
                 addView(Button(context).apply {
                     id = android.R.id.button2
-                    text = "🗑️"
+                    text = context.getString(R.string.clipboard_delete)
                     textSize = 12f
                     setPadding(8, 4, 8, 4)
                 })
@@ -207,8 +207,8 @@ class ClipboardPinView : NonScrollListView {
          */
         private fun showRemoveConfirmDialog(position: Int) {
             val dialog = AlertDialog.Builder(context)
-                .setTitle("Remove clipboard entry?")
-                .setPositiveButton("Remove") { _, _ ->
+                .setTitle(R.string.clipboard_remove_confirm)
+                .setPositiveButton(android.R.string.ok) { _, _ ->
                     removeEntry(position)
                 }
                 .setNegativeButton(android.R.string.cancel, null)
