@@ -146,10 +146,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Features: 15 built-in macros, custom shortcuts, multi-line expansion, variable substitution (date/time/clipboard), trigger detection, persistent storage
   - Integration: Integrated in CleverKeysService
 
-- [ ] **Bug #355**: ShortcutManager missing (File 153)
-  - Impact: NO keyboard shortcuts management (Ctrl+X, Alt+E, etc.)
-  - File: ShortcutManager.java (~250-350 lines) → COMPLETELY MISSING
-  - Missing: Custom key combinations, quick-access tools
+- [x] **Bug #355**: ShortcutManager FIXED ✅ **2025-11-13**
+  - Impact: Complete keyboard shortcuts system now functional
+  - File: ShortcutManager.kt (753 lines) → ✅ FULLY IMPLEMENTED
+  - Features: 15 built-in shortcuts (Ctrl+C/X/V/Z/Y/A), modifier detection (Ctrl/Alt/Shift/Meta), custom combinations, conflict detection, persistent storage
+  - Integration: Integrated in CleverKeysService
 
 - [ ] **Bug #356**: GestureTypingCustomizer missing (File 154)
   - Impact: NO gesture typing personalization (sensitivity, speed adjustments)

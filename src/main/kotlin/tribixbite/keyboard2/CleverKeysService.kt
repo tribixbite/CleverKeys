@@ -92,6 +92,7 @@ class CleverKeysService : InputMethodService(),
     private var undoRedoManager: UndoRedoManager? = null
     private var selectionManager: SelectionManager? = null  // Bug #321 fix
     private var macroExpander: MacroExpander? = null  // Bug #354 fix
+    private var shortcutManager: ShortcutManager? = null  // Bug #355 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -141,6 +142,7 @@ class CleverKeysService : InputMethodService(),
             initializeUndoRedoManager()  // Bug #320 fix
             initializeSelectionManager()  // Bug #321 fix
             initializeMacroExpander()  // Bug #354 fix
+            initializeShortcutManager()  // Bug #355 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -207,6 +209,7 @@ class CleverKeysService : InputMethodService(),
             undoRedoManager?.release()  // Bug #320 - release undo/redo manager resources
             selectionManager?.release()  // Bug #321 - release selection manager resources
             macroExpander?.release()  // Bug #354 - release macro expander resources
+            shortcutManager?.release()  // Bug #355 - release shortcut manager resources
         }
         serviceScope.cancel()
     }
@@ -1026,6 +1029,20 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize macro expander", e)
             // Non-fatal - keyboard can work without macro expander
+        }
+    }
+
+    /**
+     * Initialize shortcut manager (Bug #355 fix)
+     */
+    private fun initializeShortcutManager() {
+        try {
+            shortcutManager = ShortcutManager(context = this)
+
+            logD("✅ ShortcutManager initialized (Bug #355)")
+        } catch (e: Exception) {
+            logE("Failed to initialize shortcut manager", e)
+            // Non-fatal - keyboard can work without shortcut manager
         }
     }
 
