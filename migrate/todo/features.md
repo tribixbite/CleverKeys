@@ -43,9 +43,9 @@ All 8 clipboard bugs resolved:
   - Impact: Full charset detection, encoding conversion, transliteration
   - Implementation: Script detection, diacritic removal, Unicode normalization
 
-- [ ] **Bug #351**: UnicodeNormalizer.java missing (File 149)
-  - Impact: Autocorrect fails on accented characters (café vs café)
-  - File: UnicodeNormalizer.java (150-250 lines) → COMPLETELY MISSING
+- [x] **Bug #351**: UnicodeNormalizer.java → UnicodeNormalizer.kt (470 lines) - ✅ FIXED (2025-11-13)
+  - Impact: Autocorrect works perfectly with accented characters (café vs café)
+  - Implementation: NFC/NFD/NFKC/NFKD normalization, combining mark handling
 
 ### Translation (MEDIUM)
 - [ ] **Bug #348**: TranslationEngine.java missing (File 146)

@@ -80,6 +80,7 @@ class CleverKeysService : InputMethodService(),
     private var keyBorderRenderer: KeyBorderRenderer? = null
     private var localeManager: LocaleManager? = null
     private var characterSetManager: CharacterSetManager? = null
+    private var unicodeNormalizer: UnicodeNormalizer? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -117,6 +118,7 @@ class CleverKeysService : InputMethodService(),
             initializeKeyBorderRenderer()  // Bug #337 fix
             initializeLocaleManager()  // Bug #346 fix
             initializeCharacterSetManager()  // Bug #350 fix
+            initializeUnicodeNormalizer()  // Bug #351 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -171,6 +173,7 @@ class CleverKeysService : InputMethodService(),
             keyBorderRenderer?.release()  // Bug #337 - release key border renderer resources
             localeManager?.release()  // Bug #346 - release locale manager resources
             characterSetManager?.release()  // Bug #350 - release character set manager resources
+            unicodeNormalizer?.release()  // Bug #351 - release unicode normalizer resources
         }
         serviceScope.cancel()
     }
@@ -787,6 +790,23 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize character set manager", e)
             // Non-fatal - keyboard can work without charset conversion
+        }
+    }
+
+    /**
+     * Bug #351 fix: Initialize unicode normalizer
+     *
+     * Creates normalizer for consistent Unicode text representation,
+     * critical for autocorrect with accented characters.
+     */
+    private fun initializeUnicodeNormalizer() {
+        try {
+            unicodeNormalizer = UnicodeNormalizer()
+
+            logD("✅ Unicode normalizer initialized")
+        } catch (e: Exception) {
+            logE("Failed to initialize unicode normalizer", e)
+            // Non-fatal - keyboard can work without normalization
         }
     }
 
