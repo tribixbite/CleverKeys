@@ -95,6 +95,7 @@ class CleverKeysService : InputMethodService(),
     private var shortcutManager: ShortcutManager? = null  // Bug #355 fix
     private var gestureTypingCustomizer: GestureTypingCustomizer? = null  // Bug #356 fix
     private var continuousInputManager: ContinuousInputManager? = null  // Bug #357 fix
+    private var handwritingRecognizer: HandwritingRecognizer? = null  // Bug #352 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -147,6 +148,7 @@ class CleverKeysService : InputMethodService(),
             initializeShortcutManager()  // Bug #355 fix
             initializeGestureTypingCustomizer()  // Bug #356 fix
             initializeContinuousInputManager()  // Bug #357 fix
+            initializeHandwritingRecognizer()  // Bug #352 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -216,6 +218,7 @@ class CleverKeysService : InputMethodService(),
             shortcutManager?.release()  // Bug #355 - release shortcut manager resources
             gestureTypingCustomizer?.release()  // Bug #356 - release gesture typing customizer resources
             continuousInputManager?.release()  // Bug #357 - release continuous input manager resources
+            handwritingRecognizer?.release()  // Bug #352 - release handwriting recognizer resources
         }
         serviceScope.cancel()
     }
@@ -1077,6 +1080,21 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize continuous input manager", e)
             // Non-fatal - keyboard can work without continuous input manager
+        }
+    }
+
+    /**
+     * Initialize handwriting recognizer for character drawing input.
+     * Bug #352 fix - Essential for CJK languages (1.3B users).
+     */
+    private fun initializeHandwritingRecognizer() {
+        try {
+            handwritingRecognizer = HandwritingRecognizer(context = this)
+
+            logD("✅ HandwritingRecognizer initialized (Bug #352)")
+        } catch (e: Exception) {
+            logE("Failed to initialize handwriting recognizer", e)
+            // Non-fatal - keyboard can work without handwriting recognition
         }
     }
 
