@@ -62,6 +62,7 @@ class CleverKeysService : InputMethodService(),
     private var spellCheckHelper: SpellCheckHelper? = null
     private var smartPunctuationHandler: SmartPunctuationHandler? = null
     private var caseConverter: CaseConverter? = null
+    private var textExpander: TextExpander? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -81,6 +82,7 @@ class CleverKeysService : InputMethodService(),
             initializeSpellChecker()
             initializeSmartPunctuation()  // Bug #316 & #361 fix
             initializeCaseConverter()      // Bug #318 fix
+            initializeTextExpander()       // Bug #319 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -327,6 +329,26 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
+     * Initialize text expander (Fix for Bug #319)
+     */
+    private fun initializeTextExpander() {
+        try {
+            textExpander = TextExpander(this)
+            // Configure from settings
+            config?.let { cfg ->
+                // Enable by default - can be toggled via settings later
+                textExpander?.setEnabled(true)
+                textExpander?.setExpandOnSpace(true)
+                textExpander?.setExpandOnPunctuation(true)
+            }
+            logD("✅ Text expander initialized (${textExpander?.getAllShortcuts()?.size ?: 0} shortcuts)")
+        } catch (e: Exception) {
+            logE("Failed to initialize text expander", e)
+            // Non-fatal - keyboard can work without text expansion
+        }
+    }
+
+    /**
      * Initialize key event handler
      */
     private fun initializeKeyEventHandler() {
@@ -401,7 +423,8 @@ class CleverKeysService : InputMethodService(),
             screenReaderManager = screenReaderManager,
             spellCheckHelper = spellCheckHelper,
             smartPunctuationHandler = smartPunctuationHandler,
-            caseConverter = caseConverter
+            caseConverter = caseConverter,
+            textExpander = textExpander
         )
 
         // Re-initialize Config with the fully-initialized handler (Fix #51, #311)

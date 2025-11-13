@@ -21,6 +21,7 @@ import tribixbite.keyboard2.R
  * Includes spell checking integration (Fix for Bug #311)
  * Includes smart punctuation (Fix for Bug #316 & #361)
  * Includes case conversion (Fix for Bug #318)
+ * Includes text expansion (Fix for Bug #319)
  */
 class KeyEventHandler(
     private val receiver: IReceiver,
@@ -29,7 +30,8 @@ class KeyEventHandler(
     private val screenReaderManager: ScreenReaderManager? = null,
     private val spellCheckHelper: SpellCheckHelper? = null,
     private val smartPunctuationHandler: SmartPunctuationHandler? = null,
-    private val caseConverter: CaseConverter? = null
+    private val caseConverter: CaseConverter? = null,
+    private val textExpander: TextExpander? = null
 ) : Config.IKeyEventHandler, ClipboardPasteCallback {
 
     companion object {
@@ -112,6 +114,24 @@ class KeyEventHandler(
             char.uppercaseChar()
         } else {
             char
+        }
+
+        // Check for text expansion (Fix for Bug #319)
+        // Expansion triggers on space or punctuation
+        if (finalChar.isWhitespace() || finalChar in ".,!?;:") {
+            val expanded = textExpander?.processText(inputConnection, finalChar)
+            if (expanded == true) {
+                // Text was expanded - don't insert the trigger character
+                // Update capitalization state
+                shouldCapitalizeNext = finalChar in ".!?"
+                receiver.performVibration()
+
+                // Update tap typing context
+                if (!isSwipe && typingPredictionEngine != null) {
+                    finishCurrentWord()
+                }
+                return
+            }
         }
 
         // Apply smart punctuation processing (Fix for Bug #316 & #361)
