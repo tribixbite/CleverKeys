@@ -125,6 +125,7 @@ class CleverKeysService : InputMethodService(),
     private var materialThemeManager: tribixbite.keyboard2.theme.MaterialThemeManager? = null  // Material 3 theming
     private var loopGestureDetector: LoopGestureDetector? = null  // Bug #258 fix - loop gesture detection
     private var enhancedSwipeGestureRecognizer: EnhancedSwipeGestureRecognizer? = null  // Enhanced swipe tracking
+    private var probabilisticKeyDetector: ProbabilisticKeyDetector? = null  // Probabilistic key detection for swipes
 
     // Configuration and state
     private var config: Config? = null
@@ -166,6 +167,7 @@ class CleverKeysService : InputMethodService(),
             loadDefaultKeyboardLayout()
             initializeLoopGestureDetector()  // Bug #258 fix - loop gesture detection
             initializeEnhancedSwipeGestureRecognizer()  // Enhanced swipe tracking
+            initializeProbabilisticKeyDetector()  // Probabilistic key detection for swipes
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -1085,6 +1087,37 @@ class CleverKeysService : InputMethodService(),
             logD("   - 94 lines of swipe tracking logic")
         } catch (e: Exception) {
             logE("Failed to initialize enhanced swipe gesture recognizer", e)
+        }
+    }
+
+    private fun initializeProbabilisticKeyDetector() {
+        try {
+            // Use current layout if loaded, otherwise stub
+            val keyboard = currentLayout ?: run {
+                logD("Keyboard layout not loaded yet, will initialize ProbabilisticKeyDetector later")
+                return
+            }
+
+            // Get keyboard dimensions (default if not available)
+            val keyboardWidth = resources.displayMetrics.widthPixels.toFloat()
+            val keyboardHeight = 400f  // Default keyboard height
+
+            probabilisticKeyDetector = ProbabilisticKeyDetector(
+                keyboard = keyboard,
+                keyboardWidth = keyboardWidth,
+                keyboardHeight = keyboardHeight
+            )
+
+            logD("✅ ProbabilisticKeyDetector initialized")
+            logD("   - Gaussian probability distribution for key proximity")
+            logD("   - Cumulative probability tracking across swipe path")
+            logD("   - Alphabetic key filtering")
+            logD("   - Path-ordered key sequence extraction")
+            logD("   - Ramer-Douglas-Peucker path simplification")
+            logD("   - Formula: P(key|point) = exp(-(distance²) / (2 * sigma²))")
+            logD("   - 332 lines of probabilistic detection logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize probabilistic key detector", e)
         }
     }
 
