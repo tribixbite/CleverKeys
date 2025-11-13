@@ -105,6 +105,7 @@ class CleverKeysService : InputMethodService(),
     private var multiLanguageDictionary: MultiLanguageDictionaryManager? = null  // Bug #277 fix
     private var keyboardSwipeRecognizer: KeyboardSwipeRecognizer? = null  // Bug #256 fix
     private var bigramModel: BigramModel? = null  // Bug #255 fix - contextual word prediction
+    private var ngramModel: NgramModel? = null  // Bug #259 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -125,6 +126,7 @@ class CleverKeysService : InputMethodService(),
             initializeMultiLanguageDictionary()  // Bug #277 fix - multi-language dictionaries
             initializeKeyboardSwipeRecognizer()  // Bug #256 fix - Bayesian swipe recognition
             initializeBigramModel()  // Bug #255 fix - contextual word prediction
+            initializeNgramModel()  // Bug #259 fix
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -545,6 +547,18 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize bigram model", e)
             // Non-fatal - predictions work without contextual scoring
+        }
+    }
+
+    /**
+     * Initialize n-gram model (Bug #259 fix).
+     */
+    private fun initializeNgramModel() {
+        try {
+            ngramModel = NgramModel()
+            logD("✅ NgramModel initialized (Bug #259)")
+        } catch (e: Exception) {
+            logE("Failed to initialize n-gram model", e)
         }
     }
 
