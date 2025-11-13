@@ -1,74 +1,124 @@
 package tribixbite.keyboard2.prefs
 
+import android.app.AlertDialog
 import android.content.Context
 import android.content.SharedPreferences
-import android.preference.Preference
 import android.util.AttributeSet
+import android.view.View
+import android.widget.EditText
+import android.widget.TextView
 import tribixbite.keyboard2.KeyValue
 import tribixbite.keyboard2.KeyboardData
+import tribixbite.keyboard2.R
 
 /**
  * Custom Extra Keys Preference
- * Allows users to define custom extra keys with specific positions.
+ * Allows users to define custom extra keys by entering key names.
  *
- * TODO: Full implementation pending
- * - Key picker dialog with all available keys
- * - Position configuration (row, column, direction)
- * - Persistence to SharedPreferences
- * - Visual keyboard preview for positioning
+ * Features:
+ * - Add custom keys by name (e.g., "ctrl", "alt", "esc")
+ * - Modify existing custom keys
+ * - Remove custom keys
+ * - Keys are added with default positioning
+ * - List-based UI with add/remove buttons
  *
- * For now, this is a placeholder to prevent crashes when referenced in settings.xml
+ * Storage:
+ * - Stores list of key names as JSON array in SharedPreferences
+ * - Each key name is validated against KeyValue.getKeyByName()
+ *
+ * CRITICAL FIX (Bug #637): Now properly extends ListGroupPreference<String>
+ * instead of being a stub. Full custom key management now working.
+ *
+ * Ported from Java to Kotlin with modern improvements.
  */
-class CustomExtraKeysPreference @JvmOverloads constructor(
+class CustomExtraKeysPreference(
     context: Context,
-    attrs: AttributeSet? = null
-) : Preference(context, attrs) {
+    attrs: AttributeSet
+) : ListGroupPreference<String>(context, attrs) {
 
     companion object {
-        private const val PREF_KEY = "custom_extra_keys_data"
+        /** Preference key for storing custom extra keys */
+        const val KEY = "custom_extra_keys"
+
+        /** Serializer for string list persistence */
+        @JvmField
+        val SERIALIZER: ListGroupPreference.Serializer<String> = StringSerializer()
 
         /**
          * Get custom extra keys from preferences.
+         * Converts stored key names to KeyValue objects with default positioning.
          *
-         * TODO: Parse and return user-defined custom keys
-         * Format: JSON array of {keyName, row, col, direction}
+         * @param prefs SharedPreferences to load from
+         * @return Map of KeyValue to PreferredPos (all with DEFAULT positioning)
          */
         @JvmStatic
         fun get(prefs: SharedPreferences): Map<KeyValue, KeyboardData.PreferredPos> {
-            // TODO: Implement custom key parsing from preferences
-            // val customKeysJson = prefs.getString(PREF_KEY, "[]")
-            // return parseCustomKeys(customKeysJson)
-            return emptyMap()
-        }
+            val kvs = mutableMapOf<KeyValue, KeyboardData.PreferredPos>()
+            val keyNames = load_from_preferences(KEY, prefs, emptyList(), SERIALIZER)
 
-        /**
-         * Save custom extra keys to preferences.
-         *
-         * TODO: Serialize custom keys to JSON and save
-         */
-        @JvmStatic
-        fun save(prefs: SharedPreferences, keys: Map<KeyValue, KeyboardData.PreferredPos>) {
-            // TODO: Implement serialization
-            // val json = serializeCustomKeys(keys)
-            // prefs.edit().putString(PREF_KEY, json).apply()
+            keyNames.forEach { keyName ->
+                val keyValue = KeyValue.getKeyByName(keyName)
+                if (keyValue != null) {
+                    kvs[keyValue] = KeyboardData.PreferredPos.DEFAULT
+                }
+            }
+
+            return kvs
         }
     }
 
     init {
-        title = "Custom Extra Keys"
-        summary = "Add your own custom keys (Feature coming soon)"
-        isEnabled = false // Disable until implemented
+        key = KEY
     }
 
-    override fun onClick() {
-        // TODO: Show custom key picker dialog
-        // - Grid of all available keys
-        // - Position configuration
-        // - Preview of keyboard with selected keys
-        android.widget.Toast.makeText(
-            context,
-            "Custom extra keys feature is under development",
-            android.widget.Toast.LENGTH_SHORT
-        ).show()
+    // ====== ListGroupPreference Abstract Methods ======
+
+    /**
+     * Required by ListGroupPreference: Format label for list item.
+     * For custom keys, we just display the key name.
+     */
+    override fun label_of_value(value: String, i: Int): String {
+        return value
+    }
+
+    /**
+     * Required by ListGroupPreference: Show selection dialog.
+     * Shows an EditText dialog for entering/editing custom key names.
+     *
+     * @param callback Callback to invoke with selected value
+     * @param old_value Current value if modifying, null if adding new
+     */
+    override fun select(callback: SelectionCallback<String>, old_value: String?) {
+        // Inflate dialog layout with EditText
+        val content = View.inflate(context, R.layout.dialog_edit_text, null)
+        val textView = content.findViewById<TextView>(R.id.text)
+
+        // Set initial text if modifying existing key
+        if (old_value != null) {
+            textView.text = old_value
+        }
+
+        // Show dialog
+        AlertDialog.Builder(context)
+            .setView(content)
+            .setPositiveButton(android.R.string.ok) { dialog, _ ->
+                val input = (dialog as AlertDialog).findViewById<EditText>(R.id.text)
+                val keyName = input?.text?.toString() ?: ""
+
+                // Only add non-empty key names
+                if (keyName.isNotEmpty()) {
+                    callback.select(keyName)
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * Required by ListGroupPreference: Get serializer.
+     * Uses built-in StringSerializer for simple string list persistence.
+     */
+    override fun get_serializer(): ListGroupPreference.Serializer<String> {
+        return SERIALIZER
     }
 }
