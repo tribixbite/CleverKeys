@@ -246,7 +246,7 @@ abstract class ListGroupPreference<E>(
     /**
      * "Add" button shown at the end of the list
      */
-    inner class AddButton(ctx: Context) : Preference(ctx) {
+    open inner class AddButton(ctx: Context) : Preference(ctx) {
 
         init {
             isPersistent = false

@@ -2,22 +2,15 @@ package tribixbite.keyboard2.prefs
 
 import android.app.AlertDialog
 import android.content.Context
-import android.content.DialogInterface
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.content.res.TypedArray
-import android.preference.DialogPreference
 import android.util.AttributeSet
 import android.view.View
 import android.widget.ArrayAdapter
-import kotlinx.coroutines.*
 import org.json.JSONException
 import org.json.JSONObject
 import tribixbite.keyboard2.*
-import tribixbite.keyboard2.KeyboardData
-import tribixbite.keyboard2.CustomLayoutEditDialog
-import tribixbite.keyboard2.Utils
-import java.util.*
 
 /**
  * Layout selection preference for CleverKeys.
@@ -29,16 +22,19 @@ import java.util.*
  * - Custom layouts (user-defined XML layouts)
  * - Dynamic layout validation and parsing
  * - Reactive preference updates
+ * - Add/remove/modify layouts through ListGroupPreference infrastructure
+ *
+ * CRITICAL FIX (Bug #642): Now properly extends ListGroupPreference<Layout>
+ * instead of DialogPreference. This enables full layout management UI.
+ *
+ * Ported from Java to Kotlin with modern improvements.
  */
-class LayoutsPreference @JvmOverloads constructor(
-    private val context: Context,
-    attrs: AttributeSet? = null
-) : DialogPreference(context, attrs) {
+class LayoutsPreference(
+    context: Context,
+    attrs: AttributeSet
+) : ListGroupPreference<LayoutsPreference.Layout>(context, attrs) {
 
-    // Layout values and related properties
-    private var values: MutableList<Layout> = mutableListOf()
-
-    // Layout display names loaded from resources (NOT computed from values to avoid infinite recursion)
+    // Layout display names loaded from resources
     private lateinit var layoutDisplayNames: Array<String>
 
     companion object {
@@ -112,57 +108,14 @@ class LayoutsPreference @JvmOverloads constructor(
         fun loadFromPreferences(resources: Resources, prefs: SharedPreferences): List<KeyboardData?> {
             val layouts = mutableListOf<KeyboardData?>()
 
-            // Try to load saved layout preferences
-            val layoutCount = prefs.getInt(KEY + "_count", 0)
+            // Load layout list using ListGroupPreference's load_from_preferences
+            val layoutItems = load_from_preferences(KEY, prefs, DEFAULT, SERIALIZER)
 
-            if (layoutCount > 0) {
-                // Load saved layouts from preferences
-                for (i in 0 until layoutCount) {
-                    val layoutName = prefs.getString(KEY + "_" + i, null)
-                    if (layoutName != null) {
-                        val layout = layoutOfString(resources, layoutName)
-                        layouts.add(layout)
-                    }
-                }
-            }
-
-            // If no saved layouts, load default QWERTY layout
-            if (layouts.isEmpty()) {
-                // Try to load latn_qwerty_us as default
-                android.util.Log.d("LayoutsPreference", "No saved layouts, loading default QWERTY")
-
-                // Try multiple package name variations (debug, release, etc.)
-                val packageNames = listOf(
-                    "tribixbite.keyboard2.debug",  // Debug build
-                    "tribixbite.keyboard2",        // Release build
-                    null                           // Let Android search all packages
-                )
-
-                var qwertyId = 0
-                var usedPackage: String? = null
-
-                for (packageName in packageNames) {
-                    qwertyId = resources.getIdentifier("latn_qwerty_us", "xml", packageName)
-                    if (qwertyId != 0) {
-                        usedPackage = packageName ?: "default"
-                        android.util.Log.d("LayoutsPreference", "✅ Found resource with package: $usedPackage, ID: $qwertyId (0x${qwertyId.toString(16)})")
-                        break
-                    }
-                }
-
-                if (qwertyId != 0) {
-                    try {
-                        val qwertyLayout = KeyboardData.load(resources, qwertyId)
-                        layouts.add(qwertyLayout)
-                        android.util.Log.d("LayoutsPreference", "✅ Loaded QWERTY layout: ${qwertyLayout?.name}")
-                    } catch (e: Exception) {
-                        android.util.Log.e("LayoutsPreference", "Failed to load QWERTY layout", e)
-                        layouts.add(null)
-                    }
-                } else {
-                    android.util.Log.e("LayoutsPreference", "❌ Resource ID not found for latn_qwerty_us in any package")
-                    // Fallback: add null for system layout
-                    layouts.add(null)
+            for (layout in layoutItems) {
+                when (layout) {
+                    is NamedLayout -> layouts.add(layoutOfString(resources, layout.name))
+                    is CustomLayout -> layouts.add(layout.parsed)
+                    else -> layouts.add(null) // SystemLayout
                 }
             }
 
@@ -174,8 +127,7 @@ class LayoutsPreference @JvmOverloads constructor(
          */
         @JvmStatic
         fun saveToPreferences(editor: SharedPreferences.Editor, layouts: List<Layout>) {
-            // Simplified implementation - just save layout count for now
-            editor.putInt(KEY + "_count", layouts.size)
+            save_to_preferences(KEY, editor, layouts, SERIALIZER)
         }
 
         /**
@@ -197,11 +149,10 @@ class LayoutsPreference @JvmOverloads constructor(
         }
     }
 
-
     init {
         key = KEY
 
-        // Load layout display names from resources (Bug #93 fix)
+        // Load layout display names from resources
         try {
             val displayNamesId = context.resources.getIdentifier("pref_layout_entries", "array", null)
             layoutDisplayNames = if (displayNamesId != 0) {
@@ -219,11 +170,11 @@ class LayoutsPreference @JvmOverloads constructor(
     override fun onSetInitialValue(restoreValue: Boolean, defaultValue: Any?) {
         super.onSetInitialValue(restoreValue, defaultValue)
 
-        // Initialize with default values if empty (Bug #98 fix)
-        if (values.isEmpty()) {
-            values.addAll(DEFAULT)
-        }
+        // Initialize with default values if empty (from ListGroupPreference)
+        // Note: ListGroupPreference handles loading from SharedPreferences via getPersistedString()
     }
+
+    // ====== ListGroupPreference Abstract Methods ======
 
     /**
      * Get display label for a layout entry.
@@ -233,7 +184,7 @@ class LayoutsPreference @JvmOverloads constructor(
             is NamedLayout -> {
                 val layoutNames = getLayoutNames(context.resources)
                 val valueIndex = layoutNames.indexOf(layout.name)
-                if (valueIndex >= 0) {
+                if (valueIndex >= 0 && valueIndex < layoutDisplayNames.size) {
                     layoutDisplayNames[valueIndex]
                 } else {
                     layout.name
@@ -244,62 +195,66 @@ class LayoutsPreference @JvmOverloads constructor(
                 if (layout.parsed?.name?.isNotEmpty() == true) {
                     layout.parsed.name
                 } else {
-                    // Bug #100 fix: Use resource string instead of hardcoded
-                    val stringId = context.resources.getIdentifier("pref_layout_e_custom", "string", null)
-                    if (stringId != 0) {
-                        context.getString(stringId)
-                    } else {
-                        "Custom Layout" // Fallback
-                    }
+                    context.getString(R.string.pref_layout_e_custom)
                 }
             }
             is SystemLayout -> {
-                // Bug #100 fix: Use resource string instead of hardcoded
-                val stringId = context.resources.getIdentifier("pref_layout_e_system", "string", null)
-                if (stringId != 0) {
-                    context.getString(stringId)
-                } else {
-                    "System Layout" // Fallback
-                }
+                context.getString(R.string.pref_layout_e_system)
             }
             else -> {
-                val stringId = context.resources.getIdentifier("pref_layout_e_unknown", "string", null)
-                if (stringId != 0) {
-                    context.getString(stringId)
-                } else {
-                    "Unknown Layout" // Fallback
-                }
+                "Unknown Layout"
             }
         }
     }
 
-    fun labelOfValue(value: Layout, index: Int): String {
-        return "Layout ${index + 1}: ${labelOfLayout(value)}"
+    /**
+     * Required by ListGroupPreference: Format label for list item
+     */
+    override fun label_of_value(value: Layout, i: Int): String {
+        return context.getString(R.string.pref_layouts_item, i + 1, labelOfLayout(value))
     }
-
-    private fun onAttachAddButton(prevButton: LayoutsAddButton?): LayoutsAddButton {
-        return prevButton ?: LayoutsAddButton(context)
-    }
-
-    fun shouldAllowRemoveItem(value: Layout): Boolean {
-        // Allow removal if more than one layout exists and it's not a custom layout
-        return values.size > 1 && value !is CustomLayout
-    }
-
-    fun getSerializer(): Serializer = SERIALIZER
 
     /**
-     * Selection callback interface for layout dialogs.
+     * Required by ListGroupPreference: Create add button
      */
-    interface SelectionCallback {
-        fun select(layout: Layout?)
-        fun allowRemove(): Boolean = false
+    override fun on_attach_add_button(prev_btn: AddButton?): AddButton {
+        return prev_btn ?: LayoutsAddButton()
     }
+
+    /**
+     * Required by ListGroupPreference: Determine if item can be removed
+     */
+    override fun should_allow_remove_item(value: Layout): Boolean {
+        // Don't allow removal of custom layouts (they have "Remove" button in their dialog)
+        // Allow removal of other layouts if more than one layout exists
+        return value !is CustomLayout
+    }
+
+    /**
+     * Required by ListGroupPreference: Get serializer
+     */
+    override fun get_serializer(): ListGroupPreference.Serializer<Layout> = SERIALIZER
+
+    /**
+     * Required by ListGroupPreference: Show selection dialog
+     * Called when adding new layout or modifying existing one
+     */
+    override fun select(callback: SelectionCallback<Layout>, old_value: Layout?) {
+        if (old_value is CustomLayout) {
+            // Custom layouts get special edit dialog
+            selectCustom(callback, old_value.xml)
+        } else {
+            // All other layouts use standard selection dialog
+            selectDialog(callback)
+        }
+    }
+
+    // ====== Helper Methods ======
 
     /**
      * Show layout selection dialog.
      */
-    private fun selectDialog(callback: SelectionCallback) {
+    private fun selectDialog(callback: SelectionCallback<Layout>) {
         val layoutsAdapter = ArrayAdapter(
             context,
             android.R.layout.simple_list_item_1,
@@ -307,7 +262,6 @@ class LayoutsPreference @JvmOverloads constructor(
         )
 
         AlertDialog.Builder(context)
-            // Use simple dialog without custom view for now
             .setAdapter(layoutsAdapter) { _, which ->
                 val layoutName = getLayoutNames(context.resources)[which]
                 when (layoutName) {
@@ -324,8 +278,8 @@ class LayoutsPreference @JvmOverloads constructor(
      * @param callback Selection callback
      * @param initialText Initial XML text for the layout
      */
-    private fun selectCustom(callback: SelectionCallback, initialText: String) {
-        val allowRemove = callback.allowRemove() && values.size > 1
+    private fun selectCustom(callback: SelectionCallback<Layout>, initialText: String) {
+        val allowRemove = callback.allow_remove()
 
         CustomLayoutEditDialog.show(
             context,
@@ -353,23 +307,11 @@ class LayoutsPreference @JvmOverloads constructor(
     }
 
     /**
-     * Handle layout selection with special handling for custom layouts.
-     */
-    fun select(callback: SelectionCallback, prevLayout: Layout?) {
-        if (prevLayout is CustomLayout) {
-            selectCustom(callback, prevLayout.xml)
-        } else {
-            selectDialog(callback)
-        }
-    }
-
-    /**
      * Read initial custom layout text from resources.
      * Uses QWERTY US layout as default with documentation.
      */
     private fun readInitialCustomLayout(): String {
         return try {
-            // Bug #103 fix: Load latn_qwerty_us as template
             val qwertyId = context.resources.getIdentifier("latn_qwerty_us", "raw", null)
             if (qwertyId != 0) {
                 context.resources.openRawResource(qwertyId).use { inputStream ->
@@ -386,11 +328,13 @@ class LayoutsPreference @JvmOverloads constructor(
     /**
      * Custom add button for layouts preference.
      */
-    private class LayoutsAddButton(context: Context) : View(context) {
+    private inner class LayoutsAddButton() : AddButton(context) {
         init {
-            // Simple button implementation
+            layoutResource = R.layout.pref_layouts_add_btn
         }
     }
+
+    // ====== Layout Types ======
 
     /**
      * Base interface for all layout types.
@@ -434,10 +378,10 @@ class LayoutsPreference @JvmOverloads constructor(
      * Serializer for saving/loading layout preferences.
      * Named layouts are serialized as strings, custom layouts as JSON objects.
      */
-    class Serializer {
+    class Serializer : ListGroupPreference.Serializer<Layout> {
 
         @Throws(JSONException::class)
-        fun loadItem(obj: Any): Layout {
+        override fun load_item(obj: Any): Layout {
             return when (obj) {
                 is String -> {
                     when (obj) {
@@ -457,12 +401,12 @@ class LayoutsPreference @JvmOverloads constructor(
         }
 
         @Throws(JSONException::class)
-        fun saveItem(layout: Layout): Any {
-            return when (layout) {
-                is NamedLayout -> layout.name
+        override fun save_item(item: Layout): Any {
+            return when (item) {
+                is NamedLayout -> item.name
                 is CustomLayout -> JSONObject()
                     .put("kind", "custom")
-                    .put("xml", layout.xml)
+                    .put("xml", item.xml)
                 is SystemLayout -> JSONObject().put("kind", "system")
                 else -> JSONObject().put("kind", "system") // Default fallback
             }
