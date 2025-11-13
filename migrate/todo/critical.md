@@ -189,9 +189,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 #### Core Systems Missing
 
 **Multi-Language Support (Files 142-149)**
-- [ ] **Bug #344**: LanguageManager.java missing (File 142)
-  - Impact: NO language switching, only English supported
-  - File: LanguageManager.java (300-400 lines) → COMPLETELY MISSING
+- [x] **Bug #344**: LanguageManager FIXED ✅ **2025-11-13**
+  - Impact: Complete multi-language management system now functional
+  - File: LanguageManager.kt (780 lines) → ✅ FULLY IMPLEMENTED
+  - Features: Language switching (next/previous/set), enabled languages management, 20 major languages (en/es/fr/de/it/pt/ru/zh/ja/ko/ar/he/hi/th/el/tr/pl/nl/sv/da), script detection (LATIN/CYRILLIC/ARABIC/HEBREW/DEVANAGARI/CHINESE/JAPANESE/KOREAN/THAI/GREEK), RTL language support, recent languages tracking (max 5), auto-switch mode, follow system locale, language preferences persistence, StateFlow reactive updates
+  - Integration: Integrated in CleverKeysService (initialized early after configuration)
 
 - [x] **Bug #345**: DictionaryLoader/DictionaryManager FIXED ✅ **2025-10-28**
   - Impact: Dictionary management now functional with multi-language support and user dictionary

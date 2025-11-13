@@ -97,6 +97,7 @@ class CleverKeysService : InputMethodService(),
     private var continuousInputManager: ContinuousInputManager? = null  // Bug #357 fix
     private var handwritingRecognizer: HandwritingRecognizer? = null  // Bug #352 fix
     private var voiceTypingEngine: VoiceTypingEngine? = null  // Bug #353 fix
+    private var languageManager: LanguageManager? = null  // Bug #344 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -109,6 +110,7 @@ class CleverKeysService : InputMethodService(),
         try {
             // Initialize components in dependency order
             initializeConfiguration()
+            initializeLanguageManager()  // Bug #344 fix - foundational for multi-language
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -222,6 +224,7 @@ class CleverKeysService : InputMethodService(),
             continuousInputManager?.release()  // Bug #357 - release continuous input manager resources
             handwritingRecognizer?.release()  // Bug #352 - release handwriting recognizer resources
             voiceTypingEngine?.release()  // Bug #353 - release voice typing engine resources
+            languageManager?.release()  // Bug #344 - release language manager resources
         }
         serviceScope.cancel()
     }
@@ -263,6 +266,21 @@ class CleverKeysService : InputMethodService(),
         }
         
         logD("Configuration initialized")
+    }
+
+    /**
+     * Initialize language manager for multi-language support.
+     * Bug #344 fix - Foundational component for language switching.
+     */
+    private fun initializeLanguageManager() {
+        try {
+            languageManager = LanguageManager(context = this)
+
+            logD("✅ LanguageManager initialized (Bug #344)")
+        } catch (e: Exception) {
+            logE("Failed to initialize language manager", e)
+            // Non-fatal - keyboard defaults to English
+        }
     }
 
     /**
