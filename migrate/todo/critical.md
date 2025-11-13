@@ -164,10 +164,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Features: Automatic mode detection (tap/swipe/hybrid), velocity-based classification, gesture timeout, mode preferences, seamless switching, input statistics
   - Integration: Integrated in CleverKeysService
 
-- [ ] **Bug #358**: OneHandedModeManager missing (File 156)
-  - Impact: NO one-handed mode (large phone users + accessibility issue)
-  - File: OneHandedModeManager.java (~250-300 lines) → COMPLETELY MISSING
-  - Missing: Keyboard position shift (left/right), thumb-zone optimization
+- [x] **Bug #358**: OneHandedModeManager FIXED ✅ **2025-11-13** (Duplicate of Bug #331)
+  - Impact: Complete one-handed mode system now functional
+  - File: OneHandedModeManager.kt (478 lines) → ✅ FULLY IMPLEMENTED (Bug #331)
+  - Features: Keyboard position shift (left/right/center), thumb-zone optimization, size adjustment, animation
+  - Integration: Already integrated in CleverKeysService (File 135)
 
 #### Accessibility (Files 167-177) - LEGAL REQUIREMENT
 - [x] **Bug #371**: Switch Access missing (File 169) ✅ **FIXED**
