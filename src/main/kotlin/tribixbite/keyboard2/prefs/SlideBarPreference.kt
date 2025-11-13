@@ -42,7 +42,10 @@ class SlideBarPreference(
         initialSummary = summary?.toString() ?: ""
 
         textView = TextView(context).apply {
-            setPadding(48, 40, 48, 40)
+            // Convert dp to pixels for proper scaling across screen densities
+            val paddingHorizontal = (48 * context.resources.displayMetrics.density).toInt()
+            val paddingVertical = (40 * context.resources.displayMetrics.density).toInt()
+            setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical)
         }
 
         seekBar = SeekBar(context).apply {

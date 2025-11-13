@@ -57,7 +57,10 @@ class IntSlideBarPreference(
 
         // Create text view for displaying current value
         textView = TextView(context).apply {
-            setPadding(48, 40, 48, 40)
+            // Convert dp to pixels for proper scaling across screen densities
+            val paddingHorizontal = (48 * context.resources.displayMetrics.density).toInt()
+            val paddingVertical = (40 * context.resources.displayMetrics.density).toInt()
+            setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical)
         }
 
         // Get min/max from XML attributes
