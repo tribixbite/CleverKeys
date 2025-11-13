@@ -40,15 +40,21 @@ This file tracks UI-related bugs and missing features (theming, suggestion bar, 
 ## 🟡 LOW PRIORITY BUGS (From TODO_MEDIUM_LOW.md)
 
 ### API Consistency (2 bugs)
-- [ ] **Bug #129**: Different method name - clear_expired_and_get_history
+- [x] **Bug #129**: Different method name - clear_expired_and_get_history ❌ FALSE (2025-11-13)
   - File: ClipboardHistoryService.kt (File 25)
-  - Impact: API naming inconsistency
-  - Severity: LOW
+  - Status: NOT A BUG - Kotlin uses camelCase naming convention (clearExpiredAndGetHistory)
+  - Java: `clear_expired_and_get_history()` (snake_case)
+  - Kotlin: `clearExpiredAndGetHistory()` (camelCase - CORRECT Kotlin convention)
+  - Impact: None - follows language idioms
+  - Severity: N/A (false report)
 
-- [ ] **Bug #130**: Interface moved from inner to top-level
+- [x] **Bug #130**: Interface moved from inner to top-level ❌ FALSE (2025-11-13)
   - File: ClipboardHistoryService.kt (File 25)
-  - Impact: Minor architectural difference
-  - Severity: LOW
+  - Status: NOT A BUG - Top-level interface is Kotlin best practice
+  - Java: `public interface ClipboardPasteCallback` (inner interface)
+  - Kotlin: `interface ClipboardPasteCallback` (top-level - BETTER design)
+  - Impact: None - improves reusability and separation of concerns
+  - Severity: N/A (intentional improvement)
 
 ---
 
