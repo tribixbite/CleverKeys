@@ -104,6 +104,7 @@ class CleverKeysService : InputMethodService(),
     private var thumbModeOptimizer: ThumbModeOptimizer? = null  // Bug #359 fix
     private var multiLanguageDictionary: MultiLanguageDictionaryManager? = null  // Bug #277 fix
     private var keyboardSwipeRecognizer: KeyboardSwipeRecognizer? = null  // Bug #256 fix
+    private var bigramModel: BigramModel? = null  // Bug #255 fix - contextual word prediction
 
     // Configuration and state
     private var config: Config? = null
@@ -123,6 +124,7 @@ class CleverKeysService : InputMethodService(),
             initializeThumbModeOptimizer()  // Bug #359 fix - ergonomic thumb typing
             initializeMultiLanguageDictionary()  // Bug #277 fix - multi-language dictionaries
             initializeKeyboardSwipeRecognizer()  // Bug #256 fix - Bayesian swipe recognition
+            initializeBigramModel()  // Bug #255 fix - contextual word prediction
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -490,6 +492,59 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize keyboard swipe recognizer", e)
             // Non-fatal - keyboard works with fallback recognition
+        }
+    }
+
+    /**
+     * Initialize bigram model for contextual word prediction.
+     *
+     * Implements Bug #255 fix - Word-level bigram model system.
+     *
+     * Provides contextual word prediction using bigram probabilities:
+     * - P(word | previous_word) for context-aware predictions
+     * - 4-language support (en, es, fr, de) with language-specific models
+     * - Linear interpolation smoothing (λ=0.95) between bigram/unigram
+     * - Context multiplier (0.1-10.0x) for boosting/penalizing predictions
+     * - User adaptation via addBigram() for learning new patterns
+     * - Singleton pattern for global access
+     *
+     * Features:
+     * - Language-specific bigram probabilities (e.g., "the|end", "a|lot")
+     * - Language-specific unigram fallback probabilities
+     * - Automatic language switching with setLanguage()
+     * - File loading for comprehensive bigram data from assets
+     * - User learning via addBigram() for personalization
+     * - Statistics tracking (word count, language coverage)
+     *
+     * Integration:
+     * - Will coordinate with LanguageManager for language switching
+     * - Can load additional bigram data from assets/bigrams/
+     * - Provides scoring for KeyboardSwipeRecognizer word candidates
+     * - Enhances MultiLanguageDictionaryManager predictions
+     *
+     * Note: BigramModel is a singleton - getInstance() returns shared instance.
+     * No cleanup needed in onDestroy() as singleton persists across lifecycle.
+     */
+    private fun initializeBigramModel() {
+        try {
+            // Get singleton instance (creates if first time)
+            bigramModel = BigramModel.getInstance(context = this)
+
+            // Set initial language from LanguageManager if available
+            val currentLang = languageManager?.getCurrentLanguage()?.code ?: "en"
+            bigramModel?.setLanguage(currentLang)
+
+            // Log statistics
+            val stats = bigramModel?.getStatistics() ?: "N/A"
+            logD("BigramModel initialized: $stats")
+
+            // TODO: Load additional bigram data from assets if available
+            // bigramModel?.loadFromFile(this, "bigrams_en.txt")
+
+            logD("✅ BigramModel initialized (Bug #255)")
+        } catch (e: Exception) {
+            logE("Failed to initialize bigram model", e)
+            // Non-fatal - predictions work without contextual scoring
         }
     }
 
