@@ -78,9 +78,14 @@ class PredictionCache(
     private val cache = mutableListOf<CacheEntry>()
     private val cacheLock = Any()
 
+    // Cache metrics (Bug #186 fix)
+    private var hitCount = 0L
+    private var missCount = 0L
+
     /**
      * Get cached prediction if similar gesture exists
      * Bug #184 fix: Thread-safe access with synchronization
+     * Bug #186 fix: Track hit/miss metrics
      */
     fun get(coordinates: List<PointF>): PredictionResult? {
         val queryKey = CacheKey.fromCoordinates(coordinates) ?: return null
@@ -92,10 +97,12 @@ class PredictionCache(
             if (entry != null) {
                 // Update access time (LRU)
                 entry.lastAccessTime = System.currentTimeMillis()
-                logD("Cache hit! Returning cached prediction")
+                hitCount++
+                logD("Cache hit! Returning cached prediction (hit rate: ${getHitRate()}%)")
                 return entry.result
             }
 
+            missCount++
             return null
         }
     }
@@ -136,21 +143,51 @@ class PredictionCache(
     }
 
     /**
+     * Reset cache metrics
+     * Bug #186 fix: Allow resetting hit/miss counters
+     */
+    fun resetMetrics() {
+        synchronized(cacheLock) {
+            hitCount = 0L
+            missCount = 0L
+            logD("Cache metrics reset")
+        }
+    }
+
+    /**
      * Get current cache statistics
      * Bug #184 fix: Thread-safe access with synchronization
+     * Bug #186 fix: Include hit/miss metrics
      */
     fun getStats(): CacheStats {
         synchronized(cacheLock) {
             return CacheStats(
                 size = cache.size,
-                maxSize = maxSize
+                maxSize = maxSize,
+                hits = hitCount,
+                misses = missCount,
+                totalRequests = hitCount + missCount,
+                hitRate = getHitRate()
             )
         }
     }
 
+    /**
+     * Calculate hit rate percentage
+     * Bug #186 fix: Helper for hit rate calculation
+     */
+    private fun getHitRate(): Double {
+        val total = hitCount + missCount
+        return if (total > 0) (hitCount.toDouble() / total.toDouble()) * 100.0 else 0.0
+    }
+
     data class CacheStats(
         val size: Int,
-        val maxSize: Int
+        val maxSize: Int,
+        val hits: Long,
+        val misses: Long,
+        val totalRequests: Long,
+        val hitRate: Double
     )
 
     companion object {
