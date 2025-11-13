@@ -76,6 +76,7 @@ class CleverKeysService : InputMethodService(),
     private var splitKeyboardManager: SplitKeyboardManager? = null
     private var darkModeManager: DarkModeManager? = null
     private var adaptiveLayoutManager: AdaptiveLayoutManager? = null
+    private var typingStatisticsCollector: TypingStatisticsCollector? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -109,6 +110,7 @@ class CleverKeysService : InputMethodService(),
             initializeSplitKeyboardManager()  // Bug #333 fix
             initializeDarkModeManager()  // Bug #334 fix
             initializeAdaptiveLayoutManager()  // Bug #335 fix
+            initializeTypingStatisticsCollector()  // Bug #336 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -159,6 +161,7 @@ class CleverKeysService : InputMethodService(),
             splitKeyboardManager?.release()  // Bug #333 - release split keyboard manager resources
             darkModeManager?.release()  // Bug #334 - release dark mode manager resources
             adaptiveLayoutManager?.release()  // Bug #335 - release adaptive layout manager resources
+            typingStatisticsCollector?.release()  // Bug #336 - release typing statistics collector resources
         }
         serviceScope.cancel()
     }
@@ -703,6 +706,23 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize adaptive layout manager", e)
             // Non-fatal - keyboard can work with default layout
+        }
+    }
+
+    /**
+     * Bug #336 fix: Initialize typing statistics collector
+     *
+     * Creates collector for tracking typing metrics, speed, accuracy,
+     * and usage patterns for performance insights.
+     */
+    private fun initializeTypingStatisticsCollector() {
+        try {
+            typingStatisticsCollector = TypingStatisticsCollector(context = this)
+
+            logD("✅ Typing statistics collector initialized")
+        } catch (e: Exception) {
+            logE("Failed to initialize typing statistics collector", e)
+            // Non-fatal - keyboard can work without statistics
         }
     }
 

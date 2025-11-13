@@ -220,5 +220,5 @@ All 8 clipboard bugs resolved:
 - File 137: ✅ **SplitKeyboardManager.java → SplitKeyboardManager.kt (563 lines) - ✅ FIXED (Bug #333 - 2025-11-13)**
 - File 138: ✅ **DarkModeManager.java → DarkModeManager.kt (523 lines) - ✅ FIXED (Bug #334 - 2025-11-13)**
 - File 139: ✅ **AdaptiveLayoutManager.java → AdaptiveLayoutManager.kt (600 lines) - ✅ FIXED (Bug #335 - 2025-11-13)**
-- File 140: ✅ **TypingStatisticsCollector.java - ⚠️ COMPLETELY MISSING (Bug #336 LOW)**
+- File 140: ✅ **TypingStatisticsCollector.java → TypingStatisticsCollector.kt (674 lines) - ✅ FIXED (Bug #336 - 2025-11-13)**
 - File 141: ✅ **KeyBorderRenderer.java - ⚠️ COMPLETELY MISSING (Bug #337 LOW)**
