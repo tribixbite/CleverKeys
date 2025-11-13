@@ -12,10 +12,13 @@ class PredictionCache(
 ) {
 
     private data class CacheKey(
-        val startPoint: PointF,
-        val endPoint: PointF,
+        val startX: Float,
+        val startY: Float,
+        val endX: Float,
+        val endY: Float,
         val length: Int,
-        val averagePoint: PointF
+        val avgX: Float,
+        val avgY: Float
     ) {
         companion object {
             /**
@@ -30,10 +33,13 @@ class PredictionCache(
                 val avgY = coords.map { it.y }.average().toFloat()
 
                 return CacheKey(
-                    startPoint = start,
-                    endPoint = end,
+                    startX = start.x,
+                    startY = start.y,
+                    endX = end.x,
+                    endY = end.y,
                     length = coords.size,
-                    averagePoint = PointF(avgX, avgY)
+                    avgX = avgX,
+                    avgY = avgY
                 )
             }
         }
@@ -47,18 +53,18 @@ class PredictionCache(
             if (lengthRatio < 0.8f || lengthRatio > 1.2f) return false
 
             // Check if start/end points are close
-            val startDist = distance(startPoint, other.startPoint)
-            val endDist = distance(endPoint, other.endPoint)
-            val avgDist = distance(averagePoint, other.averagePoint)
+            val startDist = distance(startX, startY, other.startX, other.startY)
+            val endDist = distance(endX, endY, other.endX, other.endY)
+            val avgDist = distance(avgX, avgY, other.avgX, other.avgY)
 
             return startDist < distanceThreshold &&
                    endDist < distanceThreshold &&
                    avgDist < distanceThreshold
         }
 
-        private fun distance(p1: PointF, p2: PointF): Float {
-            val dx = p1.x - p2.x
-            val dy = p1.y - p2.y
+        private fun distance(x1: Float, y1: Float, x2: Float, y2: Float): Float {
+            val dx = x1 - x2
+            val dy = y1 - y2
             return sqrt(dx * dx + dy * dy)
         }
     }
