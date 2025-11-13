@@ -289,7 +289,11 @@ class SwipeMLData private constructor(
     fun getRegisteredKeys(): List<String> = registeredKeys.toList()
 
     /**
-     * Normalized Trace Point
+     * Normalized trace point with time delta
+     *
+     * @property x Normalized X coordinate [0, 1]
+     * @property y Normalized Y coordinate [0, 1]
+     * @property tDeltaMs Time delta from previous point in milliseconds
      */
     data class TracePoint(
         val x: Float,

@@ -27,9 +27,10 @@ This file tracks bugs and missing features in the core keyboard logic (parsing, 
   - Impact: Code bloat only
   - Severity: LOW
 
-- [ ] **Bug #272**: TracePoint comment incorrect
+- [x] **Bug #272**: TracePoint comment incorrect ✅ FIXED (2025-11-13)
   - File: SwipeMLData.kt (File 70)
   - Impact: Documentation only
+  - Fix: Added proper KDoc with @property annotations for x, y (normalized [0,1]) and tDeltaMs (time delta from previous point)
   - Severity: LOW
 
 ---
