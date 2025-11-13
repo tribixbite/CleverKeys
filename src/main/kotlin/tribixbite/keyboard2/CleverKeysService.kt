@@ -124,6 +124,7 @@ class CleverKeysService : InputMethodService(),
     private var predictionCache: PredictionCache? = null  // LRU cache for neural predictions
     private var materialThemeManager: tribixbite.keyboard2.theme.MaterialThemeManager? = null  // Material 3 theming
     private var loopGestureDetector: LoopGestureDetector? = null  // Bug #258 fix - loop gesture detection
+    private var enhancedSwipeGestureRecognizer: EnhancedSwipeGestureRecognizer? = null  // Enhanced swipe tracking
 
     // Configuration and state
     private var config: Config? = null
@@ -164,6 +165,7 @@ class CleverKeysService : InputMethodService(),
             initializeMaterialThemeManager()  // Material 3 theming
             loadDefaultKeyboardLayout()
             initializeLoopGestureDetector()  // Bug #258 fix - loop gesture detection
+            initializeEnhancedSwipeGestureRecognizer()  // Enhanced swipe tracking
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -292,6 +294,7 @@ class CleverKeysService : InputMethodService(),
             runtimeValidator?.cleanup()  // Cleanup runtime validator
             foldStateTracker?.cleanup()  // Cleanup fold state tracker
             predictionCache?.clear()  // Clear prediction cache
+            enhancedSwipeGestureRecognizer?.clear()  // Clear swipe tracking data
             serviceScope.launch {
                 neuralSwipeTypingEngine?.cleanup()  // Bug #275 dependency - cleanup is suspend function
             }
@@ -1067,6 +1070,21 @@ class CleverKeysService : InputMethodService(),
             logD("   - Fixes words like: hello, book, coffee")
         } catch (e: Exception) {
             logE("Failed to initialize loop gesture detector", e)
+        }
+    }
+
+    private fun initializeEnhancedSwipeGestureRecognizer() {
+        try {
+            enhancedSwipeGestureRecognizer = EnhancedSwipeGestureRecognizer()
+
+            logD("✅ EnhancedSwipeGestureRecognizer initialized")
+            logD("   - Touch trajectory tracking for neural prediction")
+            logD("   - Timestamp recording for swipe velocity")
+            logD("   - SwipeInput generation for ONNX processing")
+            logD("   - Real-time point addition during swipe")
+            logD("   - 94 lines of swipe tracking logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize enhanced swipe gesture recognizer", e)
         }
     }
 
