@@ -107,6 +107,7 @@ class CleverKeysService : InputMethodService(),
     private var bigramModel: BigramModel? = null  // Bug #255 fix - contextual word prediction
     private var ngramModel: NgramModel? = null  // Bug #259 fix
     private var wordPredictor: WordPredictor? = null  // Bug #262 fix
+    private var languageDetector: LanguageDetector? = null  // Bug #257 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -129,6 +130,7 @@ class CleverKeysService : InputMethodService(),
             initializeBigramModel()  // Bug #255 fix - contextual word prediction
             initializeNgramModel()  // Bug #259 fix
             initializeWordPredictor()  // Bug #262 fix
+            initializeLanguageDetector()  // Bug #257 fix
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -580,6 +582,23 @@ class CleverKeysService : InputMethodService(),
             }
         } catch (e: Exception) {
             logE("Failed to initialize word predictor", e)
+        }
+    }
+
+    /**
+     * Initialize language detector (Bug #257 fix).
+     */
+    private fun initializeLanguageDetector() {
+        try {
+            languageDetector = LanguageDetector()
+
+            // TODO: WordPredictor expects tribixbite.keyboard2.data.LanguageDetector
+            // but we have tribixbite.keyboard2.LanguageDetector (different class)
+            // For now, detector works standalone
+
+            logD("✅ LanguageDetector initialized (Bug #257)")
+        } catch (e: Exception) {
+            logE("Failed to initialize language detector", e)
         }
     }
 
