@@ -26,10 +26,12 @@ This file tracks missing user-facing features.
 
 ## 🔴 HIGH PRIORITY BUGS (Previously Documented)
 
-### Clipboard & History (8 bugs)
-- [ ] **Bug #114**: Missing AttributeSet constructor parameter
+### Clipboard & History (7 bugs)
+- [x] **Bug #114**: Missing AttributeSet constructor parameter ✅ FIXED (2025-11-12)
   - File: ClipboardHistoryView.kt (File 24)
   - Impact: Custom view attributes broken
+  - Fix: Added AttributeSet parameter with default null to constructor
+  - Commit: 287b016c
   - Severity: HIGH
 
 - [ ] **Bug #115**: Missing adapter pattern
