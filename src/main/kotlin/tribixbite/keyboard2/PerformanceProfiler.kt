@@ -19,6 +19,7 @@ class PerformanceProfiler(private val context: Context) {
     private val performanceData = mutableListOf<PerformanceMetric>()
     private val dataLock = Any()
     private val metricsFlow = MutableSharedFlow<PerformanceMetric>()
+    private var monitoringJob: Job? = null
     
     /**
      * Performance metric data
@@ -144,11 +145,25 @@ class PerformanceProfiler(private val context: Context) {
      * Start continuous monitoring
      */
     fun startMonitoring(onMetric: (PerformanceMetric) -> Unit) {
-        scope.launch {
+        // Cancel existing monitoring if any
+        monitoringJob?.cancel()
+
+        monitoringJob = scope.launch {
             metricsFlow.collect { metric ->
                 onMetric(metric)
             }
         }
+        logD("Performance monitoring started")
+    }
+
+    /**
+     * Stop continuous monitoring
+     * Bug #180 fix: Added stopMonitoring() to cancel monitoring without cleanup
+     */
+    fun stopMonitoring() {
+        monitoringJob?.cancel()
+        monitoringJob = null
+        logD("Performance monitoring stopped")
     }
     
     /**
@@ -176,6 +191,7 @@ class PerformanceProfiler(private val context: Context) {
      * Cleanup
      */
     fun cleanup() {
+        stopMonitoring()
         scope.cancel()
     }
 
