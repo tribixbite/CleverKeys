@@ -141,6 +141,7 @@ class OptimizedTensorPool private constructor(private val ortEnvironment: OrtEnv
         // CRITICAL FIX: Only use pooled buffer if it's large enough
         val pooledBuffer = floatBufferPool.poll()
         return if (pooledBuffer != null && pooledBuffer.capacity() >= sizeBytes) {
+            pooledBuffer.clear() // Reset position/limit before reuse
             pooledBuffer
         } else {
             // Return undersized buffer to pool and create new one
@@ -153,6 +154,7 @@ class OptimizedTensorPool private constructor(private val ortEnvironment: OrtEnv
         // CRITICAL FIX: Only use pooled buffer if it's large enough
         val pooledBuffer = longBufferPool.poll()
         return if (pooledBuffer != null && pooledBuffer.capacity() >= sizeBytes) {
+            pooledBuffer.clear() // Reset position/limit before reuse
             pooledBuffer
         } else {
             // Return undersized buffer to pool and create new one
@@ -165,6 +167,7 @@ class OptimizedTensorPool private constructor(private val ortEnvironment: OrtEnv
         // CRITICAL FIX: Only use pooled buffer if it's large enough
         val pooledBuffer = booleanBufferPool.poll()
         return if (pooledBuffer != null && pooledBuffer.capacity() >= sizeBytes) {
+            pooledBuffer.clear() // Reset position/limit before reuse
             pooledBuffer
         } else {
             // Return undersized buffer to pool and create new one
