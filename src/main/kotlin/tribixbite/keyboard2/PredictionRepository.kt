@@ -69,6 +69,7 @@ class PredictionRepository(
     
     /**
      * Request prediction with callback (for Java interop)
+     * Bug #196 fix: Preserve exception type in error callback
      */
     fun requestPrediction(input: SwipeInput, callback: PredictionCallback) {
         scope.launch {
@@ -79,7 +80,10 @@ class PredictionRepository(
                 // Expected when new prediction starts
                 logD("Prediction cancelled")
             } catch (e: Exception) {
-                callback.onPredictionError(e.message ?: "Unknown error")
+                // Include exception type and message for better debugging
+                val errorMessage = "${e::class.simpleName}: ${e.message ?: "Unknown error"}"
+                logE("Prediction error: $errorMessage", e)
+                callback.onPredictionError(errorMessage)
             }
         }
     }
@@ -119,13 +123,16 @@ class PredictionRepository(
     
     /**
      * Cancel all pending predictions
+     * Bug #195 fix: Use completeExceptionally for Deferred cancellation
      */
     fun cancelPendingPredictions() {
         currentPredictionJob?.cancel()
-        
-        // Clear pending requests
+
+        // Clear pending requests with proper Deferred cancellation
         while (!predictionRequests.isEmpty) {
-            predictionRequests.tryReceive().getOrNull()?.deferred?.cancel()
+            predictionRequests.tryReceive().getOrNull()?.deferred?.completeExceptionally(
+                CancellationException("Prediction cancelled")
+            )
         }
     }
     
@@ -151,11 +158,14 @@ class PredictionRepository(
     
     /**
      * Cleanup resources
+     * Bug #195 fix: Use completeExceptionally for Deferred cancellation
      */
     fun cleanup() {
         scope.cancel()
         while (!predictionRequests.isEmpty) {
-            predictionRequests.tryReceive().getOrNull()?.deferred?.cancel()
+            predictionRequests.tryReceive().getOrNull()?.deferred?.completeExceptionally(
+                CancellationException("Repository cleanup")
+            )
         }
     }
     
