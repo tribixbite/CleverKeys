@@ -75,7 +75,16 @@ class PredictionCache(
         var lastAccessTime: Long = System.currentTimeMillis()
     )
 
-    private val cache = mutableListOf<CacheEntry>()
+    // Bug #185 fix: Use LinkedHashMap for efficient O(1) LRU eviction
+    private val cache = object : LinkedHashMap<CacheKey, CacheEntry>(
+        maxSize + 1,  // Initial capacity
+        0.75f,        // Load factor
+        true          // accessOrder = true for LRU (most recently accessed at end)
+    ) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<CacheKey, CacheEntry>?): Boolean {
+            return size > maxSize
+        }
+    }
     private val cacheLock = Any()
 
     // Cache metrics (Bug #186 fix)
@@ -85,17 +94,18 @@ class PredictionCache(
     /**
      * Get cached prediction if similar gesture exists
      * Bug #184 fix: Thread-safe access with synchronization
+     * Bug #185 fix: Efficient O(1) lookup with LinkedHashMap
      * Bug #186 fix: Track hit/miss metrics
      */
     fun get(coordinates: List<PointF>): PredictionResult? {
         val queryKey = CacheKey.fromCoordinates(coordinates) ?: return null
 
         synchronized(cacheLock) {
-            // Find similar entry in cache
-            val entry = cache.find { it.key.isSimilarTo(queryKey) }
+            // Find similar entry in cache (O(n) for similarity check - unavoidable)
+            val matchingKey = cache.keys.find { it.isSimilarTo(queryKey) }
 
-            if (entry != null) {
-                // Update access time (LRU)
+            if (matchingKey != null) {
+                val entry = cache[matchingKey]!! // Accessing triggers LRU reordering
                 entry.lastAccessTime = System.currentTimeMillis()
                 hitCount++
                 logD("Cache hit! Returning cached prediction (hit rate: ${getHitRate()}%)")
@@ -110,22 +120,20 @@ class PredictionCache(
     /**
      * Put prediction result in cache
      * Bug #184 fix: Thread-safe access with synchronization
+     * Bug #185 fix: Efficient O(1) LRU eviction with LinkedHashMap
      */
     fun put(coordinates: List<PointF>, result: PredictionResult) {
         val key = CacheKey.fromCoordinates(coordinates) ?: return
 
         synchronized(cacheLock) {
-            // Remove similar existing entry if present
-            cache.removeAll { it.key.isSimilarTo(key) }
-
-            // Add new entry
-            cache.add(CacheEntry(key, result))
-
-            // Evict oldest if cache is full (LRU)
-            if (cache.size > maxSize) {
-                val oldest = cache.minByOrNull { it.lastAccessTime }
-                oldest?.let { cache.remove(it) }
+            // Remove similar existing entry if present (O(n) for similarity check)
+            val similarKey = cache.keys.find { it.isSimilarTo(key) }
+            if (similarKey != null) {
+                cache.remove(similarKey)
             }
+
+            // Add new entry (LinkedHashMap automatically evicts oldest via removeEldestEntry)
+            cache[key] = CacheEntry(key, result)
 
             logD("Cached prediction (cache size: ${cache.size})")
         }
