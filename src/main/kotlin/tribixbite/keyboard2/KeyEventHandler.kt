@@ -35,7 +35,8 @@ class KeyEventHandler(
     private val caseConverter: CaseConverter? = null,
     private val textExpander: TextExpander? = null,
     private val cursorMovementManager: CursorMovementManager? = null,
-    private val multiTouchHandler: MultiTouchHandler? = null
+    private val multiTouchHandler: MultiTouchHandler? = null,
+    private val soundEffectManager: SoundEffectManager? = null
 ) : Config.IKeyEventHandler, ClipboardPasteCallback {
 
     companion object {
@@ -82,6 +83,9 @@ class KeyEventHandler(
         receiver.getKeyboardView()?.let { view ->
             screenReaderManager?.announceKeyPress(view, value)
         }
+
+        // Play sound effect for key press (Bug #324 fix)
+        soundEffectManager?.playSoundForKey(value)
 
         when (value) {
             is KeyValue.CharKey -> handleCharacterKey(value.char, is_swipe)

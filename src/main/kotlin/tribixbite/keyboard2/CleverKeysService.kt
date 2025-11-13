@@ -65,6 +65,7 @@ class CleverKeysService : InputMethodService(),
     private var textExpander: TextExpander? = null
     private var cursorMovementManager: CursorMovementManager? = null
     private var multiTouchHandler: MultiTouchHandler? = null
+    private var soundEffectManager: SoundEffectManager? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -87,6 +88,7 @@ class CleverKeysService : InputMethodService(),
             initializeTextExpander()       // Bug #319 fix
             initializeCursorMovementManager()  // Bug #322 fix
             initializeMultiTouchHandler()  // Bug #323 fix
+            initializeSoundEffectManager()  // Bug #324 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -126,6 +128,7 @@ class CleverKeysService : InputMethodService(),
             typingPredictionEngine?.cleanup()
             voiceGuidanceEngine?.cleanup()
             spellCheckerManager?.cleanup()
+            soundEffectManager?.release()  // Bug #324 - release audio resources
         }
         serviceScope.cancel()
     }
@@ -428,6 +431,32 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
+     * Initialize sound effect manager for keyboard audio feedback.
+     * Bug #324 - HIGH: Implement missing SoundEffectManager
+     */
+    private fun initializeSoundEffectManager() {
+        try {
+            // TODO: Get enabled state and volume from user preferences
+            val soundsEnabled = true  // Default to enabled
+            val volume = 0.5f         // Default volume (50%)
+
+            soundEffectManager = SoundEffectManager(
+                context = this,
+                enabled = soundsEnabled,
+                volumeLevel = volume
+            )
+
+            // Preload sounds for low-latency playback
+            soundEffectManager?.preloadSounds()
+
+            logD("✅ Sound effect manager initialized (enabled=$soundsEnabled, volume=$volume)")
+        } catch (e: Exception) {
+            logE("Failed to initialize sound effect manager", e)
+            // Non-fatal - keyboard can work without sound effects
+        }
+    }
+
+    /**
      * Initialize key event handler
      */
     private fun initializeKeyEventHandler() {
@@ -505,7 +534,8 @@ class CleverKeysService : InputMethodService(),
             caseConverter = caseConverter,
             textExpander = textExpander,
             cursorMovementManager = cursorMovementManager,
-            multiTouchHandler = multiTouchHandler
+            multiTouchHandler = multiTouchHandler,
+            soundEffectManager = soundEffectManager
         )
 
         // Re-initialize Config with the fully-initialized handler (Fix #51, #311)
