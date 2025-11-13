@@ -126,6 +126,7 @@ class CleverKeysService : InputMethodService(),
     private var loopGestureDetector: LoopGestureDetector? = null  // Bug #258 fix - loop gesture detection
     private var enhancedSwipeGestureRecognizer: EnhancedSwipeGestureRecognizer? = null  // Enhanced swipe tracking
     private var probabilisticKeyDetector: ProbabilisticKeyDetector? = null  // Probabilistic key detection for swipes
+    private var swipeDetector: SwipeDetector? = null  // Swipe gesture quality detection
 
     // Configuration and state
     private var config: Config? = null
@@ -168,6 +169,7 @@ class CleverKeysService : InputMethodService(),
             initializeLoopGestureDetector()  // Bug #258 fix - loop gesture detection
             initializeEnhancedSwipeGestureRecognizer()  // Enhanced swipe tracking
             initializeProbabilisticKeyDetector()  // Probabilistic key detection for swipes
+            initializeSwipeDetector()  // Swipe gesture quality detection
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -1118,6 +1120,24 @@ class CleverKeysService : InputMethodService(),
             logD("   - 332 lines of probabilistic detection logic")
         } catch (e: Exception) {
             logE("Failed to initialize probabilistic key detector", e)
+        }
+    }
+
+    private fun initializeSwipeDetector() {
+        try {
+            swipeDetector = SwipeDetector()
+
+            logD("✅ SwipeDetector initialized")
+            logD("   - Multi-factor swipe quality analysis")
+            logD("   - Path length validation (min 50px)")
+            logD("   - Duration validation (0.15-3.0 seconds)")
+            logD("   - Direction change detection")
+            logD("   - Velocity analysis (min 50px/s)")
+            logD("   - Keyboard coverage measurement")
+            logD("   - Quality levels: EXCELLENT, GOOD, FAIR, POOR")
+            logD("   - 200 lines of swipe detection logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize swipe detector", e)
         }
     }
 
