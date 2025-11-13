@@ -117,6 +117,7 @@ class CleverKeysService : InputMethodService(),
     private var longPressManager: LongPressManager? = null  // Bug #327 fix - long-press behavior
     private var backupRestoreManager: BackupRestoreManager? = null  // Configuration backup/restore with SAF
     private var settingsSyncManager: SettingsSyncManager? = null  // Bug #383 fix - settings backup/sync
+    private var clipboardSyncManager: ClipboardSyncManager? = null  // Bug #380 fix - clipboard cross-device sync
 
     // Configuration and state
     private var config: Config? = null
@@ -149,6 +150,7 @@ class CleverKeysService : InputMethodService(),
             initializeLongPressManager()  // Bug #327 fix - long-press behavior
             initializeBackupRestoreManager()  // Configuration backup/restore with SAF
             initializeSettingsSyncManager()  // Bug #383 fix - settings backup/sync
+            initializeClipboardSyncManager()  // Bug #380 fix - clipboard cross-device sync
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -273,6 +275,7 @@ class CleverKeysService : InputMethodService(),
             swipeMLTrainer?.shutdown()  // Bug #274 - release swipe ML trainer resources
             asyncPredictionHandler?.shutdown()  // Bug #275 - release async prediction handler resources
             inputConnectionManager?.cleanup()  // Release input connection manager resources
+            clipboardSyncManager?.stopAutoSync()  // Bug #380 - stop clipboard sync
             serviceScope.launch {
                 neuralSwipeTypingEngine?.cleanup()  // Bug #275 dependency - cleanup is suspend function
             }
@@ -892,6 +895,23 @@ class CleverKeysService : InputMethodService(),
             logD("   - 338 lines of sync logic")
         } catch (e: Exception) {
             logE("Failed to initialize settings sync manager", e)
+        }
+    }
+
+    private fun initializeClipboardSyncManager() {
+        try {
+            clipboardSyncManager = ClipboardSyncManager(context = this)
+
+            logD("✅ ClipboardSyncManager initialized (Bug #380)")
+            logD("   - Cross-device clipboard synchronization")
+            logD("   - AES encryption support")
+            logD("   - Max 100 items, 100KB per item")
+            logD("   - 5-minute auto-sync interval")
+            logD("   - StateFlow-based sync status tracking")
+            logD("   - Device ID generation and conflict resolution")
+            logD("   - 450 lines of sync logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize clipboard sync manager", e)
         }
     }
 
