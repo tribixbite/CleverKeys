@@ -378,7 +378,13 @@ class PooledTensorHandle(
     val tensor: OnnxTensor get() = pooledTensor.tensor
 
     /**
-     * Release tensor back to pool automatically
+     * Release tensor back to pool automatically.
+     *
+     * ⚠️ WARNING: This uses runBlocking and should NOT be called from main thread.
+     * Prefer using OptimizedTensorPool.useTensor() which handles release in suspend context.
+     *
+     * This method exists for AutoCloseable compatibility when used with try-with-resources
+     * or .use{} blocks that are already running in background threads.
      */
     override fun close() {
         kotlinx.coroutines.runBlocking {
@@ -388,7 +394,8 @@ class PooledTensorHandle(
 }
 
 /**
- * Extension for easier tensor pool usage in beam search
+ * Extension for easier tensor pool usage in beam search.
+ * Automatically releases tensor back to pool in suspend context.
  */
 suspend inline fun <T> OptimizedTensorPool.useTensor(
     shape: LongArray,
@@ -399,6 +406,7 @@ suspend inline fun <T> OptimizedTensorPool.useTensor(
     return try {
         block(handle.tensor)
     } finally {
-        handle.close()
+        // Call releaseTensor directly in suspend context instead of close()
+        releaseTensor(handle)
     }
 }
