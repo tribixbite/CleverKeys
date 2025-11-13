@@ -19,11 +19,17 @@ class PredictionRepository(
     private val coroutineContext: CoroutineContext = Dispatchers.Default + SupervisorJob()
 ) {
     
+    companion object {
+        private const val TAG = "PredictionRepository"
+        private const val MAX_PENDING_REQUESTS = 16 // Limit pending requests for backpressure
+    }
+
     private val scope = CoroutineScope(coroutineContext)
-    
-    // Channel for prediction requests with automatic backpressure handling
-    private val predictionRequests = Channel<PredictionRequest>(Channel.UNLIMITED)
-    
+
+    // Channel for prediction requests with bounded capacity for backpressure
+    // Bug #194 fix: Changed from UNLIMITED to bounded capacity to prevent memory bloat
+    private val predictionRequests = Channel<PredictionRequest>(MAX_PENDING_REQUESTS)
+
     // Current prediction job for cancellation
     private var currentPredictionJob: Job? = null
     
@@ -176,10 +182,6 @@ class PredictionRepository(
     interface PredictionCallback {
         fun onPredictionsReady(words: List<String>, scores: List<Int>)
         fun onPredictionError(error: String)
-    }
-    
-    companion object {
-        private const val TAG = "PredictionRepository"
     }
 
     private fun logD(message: String) {
