@@ -191,6 +191,16 @@ class Config private constructor(
     var auto_commit_predictions = false  // Feature flag for auto-commit
     var auto_commit_threshold = 0.8f     // Confidence threshold (0.0-1.0) for auto-commit
 
+    // Tap typing prediction configuration (WordPredictor)
+    var prediction_frequency_scale = 1000.0f  // Frequency normalization scale
+    var prediction_context_boost = 2.0f       // Context influence multiplier (higher = more context weight)
+
+    // Auto-correct configuration (WordPredictor)
+    var autocorrect_enabled = true                          // Enable auto-correct
+    var autocorrect_min_word_length = 3                     // Minimum word length for correction
+    var autocorrect_char_match_threshold = 0.67f            // Character match ratio (2/3 = 0.67)
+    var autocorrect_confidence_min_frequency = 500          // Minimum frequency to apply correction
+
     // Dynamically set properties
     var shouldOfferVoiceTyping = false
     var actionLabel: String? = null
