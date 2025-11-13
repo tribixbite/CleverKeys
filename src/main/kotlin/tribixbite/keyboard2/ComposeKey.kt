@@ -100,7 +100,7 @@ object ComposeKey {
 
                 nextHeader > 0 -> {
                     // Character final state
-                    KeyValue.CharKey(nextHeader.toChar(), nextHeader.toChar().toString(), emptySet())
+                    KeyValue.makeCharKey(nextHeader.toChar())
                 }
 
                 else -> null
@@ -216,7 +216,7 @@ object ComposeKey {
 
             header > 0 -> {
                 // Character final state
-                KeyValue.CharKey(header.toChar(), header.toChar().toString(), emptySet())
+                KeyValue.makeCharKey(header.toChar())
             }
 
             else -> null
