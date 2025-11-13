@@ -5,6 +5,7 @@ import android.util.Log
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 // Constants for pipeline processing
@@ -38,7 +39,7 @@ class PipelineParallelismManager(
 
     // Pipeline state
     private val pipelineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private var isRunning = false
+    private val isRunning = AtomicBoolean(false)
 
     /**
      * Encoder job for pipeline processing
@@ -72,11 +73,11 @@ class PipelineParallelismManager(
 
     /**
      * Start pipeline processing workers
+     * Bug #197 fix: Thread-safe isRunning flag using AtomicBoolean
      */
     fun startPipeline() {
-        if (isRunning) return
+        if (!isRunning.compareAndSet(false, true)) return
 
-        isRunning = true
         logD("🚀 Starting pipeline parallelism workers...")
 
         // Start encoder worker
@@ -339,9 +340,10 @@ class PipelineParallelismManager(
 
     /**
      * Cleanup pipeline resources
+     * Bug #197 fix: Thread-safe isRunning flag using AtomicBoolean
      */
     fun cleanup() {
-        isRunning = false
+        isRunning.set(false)
         pipelineScope.cancel()
 
         // Close channels
