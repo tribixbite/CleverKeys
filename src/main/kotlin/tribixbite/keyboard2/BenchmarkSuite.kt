@@ -518,4 +518,8 @@ class BenchmarkSuite(private val context: Context) {
     private fun logD(message: String) {
         android.util.Log.d(TAG, message)
     }
+
+    private fun logE(message: String) {
+        android.util.Log.e(TAG, message)
+    }
 }
