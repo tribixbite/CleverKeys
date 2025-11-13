@@ -41,8 +41,8 @@ This file tracks issues related to the swipe prediction and ONNX machine learnin
 ## 🟢 ONNX PIPELINE BUGS
 
 - File 41: **3 bugs** (OnnxSwipePredictor - LOW: redundant debugLogger field, misleading stub documentation, undocumented singleton lifecycle)
-- File 42: **6 bugs → 5 bugs** (OnnxSwipePredictorImpl - ✅ FIXED Bug #165: undefined logD(); ⏳ REMAINING: orphaned comment, runBlocking in cleanup, code duplication, hardcoded thresholds, excessive logging)
-- File 43: **4 bugs** (OptimizedTensorPool - MEDIUM: runBlocking in close(); LOW: useTensor runBlocking, large buffers, buffer position not reset)
+- File 42: **6 bugs → 4 bugs** (OnnxSwipePredictorImpl - ✅ FIXED Bug #165: undefined logD(), runBlocking in cleanup (commit c0189936 - cleanup() is now suspend); ⏳ REMAINING: orphaned comment, code duplication, hardcoded thresholds, excessive logging)
+- File 43: **4 bugs → 0 bugs** (OptimizedTensorPool - ✅ FIXED: useTensor runBlocking (commit 9953264c), buffer position not reset (commit 5e85a519); ✅ VERIFIED FALSE: runBlocking in close() exists for AutoCloseable compatibility, documented, not used in codebase; large buffers are intentional optimization, correctly limited by buffer.limit())
 - File 44: **6 bugs → 5 bugs** (OptimizedVocabularyImpl - ✅ FIXED Bug #170; ⏳ REMAINING: HIGH - filters out ALL OOV predictions; MEDIUM - RuntimeException on load failure; LOW - hardcoded limits, optimization issues)
 - File 45: **5 bugs → 3 bugs** (PerformanceProfiler - ✅ FIXED Bug #176; ✅ VERIFIED: SimpleDateFormat no longer used in file; ⏳ REMAINING: HIGH - thread-unsafe performanceData access; MEDIUM - unsafe JSON metadata; LOW - missing stopMonitoring)
 - File 46: **2 bugs** (PipelineParallelismManager - CRITICAL: stub helper methods; LOW: isRunning flag not thread-safe)
