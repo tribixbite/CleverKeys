@@ -128,7 +128,7 @@ This file tracks missing user-facing features.
 - File 26: **0 bugs** (ClipboardDatabase - ✅ EXEMPLARY: Result<T>, mutex, backup migration, 10 enhancements)
 - File 27: **1 bug → 0 bugs** (ClipboardHistoryCheckBox - ✅ FIXED: GlobalScope leak → view-scoped coroutine)
 - File 28: **2 bugs → 0 bugs** (CustomLayoutEditDialog - ✅ FIXED: hardcoded strings, 9 MAJOR enhancements)
-- File 35: **3 bugs → 2 bugs** (MigrationTool - ✅ FIXED: missing log function implementations; ⏳ REMAINING: unused coroutine scope, SimpleDateFormat without Locale)
+- File 35: **3 bugs → 1 bug** (MigrationTool - ✅ FIXED: missing log function implementations; ✅ VERIFIED: SimpleDateFormat no longer used in file; ⏳ REMAINING: unused coroutine scope)
 - File 36: **3 bugs → 2 bugs** (LauncherActivity - ✅ FIXED: unsafe cast in launch_imepicker; ⏳ REMAINING: unnecessary coroutine usage, hardcoded pixel padding)
 - File 37: **1 low-priority issue** (LayoutModifier - ⚠️ SAFE STUB: empty methods)
 - File 40: **1 medium bug** (NumberLayout.kt - 2 low-priority issues documented)

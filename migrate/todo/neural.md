@@ -44,7 +44,7 @@ This file tracks issues related to the swipe prediction and ONNX machine learnin
 - File 42: **6 bugs → 5 bugs** (OnnxSwipePredictorImpl - ✅ FIXED Bug #165: undefined logD(); ⏳ REMAINING: orphaned comment, runBlocking in cleanup, code duplication, hardcoded thresholds, excessive logging)
 - File 43: **4 bugs** (OptimizedTensorPool - MEDIUM: runBlocking in close(); LOW: useTensor runBlocking, large buffers, buffer position not reset)
 - File 44: **6 bugs → 5 bugs** (OptimizedVocabularyImpl - ✅ FIXED Bug #170; ⏳ REMAINING: HIGH - filters out ALL OOV predictions; MEDIUM - RuntimeException on load failure; LOW - hardcoded limits, optimization issues)
-- File 45: **5 bugs → 4 bugs** (PerformanceProfiler - ✅ FIXED Bug #176; ⏳ REMAINING: HIGH - thread-unsafe performanceData access; MEDIUM - unsafe JSON metadata; LOW - SimpleDateFormat without Locale, missing stopMonitoring)
+- File 45: **5 bugs → 3 bugs** (PerformanceProfiler - ✅ FIXED Bug #176; ✅ VERIFIED: SimpleDateFormat no longer used in file; ⏳ REMAINING: HIGH - thread-unsafe performanceData access; MEDIUM - unsafe JSON metadata; LOW - missing stopMonitoring)
 - File 46: **2 bugs** (PipelineParallelismManager - CRITICAL: stub helper methods; LOW: isRunning flag not thread-safe)
 - File 47: **6 bugs → 5 bugs** (PredictionCache - ✅ FIXED Bug #183; ⏳ REMAINING: HIGH - thread-unsafe cache access; MEDIUM - inefficient LRU eviction; LOW - mutable PointF in CacheKey, missing cache metrics, hardcoded thresholds)
 - File 48: **8 bugs → 6 bugs** (PredictionRepository - ✅ FIXED Bug #189, #190; ⏳ REMAINING: HIGH - thread-unsafe stats; MEDIUM - non-functional stats, getStats() mutates channel, unbounded channel capacity; LOW - wrong cancellation, error type loss)
