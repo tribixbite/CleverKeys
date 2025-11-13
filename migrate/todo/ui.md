@@ -4,20 +4,26 @@ This file tracks UI-related bugs and missing features (theming, suggestion bar, 
 
 ## 🟠 MEDIUM PRIORITY BUGS (From TODO_MEDIUM_LOW.md)
 
-### UI Internationalization (4 bugs)
-- [ ] **Bug #116**: Hardcoded header text
+### UI Internationalization (1 bug)
+- [x] **Bug #116**: Hardcoded header text ✅ FIXED (2025-11-12)
   - File: ClipboardPinView.kt (File 23)
   - Impact: No i18n support
+  - Fix: Replaced hardcoded strings with R.string resources
+  - Commit: a1887701
   - Severity: MEDIUM
 
-- [ ] **Bug #117**: Hardcoded button text
+- [x] **Bug #117**: Hardcoded button text ✅ FIXED (2025-11-12)
   - File: ClipboardPinView.kt (File 23)
   - Impact: No i18n support
+  - Fix: Replaced hardcoded strings with R.string resources
+  - Commit: a1887701
   - Severity: MEDIUM
 
-- [ ] **Bug #119**: Hardcoded emoji icons
+- [x] **Bug #119**: Hardcoded emoji icons ✅ FIXED (2025-11-12)
   - File: ClipboardPinView.kt (File 23)
   - Impact: No customization
+  - Fix: Replaced emoji buttons (📋, 🗑️) with text buttons using R.string resources
+  - Commit: a1887701
   - Severity: MEDIUM
 
 - [ ] **Bug #121**: Hardcoded toast message
@@ -54,7 +60,7 @@ This file tracks UI-related bugs and missing features (theming, suggestion bar, 
 - File 9: 5 critical (Keyboard2View - gesture exclusion missing, inset handling, indication rendering)
 - File 10: 5 critical (KeyboardData - keysHeight wrong, missing validations)
 - File 22: **16 CRITICAL → 9 REMAINING** (LayoutsPreference - ✅ FIXED 7; ⏳ REMAINING: wrong base class, data loss, broken serialization)
-- File 23: **5 bugs** (ClipboardPinView - programmatic layout workaround, hardcoded strings/emojis, missing Utils.show_dialog_on_ime, but 5 enhancements)
+- File 23: **2 bugs** (ClipboardPinView - ✅ FIXED Bugs #116-117-119 hardcoded strings/emojis; ⏳ REMAINING: programmatic layout workaround, missing Utils.show_dialog_on_ime, but 5 enhancements)
 - File 24: **12 CATASTROPHIC** (ClipboardHistoryView - wrong base class LinearLayout→NonScrollListView, missing AttributeSet, no adapter, broken pin/paste, missing lifecycle, wrong API calls)
 - File 29: **1 bug → 0 bugs** (EmojiGroupButtonsBar - ✅ FIXED: wrong resource ID)
 - File 30: **3 bugs → 1 bug** (EmojiGridView - ✅ FIXED: missing onDetachedFromWindow() lifecycle; ⏳ REMAINING: inconsistent API, missing accessibility)

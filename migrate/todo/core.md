@@ -4,10 +4,12 @@ This file tracks bugs and missing features in the core keyboard logic (parsing, 
 
 ## 🟠 MEDIUM PRIORITY BUGS (From TODO_MEDIUM_LOW.md)
 
-### Configuration (2 bugs)
-- [ ] **Bug #75**: CharKey flags hardcoded to emptySet()
+### Configuration (1 bug)
+- [x] **Bug #75**: CharKey flags hardcoded to emptySet() ✅ FIXED (2025-11-12)
   - File: ComposeKey.kt (File 13)
   - Impact: Some compose key flags lost
+  - Fix: Replaced direct CharKey() constructor with KeyValue.makeCharKey() factory method
+  - Commit: 876e995e
   - Severity: MEDIUM
 
 - [ ] **Bug #80**: TRIGGER_CHARACTERS expanded beyond Java
@@ -54,7 +56,7 @@ This file tracks bugs and missing features in the core keyboard logic (parsing, 
 - File 7: 8 critical (KeyEventHandler 22% missing - no macros, editing keys, sliders)
 - File 11: **11 CATASTROPHIC** (KeyModifier - modify() broken, 335 lines missing, 63% reduction)
 - File 12: **✅ 0 bugs** (Modmap - PROPERLY IMPLEMENTED, improvements over Java)
-- File 13: **2 bugs** (ComposeKey - flags hardcoded, 90 lines unused code)
+- File 13: **1 bug** (ComposeKey - ✅ FIXED Bug #75 flags hardcoded; ⏳ REMAINING: 90 lines unused code)
 - File 14: **✅ 0 bugs** (ComposeKeyData - ✅ FIXED with code generation)
 - File 15: **1 bug** (Autocapitalisation - TRIGGER_CHARACTERS expanded, questionable)
 - File 16: **1 CATASTROPHIC** (ExtraKeys - 95% missing, architectural mismatch)
