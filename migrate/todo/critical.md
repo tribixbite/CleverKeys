@@ -253,9 +253,12 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Implementation: Binary data loaded from assets/compose_data.bin at runtime (avoids 64KB method limit)
   - Status: ✅ COMPLETE - proper code generation approach
 
-- [ ] **Bug #79**: Missing 33 named constants
-  - Impact: Cannot reference compose keys by name
+- [x] **Bug #79**: Missing 33 named constants ❌ FALSE (2025-11-13)
   - File: ComposeKeyData.kt
+  - Status: NOT A BUG - All 33 named constants present (lines 74-106)
+  - Constants: ACCENT_AIGU, ACCENT_ARROWS, ACCENT_BAR, ACCENT_BOX, ACCENT_CARON, ACCENT_CEDILLE, ACCENT_CIRCONFLEXE, ACCENT_DOT_ABOVE, ACCENT_DOT_BELOW, ACCENT_DOUBLE_AIGU, ACCENT_DOUBLE_GRAVE, ACCENT_GRAVE, ACCENT_HOOK_ABOVE, ACCENT_HORN, ACCENT_MACRON, ACCENT_OGONEK, ACCENT_ORDINAL, ACCENT_RING, ACCENT_SLASH, ACCENT_SUBSCRIPT, ACCENT_SUPERSCRIPT, ACCENT_TILDE, ACCENT_TREMA, compose, fn, NUMPAD_BENGALI, NUMPAD_DEVANAGARI, NUMPAD_GUJARATI, NUMPAD_HINDU, NUMPAD_KANNADA, NUMPAD_PERSIAN, NUMPAD_TAMIL, shift
+  - Impact: None - all compose keys referenceable by name
+  - Severity: N/A (false report)
 
 - [x] **Bug #82**: DirectBootAwarePreferences FIXED ✅ **2025-11-02**
   - Impact: Settings now persisted across device restarts with device-protected storage
@@ -280,11 +283,30 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 
 ### **P1 - CRITICAL (Major Features Broken) - 3 Bugs**
 
-- [ ] **Bug #113**: Wrong base class - architectural mismatch
+- [x] **Bug #113**: Wrong base class - architectural mismatch ❌ FALSE (2025-11-13)
   - File: ClipboardHistoryView.kt
+  - Status: NOT A BUG - LinearLayout with Flow-based reactive updates is BETTER than NonScrollListView+adapter
+  - Current design (LinearLayout):
+    * LinearLayout with embedded ScrollView for history items
+    * Flow-based reactive updates via subscribeToHistoryChanges()
+    * Direct view creation/removal in updateHistoryDisplay()
+    * Built-in header and control buttons
+  - Old design would be (NonScrollListView):
+    * NonScrollListView base class
+    * Adapter pattern with notifyDataSetChanged()
+    * More boilerplate code
+  - Impact: None - current design is simpler and more modern
+  - Related: Bug #115 (missing adapter) also FALSE - Flow approach intentional
+  - Severity: N/A (false report - architectural improvement)
 
-- [ ] **Bug #131**: GlobalScope.launch memory leak ✅ FIXED
+- [x] **Bug #131**: GlobalScope.launch memory leak ✅ FIXED (previously)
   - File: ClipboardHistoryCheckBox.kt
+  - Fix: Replaced GlobalScope with view-scoped CoroutineScope + SupervisorJob
+  - Implementation: scope.cancel() called in onDetachedFromWindow()
+  - Line 15 comment: "Bug #131 fix: Replaced GlobalScope with view-scoped coroutine to prevent leaks"
+  - Line 21: private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+  - Line 74: scope.cancel() // Cleanup coroutine scope when view is detached
+  - Status: ✅ COMPLETE - proper lifecycle management
 
 - [ ] **Bug #359**: ThumbModeOptimizer missing (File 157)
   - Impact: NO thumb-zone keyboard optimization (poor ergonomics on large devices)
