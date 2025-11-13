@@ -85,6 +85,7 @@ class CleverKeysService : InputMethodService(),
     private var autoCorrection: AutoCorrection? = null
     private var spellChecker: SpellChecker? = null
     private var frequencyModel: FrequencyModel? = null
+    private var textPredictionEngine: TextPredictionEngine? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -127,6 +128,7 @@ class CleverKeysService : InputMethodService(),
             initializeAutoCorrection()  // Bug #310 fix
             initializeCustomSpellChecker()  // Bug #311 fix
             initializeFrequencyModel()  // Bug #312 fix
+            initializeTextPredictionEngine()  // Bug #313 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -186,6 +188,7 @@ class CleverKeysService : InputMethodService(),
             autoCorrection?.release()  // Bug #310 - release autocorrection resources
             spellChecker?.release()  // Bug #311 - release spell checker resources
             frequencyModel?.release()  // Bug #312 - release frequency model resources
+            textPredictionEngine?.release()  // Bug #313 - release text prediction engine resources
         }
         serviceScope.cancel()
     }
@@ -887,6 +890,28 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize frequency model", e)
             // Non-fatal - keyboard can work without frequency tracking
+        }
+    }
+
+    /**
+     * Bug #313 fix: Initialize text prediction engine
+     *
+     * Creates prediction engine that coordinates all prediction sources
+     * (frequency model, autocorrection, spell check) for ranked suggestions.
+     */
+    private fun initializeTextPredictionEngine() {
+        try {
+            textPredictionEngine = TextPredictionEngine(
+                context = this,
+                frequencyModel = frequencyModel,
+                autoCorrection = autoCorrection,
+                spellChecker = spellChecker
+            )
+
+            logD("✅ TextPredictionEngine initialized (Bug #313)")
+        } catch (e: Exception) {
+            logE("Failed to initialize text prediction engine", e)
+            // Non-fatal - keyboard can work without advanced predictions
         }
     }
 
