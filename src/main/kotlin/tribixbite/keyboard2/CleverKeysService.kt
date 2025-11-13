@@ -98,6 +98,7 @@ class CleverKeysService : InputMethodService(),
     private var handwritingRecognizer: HandwritingRecognizer? = null  // Bug #352 fix
     private var voiceTypingEngine: VoiceTypingEngine? = null  // Bug #353 fix
     private var languageManager: LanguageManager? = null  // Bug #344 fix
+    private var imeLanguageSelector: IMELanguageSelector? = null  // Bug #347 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -111,6 +112,7 @@ class CleverKeysService : InputMethodService(),
             // Initialize components in dependency order
             initializeConfiguration()
             initializeLanguageManager()  // Bug #344 fix - foundational for multi-language
+            initializeIMELanguageSelector()  // Bug #347 fix - language selection UI
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -224,6 +226,7 @@ class CleverKeysService : InputMethodService(),
             continuousInputManager?.release()  // Bug #357 - release continuous input manager resources
             handwritingRecognizer?.release()  // Bug #352 - release handwriting recognizer resources
             voiceTypingEngine?.release()  // Bug #353 - release voice typing engine resources
+            imeLanguageSelector?.release()  // Bug #347 - release IME language selector resources
             languageManager?.release()  // Bug #344 - release language manager resources
         }
         serviceScope.cancel()
@@ -280,6 +283,28 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize language manager", e)
             // Non-fatal - keyboard defaults to English
+        }
+    }
+
+    /**
+     * Initialize IME language selector for language selection UI.
+     * Bug #347 fix - Provides globe key menu and language switching UI.
+     */
+    private fun initializeIMELanguageSelector() {
+        try {
+            languageManager?.let { manager ->
+                imeLanguageSelector = IMELanguageSelector(
+                    context = this,
+                    languageManager = manager
+                )
+
+                logD("✅ IMELanguageSelector initialized (Bug #347)")
+            } ?: run {
+                logE("Cannot initialize IMELanguageSelector: LanguageManager not initialized")
+            }
+        } catch (e: Exception) {
+            logE("Failed to initialize IME language selector", e)
+            // Non-fatal - language switching can still work without UI
         }
     }
 

@@ -201,9 +201,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Features: Multi-language dictionary support (lazy loading), user dictionary (add/remove custom words), language switching with predictor caching, dictionary preloading, SharedPreferences persistence, automatic default language detection
   - Integration: Uses TypingPredictionEngine for predictions
 
-- [ ] **Bug #347**: IMELanguageSelector.java missing (File 145)
-  - Impact: NO language selection UI, no globe key menu
-  - File: IMELanguageSelector.java (200-300 lines) → COMPLETELY MISSING
+- [x] **Bug #347**: IMELanguageSelector FIXED ✅ **2025-11-13**
+  - Impact: Complete language selection UI system now functional
+  - File: IMELanguageSelector.kt (480 lines) → ✅ FULLY IMPLEMENTED
+  - Features: Language selection dialog (switch/enable-disable modes), current language indicator view (5 styles: FULL_NAME/SHORT_CODE/NATIVE_NAME/FLAG_EMOJI/COMPACT), quick language switching (next/previous), recent languages menu, language search/filter, keyboard shortcut support, multi-selection for enabling languages, flag emojis for 20 languages, customized dialog appearance, click/long-click handlers, StateFlow reactive updates
+  - Integration: Integrated in CleverKeysService (requires LanguageManager)
 
 - [ ] **Bug #349**: RTLLanguageHandler.java missing (File 147)
   - Impact: Arabic/Hebrew text BROKEN, ~429M users blocked

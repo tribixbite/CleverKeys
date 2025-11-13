@@ -38,6 +38,76 @@ import java.util.concurrent.ConcurrentHashMap
 class LanguageManager(
     private val context: Context
 ) {
+    /**
+     * Writing script type.
+     */
+    enum class Script {
+        LATIN,           // English, French, German, Spanish, etc.
+        CYRILLIC,        // Russian, Ukrainian, Bulgarian, etc.
+        ARABIC,          // Arabic, Persian, Urdu
+        HEBREW,          // Hebrew, Yiddish
+        DEVANAGARI,      // Hindi, Sanskrit, Marathi, Nepali
+        CHINESE,         // Chinese (Simplified/Traditional)
+        JAPANESE,        // Japanese (Hiragana, Katakana, Kanji)
+        KOREAN,          // Korean (Hangul)
+        THAI,            // Thai
+        GREEK,           // Greek
+        UNKNOWN          // Unknown or mixed
+    }
+
+    /**
+     * Language information.
+     */
+    data class LanguageInfo(
+        val code: String,
+        val displayName: String,
+        val nativeName: String,
+        val script: Script,
+        val isRTL: Boolean,
+        val locale: Locale
+    ) {
+        /**
+         * Get short display name (code).
+         */
+        fun getShortName(): String = code.uppercase()
+
+        /**
+         * Get full display name with native name.
+         */
+        fun getFullDisplayName(): String = "$displayName ($nativeName)"
+    }
+
+    /**
+     * Language change event.
+     */
+    data class LanguageChangeEvent(
+        val previousLanguage: LanguageInfo?,
+        val currentLanguage: LanguageInfo,
+        val trigger: ChangeTrigger
+    )
+
+    /**
+     * Trigger for language change.
+     */
+    enum class ChangeTrigger {
+        USER_ACTION,        // User manually switched
+        AUTO_DETECTION,     // Automatic detection
+        SYSTEM_LOCALE,      // Following system locale
+        APP_START,          // On app startup
+        EXTERNAL_REQUEST    // From external component
+    }
+
+    /**
+     * Language state.
+     */
+    data class LanguageState(
+        val currentLanguage: LanguageInfo,
+        val enabledLanguages: List<LanguageInfo>,
+        val recentLanguages: List<LanguageInfo>,
+        val autoSwitchEnabled: Boolean,
+        val followSystemLocale: Boolean
+    )
+
     companion object {
         private const val TAG = "LanguageManager"
 
@@ -52,76 +122,6 @@ class LanguageManager(
         // Constants
         private const val MAX_RECENT_LANGUAGES = 5
         private const val DEFAULT_LANGUAGE = "en"
-
-        /**
-         * Writing script type.
-         */
-        enum class Script {
-            LATIN,           // English, French, German, Spanish, etc.
-            CYRILLIC,        // Russian, Ukrainian, Bulgarian, etc.
-            ARABIC,          // Arabic, Persian, Urdu
-            HEBREW,          // Hebrew, Yiddish
-            DEVANAGARI,      // Hindi, Sanskrit, Marathi, Nepali
-            CHINESE,         // Chinese (Simplified/Traditional)
-            JAPANESE,        // Japanese (Hiragana, Katakana, Kanji)
-            KOREAN,          // Korean (Hangul)
-            THAI,            // Thai
-            GREEK,           // Greek
-            UNKNOWN          // Unknown or mixed
-        }
-
-        /**
-         * Language information.
-         */
-        data class LanguageInfo(
-            val code: String,
-            val displayName: String,
-            val nativeName: String,
-            val script: Script,
-            val isRTL: Boolean,
-            val locale: Locale
-        ) {
-            /**
-             * Get short display name (code).
-             */
-            fun getShortName(): String = code.uppercase()
-
-            /**
-             * Get full display name with native name.
-             */
-            fun getFullDisplayName(): String = "$displayName ($nativeName)"
-        }
-
-        /**
-         * Language change event.
-         */
-        data class LanguageChangeEvent(
-            val previousLanguage: LanguageInfo?,
-            val currentLanguage: LanguageInfo,
-            val trigger: ChangeTrigger
-        )
-
-        /**
-         * Trigger for language change.
-         */
-        enum class ChangeTrigger {
-            USER_ACTION,        // User manually switched
-            AUTO_DETECTION,     // Automatic detection
-            SYSTEM_LOCALE,      // Following system locale
-            APP_START,          // On app startup
-            EXTERNAL_REQUEST    // From external component
-        }
-
-        /**
-         * Language state.
-         */
-        data class LanguageState(
-            val currentLanguage: LanguageInfo,
-            val enabledLanguages: List<LanguageInfo>,
-            val recentLanguages: List<LanguageInfo>,
-            val autoSwitchEnabled: Boolean,
-            val followSystemLocale: Boolean
-        )
     }
 
     /**
