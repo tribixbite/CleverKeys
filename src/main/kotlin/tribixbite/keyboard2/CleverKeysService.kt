@@ -69,6 +69,7 @@ class CleverKeysService : InputMethodService(),
     private var animationManager: AnimationManager? = null
     private var keyPreviewManager: KeyPreviewManager? = null
     private var gestureTrailRenderer: GestureTrailRenderer? = null
+    private var keyRepeatHandler: KeyRepeatHandler? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -95,6 +96,7 @@ class CleverKeysService : InputMethodService(),
             initializeAnimationManager()    // Bug #325 fix
             initializeKeyPreviewManager()   // Bug #326 fix
             initializeGestureTrailRenderer()  // Bug #328 fix
+            initializeKeyRepeatHandler()    // Bug #330 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -138,6 +140,7 @@ class CleverKeysService : InputMethodService(),
             animationManager?.release()    // Bug #325 - release animation resources
             keyPreviewManager?.release()   // Bug #326 - release preview resources
             gestureTrailRenderer?.release()  // Bug #328 - release trail renderer resources
+            keyRepeatHandler?.release()    // Bug #330 - release key repeat handler resources
         }
         serviceScope.cancel()
     }
@@ -529,6 +532,30 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize gesture trail renderer", e)
             // Non-fatal - keyboard can work without gesture trails
+        }
+    }
+
+    /**
+     * Initialize key repeat handler for auto-repeat on held keys.
+     * Bug #330 - HIGH: Implement missing KeyRepeatHandler
+     */
+    private fun initializeKeyRepeatHandler() {
+        try {
+            // TODO: Get enabled state and timing from user preferences
+            val repeatEnabled = true     // Default to enabled
+            val initialDelay = 400L      // Default initial delay (400ms)
+            val repeatInterval = 50L     // Default repeat interval (50ms)
+
+            keyRepeatHandler = KeyRepeatHandler(
+                enabled = repeatEnabled,
+                initialDelay = initialDelay,
+                repeatInterval = repeatInterval
+            )
+
+            logD("✅ Key repeat handler initialized (enabled=$repeatEnabled, initialDelay=${initialDelay}ms, interval=${repeatInterval}ms)")
+        } catch (e: Exception) {
+            logE("Failed to initialize key repeat handler", e)
+            // Non-fatal - keyboard can work without key repeat
         }
     }
 
