@@ -115,6 +115,7 @@ class CleverKeysService : InputMethodService(),
     private var inputConnectionManager: InputConnectionManager? = null  // Advanced input connection management
     private var personalizationManager: PersonalizationManager? = null  // Word frequency tracking and bigram learning
     private var longPressManager: LongPressManager? = null  // Bug #327 fix - long-press behavior
+    private var backupRestoreManager: BackupRestoreManager? = null  // Configuration backup/restore with SAF
 
     // Configuration and state
     private var config: Config? = null
@@ -145,6 +146,7 @@ class CleverKeysService : InputMethodService(),
             initializeInputConnectionManager()  // Advanced input connection management
             initializePersonalizationManager()  // Word frequency tracking and bigram learning
             initializeLongPressManager()  // Bug #327 fix - long-press behavior
+            initializeBackupRestoreManager()  // Configuration backup/restore with SAF
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -829,6 +831,36 @@ class CleverKeysService : InputMethodService(),
             logD("   - ⚠️ Stub callback (full implementation pending)")
         } catch (e: Exception) {
             logE("Failed to initialize long-press manager", e)
+        }
+    }
+
+    /**
+     * Initialize backup/restore manager.
+     * Provides JSON export/import of keyboard configuration.
+     *
+     * Features:
+     * - JSON export of SharedPreferences
+     * - Metadata tracking (version, screen size, date)
+     * - Version-tolerant import with validation
+     * - Special handling for JSON-string preferences
+     * - Type detection (boolean, int, float, string, StringSet)
+     * - Screen size mismatch detection (20% threshold)
+     * - Internal preference filtering
+     * - Storage Access Framework (SAF) for Android 15+
+     * - Import result statistics (imported/skipped counts)
+     */
+    private fun initializeBackupRestoreManager() {
+        try {
+            backupRestoreManager = BackupRestoreManager(context = this)
+
+            logD("✅ BackupRestoreManager initialized")
+            logD("   - JSON export/import of configuration")
+            logD("   - Metadata: version, screen size, date")
+            logD("   - Screen size mismatch detection (20% threshold)")
+            logD("   - Storage Access Framework (SAF) support")
+            logD("   - 593 lines of backup/restore logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize backup/restore manager", e)
         }
     }
 
