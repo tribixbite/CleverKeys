@@ -169,6 +169,7 @@ class PerformanceProfiler(private val context: Context) {
     /**
      * Export performance data
      * Bug #178 fix: Thread-safe access to performanceData
+     * Bug #179 fix: Safe JSON metadata serialization with error handling
      */
     suspend fun exportData(): String = withContext(Dispatchers.Default) {
         val json = org.json.JSONArray()
@@ -180,7 +181,23 @@ class PerformanceProfiler(private val context: Context) {
                 put("operation", metric.operation)
                 put("duration_ms", metric.durationMs)
                 put("timestamp", metric.timestamp)
-                put("metadata", org.json.JSONObject(metric.metadata))
+
+                // Safe metadata serialization with error handling
+                val metadataJson = org.json.JSONObject()
+                metric.metadata.forEach { (key, value) ->
+                    try {
+                        // Handle common JSON-serializable types
+                        val jsonValue = when (value) {
+                            is String, is Number, is Boolean -> value
+                            else -> value.toString() // Non-null Any type
+                        }
+                        metadataJson.put(key, jsonValue)
+                    } catch (e: Exception) {
+                        // Skip non-serializable values instead of crashing
+                        logW("Skipping non-serializable metadata: $key = $value")
+                    }
+                }
+                put("metadata", metadataJson)
             }
             json.put(obj)
         }
@@ -197,5 +214,9 @@ class PerformanceProfiler(private val context: Context) {
 
     private fun logD(message: String) {
         android.util.Log.d(TAG, message)
+    }
+
+    private fun logW(message: String) {
+        android.util.Log.w(TAG, message)
     }
 }
