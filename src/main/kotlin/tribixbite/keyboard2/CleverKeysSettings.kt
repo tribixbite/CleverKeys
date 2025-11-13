@@ -15,19 +15,30 @@ class CleverKeysSettings : Activity() {
     companion object {
         private const val TAG = "CleverKeysSettings"
     }
-    
+
     private lateinit var neuralConfig: NeuralConfig
-    
+
+    // Bug #283 fix: Lifecycle-bound scope instead of GlobalScope
+    private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         // Initialize configuration
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
         neuralConfig = NeuralConfig(prefs)
-        
+
         setupUI()
     }
-    
+
+    /**
+     * Bug #283 fix: Cancel coroutine scope to prevent memory leak
+     */
+    override fun onDestroy() {
+        super.onDestroy()
+        activityScope.cancel()
+    }
+
     private fun setupUI() = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
         setPadding(32, 32, 32, 32)
@@ -132,7 +143,8 @@ class CleverKeysSettings : Activity() {
         addView(Button(this@CleverKeysSettings).apply {
             text = "🧪 Test Predictions"
             setOnClickListener {
-                GlobalScope.launch {
+                // Bug #283 fix: Use activity scope instead of GlobalScope
+                activityScope.launch {
                     testPredictionSystem()
                 }
             }

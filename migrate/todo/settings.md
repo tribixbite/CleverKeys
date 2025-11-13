@@ -12,4 +12,4 @@ This file tracks bugs and TODOs for the settings and preferences UI.
 - File 82: ✅ **ExtraKeysPreference.java (est. 300-400 lines) vs ExtraKeysPreference.kt (337 lines) + ExtraKeys.kt (18 lines) - ✅ EXCELLENT**
 - File 92: ✅ **SwipeAdvancedSettings.java (est. 400-500 lines) vs SwipeAdvancedSettings.kt (282 lines) - ✅ EXCELLENT**
 - File 97: ✅ **SettingsActivity.java (est. 700-900 lines) vs SettingsActivity.kt (935 lines) - ✅ EXCELLENT**
-- File 104: ✅ **SettingsActivity.java (est. 800-1000 lines) vs CleverKeysSettings.kt (257 lines) - ⚠️ DUPLICATE (SUPERSEDED BY File 97, GlobalScope leak Bug #283)**
+- File 104: **1 bug → 0 bugs** (CleverKeysSettings.kt - ✅ FIXED Bug #283: GlobalScope memory leak → activityScope with onDestroy() cleanup; ⚠️ DUPLICATE/SUPERSEDED BY File 97 SettingsActivity.kt)
