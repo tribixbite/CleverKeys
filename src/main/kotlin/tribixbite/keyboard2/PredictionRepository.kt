@@ -232,4 +232,29 @@ class PredictionRepository(
             successRate = if (total > 0) successful.toDouble() / total else 0.0
         )
     }
+
+    /**
+     * Reset performance statistics
+     * Bug #192 fix: Add resetStats() to make statistics functional
+     */
+    fun resetStats() {
+        totalPredictions.set(0)
+        totalTime.set(0L)
+        successfulPredictions.set(0)
+        logD("Prediction statistics reset")
+    }
+
+    /**
+     * Log current statistics for monitoring
+     * Bug #192 fix: Add logStats() for real-time monitoring
+     */
+    fun logStats() {
+        val stats = getStats()
+        logD("""
+            📊 Prediction Statistics:
+               Total predictions: ${stats.totalPredictions}
+               Average time: ${"%.2f".format(stats.averageTimeMs)}ms
+               Success rate: ${"%.1f".format(stats.successRate * 100)}%
+        """.trimIndent())
+    }
 }
