@@ -72,7 +72,7 @@ This file tracks UI-related bugs and missing features (theming, suggestion bar, 
 - File 23: **2 bugs** (ClipboardPinView - ✅ FIXED Bugs #116-117-119 hardcoded strings/emojis; ⏳ REMAINING: programmatic layout workaround, missing Utils.show_dialog_on_ime, but 5 enhancements)
 - File 24: **12 CATASTROPHIC** (ClipboardHistoryView - wrong base class LinearLayout→NonScrollListView, missing AttributeSet, no adapter, broken pin/paste, missing lifecycle, wrong API calls)
 - File 29: **1 bug → 0 bugs** (EmojiGroupButtonsBar - ✅ FIXED: wrong resource ID)
-- File 30: **3 bugs → 1 bug** (EmojiGridView - ✅ FIXED: missing onDetachedFromWindow() lifecycle; ⏳ REMAINING: inconsistent API, missing accessibility)
+- File 30: **3 bugs → 0 bugs** (EmojiGridView - ✅ FIXED: missing onDetachedFromWindow() lifecycle (lines 177-180), missing accessibility (line 121 adds contentDescription); ✅ VERIFIED FALSE: inconsistent API is intentional - showGroup(String) for group names vs setEmojiGroup(Int) for indices - different purposes, compatibility layer)
 - File 38: **0 bugs** (NonScrollListView - ✅ EXEMPLARY: clean utility class)
 - File 55: **8 bugs** (EmojiGridView.kt - Bug #244 wrong base class GridLayout→GridView, Bug #245 no adapter pattern, etc.)
 - File 56: **3 bugs** (EmojiGroupButtonsBar.kt - Bug #252 nullable AttributeSet, etc.)

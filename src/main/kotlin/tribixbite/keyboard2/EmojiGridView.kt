@@ -113,9 +113,12 @@ class EmojiGridView(context: Context) : GridLayout(context) {
                 height = Utils.dpToPx(EMOJI_SIZE_DP.toFloat(), resources.displayMetrics).toInt()
                 setMargins(4, 4, 4, 4)
             }
-            
+
             setBackgroundColor(Color.TRANSPARENT)
             isClickable = true
+
+            // Accessibility: Set content description for screen readers
+            contentDescription = emojiData.description
         }
         
         override fun onDraw(canvas: Canvas) {
