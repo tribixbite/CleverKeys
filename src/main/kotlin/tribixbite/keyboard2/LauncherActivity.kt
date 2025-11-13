@@ -342,16 +342,22 @@ class LauncherActivity : Activity(), Handler.Callback {
      * Fallback UI creation if layout inflation fails
      */
     private fun setupFallbackUI() {
+        // Convert dp to pixels for density-independent padding
+        val density = resources.displayMetrics.density
+        val dp32 = (32 * density).toInt()
+        val dp16 = (16 * density).toInt()
+        val dp8 = (8 * density).toInt()
+
         val layout = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(32, 32, 32, 32)
+            setPadding(dp32, dp32, dp32, dp32)
         }
 
         // Title
         val title = android.widget.TextView(this).apply {
             text = "⌨️ CleverKeys Launcher"
             textSize = 24f
-            setPadding(0, 0, 0, 16)
+            setPadding(0, 0, 0, dp16)
         }
         layout.addView(title)
 
@@ -359,14 +365,14 @@ class LauncherActivity : Activity(), Handler.Callback {
         tryhereText = android.widget.TextView(this).apply {
             text = "Type here to test keyboard..."
             textSize = 16f
-            setPadding(0, 0, 0, 8)
+            setPadding(0, 0, 0, dp8)
         }
         layout.addView(tryhereText)
 
         // Try here area (fallback)
         tryhereArea = android.widget.EditText(this).apply {
             hint = "Test typing here"
-            setPadding(16, 16, 16, 16)
+            setPadding(dp16, dp16, dp16, dp16)
         }
         layout.addView(tryhereArea)
 
