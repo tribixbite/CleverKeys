@@ -128,6 +128,7 @@ class CleverKeysService : InputMethodService(),
     private var probabilisticKeyDetector: ProbabilisticKeyDetector? = null  // Probabilistic key detection for swipes
     private var swipeDetector: SwipeDetector? = null  // Swipe gesture quality detection
     private var autoCorrectionEngine: AutoCorrectionEngine? = null  // Bug #310 fix - typo correction with edit distance
+    private var swipeGestureRecognizer: SwipeGestureRecognizer? = null  // Comprehensive swipe gesture recognition
 
     // Configuration and state
     private var config: Config? = null
@@ -172,6 +173,7 @@ class CleverKeysService : InputMethodService(),
             initializeProbabilisticKeyDetector()  // Probabilistic key detection for swipes
             initializeSwipeDetector()  // Swipe gesture quality detection
             initializeAutoCorrectionEngine()  // Bug #310 fix - typo correction
+            initializeSwipeGestureRecognizer()  // Comprehensive swipe gesture recognition
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -1160,6 +1162,34 @@ class CleverKeysService : InputMethodService(),
             logD("   - 250 lines of autocorrection logic")
         } catch (e: Exception) {
             logE("Failed to initialize autocorrection engine", e)
+        }
+    }
+
+    private fun initializeSwipeGestureRecognizer() {
+        try {
+            swipeGestureRecognizer = SwipeGestureRecognizer()
+
+            // Set keyboard dimensions if layout is loaded
+            currentLayout?.let { layout ->
+                // Estimate key dimensions from layout
+                val keyWidth = 100f  // Default, will be updated when layout fully loads
+                val keyHeight = 100f  // Default, will be updated when layout fully loads
+                swipeGestureRecognizer?.setKeyboardDimensions(keyWidth, keyHeight)
+            }
+
+            logD("✅ SwipeGestureRecognizer initialized")
+            logD("   - Distance and velocity-based swipe detection")
+            logD("   - Medium swipe (2-letter) vs full swipe typing distinction")
+            logD("   - Min swipe distance: 50px (full), 35px (medium)")
+            logD("   - Velocity threshold: 0.15 px/ms")
+            logD("   - Point filtering (min 25px between points)")
+            logD("   - Key dwell time filtering (min 30ms)")
+            logD("   - Loop detection for repeated letters")
+            logD("   - Swipe path tracking with timestamps")
+            logD("   - Touched keys registration (alphabetic only)")
+            logD("   - 366 lines of gesture recognition logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize swipe gesture recognizer", e)
         }
     }
 
