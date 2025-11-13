@@ -99,7 +99,7 @@ object ClipboardHistoryService {
 class ClipboardHistoryServiceImpl(private val context: Context) {
 
     private val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    private val database by lazy { runBlocking { ClipboardDatabase.getInstance(context) } }
+    private lateinit var database: ClipboardDatabase
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     // Event flows for reactive programming
@@ -120,18 +120,22 @@ class ClipboardHistoryServiceImpl(private val context: Context) {
         // Set up clipboard monitoring
         clipboardManager.addPrimaryClipChangedListener(SystemClipboardListener())
 
-        // Clean up expired entries on startup
+        // Initialize database asynchronously and start cleanup tasks
         scope.launch {
+            // Initialize database first
+            database = ClipboardDatabase.getInstance(context)
+
+            // Clean up expired entries on startup
             database.cleanupExpiredEntries()
             refreshEntryCache()
-        }
 
-        // Set up periodic cleanup (every 30 seconds)
-        scope.launch {
-            while (isActive) {
-                delay(30_000)
-                database.cleanupExpiredEntries()
-                refreshEntryCache()
+            // Set up periodic cleanup (every 30 seconds)
+            launch {
+                while (isActive) {
+                    delay(30_000)
+                    database.cleanupExpiredEntries()
+                    refreshEntryCache()
+                }
             }
         }
     }

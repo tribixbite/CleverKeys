@@ -32,9 +32,12 @@ This file tracks UI-related bugs and missing features (theming, suggestion bar, 
   - Severity: MEDIUM
 
 ### Performance (1 bug)
-- [ ] **Bug #128**: Blocking initialization in lazy property
+- [x] **Bug #128**: Blocking initialization in lazy property ✅ FIXED (2025-11-13)
   - File: ClipboardHistoryService.kt (File 25)
-  - Impact: Potential ANR (Application Not Responding)
+  - Impact: Prevented ANR (Application Not Responding)
+  - Fix: Changed from `lazy { runBlocking { } }` to `lateinit var` with async initialization in init block
+  - Before: `private val database by lazy { runBlocking { ClipboardDatabase.getInstance(context) } }`
+  - After: `private lateinit var database: ClipboardDatabase` + async init in scope.launch
   - Severity: MEDIUM
 
 ## 🟡 LOW PRIORITY BUGS (From TODO_MEDIUM_LOW.md)
