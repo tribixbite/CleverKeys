@@ -27,7 +27,7 @@ class EmojiGroupButtonsBar : LinearLayout {
     private var emojiGrid: EmojiGridView? = null
     private val emoji by lazy { Emoji.getInstance(context) }
 
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
+    constructor(context: Context, attrs: AttributeSet? = null) : super(context, attrs) {
         setupGroupButtons()
     }
 
