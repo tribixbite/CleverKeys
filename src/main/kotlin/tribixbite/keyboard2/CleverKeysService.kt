@@ -113,6 +113,7 @@ class CleverKeysService : InputMethodService(),
     private var neuralSwipeTypingEngine: NeuralSwipeTypingEngine? = null  // Bug #275 dependency - neural prediction engine
     private var asyncPredictionHandler: AsyncPredictionHandler? = null  // Bug #275 fix - async prediction processing
     private var inputConnectionManager: InputConnectionManager? = null  // Advanced input connection management
+    private var personalizationManager: PersonalizationManager? = null  // Word frequency tracking and bigram learning
 
     // Configuration and state
     private var config: Config? = null
@@ -141,6 +142,7 @@ class CleverKeysService : InputMethodService(),
             initializeNeuralSwipeTypingEngine()  // Bug #275 dependency - neural prediction engine
             initializeAsyncPredictionHandler()  // Bug #275 fix - async prediction processing
             initializeInputConnectionManager()  // Advanced input connection management
+            initializePersonalizationManager()  // Word frequency tracking and bigram learning
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -740,6 +742,35 @@ class CleverKeysService : InputMethodService(),
             logD("   - 378 lines of advanced input management")
         } catch (e: Exception) {
             logE("Failed to initialize input connection manager", e)
+        }
+    }
+
+    /**
+     * Initialize personalization manager.
+     * Tracks user typing patterns and learns word/bigram frequencies.
+     *
+     * Features:
+     * - Word frequency tracking (up to 1000 words)
+     * - Bigram learning for context-aware predictions (up to 500 bigrams)
+     * - Automatic word usage recording
+     * - Personalized frequency scoring (30% weight)
+     * - Next-word predictions based on previous word
+     * - Frequency decay to reduce old patterns
+     * - Persistent storage in SharedPreferences
+     * - ConcurrentHashMap for thread-safe access
+     */
+    private fun initializePersonalizationManager() {
+        try {
+            personalizationManager = PersonalizationManager(context = this)
+
+            val stats = personalizationManager?.getStats()
+            logD("✅ PersonalizationManager initialized")
+            logD("   - Words tracked: ${stats?.totalWords ?: 0}")
+            logD("   - Bigrams learned: ${stats?.totalBigrams ?: 0}")
+            logD("   - Most frequent: '${stats?.mostFrequentWord ?: "none"}'")
+            logD("   - 326 lines of personalized learning")
+        } catch (e: Exception) {
+            logE("Failed to initialize personalization manager", e)
         }
     }
 
