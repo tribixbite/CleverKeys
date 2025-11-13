@@ -118,6 +118,7 @@ class CleverKeysService : InputMethodService(),
     private var backupRestoreManager: BackupRestoreManager? = null  // Configuration backup/restore with SAF
     private var settingsSyncManager: SettingsSyncManager? = null  // Bug #383 fix - settings backup/sync
     private var clipboardSyncManager: ClipboardSyncManager? = null  // Bug #380 fix - clipboard cross-device sync
+    private var stickyKeysManager: StickyKeysManager? = null  // Bug #373 fix - accessibility (ADA/WCAG)
 
     // Configuration and state
     private var config: Config? = null
@@ -151,6 +152,7 @@ class CleverKeysService : InputMethodService(),
             initializeBackupRestoreManager()  // Configuration backup/restore with SAF
             initializeSettingsSyncManager()  // Bug #383 fix - settings backup/sync
             initializeClipboardSyncManager()  // Bug #380 fix - clipboard cross-device sync
+            initializeStickyKeysManager()  // Bug #373 fix - accessibility (ADA/WCAG)
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -276,6 +278,7 @@ class CleverKeysService : InputMethodService(),
             asyncPredictionHandler?.shutdown()  // Bug #275 - release async prediction handler resources
             inputConnectionManager?.cleanup()  // Release input connection manager resources
             clipboardSyncManager?.stopAutoSync()  // Bug #380 - stop clipboard sync
+            stickyKeysManager?.cleanup()  // Bug #373 - cleanup sticky keys manager
             serviceScope.launch {
                 neuralSwipeTypingEngine?.cleanup()  // Bug #275 dependency - cleanup is suspend function
             }
@@ -912,6 +915,38 @@ class CleverKeysService : InputMethodService(),
             logD("   - 450 lines of sync logic")
         } catch (e: Exception) {
             logE("Failed to initialize clipboard sync manager", e)
+        }
+    }
+
+    private fun initializeStickyKeysManager() {
+        try {
+            val prefs = getSharedPreferences("${packageName}_preferences", android.content.Context.MODE_PRIVATE)
+            stickyKeysManager = StickyKeysManager(context = this, prefs = prefs).apply {
+                initialize()
+
+                // Set up callbacks for modifier state changes
+                setOnModifierStateChangedListener { modifier, state ->
+                    logD("Sticky modifier state changed: $modifier → $state")
+                    // TODO: Update visual feedback in keyboard view
+                }
+
+                setOnVisualFeedbackListener { modifier, state ->
+                    logD("Visual feedback requested: $modifier ($state)")
+                    // TODO: Trigger visual feedback (highlight key, show indicator)
+                }
+            }
+
+            logD("✅ StickyKeysManager initialized (Bug #373)")
+            logD("   - Accessibility compliance (ADA/WCAG)")
+            logD("   - Modifier latching (single press - one key)")
+            logD("   - Modifier locking (double press - toggle)")
+            logD("   - 5-second timeout (configurable)")
+            logD("   - SHIFT/CTRL/ALT support")
+            logD("   - State callbacks: ${stickyKeysManager?.isStickyKeysEnabled()}")
+            logD("   - 307 lines of accessibility logic")
+            logD("   - ⚠️ Visual feedback callbacks need keyboard view integration")
+        } catch (e: Exception) {
+            logE("Failed to initialize sticky keys manager", e)
         }
     }
 
