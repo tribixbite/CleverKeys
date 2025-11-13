@@ -91,6 +91,7 @@ class CleverKeysService : InputMethodService(),
     private var grammarChecker: GrammarChecker? = null
     private var undoRedoManager: UndoRedoManager? = null
     private var selectionManager: SelectionManager? = null  // Bug #321 fix
+    private var macroExpander: MacroExpander? = null  // Bug #354 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -139,6 +140,7 @@ class CleverKeysService : InputMethodService(),
             initializeGrammarChecker()  // Bug #317 fix
             initializeUndoRedoManager()  // Bug #320 fix
             initializeSelectionManager()  // Bug #321 fix
+            initializeMacroExpander()  // Bug #354 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -204,6 +206,7 @@ class CleverKeysService : InputMethodService(),
             grammarChecker?.release()  // Bug #317 - release grammar checker resources
             undoRedoManager?.release()  // Bug #320 - release undo/redo manager resources
             selectionManager?.release()  // Bug #321 - release selection manager resources
+            macroExpander?.release()  // Bug #354 - release macro expander resources
         }
         serviceScope.cancel()
     }
@@ -1009,6 +1012,20 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize selection manager", e)
             // Non-fatal - keyboard can work without selection manager
+        }
+    }
+
+    /**
+     * Initialize macro expander (Bug #354 fix)
+     */
+    private fun initializeMacroExpander() {
+        try {
+            macroExpander = MacroExpander(context = this)
+
+            logD("✅ MacroExpander initialized (Bug #354)")
+        } catch (e: Exception) {
+            logE("Failed to initialize macro expander", e)
+            // Non-fatal - keyboard can work without macro expander
         }
     }
 

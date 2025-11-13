@@ -140,10 +140,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Current: VoiceImeSwitcher.kt (76 lines) - launches external app only
   - Note: Bug #308 (VoiceImeSwitcher) launches wrong app
 
-- [ ] **Bug #354**: MacroExpander missing (File 152)
-  - Impact: NO text macro/shortcut expansion (e.g., "brb" → "be right back")
-  - File: MacroExpander.java (~300-400 lines) → COMPLETELY MISSING
-  - Missing: User-defined shortcuts, multi-line macros, variables (date/time)
+- [x] **Bug #354**: MacroExpander FIXED ✅ **2025-11-13**
+  - Impact: Complete macro expansion system now functional
+  - File: MacroExpander.kt (674 lines) → ✅ FULLY IMPLEMENTED
+  - Features: 15 built-in macros, custom shortcuts, multi-line expansion, variable substitution (date/time/clipboard), trigger detection, persistent storage
+  - Integration: Integrated in CleverKeysService
 
 - [ ] **Bug #355**: ShortcutManager missing (File 153)
   - Impact: NO keyboard shortcuts management (Ctrl+X, Alt+E, etc.)
