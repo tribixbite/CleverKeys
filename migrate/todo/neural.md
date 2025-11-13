@@ -160,6 +160,38 @@ All critical neural/ML components are now integrated into CleverKeysService.kt:
 **Combined Total**: 6,961 lines of integrated functionality (neural + support)
 **Bug Fixes**: #256, #257, #259, #262, #263, #274, #275, #277, #327, #373, #380, #383
 
+### System Components (3 components - 2025-11-13):
+
+18. **RuntimeValidator** - 460 lines → INTEGRATED
+    - Model validation (ONNX, TensorFlow)
+    - Asset verification (dictionaries, layouts)
+    - System integration checks
+    - Memory and device capability detection
+    - Comprehensive validation reporting
+    - CleverKeysService: Line 122 property, Line 159 initialization, Line 288 cleanup
+    - Initialization method: Lines 956-970
+
+19. **FoldStateTracker** - 274 lines → INTEGRATED
+    - WindowManager API integration (Android R+)
+    - Display metrics fallback (older devices)
+    - Device-specific fold detection (Samsung, Pixel)
+    - Reactive StateFlow updates
+    - FoldStateTracker delegator (27 lines) + FoldStateTrackerImpl (247 lines)
+    - CleverKeysService: Line 123 property, Line 160 initialization, Line 289 cleanup
+    - Initialization method: Lines 975-1000
+
+20. **PredictionCache** - 208 lines → INTEGRATED
+    - LRU cache for neural prediction results
+    - Max 20 cached predictions
+    - Gesture similarity matching (50px threshold)
+    - Avoids redundant ONNX inference
+    - O(1) lookup and eviction
+    - CleverKeysService: Line 124 property, Line 161 initialization, Line 290 cleanup
+    - Initialization method: Lines 1002-1016
+
+**System Total**: 942 lines of system infrastructure
+**Grand Total**: 7,903 lines of integrated functionality (neural + support + system)
+
 ---
 
 ## 🟢 ONNX PIPELINE BUGS
