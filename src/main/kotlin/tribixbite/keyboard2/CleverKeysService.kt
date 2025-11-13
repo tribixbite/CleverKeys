@@ -71,6 +71,7 @@ class CleverKeysService : InputMethodService(),
     private var gestureTrailRenderer: GestureTrailRenderer? = null
     private var keyRepeatHandler: KeyRepeatHandler? = null
     private var layoutSwitchAnimator: LayoutSwitchAnimator? = null
+    private var oneHandedModeManager: OneHandedModeManager? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -99,6 +100,7 @@ class CleverKeysService : InputMethodService(),
             initializeGestureTrailRenderer()  // Bug #328 fix
             initializeKeyRepeatHandler()    // Bug #330 fix
             initializeLayoutSwitchAnimator()  // Bug #329 fix
+            initializeOneHandedModeManager()  // Bug #331 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -144,6 +146,7 @@ class CleverKeysService : InputMethodService(),
             gestureTrailRenderer?.release()  // Bug #328 - release trail renderer resources
             keyRepeatHandler?.release()    // Bug #330 - release key repeat handler resources
             layoutSwitchAnimator?.release()  // Bug #329 - release layout animator resources
+            oneHandedModeManager?.release()  // Bug #331 - release one-handed mode manager resources
         }
         serviceScope.cancel()
     }
@@ -584,6 +587,29 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize layout switch animator", e)
             // Non-fatal - keyboard can work without layout animations
+        }
+    }
+
+    /**
+     * Bug #331 fix: Initialize one-handed mode manager
+     *
+     * Creates manager for one-handed keyboard mode with position/size adjustments
+     * for easier single-hand typing.
+     */
+    private fun initializeOneHandedModeManager() {
+        try {
+            // TODO: Get enabled state from user preferences
+            val oneHandedEnabled = false  // Default to disabled (full-width mode)
+
+            oneHandedModeManager = OneHandedModeManager(
+                context = this,
+                enabled = oneHandedEnabled
+            )
+
+            logD("✅ One-handed mode manager initialized (enabled=$oneHandedEnabled)")
+        } catch (e: Exception) {
+            logE("Failed to initialize one-handed mode manager", e)
+            // Non-fatal - keyboard can work in full-width mode
         }
     }
 
