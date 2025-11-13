@@ -83,6 +83,7 @@ class CleverKeysService : InputMethodService(),
     private var unicodeNormalizer: UnicodeNormalizer? = null
     private var translationEngine: TranslationEngine? = null
     private var autoCorrection: AutoCorrection? = null
+    private var spellChecker: SpellChecker? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -123,6 +124,7 @@ class CleverKeysService : InputMethodService(),
             initializeUnicodeNormalizer()  // Bug #351 fix
             initializeTranslationEngine()  // Bug #348 fix
             initializeAutoCorrection()  // Bug #310 fix
+            initializeCustomSpellChecker()  // Bug #311 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -180,6 +182,7 @@ class CleverKeysService : InputMethodService(),
             unicodeNormalizer?.release()  // Bug #351 - release unicode normalizer resources
             translationEngine?.release()  // Bug #348 - release translation engine resources
             autoCorrection?.release()  // Bug #310 - release autocorrection resources
+            spellChecker?.release()  // Bug #311 - release spell checker resources
         }
         serviceScope.cancel()
     }
@@ -847,6 +850,23 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize autocorrection", e)
             // Non-fatal - keyboard can work without autocorrection
+        }
+    }
+
+    /**
+     * Bug #311 fix: Initialize custom spell checker
+     *
+     * Creates custom spell checker for real-time spelling validation
+     * with phonetic matching and custom dictionary support.
+     */
+    private fun initializeCustomSpellChecker() {
+        try {
+            spellChecker = SpellChecker(context = this)
+
+            logD("✅ Custom SpellChecker initialized (Bug #311)")
+        } catch (e: Exception) {
+            logE("Failed to initialize custom spell checker", e)
+            // Non-fatal - keyboard can work without spell checking
         }
     }
 
