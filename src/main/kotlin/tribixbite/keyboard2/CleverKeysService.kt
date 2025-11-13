@@ -84,6 +84,7 @@ class CleverKeysService : InputMethodService(),
     private var translationEngine: TranslationEngine? = null
     private var autoCorrection: AutoCorrection? = null
     private var spellChecker: SpellChecker? = null
+    private var frequencyModel: FrequencyModel? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -125,6 +126,7 @@ class CleverKeysService : InputMethodService(),
             initializeTranslationEngine()  // Bug #348 fix
             initializeAutoCorrection()  // Bug #310 fix
             initializeCustomSpellChecker()  // Bug #311 fix
+            initializeFrequencyModel()  // Bug #312 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -183,6 +185,7 @@ class CleverKeysService : InputMethodService(),
             translationEngine?.release()  // Bug #348 - release translation engine resources
             autoCorrection?.release()  // Bug #310 - release autocorrection resources
             spellChecker?.release()  // Bug #311 - release spell checker resources
+            frequencyModel?.release()  // Bug #312 - release frequency model resources
         }
         serviceScope.cancel()
     }
@@ -867,6 +870,23 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize custom spell checker", e)
             // Non-fatal - keyboard can work without spell checking
+        }
+    }
+
+    /**
+     * Bug #312 fix: Initialize frequency model
+     *
+     * Creates frequency model for n-gram tracking, word frequency ranking,
+     * and context-aware prediction with learning capabilities.
+     */
+    private fun initializeFrequencyModel() {
+        try {
+            frequencyModel = FrequencyModel(context = this)
+
+            logD("✅ FrequencyModel initialized (Bug #312)")
+        } catch (e: Exception) {
+            logE("Failed to initialize frequency model", e)
+            // Non-fatal - keyboard can work without frequency tracking
         }
     }
 
