@@ -7,11 +7,31 @@ import kotlinx.coroutines.*
  * Complete optimized vocabulary implementation
  * Kotlin version with full functionality from Java original
  */
-class OptimizedVocabularyImpl(private val context: Context) {
-    
+class OptimizedVocabularyImpl(
+    private val context: Context,
+    private val config: VocabularyConfig = VocabularyConfig()
+) {
+
     companion object {
         private const val TAG = "OptimizedVocabulary"
     }
+
+    /**
+     * Configuration for vocabulary tuning
+     * Bug #173 fix: Make hardcoded limits configurable
+     */
+    data class VocabularyConfig(
+        val maxWords: Int = 150_000,
+        val commonWordsCount: Int = 100,
+        val top5000Count: Int = 5000,
+        val frequencyBoostMultiplier: Float = 1000f,
+        val commonWordBoost: Float = 2.0f,
+        val top5000Boost: Float = 1.5f,
+        val longWordLengthThreshold: Int = 12,
+        val longWordPenalty: Float = 0.5f,
+        val swipePathLengthDivisor: Float = 50f,
+        val typingSpeedMultiplier: Float = 0.15f
+    )
     
     // Vocabulary data structures
     private val wordFrequencies = mutableMapOf<String, Float>()
@@ -54,8 +74,8 @@ class OptimizedVocabularyImpl(private val context: Context) {
                     val frequency = 1.0f / (wordCount + 1.0f)
                     wordFrequencies[word] = frequency
                     wordCount++
-                    
-                    if (wordCount >= 150_000) return@forEach // Limit for memory
+
+                    if (wordCount >= config.maxWords) return@forEach // Limit for memory
                 }
             }
         }
@@ -83,12 +103,12 @@ class OptimizedVocabularyImpl(private val context: Context) {
      */
     private fun createFastPathSets() {
         val sortedWords = wordFrequencies.toList().sortedByDescending { it.second }
-        
+
         // Top words are common
-        commonWords.addAll(sortedWords.take(100).map { it.first })
-        
-        // Top 5000 most frequent
-        top5000.addAll(sortedWords.take(5000).map { it.first })
+        commonWords.addAll(sortedWords.take(config.commonWordsCount).map { it.first })
+
+        // Top N most frequent
+        top5000.addAll(sortedWords.take(config.top5000Count).map { it.first })
     }
     
     /**
@@ -140,25 +160,25 @@ class OptimizedVocabularyImpl(private val context: Context) {
      */
     private fun calculateVocabularyScore(word: String, frequency: Float): Float {
         var score = 1.0f
-        
+
         // Frequency boost
-        score *= (frequency * 1000 + 1.0f)
-        
+        score *= (frequency * config.frequencyBoostMultiplier + 1.0f)
+
         // Common word boost
         if (word in commonWords) {
-            score *= 2.0f
+            score *= config.commonWordBoost
         }
-        
-        // Top 5000 boost
+
+        // Top N boost
         if (word in top5000) {
-            score *= 1.5f
+            score *= config.top5000Boost
         }
-        
+
         // Length penalty for very long words
-        if (word.length > 12) {
-            score *= 0.5f
+        if (word.length > config.longWordLengthThreshold) {
+            score *= config.longWordPenalty
         }
-        
+
         return score
     }
     
@@ -167,17 +187,17 @@ class OptimizedVocabularyImpl(private val context: Context) {
      */
     private fun calculateContextScore(word: String, swipeStats: SwipeStats): Float {
         var score = 1.0f
-        
+
         // Length vs swipe path correlation
-        val expectedLength = swipeStats.pathLength / 50f // Rough estimate
+        val expectedLength = swipeStats.pathLength / config.swipePathLengthDivisor
         val lengthDiff = kotlin.math.abs(word.length - expectedLength)
         score *= kotlin.math.max(0.5f, 1.0f - lengthDiff * 0.1f)
-        
+
         // Duration correlation
-        val expectedDuration = word.length * 0.15f // Rough typing speed
+        val expectedDuration = word.length * config.typingSpeedMultiplier
         val durationDiff = kotlin.math.abs(swipeStats.duration - expectedDuration)
         score *= kotlin.math.max(0.7f, 1.0f - durationDiff * 0.2f)
-        
+
         return score
     }
     
