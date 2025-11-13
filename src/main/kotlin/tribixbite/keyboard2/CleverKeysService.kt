@@ -89,6 +89,7 @@ class CleverKeysService : InputMethodService(),
     private var completionEngine: CompletionEngine? = null
     private var contextAnalyzer: ContextAnalyzer? = null
     private var grammarChecker: GrammarChecker? = null
+    private var undoRedoManager: UndoRedoManager? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -135,6 +136,7 @@ class CleverKeysService : InputMethodService(),
             initializeCompletionEngine()  // Bug #314 fix
             initializeContextAnalyzer()  // Bug #315 fix
             initializeGrammarChecker()  // Bug #317 fix
+            initializeUndoRedoManager()  // Bug #320 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -198,6 +200,7 @@ class CleverKeysService : InputMethodService(),
             completionEngine?.release()  // Bug #314 - release completion engine resources
             contextAnalyzer?.release()  // Bug #315 - release context analyzer resources
             grammarChecker?.release()  // Bug #317 - release grammar checker resources
+            undoRedoManager?.release()  // Bug #320 - release undo/redo manager resources
         }
         serviceScope.cancel()
     }
@@ -972,6 +975,23 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize grammar checker", e)
             // Non-fatal - keyboard can work without grammar checking
+        }
+    }
+
+    /**
+     * Bug #320 fix: Initialize undo/redo manager
+     *
+     * Creates undo/redo manager for multi-level text operation tracking
+     * with operation batching and cursor position restoration.
+     */
+    private fun initializeUndoRedoManager() {
+        try {
+            undoRedoManager = UndoRedoManager(context = this)
+
+            logD("✅ UndoRedoManager initialized (Bug #320)")
+        } catch (e: Exception) {
+            logE("Failed to initialize undo/redo manager", e)
+            // Non-fatal - keyboard can work without undo/redo
         }
     }
 
