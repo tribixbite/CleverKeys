@@ -19,13 +19,15 @@ import tribixbite.keyboard2.R
  * Includes voice guidance for blind users (Fix for Bug #368)
  * Includes screen reader integration for TalkBack (Fix for Bug #377)
  * Includes spell checking integration (Fix for Bug #311)
+ * Includes smart punctuation (Fix for Bug #316 & #361)
  */
 class KeyEventHandler(
     private val receiver: IReceiver,
     private val typingPredictionEngine: TypingPredictionEngine? = null,
     private val voiceGuidanceEngine: VoiceGuidanceEngine? = null,
     private val screenReaderManager: ScreenReaderManager? = null,
-    private val spellCheckHelper: SpellCheckHelper? = null
+    private val spellCheckHelper: SpellCheckHelper? = null,
+    private val smartPunctuationHandler: SmartPunctuationHandler? = null
 ) : Config.IKeyEventHandler, ClipboardPasteCallback {
 
     companion object {
@@ -110,7 +112,19 @@ class KeyEventHandler(
             char
         }
 
-        inputConnection.commitText(finalChar.toString(), 1)
+        // Apply smart punctuation processing (Fix for Bug #316 & #361)
+        val processedText = smartPunctuationHandler?.processCharacter(
+            finalChar,
+            inputConnection
+        )
+
+        if (processedText != null) {
+            // Smart punctuation modified the input
+            inputConnection.commitText(processedText, processedText.length)
+        } else {
+            // No modification, commit as-is
+            inputConnection.commitText(finalChar.toString(), 1)
+        }
 
         // Update capitalization state
         shouldCapitalizeNext = finalChar in ".!?"
@@ -265,6 +279,9 @@ class KeyEventHandler(
             deleteWord(inputConnection)
             currentWord.clear()
         } else {
+            // Smart punctuation handles paired characters (Fix for Bug #316 & #361)
+            smartPunctuationHandler?.handleBackspace(inputConnection)
+
             inputConnection.deleteSurroundingText(1, 0)
             // Remove last character from current word
             if (currentWord.isNotEmpty()) {

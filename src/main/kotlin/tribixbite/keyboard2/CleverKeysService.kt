@@ -60,6 +60,7 @@ class CleverKeysService : InputMethodService(),
     private var screenReaderManager: ScreenReaderManager? = null
     private var spellCheckerManager: SpellCheckerManager? = null
     private var spellCheckHelper: SpellCheckHelper? = null
+    private var smartPunctuationHandler: SmartPunctuationHandler? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -77,6 +78,7 @@ class CleverKeysService : InputMethodService(),
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
             initializeSpellChecker()
+            initializeSmartPunctuation()  // Bug #316 & #361 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -290,6 +292,26 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
+     * Initialize smart punctuation handler (Fix for Bug #316 & #361)
+     */
+    private fun initializeSmartPunctuation() {
+        try {
+            smartPunctuationHandler = SmartPunctuationHandler()
+            // Configure from settings
+            config?.let { cfg ->
+                smartPunctuationHandler?.setDoubleSpacePeriodEnabled(cfg.autocapitalisation)
+                smartPunctuationHandler?.setAutoPairQuotesEnabled(true)
+                smartPunctuationHandler?.setAutoPairBracketsEnabled(true)
+                smartPunctuationHandler?.setContextSpacingEnabled(true)
+            }
+            logD("✅ Smart punctuation handler initialized")
+        } catch (e: Exception) {
+            logE("Failed to initialize smart punctuation", e)
+            // Non-fatal - keyboard can work without smart punctuation
+        }
+    }
+
+    /**
      * Initialize key event handler
      */
     private fun initializeKeyEventHandler() {
@@ -362,7 +384,8 @@ class CleverKeysService : InputMethodService(),
             typingPredictionEngine = typingPredictionEngine,
             voiceGuidanceEngine = voiceGuidanceEngine,
             screenReaderManager = screenReaderManager,
-            spellCheckHelper = spellCheckHelper
+            spellCheckHelper = spellCheckHelper,
+            smartPunctuationHandler = smartPunctuationHandler
         )
 
         // Re-initialize Config with the fully-initialized handler (Fix #51, #311)

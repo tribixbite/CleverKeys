@@ -115,11 +115,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - File: ContextAnalysisEngine.java (~400 lines) → COMPLETELY MISSING
   - Missing: Sentence boundary detection, input field type detection, semantic analysis
 
-- [ ] **Bug #361**: SmartPunctuation PARTIAL FIX ✅ **2025-10-28** (Autocapitalisation complete, other features pending)
-  - Impact: Autocapitalisation now functional (sentences, words, input types)
-  - File: Autocapitalisation.kt (241 lines) → ✅ IMPLEMENTED (partial)
-  - Implemented: Smart capitalization (sentences, words), cursor tracking, delayed callbacks, input type detection
-  - Still Missing: Auto-punctuation (double-space to period), quote/bracket pairing, context-aware spacing
+- [x] **Bug #361**: SmartPunctuation FIXED ✅ **2025-11-13**
+  - Impact: Complete smart punctuation system now functional
+  - Files: Autocapitalisation.kt (256 lines) + SmartPunctuationHandler.kt (305 lines) → ✅ FULLY IMPLEMENTED
+  - Features: Smart capitalization, double-space to period, quote/bracket auto-pairing, context-aware spacing, smart backspace
+  - Integration: Integrated with KeyEventHandler in CleverKeysService
 
 - [ ] **Bug #362**: GrammarCheck engine missing (File 165) ✅ **CONFIRMED**
   - Impact: NO grammar checking (your/you're, subject-verb agreement, etc.)
