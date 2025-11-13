@@ -152,10 +152,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Features: 15 built-in shortcuts (Ctrl+C/X/V/Z/Y/A), modifier detection (Ctrl/Alt/Shift/Meta), custom combinations, conflict detection, persistent storage
   - Integration: Integrated in CleverKeysService
 
-- [ ] **Bug #356**: GestureTypingCustomizer missing (File 154)
-  - Impact: NO gesture typing personalization (sensitivity, speed adjustments)
-  - File: GestureTypingCustomizer.java (~300-350 lines) → COMPLETELY MISSING
-  - Missing: User calibration, personal gesture models
+- [x] **Bug #356**: GestureTypingCustomizer FIXED ✅ **2025-11-13**
+  - Impact: Complete gesture typing customization system now functional
+  - File: GestureTypingCustomizer.kt (634 lines) → ✅ FULLY IMPLEMENTED
+  - Features: Sensitivity/speed/smoothing adjustment, 3 profiles (Beginner/Normal/Advanced), adaptive learning, personal patterns, calibration wizard, real-time hints
+  - Integration: Integrated in CleverKeysService
 
 - [ ] **Bug #357**: ContinuousInputManager missing (File 155)
   - Impact: NO hybrid tap+swipe typing (cannot seamlessly switch modes)

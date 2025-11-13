@@ -93,6 +93,7 @@ class CleverKeysService : InputMethodService(),
     private var selectionManager: SelectionManager? = null  // Bug #321 fix
     private var macroExpander: MacroExpander? = null  // Bug #354 fix
     private var shortcutManager: ShortcutManager? = null  // Bug #355 fix
+    private var gestureTypingCustomizer: GestureTypingCustomizer? = null  // Bug #356 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -143,6 +144,7 @@ class CleverKeysService : InputMethodService(),
             initializeSelectionManager()  // Bug #321 fix
             initializeMacroExpander()  // Bug #354 fix
             initializeShortcutManager()  // Bug #355 fix
+            initializeGestureTypingCustomizer()  // Bug #356 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -210,6 +212,7 @@ class CleverKeysService : InputMethodService(),
             selectionManager?.release()  // Bug #321 - release selection manager resources
             macroExpander?.release()  // Bug #354 - release macro expander resources
             shortcutManager?.release()  // Bug #355 - release shortcut manager resources
+            gestureTypingCustomizer?.release()  // Bug #356 - release gesture typing customizer resources
         }
         serviceScope.cancel()
     }
@@ -1043,6 +1046,20 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize shortcut manager", e)
             // Non-fatal - keyboard can work without shortcut manager
+        }
+    }
+
+    /**
+     * Initialize gesture typing customizer (Bug #356 fix)
+     */
+    private fun initializeGestureTypingCustomizer() {
+        try {
+            gestureTypingCustomizer = GestureTypingCustomizer(context = this)
+
+            logD("✅ GestureTypingCustomizer initialized (Bug #356)")
+        } catch (e: Exception) {
+            logE("Failed to initialize gesture typing customizer", e)
+            // Non-fatal - keyboard can work without gesture typing customizer
         }
     }
 
