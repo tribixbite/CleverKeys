@@ -121,6 +121,7 @@ class CleverKeysService : InputMethodService(),
     private var stickyKeysManager: StickyKeysManager? = null  // Bug #373 fix - accessibility (ADA/WCAG)
     private var runtimeValidator: RuntimeValidator? = null  // Runtime validation for models and assets
     private var foldStateTracker: FoldStateTracker? = null  // Foldable device state tracking
+    private var predictionCache: PredictionCache? = null  // LRU cache for neural predictions
 
     // Configuration and state
     private var config: Config? = null
@@ -157,6 +158,7 @@ class CleverKeysService : InputMethodService(),
             initializeStickyKeysManager()  // Bug #373 fix - accessibility (ADA/WCAG)
             initializeRuntimeValidator()  // Runtime validation for models and assets
             initializeFoldStateTracker()  // Foldable device state tracking
+            initializePredictionCache()  // LRU cache for neural predictions
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -285,6 +287,7 @@ class CleverKeysService : InputMethodService(),
             stickyKeysManager?.cleanup()  // Bug #373 - cleanup sticky keys manager
             runtimeValidator?.cleanup()  // Cleanup runtime validator
             foldStateTracker?.cleanup()  // Cleanup fold state tracker
+            predictionCache?.clear()  // Clear prediction cache
             serviceScope.launch {
                 neuralSwipeTypingEngine?.cleanup()  // Bug #275 dependency - cleanup is suspend function
             }
@@ -993,6 +996,22 @@ class CleverKeysService : InputMethodService(),
             logD("   - 274 lines of fold tracking logic")
         } catch (e: Exception) {
             logE("Failed to initialize fold state tracker", e)
+        }
+    }
+
+    private fun initializePredictionCache() {
+        try {
+            predictionCache = PredictionCache(maxSize = 20)
+
+            logD("✅ PredictionCache initialized")
+            logD("   - LRU cache for neural prediction results")
+            logD("   - Max 20 cached predictions")
+            logD("   - Gesture similarity matching (50px threshold)")
+            logD("   - Avoids redundant ONNX inference")
+            logD("   - O(1) lookup and eviction")
+            logD("   - 208 lines of caching logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize prediction cache", e)
         }
     }
 
