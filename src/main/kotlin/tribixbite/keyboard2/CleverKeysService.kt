@@ -90,6 +90,7 @@ class CleverKeysService : InputMethodService(),
     private var contextAnalyzer: ContextAnalyzer? = null
     private var grammarChecker: GrammarChecker? = null
     private var undoRedoManager: UndoRedoManager? = null
+    private var selectionManager: SelectionManager? = null  // Bug #321 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -137,6 +138,7 @@ class CleverKeysService : InputMethodService(),
             initializeContextAnalyzer()  // Bug #315 fix
             initializeGrammarChecker()  // Bug #317 fix
             initializeUndoRedoManager()  // Bug #320 fix
+            initializeSelectionManager()  // Bug #321 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -201,6 +203,7 @@ class CleverKeysService : InputMethodService(),
             contextAnalyzer?.release()  // Bug #315 - release context analyzer resources
             grammarChecker?.release()  // Bug #317 - release grammar checker resources
             undoRedoManager?.release()  // Bug #320 - release undo/redo manager resources
+            selectionManager?.release()  // Bug #321 - release selection manager resources
         }
         serviceScope.cancel()
     }
@@ -992,6 +995,20 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize undo/redo manager", e)
             // Non-fatal - keyboard can work without undo/redo
+        }
+    }
+
+    /**
+     * Initialize selection manager (Bug #321 fix)
+     */
+    private fun initializeSelectionManager() {
+        try {
+            selectionManager = SelectionManager(context = this)
+
+            logD("✅ SelectionManager initialized (Bug #321)")
+        } catch (e: Exception) {
+            logE("Failed to initialize selection manager", e)
+            // Non-fatal - keyboard can work without selection manager
         }
     }
 
