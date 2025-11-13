@@ -261,13 +261,19 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Note: Kotlin version MORE complete than Java (113 vs 88 lines)
 
 #### Clipboard
-- [ ] **Bug #124**: Non-existent API usage
-  - Impact: Clipboard functionality broken
+- [x] **Bug #124**: Non-existent API usage ❌ FALSE (2025-11-13)
   - File: ClipboardHistoryView.kt
+  - Status: NOT A BUG - All methods exist and code compiles successfully
+  - Verified: subscribeToHistoryChanges(), setPinnedStatus(), removeHistoryEntry(), clearHistory(), addCurrentClip() all exist in ClipboardHistoryService.kt
+  - Impact: None - functionality working
+  - Severity: N/A (false report)
 
-- [ ] **Bug #125**: Missing synchronous getService() wrapper
-  - Impact: Call sites can't access service
+- [x] **Bug #125**: Missing synchronous getService() wrapper ❌ FALSE (2025-11-13)
   - File: ClipboardHistoryService.kt
+  - Status: NOT A BUG - All getService() calls are properly in coroutine scopes (scope.launch {})
+  - Verified: Lines 74, 101, 151, 163, 176 all inside coroutine contexts
+  - Impact: None - async access pattern correct
+  - Severity: N/A (false report)
 
 ### **P1 - CRITICAL (Major Features Broken) - 3 Bugs**
 
