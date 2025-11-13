@@ -112,6 +112,7 @@ class CleverKeysService : InputMethodService(),
     private var swipeMLTrainer: tribixbite.keyboard2.ml.SwipeMLTrainer? = null  // Bug #274 fix
     private var neuralSwipeTypingEngine: NeuralSwipeTypingEngine? = null  // Bug #275 dependency - neural prediction engine
     private var asyncPredictionHandler: AsyncPredictionHandler? = null  // Bug #275 fix - async prediction processing
+    private var inputConnectionManager: InputConnectionManager? = null  // Advanced input connection management
 
     // Configuration and state
     private var config: Config? = null
@@ -139,6 +140,7 @@ class CleverKeysService : InputMethodService(),
             initializeSwipeMLTrainer()  // Bug #274 fix
             initializeNeuralSwipeTypingEngine()  // Bug #275 dependency - neural prediction engine
             initializeAsyncPredictionHandler()  // Bug #275 fix - async prediction processing
+            initializeInputConnectionManager()  // Advanced input connection management
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -262,6 +264,7 @@ class CleverKeysService : InputMethodService(),
             userAdaptationManager?.cleanup()  // Bug #263 - release user adaptation manager resources
             swipeMLTrainer?.shutdown()  // Bug #274 - release swipe ML trainer resources
             asyncPredictionHandler?.shutdown()  // Bug #275 - release async prediction handler resources
+            inputConnectionManager?.cleanup()  // Release input connection manager resources
             serviceScope.launch {
                 neuralSwipeTypingEngine?.cleanup()  // Bug #275 dependency - cleanup is suspend function
             }
@@ -710,6 +713,33 @@ class CleverKeysService : InputMethodService(),
             logD("   - Stats: ${asyncPredictionHandler?.getStats()}")
         } catch (e: Exception) {
             logE("Failed to initialize async prediction handler", e)
+        }
+    }
+
+    /**
+     * Initialize input connection manager.
+     * Provides comprehensive input connection management with app-specific behavior.
+     *
+     * Features:
+     * - EditorInfo-based behavior customization
+     * - Context extraction and management
+     * - Smart composition and contextual suggestions
+     * - Emoji/hashtag/mention completion support
+     * - Character limit warnings
+     * - Advanced formatting and grammar suggestions
+     * - Code/symbol completion
+     * - Null-safe input connection wrapper
+     */
+    private fun initializeInputConnectionManager() {
+        try {
+            inputConnectionManager = InputConnectionManager(service = this)
+
+            logD("✅ InputConnectionManager initialized")
+            logD("   - App-specific behavior customization enabled")
+            logD("   - Context-aware suggestions supported")
+            logD("   - 378 lines of advanced input management")
+        } catch (e: Exception) {
+            logE("Failed to initialize input connection manager", e)
         }
     }
 
