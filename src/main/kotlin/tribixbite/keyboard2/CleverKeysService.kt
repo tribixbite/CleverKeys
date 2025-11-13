@@ -74,6 +74,7 @@ class CleverKeysService : InputMethodService(),
     private var oneHandedModeManager: OneHandedModeManager? = null
     private var floatingKeyboardManager: FloatingKeyboardManager? = null
     private var splitKeyboardManager: SplitKeyboardManager? = null
+    private var darkModeManager: DarkModeManager? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -105,6 +106,7 @@ class CleverKeysService : InputMethodService(),
             initializeOneHandedModeManager()  // Bug #331 fix
             initializeFloatingKeyboardManager()  // Bug #332 fix
             initializeSplitKeyboardManager()  // Bug #333 fix
+            initializeDarkModeManager()  // Bug #334 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -153,6 +155,7 @@ class CleverKeysService : InputMethodService(),
             oneHandedModeManager?.release()  // Bug #331 - release one-handed mode manager resources
             floatingKeyboardManager?.release()  // Bug #332 - release floating keyboard manager resources
             splitKeyboardManager?.release()  // Bug #333 - release split keyboard manager resources
+            darkModeManager?.release()  // Bug #334 - release dark mode manager resources
         }
         serviceScope.cancel()
     }
@@ -662,6 +665,23 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize split keyboard manager", e)
             // Non-fatal - keyboard can work in unified mode
+        }
+    }
+
+    /**
+     * Bug #334 fix: Initialize dark mode manager
+     *
+     * Creates manager for dark mode theme with automatic detection
+     * and multiple dark theme variants.
+     */
+    private fun initializeDarkModeManager() {
+        try {
+            darkModeManager = DarkModeManager(context = this)
+
+            logD("✅ Dark mode manager initialized (mode=${darkModeManager?.getThemeMode()}, dark=${darkModeManager?.isDarkMode()})")
+        } catch (e: Exception) {
+            logE("Failed to initialize dark mode manager", e)
+            // Non-fatal - keyboard can work without theme management
         }
     }
 
