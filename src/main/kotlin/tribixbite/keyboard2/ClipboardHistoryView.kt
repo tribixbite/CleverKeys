@@ -2,6 +2,7 @@ package tribixbite.keyboard2
 
 import android.content.Context
 import android.graphics.Color
+import android.util.AttributeSet
 import android.view.View
 import android.widget.*
 import android.widget.Toast
@@ -12,7 +13,10 @@ import kotlinx.coroutines.flow.*
  * Clipboard history view with reactive updates
  * Kotlin implementation with Flow-based data binding
  */
-class ClipboardHistoryView(context: Context) : LinearLayout(context) {
+class ClipboardHistoryView(
+    context: Context,
+    attrs: AttributeSet? = null
+) : LinearLayout(context, attrs) {
 
     companion object {
         private const val TAG = "ClipboardHistoryView"
@@ -40,7 +44,7 @@ class ClipboardHistoryView(context: Context) : LinearLayout(context) {
     private fun setupHistoryView() {
         // Header
         addView(TextView(context).apply {
-            text = "📋 Clipboard History"
+            text = context.getString(R.string.clipboard_history_title)
             textSize = 18f
             setPadding(16, 16, 16, 8)
             setTypeface(typeface, android.graphics.Typeface.BOLD)
@@ -63,23 +67,27 @@ class ClipboardHistoryView(context: Context) : LinearLayout(context) {
     private fun createControlButtons() = LinearLayout(context).apply {
         orientation = HORIZONTAL
         setPadding(16, 8, 16, 16)
-        
+
         addView(Button(context).apply {
-            text = "Clear All"
+            text = context.getString(R.string.clipboard_clear_all)
             setOnClickListener {
                 scope.launch {
                     ClipboardHistoryService.getService(context)?.clearHistory()
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Clipboard history cleared", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.clipboard_empty_title),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
             layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
         })
-        
+
         addView(Button(context).apply {
-            text = "Close"
-            setOnClickListener { 
+            text = context.getString(R.string.clipboard_close)
+            setOnClickListener {
                 visibility = GONE
             }
             layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
@@ -136,7 +144,7 @@ class ClipboardHistoryView(context: Context) : LinearLayout(context) {
 
             // Pin button
             addView(Button(context).apply {
-                text = "📍"
+                text = context.getString(R.string.clipboard_pin)
                 textSize = 12f
                 setPadding(8, 4, 8, 4)
                 setOnClickListener {
@@ -148,7 +156,7 @@ class ClipboardHistoryView(context: Context) : LinearLayout(context) {
 
             // Delete button
             addView(Button(context).apply {
-                text = "🗑️"
+                text = context.getString(R.string.clipboard_delete)
                 textSize = 12f
                 setPadding(8, 4, 8, 4)
                 setOnClickListener {
