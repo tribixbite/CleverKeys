@@ -66,6 +66,7 @@ class CleverKeysService : InputMethodService(),
     private var cursorMovementManager: CursorMovementManager? = null
     private var multiTouchHandler: MultiTouchHandler? = null
     private var soundEffectManager: SoundEffectManager? = null
+    private var animationManager: AnimationManager? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -89,6 +90,7 @@ class CleverKeysService : InputMethodService(),
             initializeCursorMovementManager()  // Bug #322 fix
             initializeMultiTouchHandler()  // Bug #323 fix
             initializeSoundEffectManager()  // Bug #324 fix
+            initializeAnimationManager()    // Bug #325 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -129,6 +131,7 @@ class CleverKeysService : InputMethodService(),
             voiceGuidanceEngine?.cleanup()
             spellCheckerManager?.cleanup()
             soundEffectManager?.release()  // Bug #324 - release audio resources
+            animationManager?.release()    // Bug #325 - release animation resources
         }
         serviceScope.cancel()
     }
@@ -453,6 +456,29 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize sound effect manager", e)
             // Non-fatal - keyboard can work without sound effects
+        }
+    }
+
+    /**
+     * Initialize animation manager for keyboard UI animations.
+     * Bug #325 - HIGH: Implement missing AnimationManager
+     */
+    private fun initializeAnimationManager() {
+        try {
+            // TODO: Get enabled state and duration scale from user preferences
+            val animationsEnabled = true  // Default to enabled
+            val durationScale = 1.0f      // Default scale (normal speed)
+
+            animationManager = AnimationManager(
+                context = this,
+                enabled = animationsEnabled,
+                durationScale = durationScale
+            )
+
+            logD("✅ Animation manager initialized (enabled=$animationsEnabled, scale=$durationScale)")
+        } catch (e: Exception) {
+            logE("Failed to initialize animation manager", e)
+            // Non-fatal - keyboard can work without animations
         }
     }
 
