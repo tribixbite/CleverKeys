@@ -105,15 +105,17 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Integration: updateSuggestions() connected to suggestion bar
   - **RESULT**: 60%+ tap-typing users can now use keyboard!
 
-- [ ] **Bug #314**: Completion system missing (File 162) ✅ **CONFIRMED**
-  - Impact: NO word completion suggestions (partially addressed by Bug #313 fix - prefix trie provides autocomplete)
-  - File: CompletionEngine.java (~350 lines) → Replaced by TypingPredictionEngine
-  - Missing: Advanced frequency-ranked completions (basic version in TypingPredictionEngine)
+- [x] **Bug #314**: Completion system FIXED ✅ **2025-11-13**
+  - Impact: Complete text completion and abbreviation expansion system now functional
+  - File: CompletionEngine.kt (677 lines) → ✅ FULLY IMPLEMENTED
+  - Features: 20+ built-in completions, template system with placeholders, abbreviation expansion, usage tracking
+  - Integration: Integrated with TextPredictionEngine in CleverKeysService
 
-- [ ] **Bug #360**: ContextAnalysis engine missing (File 163) ✅ **CONFIRMED**
-  - Impact: NO contextual prediction intelligence
-  - File: ContextAnalysisEngine.java (~400 lines) → COMPLETELY MISSING
-  - Missing: Sentence boundary detection, input field type detection, semantic analysis
+- [x] **Bug #360**: ContextAnalysis engine FIXED ✅ **2025-11-13** (Bug #315)
+  - Impact: Complete context analysis system now functional
+  - File: ContextAnalyzer.kt (559 lines) → ✅ FULLY IMPLEMENTED
+  - Features: Sentence type detection, writing style classification, topic detection, formality assessment, tone detection, n-gram patterns, named entity recognition
+  - Integration: Integrated with TextPredictionEngine in CleverKeysService
 
 - [x] **Bug #361**: SmartPunctuation FIXED ✅ **2025-11-13**
   - Impact: Complete smart punctuation system now functional
@@ -121,10 +123,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Features: Smart capitalization, double-space to period, quote/bracket auto-pairing, context-aware spacing, smart backspace
   - Integration: Integrated with KeyEventHandler in CleverKeysService
 
-- [ ] **Bug #362**: GrammarCheck engine missing (File 165) ✅ **CONFIRMED**
-  - Impact: NO grammar checking (your/you're, subject-verb agreement, etc.)
-  - File: GrammarCheckEngine.java (~400 lines) → COMPLETELY MISSING
-  - Missing: Grammar rule engine, error detection, style checking
+- [x] **Bug #362**: GrammarCheck engine FIXED ✅ **2025-11-13** (Bug #317)
+  - Impact: Complete grammar checking system now functional
+  - File: GrammarChecker.kt (695 lines) → ✅ FULLY IMPLEMENTED
+  - Features: Subject-verb agreement, article usage (a/an), punctuation, capitalization, double negatives, redundancy detection, common error corrections
+  - Integration: Integrated in CleverKeysService
 
 #### Advanced Input Methods (Files 150-153)
 - [ ] **Bug #352**: HandwritingRecognizer missing (File 150)
