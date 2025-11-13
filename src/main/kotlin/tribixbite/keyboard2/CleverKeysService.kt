@@ -86,6 +86,7 @@ class CleverKeysService : InputMethodService(),
     private var spellChecker: SpellChecker? = null
     private var frequencyModel: FrequencyModel? = null
     private var textPredictionEngine: TextPredictionEngine? = null
+    private var completionEngine: CompletionEngine? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -129,6 +130,7 @@ class CleverKeysService : InputMethodService(),
             initializeCustomSpellChecker()  // Bug #311 fix
             initializeFrequencyModel()  // Bug #312 fix
             initializeTextPredictionEngine()  // Bug #313 fix
+            initializeCompletionEngine()  // Bug #314 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -189,6 +191,7 @@ class CleverKeysService : InputMethodService(),
             spellChecker?.release()  // Bug #311 - release spell checker resources
             frequencyModel?.release()  // Bug #312 - release frequency model resources
             textPredictionEngine?.release()  // Bug #313 - release text prediction engine resources
+            completionEngine?.release()  // Bug #314 - release completion engine resources
         }
         serviceScope.cancel()
     }
@@ -912,6 +915,23 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize text prediction engine", e)
             // Non-fatal - keyboard can work without advanced predictions
+        }
+    }
+
+    /**
+     * Bug #314 fix: Initialize completion engine
+     *
+     * Creates completion engine for intelligent text completion with
+     * templates, snippets, and abbreviation expansion.
+     */
+    private fun initializeCompletionEngine() {
+        try {
+            completionEngine = CompletionEngine(context = this)
+
+            logD("✅ CompletionEngine initialized (Bug #314)")
+        } catch (e: Exception) {
+            logE("Failed to initialize completion engine", e)
+            // Non-fatal - keyboard can work without completions
         }
     }
 
