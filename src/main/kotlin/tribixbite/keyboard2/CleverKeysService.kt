@@ -70,6 +70,7 @@ class CleverKeysService : InputMethodService(),
     private var keyPreviewManager: KeyPreviewManager? = null
     private var gestureTrailRenderer: GestureTrailRenderer? = null
     private var keyRepeatHandler: KeyRepeatHandler? = null
+    private var layoutSwitchAnimator: LayoutSwitchAnimator? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -97,6 +98,7 @@ class CleverKeysService : InputMethodService(),
             initializeKeyPreviewManager()   // Bug #326 fix
             initializeGestureTrailRenderer()  // Bug #328 fix
             initializeKeyRepeatHandler()    // Bug #330 fix
+            initializeLayoutSwitchAnimator()  // Bug #329 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -141,6 +143,7 @@ class CleverKeysService : InputMethodService(),
             keyPreviewManager?.release()   // Bug #326 - release preview resources
             gestureTrailRenderer?.release()  // Bug #328 - release trail renderer resources
             keyRepeatHandler?.release()    // Bug #330 - release key repeat handler resources
+            layoutSwitchAnimator?.release()  // Bug #329 - release layout animator resources
         }
         serviceScope.cancel()
     }
@@ -556,6 +559,31 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize key repeat handler", e)
             // Non-fatal - keyboard can work without key repeat
+        }
+    }
+
+    /**
+     * Bug #329 fix: Initialize layout switch animator
+     *
+     * Creates specialized animator for smooth keyboard layout transitions
+     * (e.g., QWERTY → numeric, text → emoji, etc.)
+     */
+    private fun initializeLayoutSwitchAnimator() {
+        try {
+            // TODO: Get enabled state and duration from user preferences
+            val animationsEnabled = true  // Default to enabled
+            val duration = 250L           // Default animation duration (250ms)
+
+            layoutSwitchAnimator = LayoutSwitchAnimator(
+                context = this,
+                enabled = animationsEnabled,
+                defaultDuration = duration
+            )
+
+            logD("✅ Layout switch animator initialized (enabled=$animationsEnabled, duration=${duration}ms)")
+        } catch (e: Exception) {
+            logE("Failed to initialize layout switch animator", e)
+            // Non-fatal - keyboard can work without layout animations
         }
     }
 
