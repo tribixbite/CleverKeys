@@ -29,7 +29,9 @@ private fun logW(message: String) = logW("CleverKeysService", message)
  * Modern Kotlin InputMethodService for CleverKeys
  * Replaces Keyboard2.java with coroutines, null safety, and clean architecture
  */
-class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPreferenceChangeListener {
+class CleverKeysService : InputMethodService(),
+    SharedPreferences.OnSharedPreferenceChangeListener,
+    ClipboardPasteCallback {
     
     companion object {
         private const val TAG = "CleverKeysService"
@@ -72,6 +74,7 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
             initializeConfiguration()
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
+            initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
             initializeSpellChecker()
             initializeKeyEventHandler()
@@ -471,6 +474,25 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         } catch (e: Exception) {
             logE("Failed to initialize ComposeKeyData", e)
             // Non-critical - compose key feature will be unavailable
+        }
+    }
+
+    /**
+     * Bug #118 & #120 fix: Initialize clipboard history service with paste callback
+     *
+     * This registers the CleverKeysService as the paste callback handler,
+     * enabling clipboard paste functionality from ClipboardPinView.
+     */
+    private fun initializeClipboardService() {
+        try {
+            // Register paste callback asynchronously
+            CoroutineScope(Dispatchers.Main).launch {
+                ClipboardHistoryService.onStartup(this@CleverKeysService, this@CleverKeysService)
+                logD("✅ Clipboard history service initialized with paste callback")
+            }
+        } catch (e: Exception) {
+            logE("Failed to initialize clipboard service", e)
+            // Non-critical - clipboard paste will be unavailable
         }
     }
 
@@ -1126,6 +1148,25 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         override fun updateSuggestions(suggestions: List<String>) {
             // Update suggestion bar with tap typing predictions
             suggestionBar?.setSuggestions(suggestions)
+        }
+    }
+
+    // ============================================================================
+    // Clipboard Integration (Bug #118 & #120 fixes)
+    // ============================================================================
+
+    /**
+     * Bug #118 & #120 fix: Implement ClipboardPasteCallback to enable paste from pinned items
+     *
+     * This method is called when user taps the paste button in ClipboardPinView.
+     * It commits the clipboard content to the active text editor.
+     */
+    override fun pasteFromClipboardPane(content: String) {
+        try {
+            currentInputConnection?.commitText(content, 1)
+            logD("Pasted clipboard content: ${content.take(50)}...")
+        } catch (e: Exception) {
+            logE("Failed to paste from clipboard pane", e)
         }
     }
 }

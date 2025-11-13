@@ -41,14 +41,18 @@ This file tracks missing user-facing features.
   - Impact: None - reactive approach superior to adapter pattern
   - Severity: N/A (false report)
 
-- [ ] **Bug #118**: Broken pin functionality
-  - File: ClipboardPinView.kt (File 23)
-  - Impact: Cannot pin clipboard items
+- [x] **Bug #118**: Broken pin functionality ✅ FIXED (2025-11-13)
+  - File: ClipboardPinView.kt (File 23) + CleverKeysService.kt
+  - Impact: Paste button didn't work because callback wasn't registered
+  - Fix: CleverKeysService implements ClipboardPasteCallback and registers with onStartup()
+  - Implementation: Added pasteFromClipboardPane() using currentInputConnection?.commitText()
   - Severity: HIGH
 
-- [ ] **Bug #120**: Missing paste functionality
-  - File: ClipboardPinView.kt (File 23)
-  - Impact: Cannot paste from pinned items
+- [x] **Bug #120**: Missing paste functionality ✅ FIXED (2025-11-13)
+  - File: ClipboardPinView.kt (File 23) + CleverKeysService.kt
+  - Impact: Same root cause as Bug #118 - callback not registered
+  - Fix: Same fix as Bug #118 - both caused by missing ClipboardPasteCallback registration
+  - Implementation: initializeClipboardService() calls ClipboardHistoryService.onStartup(this, this)
   - Severity: HIGH
 
 - [x] **Bug #122**: Missing update_data() implementation ✅ FIXED (2025-11-13)
