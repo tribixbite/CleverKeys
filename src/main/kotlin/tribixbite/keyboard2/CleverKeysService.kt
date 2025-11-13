@@ -103,6 +103,7 @@ class CleverKeysService : InputMethodService(),
     private var comprehensiveTraceAnalyzer: ComprehensiveTraceAnalyzer? = null  // Bug #276 fix
     private var thumbModeOptimizer: ThumbModeOptimizer? = null  // Bug #359 fix
     private var multiLanguageDictionary: MultiLanguageDictionaryManager? = null  // Bug #277 fix
+    private var keyboardSwipeRecognizer: KeyboardSwipeRecognizer? = null  // Bug #256 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -121,6 +122,7 @@ class CleverKeysService : InputMethodService(),
             initializeComprehensiveTraceAnalyzer()  // Bug #276 fix - advanced gesture analysis
             initializeThumbModeOptimizer()  // Bug #359 fix - ergonomic thumb typing
             initializeMultiLanguageDictionary()  // Bug #277 fix - multi-language dictionaries
+            initializeKeyboardSwipeRecognizer()  // Bug #256 fix - Bayesian swipe recognition
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -238,6 +240,7 @@ class CleverKeysService : InputMethodService(),
             comprehensiveTraceAnalyzer?.release()  // Bug #276 - release comprehensive trace analyzer resources
             thumbModeOptimizer?.release()  // Bug #359 - release thumb mode optimizer resources
             multiLanguageDictionary?.release()  // Bug #277 - release multi-language dictionary resources
+            keyboardSwipeRecognizer?.release()  // Bug #256 - release keyboard swipe recognizer resources
             imeLanguageSelector?.release()  // Bug #347 - release IME language selector resources
             languageManager?.release()  // Bug #344 - release language manager resources
         }
@@ -438,6 +441,55 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize multi-language dictionary", e)
             // Non-fatal - keyboard works with fallback vocabulary
+        }
+    }
+
+    /**
+     * Initialize keyboard swipe recognizer.
+     *
+     * Implements Bug #256 fix - Bayesian keyboard-specific swipe recognition.
+     *
+     * Provides probabilistic swipe-to-word recognition using Bayesian inference:
+     * - P(word|path) = P(path|word) * P(word) / P(path)
+     * - Keyboard layout integration (key positions, sizes, centers)
+     * - Geometric path analysis (distance, angle, curvature, smoothness)
+     * - Key proximity scoring with Gaussian distribution
+     * - Path segmentation into key regions with dwell time tracking
+     * - Multi-candidate scoring and ranking with confidence thresholds
+     * - Language model prior probabilities
+     * - Path likelihood calculation with proximity and dwell time
+     * - Real-time incremental recognition for immediate feedback
+     * - Edit distance penalty for non-exact matches
+     * - Path smoothing with moving average filter
+     * - Touch point clustering for noise reduction
+     *
+     * Note: Keyboard layout must be set before recognition can begin.
+     */
+    private fun initializeKeyboardSwipeRecognizer() {
+        try {
+            keyboardSwipeRecognizer = KeyboardSwipeRecognizer(context = this)
+
+            // Set up recognition callback
+            keyboardSwipeRecognizer?.setCallback(object : KeyboardSwipeRecognizer.Callback {
+                override fun onRecognitionComplete(results: List<KeyboardSwipeRecognizer.RecognitionResult>) {
+                    logD("Swipe recognition complete: ${results.size} results")
+                    if (results.isNotEmpty()) {
+                        val top = results.first()
+                        logD("Top result: ${top.word} (confidence: ${top.confidence})")
+                    }
+                }
+
+                override fun onPartialRecognition(topCandidate: KeyboardSwipeRecognizer.RecognitionResult?) {
+                    topCandidate?.let {
+                        logD("Partial: ${it.word} (${it.confidence})")
+                    }
+                }
+            })
+
+            logD("✅ KeyboardSwipeRecognizer initialized (Bug #256)")
+        } catch (e: Exception) {
+            logE("Failed to initialize keyboard swipe recognizer", e)
+            // Non-fatal - keyboard works with fallback recognition
         }
     }
 
