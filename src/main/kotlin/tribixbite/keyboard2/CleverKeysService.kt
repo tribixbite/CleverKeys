@@ -100,6 +100,7 @@ class CleverKeysService : InputMethodService(),
     private var languageManager: LanguageManager? = null  // Bug #344 fix
     private var imeLanguageSelector: IMELanguageSelector? = null  // Bug #347 fix
     private var rtlLanguageHandler: RTLLanguageHandler? = null  // Bug #349 fix
+    private var comprehensiveTraceAnalyzer: ComprehensiveTraceAnalyzer? = null  // Bug #276 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -115,6 +116,7 @@ class CleverKeysService : InputMethodService(),
             initializeLanguageManager()  // Bug #344 fix - foundational for multi-language
             initializeIMELanguageSelector()  // Bug #347 fix - language selection UI
             initializeRTLLanguageHandler()  // Bug #349 fix - RTL text support
+            initializeComprehensiveTraceAnalyzer()  // Bug #276 fix - advanced gesture analysis
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -229,6 +231,7 @@ class CleverKeysService : InputMethodService(),
             handwritingRecognizer?.release()  // Bug #352 - release handwriting recognizer resources
             voiceTypingEngine?.release()  // Bug #353 - release voice typing engine resources
             rtlLanguageHandler?.release()  // Bug #349 - release RTL language handler resources
+            comprehensiveTraceAnalyzer?.release()  // Bug #276 - release comprehensive trace analyzer resources
             imeLanguageSelector?.release()  // Bug #347 - release IME language selector resources
             languageManager?.release()  // Bug #344 - release language manager resources
         }
@@ -323,6 +326,30 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize RTL language handler", e)
             // Non-fatal - keyboard works without RTL support
+        }
+    }
+
+    /**
+     * Initialize comprehensive trace analyzer.
+     *
+     * Implements Bug #276 fix - Advanced gesture analysis for swipe typing.
+     *
+     * Provides comprehensive trace analysis including:
+     * - Geometric features (length, curvature, angles, bounding box, aspect ratio)
+     * - Motion features (velocity, acceleration, jerk)
+     * - Pattern detection (LINEAR/CURVED/LOOP/ZIGZAG/SPIRAL/COMPLEX)
+     * - Quality metrics (EXCELLENT/GOOD/FAIR/POOR/INVALID)
+     * - 25-dimensional feature vector extraction for ML
+     * - Stroke segmentation and direction change detection
+     */
+    private fun initializeComprehensiveTraceAnalyzer() {
+        try {
+            comprehensiveTraceAnalyzer = ComprehensiveTraceAnalyzer(context = this)
+
+            logD("✅ ComprehensiveTraceAnalyzer initialized (Bug #276)")
+        } catch (e: Exception) {
+            logE("Failed to initialize comprehensive trace analyzer", e)
+            // Non-fatal - gesture analysis provides enhancement but not critical
         }
     }
 
