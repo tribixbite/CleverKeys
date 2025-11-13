@@ -158,10 +158,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Features: Sensitivity/speed/smoothing adjustment, 3 profiles (Beginner/Normal/Advanced), adaptive learning, personal patterns, calibration wizard, real-time hints
   - Integration: Integrated in CleverKeysService
 
-- [ ] **Bug #357**: ContinuousInputManager missing (File 155)
-  - Impact: NO hybrid tap+swipe typing (cannot seamlessly switch modes)
-  - File: ContinuousInputManager.java (~350-400 lines) → COMPLETELY MISSING
-  - Missing: Multi-modal input, context-aware method selection
+- [x] **Bug #357**: ContinuousInputManager FIXED ✅ **2025-11-13**
+  - Impact: Complete hybrid tap+swipe typing system now functional
+  - File: ContinuousInputManager.kt (530 lines) → ✅ FULLY IMPLEMENTED
+  - Features: Automatic mode detection (tap/swipe/hybrid), velocity-based classification, gesture timeout, mode preferences, seamless switching, input statistics
+  - Integration: Integrated in CleverKeysService
 
 - [ ] **Bug #358**: OneHandedModeManager missing (File 156)
   - Impact: NO one-handed mode (large phone users + accessibility issue)

@@ -94,6 +94,7 @@ class CleverKeysService : InputMethodService(),
     private var macroExpander: MacroExpander? = null  // Bug #354 fix
     private var shortcutManager: ShortcutManager? = null  // Bug #355 fix
     private var gestureTypingCustomizer: GestureTypingCustomizer? = null  // Bug #356 fix
+    private var continuousInputManager: ContinuousInputManager? = null  // Bug #357 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -145,6 +146,7 @@ class CleverKeysService : InputMethodService(),
             initializeMacroExpander()  // Bug #354 fix
             initializeShortcutManager()  // Bug #355 fix
             initializeGestureTypingCustomizer()  // Bug #356 fix
+            initializeContinuousInputManager()  // Bug #357 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -213,6 +215,7 @@ class CleverKeysService : InputMethodService(),
             macroExpander?.release()  // Bug #354 - release macro expander resources
             shortcutManager?.release()  // Bug #355 - release shortcut manager resources
             gestureTypingCustomizer?.release()  // Bug #356 - release gesture typing customizer resources
+            continuousInputManager?.release()  // Bug #357 - release continuous input manager resources
         }
         serviceScope.cancel()
     }
@@ -1060,6 +1063,20 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize gesture typing customizer", e)
             // Non-fatal - keyboard can work without gesture typing customizer
+        }
+    }
+
+    /**
+     * Initialize continuous input manager (Bug #357 fix)
+     */
+    private fun initializeContinuousInputManager() {
+        try {
+            continuousInputManager = ContinuousInputManager(context = this)
+
+            logD("✅ ContinuousInputManager initialized (Bug #357)")
+        } catch (e: Exception) {
+            logE("Failed to initialize continuous input manager", e)
+            // Non-fatal - keyboard can work without continuous input manager
         }
     }
 
