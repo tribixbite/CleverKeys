@@ -77,9 +77,13 @@ This file tracks missing user-facing features.
   - Impact: None - reactive Flow approach superior to callbacks
   - Severity: N/A (false report)
 
-- [ ] **Bug #127**: Inconsistent API naming breaks all call sites
-  - File: ClipboardHistoryService.kt (File 25)
-  - Impact: All existing code broken
+- [x] **Bug #127**: Inconsistent API naming breaks all call sites ✅ FIXED (2025-11-13)
+  - File: clipboard/ClipboardHistoryService.kt (duplicate) + ClipboardViewModel.kt + ClipboardHistoryViewM3.kt
+  - Impact: Duplicate ClipboardHistoryService with incompatible API caused confusion
+  - Root cause: TWO implementations existed with different APIs (getInstance vs getService, observeHistory vs subscribeToHistoryChanges, etc.)
+  - Fix: Deleted old duplicate files (clipboard/ClipboardHistoryService.kt, ClipboardViewModel.kt, ClipboardHistoryViewM3.kt)
+  - Result: Only modern tribixbite.keyboard2.ClipboardHistoryService remains (reactive, SQLite, suspend)
+  - Files deleted: 3 dead code files (unused anywhere in codebase)
   - Severity: HIGH
 
 ### Voice Input (1 bug)
