@@ -26,10 +26,11 @@ This file tracks UI-related bugs and missing features (theming, suggestion bar, 
   - Commit: a1887701
   - Severity: MEDIUM
 
-- [ ] **Bug #121**: Hardcoded toast message
+- [x] **Bug #121**: Hardcoded toast message ❌ FALSE (2025-11-13)
   - File: ClipboardHistoryCheckBox.kt (File 27)
-  - Impact: No i18n support
-  - Severity: MEDIUM
+  - Status: NOT A BUG - No toast message exists in file (verified lines 1-46)
+  - Impact: None - no hardcoded strings found
+  - Severity: N/A (false report)
 
 ### Performance (1 bug)
 - [x] **Bug #128**: Blocking initialization in lazy property ✅ FIXED (2025-11-13)
