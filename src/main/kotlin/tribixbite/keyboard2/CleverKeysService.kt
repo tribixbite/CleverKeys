@@ -82,6 +82,7 @@ class CleverKeysService : InputMethodService(),
     private var characterSetManager: CharacterSetManager? = null
     private var unicodeNormalizer: UnicodeNormalizer? = null
     private var translationEngine: TranslationEngine? = null
+    private var autoCorrection: AutoCorrection? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -121,6 +122,7 @@ class CleverKeysService : InputMethodService(),
             initializeCharacterSetManager()  // Bug #350 fix
             initializeUnicodeNormalizer()  // Bug #351 fix
             initializeTranslationEngine()  // Bug #348 fix
+            initializeAutoCorrection()  // Bug #310 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -177,6 +179,7 @@ class CleverKeysService : InputMethodService(),
             characterSetManager?.release()  // Bug #350 - release character set manager resources
             unicodeNormalizer?.release()  // Bug #351 - release unicode normalizer resources
             translationEngine?.release()  // Bug #348 - release translation engine resources
+            autoCorrection?.release()  // Bug #310 - release autocorrection resources
         }
         serviceScope.cancel()
     }
@@ -827,6 +830,23 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize translation engine", e)
             // Non-fatal - keyboard can work without translation
+        }
+    }
+
+    /**
+     * Bug #310 fix: Initialize autocorrection
+     *
+     * Creates autocorrection engine for intelligent text correction
+     * with user dictionary and learning capabilities.
+     */
+    private fun initializeAutoCorrection() {
+        try {
+            autoCorrection = AutoCorrection(context = this)
+
+            logD("✅ AutoCorrection initialized")
+        } catch (e: Exception) {
+            logE("Failed to initialize autocorrection", e)
+            // Non-fatal - keyboard can work without autocorrection
         }
     }
 
