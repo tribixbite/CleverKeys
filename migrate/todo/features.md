@@ -39,9 +39,9 @@ All 8 clipboard bugs resolved:
   - Impact: Full locale formatting, dynamic separators, RTL support
   - Implementation: Comprehensive i18n with number/currency/date formatting
 
-- [ ] **Bug #350**: CharacterSetManager.java missing (File 148)
-  - Impact: NO character set detection, no transliteration
-  - File: CharacterSetManager.java (250-350 lines) → COMPLETELY MISSING
+- [x] **Bug #350**: CharacterSetManager.java → CharacterSetManager.kt (490 lines) - ✅ FIXED (2025-11-13)
+  - Impact: Full charset detection, encoding conversion, transliteration
+  - Implementation: Script detection, diacritic removal, Unicode normalization
 
 - [ ] **Bug #351**: UnicodeNormalizer.java missing (File 149)
   - Impact: Autocorrect fails on accented characters (café vs café)

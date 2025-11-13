@@ -79,6 +79,7 @@ class CleverKeysService : InputMethodService(),
     private var typingStatisticsCollector: TypingStatisticsCollector? = null
     private var keyBorderRenderer: KeyBorderRenderer? = null
     private var localeManager: LocaleManager? = null
+    private var characterSetManager: CharacterSetManager? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -115,6 +116,7 @@ class CleverKeysService : InputMethodService(),
             initializeTypingStatisticsCollector()  // Bug #336 fix
             initializeKeyBorderRenderer()  // Bug #337 fix
             initializeLocaleManager()  // Bug #346 fix
+            initializeCharacterSetManager()  // Bug #350 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -168,6 +170,7 @@ class CleverKeysService : InputMethodService(),
             typingStatisticsCollector?.release()  // Bug #336 - release typing statistics collector resources
             keyBorderRenderer?.release()  // Bug #337 - release key border renderer resources
             localeManager?.release()  // Bug #346 - release locale manager resources
+            characterSetManager?.release()  // Bug #350 - release character set manager resources
         }
         serviceScope.cancel()
     }
@@ -767,6 +770,23 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize locale manager", e)
             // Non-fatal - keyboard can work with default locale
+        }
+    }
+
+    /**
+     * Bug #350 fix: Initialize character set manager
+     *
+     * Creates manager for character encoding detection, transliteration,
+     * and character set conversion.
+     */
+    private fun initializeCharacterSetManager() {
+        try {
+            characterSetManager = CharacterSetManager()
+
+            logD("✅ Character set manager initialized")
+        } catch (e: Exception) {
+            logE("Failed to initialize character set manager", e)
+            // Non-fatal - keyboard can work without charset conversion
         }
     }
 
