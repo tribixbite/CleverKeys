@@ -102,6 +102,7 @@ class CleverKeysService : InputMethodService(),
     private var rtlLanguageHandler: RTLLanguageHandler? = null  // Bug #349 fix
     private var comprehensiveTraceAnalyzer: ComprehensiveTraceAnalyzer? = null  // Bug #276 fix
     private var thumbModeOptimizer: ThumbModeOptimizer? = null  // Bug #359 fix
+    private var multiLanguageDictionary: MultiLanguageDictionaryManager? = null  // Bug #277 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -119,6 +120,7 @@ class CleverKeysService : InputMethodService(),
             initializeRTLLanguageHandler()  // Bug #349 fix - RTL text support
             initializeComprehensiveTraceAnalyzer()  // Bug #276 fix - advanced gesture analysis
             initializeThumbModeOptimizer()  // Bug #359 fix - ergonomic thumb typing
+            initializeMultiLanguageDictionary()  // Bug #277 fix - multi-language dictionaries
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -235,6 +237,7 @@ class CleverKeysService : InputMethodService(),
             rtlLanguageHandler?.release()  // Bug #349 - release RTL language handler resources
             comprehensiveTraceAnalyzer?.release()  // Bug #276 - release comprehensive trace analyzer resources
             thumbModeOptimizer?.release()  // Bug #359 - release thumb mode optimizer resources
+            multiLanguageDictionary?.release()  // Bug #277 - release multi-language dictionary resources
             imeLanguageSelector?.release()  // Bug #347 - release IME language selector resources
             languageManager?.release()  // Bug #344 - release language manager resources
         }
@@ -380,6 +383,61 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize thumb mode optimizer", e)
             // Non-fatal - keyboard works without thumb mode optimization
+        }
+    }
+
+    /**
+     * Initialize multi-language dictionary manager.
+     *
+     * Implements Bug #277 fix - Multi-language dictionary support with user dictionary.
+     *
+     * Provides comprehensive dictionary management for multiple languages:
+     * - 20 supported languages (en, es, fr, de, it, pt, ru, zh, ja, ko, ar, he, hi, th, el, tr, pl, nl, sv, da)
+     * - System dictionaries (pre-loaded word lists)
+     * - User dictionaries (personal words, learned from typing)
+     * - Language switching with automatic dictionary reload
+     * - Word frequency tracking and boosting
+     * - User word persistence via SharedPreferences
+     * - Common words and top-5000 fast paths
+     * - OOV (out-of-vocabulary) handling with confidence thresholding
+     *
+     * Note: Coordinates with LanguageManager for consistent language state.
+     */
+    private fun initializeMultiLanguageDictionary() {
+        try {
+            multiLanguageDictionary = MultiLanguageDictionaryManager(context = this)
+
+            // Load default language (English) in background
+            serviceScope.launch {
+                val success = multiLanguageDictionary?.setLanguage(
+                    MultiLanguageDictionaryManager.Language.ENGLISH
+                )
+                if (success == true) {
+                    logD("✅ MultiLanguageDictionaryManager initialized (Bug #277) - Default: English")
+                } else {
+                    logE("Failed to load default English dictionary", null)
+                }
+            }
+
+            // Set up language change listener
+            multiLanguageDictionary?.setCallback(object : MultiLanguageDictionaryManager.Callback {
+                override fun onLanguageChanged(language: MultiLanguageDictionaryManager.Language) {
+                    logD("Dictionary language changed: ${language.displayName}")
+                }
+
+                override fun onDictionaryLoaded(language: MultiLanguageDictionaryManager.Language, wordCount: Int) {
+                    logD("Dictionary loaded: ${language.displayName} ($wordCount words)")
+                }
+
+                override fun onUserWordAdded(word: String, language: MultiLanguageDictionaryManager.Language) {
+                    logD("User word added: $word (${language.displayName})")
+                }
+            })
+
+            logD("MultiLanguageDictionaryManager created (Bug #277)")
+        } catch (e: Exception) {
+            logE("Failed to initialize multi-language dictionary", e)
+            // Non-fatal - keyboard works with fallback vocabulary
         }
     }
 
