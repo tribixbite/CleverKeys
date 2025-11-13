@@ -78,6 +78,7 @@ class CleverKeysService : InputMethodService(),
     private var adaptiveLayoutManager: AdaptiveLayoutManager? = null
     private var typingStatisticsCollector: TypingStatisticsCollector? = null
     private var keyBorderRenderer: KeyBorderRenderer? = null
+    private var localeManager: LocaleManager? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -113,6 +114,7 @@ class CleverKeysService : InputMethodService(),
             initializeAdaptiveLayoutManager()  // Bug #335 fix
             initializeTypingStatisticsCollector()  // Bug #336 fix
             initializeKeyBorderRenderer()  // Bug #337 fix
+            initializeLocaleManager()  // Bug #346 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -165,6 +167,7 @@ class CleverKeysService : InputMethodService(),
             adaptiveLayoutManager?.release()  // Bug #335 - release adaptive layout manager resources
             typingStatisticsCollector?.release()  // Bug #336 - release typing statistics collector resources
             keyBorderRenderer?.release()  // Bug #337 - release key border renderer resources
+            localeManager?.release()  // Bug #346 - release locale manager resources
         }
         serviceScope.cancel()
     }
@@ -747,6 +750,23 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize key border renderer", e)
             // Non-fatal - keyboard can work without custom borders
+        }
+    }
+
+    /**
+     * Bug #346 fix: Initialize locale manager
+     *
+     * Creates manager for locale-specific formatting, separators, RTL support,
+     * and internationalization features.
+     */
+    private fun initializeLocaleManager() {
+        try {
+            localeManager = LocaleManager(context = this)
+
+            logD("✅ Locale manager initialized (locale: ${localeManager?.getLanguageTag()}, RTL: ${localeManager?.isRtl()})")
+        } catch (e: Exception) {
+            logE("Failed to initialize locale manager", e)
+            // Non-fatal - keyboard can work with default locale
         }
     }
 
