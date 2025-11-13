@@ -48,9 +48,9 @@ All 8 clipboard bugs resolved:
   - Implementation: NFC/NFD/NFKC/NFKD normalization, combining mark handling
 
 ### Translation (MEDIUM)
-- [ ] **Bug #348**: TranslationEngine.java missing (File 146)
-  - Impact: NO inline translation, no Google Translate integration
-  - File: TranslationEngine.java (300-400 lines) → COMPLETELY MISSING
+- [x] **Bug #348**: TranslationEngine.java → TranslationEngine.kt (576 lines) - ✅ FIXED (2025-11-13)
+  - Impact: Full inline translation, multi-provider support, language detection
+  - Implementation: Mock/ML Kit/Google Translate support, caching, history
 
 ---
 

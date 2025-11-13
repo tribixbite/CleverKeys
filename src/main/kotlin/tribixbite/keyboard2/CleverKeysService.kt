@@ -81,6 +81,7 @@ class CleverKeysService : InputMethodService(),
     private var localeManager: LocaleManager? = null
     private var characterSetManager: CharacterSetManager? = null
     private var unicodeNormalizer: UnicodeNormalizer? = null
+    private var translationEngine: TranslationEngine? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -119,6 +120,7 @@ class CleverKeysService : InputMethodService(),
             initializeLocaleManager()  // Bug #346 fix
             initializeCharacterSetManager()  // Bug #350 fix
             initializeUnicodeNormalizer()  // Bug #351 fix
+            initializeTranslationEngine()  // Bug #348 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -174,6 +176,7 @@ class CleverKeysService : InputMethodService(),
             localeManager?.release()  // Bug #346 - release locale manager resources
             characterSetManager?.release()  // Bug #350 - release character set manager resources
             unicodeNormalizer?.release()  // Bug #351 - release unicode normalizer resources
+            translationEngine?.release()  // Bug #348 - release translation engine resources
         }
         serviceScope.cancel()
     }
@@ -807,6 +810,23 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize unicode normalizer", e)
             // Non-fatal - keyboard can work without normalization
+        }
+    }
+
+    /**
+     * Bug #348 fix: Initialize translation engine
+     *
+     * Creates translation engine for inline text translation with
+     * multi-provider support and language detection.
+     */
+    private fun initializeTranslationEngine() {
+        try {
+            translationEngine = TranslationEngine(context = this)
+
+            logD("✅ Translation engine initialized")
+        } catch (e: Exception) {
+            logE("Failed to initialize translation engine", e)
+            // Non-fatal - keyboard can work without translation
         }
     }
 
