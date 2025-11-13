@@ -64,6 +64,16 @@ sealed class KeyValue : Comparable<KeyValue> {
         SELECT_WORD,              // Select word at cursor
         SELECT_LINE,              // Select line at cursor
         CLEAR_SELECTION,          // Clear selection
+        TWO_FINGER_SWIPE_LEFT,    // Two-finger swipe left
+        TWO_FINGER_SWIPE_RIGHT,   // Two-finger swipe right
+        TWO_FINGER_SWIPE_UP,      // Two-finger swipe up
+        TWO_FINGER_SWIPE_DOWN,    // Two-finger swipe down
+        THREE_FINGER_SWIPE_LEFT,  // Three-finger swipe left
+        THREE_FINGER_SWIPE_RIGHT, // Three-finger swipe right
+        THREE_FINGER_SWIPE_UP,    // Three-finger swipe up
+        THREE_FINGER_SWIPE_DOWN,  // Three-finger swipe down
+        PINCH_IN,                 // Pinch in gesture
+        PINCH_OUT,                // Pinch out gesture
     }
 
     /**

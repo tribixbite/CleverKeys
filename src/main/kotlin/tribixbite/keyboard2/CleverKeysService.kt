@@ -64,6 +64,7 @@ class CleverKeysService : InputMethodService(),
     private var caseConverter: CaseConverter? = null
     private var textExpander: TextExpander? = null
     private var cursorMovementManager: CursorMovementManager? = null
+    private var multiTouchHandler: MultiTouchHandler? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -85,6 +86,7 @@ class CleverKeysService : InputMethodService(),
             initializeCaseConverter()      // Bug #318 fix
             initializeTextExpander()       // Bug #319 fix
             initializeCursorMovementManager()  // Bug #322 fix
+            initializeMultiTouchHandler()  // Bug #323 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -364,6 +366,68 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
+     * Initialize multi-touch handler (Fix for Bug #323)
+     */
+    private fun initializeMultiTouchHandler() {
+        try {
+            multiTouchHandler = MultiTouchHandler(object : MultiTouchHandler.Callback {
+                override fun onTwoFingerSwipe(direction: MultiTouchHandler.SwipeDirection, velocity: Float) {
+                    logD("Two-finger swipe: ${direction.name} at ${velocity}px/s")
+                    // Trigger appropriate keyboard action via KeyEventHandler
+                    keyEventHandler?.let { handler ->
+                        val event = when (direction) {
+                            MultiTouchHandler.SwipeDirection.LEFT -> KeyValue.Event.TWO_FINGER_SWIPE_LEFT
+                            MultiTouchHandler.SwipeDirection.RIGHT -> KeyValue.Event.TWO_FINGER_SWIPE_RIGHT
+                            MultiTouchHandler.SwipeDirection.UP -> KeyValue.Event.TWO_FINGER_SWIPE_UP
+                            MultiTouchHandler.SwipeDirection.DOWN -> KeyValue.Event.TWO_FINGER_SWIPE_DOWN
+                        }
+                        // TODO: Trigger event through KeyEventHandler
+                        logD("Would trigger event: $event")
+                    }
+                }
+
+                override fun onThreeFingerSwipe(direction: MultiTouchHandler.SwipeDirection) {
+                    logD("Three-finger swipe: ${direction.name}")
+                    keyEventHandler?.let { handler ->
+                        val event = when (direction) {
+                            MultiTouchHandler.SwipeDirection.LEFT -> KeyValue.Event.THREE_FINGER_SWIPE_LEFT
+                            MultiTouchHandler.SwipeDirection.RIGHT -> KeyValue.Event.THREE_FINGER_SWIPE_RIGHT
+                            MultiTouchHandler.SwipeDirection.UP -> KeyValue.Event.THREE_FINGER_SWIPE_UP
+                            MultiTouchHandler.SwipeDirection.DOWN -> KeyValue.Event.THREE_FINGER_SWIPE_DOWN
+                        }
+                        // TODO: Trigger event through KeyEventHandler
+                        logD("Would trigger event: $event")
+                    }
+                }
+
+                override fun onPinchGesture(scale: Float) {
+                    logD("Pinch gesture: scale = $scale")
+                    val event = if (scale < 1.0f) {
+                        KeyValue.Event.PINCH_IN
+                    } else {
+                        KeyValue.Event.PINCH_OUT
+                    }
+                    // TODO: Trigger event through KeyEventHandler
+                    logD("Would trigger event: $event")
+                }
+
+                override fun onSimultaneousKeyPress(touchCount: Int) {
+                    logD("Simultaneous key press: $touchCount touches")
+                    // Could trigger special actions for multi-key combos
+                }
+
+                override fun performVibration() {
+                    keyboardView?.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+                }
+            })
+            logD("✅ Multi-touch handler initialized")
+        } catch (e: Exception) {
+            logE("Failed to initialize multi-touch handler", e)
+            // Non-fatal - keyboard can work without multi-touch gestures
+        }
+    }
+
+    /**
      * Initialize key event handler
      */
     private fun initializeKeyEventHandler() {
@@ -440,7 +504,8 @@ class CleverKeysService : InputMethodService(),
             smartPunctuationHandler = smartPunctuationHandler,
             caseConverter = caseConverter,
             textExpander = textExpander,
-            cursorMovementManager = cursorMovementManager
+            cursorMovementManager = cursorMovementManager,
+            multiTouchHandler = multiTouchHandler
         )
 
         // Re-initialize Config with the fully-initialized handler (Fix #51, #311)

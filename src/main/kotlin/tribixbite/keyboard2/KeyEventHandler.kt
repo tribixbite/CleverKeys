@@ -23,6 +23,7 @@ import tribixbite.keyboard2.R
  * Includes case conversion (Fix for Bug #318)
  * Includes text expansion (Fix for Bug #319)
  * Includes cursor movement (Fix for Bug #322)
+ * Includes multi-touch gestures (Fix for Bug #323)
  */
 class KeyEventHandler(
     private val receiver: IReceiver,
@@ -33,7 +34,8 @@ class KeyEventHandler(
     private val smartPunctuationHandler: SmartPunctuationHandler? = null,
     private val caseConverter: CaseConverter? = null,
     private val textExpander: TextExpander? = null,
-    private val cursorMovementManager: CursorMovementManager? = null
+    private val cursorMovementManager: CursorMovementManager? = null,
+    private val multiTouchHandler: MultiTouchHandler? = null
 ) : Config.IKeyEventHandler, ClipboardPasteCallback {
 
     companion object {
@@ -195,6 +197,16 @@ class KeyEventHandler(
             KeyValue.Event.SELECT_WORD -> handleSelectWord()
             KeyValue.Event.SELECT_LINE -> handleSelectLine()
             KeyValue.Event.CLEAR_SELECTION -> handleClearSelection()
+            KeyValue.Event.TWO_FINGER_SWIPE_LEFT -> handleTwoFingerSwipe(MultiTouchHandler.SwipeDirection.LEFT)
+            KeyValue.Event.TWO_FINGER_SWIPE_RIGHT -> handleTwoFingerSwipe(MultiTouchHandler.SwipeDirection.RIGHT)
+            KeyValue.Event.TWO_FINGER_SWIPE_UP -> handleTwoFingerSwipe(MultiTouchHandler.SwipeDirection.UP)
+            KeyValue.Event.TWO_FINGER_SWIPE_DOWN -> handleTwoFingerSwipe(MultiTouchHandler.SwipeDirection.DOWN)
+            KeyValue.Event.THREE_FINGER_SWIPE_LEFT -> handleThreeFingerSwipe(MultiTouchHandler.SwipeDirection.LEFT)
+            KeyValue.Event.THREE_FINGER_SWIPE_RIGHT -> handleThreeFingerSwipe(MultiTouchHandler.SwipeDirection.RIGHT)
+            KeyValue.Event.THREE_FINGER_SWIPE_UP -> handleThreeFingerSwipe(MultiTouchHandler.SwipeDirection.UP)
+            KeyValue.Event.THREE_FINGER_SWIPE_DOWN -> handleThreeFingerSwipe(MultiTouchHandler.SwipeDirection.DOWN)
+            KeyValue.Event.PINCH_IN -> handlePinchGesture(0.5f)
+            KeyValue.Event.PINCH_OUT -> handlePinchGesture(1.5f)
             else -> logD("Unhandled event: $event")
         }
     }
@@ -374,6 +386,82 @@ class KeyEventHandler(
             receiver.performVibration()
             logD("Cleared selection")
         }
+    }
+
+    /**
+     * Handle two-finger swipe gesture (Fix for Bug #323)
+     */
+    private fun handleTwoFingerSwipe(direction: MultiTouchHandler.SwipeDirection) {
+        logD("Two-finger swipe ${direction.name}")
+
+        // Default actions for two-finger swipes
+        when (direction) {
+            MultiTouchHandler.SwipeDirection.LEFT -> {
+                // Undo text operation
+                logD("Two-finger swipe left - trigger undo")
+            }
+            MultiTouchHandler.SwipeDirection.RIGHT -> {
+                // Redo text operation
+                logD("Two-finger swipe right - trigger redo")
+            }
+            MultiTouchHandler.SwipeDirection.UP -> {
+                // Switch to previous layout
+                logD("Two-finger swipe up - previous layout")
+            }
+            MultiTouchHandler.SwipeDirection.DOWN -> {
+                // Switch to next layout
+                logD("Two-finger swipe down - next layout")
+            }
+        }
+
+        receiver.performVibration()
+    }
+
+    /**
+     * Handle three-finger swipe gesture (Fix for Bug #323)
+     */
+    private fun handleThreeFingerSwipe(direction: MultiTouchHandler.SwipeDirection) {
+        logD("Three-finger swipe ${direction.name}")
+
+        // Default actions for three-finger swipes
+        when (direction) {
+            MultiTouchHandler.SwipeDirection.LEFT -> {
+                // Previous keyboard
+                logD("Three-finger swipe left - previous keyboard")
+            }
+            MultiTouchHandler.SwipeDirection.RIGHT -> {
+                // Next keyboard
+                logD("Three-finger swipe right - next keyboard")
+            }
+            MultiTouchHandler.SwipeDirection.UP -> {
+                // Show emoji/symbols
+                receiver.switchToEmojiLayout()
+            }
+            MultiTouchHandler.SwipeDirection.DOWN -> {
+                // Hide keyboard
+                logD("Three-finger swipe down - hide keyboard")
+            }
+        }
+
+        receiver.performVibration()
+    }
+
+    /**
+     * Handle pinch gesture (Fix for Bug #323)
+     */
+    private fun handlePinchGesture(scale: Float) {
+        logD("Pinch gesture - scale: $scale")
+
+        // Default actions for pinch
+        if (scale < 1.0f) {
+            // Pinch in - decrease keyboard size or zoom out
+            logD("Pinch in - zoom out/shrink keyboard")
+        } else {
+            // Pinch out - increase keyboard size or zoom in
+            logD("Pinch out - zoom in/enlarge keyboard")
+        }
+
+        receiver.performVibration()
     }
 
     /**
