@@ -88,16 +88,19 @@ class SwipeCalibrationActivity : Activity() {
     
     override fun onDestroy() {
         super.onDestroy()
-        // Clean up all resources
-        uiScope.cancel()
 
         // Remove pending handler callbacks to prevent leaks
         handler.removeCallbacksAndMessages(null)
 
-        // Clean up neural engine resources
+        // Clean up neural engine resources before cancelling scope
         if (::neuralEngine.isInitialized) {
-            neuralEngine.cleanup()
+            runBlocking {
+                neuralEngine.cleanup()
+            }
         }
+
+        // Clean up all resources
+        uiScope.cancel()
 
         logD("=== NEURAL CALIBRATION ACTIVITY DESTROYED ===")
     }

@@ -102,16 +102,19 @@ class CleverKeysService : InputMethodService(), SharedPreferences.OnSharedPrefer
         keyboardView = null
         suggestionBar = null
 
-        // Clean shutdown of all components
+        // Clean shutdown of all components (suspend cleanup before cancelling scope)
+        runBlocking {
+            neuralEngine?.cleanup()
+            // Other components with synchronous cleanup
+            predictionService?.shutdown()
+            predictionPipeline?.cleanup()
+            performanceProfiler?.cleanup()
+            configManager?.cleanup()
+            typingPredictionEngine?.cleanup()
+            voiceGuidanceEngine?.cleanup()
+            spellCheckerManager?.cleanup()
+        }
         serviceScope.cancel()
-        predictionService?.shutdown()
-        neuralEngine?.cleanup()
-        predictionPipeline?.cleanup()
-        performanceProfiler?.cleanup()
-        configManager?.cleanup()
-        typingPredictionEngine?.cleanup()
-        voiceGuidanceEngine?.cleanup()
-        spellCheckerManager?.cleanup()
     }
     
     /**

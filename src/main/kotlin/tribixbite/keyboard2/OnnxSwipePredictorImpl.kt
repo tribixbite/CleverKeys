@@ -953,9 +953,10 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     }
     
     /**
-     * Cleanup resources with complete memory management and tensor pool
+     * Cleanup resources with complete memory management and tensor pool.
+     * Should be called from a coroutine context during service shutdown.
      */
-    fun cleanup() {
+    suspend fun cleanup() = withContext(Dispatchers.IO) {
         try {
             encoderSession?.close()
             encoderSession = null
@@ -972,10 +973,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
 
         onnxExecutor.shutdown()
 
-        // Cleanup optimized tensor pool
-        kotlinx.coroutines.runBlocking {
-            tensorPool.cleanup()
-        }
+        // Cleanup optimized tensor pool (now properly suspended)
+        tensorPool.cleanup()
 
         tensorMemoryManager.cleanup()
         isModelLoaded = false

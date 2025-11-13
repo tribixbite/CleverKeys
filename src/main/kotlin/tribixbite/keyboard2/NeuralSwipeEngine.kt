@@ -163,9 +163,10 @@ class NeuralSwipeEngine(
     )
     
     /**
-     * Clean up resources
+     * Clean up resources.
+     * Should be called from a coroutine context during service shutdown.
      */
-    fun cleanup() {
+    suspend fun cleanup() {
         neuralPredictor?.cleanup()
         neuralPredictor = null
         isInitialized = false

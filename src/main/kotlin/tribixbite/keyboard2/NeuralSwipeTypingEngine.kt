@@ -118,9 +118,10 @@ class NeuralSwipeTypingEngine(
     val isReady: Boolean get() = initialized && neuralPredictor != null
     
     /**
-     * Cleanup
+     * Cleanup.
+     * Should be called from a coroutine context during shutdown.
      */
-    fun cleanup() {
+    suspend fun cleanup() {
         neuralPredictor?.cleanup()
         neuralPredictor = null
         initialized = false

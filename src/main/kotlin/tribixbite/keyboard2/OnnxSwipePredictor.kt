@@ -78,9 +78,10 @@ class OnnxSwipePredictor private constructor(private val context: Context) {
     }
     
     /**
-     * Cleanup resources
+     * Cleanup resources.
+     * Should be called from a coroutine context during shutdown.
      */
-    fun cleanup() {
+    suspend fun cleanup() {
         realPredictor.cleanup()
         isModelLoaded = false
     }

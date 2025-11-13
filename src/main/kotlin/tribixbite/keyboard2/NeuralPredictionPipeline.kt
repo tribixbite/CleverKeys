@@ -158,12 +158,13 @@ class NeuralPredictionPipeline(private val context: Context) {
     }
 
     /**
-     * Cleanup pipeline - ONNX only
+     * Cleanup pipeline - ONNX only.
+     * Should be called from a coroutine context during shutdown.
      */
-    fun cleanup() {
-        scope.cancel()
+    suspend fun cleanup() {
         neuralEngine.cleanup()
         performanceProfiler.cleanup()
         predictionCache.clear()
+        scope.cancel()
     }
 }
