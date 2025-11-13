@@ -215,32 +215,42 @@ class PredictionRepository(
     private val totalPredictions = AtomicInteger(0)
     private val totalTime = AtomicLong(0L)
     private val successfulPredictions = AtomicInteger(0)
+    private val statsLock = Any() // Bug #191 fix: Lock for multi-value atomic consistency
 
     /**
      * Get performance statistics
-     * Bug #191 fix: Thread-safe read
+     * Bug #191 fix: Thread-safe read with synchronized block for atomic consistency
      * Bug #193 fix: Removed pendingRequests (was mutating channel)
      */
     fun getStats(): PredictionStats {
-        val total = totalPredictions.get()
-        val time = totalTime.get()
-        val successful = successfulPredictions.get()
+        // Synchronize to ensure all three reads happen atomically together
+        // Prevents TOCTOU race where values become inconsistent mid-read
+        return synchronized(statsLock) {
+            val total = totalPredictions.get()
+            val time = totalTime.get()
+            val successful = successfulPredictions.get()
 
-        return PredictionStats(
-            totalPredictions = total,
-            averageTimeMs = if (total > 0) time.toDouble() / total / 1_000_000 else 0.0,
-            successRate = if (total > 0) successful.toDouble() / total else 0.0
-        )
+            PredictionStats(
+                totalPredictions = total,
+                averageTimeMs = if (total > 0) time.toDouble() / total / 1_000_000 else 0.0,
+                successRate = if (total > 0) successful.toDouble() / total else 0.0
+            )
+        }
     }
 
     /**
      * Reset performance statistics
+     * Bug #191 fix: Thread-safe reset with synchronized block for atomic consistency
      * Bug #192 fix: Add resetStats() to make statistics functional
      */
     fun resetStats() {
-        totalPredictions.set(0)
-        totalTime.set(0L)
-        successfulPredictions.set(0)
+        // Synchronize to ensure all three resets happen atomically together
+        // Prevents partial resets if prediction completes mid-reset
+        synchronized(statsLock) {
+            totalPredictions.set(0)
+            totalTime.set(0L)
+            successfulPredictions.set(0)
+        }
         logD("Prediction statistics reset")
     }
 
