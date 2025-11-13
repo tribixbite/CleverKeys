@@ -2,7 +2,38 @@
 
 **Porting Progress: 251/251 Java files reviewed (100.0%) 🎉 REVIEW COMPLETE!**
 
-## Latest Session (Nov 12, 2025 - Part 2) - WORDPREDICTOR IMPLEMENTATION 🎯
+## Latest Session (Nov 12, 2025 - Part 3) - LAYOUTSPREFERENCE CATASTROPHIC FIX 🔧
+
+### ✅ BUG FIX: LayoutsPreference base class corrected (Bug #642 - CATASTROPHIC)
+
+**Problem**: LayoutsPreference.kt extended DialogPreference instead of ListGroupPreference<Layout>
+- Impact: Entire layout management UI was broken (couldn't add/remove/modify layouts)
+- Root Cause: Wrong base class choice during initial Kotlin port
+- Severity: CATASTROPHIC - core keyboard customization feature completely non-functional
+
+**Solution**: Changed base class to ListGroupPreference<Layout>
+- **Fixed Base Class**: Now extends `ListGroupPreference<Layout>` instead of `DialogPreference`
+- **Implemented Abstract Methods**: `label_of_value()`, `select()`, `get_serializer()`
+- **Override Optional Methods**: `on_attach_add_button()`, `should_allow_remove_item()`
+- **LayoutsAddButton**: Changed to inner class extending AddButton
+- **Serializer**: Fixed method names (`load_item`, `save_item`)
+- **ListGroupPreference**: Made AddButton `open` to allow subclassing
+
+**Features Now Working**:
+- ✅ Add new layouts (system, named, custom)
+- ✅ Remove existing layouts
+- ✅ Modify/edit layouts
+- ✅ Custom layout XML editing with validation
+- ✅ Proper persistence to SharedPreferences
+- ✅ JSON serialization for complex layout types
+
+**Result**: Full layout management UI restored! Users can now customize their keyboard layouts properly.
+
+**Commit**: 2ffe9cb3
+
+---
+
+## Previous Session (Nov 12, 2025 - Part 2) - WORDPREDICTOR IMPLEMENTATION 🎯
 
 ### ✅ NEW FEATURE: WordPredictor.kt Implemented! (Bug #640 - CATASTROPHIC)
 
