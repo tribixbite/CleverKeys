@@ -108,6 +108,7 @@ class CleverKeysService : InputMethodService(),
     private var ngramModel: NgramModel? = null  // Bug #259 fix
     private var wordPredictor: WordPredictor? = null  // Bug #262 fix
     private var languageDetector: LanguageDetector? = null  // Bug #257 fix
+    private var userAdaptationManager: UserAdaptationManager? = null  // Bug #263 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -131,6 +132,7 @@ class CleverKeysService : InputMethodService(),
             initializeNgramModel()  // Bug #259 fix
             initializeWordPredictor()  // Bug #262 fix
             initializeLanguageDetector()  // Bug #257 fix
+            initializeUserAdaptationManager()  // Bug #263 fix
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -251,6 +253,7 @@ class CleverKeysService : InputMethodService(),
             keyboardSwipeRecognizer?.release()  // Bug #256 - release keyboard swipe recognizer resources
             imeLanguageSelector?.release()  // Bug #347 - release IME language selector resources
             languageManager?.release()  // Bug #344 - release language manager resources
+            userAdaptationManager?.cleanup()  // Bug #263 - release user adaptation manager resources
         }
         serviceScope.cancel()
     }
@@ -599,6 +602,23 @@ class CleverKeysService : InputMethodService(),
             logD("✅ LanguageDetector initialized (Bug #257)")
         } catch (e: Exception) {
             logE("Failed to initialize language detector", e)
+        }
+    }
+
+    /**
+     * Initialize user adaptation manager (Bug #263 fix).
+     */
+    private fun initializeUserAdaptationManager() {
+        try {
+            userAdaptationManager = UserAdaptationManager.getInstance(context = this)
+
+            // TODO: WordPredictor expects tribixbite.keyboard2.data.UserAdaptationManager
+            // but we have tribixbite.keyboard2.UserAdaptationManager (different class)
+            // For now, adaptation manager works standalone
+
+            logD("✅ UserAdaptationManager initialized (Bug #263)")
+        } catch (e: Exception) {
+            logE("Failed to initialize user adaptation manager", e)
         }
     }
 
