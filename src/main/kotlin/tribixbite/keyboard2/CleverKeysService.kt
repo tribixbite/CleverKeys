@@ -67,6 +67,7 @@ class CleverKeysService : InputMethodService(),
     private var multiTouchHandler: MultiTouchHandler? = null
     private var soundEffectManager: SoundEffectManager? = null
     private var animationManager: AnimationManager? = null
+    private var keyPreviewManager: KeyPreviewManager? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -91,6 +92,7 @@ class CleverKeysService : InputMethodService(),
             initializeMultiTouchHandler()  // Bug #323 fix
             initializeSoundEffectManager()  // Bug #324 fix
             initializeAnimationManager()    // Bug #325 fix
+            initializeKeyPreviewManager()   // Bug #326 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -132,6 +134,7 @@ class CleverKeysService : InputMethodService(),
             spellCheckerManager?.cleanup()
             soundEffectManager?.release()  // Bug #324 - release audio resources
             animationManager?.release()    // Bug #325 - release animation resources
+            keyPreviewManager?.release()   // Bug #326 - release preview resources
         }
         serviceScope.cancel()
     }
@@ -479,6 +482,29 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize animation manager", e)
             // Non-fatal - keyboard can work without animations
+        }
+    }
+
+    /**
+     * Initialize key preview manager for key press popups.
+     * Bug #326 - HIGH: Implement missing KeyPreviewManager
+     */
+    private fun initializeKeyPreviewManager() {
+        try {
+            // TODO: Get enabled state and duration from user preferences
+            val previewsEnabled = true   // Default to enabled
+            val previewDuration = 100L   // Default duration (100ms)
+
+            keyPreviewManager = KeyPreviewManager(
+                context = this,
+                enabled = previewsEnabled,
+                duration = previewDuration
+            )
+
+            logD("✅ Key preview manager initialized (enabled=$previewsEnabled, duration=${previewDuration}ms)")
+        } catch (e: Exception) {
+            logE("Failed to initialize key preview manager", e)
+            // Non-fatal - keyboard can work without key previews
         }
     }
 
