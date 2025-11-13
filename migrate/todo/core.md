@@ -19,9 +19,11 @@ This file tracks bugs and missing features in the core keyboard logic (parsing, 
 
 ## 🟡 LOW PRIORITY BUGS (From TODO_MEDIUM_LOW.md)
 
-### Code Quality (2 bugs)
-- [ ] **Bug #77**: LegacyComposeSystem - 90 lines of UNUSED dead code
+### Code Quality (1 bug)
+- [x] **Bug #77**: LegacyComposeSystem - 90 lines of UNUSED dead code ❌ FALSE (2025-11-13)
   - File: ComposeKey.kt (File 13)
+  - Status: NOT A BUG - LegacyComposeSystem IS used in KeyModifier.kt:156
+  - Used by: applyComposeOrFallback() method for compose sequence fallback
   - Impact: Code bloat only
   - Severity: LOW
 
