@@ -4,15 +4,23 @@ import android.content.Context
 import android.graphics.PointF
 
 /**
- * ONNX Swipe Predictor - Kotlin stub for neural prediction
- * This maintains the interface but implementation would need full ONNX integration
+ * ONNX Swipe Predictor - Delegator for neural prediction
+ *
+ * This class provides a stable API surface and delegates all operations to
+ * OnnxSwipePredictorImpl for the actual ONNX Runtime integration.
+ *
+ * Singleton pattern ensures single ONNX Runtime environment instance.
+ * Thread-safe initialization via double-checked locking.
  */
 class OnnxSwipePredictor private constructor(private val context: Context) {
-    
+
     companion object {
         private const val TAG = "OnnxSwipePredictor"
         private var instance: OnnxSwipePredictor? = null
 
+        /**
+         * Get singleton instance with thread-safe lazy initialization
+         */
         fun getInstance(context: Context): OnnxSwipePredictor {
             return instance ?: synchronized(this) {
                 instance ?: OnnxSwipePredictor(context).also { instance = it }

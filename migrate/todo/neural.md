@@ -40,7 +40,7 @@ This file tracks issues related to the swipe prediction and ONNX machine learnin
 
 ## 🟢 ONNX PIPELINE BUGS
 
-- File 41: **3 bugs** (OnnxSwipePredictor - LOW: redundant debugLogger field, misleading stub documentation, undocumented singleton lifecycle)
+- File 41: **3 bugs → 0 bugs** (OnnxSwipePredictor - ✅ FIXED: misleading stub documentation (lines 6-13 now accurately describe delegator pattern and singleton lifecycle); ✅ VERIFIED FALSE: no debugLogger field exists, only delegation method)
 - File 42: **6 bugs → 4 bugs** (OnnxSwipePredictorImpl - ✅ FIXED Bug #165: undefined logD(), runBlocking in cleanup (commit c0189936 - cleanup() is now suspend); ⏳ REMAINING: orphaned comment, code duplication, hardcoded thresholds, excessive logging)
 - File 43: **4 bugs → 0 bugs** (OptimizedTensorPool - ✅ FIXED: useTensor runBlocking (commit 9953264c), buffer position not reset (commit 5e85a519); ✅ VERIFIED FALSE: runBlocking in close() exists for AutoCloseable compatibility, documented, not used in codebase; large buffers are intentional optimization, correctly limited by buffer.limit())
 - File 44: **6 bugs → 5 bugs** (OptimizedVocabularyImpl - ✅ FIXED Bug #170; ⏳ REMAINING: HIGH - filters out ALL OOV predictions; MEDIUM - RuntimeException on load failure; LOW - hardcoded limits, optimization issues)
