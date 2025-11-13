@@ -20,6 +20,7 @@ import tribixbite.keyboard2.R
  * Includes screen reader integration for TalkBack (Fix for Bug #377)
  * Includes spell checking integration (Fix for Bug #311)
  * Includes smart punctuation (Fix for Bug #316 & #361)
+ * Includes case conversion (Fix for Bug #318)
  */
 class KeyEventHandler(
     private val receiver: IReceiver,
@@ -27,7 +28,8 @@ class KeyEventHandler(
     private val voiceGuidanceEngine: VoiceGuidanceEngine? = null,
     private val screenReaderManager: ScreenReaderManager? = null,
     private val spellCheckHelper: SpellCheckHelper? = null,
-    private val smartPunctuationHandler: SmartPunctuationHandler? = null
+    private val smartPunctuationHandler: SmartPunctuationHandler? = null,
+    private val caseConverter: CaseConverter? = null
 ) : Config.IKeyEventHandler, ClipboardPasteCallback {
 
     companion object {
@@ -155,6 +157,10 @@ class KeyEventHandler(
             KeyValue.Event.SWITCH_EMOJI -> receiver.switchToEmojiLayout()
             KeyValue.Event.CONFIG -> receiver.openSettings()
             KeyValue.Event.CAPS_LOCK -> toggleCapsLock()
+            KeyValue.Event.CONVERT_CASE_CYCLE -> handleCaseCycle()
+            KeyValue.Event.CONVERT_UPPERCASE -> handleCaseConversion(CaseConverter.CaseMode.UPPERCASE)
+            KeyValue.Event.CONVERT_LOWERCASE -> handleCaseConversion(CaseConverter.CaseMode.LOWERCASE)
+            KeyValue.Event.CONVERT_TITLE_CASE -> handleCaseConversion(CaseConverter.CaseMode.TITLE_CASE)
             else -> logD("Unhandled event: $event")
         }
     }
@@ -237,6 +243,36 @@ class KeyEventHandler(
         shouldCapitalizeNext = !shouldCapitalizeNext
 
         logD("Caps lock toggled, capitalize=$shouldCapitalizeNext")
+    }
+
+    /**
+     * Handle case conversion cycle (Fix for Bug #318)
+     */
+    private fun handleCaseCycle() {
+        val inputConnection = receiver.getInputConnection() ?: return
+        val converter = caseConverter ?: return
+
+        if (converter.cycleCaseConversion(inputConnection)) {
+            receiver.performVibration()
+            logD("Case conversion cycled")
+        } else {
+            logD("Case conversion failed - no text selected")
+        }
+    }
+
+    /**
+     * Handle specific case conversion mode (Fix for Bug #318)
+     */
+    private fun handleCaseConversion(mode: CaseConverter.CaseMode) {
+        val inputConnection = receiver.getInputConnection() ?: return
+        val converter = caseConverter ?: return
+
+        if (converter.convertSelection(inputConnection, mode)) {
+            receiver.performVibration()
+            logD("Converted to ${mode.name}")
+        } else {
+            logD("Case conversion failed - no text selected")
+        }
     }
 
     /**

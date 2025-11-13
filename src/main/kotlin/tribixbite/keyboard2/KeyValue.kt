@@ -48,6 +48,10 @@ sealed class KeyValue : Comparable<KeyValue> {
         CAPS_LOCK,
         SWITCH_VOICE_TYPING,
         SWITCH_VOICE_TYPING_CHOOSER,
+        CONVERT_CASE_CYCLE,      // Cycle through case modes
+        CONVERT_UPPERCASE,        // Convert to UPPERCASE
+        CONVERT_LOWERCASE,        // Convert to lowercase
+        CONVERT_TITLE_CASE,       // Convert to Title Case
     }
 
     /**

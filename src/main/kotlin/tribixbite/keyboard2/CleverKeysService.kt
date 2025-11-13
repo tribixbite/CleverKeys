@@ -61,6 +61,7 @@ class CleverKeysService : InputMethodService(),
     private var spellCheckerManager: SpellCheckerManager? = null
     private var spellCheckHelper: SpellCheckHelper? = null
     private var smartPunctuationHandler: SmartPunctuationHandler? = null
+    private var caseConverter: CaseConverter? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -79,6 +80,7 @@ class CleverKeysService : InputMethodService(),
             initializeAccessibilityEngines()
             initializeSpellChecker()
             initializeSmartPunctuation()  // Bug #316 & #361 fix
+            initializeCaseConverter()      // Bug #318 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -312,6 +314,19 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
+     * Initialize case converter (Fix for Bug #318)
+     */
+    private fun initializeCaseConverter() {
+        try {
+            caseConverter = CaseConverter()
+            logD("✅ Case converter initialized")
+        } catch (e: Exception) {
+            logE("Failed to initialize case converter", e)
+            // Non-fatal - keyboard can work without case conversion
+        }
+    }
+
+    /**
      * Initialize key event handler
      */
     private fun initializeKeyEventHandler() {
@@ -385,7 +400,8 @@ class CleverKeysService : InputMethodService(),
             voiceGuidanceEngine = voiceGuidanceEngine,
             screenReaderManager = screenReaderManager,
             spellCheckHelper = spellCheckHelper,
-            smartPunctuationHandler = smartPunctuationHandler
+            smartPunctuationHandler = smartPunctuationHandler,
+            caseConverter = caseConverter
         )
 
         // Re-initialize Config with the fully-initialized handler (Fix #51, #311)
