@@ -88,6 +88,7 @@ class CleverKeysService : InputMethodService(),
     private var textPredictionEngine: TextPredictionEngine? = null
     private var completionEngine: CompletionEngine? = null
     private var contextAnalyzer: ContextAnalyzer? = null
+    private var grammarChecker: GrammarChecker? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -133,6 +134,7 @@ class CleverKeysService : InputMethodService(),
             initializeTextPredictionEngine()  // Bug #313 fix
             initializeCompletionEngine()  // Bug #314 fix
             initializeContextAnalyzer()  // Bug #315 fix
+            initializeGrammarChecker()  // Bug #317 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -195,6 +197,7 @@ class CleverKeysService : InputMethodService(),
             textPredictionEngine?.release()  // Bug #313 - release text prediction engine resources
             completionEngine?.release()  // Bug #314 - release completion engine resources
             contextAnalyzer?.release()  // Bug #315 - release context analyzer resources
+            grammarChecker?.release()  // Bug #317 - release grammar checker resources
         }
         serviceScope.cancel()
     }
@@ -952,6 +955,23 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize context analyzer", e)
             // Non-fatal - keyboard can work without context analysis
+        }
+    }
+
+    /**
+     * Bug #317 fix: Initialize grammar checker
+     *
+     * Creates grammar checker for rule-based grammar validation including
+     * subject-verb agreement, article usage, and common error detection.
+     */
+    private fun initializeGrammarChecker() {
+        try {
+            grammarChecker = GrammarChecker(context = this)
+
+            logD("✅ GrammarChecker initialized (Bug #317)")
+        } catch (e: Exception) {
+            logE("Failed to initialize grammar checker", e)
+            // Non-fatal - keyboard can work without grammar checking
         }
     }
 
