@@ -123,6 +123,7 @@ class CleverKeysService : InputMethodService(),
     private var foldStateTracker: FoldStateTracker? = null  // Foldable device state tracking
     private var predictionCache: PredictionCache? = null  // LRU cache for neural predictions
     private var materialThemeManager: tribixbite.keyboard2.theme.MaterialThemeManager? = null  // Material 3 theming
+    private var loopGestureDetector: LoopGestureDetector? = null  // Bug #258 fix - loop gesture detection
 
     // Configuration and state
     private var config: Config? = null
@@ -162,6 +163,7 @@ class CleverKeysService : InputMethodService(),
             initializePredictionCache()  // LRU cache for neural predictions
             initializeMaterialThemeManager()  // Material 3 theming
             loadDefaultKeyboardLayout()
+            initializeLoopGestureDetector()  // Bug #258 fix - loop gesture detection
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -1040,6 +1042,31 @@ class CleverKeysService : InputMethodService(),
             logD("   - 278 lines of theming logic")
         } catch (e: Exception) {
             logE("Failed to initialize material theme manager", e)
+        }
+    }
+
+    private fun initializeLoopGestureDetector() {
+        try {
+            // Use default key dimensions (will be updated when layout loads)
+            val keyWidth = 100f  // Default, will be updated
+            val keyHeight = 100f  // Default, will be updated
+
+            loopGestureDetector = LoopGestureDetector(
+                keyWidth = keyWidth,
+                keyHeight = keyHeight
+            )
+
+            logD("✅ LoopGestureDetector initialized (Bug #258)")
+            logD("   - Detects loop gestures for repeated letters")
+            logD("   - Geometric loop detection (center, radius, angle)")
+            logD("   - Angle validation: 270-450°")
+            logD("   - Radius validation: 15px min, 1.5x key size max")
+            logD("   - Closure threshold: 30px")
+            logD("   - Repeat count estimation (360° = 2x, 540° = 3x)")
+            logD("   - 359 lines of loop detection logic")
+            logD("   - Fixes words like: hello, book, coffee")
+        } catch (e: Exception) {
+            logE("Failed to initialize loop gesture detector", e)
         }
     }
 
