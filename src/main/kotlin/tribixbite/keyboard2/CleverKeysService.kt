@@ -73,6 +73,7 @@ class CleverKeysService : InputMethodService(),
     private var layoutSwitchAnimator: LayoutSwitchAnimator? = null
     private var oneHandedModeManager: OneHandedModeManager? = null
     private var floatingKeyboardManager: FloatingKeyboardManager? = null
+    private var splitKeyboardManager: SplitKeyboardManager? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -103,6 +104,7 @@ class CleverKeysService : InputMethodService(),
             initializeLayoutSwitchAnimator()  // Bug #329 fix
             initializeOneHandedModeManager()  // Bug #331 fix
             initializeFloatingKeyboardManager()  // Bug #332 fix
+            initializeSplitKeyboardManager()  // Bug #333 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -150,6 +152,7 @@ class CleverKeysService : InputMethodService(),
             layoutSwitchAnimator?.release()  // Bug #329 - release layout animator resources
             oneHandedModeManager?.release()  // Bug #331 - release one-handed mode manager resources
             floatingKeyboardManager?.release()  // Bug #332 - release floating keyboard manager resources
+            splitKeyboardManager?.release()  // Bug #333 - release split keyboard manager resources
         }
         serviceScope.cancel()
     }
@@ -636,6 +639,29 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize floating keyboard manager", e)
             // Non-fatal - keyboard can work in docked mode
+        }
+    }
+
+    /**
+     * Bug #333 fix: Initialize split keyboard manager
+     *
+     * Creates manager for split keyboard mode optimized for thumb typing
+     * on tablets and large phones.
+     */
+    private fun initializeSplitKeyboardManager() {
+        try {
+            // TODO: Get enabled state from user preferences
+            val splitEnabled = false  // Default to disabled (unified keyboard)
+
+            splitKeyboardManager = SplitKeyboardManager(
+                context = this,
+                enabled = splitEnabled
+            )
+
+            logD("✅ Split keyboard manager initialized (enabled=$splitEnabled)")
+        } catch (e: Exception) {
+            logE("Failed to initialize split keyboard manager", e)
+            // Non-fatal - keyboard can work in unified mode
         }
     }
 
