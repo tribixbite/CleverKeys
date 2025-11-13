@@ -52,6 +52,18 @@ sealed class KeyValue : Comparable<KeyValue> {
         CONVERT_UPPERCASE,        // Convert to UPPERCASE
         CONVERT_LOWERCASE,        // Convert to lowercase
         CONVERT_TITLE_CASE,       // Convert to Title Case
+        CURSOR_LEFT,              // Move cursor left by character
+        CURSOR_RIGHT,             // Move cursor right by character
+        CURSOR_WORD_LEFT,         // Move cursor left by word
+        CURSOR_WORD_RIGHT,        // Move cursor right by word
+        CURSOR_LINE_START,        // Move cursor to start of line
+        CURSOR_LINE_END,          // Move cursor to end of line
+        CURSOR_DOC_START,         // Move cursor to start of document
+        CURSOR_DOC_END,           // Move cursor to end of document
+        SELECT_ALL,               // Select all text
+        SELECT_WORD,              // Select word at cursor
+        SELECT_LINE,              // Select line at cursor
+        CLEAR_SELECTION,          // Clear selection
     }
 
     /**

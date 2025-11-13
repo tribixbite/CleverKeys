@@ -22,6 +22,7 @@ import tribixbite.keyboard2.R
  * Includes smart punctuation (Fix for Bug #316 & #361)
  * Includes case conversion (Fix for Bug #318)
  * Includes text expansion (Fix for Bug #319)
+ * Includes cursor movement (Fix for Bug #322)
  */
 class KeyEventHandler(
     private val receiver: IReceiver,
@@ -31,7 +32,8 @@ class KeyEventHandler(
     private val spellCheckHelper: SpellCheckHelper? = null,
     private val smartPunctuationHandler: SmartPunctuationHandler? = null,
     private val caseConverter: CaseConverter? = null,
-    private val textExpander: TextExpander? = null
+    private val textExpander: TextExpander? = null,
+    private val cursorMovementManager: CursorMovementManager? = null
 ) : Config.IKeyEventHandler, ClipboardPasteCallback {
 
     companion object {
@@ -181,6 +183,18 @@ class KeyEventHandler(
             KeyValue.Event.CONVERT_UPPERCASE -> handleCaseConversion(CaseConverter.CaseMode.UPPERCASE)
             KeyValue.Event.CONVERT_LOWERCASE -> handleCaseConversion(CaseConverter.CaseMode.LOWERCASE)
             KeyValue.Event.CONVERT_TITLE_CASE -> handleCaseConversion(CaseConverter.CaseMode.TITLE_CASE)
+            KeyValue.Event.CURSOR_LEFT -> handleCursorMove(CursorMovementManager.Direction.LEFT, CursorMovementManager.Unit.CHARACTER)
+            KeyValue.Event.CURSOR_RIGHT -> handleCursorMove(CursorMovementManager.Direction.RIGHT, CursorMovementManager.Unit.CHARACTER)
+            KeyValue.Event.CURSOR_WORD_LEFT -> handleCursorMove(CursorMovementManager.Direction.LEFT, CursorMovementManager.Unit.WORD)
+            KeyValue.Event.CURSOR_WORD_RIGHT -> handleCursorMove(CursorMovementManager.Direction.RIGHT, CursorMovementManager.Unit.WORD)
+            KeyValue.Event.CURSOR_LINE_START -> handleCursorMove(CursorMovementManager.Direction.LEFT, CursorMovementManager.Unit.LINE)
+            KeyValue.Event.CURSOR_LINE_END -> handleCursorMove(CursorMovementManager.Direction.RIGHT, CursorMovementManager.Unit.LINE)
+            KeyValue.Event.CURSOR_DOC_START -> handleCursorMove(CursorMovementManager.Direction.LEFT, CursorMovementManager.Unit.DOCUMENT)
+            KeyValue.Event.CURSOR_DOC_END -> handleCursorMove(CursorMovementManager.Direction.RIGHT, CursorMovementManager.Unit.DOCUMENT)
+            KeyValue.Event.SELECT_ALL -> handleSelectAll()
+            KeyValue.Event.SELECT_WORD -> handleSelectWord()
+            KeyValue.Event.SELECT_LINE -> handleSelectLine()
+            KeyValue.Event.CLEAR_SELECTION -> handleClearSelection()
             else -> logD("Unhandled event: $event")
         }
     }
@@ -292,6 +306,73 @@ class KeyEventHandler(
             logD("Converted to ${mode.name}")
         } else {
             logD("Case conversion failed - no text selected")
+        }
+    }
+
+    /**
+     * Handle cursor movement (Fix for Bug #322)
+     */
+    private fun handleCursorMove(direction: CursorMovementManager.Direction, unit: CursorMovementManager.Unit) {
+        val inputConnection = receiver.getInputConnection() ?: return
+        val manager = cursorMovementManager ?: return
+
+        if (manager.moveCursor(inputConnection, direction, unit, select = false)) {
+            receiver.performVibration()
+            logD("Cursor moved ${direction.name} by ${unit.name}")
+        } else {
+            logD("Cursor movement failed")
+        }
+    }
+
+    /**
+     * Handle select all (Fix for Bug #322)
+     */
+    private fun handleSelectAll() {
+        val inputConnection = receiver.getInputConnection() ?: return
+        val manager = cursorMovementManager ?: return
+
+        if (manager.selectAll(inputConnection)) {
+            receiver.performVibration()
+            logD("Selected all text")
+        }
+    }
+
+    /**
+     * Handle select word (Fix for Bug #322)
+     */
+    private fun handleSelectWord() {
+        val inputConnection = receiver.getInputConnection() ?: return
+        val manager = cursorMovementManager ?: return
+
+        if (manager.selectWord(inputConnection)) {
+            receiver.performVibration()
+            logD("Selected word")
+        }
+    }
+
+    /**
+     * Handle select line (Fix for Bug #322)
+     */
+    private fun handleSelectLine() {
+        val inputConnection = receiver.getInputConnection() ?: return
+        val manager = cursorMovementManager ?: return
+
+        if (manager.selectLine(inputConnection)) {
+            receiver.performVibration()
+            logD("Selected line")
+        }
+    }
+
+    /**
+     * Handle clear selection (Fix for Bug #322)
+     */
+    private fun handleClearSelection() {
+        val inputConnection = receiver.getInputConnection() ?: return
+        val manager = cursorMovementManager ?: return
+
+        if (manager.clearSelection(inputConnection)) {
+            receiver.performVibration()
+            logD("Cleared selection")
         }
     }
 

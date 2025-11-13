@@ -63,6 +63,7 @@ class CleverKeysService : InputMethodService(),
     private var smartPunctuationHandler: SmartPunctuationHandler? = null
     private var caseConverter: CaseConverter? = null
     private var textExpander: TextExpander? = null
+    private var cursorMovementManager: CursorMovementManager? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -83,6 +84,7 @@ class CleverKeysService : InputMethodService(),
             initializeSmartPunctuation()  // Bug #316 & #361 fix
             initializeCaseConverter()      // Bug #318 fix
             initializeTextExpander()       // Bug #319 fix
+            initializeCursorMovementManager()  // Bug #322 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -349,6 +351,19 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
+     * Initialize cursor movement manager (Fix for Bug #322)
+     */
+    private fun initializeCursorMovementManager() {
+        try {
+            cursorMovementManager = CursorMovementManager()
+            logD("✅ Cursor movement manager initialized")
+        } catch (e: Exception) {
+            logE("Failed to initialize cursor movement manager", e)
+            // Non-fatal - keyboard can work without advanced cursor movement
+        }
+    }
+
+    /**
      * Initialize key event handler
      */
     private fun initializeKeyEventHandler() {
@@ -424,7 +439,8 @@ class CleverKeysService : InputMethodService(),
             spellCheckHelper = spellCheckHelper,
             smartPunctuationHandler = smartPunctuationHandler,
             caseConverter = caseConverter,
-            textExpander = textExpander
+            textExpander = textExpander,
+            cursorMovementManager = cursorMovementManager
         )
 
         // Re-initialize Config with the fully-initialized handler (Fix #51, #311)
