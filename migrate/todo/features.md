@@ -51,14 +51,18 @@ This file tracks missing user-facing features.
   - Impact: Cannot paste from pinned items
   - Severity: HIGH
 
-- [ ] **Bug #122**: Missing update_data() implementation
+- [x] **Bug #122**: Missing update_data() implementation ✅ FIXED (2025-11-13)
   - File: ClipboardHistoryCheckBox.kt (File 27)
-  - Impact: UI doesn't update
+  - Impact: UI couldn't refresh when config changed externally
+  - Fix: Added updateData() method to refresh checkbox state from global config
+  - Implementation: Uses isUpdatingFromConfig flag to prevent infinite loops
   - Severity: HIGH
 
-- [ ] **Bug #123**: Missing lifecycle hook
+- [x] **Bug #123**: Missing lifecycle hook ✅ FIXED (2025-11-13)
   - File: ClipboardHistoryCheckBox.kt (File 27)
-  - Impact: Memory leaks possible
+  - Impact: State not refreshed when view reattached
+  - Fix: Added onAttachedToWindow() lifecycle hook to call updateData()
+  - Implementation: Ensures checkbox reflects current config when view becomes visible
   - Severity: HIGH
 
 - [x] **Bug #126**: Missing callback-based notification support ❌ FALSE (2025-11-13)
