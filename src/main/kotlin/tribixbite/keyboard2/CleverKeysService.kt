@@ -77,6 +77,7 @@ class CleverKeysService : InputMethodService(),
     private var darkModeManager: DarkModeManager? = null
     private var adaptiveLayoutManager: AdaptiveLayoutManager? = null
     private var typingStatisticsCollector: TypingStatisticsCollector? = null
+    private var keyBorderRenderer: KeyBorderRenderer? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -111,6 +112,7 @@ class CleverKeysService : InputMethodService(),
             initializeDarkModeManager()  // Bug #334 fix
             initializeAdaptiveLayoutManager()  // Bug #335 fix
             initializeTypingStatisticsCollector()  // Bug #336 fix
+            initializeKeyBorderRenderer()  // Bug #337 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -162,6 +164,7 @@ class CleverKeysService : InputMethodService(),
             darkModeManager?.release()  // Bug #334 - release dark mode manager resources
             adaptiveLayoutManager?.release()  // Bug #335 - release adaptive layout manager resources
             typingStatisticsCollector?.release()  // Bug #336 - release typing statistics collector resources
+            keyBorderRenderer?.release()  // Bug #337 - release key border renderer resources
         }
         serviceScope.cancel()
     }
@@ -723,6 +726,27 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize typing statistics collector", e)
             // Non-fatal - keyboard can work without statistics
+        }
+    }
+
+    /**
+     * Bug #337 fix: Initialize key border renderer
+     *
+     * Creates renderer for decorative borders, outlines, gradients, shadows,
+     * and visual effects on keyboard keys.
+     */
+    private fun initializeKeyBorderRenderer() {
+        try {
+            keyBorderRenderer = KeyBorderRenderer()
+
+            // Set screen density for dp to px conversion
+            val density = resources.displayMetrics.density
+            keyBorderRenderer?.setDensity(density)
+
+            logD("✅ Key border renderer initialized")
+        } catch (e: Exception) {
+            logE("Failed to initialize key border renderer", e)
+            // Non-fatal - keyboard can work without custom borders
         }
     }
 
