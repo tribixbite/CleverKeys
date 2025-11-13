@@ -110,6 +110,8 @@ class CleverKeysService : InputMethodService(),
     private var languageDetector: LanguageDetector? = null  // Bug #257 fix
     private var userAdaptationManager: UserAdaptationManager? = null  // Bug #263 fix
     private var swipeMLTrainer: tribixbite.keyboard2.ml.SwipeMLTrainer? = null  // Bug #274 fix
+    private var neuralSwipeTypingEngine: NeuralSwipeTypingEngine? = null  // Bug #275 dependency - neural prediction engine
+    private var asyncPredictionHandler: AsyncPredictionHandler? = null  // Bug #275 fix - async prediction processing
 
     // Configuration and state
     private var config: Config? = null
@@ -135,6 +137,8 @@ class CleverKeysService : InputMethodService(),
             initializeLanguageDetector()  // Bug #257 fix
             initializeUserAdaptationManager()  // Bug #263 fix
             initializeSwipeMLTrainer()  // Bug #274 fix
+            initializeNeuralSwipeTypingEngine()  // Bug #275 dependency - neural prediction engine
+            initializeAsyncPredictionHandler()  // Bug #275 fix - async prediction processing
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -257,6 +261,10 @@ class CleverKeysService : InputMethodService(),
             languageManager?.release()  // Bug #344 - release language manager resources
             userAdaptationManager?.cleanup()  // Bug #263 - release user adaptation manager resources
             swipeMLTrainer?.shutdown()  // Bug #274 - release swipe ML trainer resources
+            asyncPredictionHandler?.shutdown()  // Bug #275 - release async prediction handler resources
+            serviceScope.launch {
+                neuralSwipeTypingEngine?.cleanup()  // Bug #275 dependency - cleanup is suspend function
+            }
         }
         serviceScope.cancel()
     }
@@ -638,6 +646,70 @@ class CleverKeysService : InputMethodService(),
             logD("✅ SwipeMLTrainer initialized (Bug #274)")
         } catch (e: Exception) {
             logE("Failed to initialize swipe ML trainer", e)
+        }
+    }
+
+    /**
+     * Initialize neural swipe typing engine (Bug #275 dependency).
+     * This is the core prediction engine required by AsyncPredictionHandler.
+     *
+     * Features:
+     * - ONNX-based neural swipe prediction
+     * - Synchronous and asynchronous prediction APIs
+     * - Keyboard dimension and key position configuration
+     * - Debug logging support
+     */
+    private fun initializeNeuralSwipeTypingEngine() {
+        try {
+            val cfg = config ?: throw IllegalStateException("Config not initialized")
+
+            neuralSwipeTypingEngine = NeuralSwipeTypingEngine(
+                context = this,
+                config = cfg
+            )
+
+            // Initialize asynchronously in background
+            serviceScope.launch {
+                val success = neuralSwipeTypingEngine?.initialize() ?: false
+                if (success) {
+                    logD("✅ NeuralSwipeTypingEngine initialized (Bug #275 dependency)")
+                    logD("   - ONNX models loaded")
+                    logD("   - Ready for predictions")
+                } else {
+                    logE("Failed to initialize NeuralSwipeTypingEngine")
+                }
+            }
+        } catch (e: Exception) {
+            logE("Failed to initialize neural swipe typing engine", e)
+        }
+    }
+
+    /**
+     * Initialize async prediction handler (Bug #275 fix).
+     * Handles swipe predictions asynchronously to prevent UI blocking.
+     *
+     * Features:
+     * - Background prediction processing with Dispatchers.Default
+     * - Automatic cancellation of stale predictions
+     * - Request ID tracking for result validation
+     * - Main thread callback delivery
+     * - Graceful error handling with performance timing
+     */
+    private fun initializeAsyncPredictionHandler() {
+        try {
+            val engine = neuralSwipeTypingEngine ?: run {
+                logD("⏳ AsyncPredictionHandler initialization deferred (waiting for NeuralSwipeTypingEngine)")
+                return
+            }
+
+            asyncPredictionHandler = AsyncPredictionHandler(neuralEngine = engine)
+
+            logD("✅ AsyncPredictionHandler initialized (Bug #275)")
+            logD("   - Coroutine-based async processing enabled")
+            logD("   - Auto-cancellation of pending predictions")
+            logD("   - Stats: ${asyncPredictionHandler?.getStats()}")
+        } catch (e: Exception) {
+            logE("Failed to initialize async prediction handler", e)
         }
     }
 
