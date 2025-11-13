@@ -75,6 +75,7 @@ class CleverKeysService : InputMethodService(),
     private var floatingKeyboardManager: FloatingKeyboardManager? = null
     private var splitKeyboardManager: SplitKeyboardManager? = null
     private var darkModeManager: DarkModeManager? = null
+    private var adaptiveLayoutManager: AdaptiveLayoutManager? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -107,6 +108,7 @@ class CleverKeysService : InputMethodService(),
             initializeFloatingKeyboardManager()  // Bug #332 fix
             initializeSplitKeyboardManager()  // Bug #333 fix
             initializeDarkModeManager()  // Bug #334 fix
+            initializeAdaptiveLayoutManager()  // Bug #335 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -156,6 +158,7 @@ class CleverKeysService : InputMethodService(),
             floatingKeyboardManager?.release()  // Bug #332 - release floating keyboard manager resources
             splitKeyboardManager?.release()  // Bug #333 - release split keyboard manager resources
             darkModeManager?.release()  // Bug #334 - release dark mode manager resources
+            adaptiveLayoutManager?.release()  // Bug #335 - release adaptive layout manager resources
         }
         serviceScope.cancel()
     }
@@ -682,6 +685,24 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize dark mode manager", e)
             // Non-fatal - keyboard can work without theme management
+        }
+    }
+
+    /**
+     * Bug #335 fix: Initialize adaptive layout manager
+     *
+     * Creates manager for intelligent layout optimization based on
+     * device characteristics and screen configuration.
+     */
+    private fun initializeAdaptiveLayoutManager() {
+        try {
+            adaptiveLayoutManager = AdaptiveLayoutManager(context = this)
+
+            val config = adaptiveLayoutManager?.getConfig()
+            logD("✅ Adaptive layout manager initialized (device=${config?.deviceType}, orientation=${config?.orientation}, scale=${config?.scaleFactor})")
+        } catch (e: Exception) {
+            logE("Failed to initialize adaptive layout manager", e)
+            // Non-fatal - keyboard can work with default layout
         }
     }
 
