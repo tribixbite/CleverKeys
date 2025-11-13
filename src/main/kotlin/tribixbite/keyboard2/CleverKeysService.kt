@@ -99,6 +99,7 @@ class CleverKeysService : InputMethodService(),
     private var voiceTypingEngine: VoiceTypingEngine? = null  // Bug #353 fix
     private var languageManager: LanguageManager? = null  // Bug #344 fix
     private var imeLanguageSelector: IMELanguageSelector? = null  // Bug #347 fix
+    private var rtlLanguageHandler: RTLLanguageHandler? = null  // Bug #349 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -113,6 +114,7 @@ class CleverKeysService : InputMethodService(),
             initializeConfiguration()
             initializeLanguageManager()  // Bug #344 fix - foundational for multi-language
             initializeIMELanguageSelector()  // Bug #347 fix - language selection UI
+            initializeRTLLanguageHandler()  // Bug #349 fix - RTL text support
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -226,6 +228,7 @@ class CleverKeysService : InputMethodService(),
             continuousInputManager?.release()  // Bug #357 - release continuous input manager resources
             handwritingRecognizer?.release()  // Bug #352 - release handwriting recognizer resources
             voiceTypingEngine?.release()  // Bug #353 - release voice typing engine resources
+            rtlLanguageHandler?.release()  // Bug #349 - release RTL language handler resources
             imeLanguageSelector?.release()  // Bug #347 - release IME language selector resources
             languageManager?.release()  // Bug #344 - release language manager resources
         }
@@ -305,6 +308,21 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize IME language selector", e)
             // Non-fatal - language switching can still work without UI
+        }
+    }
+
+    /**
+     * Initialize RTL language handler for Arabic/Hebrew support.
+     * Bug #349 fix - Essential for ~429M RTL language users.
+     */
+    private fun initializeRTLLanguageHandler() {
+        try {
+            rtlLanguageHandler = RTLLanguageHandler(context = this)
+
+            logD("✅ RTLLanguageHandler initialized (Bug #349)")
+        } catch (e: Exception) {
+            logE("Failed to initialize RTL language handler", e)
+            // Non-fatal - keyboard works without RTL support
         }
     }
 

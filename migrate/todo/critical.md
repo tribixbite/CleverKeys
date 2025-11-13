@@ -207,9 +207,11 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Features: Language selection dialog (switch/enable-disable modes), current language indicator view (5 styles: FULL_NAME/SHORT_CODE/NATIVE_NAME/FLAG_EMOJI/COMPACT), quick language switching (next/previous), recent languages menu, language search/filter, keyboard shortcut support, multi-selection for enabling languages, flag emojis for 20 languages, customized dialog appearance, click/long-click handlers, StateFlow reactive updates
   - Integration: Integrated in CleverKeysService (requires LanguageManager)
 
-- [ ] **Bug #349**: RTLLanguageHandler.java missing (File 147)
-  - Impact: Arabic/Hebrew text BROKEN, ~429M users blocked
-  - File: RTLLanguageHandler.java (200-300 lines) → COMPLETELY MISSING
+- [x] **Bug #349**: RTLLanguageHandler FIXED ✅ **2025-11-13**
+  - Impact: Complete RTL text handling system now functional for Arabic/Hebrew/Persian/Urdu/Yiddish (~429M users)
+  - File: RTLLanguageHandler.kt (540 lines) → ✅ FULLY IMPLEMENTED
+  - Features: Text direction detection (LTR/RTL/AUTO), RTL character detection (Hebrew/Arabic/Syriac/Thaana/NKo/Samaritan/Mandaic ranges), text analysis (direction/mixed content/RTL percentage), visual↔logical position conversion, cursor positioning in RTL context, word boundary detection, cursor movement (left/right with RTL awareness), UI layout direction adjustment, text direction hints, number formatting (Arabic-Indic numerals ٠١٢٣٤٥٦٧٨٩), bidirectional text support, RTL punctuation handling, system locale detection, 5 supported RTL languages (ar/he/fa/ur/yi)
+  - Integration: Integrated in CleverKeysService
 
 - [x] **Bug #257**: LanguageDetector FIXED ✅ **2025-10-28**
   - Impact: Automatic language detection now functional (en, es, fr, de)
