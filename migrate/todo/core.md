@@ -12,10 +12,13 @@ This file tracks bugs and missing features in the core keyboard logic (parsing, 
   - Commit: 876e995e
   - Severity: MEDIUM
 
-- [ ] **Bug #80**: TRIGGER_CHARACTERS expanded beyond Java
-  - File: ComposeKeyData.kt (File 14)
-  - Impact: Functionality change (may be intentional)
-  - Severity: MEDIUM
+- [x] **Bug #80**: TRIGGER_CHARACTERS expanded beyond Java ❌ FALSE (2025-11-13)
+  - File: Autocapitalisation.kt (File 15) - Note: todo incorrectly listed as File 14
+  - Status: NOT A BUG - Both Java and Kotlin versions only trigger on space character
+  - Java: `is_trigger_character(c)` returns true only for ' ' (space)
+  - Kotlin: `isTriggerCharacter(c)` returns true only for ' ' (space)
+  - Impact: None - identical behavior
+  - Severity: N/A (false report)
 
 ## 🟡 LOW PRIORITY BUGS (From TODO_MEDIUM_LOW.md)
 
@@ -61,7 +64,7 @@ This file tracks bugs and missing features in the core keyboard logic (parsing, 
 - File 12: **✅ 0 bugs** (Modmap - PROPERLY IMPLEMENTED, improvements over Java)
 - File 13: **1 bug** (ComposeKey - ✅ FIXED Bug #75 flags hardcoded; ⏳ REMAINING: 90 lines unused code)
 - File 14: **✅ 0 bugs** (ComposeKeyData - ✅ FIXED with code generation)
-- File 15: **1 bug** (Autocapitalisation - TRIGGER_CHARACTERS expanded, questionable)
+- File 15: **0 bugs** (Autocapitalisation - ❌ Bug #80 FALSE: trigger logic identical to Java)
 - File 16: **1 CATASTROPHIC** (ExtraKeys - 95% missing, architectural mismatch)
 - File 17: **1 CRITICAL → 0 bugs** (DirectBootAwarePreferences - ✅ FIXED: device-protected storage, migration logic, full implementation)
 - File 18: **✅ 0 bugs** (Utils - ✅ EXEMPLARY! 7X expansion with enhancements)
