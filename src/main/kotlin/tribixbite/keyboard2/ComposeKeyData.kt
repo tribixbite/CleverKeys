@@ -24,7 +24,6 @@ object ComposeKeyData {
      * State array representing compose sequence states and transitions.
      * Loaded lazily from binary resource file.
      */
-    @JvmField
     val states: CharArray
         get() = _states ?: throw IllegalStateException("ComposeKeyData not initialized. Call initialize(context) first.")
 
@@ -32,7 +31,6 @@ object ComposeKeyData {
      * Edge array representing transition states and state sizes.
      * Must have the same length as states array.
      */
-    @JvmField
     val edges: IntArray
         get() = _edges ?: throw IllegalStateException("ComposeKeyData not initialized. Call initialize(context) first.")
 
