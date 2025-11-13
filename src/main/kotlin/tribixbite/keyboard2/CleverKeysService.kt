@@ -87,6 +87,7 @@ class CleverKeysService : InputMethodService(),
     private var frequencyModel: FrequencyModel? = null
     private var textPredictionEngine: TextPredictionEngine? = null
     private var completionEngine: CompletionEngine? = null
+    private var contextAnalyzer: ContextAnalyzer? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -131,6 +132,7 @@ class CleverKeysService : InputMethodService(),
             initializeFrequencyModel()  // Bug #312 fix
             initializeTextPredictionEngine()  // Bug #313 fix
             initializeCompletionEngine()  // Bug #314 fix
+            initializeContextAnalyzer()  // Bug #315 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -192,6 +194,7 @@ class CleverKeysService : InputMethodService(),
             frequencyModel?.release()  // Bug #312 - release frequency model resources
             textPredictionEngine?.release()  // Bug #313 - release text prediction engine resources
             completionEngine?.release()  // Bug #314 - release completion engine resources
+            contextAnalyzer?.release()  // Bug #315 - release context analyzer resources
         }
         serviceScope.cancel()
     }
@@ -932,6 +935,23 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize completion engine", e)
             // Non-fatal - keyboard can work without completions
+        }
+    }
+
+    /**
+     * Bug #315 fix: Initialize context analyzer
+     *
+     * Creates context analyzer for intelligent text analysis including
+     * sentence structure, writing style, and topic detection.
+     */
+    private fun initializeContextAnalyzer() {
+        try {
+            contextAnalyzer = ContextAnalyzer(context = this)
+
+            logD("✅ ContextAnalyzer initialized (Bug #315)")
+        } catch (e: Exception) {
+            logE("Failed to initialize context analyzer", e)
+            // Non-fatal - keyboard can work without context analysis
         }
     }
 
