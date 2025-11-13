@@ -328,10 +328,12 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Line 74: scope.cancel() // Cleanup coroutine scope when view is detached
   - Status: ✅ COMPLETE - proper lifecycle management
 
-- [ ] **Bug #359**: ThumbModeOptimizer missing (File 157)
-  - Impact: NO thumb-zone keyboard optimization (poor ergonomics on large devices)
-  - File: ThumbModeOptimizer.java (~200-250 lines) → COMPLETELY MISSING
-  - Missing: Thumb reach layout, curved/arc adaptation, ergonomic positioning
+- [x] **Bug #359**: ThumbModeOptimizer missing (File 157) ✅ FIXED (2025-11-13)
+  - Impact: NO thumb-zone keyboard optimization → Now provides comprehensive ergonomic optimization
+  - File: ThumbModeOptimizer.kt (591 lines) → COMPLETE
+  - Features: Four thumb modes (DISABLED/ONE_HANDED_LEFT/ONE_HANDED_RIGHT/TWO_HANDED), thumb reach zone calculation (comfortable 2.5" radius, maximum 3.5" radius), curved/arc keyboard layout adaptation with configurable curvature strength, dynamic key positioning for ergonomic reach, key size scaling by reachability (0.7x-1.3x), device size detection (SMALL/MEDIUM/LARGE/XLARGE), screen size and orientation detection, thumb mode recommendations based on device characteristics
+  - Integration: Initialized in CleverKeysService onCreate(), released in onDestroy()
+  - Implementation: Ergonomic adaptation with ThumbReach calculation (comfortable/maximum radius, optimal pivot point, reachable zone), KeyAdjustment with position/scale/reachability scores, ThumbModeConfig with curvature strength/keyboard width/horizontal offset, applyCurvature() for arc effect, calculateReachabilityScore() for accessibility metrics
 
 **Total P0/P1**: 41 bugs (2 fixed, 39 remaining)
 

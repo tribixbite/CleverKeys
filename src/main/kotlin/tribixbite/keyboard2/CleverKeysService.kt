@@ -101,6 +101,7 @@ class CleverKeysService : InputMethodService(),
     private var imeLanguageSelector: IMELanguageSelector? = null  // Bug #347 fix
     private var rtlLanguageHandler: RTLLanguageHandler? = null  // Bug #349 fix
     private var comprehensiveTraceAnalyzer: ComprehensiveTraceAnalyzer? = null  // Bug #276 fix
+    private var thumbModeOptimizer: ThumbModeOptimizer? = null  // Bug #359 fix
 
     // Configuration and state
     private var config: Config? = null
@@ -117,6 +118,7 @@ class CleverKeysService : InputMethodService(),
             initializeIMELanguageSelector()  // Bug #347 fix - language selection UI
             initializeRTLLanguageHandler()  // Bug #349 fix - RTL text support
             initializeComprehensiveTraceAnalyzer()  // Bug #276 fix - advanced gesture analysis
+            initializeThumbModeOptimizer()  // Bug #359 fix - ergonomic thumb typing
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -232,6 +234,7 @@ class CleverKeysService : InputMethodService(),
             voiceTypingEngine?.release()  // Bug #353 - release voice typing engine resources
             rtlLanguageHandler?.release()  // Bug #349 - release RTL language handler resources
             comprehensiveTraceAnalyzer?.release()  // Bug #276 - release comprehensive trace analyzer resources
+            thumbModeOptimizer?.release()  // Bug #359 - release thumb mode optimizer resources
             imeLanguageSelector?.release()  // Bug #347 - release IME language selector resources
             languageManager?.release()  // Bug #344 - release language manager resources
         }
@@ -350,6 +353,33 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize comprehensive trace analyzer", e)
             // Non-fatal - gesture analysis provides enhancement but not critical
+        }
+    }
+
+    /**
+     * Initialize thumb mode optimizer.
+     *
+     * Implements Bug #359 fix - Ergonomic thumb-zone keyboard optimization.
+     *
+     * Provides ergonomic keyboard adaptations for one-handed and two-handed
+     * thumb typing with curved key layouts and reach-zone optimization:
+     * - Thumb reach zone calculation based on screen size
+     * - One-handed mode (left/right thumb optimization)
+     * - Two-handed mode (dual thumb zones)
+     * - Curved/arc keyboard layout adaptation
+     * - Dynamic key positioning for ergonomic reach
+     * - Key size adjustments for better accessibility
+     * - Screen size and orientation detection
+     * - Thumb fatigue reduction optimization
+     */
+    private fun initializeThumbModeOptimizer() {
+        try {
+            thumbModeOptimizer = ThumbModeOptimizer(context = this)
+
+            logD("✅ ThumbModeOptimizer initialized (Bug #359) - Device: ${thumbModeOptimizer?.getDeviceSize()}, Screen: ${thumbModeOptimizer?.getScreenSizeInches()}\"")
+        } catch (e: Exception) {
+            logE("Failed to initialize thumb mode optimizer", e)
+            // Non-fatal - keyboard works without thumb mode optimization
         }
     }
 
