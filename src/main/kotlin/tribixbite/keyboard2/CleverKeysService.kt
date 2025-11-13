@@ -116,6 +116,7 @@ class CleverKeysService : InputMethodService(),
     private var personalizationManager: PersonalizationManager? = null  // Word frequency tracking and bigram learning
     private var longPressManager: LongPressManager? = null  // Bug #327 fix - long-press behavior
     private var backupRestoreManager: BackupRestoreManager? = null  // Configuration backup/restore with SAF
+    private var settingsSyncManager: SettingsSyncManager? = null  // Bug #383 fix - settings backup/sync
 
     // Configuration and state
     private var config: Config? = null
@@ -147,6 +148,7 @@ class CleverKeysService : InputMethodService(),
             initializePersonalizationManager()  // Word frequency tracking and bigram learning
             initializeLongPressManager()  // Bug #327 fix - long-press behavior
             initializeBackupRestoreManager()  // Configuration backup/restore with SAF
+            initializeSettingsSyncManager()  // Bug #383 fix - settings backup/sync
             loadDefaultKeyboardLayout()
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
@@ -861,6 +863,35 @@ class CleverKeysService : InputMethodService(),
             logD("   - 593 lines of backup/restore logic")
         } catch (e: Exception) {
             logE("Failed to initialize backup/restore manager", e)
+        }
+    }
+
+    /**
+     * Initialize settings sync manager (Bug #383 fix - HIGH).
+     * Provides automated backup/sync for keyboard settings.
+     *
+     * Features:
+     * - Comprehensive settings backup (all preferences, layouts, themes, clipboard)
+     * - Local backup management (up to 10 backups, GZIP compressed)
+     * - Device info tracking (manufacturer, model, Android version, app version)
+     * - Automatic backup on settings change
+     * - Cloud storage integration hooks
+     * - Version tracking (SETTINGS_VERSION = 1)
+     * - JSON serialization with compression
+     * - Restore with device compatibility check
+     */
+    private fun initializeSettingsSyncManager() {
+        try {
+            settingsSyncManager = SettingsSyncManager(context = this)
+
+            logD("✅ SettingsSyncManager initialized (Bug #383)")
+            logD("   - Automated backup/sync for settings")
+            logD("   - Local backup management (max 10, GZIP)")
+            logD("   - Device info tracking")
+            logD("   - Cloud storage integration hooks")
+            logD("   - 338 lines of sync logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize settings sync manager", e)
         }
     }
 
