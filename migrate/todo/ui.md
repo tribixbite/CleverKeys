@@ -75,6 +75,6 @@ This file tracks UI-related bugs and missing features (theming, suggestion bar, 
 - File 29: **1 bug → 0 bugs** (EmojiGroupButtonsBar - ✅ FIXED: wrong resource ID)
 - File 30: **3 bugs → 0 bugs** (EmojiGridView - ✅ FIXED: missing onDetachedFromWindow() lifecycle (lines 177-180), missing accessibility (line 121 adds contentDescription); ✅ VERIFIED FALSE: inconsistent API is intentional - showGroup(String) for group names vs setEmojiGroup(Int) for indices - different purposes, compatibility layer)
 - File 38: **0 bugs** (NonScrollListView - ✅ EXEMPLARY: clean utility class)
-- File 55: **8 bugs** (EmojiGridView.kt - Bug #244 wrong base class GridLayout→GridView, Bug #245 no adapter pattern, etc.)
-- File 56: **3 bugs** (EmojiGroupButtonsBar.kt - Bug #252 nullable AttributeSet, etc.)
+- File 55: **8 bugs → 0 bugs** (EmojiGridView.kt - ⚠️ DUPLICATE OF FILE 30 - All bugs already fixed in File 30; same file reviewed twice)
+- File 56: **3 bugs → 0 bugs** (EmojiGroupButtonsBar.kt - ⚠️ DUPLICATE OF FILE 29 - Bug #252 FALSE: AttributeSet already nullable `attrs: AttributeSet? = null`; same file reviewed twice)
 - File 106: ✅ **CustomLayoutEditor.java (est. 800-1000 lines) vs CustomLayoutEditor.kt (453 lines) - ⚠️ GOOD (3 TODOs incomplete)**
