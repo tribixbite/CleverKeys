@@ -1,0 +1,100 @@
+464e9d8c fix(predictions): eliminate result mixing that corrupts KeyboardSwipeRecognizer rankings
+149e5f22 feat: restore valuable improvements with working keyboard functionality
+c4c390a6 feat(debug): add comprehensive coordinate debugging pipeline for investigation
+cfe931ee feat(algo): comprehensive algorithm documentation and main keyboard consistency fix
+38ad7978 fix: commit build log for cherry-pick
+c65a5afd feat(calibration): add comprehensive proximity score calculation breakdown
+a4e338f5 Revert "feat(sequence-scoring): implement fuzzy matching for dramatic accuracy improvement"
+0fba7a91 feat(sequence-scoring): implement fuzzy matching for dramatic accuracy improvement
+185cf348 fix(letter-detection): solve over-detection issue with intelligent sampling
+2eafdd41 feat(dictionary): expand from 5,000 to 10,000 words for comprehensive recognition
+c04ef3a7 fix(sequence-score): improve letter detection with larger key zones and debugging
+25c902f4 feat(calibration): enhance equation breakdown with comprehensive inputs for all top 3 predictions
+017c6a6e feat(calibration): comprehensive UI overhaul for improved usability and debugging
+aac09aa9 fix(calibration): eliminate redundant output and enhance CGR equation breakdown
+6b91180f feat(main-keyboard): implement dynamic keyboard dimension support matching calibration
+c9743f47 feat(coordinate-system): implement 100% accurate real key position mapping
+d443574e fix(compilation): remove stray KeyboardSwipeRecognizer reference
+ca70ef85 fix(main-keyboard): resolve coordinate system mismatch causing wrong key detection
+d2d8e701 fix(main-keyboard): resolve gesture interruption causing two separate predictions
+294b7a79 debug(swipe): add comprehensive coordinate and key detection comparison logging
+309ab80e debug(main-keyboard): fix swipe detection and add comprehensive logging
+09eb72df debug(main-keyboard): add comprehensive CGR prediction logging
+52829cb5 fix(main-keyboard): add missing keyboard dimensions to CGR recognizer
+234d159d feat(main-keyboard): replace broken DTW with working CGR algorithm
+123b784d fix(calibration): replace broken DTW with working CGR algorithm equation breakdown
+5c11a27a debug(calibration): add comprehensive logging and fix DTW equation display order
+3744eab9 feat(calibration): implement comprehensive algorithm equation breakdown with real calculated values
+fcb4b536 fix(calibration): implement actual calculated DTW equation values and fix parameter flow
+fb6c2318 fix(calibration): restore prediction equations and enhance algorithm debug output
+e9c409a9 feat(playground): implement comprehensive parameter export/import system
+0696a525 feat(playground): replace dialog buttons with custom single-row icon buttons
+58486a05 fix(playground): ensure initial slider values are stored in _playgroundParams
+a97fa6a9 feat(playground): implement unified import/export system for algorithm weights
+4d955b12 feat(browser): add Template Browser and comprehensive score debugging
+1828c333 fix(critical): resolve exact crash source identified by Gemini expert analysis
+1636645f feat(debugging): implement comprehensive error reporting in output text box
+1f1c04d3 fix(crashes): comprehensive array bounds safety for all prediction pipeline arrays
+cce72842 fix(algorithm): implement simplified crash-free recognition algorithm
+6bd6468f fix(crashes): remove emergency test system and add proper error handling
+5b78c9e3 debug(emergency): force test candidates to identify algorithm failure point
+abb32841 fix(critical): remove overly strict filtering causing 0 predictions
+9d99b33f fix: remove 50 word fallback and focus on core algorithm debugging
+f1979ea9 fix(critical): guarantee algorithm always returns predictions and fix UI issues
+eaab7d4f fix(complete): address all remaining UI issues and restore functionality
+f807c2ef fix(ui): remove Delete Samples button and identify remaining issues
+a6f70884 fix(critical): restore swipe data display and fix layout structure
+7adc7eeb fix(layout): comprehensive UI layout fixes based on corrected screenshot analysis
+ca97b968 feat(complete): finalize all remaining TODOs with production-grade implementation
+8c4c50ef fix(comprehensive): address all TODOs with production-grade modular code
+e2140930 feat(functional): implement fully functional playground with live parameter updates
+e3273399 feat(ui): complete comprehensive UI overhaul with playground modal
+6cae17f2 feat(complete): implement full template and user gesture equation comparison
+8cf6cd52 feat(equation): implement complete mathematical transparency with full equations
+7764ec22 feat(comprehensive): implement maximum modularity and configurability
+4510fc66 feat(complete): implement all Gemini refactor suggestions with performance fixes
+2e0114ff feat(transparency): implement complete algorithm transparency and live control
+82fa4a93 fix(crash): add safety wrapper to prevent calibration page force close
+3b4175ba fix(calibration): resolve force close by removing orphaned UI component references
+44808ece build: successful compilation of complete KeyboardSwipeRecognizer implementation
+a9c37466 feat(settings): complete transformation to KeyboardSwipeRecognizer weight system
+f75eb005 ui(cleanup): remove useless elements and enhance algorithm debugging
+9471d04c fix(detection): enhance key detection parameters for better letter recognition
+cfededcb debug(algorithm): add comprehensive debugging for new keyboard recognition
+3631d2ca docs(pm): update project status with completed algorithm rewrite
+1992a41f feat(complete): implement comprehensive keyboard-specific recognition algorithm
+a379b54d feat(rewrite): extensively reuse existing code for keyboard-specific algorithm
+aa7439a9 feat(algorithm): begin complete rewrite with keyboard-specific Bayesian recognition
+6de6ff90 fix(critical): implement complete research paper normalization with bounding box scaling
+023d8a89 fix(critical): add length filtering to single-threaded fallback path
+32f8c499 feat(ui): implement dynamic CGR parameter summary display
+8d3247b3 fix(settings): force settings reload in calibration and expand parameter ranges
+815df3e6 fix(crash): remove problematic broadcast system causing app crashes
+2ddbc9c7 feat(realtime): implement complete real-time CGR parameter system
+3fcf1fea feat(cgr): add user-configurable length similarity filter with optimal defaults
+88eacb32 feat(cgr): implement all 4 comprehensive CGR fixes
+3e3755ab fix(cgr): heavily prioritize length matching for keyboard context
+3bde9791 feat(cgr): implement keyboard-optimal parameters and detailed algorithm metrics
+c1aff0c7 feat(debug): add comprehensive CGR algorithm metrics display
+44b5ba3f fix(ui): complete calibration page UI improvements
+c7a5748c fix(calibration): prevent crashes from removed algorithm weight UI elements
+3d4668ab fix(stability): add default coordinate initialization to prevent template crashes
+156b8878 fix(crash): add robust error handling for dynamic template generation
+34dfb30a feat(templates): use dynamic keyboard layout for template generation
+8f550f04 fix(coordinates): implement paper's normalization with keyboard-matched templates
+7af8981a fix(calibration): replace algorithm weights with detailed CGR analysis display
+c12f04cf fix(calibration): enhance CGR analysis display and fix text box layout
+43e9555e feat(settings): replace endpoint/confidence settings with dedicated CGR controls
+13b9cb17 restore(architecture): return both systems to full 3000 template vocabulary
+e0a5b3e2 feat(cgr): create dedicated CGR parameter settings and fix vocabulary size issue
+7436d165 fix(debug): restore real CGR testing in calibration with comprehensive comparison
+3fcda92c fix(cgr): restore combined distance calculation with debugging
+839157e4 fix(coordinates): eliminate template corruption and align coordinate systems
+1dbb5535 debug(templates): disable CGR processing to reveal raw template coordinates
+d4ff34d6 feat(debug): add comprehensive template comparison to swipe calibration
+0c753b48 fix(cgr): implement proper normalization per research paper guidelines
+41974936 perf(cgr): implement turning-angle-only distance per research paper
+6dfdfa73 fix(gesture): increase MAX_RESAMPLING_PTS to 5000 for complex words
+cb4e9bfa restore(accuracy): revert sample point distance to original value
+9ecedaad fix(perf): disable real-time CGR recognition during swipe gestures
+fd448d03 refactor(memory): optimize resampling and preserve real-time code for future
