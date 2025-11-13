@@ -12,15 +12,14 @@ class OnnxSwipePredictor private constructor(private val context: Context) {
     companion object {
         private const val TAG = "OnnxSwipePredictor"
         private var instance: OnnxSwipePredictor? = null
-        
+
         fun getInstance(context: Context): OnnxSwipePredictor {
             return instance ?: synchronized(this) {
                 instance ?: OnnxSwipePredictor(context).also { instance = it }
             }
         }
     }
-    
-    private var debugLogger: ((String) -> Unit)? = null
+
     var isModelLoaded = false
         private set
     
@@ -75,7 +74,6 @@ class OnnxSwipePredictor private constructor(private val context: Context) {
      * Set debug logger
      */
     fun setDebugLogger(logger: ((String) -> Unit)?) {
-        debugLogger = logger
         realPredictor.setDebugLogger(logger)
     }
     
