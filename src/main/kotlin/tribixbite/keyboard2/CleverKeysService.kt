@@ -68,6 +68,7 @@ class CleverKeysService : InputMethodService(),
     private var soundEffectManager: SoundEffectManager? = null
     private var animationManager: AnimationManager? = null
     private var keyPreviewManager: KeyPreviewManager? = null
+    private var gestureTrailRenderer: GestureTrailRenderer? = null
 
     // Configuration and state
     private var config: Config? = null
@@ -93,6 +94,7 @@ class CleverKeysService : InputMethodService(),
             initializeSoundEffectManager()  // Bug #324 fix
             initializeAnimationManager()    // Bug #325 fix
             initializeKeyPreviewManager()   // Bug #326 fix
+            initializeGestureTrailRenderer()  // Bug #328 fix
             initializeKeyEventHandler()
             initializePerformanceProfiler()
             initializeNeuralComponents()
@@ -135,6 +137,7 @@ class CleverKeysService : InputMethodService(),
             soundEffectManager?.release()  // Bug #324 - release audio resources
             animationManager?.release()    // Bug #325 - release animation resources
             keyPreviewManager?.release()   // Bug #326 - release preview resources
+            gestureTrailRenderer?.release()  // Bug #328 - release trail renderer resources
         }
         serviceScope.cancel()
     }
@@ -505,6 +508,27 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize key preview manager", e)
             // Non-fatal - keyboard can work without key previews
+        }
+    }
+
+    /**
+     * Initialize gesture trail renderer for swipe visual feedback.
+     * Bug #328 - HIGH: Implement missing GestureTrailRenderer
+     */
+    private fun initializeGestureTrailRenderer() {
+        try {
+            // TODO: Get enabled state from user preferences
+            val trailsEnabled = true   // Default to enabled
+
+            gestureTrailRenderer = GestureTrailRenderer(
+                context = this,
+                enabled = trailsEnabled
+            )
+
+            logD("✅ Gesture trail renderer initialized (enabled=$trailsEnabled)")
+        } catch (e: Exception) {
+            logE("Failed to initialize gesture trail renderer", e)
+            // Non-fatal - keyboard can work without gesture trails
         }
     }
 
