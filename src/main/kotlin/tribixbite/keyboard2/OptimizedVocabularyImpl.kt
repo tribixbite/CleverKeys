@@ -43,22 +43,24 @@ class OptimizedVocabularyImpl(
     
     /**
      * Load vocabulary from assets with frequency data
+     * Bug #172 fix: Return false on failure instead of throwing RuntimeException
      */
     suspend fun loadVocabulary(): Boolean = withContext(Dispatchers.IO) {
         try {
             logD("Loading optimized vocabulary from assets...")
-            
+
             loadWordFrequencies()
             createFastPathSets()
             initializeFrequencyThresholds()
             createLengthBasedLookup()
-            
+
             isLoaded = true
             logD("Vocabulary loaded: ${wordFrequencies.size} total words, ${commonWords.size} common, ${top5000.size} top5000")
             true
         } catch (e: Exception) {
-            logE("Failed to load vocabulary - NO FALLBACK ALLOWED", e)
-            throw RuntimeException("Dictionary loading failed - fallback vocabulary deleted", e)
+            logE("Failed to load vocabulary - returning false for graceful degradation", e)
+            isLoaded = false
+            false // Return false instead of throwing exception
         }
     }
     
