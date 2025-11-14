@@ -300,7 +300,7 @@ CleverKeys is based on [Unexpected-Keyboard](https://github.com/Julow/Unexpected
 
 ## 📞 **Support**
 
-- **Documentation**: Start with [`START_HERE.md`](START_HERE.md)
+- **Documentation**: Start with [`00_START_HERE_FIRST.md`](00_START_HERE_FIRST.md)
 - **Troubleshooting**: See [`INSTALLATION_STATUS.md`](INSTALLATION_STATUS.md)
 - **Logs**: `logcat | grep CleverKeys`
 - **Bug Reports**: Template in `INSTALLATION_STATUS.md`
@@ -309,7 +309,7 @@ CleverKeys is based on [Unexpected-Keyboard](https://github.com/Julow/Unexpected
 
 **Status**: ✅ **DEVELOPMENT COMPLETE - READY FOR TESTING**
 
-👉 **Next Action**: Read [`START_HERE.md`](START_HERE.md) and enable CleverKeys!
+👉 **Next Action**: Read [`00_START_HERE_FIRST.md`](00_START_HERE_FIRST.md) and enable CleverKeys!
 
 ---
 
