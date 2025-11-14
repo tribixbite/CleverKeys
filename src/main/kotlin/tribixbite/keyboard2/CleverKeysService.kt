@@ -961,8 +961,12 @@ class CleverKeysService : InputMethodService(),
                 }
 
                 override fun performVibration() {
-                    // TODO: Trigger vibration through VibratorCompat
-                    logD("Vibration requested")
+                    // Trigger haptic feedback for long press
+                    try {
+                        keyboardView?.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+                    } catch (e: Exception) {
+                        logE("Failed to perform vibration", e)
+                    }
                 }
             }
 
