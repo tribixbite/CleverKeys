@@ -143,6 +143,7 @@ class CleverKeysService : InputMethodService(),
     private var benchmarkSuite: BenchmarkSuite? = null  // Comprehensive performance testing suite
     private var swipePredictionService: SwipePredictionService? = null  // Modern coroutine-based prediction service
     private var swipePruner: SwipePruner? = null  // Dictionary pruning for swipe gestures
+    private var runtimeTestSuite: RuntimeTestSuite? = null  // Runtime testing and validation
 
     // Configuration and state
     private var config: Config? = null
@@ -202,6 +203,7 @@ class CleverKeysService : InputMethodService(),
             initializeBenchmarkSuite()  // Comprehensive performance testing
             initializeSwipePredictionService()  // Modern coroutine-based prediction
             initializeSwipePruner()  // Dictionary pruning for swipe gestures
+            initializeRuntimeTestSuite()  // Runtime testing and validation
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -337,6 +339,7 @@ class CleverKeysService : InputMethodService(),
             configurationManager?.cleanup()  // Bug #382 - cleanup configuration manager
             benchmarkSuite?.cleanup()  // Cleanup benchmark suite
             swipePredictionService?.shutdown()  // Shutdown prediction service
+            runtimeTestSuite?.cleanup()  // Cleanup runtime test suite
             runtimeValidator?.cleanup()  // Cleanup runtime validator
             foldStateTracker?.cleanup()  // Cleanup fold state tracker
             predictionCache?.clear()  // Clear prediction cache
@@ -2690,6 +2693,30 @@ class CleverKeysService : InputMethodService(),
             logD("   - Dictionary size: ${placeholderDictionary.size} words (placeholder)")
         } catch (e: Exception) {
             logE("Failed to initialize swipe pruner", e)
+        }
+    }
+
+    private fun initializeRuntimeTestSuite() {
+        try {
+            runtimeTestSuite = RuntimeTestSuite(context = this)
+
+            logD("✅ RuntimeTestSuite initialized")
+            logD("   - Runtime testing and validation for CleverKeys")
+            logD("   - 6 comprehensive runtime test categories:")
+            logD("     1. System initialization (ProductionInitializer)")
+            logD("     2. Neural engine functionality (ONNX prediction)")
+            logD("     3. Gesture recognition (swipe tracking)")
+            logD("     4. Configuration management (SharedPreferences)")
+            logD("     5. Memory management (tensor pooling)")
+            logD("     6. Error handling (graceful degradation)")
+            logD("   - RuntimeTestResult data class with:")
+            logD("     * testName, success, executionTimeMs")
+            logD("     * details, errorMessage")
+            logD("   - Async execution with coroutines (Dispatchers.Default)")
+            logD("   - Test reporting: passed/total count")
+            logD("   - 447 lines of runtime testing logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize runtime test suite", e)
         }
     }
 
