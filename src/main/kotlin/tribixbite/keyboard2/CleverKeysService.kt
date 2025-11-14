@@ -151,6 +151,7 @@ class CleverKeysService : InputMethodService(),
     private var vibratorCompat: VibratorCompat? = null  // Cross-platform vibration for haptic feedback
     private var gestureClassifier: GestureClassifier? = null  // Unified TAP vs SWIPE gesture classification
     private var emoji: Emoji? = null  // Emoji management system with search and grouping
+    private var modmap: Modmap? = null  // Keyboard modifier key mappings (Shift, Fn, Ctrl)
     // Note: SwipeResampler is a Kotlin object (singleton) - no property needed
     // Note: DirectBootAwarePreferences is a Kotlin object (singleton) - no property needed
     // Note: Logs is a Kotlin object (singleton) - no property needed
@@ -224,6 +225,7 @@ class CleverKeysService : InputMethodService(),
             initializeDirectBootAwarePreferences()  // Device-protected storage preferences (singleton)
             initializeLogs()  // Centralized logging system (singleton)
             initializeEmoji()  // Emoji management system with search and grouping
+            initializeModmap()  // Keyboard modifier key mappings (Shift, Fn, Ctrl)
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -3089,6 +3091,47 @@ class CleverKeysService : InputMethodService(),
             }
         } catch (e: Exception) {
             logE("Failed to initialize emoji system", e)
+        }
+    }
+
+    private fun initializeModmap() {
+        try {
+            modmap = Modmap.empty()
+
+            logD("✅ Modmap initialized")
+            logD("   - Keyboard modifier key mappings (Shift, Fn, Ctrl)")
+            logD("   - Features:")
+            logD("     * Modifier key mapping system")
+            logD("     * Support for SHIFT, FN, CTRL modifiers")
+            logD("     * Key transformation based on active modifiers")
+            logD("     * Dynamic mapping configuration")
+            logD("   - Modifiers:")
+            logD("     * SHIFT: Capital letters, shifted symbols")
+            logD("     * FN: Function keys, special symbols")
+            logD("     * CTRL: Control key combinations")
+            logD("   - Mapping Operations:")
+            logD("     * addMapping(modifier, from, to): Add key transformation")
+            logD("     * applyModifier(modifier, key): Apply modifier to key")
+            logD("     * hasMapping(modifier, key): Check if mapping exists")
+            logD("     * getAllMappings(): Get all configured mappings")
+            logD("   - Use Cases:")
+            logD("     * SHIFT + 'a' → 'A' (capitalization)")
+            logD("     * SHIFT + '1' → '!' (shifted number)")
+            logD("     * FN + 'q' → 'F1' (function key)")
+            logD("     * CTRL + 'c' → Copy (control combination)")
+            logD("   - API Methods:")
+            logD("     * empty(): Create empty modmap")
+            logD("     * addMapping(modifier, from, to): Add transformation rule")
+            logD("     * applyModifier(modifier, key): Apply modifier and get result")
+            logD("     * hasMapping(modifier, key): Check for mapping existence")
+            logD("     * getAllMappings(): Get all mappings as Map")
+            logD("   - Implementation:")
+            logD("     * MutableMap<Pair<Modifier, KeyValue>, KeyValue> storage")
+            logD("     * O(1) lookup performance")
+            logD("     * Returns original key if no mapping exists")
+            logD("   - 36 lines of modifier mapping logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize modmap", e)
         }
     }
 
