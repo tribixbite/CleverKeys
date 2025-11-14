@@ -346,28 +346,26 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 
 **Total P0/P1**: 45 bugs (all resolved - 38 fixed, 7 false reports)
 
-### **PRIORITY 2: CRITICAL MISSING FILES**
+### **PRIORITY 2: REMAINING WORK**
 
-**KeyValueParser.java → KeyValueParser.kt**
-- Status: 96% missing (276/289 lines)
-- Port: All 5 syntax modes, regex patterns, error handling
-- Impact: Fixes Chinese character bug
-- Time: 2-3 days
+- [x] **KeyValueParser.java → KeyValueParser.kt** ✅ COMPLETE (commit fc523938)
+  - Status: 443 lines, fully implemented
+  - Features: Modern & legacy syntax, 5 syntax modes, regex patterns, error handling
+  - Impact: Chinese character support working
 
-**Missing Keyboard2/CleverKeysService components:**
-- updateContext(), handlePredictionResults(), onSuggestionSelected()
-- handleRegularTyping(), handleBackspace(), updatePredictionsForCurrentWord()
-- calculateDynamicKeyboardHeight(), handleSwipeTyping() (complete version)
-- Time: 1-2 weeks
+**Future Enhancements** (non-blocking):
+- Emoji picker UI (complex implementation, deferred)
+- Long press popup UI (custom PopupWindow needed)
+- Dictionary/bigram asset files (for improved prediction quality)
 
 ---
 
 ## 📝 NEXT STEPS
 
-1. **Resume systematic review** - Continue at File 142/251 (110 files remaining)
-2. **Create critical specs** - gesture-system.md, layout-system.md, neural-prediction.md
-3. **Fix P0 bugs** - As discovered during review
-4. **Port missing files** - 25+ Java files completely absent from Kotlin
+1. **Manual testing** - Follow MANUAL_TESTING_GUIDE.md (requires physical device)
+2. **Asset creation** - Dictionary and bigram files (see ASSET_FILES_NEEDED.md)
+3. **Future features** - Emoji picker, long press popup UI
+4. **Performance optimization** - Profile ONNX inference
 
 **See**: `docs/COMPLETE_REVIEW_STATUS.md` for full review timeline
 **See**: `docs/specs/` for feature specifications
