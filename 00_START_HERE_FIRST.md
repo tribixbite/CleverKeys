@@ -81,6 +81,7 @@ Try these 5 quick tests:
 ### For Understanding The Project
 9. `docs/TABLE_OF_CONTENTS.md` - Master file index
 10. `migrate/project_status.md` - Complete development history
+11. `SCRIPTS_REFERENCE.md` - **Complete guide to all 25 shell scripts**
 
 ### Ignore These (Informational Only)
 - All other `.txt` files - Just status reports
@@ -141,6 +142,7 @@ Five automation scripts make testing and building easier.
 - Use for troubleshooting/bug reporting
 
 **Tip**: Start with `run-all-checks.sh` for a complete verification!
+**Full Scripts Guide**: See `SCRIPTS_REFERENCE.md` for all 25 scripts with categorization and usage recommendations.
 
 ---
 

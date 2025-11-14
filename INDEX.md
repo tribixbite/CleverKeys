@@ -73,6 +73,21 @@ This index organizes all 38+ documentation files in the root directory.
 
 ---
 
+## 📜 **Scripts Reference** (NEW!)
+
+| File | Purpose | Lines |
+|------|---------|-------|
+| **`SCRIPTS_REFERENCE.md`** | **Complete guide to all 25 shell scripts** | 363 |
+
+**Quick Access:**
+- 🌟 **5 User-Facing Scripts** (with --help): build-and-verify, run-all-checks, check-keyboard-status, quick-test-guide, diagnose-issues
+- 🔧 **5 Build/Install Scripts** (alternative methods): build-on-termux, install, adb-install, check-install, build-install
+- 🧪 **15 Testing Scripts** (development/internal): test-*, run-test*, verify-pipeline, ONNX tests
+
+**See `SCRIPTS_REFERENCE.md` for full categorization, usage examples, and recommendations.**
+
+---
+
 ## 🧠 **ONNX & Neural Systems**
 
 | File | Purpose | Lines |
