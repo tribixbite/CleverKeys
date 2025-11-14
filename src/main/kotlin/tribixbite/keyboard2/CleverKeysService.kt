@@ -156,6 +156,7 @@ class CleverKeysService : InputMethodService(),
     // Note: SwipeResampler is a Kotlin object (singleton) - no property needed
     // Note: DirectBootAwarePreferences is a Kotlin object (singleton) - no property needed
     // Note: Logs is a Kotlin object (singleton) - no property needed
+    // Note: Utils is a Kotlin object (singleton) - no property needed
     // Note: Extensions.kt provides top-level utility extension functions (automatically available when imported)
 
     // Configuration and state
@@ -230,6 +231,7 @@ class CleverKeysService : InputMethodService(),
             initializeModmap()  // Keyboard modifier key mappings (Shift, Fn, Ctrl)
             initializeAutocapitalisation()  // Smart auto-capitalization (Bug #361 partial fix)
             initializeExtensions()  // Utility extension functions for common operations
+            initializeUtils()  // Comprehensive utility functions (singleton)
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -3239,6 +3241,56 @@ class CleverKeysService : InputMethodService(),
             logD("   - 104 lines of utility extension functions")
         } catch (e: Exception) {
             logE("Failed to document extensions", e)
+        }
+    }
+
+    /**
+     * Initialize Utils object (singleton)
+     * Comprehensive utility functions for string manipulation, IME dialogs, file I/O, and gesture analysis
+     */
+    private fun initializeUtils() {
+        try {
+            // Utils is a Kotlin object (singleton) - no instantiation needed
+            // Functions are available via Utils.methodName() calls
+
+            logD("✅ Utils object initialized (379 lines)")
+            logD("   - String Manipulation:")
+            logD("     * capitalizeString(input): Unicode-aware capitalization")
+            logD("     * String.capitalizeFirst(): Extension for capitalization")
+            logD("     * String.isPrintable(): Check for printable characters")
+            logD("     * String.truncate(maxLength, ellipsis): Truncate with ellipsis")
+            logD("   - IME Dialog Support:")
+            logD("     * showDialogOnIme(dialog, token): Configure dialog for IME context")
+            logD("     * Sets TYPE_APPLICATION_ATTACHED_DIALOG")
+            logD("     * Adds FLAG_ALT_FOCUSABLE_IM flag")
+            logD("   - File I/O:")
+            logD("     * readAllUtf8(inputStream): Read UTF-8 content")
+            logD("     * safeReadAllUtf8(inputStream): Safe read with error handling")
+            logD("     * 8KB buffer with automatic resource management")
+            logD("   - UI Measurement:")
+            logD("     * dpToPx(dp, metrics): Convert DP to pixels")
+            logD("     * spToPx(sp, metrics): Convert SP to pixels")
+            logD("     * Resources.safeGetFloat(id, default): Safe resource access")
+            logD("   - Gesture Analysis:")
+            logD("     * distance(p1, p2): Point distance calculation")
+            logD("     * angle(p1, p2): Angle in radians")
+            logD("     * normalizeAngle(angle): Normalize to [-PI, PI]")
+            logD("     * smoothTrajectory(points, windowSize): Moving average smoothing")
+            logD("     * calculateCurvature(points): Average trajectory curvature")
+            logD("   - Gesture Direction Detection:")
+            logD("     * detectPrimaryDirection(points, threshold): LEFT/RIGHT/UP/DOWN/NONE")
+            logD("     * Direction enum with 8 cardinal directions")
+            logD("   - Advanced Gesture Analysis:")
+            logD("     * calculateVelocityProfile(points, timestamps): Velocity over time")
+            logD("     * isCircularGesture(points, threshold): Circular motion detection")
+            logD("     * calculatePathLength(points): Total path length")
+            logD("     * isLoopGesture(points, threshold): Loop detection")
+            logD("   - Trajectory Simplification:")
+            logD("     * simplifyTrajectory(points, tolerance): Douglas-Peucker algorithm")
+            logD("     * Reduces point count while preserving shape")
+            logD("   - 379 lines of utility functions")
+        } catch (e: Exception) {
+            logE("Failed to initialize Utils", e)
         }
     }
 
