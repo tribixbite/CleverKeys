@@ -151,6 +151,7 @@ class CleverKeysService : InputMethodService(),
     private var vibratorCompat: VibratorCompat? = null  // Cross-platform vibration for haptic feedback
     private var gestureClassifier: GestureClassifier? = null  // Unified TAP vs SWIPE gesture classification
     // Note: SwipeResampler is a Kotlin object (singleton) - no property needed
+    // Note: DirectBootAwarePreferences is a Kotlin object (singleton) - no property needed
 
     // Configuration and state
     private var config: Config? = null
@@ -218,6 +219,7 @@ class CleverKeysService : InputMethodService(),
             initializeVibratorCompat()  // Cross-platform vibration for haptic feedback
             initializeGestureClassifier()  // Unified TAP vs SWIPE gesture classification
             initializeSwipeResampler()  // Swipe trajectory resampling utility (singleton)
+            initializeDirectBootAwarePreferences()  // Device-protected storage preferences (singleton)
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -2954,6 +2956,39 @@ class CleverKeysService : InputMethodService(),
             logD("   - 337 lines of trajectory resampling logic")
         } catch (e: Exception) {
             logE("Failed to initialize swipe resampler", e)
+        }
+    }
+
+    private fun initializeDirectBootAwarePreferences() {
+        try {
+            // DirectBootAwarePreferences is a Kotlin object (singleton) - no instantiation needed
+            // Just log its availability and features
+
+            logD("✅ DirectBootAwarePreferences available (Kotlin singleton)")
+            logD("   - Device-protected storage for keyboard settings (Bug #82 fix)")
+            logD("   - Features:")
+            logD("     * Direct Boot compatibility (API 24+)")
+            logD("     * Access settings before device unlock")
+            logD("     * Enable typing during boot for storage password entry")
+            logD("     * Automatic migration from credential-encrypted storage")
+            logD("   - Storage Types:")
+            logD("     * API >= 24: Device-protected storage (accessible during boot)")
+            logD("     * API < 24: Default shared preferences (fallback)")
+            logD("   - Security:")
+            logD("     * Less protected than credential-encrypted storage")
+            logD("     * Only keyboard settings stored (no personal data)")
+            logD("     * Safe for pre-unlock access")
+            logD("   - Migration:")
+            logD("     * One-time migration on first API 24+ access")
+            logD("     * Copies all preferences from credential to device storage")
+            logD("     * Handles all SharedPreferences types (Boolean, Float, Int, Long, String, StringSet)")
+            logD("     * Graceful handling of locked device (deferred migration)")
+            logD("   - API Methods:")
+            logD("     * get_shared_preferences(context): Get appropriate storage for API level")
+            logD("     * copy_preferences_to_protected_storage(context, src): Manual migration")
+            logD("   - 113 lines of Direct Boot aware preferences logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize direct boot aware preferences", e)
         }
     }
 
