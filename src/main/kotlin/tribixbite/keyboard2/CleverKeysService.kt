@@ -137,6 +137,7 @@ class CleverKeysService : InputMethodService(),
     private var switchAccessSupport: SwitchAccessSupport? = null  // Bug #371 fix - switch access for quadriplegic users
     private var mouseKeysEmulation: MouseKeysEmulation? = null  // Bug #375 fix - mouse keys for severely disabled users
     private var gaussianKeyModel: GaussianKeyModel? = null  // 2D Gaussian probability model for swipe typing
+    private var dictionaryManager: DictionaryManager? = null  // Bug #345 fix - multi-language dictionary management
     private var swipeTokenizer: SwipeTokenizer? = null  // Token mapping for ONNX neural prediction
 
     // Configuration and state
@@ -192,6 +193,7 @@ class CleverKeysService : InputMethodService(),
             initializeMouseKeysEmulation()  // Bug #375 fix - mouse keys for severely disabled users
             initializeGaussianKeyModel()  // 2D Gaussian probability model
             initializeSwipeTokenizer()  // Token mapping for ONNX neural prediction
+            initializeDictionaryManager()  // Bug #345 fix - multi-language dictionaries
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -323,6 +325,7 @@ class CleverKeysService : InputMethodService(),
             stickyKeysManager?.cleanup()  // Bug #373 - cleanup sticky keys manager
             switchAccessSupport?.disable()  // Bug #371 - disable switch access and stop scanning
             mouseKeysEmulation?.disable()  // Bug #375 - disable mouse keys emulation
+            dictionaryManager?.cleanup()  // Bug #345 - cleanup dictionary manager
             runtimeValidator?.cleanup()  // Cleanup runtime validator
             foldStateTracker?.cleanup()  // Cleanup fold state tracker
             predictionCache?.clear()  // Clear prediction cache
@@ -2546,6 +2549,24 @@ class CleverKeysService : InputMethodService(),
         } catch (e: Exception) {
             logE("Failed to initialize clipboard service", e)
             // Non-critical - clipboard paste will be unavailable
+        }
+    }
+
+    private fun initializeDictionaryManager() {
+        try {
+            dictionaryManager = DictionaryManager(context = this)
+
+            logD("✅ DictionaryManager initialized (Bug #345)")
+            logD("   - Multi-language dictionary support with lazy loading")
+            logD("   - User dictionary (add/remove custom words)")
+            logD("   - Language switching with predictor caching")
+            logD("   - Dictionary preloading for performance")
+            logD("   - SharedPreferences persistence for user words")
+            logD("   - Automatic default language detection")
+            logD("   - Max predictions: 5")
+            logD("   - 226 lines of dictionary management logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize dictionary manager", e)
         }
     }
 
