@@ -144,6 +144,7 @@ class CleverKeysService : InputMethodService(),
     private var swipePredictionService: SwipePredictionService? = null  // Modern coroutine-based prediction service
     private var swipePruner: SwipePruner? = null  // Dictionary pruning for swipe gestures
     private var runtimeTestSuite: RuntimeTestSuite? = null  // Runtime testing and validation
+    private var productionInitializer: ProductionInitializer? = null  // Production initialization system
 
     // Configuration and state
     private var config: Config? = null
@@ -204,6 +205,7 @@ class CleverKeysService : InputMethodService(),
             initializeSwipePredictionService()  // Modern coroutine-based prediction
             initializeSwipePruner()  // Dictionary pruning for swipe gestures
             initializeRuntimeTestSuite()  // Runtime testing and validation
+            initializeProductionInitializer()  // Production initialization system
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -340,6 +342,7 @@ class CleverKeysService : InputMethodService(),
             benchmarkSuite?.cleanup()  // Cleanup benchmark suite
             swipePredictionService?.shutdown()  // Shutdown prediction service
             runtimeTestSuite?.cleanup()  // Cleanup runtime test suite
+            productionInitializer?.cleanup()  // Cleanup production initializer
             runtimeValidator?.cleanup()  // Cleanup runtime validator
             foldStateTracker?.cleanup()  // Cleanup fold state tracker
             predictionCache?.clear()  // Clear prediction cache
@@ -2717,6 +2720,36 @@ class CleverKeysService : InputMethodService(),
             logD("   - 447 lines of runtime testing logic")
         } catch (e: Exception) {
             logE("Failed to initialize runtime test suite", e)
+        }
+    }
+
+    private fun initializeProductionInitializer() {
+        try {
+            productionInitializer = ProductionInitializer(context = this)
+
+            logD("✅ ProductionInitializer initialized")
+            logD("   - Production initialization and validation system")
+            logD("   - 5-step comprehensive initialization:")
+            logD("     1. Runtime environment validation (RuntimeValidator)")
+            logD("     2. Core component initialization (ConfigurationManager)")
+            logD("     3. Neural model loading and validation (OnnxSwipePredictorImpl)")
+            logD("     4. Prediction pipeline initialization (NeuralPredictionPipeline)")
+            logD("     5. System health check (comprehensive validation)")
+            logD("   - InitializationResult data class:")
+            logD("     * success: Boolean (overall initialization status)")
+            logD("     * errors: List<String> (critical failures)")
+            logD("     * warnings: List<String> (non-critical issues)")
+            logD("     * performanceMetrics: Map<String, Long> (timing per step)")
+            logD("   - Performance tracking:")
+            logD("     * environment_validation_ms")
+            logD("     * core_initialization_ms")
+            logD("     * model_loading_ms")
+            logD("     * pipeline_initialization_ms")
+            logD("     * health_check_ms")
+            logD("   - Async execution with coroutines (Dispatchers.Default)")
+            logD("   - 301 lines of production initialization logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize production initializer", e)
         }
     }
 
