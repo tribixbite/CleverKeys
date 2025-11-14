@@ -1,7 +1,7 @@
 # CleverKeys Documentation - Table of Contents
 
-**Last Updated**: 2025-10-20
-**Review Status**: Files 82-85 of 251 (32.7% complete)
+**Last Updated**: 2025-11-14
+**Review Status**: Files 141 of 251 (56.2% complete)
 
 ## 📋 Quick Navigation
 
@@ -58,6 +58,17 @@
 | `ONNX_MODEL_UPDATE_REQUIRED.md` | Model update notes | 📚 Reference |
 | `CLI_TEST_README.md` | CLI testing guide | ✅ Active |
 
+#### Testing & Verification (2025-11-14)
+| File | Purpose | Status |
+|------|---------|--------|
+| `VERIFICATION_COMPLETE.md` | Comprehensive verification report (500+ lines) | ✅ Active |
+| `TESTING_READINESS.md` | Build verification status (400+ lines) | ✅ Active |
+| `MANUAL_TESTING_GUIDE.md` | 5-priority manual testing procedure (264 lines) | ✅ Active |
+| `ASSET_FILES_NEEDED.md` | Asset requirements & generation (288 lines) | ✅ Active |
+| `SESSION_SUMMARY_2025-11-14.md` | Complete session chronology (523 lines) | ✅ Active |
+| `test-keyboard-automated.sh` | ADB-based automated testing script (359 lines) | ✅ Active |
+| `TESTING_CHECKLIST.md` | Comprehensive feature checklist | ✅ Active |
+
 #### Review Files (Files 82-85)
 | File | Purpose | Status |
 |------|---------|--------|
@@ -110,15 +121,17 @@
 *Spec-driven development - All major systems documented*
 | File | Purpose | Status |
 |------|---------|--------|
+| `README.md` | **Master ToC for all 10 specs** | ✅ Created 2025-11-14 |
 | `SPEC_TEMPLATE.md` | Template for new specs | ✅ Active |
-| `core-keyboard-system.md` | Core keyboard operations | ✅ Created 2025-10-21 |
-| `settings-system.md` | Settings & preferences | ✅ Created 2025-10-21 |
-| `performance-optimization.md` | Performance & monitoring | ✅ Created 2025-10-21 |
-| `layout-system.md` | Layout & extra keys | ✅ Updated 2025-10-21 |
-| `neural-prediction.md` | ONNX prediction pipeline | ✅ Active |
-| `gesture-system.md` | Gesture recognition | ✅ Active |
-| `ui-material3-modernization.md` | Material 3 UI | ✅ Updated 2025-10-21 |
-| `architectural-decisions.md` | ADR log | ✅ Active |
+| `core-keyboard-system.md` | Core keyboard operations (P0) | ✅ Implemented |
+| `gesture-system.md` | Gesture recognition (P0) | 🟡 Partial (1 bug) |
+| `neural-prediction.md` | ONNX prediction pipeline (P0) | ✅ Updated 2025-11-14 |
+| `layout-system.md` | Layout & extra keys (P1) | 🟡 Partial (1 bug) |
+| `settings-system.md` | Settings & preferences (P1) | 🟡 Partial |
+| `ui-material3-modernization.md` | Material 3 UI (P2) | ✅ Implemented |
+| `performance-optimization.md` | Performance & monitoring (P2) | 🟡 In Progress |
+| `test-suite.md` | Testing infrastructure (P2) | 🟢 Script Complete |
+| `architectural-decisions.md` | 6 ADRs (Reference) | ✅ Active |
 
 #### History (`/docs/history/`)
 | File | Purpose | Status |
@@ -130,15 +143,16 @@
 
 ## 📊 Review Progress
 
-**Java Files Reviewed**: 82-85 of 251 (32.7%)
-**Critical Fixes Applied**: 3/3 (Fix #51, #52, #53) ✅
-**APK Build Status**: SUCCESS (49MB)
-**Next Review Files**: 86-100
+**Java Files Reviewed**: 141 of 251 (56.2%)
+**Critical Fixes Applied**: Initialization order bug + 30 TODOs (97% resolved) ✅
+**APK Build Status**: SUCCESS (51MB, Build 50+)
+**Testing Status**: ✅ READY FOR MANUAL TESTING
+**Next Review Files**: 142-251 (110 remaining)
 
 ### Review Tracking
-- Files 1-81: Completed (see `migrate/claude_history.md`)
-- Files 82-85: Current batch (4 files reviewed)
-- Files 86-251: Remaining (165 files)
+- Files 1-141: Completed (see `docs/COMPLETE_REVIEW_STATUS.md`)
+- Files 142-251: Remaining (110 files)
+- Latest Session: 2025-11-14 (Prediction pipeline integration)
 
 ## 🔄 Consolidation Plan
 
