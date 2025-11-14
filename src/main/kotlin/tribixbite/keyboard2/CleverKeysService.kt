@@ -139,6 +139,7 @@ class CleverKeysService : InputMethodService(),
     private var gaussianKeyModel: GaussianKeyModel? = null  // 2D Gaussian probability model for swipe typing
     private var dictionaryManager: DictionaryManager? = null  // Bug #345 fix - multi-language dictionary management
     private var swipeTokenizer: SwipeTokenizer? = null  // Token mapping for ONNX neural prediction
+    private var configurationManager: ConfigurationManager? = null  // Bug #382 fix - advanced configuration management
 
     // Configuration and state
     private var config: Config? = null
@@ -194,6 +195,7 @@ class CleverKeysService : InputMethodService(),
             initializeGaussianKeyModel()  // 2D Gaussian probability model
             initializeSwipeTokenizer()  // Token mapping for ONNX neural prediction
             initializeDictionaryManager()  // Bug #345 fix - multi-language dictionaries
+            initializeConfigurationManager()  // Bug #382 fix - advanced configuration management
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -326,6 +328,7 @@ class CleverKeysService : InputMethodService(),
             switchAccessSupport?.disable()  // Bug #371 - disable switch access and stop scanning
             mouseKeysEmulation?.disable()  // Bug #375 - disable mouse keys emulation
             dictionaryManager?.cleanup()  // Bug #345 - cleanup dictionary manager
+            configurationManager?.cleanup()  // Bug #382 - cleanup configuration manager
             runtimeValidator?.cleanup()  // Cleanup runtime validator
             foldStateTracker?.cleanup()  // Cleanup fold state tracker
             predictionCache?.clear()  // Clear prediction cache
@@ -2567,6 +2570,36 @@ class CleverKeysService : InputMethodService(),
             logD("   - 226 lines of dictionary management logic")
         } catch (e: Exception) {
             logE("Failed to initialize dictionary manager", e)
+        }
+    }
+
+    private fun initializeConfigurationManager() {
+        try {
+            configurationManager = ConfigurationManager(context = this)
+
+            // Initialize asynchronously (initialize() is suspend)
+            serviceScope.launch {
+                val success = configurationManager?.initialize() ?: false
+                if (success) {
+                    logD("✅ ConfigurationManager initialized (Bug #382)")
+                    logD("   - Configuration versioning and migration (v1→v2→v3→v4)")
+                    logD("   - Reactive configuration changes with Flow streams")
+                    logD("   - SharedPreferences monitoring with auto-updates")
+                    logD("   - Version migration with MigrationResult events")
+                    logD("   - Registration APIs for neural engine, keyboard view, UI")
+                    logD("   - Configuration validation with ErrorHandling")
+                    logD("   - Config change flows: configChanges, migrationFlow")
+                    logD("   - Coroutine scope with Dispatchers.Default")
+                    logD("   - Migration keys: swipe_typing, neural prediction, gesture recognition")
+                    logD("   - Performance settings: batched_inference, tensor_memory_pool")
+                    logD("   - Accessibility settings: accessibility_enhanced, voice_input")
+                    logD("   - 512 lines of advanced configuration management")
+                } else {
+                    logE("ConfigurationManager initialization failed")
+                }
+            }
+        } catch (e: Exception) {
+            logE("Failed to initialize configuration manager", e)
         }
     }
 
