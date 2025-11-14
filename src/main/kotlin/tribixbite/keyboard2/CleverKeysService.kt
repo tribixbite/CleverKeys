@@ -146,6 +146,7 @@ class CleverKeysService : InputMethodService(),
     private var runtimeTestSuite: RuntimeTestSuite? = null  // Runtime testing and validation
     private var productionInitializer: ProductionInitializer? = null  // Production initialization system
     private var systemIntegrationTester: SystemIntegrationTester? = null  // End-to-end system integration testing
+    private var predictionRepository: PredictionRepository? = null  // Modern coroutine-based prediction repository
 
     // Configuration and state
     private var config: Config? = null
@@ -208,6 +209,7 @@ class CleverKeysService : InputMethodService(),
             initializeRuntimeTestSuite()  // Runtime testing and validation
             initializeProductionInitializer()  // Production initialization system
             initializeSystemIntegrationTester()  // End-to-end system integration testing
+            initializePredictionRepository()  // Modern coroutine-based prediction repository
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -345,6 +347,7 @@ class CleverKeysService : InputMethodService(),
             swipePredictionService?.shutdown()  // Shutdown prediction service
             runtimeTestSuite?.cleanup()  // Cleanup runtime test suite
             productionInitializer?.cleanup()  // Cleanup production initializer
+            predictionRepository?.cleanup()  // Cleanup prediction repository
             runtimeValidator?.cleanup()  // Cleanup runtime validator
             foldStateTracker?.cleanup()  // Cleanup fold state tracker
             predictionCache?.clear()  // Clear prediction cache
@@ -2781,6 +2784,39 @@ class CleverKeysService : InputMethodService(),
             logD("   - 447 lines of integration testing logic")
         } catch (e: Exception) {
             logE("Failed to initialize system integration tester", e)
+        }
+    }
+
+    private fun initializePredictionRepository() {
+        try {
+            val engine = neuralSwipeTypingEngine
+            if (engine != null) {
+                predictionRepository = PredictionRepository(neuralEngine = engine)
+
+                logD("✅ PredictionRepository initialized (Bug #194, #196, #192)")
+                logD("   - Modern coroutine-based prediction repository")
+                logD("   - Replaces AsyncPredictionHandler with structured concurrency")
+                logD("   - Eliminates HandlerThread, Message queue, callback complexity")
+                logD("   - Bug #194 fix: Bounded channel capacity (MAX_PENDING_REQUESTS=16)")
+                logD("   - Bug #196 fix: Preserve exception type in error callbacks")
+                logD("   - Bug #192 fix: Tracks prediction statistics")
+                logD("   - Features:")
+                logD("     * Automatic cancellation of previous predictions")
+                logD("     * Backpressure control with bounded channel")
+                logD("     * Type-safe error handling")
+                logD("     * Multiple API styles (Deferred, callback, suspend)")
+                logD("   - API Methods:")
+                logD("     * requestPrediction(input): Deferred<PredictionResult> (async/await)")
+                logD("     * requestPrediction(input, callback) (Java interop)")
+                logD("     * predict(input): PredictionResult (suspend function)")
+                logD("   - Performance tracking: request count, total time, avg latency")
+                logD("   - Structured concurrency with SupervisorJob + Dispatchers.Default")
+                logD("   - 269 lines of modern prediction logic")
+            } else {
+                logW("PredictionRepository not initialized: neural engine unavailable")
+            }
+        } catch (e: Exception) {
+            logE("Failed to initialize prediction repository", e)
         }
     }
 
