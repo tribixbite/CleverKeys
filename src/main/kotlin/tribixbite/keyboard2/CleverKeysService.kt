@@ -149,6 +149,7 @@ class CleverKeysService : InputMethodService(),
     private var predictionRepository: PredictionRepository? = null  // Modern coroutine-based prediction repository
     private var voiceImeSwitcher: VoiceImeSwitcher? = null  // Bug #264 fix - voice IME switching
     private var vibratorCompat: VibratorCompat? = null  // Cross-platform vibration for haptic feedback
+    private var gestureClassifier: GestureClassifier? = null  // Unified TAP vs SWIPE gesture classification
 
     // Configuration and state
     private var config: Config? = null
@@ -214,6 +215,7 @@ class CleverKeysService : InputMethodService(),
             initializePredictionRepository()  // Modern coroutine-based prediction repository
             initializeVoiceImeSwitcher()  // Bug #264 fix - voice IME switching
             initializeVibratorCompat()  // Cross-platform vibration for haptic feedback
+            initializeGestureClassifier()  // Unified TAP vs SWIPE gesture classification
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -2878,6 +2880,38 @@ class CleverKeysService : InputMethodService(),
             logD("   - 69 lines of cross-platform haptic feedback logic")
         } catch (e: Exception) {
             logE("Failed to initialize vibrator compatibility", e)
+        }
+    }
+
+    private fun initializeGestureClassifier() {
+        try {
+            gestureClassifier = GestureClassifier(context = this)
+
+            logD("✅ GestureClassifier initialized")
+            logD("   - Unified gesture classification for TAP vs SWIPE detection")
+            logD("   - Features:")
+            logD("     * Single source of truth for gesture classification")
+            logD("     * Eliminates race conditions in gesture detection")
+            logD("     * Dynamic threshold based on actual key size")
+            logD("     * Adapts to different keyboard sizes and screen densities")
+            logD("     * Time-based threshold (150ms) for deliberate gestures")
+            logD("   - Classification Algorithm:")
+            logD("     * SWIPE: Left starting key AND (distance >= keyWidth/2 OR time > 150ms)")
+            logD("     * TAP: All other cases")
+            logD("   - Dynamic Threshold:")
+            logD("     * Minimum swipe distance = keyWidth / 2")
+            logD("     * Adapts to keyboard rendering (no fixed pixel values)")
+            logD("     * More reliable than fixed thresholds across devices")
+            logD("   - Time Threshold:")
+            logD("     * MAX_TAP_DURATION_MS = 150ms")
+            logD("     * Gestures > 150ms considered intentional swipes")
+            logD("     * Prevents accidental swipes from quick taps")
+            logD("   - API Methods:")
+            logD("     * classify(GestureData): GestureType (TAP or SWIPE)")
+            logD("     * GestureData(hasLeftStartingKey, totalDistance, timeElapsed, keyWidth)")
+            logD("   - 149 lines of unified gesture classification logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize gesture classifier", e)
         }
     }
 
