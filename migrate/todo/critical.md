@@ -181,11 +181,12 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Integration: CleverKeysService line 134 property, line 184 initialization, line 313 cleanup
   - Commit: c1dbb88e
 
-- [x] **Bug #375**: Mouse Keys missing (File 173) ✅ **FIXED**
+- [x] **Bug #375**: Mouse Keys missing (File 173) ✅ **FIXED & INTEGRATED**
   - Impact: Severely disabled users can NOW interact with UI → ADA/WCAG COMPLIANT
-  - File: MouseKeysEmulation.kt → ✅ Complete implementation (663 lines)
-  - Features: Keyboard cursor control (arrow/numpad/WASD), click emulation (left/right/double), drag-and-drop, 3 speed modes (normal/precision/quick), visual crosshair overlay, accessibility announcements
-  - Commit: (current session)
+  - File: MouseKeysEmulation.kt → ✅ Complete implementation (659 lines)
+  - Features: Keyboard cursor control (arrow/numpad/WASD), click emulation (left/right/double), drag-and-drop, 3 speed modes (normal 10px/precision 3px/quick 30px), visual crosshair overlay (48px, RED/GREEN/BLUE), acceleration (1.5x after 500ms), 8-way movement, accessibility announcements
+  - Integration: CleverKeysService line 135 property, line 186 initialization (conditional on keyboard view), line 316 cleanup
+  - Commit: 67dd3ce9
 
 #### Core Systems Missing
 
