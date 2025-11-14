@@ -152,6 +152,7 @@ class CleverKeysService : InputMethodService(),
     private var gestureClassifier: GestureClassifier? = null  // Unified TAP vs SWIPE gesture classification
     private var emoji: Emoji? = null  // Emoji management system with search and grouping
     private var modmap: Modmap? = null  // Keyboard modifier key mappings (Shift, Fn, Ctrl)
+    private var autocapitalisation: Autocapitalisation? = null  // Smart auto-capitalization for sentences and words (Bug #361 partial fix)
     // Note: SwipeResampler is a Kotlin object (singleton) - no property needed
     // Note: DirectBootAwarePreferences is a Kotlin object (singleton) - no property needed
     // Note: Logs is a Kotlin object (singleton) - no property needed
@@ -226,6 +227,7 @@ class CleverKeysService : InputMethodService(),
             initializeLogs()  // Centralized logging system (singleton)
             initializeEmoji()  // Emoji management system with search and grouping
             initializeModmap()  // Keyboard modifier key mappings (Shift, Fn, Ctrl)
+            initializeAutocapitalisation()  // Smart auto-capitalization (Bug #361 partial fix)
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -364,6 +366,7 @@ class CleverKeysService : InputMethodService(),
             runtimeTestSuite?.cleanup()  // Cleanup runtime test suite
             productionInitializer?.cleanup()  // Cleanup production initializer
             predictionRepository?.cleanup()  // Cleanup prediction repository
+            autocapitalisation?.cleanup()  // Bug #361 partial fix - cleanup autocapitalisation handler
             runtimeValidator?.cleanup()  // Cleanup runtime validator
             foldStateTracker?.cleanup()  // Cleanup fold state tracker
             predictionCache?.clear()  // Clear prediction cache
@@ -3132,6 +3135,60 @@ class CleverKeysService : InputMethodService(),
             logD("   - 36 lines of modifier mapping logic")
         } catch (e: Exception) {
             logE("Failed to initialize modmap", e)
+        }
+    }
+
+    private fun initializeAutocapitalisation() {
+        try {
+            // Create autocapitalisation with callback for shift state updates
+            val callback = object : Autocapitalisation.Callback {
+                override fun updateShiftState(shouldEnable: Boolean, shouldDisable: Boolean) {
+                    // TODO: Update keyboard shift state based on autocapitalisation
+                    logD("Autocapitalisation shift state: enable=$shouldEnable, disable=$shouldDisable")
+                }
+            }
+
+            autocapitalisation = Autocapitalisation(callback = callback)
+
+            logD("✅ Autocapitalisation initialized (Bug #361 partial fix)")
+            logD("   - Smart auto-capitalization for sentences and words")
+            logD("   - Features:")
+            logD("     * Sentence capitalization (after periods, newlines)")
+            logD("     * Word capitalization (for proper names)")
+            logD("     * Cursor position tracking")
+            logD("     * Input type detection (messages, names, emails)")
+            logD("     * Delayed callbacks for editor updates")
+            logD("   - Supported Caps Modes:")
+            logD("     * TYPE_TEXT_FLAG_CAP_SENTENCES: Capitalize first word after sentence end")
+            logD("     * TYPE_TEXT_FLAG_CAP_WORDS: Capitalize first letter of each word")
+            logD("   - Lifecycle Methods:")
+            logD("     * started(info, ic): Start autocapitalisation for input session")
+            logD("     * typed(text): Handle text typed by user")
+            logD("     * eventSent(code, meta): Handle key events (DEL, ENTER)")
+            logD("     * selectionUpdated(old, new): Handle cursor position changes")
+            logD("     * pause(): Temporarily disable (returns previous state)")
+            logD("     * unpause(wasEnabled): Resume after pause")
+            logD("     * stop(): Stop autocapitalisation")
+            logD("     * cleanup(): Release resources")
+            logD("   - Trigger Characters:")
+            logD("     * Space: Updates caps mode after sentence-ending punctuation")
+            logD("     * Period + space: Triggers sentence capitalization")
+            logD("   - API Methods:")
+            logD("     * isEnabled(): Check if autocapitalisation is active")
+            logD("     * shouldShiftBeEnabled(): Get current shift recommendation")
+            logD("   - Input Type Support:")
+            logD("     * LONG_MESSAGE: Multi-line messages")
+            logD("     * NORMAL: Standard text input")
+            logD("     * PERSON_NAME: Proper name capitalization")
+            logD("     * SHORT_MESSAGE: Single-line messages")
+            logD("     * EMAIL_SUBJECT: Email subject lines")
+            logD("     * WEB_EDIT_TEXT: Web form inputs")
+            logD("   - Callback Interface:")
+            logD("     * updateShiftState(shouldEnable, shouldDisable): Shift state changes")
+            logD("     * 50ms delayed callback to wait for editor updates")
+            logD("   - 256 lines of auto-capitalization logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize autocapitalisation", e)
         }
     }
 
