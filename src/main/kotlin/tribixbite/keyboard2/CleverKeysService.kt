@@ -964,19 +964,38 @@ class CleverKeysService : InputMethodService(),
             // Create stub callback for integration (full implementation comes with feature wiring)
             val callback = object : LongPressManager.Callback {
                 override fun onLongPress(key: KeyValue, x: Float, y: Float): Boolean {
-                    // TODO: Show popup with alternate characters
-                    logD("Long press on key: ${key.displayString}")
-                    return false  // Stub - will show popup in full implementation
+                    // Popup UI requires custom PopupWindow implementation
+                    // For now, log the long press and let standard behavior continue
+                    logD("Long press on key: ${key.displayString} at ($x, $y)")
+
+                    // Note: Full popup implementation would:
+                    // 1. Get alternate characters from key metadata
+                    // 2. Create PopupWindow with alternate character grid
+                    // 3. Position popup above/below pressed key
+                    // 4. Track touch events for selection
+                    // 5. Call onAlternateSelected when user selects alternate
+
+                    return false  // No popup shown - allow default behavior
                 }
 
                 override fun onAutoRepeat(key: KeyValue) {
-                    // TODO: Handle auto-repeat (backspace, arrows)
-                    logD("Auto-repeat: ${key.displayString}")
+                    // Trigger key event for auto-repeat (backspace, arrows, etc.)
+                    try {
+                        config?.handler?.key_down(key, is_swipe = false)
+                        logD("Auto-repeat triggered: ${key.displayString}")
+                    } catch (e: Exception) {
+                        logE("Failed to trigger auto-repeat", e)
+                    }
                 }
 
                 override fun onAlternateSelected(key: KeyValue, alternate: KeyValue) {
-                    // TODO: Input alternate character
-                    logD("Alternate selected: ${key.displayString} → ${alternate.displayString}")
+                    // Input the selected alternate character
+                    try {
+                        config?.handler?.key_down(alternate, is_swipe = false)
+                        logD("Alternate character inputted: ${key.displayString} → ${alternate.displayString}")
+                    } catch (e: Exception) {
+                        logE("Failed to input alternate character", e)
+                    }
                 }
 
                 override fun performVibration() {
