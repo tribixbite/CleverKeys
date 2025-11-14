@@ -156,6 +156,7 @@ class CleverKeysService : InputMethodService(),
     // Note: SwipeResampler is a Kotlin object (singleton) - no property needed
     // Note: DirectBootAwarePreferences is a Kotlin object (singleton) - no property needed
     // Note: Logs is a Kotlin object (singleton) - no property needed
+    // Note: Extensions.kt provides top-level utility extension functions (automatically available when imported)
 
     // Configuration and state
     private var config: Config? = null
@@ -228,6 +229,7 @@ class CleverKeysService : InputMethodService(),
             initializeEmoji()  // Emoji management system with search and grouping
             initializeModmap()  // Keyboard modifier key mappings (Shift, Fn, Ctrl)
             initializeAutocapitalisation()  // Smart auto-capitalization (Bug #361 partial fix)
+            initializeExtensions()  // Utility extension functions for common operations
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -3189,6 +3191,54 @@ class CleverKeysService : InputMethodService(),
             logD("   - 256 lines of auto-capitalization logic")
         } catch (e: Exception) {
             logE("Failed to initialize autocapitalisation", e)
+        }
+    }
+
+    /**
+     * Initialize Extensions.kt utility functions
+     * Note: These are top-level extension functions that don't require instantiation
+     */
+    private fun initializeExtensions() {
+        try {
+            // Extensions.kt provides utility extension functions automatically when imported
+            // No initialization required - functions are available at compile time
+
+            logD("✅ Extensions.kt utility functions available (104 lines)")
+            logD("   - Logging extensions:")
+            logD("     * Any.logD(message): Debug logging with class name")
+            logD("     * Any.logE(message, throwable?): Error logging")
+            logD("     * Any.logW(message): Warning logging")
+            logD("   - Context extensions:")
+            logD("     * Context.toast(message): Show short toast")
+            logD("     * Context.longToast(message): Show long toast")
+            logD("   - View extensions:")
+            logD("     * View.applyIf(condition, block): Conditional apply")
+            logD("   - PointF extensions:")
+            logD("     * PointF - PointF: Subtract operator")
+            logD("     * PointF + PointF: Add operator")
+            logD("     * PointF.distanceTo(other): Distance calculation")
+            logD("   - List<PointF> gesture extensions:")
+            logD("     * List<PointF>.pathLength(): Total path length")
+            logD("     * List<PointF>.boundingBox(): Min/max coordinates")
+            logD("   - Coroutine extensions:")
+            logD("     * Context.uiScope: UI coroutine scope")
+            logD("   - Safe casting:")
+            logD("     * Any?.safeCast<T>(): Safe type casting")
+            logD("   - Math normalization:")
+            logD("     * Float.normalize(min, max): Normalize to [0,1]")
+            logD("     * Double.normalize(min, max): Normalize to [0,1]")
+            logD("   - Collection utilities:")
+            logD("     * List<T>.safeGet(index): Null-safe index access")
+            logD("     * MutableList<T>.addIfNotNull(item): Conditional add")
+            logD("   - Performance measurement:")
+            logD("     * measureTimeMillis(block): Millisecond timing")
+            logD("     * measureTimeNanos(block): Nanosecond timing")
+            logD("   - Tensor operations:")
+            logD("     * FloatArray.softmax(): Softmax activation")
+            logD("     * FloatArray.topKIndices(k): Top-K selection")
+            logD("   - 104 lines of utility extension functions")
+        } catch (e: Exception) {
+            logE("Failed to document extensions", e)
         }
     }
 
