@@ -48,12 +48,36 @@
   - Impact: Only English supported
   - Estimated Time: 8-12 hours (multi-language infrastructure)
 
-**Missing Core Systems (P0 - CATASTROPHIC)**:
-- [ ] **Bug #257**: LanguageDetector system missing (313 lines)
-- [ ] **Bug #259**: NgramModel system missing (350 lines)
-- [ ] **Bug #262**: WordPredictor baseline missing (782 lines)
-  - Note: Replaced by ONNX (ADR-001)
-- [ ] **Bug #263**: UserAdaptationManager missing (291 lines)
+**Missing Core Systems (P0 - CATASTROPHIC)** - ✅ ALL FIXED (2025-11-14):
+- [x] **Bug #257**: LanguageDetector system missing (313 lines) - ✅ IMPLEMENTED (data package)
+  - File: src/main/kotlin/tribixbite/keyboard2/data/LanguageDetector.kt
+  - Status: Fully implemented with character frequency + common word analysis
+  - Integrated: Wired to WordPredictor in CleverKeysService (line 765-771)
+
+- [x] **Bug #259**: NgramModel system missing (350 lines) - ✅ IMPLEMENTED
+  - File: src/main/kotlin/tribixbite/keyboard2/NgramModel.kt
+  - Status: Fully implemented with bigram/trigram probabilities
+  - Integrated: Initialized in CleverKeysService (line 717-727)
+
+- [x] **Bug #262**: WordPredictor baseline missing (782 lines) - ✅ IMPLEMENTED
+  - File: src/main/kotlin/tribixbite/keyboard2/WordPredictor.kt
+  - Status: Fully implemented with dictionary, bigram, language detection, user adaptation
+  - Integrated: Wired with all dependencies in CleverKeysService (line 729-759)
+  - Note: Works alongside ONNX system (ADR-001)
+
+- [x] **Bug #263**: UserAdaptationManager missing (291 lines) - ✅ IMPLEMENTED (data package)
+  - File: src/main/kotlin/tribixbite/keyboard2/data/UserAdaptationManager.kt
+  - Status: Fully implemented with SharedPreferences persistence
+  - Integrated: Wired to WordPredictor in CleverKeysService (line 778-784)
+
+**CRITICAL BUG FIX (2025-11-14)**:
+- [x] **Initialization Order Bug**: WordPredictor wiring race condition - ✅ FIXED
+  - File: CleverKeysService.kt (lines 193-197)
+  - Problem: WordPredictor initialized BEFORE LanguageDetector and UserAdaptationManager
+  - Impact: WordPredictor received null references → features broken
+  - Fix: Reordered initialization (LanguageDetector → UserAdaptationManager → WordPredictor)
+  - Commit: 6aab63a4
+  - Result: All components properly wired at initialization ✅
 
 **Total Estimated Time (Critical Path)**: 6-10 hours for data persistence + async fixes
 
@@ -87,14 +111,15 @@ Transformer Encoder → Beam Search Decoder →
 Vocabulary Filter → Predictions
 ```
 
-### Current Status
+### Current Status (Updated: 2025-11-14)
 - **Core Pipeline**: ✅ COMPLETE (encoder + decoder + beam search)
 - **Feature Extraction**: ✅ COMPLETE (smoothing, velocity, acceleration)
 - **Tokenization**: ✅ COMPLETE (character-level)
-- **Vocabulary**: ⚠️ PARTIAL (English only, no user dict)
-- **Training Data**: ❌ CRITICAL (lost on app close)
-- **Multi-Language**: ❌ MISSING
-- **User Adaptation**: ❌ MISSING
+- **WordPredictor System**: ✅ COMPLETE (dictionary, bigram, language detection, user adaptation)
+- **Vocabulary**: ⚠️ PARTIAL (English only, assets missing but framework ready)
+- **Training Data**: ❌ CRITICAL (lost on app close - Bug #273)
+- **Multi-Language**: ⚠️ FRAMEWORK READY (LanguageDetector implemented, assets needed)
+- **User Adaptation**: ✅ COMPLETE (SharedPreferences-based learning)
 
 ---
 
