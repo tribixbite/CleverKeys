@@ -159,6 +159,7 @@ class CleverKeysService : InputMethodService(),
     // Note: Utils is a Kotlin object (singleton) - no property needed
     // Note: Extensions.kt provides top-level utility extension functions (automatically available when imported)
     // Note: KeyValueParser is a Kotlin object (singleton) - no property needed
+    // Note: LayoutModifier is a Kotlin object (singleton) - no property needed
 
     // Configuration and state
     private var config: Config? = null
@@ -234,6 +235,7 @@ class CleverKeysService : InputMethodService(),
             initializeExtensions()  // Utility extension functions for common operations
             initializeUtils()  // Comprehensive utility functions (singleton)
             initializeKeyValueParser()  // Key definition parser with modern & legacy syntax
+            initializeLayoutModifier()  // Layout modification system (singleton)
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -4066,6 +4068,50 @@ class CleverKeysService : InputMethodService(),
             logD("     * Throws ParseError on syntax errors")
         } catch (e: Exception) {
             logE("Failed to initialize KeyValueParser", e)
+        }
+    }
+
+    // ============================================================================
+    // Layout Modification System (21 lines)
+    // ============================================================================
+
+    /**
+     * Initialize LayoutModifier object (singleton)
+     *
+     * Provides layout modification functionality for keyboard layouts.
+     *
+     * Features:
+     * - Layout modification system for customizing keyboard layouts
+     * - Numpad layout modification support
+     * - Configuration-based initialization
+     *
+     * Methods:
+     * - init(config, resources): Initialize with configuration and resources
+     * - modifyLayout(layout): Apply layout modifications
+     * - modifyNumpad(numpadLayout, baseLayout): Apply numpad modifications
+     *
+     * Status: Stub implementation - methods currently return unmodified layouts
+     * Future: Will support advanced layout customization and modifications
+     *
+     * Kotlin object (singleton) - no instantiation needed.
+     * Functions available via LayoutModifier.init() and LayoutModifier.modifyLayout() calls.
+     */
+    private fun initializeLayoutModifier() {
+        try {
+            // LayoutModifier is a Kotlin object (singleton) - no instantiation needed
+            // Functions are available via LayoutModifier.init(config, resources) calls
+
+            logD("✅ LayoutModifier object initialized (21 lines)")
+            logD("   - Layout modification system")
+            logD("   - Methods:")
+            logD("     * init(config, resources): Initialize with configuration")
+            logD("     * modifyLayout(layout): Apply layout modifications")
+            logD("     * modifyNumpad(numpadLayout, baseLayout): Apply numpad modifications")
+            logD("   - Status: Stub implementation (returns unmodified layouts)")
+            logD("   - Future: Advanced layout customization support")
+            logD("   - 21 lines of layout modification")
+        } catch (e: Exception) {
+            logE("Failed to initialize LayoutModifier", e)
         }
     }
 
