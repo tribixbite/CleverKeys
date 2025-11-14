@@ -120,6 +120,7 @@ class CleverKeysService : InputMethodService(),
     private var backupRestoreManager: BackupRestoreManager? = null  // Configuration backup/restore with SAF
     private var settingsSyncManager: SettingsSyncManager? = null  // Bug #383 fix - settings backup/sync
     private var clipboardSyncManager: ClipboardSyncManager? = null  // Bug #380 fix - clipboard cross-device sync
+    private var clipboardDatabase: ClipboardDatabase? = null  // SQLite clipboard history storage with coroutines
     private var stickyKeysManager: StickyKeysManager? = null  // Bug #373 fix - accessibility (ADA/WCAG)
     private var runtimeValidator: RuntimeValidator? = null  // Runtime validation for models and assets
     private var foldStateTracker: FoldStateTracker? = null  // Foldable device state tracking
@@ -171,6 +172,7 @@ class CleverKeysService : InputMethodService(),
             initializeBackupRestoreManager()  // Configuration backup/restore with SAF
             initializeSettingsSyncManager()  // Bug #383 fix - settings backup/sync
             initializeClipboardSyncManager()  // Bug #380 fix - clipboard cross-device sync
+            initializeClipboardDatabase()  // SQLite clipboard history storage
             initializeStickyKeysManager()  // Bug #373 fix - accessibility (ADA/WCAG)
             initializeRuntimeValidator()  // Runtime validation for models and assets
             initializeFoldStateTracker()  // Foldable device state tracking
@@ -314,6 +316,7 @@ class CleverKeysService : InputMethodService(),
             asyncPredictionHandler?.shutdown()  // Bug #275 - release async prediction handler resources
             inputConnectionManager?.cleanup()  // Release input connection manager resources
             clipboardSyncManager?.stopAutoSync()  // Bug #380 - stop clipboard sync
+            clipboardDatabase?.close()  // Close clipboard database connection
             stickyKeysManager?.cleanup()  // Bug #373 - cleanup sticky keys manager
             switchAccessSupport?.disable()  // Bug #371 - disable switch access and stop scanning
             mouseKeysEmulation?.disable()  // Bug #375 - disable mouse keys emulation
@@ -957,6 +960,38 @@ class CleverKeysService : InputMethodService(),
             logD("   - 450 lines of sync logic")
         } catch (e: Exception) {
             logE("Failed to initialize clipboard sync manager", e)
+        }
+    }
+
+    /**
+     * Initialize ClipboardDatabase for clipboard history storage
+     */
+    private fun initializeClipboardDatabase() {
+        try {
+            // ClipboardDatabase is a singleton with suspend getInstance
+            // Launch in service scope to initialize asynchronously
+            serviceScope.launch {
+                clipboardDatabase = ClipboardDatabase.getInstance(this@CleverKeysService)
+
+                logD("✅ ClipboardDatabase initialized")
+                logD("   - SQLite-based clipboard history storage")
+                logD("   - Coroutine-safe operations with suspend functions")
+                logD("   - Robust error handling with Result<T> return types")
+                logD("   - Efficient indexing for performance")
+                logD("   - Automatic cleanup of expired entries")
+                logD("   - Pin functionality to preserve important clips")
+                logD("   - Thread-safe singleton pattern with mutex protection")
+                logD("   - Database version: 1")
+                logD("   - Table: clipboard_entries")
+                logD("   - Columns: id, content, timestamp, expiry_timestamp, is_pinned, content_hash")
+                logD("   - Optimized indices: content_hash, timestamp DESC, expiry, pinned")
+                logD("   - Suspend functions: insertClip, getRecentClips, pinClip, deleteExpired")
+                logD("   - Database stats tracking: total/active/expired/pinned entries")
+                logD("   - Content hash-based deduplication")
+                logD("   - 485 lines of clipboard database logic")
+            }
+        } catch (e: Exception) {
+            logE("Failed to initialize clipboard database", e)
         }
     }
 
