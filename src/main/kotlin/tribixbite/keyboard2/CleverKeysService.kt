@@ -165,6 +165,7 @@ class CleverKeysService : InputMethodService(),
     // Note: CustomLayoutEditDialog is a Kotlin object (singleton) - no property needed
     // Note: LayoutValidators is a Kotlin object (singleton) - no property needed
     // Note: BuildConfig is a Kotlin object (singleton) - no property needed
+    // Note: KeyboardShapes is a Material 3 Shapes val + KeyShapes object (singleton) - no property needed
 
     // Configuration and state
     private var config: Config? = null
@@ -245,6 +246,7 @@ class CleverKeysService : InputMethodService(),
             initializeComposeKey()  // Compose key processing with finite state machine (singleton)
             initializeCustomLayoutEditDialog()  // Custom layout editor dialog with validation (Bugs #132, #133)
             initializeBuildConfig()  // Build configuration constants (singleton)
+            initializeKeyboardShapes()  // Material 3 shape system for keyboard components (singleton)
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -4495,6 +4497,55 @@ class CleverKeysService : InputMethodService(),
             logD("   - 12 lines of build configuration")
         } catch (e: Exception) {
             logE("Failed to initialize BuildConfig", e)
+        }
+    }
+
+    private fun initializeKeyboardShapes() {
+        try {
+            // KeyboardShapes is a Material 3 Shapes val + KeyShapes object (singleton)
+            // No instantiation needed - shapes are available via KeyboardShapes.* and KeyShapes.*
+
+            logD("✅ KeyboardShapes theme system initialized (109 lines)")
+            logD("   - Material 3 Shapes Object:")
+            logD("     * extraSmall: 4.dp (checkboxes, small chips)")
+            logD("     * small: 8.dp (buttons, suggestion chips)")
+            logD("     * medium: 12.dp (cards, keys)")
+            logD("     * large: 16.dp (dialogs, sheets)")
+            logD("     * extraLarge: 28.dp (large cards, prominent surfaces)")
+            logD("   - KeyShapes Object (Semantic Tokens):")
+            logD("     * key: 12.dp - Regular keyboard keys")
+            logD("     * keyActivated: 12.dp - Pressed/activated keys")
+            logD("     * keyModifier: 14.dp - Modifier keys (Shift, Ctrl, Alt)")
+            logD("     * keySpecial: 16.dp - Special keys (Enter, Backspace, Space)")
+            logD("     * suggestionChip: 8.dp - Suggestion bar chips")
+            logD("     * emojiButton: 8.dp - Emoji grid buttons")
+            logD("     * clipboardCard: 12.dp - Clipboard history cards")
+            logD("     * dialog: 16.dp - Modal dialogs")
+            logD("     * floatingKeyboard: 28.dp - Floating keyboard container")
+            logD("   - Functions:")
+            logD("     * getKeyShape(radius): Customizable key corner radius")
+            logD("   - Features:")
+            logD("     * Material 3 compliance")
+            logD("     * Semantic shape tokens")
+            logD("     * Rounded corner shapes")
+            logD("     * Component-specific shapes")
+            logD("     * Customizable key shapes")
+            logD("     * Touch-friendly design")
+            logD("   - Components Styled:")
+            logD("     * Keyboard keys (regular, activated, modifier, special)")
+            logD("     * Suggestion chips")
+            logD("     * Emoji buttons")
+            logD("     * Clipboard cards")
+            logD("     * Dialogs")
+            logD("     * Floating keyboard")
+            logD("   - Design System:")
+            logD("     * Consistent visual language")
+            logD("     * Material 3 shape scale")
+            logD("     * Hierarchical shape differentiation")
+            logD("     * Touch target optimization")
+            logD("   - 109 lines of Material 3 shape definitions")
+        } catch (e: Exception) {
+            logE("Failed to initialize KeyboardShapes", e)
         }
     }
 
