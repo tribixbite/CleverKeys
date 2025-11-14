@@ -12,6 +12,9 @@ import android.view.inputmethod.InputConnection
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import tribixbite.keyboard2.ui.SuggestionBarM3Wrapper
+import tribixbite.keyboard2.data.BigramModel as DataBigramModel
+import tribixbite.keyboard2.data.LanguageDetector as DataLanguageDetector
+import tribixbite.keyboard2.data.UserAdaptationManager as DataUserAdaptationManager
 
 // CleverKeys specific classes - all in same package
 
@@ -106,11 +109,11 @@ class CleverKeysService : InputMethodService(),
     private var thumbModeOptimizer: ThumbModeOptimizer? = null  // Bug #359 fix
     private var multiLanguageDictionary: MultiLanguageDictionaryManager? = null  // Bug #277 fix
     private var keyboardSwipeRecognizer: KeyboardSwipeRecognizer? = null  // Bug #256 fix
-    private var bigramModel: BigramModel? = null  // Bug #255 fix - contextual word prediction
+    private var bigramModel: DataBigramModel? = null  // Bug #255 fix - contextual word prediction (data package)
     private var ngramModel: NgramModel? = null  // Bug #259 fix
     private var wordPredictor: WordPredictor? = null  // Bug #262 fix
-    private var languageDetector: LanguageDetector? = null  // Bug #257 fix
-    private var userAdaptationManager: UserAdaptationManager? = null  // Bug #263 fix
+    private var languageDetector: DataLanguageDetector? = null  // Bug #257 fix (data package)
+    private var userAdaptationManager: DataUserAdaptationManager? = null  // Bug #263 fix (data package)
     private var swipeMLTrainer: tribixbite.keyboard2.ml.SwipeMLTrainer? = null  // Bug #274 fix
     private var swipeMLDataStore: tribixbite.keyboard2.ml.SwipeMLDataStore? = null  // SQLite storage for ML training data
     private var neuralSwipeTypingEngine: NeuralSwipeTypingEngine? = null  // Bug #275 dependency - neural prediction engine
@@ -372,7 +375,7 @@ class CleverKeysService : InputMethodService(),
             keyboardSwipeRecognizer?.release()  // Bug #256 - release keyboard swipe recognizer resources
             imeLanguageSelector?.release()  // Bug #347 - release IME language selector resources
             languageManager?.release()  // Bug #344 - release language manager resources
-            userAdaptationManager?.cleanup()  // Bug #263 - release user adaptation manager resources
+            // userAdaptationManager persists via SharedPreferences - no explicit cleanup needed
             swipeMLTrainer?.shutdown()  // Bug #274 - release swipe ML trainer resources
             swipeMLDataStore?.close()  // Close ML data store database and executor
             asyncPredictionHandler?.shutdown()  // Bug #275 - release async prediction handler resources
@@ -679,21 +682,28 @@ class CleverKeysService : InputMethodService(),
      */
     private fun initializeBigramModel() {
         try {
-            // Get singleton instance (creates if first time)
-            bigramModel = BigramModel.getInstance(context = this)
+            // Use data package BigramModel (loads from assets)
+            bigramModel = DataBigramModel(context = this)
 
             // Set initial language from LanguageManager if available
             val currentLang = languageManager?.getCurrentLanguage()?.code ?: "en"
             bigramModel?.setLanguage(currentLang)
 
-            // Log statistics
-            val stats = bigramModel?.getStatistics() ?: "N/A"
-            logD("BigramModel initialized: $stats")
+            // Load bigram data asynchronously from assets
+            serviceScope.launch(Dispatchers.IO) {
+                try {
+                    bigramModel?.loadCurrentLanguage()
+                    withContext(Dispatchers.Main) {
+                        logD("✅ BigramModel loaded from assets (bigrams_$currentLang.json)")
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        logW("BigramModel asset loading failed (continuing without): ${e.message}")
+                    }
+                }
+            }
 
-            // TODO: Load additional bigram data from assets if available
-            // bigramModel?.loadFromFile(this, "bigrams_en.txt")
-
-            logD("✅ BigramModel initialized (Bug #255)")
+            logD("✅ BigramModel initialized (Bug #255) - data package version")
         } catch (e: Exception) {
             logE("Failed to initialize bigram model", e)
             // Non-fatal - predictions work without contextual scoring
@@ -714,17 +724,19 @@ class CleverKeysService : InputMethodService(),
 
     /**
      * Initialize word predictor (Bug #262 fix).
+     * Wires BigramModel, LanguageDetector, and UserAdaptationManager.
      */
     private fun initializeWordPredictor() {
         try {
             config?.let { cfg ->
                 wordPredictor = WordPredictor(context = this, config = cfg)
 
-                // TODO: WordPredictor expects tribixbite.keyboard2.data.BigramModel
-                // but we integrated tribixbite.keyboard2.BigramModel (different class)
-                // For now, pass null - predictions work without bigram context
+                // Wire prediction components (initialized separately)
+                wordPredictor?.setBigramModel(bigramModel)
+                wordPredictor?.setLanguageDetector(languageDetector)
+                wordPredictor?.setUserAdaptationManager(userAdaptationManager)
 
-                logD("✅ WordPredictor initialized (Bug #262)")
+                logD("✅ WordPredictor initialized with prediction components (Bug #262)")
             }
         } catch (e: Exception) {
             logE("Failed to initialize word predictor", e)
@@ -733,16 +745,12 @@ class CleverKeysService : InputMethodService(),
 
     /**
      * Initialize language detector (Bug #257 fix).
+     * Uses data package LanguageDetector compatible with WordPredictor.
      */
     private fun initializeLanguageDetector() {
         try {
-            languageDetector = LanguageDetector()
-
-            // TODO: WordPredictor expects tribixbite.keyboard2.data.LanguageDetector
-            // but we have tribixbite.keyboard2.LanguageDetector (different class)
-            // For now, detector works standalone
-
-            logD("✅ LanguageDetector initialized (Bug #257)")
+            languageDetector = DataLanguageDetector(context = this)
+            logD("✅ LanguageDetector initialized (Bug #257) - data package version")
         } catch (e: Exception) {
             logE("Failed to initialize language detector", e)
         }
@@ -750,16 +758,12 @@ class CleverKeysService : InputMethodService(),
 
     /**
      * Initialize user adaptation manager (Bug #263 fix).
+     * Uses data package UserAdaptationManager compatible with WordPredictor.
      */
     private fun initializeUserAdaptationManager() {
         try {
-            userAdaptationManager = UserAdaptationManager.getInstance(context = this)
-
-            // TODO: WordPredictor expects tribixbite.keyboard2.data.UserAdaptationManager
-            // but we have tribixbite.keyboard2.UserAdaptationManager (different class)
-            // For now, adaptation manager works standalone
-
-            logD("✅ UserAdaptationManager initialized (Bug #263)")
+            userAdaptationManager = DataUserAdaptationManager(context = this)
+            logD("✅ UserAdaptationManager initialized (Bug #263) - data package version")
         } catch (e: Exception) {
             logE("Failed to initialize user adaptation manager", e)
         }
