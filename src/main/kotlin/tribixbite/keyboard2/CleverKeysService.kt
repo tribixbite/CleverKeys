@@ -167,6 +167,7 @@ class CleverKeysService : InputMethodService(),
     // Note: BuildConfig is a Kotlin object (singleton) - no property needed
     // Note: KeyboardShapes is a Material 3 Shapes val + KeyShapes object (singleton) - no property needed
     // Note: KeyboardTypography is a Material 3 Typography val + KeyboardTextStyles object (singleton) - no property needed
+    // Note: MaterialMotion is a Material 3 animation system object + AnimationConfig data class (singleton) - no property needed
 
     // Configuration and state
     private var config: Config? = null
@@ -249,6 +250,7 @@ class CleverKeysService : InputMethodService(),
             initializeBuildConfig()  // Build configuration constants (singleton)
             initializeKeyboardShapes()  // Material 3 shape system for keyboard components (singleton)
             initializeKeyboardTypography()  // Material 3 typography system for keyboard text (singleton)
+            initializeMaterialMotion()  // Material 3 animation system for keyboard motion (singleton)
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -4611,6 +4613,85 @@ class CleverKeysService : InputMethodService(),
             logD("   - 169 lines of Material 3 typography definitions")
         } catch (e: Exception) {
             logE("Failed to initialize KeyboardTypography", e)
+        }
+    }
+
+    private fun initializeMaterialMotion() {
+        try {
+            // MaterialMotion is a Material 3 animation system object + AnimationConfig data class (singleton)
+            // No instantiation needed - animations are available via MaterialMotion.* and AnimationConfig.*
+
+            logD("✅ MaterialMotion animation system initialized (346 lines)")
+            logD("   - Durations (Material 3 compliant):")
+            logD("     * SHORT (50-200ms): Micro-interactions")
+            logD("       - DURATION_SHORT_1: 50ms (key release)")
+            logD("       - DURATION_SHORT_2: 100ms (key press)")
+            logD("       - DURATION_SHORT_3: 150ms (suggestion update)")
+            logD("       - DURATION_SHORT_4: 200ms (dialog exit)")
+            logD("     * MEDIUM (250-400ms): Component transitions")
+            logD("       - DURATION_MEDIUM_1: 250ms")
+            logD("       - DURATION_MEDIUM_2: 300ms (dialog enter)")
+            logD("       - DURATION_MEDIUM_3: 350ms (keyboard hide)")
+            logD("       - DURATION_MEDIUM_4: 400ms")
+            logD("     * LONG (450-600ms): Container transformations")
+            logD("       - DURATION_LONG_1: 450ms")
+            logD("       - DURATION_LONG_2: 500ms (keyboard show)")
+            logD("       - DURATION_LONG_3: 550ms")
+            logD("       - DURATION_LONG_4: 600ms")
+            logD("   - Easing Curves:")
+            logD("     * Emphasized (RECOMMENDED): Energetic, attention-grabbing")
+            logD("       - Accelerate: For exit animations")
+            logD("       - Decelerate: For enter animations")
+            logD("       - Standard: For state changes")
+            logD("     * Standard: Subtle, legacy animations")
+            logD("       - Accelerate/Decelerate/Standard variants")
+            logD("     * Legacy: Android platform default (compatibility)")
+            logD("       - Accelerate/Decelerate/Standard variants")
+            logD("   - Spring Physics:")
+            logD("     * SpringHighStiffness: Fast, snappy (key press feedback)")
+            logD("     * SpringMediumStiffness: Balanced (suggestion items, cards)")
+            logD("     * SpringLowStiffness: Slow, gentle (large elements)")
+            logD("   - Common Animation Specs:")
+            logD("     * keyPress(): Quick feedback (100ms, emphasized decelerate)")
+            logD("     * keyRelease(): Snappy release (50ms, emphasized accelerate)")
+            logD("     * suggestionUpdate(): Smooth transitions (150ms, emphasized standard)")
+            logD("     * dialogEnter(): Dialog appears (300ms, emphasized decelerate)")
+            logD("     * dialogExit(): Dialog disappears (200ms, emphasized accelerate)")
+            logD("     * keyboardShow(): Keyboard slides up (500ms, emphasized decelerate)")
+            logD("     * keyboardHide(): Keyboard slides down (350ms, emphasized accelerate)")
+            logD("     * swipeTrail(): Trail follows finger (100ms, emphasized standard)")
+            logD("   - Enter/Exit Transitions:")
+            logD("     * fadeIn/fadeOut(): Alpha transitions")
+            logD("     * slideInVertically/slideOutVertically(): Slide animations")
+            logD("     * scaleIn/scaleOut(): Scale animations")
+            logD("   - Dimension Animations:")
+            logD("     * animateDp(): Size changes (padding, margins)")
+            logD("     * animateFloat(): Alpha, scale, rotation")
+            logD("   - AnimationConfig Data Class:")
+            logD("     * enabled: Boolean - Enable/disable animations")
+            logD("     * reducedMotion: Boolean - Accessibility support")
+            logD("     * duration(base): Adjusted durations for reduced motion (50% shorter)")
+            logD("     * Presets: Default, Disabled, ReducedMotion")
+            logD("   - Features:")
+            logD("     * Material 3 compliance")
+            logD("     * Cubic Bezier easing curves")
+            logD("     * Spring-based physics")
+            logD("     * Accessibility support (reduced motion)")
+            logD("     * Runtime animation control")
+            logD("     * Consistent motion language")
+            logD("   - Use Cases:")
+            logD("     * Key press/release feedback")
+            logD("     * Suggestion bar updates")
+            logD("     * Dialog transitions")
+            logD("     * Keyboard show/hide")
+            logD("     * Swipe trail rendering")
+            logD("     * Component enter/exit")
+            logD("     * Size and position changes")
+            logD("   - Reference:")
+            logD("     * https://m3.material.io/styles/motion/easing-and-duration/tokens-specs")
+            logD("   - 346 lines of Material 3 motion system")
+        } catch (e: Exception) {
+            logE("Failed to initialize MaterialMotion", e)
         }
     }
 
