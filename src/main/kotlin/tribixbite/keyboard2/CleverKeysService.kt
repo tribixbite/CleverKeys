@@ -152,6 +152,7 @@ class CleverKeysService : InputMethodService(),
     private var gestureClassifier: GestureClassifier? = null  // Unified TAP vs SWIPE gesture classification
     // Note: SwipeResampler is a Kotlin object (singleton) - no property needed
     // Note: DirectBootAwarePreferences is a Kotlin object (singleton) - no property needed
+    // Note: Logs is a Kotlin object (singleton) - no property needed
 
     // Configuration and state
     private var config: Config? = null
@@ -220,6 +221,7 @@ class CleverKeysService : InputMethodService(),
             initializeGestureClassifier()  // Unified TAP vs SWIPE gesture classification
             initializeSwipeResampler()  // Swipe trajectory resampling utility (singleton)
             initializeDirectBootAwarePreferences()  // Device-protected storage preferences (singleton)
+            initializeLogs()  // Centralized logging system (singleton)
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -2989,6 +2991,47 @@ class CleverKeysService : InputMethodService(),
             logD("   - 113 lines of Direct Boot aware preferences logic")
         } catch (e: Exception) {
             logE("Failed to initialize direct boot aware preferences", e)
+        }
+    }
+
+    private fun initializeLogs() {
+        try {
+            // Logs is a Kotlin object (singleton) - no instantiation needed
+            // Just log its availability and features
+
+            logD("✅ Logs available (Kotlin singleton)")
+            logD("   - Centralized logging system for CleverKeys (Bugs #87-89 fixes)")
+            logD("   - Features:")
+            logD("     * Configurable logging levels (debug, verbose, info, warning, error)")
+            logD("     * LogPrinter support for detailed startup debugging")
+            logD("     * EditorInfo debugging for input view startup")
+            logD("     * Stack trace logging for debugging")
+            logD("     * Config migration logging")
+            logD("   - Bug #87 fix: TAG constant for consistent logging")
+            logD("     * TAG = 'tribixbite.keyboard2' (consistent across all logs)")
+            logD("   - Bug #88 fix: debug_startup_input_view()")
+            logD("     * Logs EditorInfo details for input debugging")
+            logD("     * Dumps extras, action labels, swap settings")
+            logD("   - Bug #89 fix: trace() for stack traces")
+            logD("     * Logs full stack trace for debugging complex issues")
+            logD("   - Logging Methods:")
+            logD("     * d(tag, message): Debug logging (respects debug flag)")
+            logD("     * e(tag, message, throwable): Error logging (always enabled)")
+            logD("     * w(tag, message): Warning logging (always enabled)")
+            logD("     * i(tag, message): Info logging (always enabled)")
+            logD("     * v(tag, message): Verbose logging (respects verbose flag)")
+            logD("     * debug(message): Generic debug via LogPrinter")
+            logD("     * trace(): Stack trace logging via LogPrinter")
+            logD("   - Configuration Methods:")
+            logD("     * set_debug_logs(enabled): Enable/disable LogPrinter debugging")
+            logD("     * setDebugEnabled(enabled): Control debug logging")
+            logD("     * setVerboseEnabled(enabled): Control verbose logging")
+            logD("   - Special Debugging:")
+            logD("     * debug_startup_input_view(info, conf): EditorInfo debugging")
+            logD("     * debug_config_migration(saved, current): Config version migration")
+            logD("   - 120 lines of centralized logging logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize logs", e)
         }
     }
 
