@@ -13,16 +13,19 @@
 **APK**: ✅ Built and Installed
 **Development**: ✅ 100% Complete (251/251 files)
 **Bugs**: ✅ All P0/P1 Resolved (45 total)
-**Documentation**: ✅ 1,849 lines of testing guides
+**Documentation**: ✅ 3,873+ lines (testing guides + automation infrastructure)
+**Automation**: ✅ 5 helper scripts with --help (2,024 lines)
 
-### 👉 **START HERE**: [`START_HERE.md`](START_HERE.md)
+### 👉 **START HERE**: [`00_START_HERE_FIRST.md`](00_START_HERE_FIRST.md)
 
 If you want to test CleverKeys right now:
-1. Read [`START_HERE.md`](START_HERE.md) (takes 2 minutes)
+1. Read [`00_START_HERE_FIRST.md`](00_START_HERE_FIRST.md) (takes 2 minutes)
 2. Enable keyboard in Android Settings (takes 90 seconds)
 3. Run quick tests (takes 2 minutes)
 
-That's it! Full testing guides available if you want to go deeper.
+**Or use automation:** `./run-all-checks.sh` for complete verification
+
+That's it! Full testing guides and 25 shell scripts available (see [`SCRIPTS_REFERENCE.md`](SCRIPTS_REFERENCE.md)).
 
 ---
 
@@ -103,7 +106,9 @@ Backup: ~/storage/shared/CleverKeys-debug.apk
 4. Find **"CleverKeys (Debug)"** and toggle **ON**
 5. Open any text app and select CleverKeys from keyboard switcher (⌨️)
 
-### 🛠️ **Helper Scripts** (NEW!)
+### 🛠️ **Helper Scripts** (NEW - Part 6 Infrastructure!)
+
+**5 User-Facing Scripts** (All with `--help` documentation):
 ```bash
 ./build-and-verify.sh         # 🚀 Complete build-install-verify pipeline
 ./run-all-checks.sh           # ⭐ Complete verification suite (recommended)
@@ -114,6 +119,15 @@ Backup: ~/storage/shared/CleverKeys-debug.apk
 # All scripts support --help for detailed usage information
 ./script-name.sh --help       # Show comprehensive help
 ```
+
+**Plus 20 more scripts** for building, testing, and development (see [`SCRIPTS_REFERENCE.md`](SCRIPTS_REFERENCE.md) for complete catalog)
+
+**Features:**
+- ✅ 2,024 lines of automation + help documentation
+- ✅ Complete build-to-verification pipeline
+- ✅ Interactive guided testing
+- ✅ Comprehensive diagnostics with report generation
+- ✅ Self-documenting with --help flags
 
 ### ✅ **Quick Test** (2 minutes)
 
@@ -130,9 +144,13 @@ Once CleverKeys is active:
 
 ## 📚 **Documentation**
 
-### 🎯 **Testing Guides** (1,849 lines)
-- [`START_HERE.md`](START_HERE.md) - **Read this first!** Quick start guide
+### 🎯 **Essential Guides** (Start Here!)
+- [`00_START_HERE_FIRST.md`](00_START_HERE_FIRST.md) - **Main entry point** (starts with "00_" to sort first)
 - [`QUICK_REFERENCE.md`](QUICK_REFERENCE.md) - 1-page cheat sheet
+- [`INDEX.md`](INDEX.md) - Complete documentation index (40+ files organized)
+- [`SCRIPTS_REFERENCE.md`](SCRIPTS_REFERENCE.md) - Complete guide to all 25 shell scripts
+
+### 🧪 **Testing Guides** (1,849 lines)
 - [`PROJECT_COMPLETE.md`](PROJECT_COMPLETE.md) - Full completion summary
 - [`MANUAL_TESTING_GUIDE.md`](MANUAL_TESTING_GUIDE.md) - Systematic testing (5 priorities)
 - [`TESTING_CHECKLIST.md`](TESTING_CHECKLIST.md) - 50+ item checklist
@@ -140,7 +158,7 @@ Once CleverKeys is active:
 - [`TESTING_NEXT_STEPS.md`](TESTING_NEXT_STEPS.md) - Step-by-step activation
 
 ### 📊 **Project Documentation**
-- [`migrate/project_status.md`](migrate/project_status.md) - Complete development history
+- [`migrate/project_status.md`](migrate/project_status.md) - Complete development history (3,460+ lines)
 - [`docs/TABLE_OF_CONTENTS.md`](docs/TABLE_OF_CONTENTS.md) - Master file index (66+ files)
 - [`docs/specs/README.md`](docs/specs/README.md) - 10 system specifications
 - [`migrate/todo/critical.md`](migrate/todo/critical.md) - All P0/P1 bugs (resolved)
