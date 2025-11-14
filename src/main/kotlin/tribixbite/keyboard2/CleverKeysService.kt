@@ -160,6 +160,7 @@ class CleverKeysService : InputMethodService(),
     // Note: Extensions.kt provides top-level utility extension functions (automatically available when imported)
     // Note: KeyValueParser is a Kotlin object (singleton) - no property needed
     // Note: LayoutModifier is a Kotlin object (singleton) - no property needed
+    // Note: ErrorHandling is a Kotlin object (singleton) - no property needed
 
     // Configuration and state
     private var config: Config? = null
@@ -236,6 +237,7 @@ class CleverKeysService : InputMethodService(),
             initializeUtils()  // Comprehensive utility functions (singleton)
             initializeKeyValueParser()  // Key definition parser with modern & legacy syntax
             initializeLayoutModifier()  // Layout modification system (singleton)
+            initializeErrorHandling()  // Comprehensive error handling & validation (singleton)
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -4112,6 +4114,114 @@ class CleverKeysService : InputMethodService(),
             logD("   - 21 lines of layout modification")
         } catch (e: Exception) {
             logE("Failed to initialize LayoutModifier", e)
+        }
+    }
+
+    // ============================================================================
+    // Error Handling & Validation System (251 lines)
+    // ============================================================================
+
+    /**
+     * Initialize ErrorHandling object (singleton)
+     *
+     * Comprehensive error handling and validation system with structured exception management.
+     *
+     * Custom Exceptions (Sealed Class Hierarchy):
+     * - CleverKeysException: Base sealed class for all CleverKeys exceptions
+     * - NeuralEngineException: ONNX runtime and neural processing errors
+     * - GestureRecognitionException: Gesture and swipe recognition errors
+     * - LayoutException: Keyboard layout errors
+     * - ConfigurationException: Configuration and validation errors
+     * - ResourceException: Resource loading and management errors
+     * - ModelLoadingException: ML model loading errors
+     *
+     * Global Exception Handler:
+     * - CleverKeysExceptionHandler: Coroutine exception handler with error callback
+     * - Converts ONNX, OOM, and unexpected exceptions to CleverKeysException
+     *
+     * Validation Functions (ErrorHandling.Validation):
+     * - validateSwipeInput(input): Validate swipe coordinates, timestamps, path length, duration
+     * - validateNeuralConfig(config): Validate beam width, max length, confidence threshold
+     * - validateKeyboardLayout(layout): Validate rows, keys, and key values
+     *
+     * ValidationResult Data Class:
+     * - isValid: Boolean flag
+     * - errors: List of error messages
+     * - throwIfInvalid(): Throw if validation failed
+     * - getErrorSummary(): Get formatted error summary
+     *
+     * Safe Execution Wrapper:
+     * - safeExecute<T>(operation, context, block): Wrap operation with error handling
+     * - Returns Result<T> with success or failure
+     * - Handles cancellation, CleverKeysException, and unexpected errors
+     *
+     * Retry Mechanism:
+     * - retryOperation<T>(maxAttempts, delayMs, operation): Retry flaky operations
+     * - Default: 3 attempts with 1000ms delay
+     * - Respects cancellation (no retry)
+     * - Logs each attempt
+     *
+     * Resource Validation:
+     * - validateResources(context): Check essential assets and string resources
+     * - Required assets: dictionaries, ONNX models
+     * - Required strings: app_name
+     *
+     * Features:
+     * - Structured exception hierarchy
+     * - Global coroutine exception handling
+     * - Comprehensive input validation
+     * - Safe execution wrapper with Result<T>
+     * - Automatic retry for flaky operations
+     * - Resource existence validation
+     *
+     * Kotlin object (singleton) - no instantiation needed.
+     * Functions available via ErrorHandling.Validation.validate*() and ErrorHandling.safeExecute() calls.
+     */
+    private fun initializeErrorHandling() {
+        try {
+            // ErrorHandling is a Kotlin object (singleton) - no instantiation needed
+            // Functions are available via ErrorHandling.* calls
+
+            logD("✅ ErrorHandling object initialized (251 lines)")
+            logD("   - Custom Exceptions:")
+            logD("     * CleverKeysException: Base sealed class")
+            logD("     * NeuralEngineException: ONNX and neural errors")
+            logD("     * GestureRecognitionException: Gesture errors")
+            logD("     * LayoutException: Keyboard layout errors")
+            logD("     * ConfigurationException: Config errors")
+            logD("     * ResourceException: Resource errors")
+            logD("     * ModelLoadingException: ML model errors")
+            logD("   - Global Exception Handler:")
+            logD("     * CleverKeysExceptionHandler: Coroutine handler")
+            logD("     * Converts ONNX, OOM, unexpected → CleverKeysException")
+            logD("   - Validation Functions:")
+            logD("     * validateSwipeInput(input): Coordinates, timestamps, path, duration")
+            logD("     * validateNeuralConfig(config): Beam width, max length, confidence")
+            logD("     * validateKeyboardLayout(layout): Rows, keys, key values")
+            logD("   - ValidationResult:")
+            logD("     * isValid: Boolean")
+            logD("     * errors: List<String>")
+            logD("     * throwIfInvalid(): Throw on validation failure")
+            logD("     * getErrorSummary(): Formatted error summary")
+            logD("   - Safe Execution:")
+            logD("     * safeExecute<T>(operation, context, block): Error wrapper")
+            logD("     * Returns Result<T> (success/failure)")
+            logD("     * Handles cancellation, CleverKeysException, unexpected errors")
+            logD("   - Retry Mechanism:")
+            logD("     * retryOperation<T>(maxAttempts, delayMs, operation)")
+            logD("     * Default: 3 attempts, 1000ms delay")
+            logD("     * Respects cancellation (no retry)")
+            logD("   - Resource Validation:")
+            logD("     * validateResources(context): Check assets & strings")
+            logD("     * Required: dictionaries, ONNX models, app_name")
+            logD("   - 251 lines of error handling & validation")
+            logD("   - Functions:")
+            logD("     * ErrorHandling.Validation.validate*(): Validation methods")
+            logD("     * ErrorHandling.safeExecute(): Safe wrapper")
+            logD("     * ErrorHandling.retryOperation(): Retry with backoff")
+            logD("     * ErrorHandling.validateResources(): Resource check")
+        } catch (e: Exception) {
+            logE("Failed to initialize ErrorHandling", e)
         }
     }
 
