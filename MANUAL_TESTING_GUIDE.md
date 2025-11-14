@@ -2,7 +2,12 @@
 
 **Version**: 1.32.1 (Build 50+)
 **Date**: 2025-11-14
-**Focus**: Verify TODO resolution integrations
+**Focus**: Verify TODO resolution integrations + initialization order fix
+
+## 🐛 Critical Bug Fix (Build 50+)
+**Initialization Order Bug Fixed**: WordPredictor now properly receives LanguageDetector and UserAdaptationManager references (previously null due to wrong initialization order).
+
+**Impact**: Language detection and user adaptation features should now work correctly.
 
 ---
 
