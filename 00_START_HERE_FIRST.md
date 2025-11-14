@@ -26,6 +26,7 @@ CleverKeys is a **modern Android keyboard** with neural swipe typing, built from
 
 ### Quick Tools (NEW!)
 Before manual steps, try these helper scripts:
+- **`./build-and-verify.sh`** - 🚀 Complete build-install-verify pipeline (for rebuilds)
 - **`./run-all-checks.sh`** - 🌟 Complete verification suite (recommended)
 - **`./check-keyboard-status.sh`** - Verify installation and status
 - **`./quick-test-guide.sh`** - Interactive 5-test guide
@@ -89,7 +90,17 @@ Try these 5 quick tests:
 
 ## 🛠️ **Helper Scripts**
 
-Four interactive scripts make testing easier:
+Five automation scripts make testing and building easier:
+
+### build-and-verify.sh (🚀 For Rebuilds)
+```bash
+./build-and-verify.sh [--clean] [--skip-verify]
+```
+- Complete build-install-verify pipeline
+- Clean → Compile → Build APK → Install → Verify
+- Optional clean build (--clean flag)
+- Skip verification (--skip-verify flag)
+- Best for rebuilding after code changes
 
 ### run-all-checks.sh (⭐ Recommended)
 ```bash

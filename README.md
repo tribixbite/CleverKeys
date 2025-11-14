@@ -105,6 +105,7 @@ Backup: ~/storage/shared/CleverKeys-debug.apk
 
 ### 🛠️ **Helper Scripts** (NEW!)
 ```bash
+./build-and-verify.sh         # 🚀 Complete build-install-verify pipeline
 ./run-all-checks.sh           # ⭐ Complete verification suite (recommended)
 ./check-keyboard-status.sh    # Quick status check
 ./quick-test-guide.sh         # Interactive 5-test guide
