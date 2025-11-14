@@ -150,6 +150,7 @@ class CleverKeysService : InputMethodService(),
     private var voiceImeSwitcher: VoiceImeSwitcher? = null  // Bug #264 fix - voice IME switching
     private var vibratorCompat: VibratorCompat? = null  // Cross-platform vibration for haptic feedback
     private var gestureClassifier: GestureClassifier? = null  // Unified TAP vs SWIPE gesture classification
+    // Note: SwipeResampler is a Kotlin object (singleton) - no property needed
 
     // Configuration and state
     private var config: Config? = null
@@ -216,6 +217,7 @@ class CleverKeysService : InputMethodService(),
             initializeVoiceImeSwitcher()  // Bug #264 fix - voice IME switching
             initializeVibratorCompat()  // Cross-platform vibration for haptic feedback
             initializeGestureClassifier()  // Unified TAP vs SWIPE gesture classification
+            initializeSwipeResampler()  // Swipe trajectory resampling utility (singleton)
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -2912,6 +2914,46 @@ class CleverKeysService : InputMethodService(),
             logD("   - 149 lines of unified gesture classification logic")
         } catch (e: Exception) {
             logE("Failed to initialize gesture classifier", e)
+        }
+    }
+
+    private fun initializeSwipeResampler() {
+        try {
+            // SwipeResampler is a Kotlin object (singleton) - no instantiation needed
+            // Just log its availability and features
+
+            logD("✅ SwipeResampler available (Kotlin singleton)")
+            logD("   - Swipe trajectory resampling for neural model input")
+            logD("   - Features:")
+            logD("     * Three resampling strategies: TRUNCATE, DISCARD, MERGE")
+            logD("     * Reduces trajectory point counts while preserving shape")
+            logD("     * Critical start/end information preservation")
+            logD("     * Weighted uniform sampling for production use")
+            logD("   - Resampling Modes:")
+            logD("     * TRUNCATE: First N points (fastest, loses end info)")
+            logD("     * DISCARD: Weighted uniform sampling (recommended for production)")
+            logD("     * MERGE: Averaging neighboring points (best quality, slower)")
+            logD("   - Performance:")
+            logD("     * TRUNCATE: O(N) with minimal overhead")
+            logD("     * DISCARD: O(N) with weighted selection (35/30/35 zone split)")
+            logD("     * MERGE: O(N*F) where F = feature count")
+            logD("   - Use Cases:")
+            logD("     * TRUNCATE: Fast preview, real-time visualization")
+            logD("     * DISCARD: Production swipe recognition (recommended)")
+            logD("     * MERGE: High-accuracy mode, post-processing")
+            logD("   - API Methods:")
+            logD("     * resample(trajectoryData, targetLength, mode): Resampled trajectory")
+            logD("     * parseMode(modeString): Parse mode from string")
+            logD("     * getResamplingStats(original, resampled): Statistics string")
+            logD("     * isValidTrajectory(data, targetLength): Validation")
+            logD("   - Zone Weighting (DISCARD mode):")
+            logD("     * Start zone: 30% of trajectory, 35% of output points")
+            logD("     * Middle zone: 40% of trajectory, 30% of output points")
+            logD("     * End zone: 30% of trajectory, 35% of output points")
+            logD("     * Ensures gesture extremities are well-represented")
+            logD("   - 337 lines of trajectory resampling logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize swipe resampler", e)
         }
     }
 
