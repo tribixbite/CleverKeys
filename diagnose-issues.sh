@@ -6,6 +6,70 @@
 
 set -e
 
+# Help function
+show_help() {
+    cat << EOF
+CleverKeys Diagnostic Tool
+
+DESCRIPTION:
+    Comprehensive diagnostic tool that collects system information, logs, and
+    detects common issues. Generates a timestamped report file for troubleshooting.
+
+USAGE:
+    ./diagnose-issues.sh [OPTIONS]
+
+OPTIONS:
+    -h, --help      Show this help message and exit
+
+EXAMPLES:
+    ./diagnose-issues.sh              # Run full diagnostics
+    ./diagnose-issues.sh --help       # Show this help
+
+DIAGNOSTIC SECTIONS:
+    1.  System Information (Android version, device, architecture)
+    2.  APK Installation Status (package verification)
+    3.  Build Information (version, last build time)
+    4.  Keyboard Enablement (IME settings check)
+    5.  Keyboard Activation (current IME check)
+    6.  Permissions (required permissions status)
+    7.  Recent Logs (last 100 lines filtered for CleverKeys)
+    8.  Crash Detection (fatal errors in logs)
+    9.  Storage Information (available space)
+    10. Process Status (running processes)
+    11. Common Issues Check (automated detection)
+
+OUTPUT:
+    Generates report file: cleverkeys-diagnostic-YYYYMMDD-HHMMSS.txt
+    Report includes all diagnostic information for bug reporting.
+
+EXIT CODES:
+    0    Diagnostics completed successfully
+    1    Diagnostics failed or errors encountered
+
+NOTES:
+    - Report files are automatically added to .gitignore
+    - Safe to share reports (no sensitive personal information)
+    - Include report when filing bug reports
+
+EOF
+    exit 0
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_help
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
 # Colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'

@@ -6,6 +6,54 @@
 
 set -e
 
+# Help function
+show_help() {
+    cat << EOF
+CleverKeys Status Checker
+
+DESCRIPTION:
+    Verifies CleverKeys installation status and provides next steps.
+    Checks: APK installation, keyboard enablement, keyboard activation.
+
+USAGE:
+    ./check-keyboard-status.sh [OPTIONS]
+
+OPTIONS:
+    -h, --help      Show this help message and exit
+
+EXAMPLES:
+    ./check-keyboard-status.sh              # Check installation status
+    ./check-keyboard-status.sh --help       # Show this help
+
+OUTPUT:
+    - Installation status (installed/not installed)
+    - Enablement status (enabled/not enabled)
+    - Activation status (active/not active)
+    - Next steps based on current state
+
+EXIT CODES:
+    0    All checks passed (keyboard ready)
+    1    Some checks failed (action needed)
+
+EOF
+    exit 0
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_help
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
 echo "╔════════════════════════════════════════════════════════════════════════════╗"
 echo "║                    CleverKeys - Installation Status                        ║"
 echo "╚════════════════════════════════════════════════════════════════════════════╝"

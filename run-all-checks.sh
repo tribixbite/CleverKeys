@@ -6,6 +6,77 @@
 
 set -e
 
+# Help function
+show_help() {
+    cat << EOF
+CleverKeys Complete Verification Suite
+
+DESCRIPTION:
+    Master verification tool that runs all checking and testing scripts in sequence.
+    Orchestrates: status check → diagnostics → guided testing → final summary.
+
+USAGE:
+    ./run-all-checks.sh [OPTIONS]
+
+OPTIONS:
+    -h, --help      Show this help message and exit
+
+EXAMPLES:
+    ./run-all-checks.sh              # Run complete verification suite
+    ./run-all-checks.sh --help       # Show this help
+
+VERIFICATION STEPS:
+    Step 1: Status Check (check-keyboard-status.sh)
+        - Verify APK installation
+        - Check keyboard enablement
+        - Verify keyboard activation
+
+    Step 2: Diagnostic Scan (diagnose-issues.sh)
+        - Comprehensive system check
+        - Log collection
+        - Common issues detection
+        - Generate diagnostic report
+
+    Step 3: Guided Testing (quick-test-guide.sh) [conditional]
+        - Interactive 5-test suite
+        - Only runs if keyboard is ready
+        - Can be skipped if keyboard not enabled
+
+OUTPUT:
+    - Real-time progress through all steps
+    - Final summary with all results
+    - Recommendations based on findings
+    - Diagnostic report file (if issues found)
+
+EXIT CODES:
+    0    All checks passed
+    1+   Some checks failed or warnings issued
+
+NOTES:
+    - Takes 5-15 minutes depending on tests
+    - Guided testing is optional (can skip if keyboard not ready)
+    - Integrates with all verification tools
+    - Best for first-time verification
+
+EOF
+    exit 0
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_help
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
 # Colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'

@@ -6,6 +6,59 @@
 
 set -e
 
+# Help function
+show_help() {
+    cat << EOF
+CleverKeys Quick Test Guide
+
+DESCRIPTION:
+    Interactive guide through 5 essential tests to verify CleverKeys functionality.
+    Tests: Basic typing, predictions, swipe, autocorrect, design.
+
+USAGE:
+    ./quick-test-guide.sh [OPTIONS]
+
+OPTIONS:
+    -h, --help      Show this help message and exit
+
+EXAMPLES:
+    ./quick-test-guide.sh              # Run interactive test guide
+    ./quick-test-guide.sh --help       # Show this help
+
+PREREQUISITE:
+    CleverKeys must be enabled and selected as the active keyboard.
+    Open any text app and select CleverKeys before running this script.
+
+TESTS COVERED:
+    1. Basic Typing - Type "hello world"
+    2. Predictions - Type "th" and check suggestions
+    3. Swipe Typing - Swipe h→e→l→l→o
+    4. Autocorrect - Type "teh " and check correction
+    5. Design - Verify Material 3 theme
+
+EXIT CODES:
+    0    All tests passed
+    1    Some tests failed
+
+EOF
+    exit 0
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_help
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
 # Colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'

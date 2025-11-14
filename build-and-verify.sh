@@ -15,6 +15,97 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
+# Help function
+show_help() {
+    cat << EOF
+CleverKeys Build & Verification Pipeline
+
+DESCRIPTION:
+    Complete automation pipeline from source code to verified installation.
+    One command to: clean → compile → build → install → verify.
+
+USAGE:
+    ./build-and-verify.sh [OPTIONS]
+
+OPTIONS:
+    --clean             Clean build directories before compilation
+    --skip-verify       Skip verification suite after installation
+    -h, --help          Show this help message and exit
+
+EXAMPLES:
+    ./build-and-verify.sh                  # Standard build and verify
+    ./build-and-verify.sh --clean          # Clean build first
+    ./build-and-verify.sh --skip-verify    # Build and install only (no tests)
+    ./build-and-verify.sh --clean --skip-verify  # Clean build, skip verification
+
+BUILD PIPELINE:
+    Step 1: Clean Build (optional with --clean)
+        - Run ./gradlew clean
+        - Remove previous build artifacts
+
+    Step 2: Compile Production Code
+        - Run ./gradlew compileDebugKotlin
+        - Verify 0 compilation errors
+
+    Step 3: Build APK
+        - Run ./gradlew assembleDebug
+        - Generate tribixbite.keyboard2.debug.apk
+
+    Step 4: Install APK
+        - Method 1: termux-open (recommended)
+        - Method 2: ADB wireless
+        - Method 3: Manual copy to shared storage
+        - Verify installation with pm command
+
+    Step 5: Verification Suite (optional with --skip-verify)
+        - Run ./run-all-checks.sh
+        - Status check + diagnostics + guided testing
+
+TIMING:
+    - Standard build: 5-7 minutes
+    - Clean build: 8-10 minutes
+    - Skip verification: 3-5 minutes
+
+EXIT CODES:
+    0    Pipeline completed successfully
+    1    Compilation, build, or installation failed
+
+NOTES:
+    - Requires Gradle and Android SDK
+    - APK output: build/outputs/apk/debug/
+    - Backup copy: ~/storage/shared/CleverKeys-debug.apk
+    - Best for rebuilding after code changes
+
+EOF
+    exit 0
+}
+
+# Parse arguments
+CLEAN_BUILD=false
+SKIP_VERIFICATION=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_help
+            ;;
+        --clean)
+            CLEAN_BUILD=true
+            shift
+            ;;
+        --skip-verify)
+            SKIP_VERIFICATION=true
+            shift
+            ;;
+        *)
+            echo -e "${RED}Unknown option: $1${NC}"
+            echo "Usage: $0 [--clean] [--skip-verify]"
+            echo "Use --help for more information"
+            exit 1
+            ;;
+    esac
+done
+
 clear
 
 echo "╔════════════════════════════════════════════════════════════════════════════╗"
@@ -31,28 +122,6 @@ echo ""
 echo -e "${YELLOW}⏱️  Estimated time: 5-10 minutes${NC}"
 echo ""
 read -p "Press ENTER to start, or Ctrl+C to cancel..."
-
-# Parse arguments
-CLEAN_BUILD=false
-SKIP_VERIFICATION=false
-
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --clean)
-            CLEAN_BUILD=true
-            shift
-            ;;
-        --skip-verify)
-            SKIP_VERIFICATION=true
-            shift
-            ;;
-        *)
-            echo -e "${RED}Unknown option: $1${NC}"
-            echo "Usage: $0 [--clean] [--skip-verify]"
-            exit 1
-            ;;
-    esac
-done
 
 # Section 1: Clean Build (Optional)
 if [ "$CLEAN_BUILD" = true ]; then
