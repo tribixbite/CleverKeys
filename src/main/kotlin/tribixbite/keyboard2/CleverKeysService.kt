@@ -161,6 +161,7 @@ class CleverKeysService : InputMethodService(),
     // Note: KeyValueParser is a Kotlin object (singleton) - no property needed
     // Note: LayoutModifier is a Kotlin object (singleton) - no property needed
     // Note: ErrorHandling is a Kotlin object (singleton) - no property needed
+    // Note: ComposeKey is a Kotlin object (singleton) - no property needed
 
     // Configuration and state
     private var config: Config? = null
@@ -238,6 +239,7 @@ class CleverKeysService : InputMethodService(),
             initializeKeyValueParser()  // Key definition parser with modern & legacy syntax
             initializeLayoutModifier()  // Layout modification system (singleton)
             initializeErrorHandling()  // Comprehensive error handling & validation (singleton)
+            initializeComposeKey()  // Compose key processing with finite state machine (singleton)
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -4222,6 +4224,107 @@ class CleverKeysService : InputMethodService(),
             logD("     * ErrorHandling.validateResources(): Resource check")
         } catch (e: Exception) {
             logE("Failed to initialize ErrorHandling", e)
+        }
+    }
+
+    // ============================================================================
+    // Compose Key Processing System (345 lines)
+    // ============================================================================
+
+    /**
+     * Initialize ComposeKey object (singleton)
+     *
+     * Compose key processing system with finite state machine for dead keys and multi-character input sequences.
+     *
+     * Main Functions:
+     * - apply(state, keyValue): Apply compose sequence to KeyValue
+     * - apply(state, char): Apply compose sequence to single character
+     * - apply(state, string): Apply compose sequence to string (character-by-character)
+     * - isValidState(state): Validate state
+     * - getAvailableTransitions(state): Get possible transitions from state
+     * - isFinalState(state): Check if state produces output
+     * - getFinalStateResult(state): Get result from final state
+     * - getInitialState(): Reset to initial state (0)
+     * - getStatistics(): Get compose data statistics
+     * - validateData(): Validate data integrity
+     *
+     * Features:
+     * - Unicode compose sequence support
+     * - Dead key processing (accents, diacritics)
+     * - Multi-character sequence matching
+     * - State machine-based implementation
+     * - Efficient binary search for transitions
+     * - Bounds checking and error handling
+     * - Graceful error recovery (returns null on error)
+     *
+     * State Machine:
+     * - States: Array of characters representing transitions
+     * - Edges: Array of lengths/next states
+     * - Binary search for finding transitions
+     * - Header codes: 0 (intermediate), 0xFFFF (string final), >0 (character final)
+     *
+     * LegacyComposeSystem (Backward Compatibility):
+     * - Common compose sequences (á, é, í, ó, ú, ñ, ç, ß, æ, œ, þ, ð, ø, etc.)
+     * - ComposeState data class for tracking sequences
+     * - processCompose(sequence): Process compose sequence
+     * - isComposeStarter(char): Check if character starts sequence
+     * - getCompletions(partial): Get possible completions
+     *
+     * Compose Sequences (Legacy):
+     * - Vowels + accents: a' → á, e` → è, i^ → î, o~ → õ, u" → ü
+     * - Special characters: n~ → ñ, c, → ç, ss → ß
+     * - Ligatures: ae → æ, oe → œ
+     * - Nordic: th → þ, dh → ð, /o → ø
+     *
+     * Uses ComposeKeyData (already initialized) for state machine data.
+     *
+     * Kotlin object (singleton) - no instantiation needed.
+     * Functions available via ComposeKey.apply() and ComposeKey.* calls.
+     */
+    private fun initializeComposeKey() {
+        try {
+            // ComposeKey is a Kotlin object (singleton) - no instantiation needed
+            // Functions are available via ComposeKey.* calls
+
+            logD("✅ ComposeKey object initialized (345 lines)")
+            logD("   - Main Functions:")
+            logD("     * apply(state, keyValue): Process compose with KeyValue")
+            logD("     * apply(state, char): Process single character")
+            logD("     * apply(state, string): Process string character-by-character")
+            logD("     * isValidState(state): Validate state")
+            logD("     * getAvailableTransitions(state): Get possible transitions")
+            logD("     * isFinalState(state): Check if produces output")
+            logD("     * getFinalStateResult(state): Get result from final state")
+            logD("     * getInitialState(): Reset to initial state (0)")
+            logD("     * getStatistics(): Get compose data statistics")
+            logD("     * validateData(): Validate data integrity")
+            logD("   - Features:")
+            logD("     * Unicode compose sequence support")
+            logD("     * Dead key processing (accents, diacritics)")
+            logD("     * Multi-character sequence matching")
+            logD("     * State machine-based implementation")
+            logD("     * Efficient binary search for transitions")
+            logD("     * Bounds checking and error handling")
+            logD("   - State Machine:")
+            logD("     * States: Array of characters (transitions)")
+            logD("     * Edges: Array of lengths/next states")
+            logD("     * Binary search for transition lookup")
+            logD("     * Header: 0 (intermediate), 0xFFFF (string), >0 (char)")
+            logD("   - LegacyComposeSystem:")
+            logD("     * Common sequences: á é í ó ú ñ ç ß æ œ þ ð ø")
+            logD("     * ComposeState: Track multi-key sequences")
+            logD("     * processCompose(sequence): Process sequence")
+            logD("     * isComposeStarter(char): Check if starts sequence")
+            logD("     * getCompletions(partial): Get completions")
+            logD("   - Compose Sequences:")
+            logD("     * Vowels + accents: a' → á, e` → è, i^ → î, o~ → õ, u\" → ü")
+            logD("     * Special: n~ → ñ, c, → ç, ss → ß")
+            logD("     * Ligatures: ae → æ, oe → œ")
+            logD("     * Nordic: th → þ, dh → ð, /o → ø")
+            logD("   - Uses ComposeKeyData for state machine data")
+            logD("   - 345 lines of compose key processing")
+        } catch (e: Exception) {
+            logE("Failed to initialize ComposeKey", e)
         }
     }
 
