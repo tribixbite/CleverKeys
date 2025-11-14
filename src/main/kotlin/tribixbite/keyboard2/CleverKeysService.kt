@@ -112,6 +112,7 @@ class CleverKeysService : InputMethodService(),
     private var languageDetector: LanguageDetector? = null  // Bug #257 fix
     private var userAdaptationManager: UserAdaptationManager? = null  // Bug #263 fix
     private var swipeMLTrainer: tribixbite.keyboard2.ml.SwipeMLTrainer? = null  // Bug #274 fix
+    private var swipeMLDataStore: tribixbite.keyboard2.ml.SwipeMLDataStore? = null  // SQLite storage for ML training data
     private var neuralSwipeTypingEngine: NeuralSwipeTypingEngine? = null  // Bug #275 dependency - neural prediction engine
     private var asyncPredictionHandler: AsyncPredictionHandler? = null  // Bug #275 fix - async prediction processing
     private var inputConnectionManager: InputConnectionManager? = null  // Advanced input connection management
@@ -162,6 +163,7 @@ class CleverKeysService : InputMethodService(),
             initializeLanguageDetector()  // Bug #257 fix
             initializeUserAdaptationManager()  // Bug #263 fix
             initializeSwipeMLTrainer()  // Bug #274 fix
+            initializeSwipeMLDataStore()  // SQLite storage for ML training data
             initializeNeuralSwipeTypingEngine()  // Bug #275 dependency - neural prediction engine
             initializeTensorMemoryManager()  // ONNX tensor memory management with pooling
             initializeBatchedMemoryOptimizer()  // GPU-optimized batched memory for ONNX
@@ -313,6 +315,7 @@ class CleverKeysService : InputMethodService(),
             languageManager?.release()  // Bug #344 - release language manager resources
             userAdaptationManager?.cleanup()  // Bug #263 - release user adaptation manager resources
             swipeMLTrainer?.shutdown()  // Bug #274 - release swipe ML trainer resources
+            swipeMLDataStore?.close()  // Close ML data store database and executor
             asyncPredictionHandler?.shutdown()  // Bug #275 - release async prediction handler resources
             inputConnectionManager?.cleanup()  // Release input connection manager resources
             clipboardSyncManager?.stopAutoSync()  // Bug #380 - stop clipboard sync
@@ -708,6 +711,33 @@ class CleverKeysService : InputMethodService(),
             logD("✅ SwipeMLTrainer initialized (Bug #274)")
         } catch (e: Exception) {
             logE("Failed to initialize swipe ML trainer", e)
+        }
+    }
+
+    /**
+     * Initialize SwipeMLDataStore for persistent ML training data storage
+     */
+    private fun initializeSwipeMLDataStore() {
+        try {
+            swipeMLDataStore = tribixbite.keyboard2.ml.SwipeMLDataStore.getInstance(this)
+
+            logD("✅ SwipeMLDataStore initialized")
+            logD("   - SQLite-based persistent storage for ML swipe data")
+            logD("   - Database: swipe_ml_data.db (version 1)")
+            logD("   - Table: swipe_data with optimized indices")
+            logD("   - Columns: id, trace_id, target_word, timestamp_utc, collection_source, json_data, is_exported")
+            logD("   - Indices: trace_id, target_word, timestamp, source, is_exported")
+            logD("   - Async operations with ExecutorService")
+            logD("   - Export/Import: JSON and NDJSON formats")
+            logD("   - Statistics tracking with SharedPreferences")
+            logD("   - Batch operations with SQL transactions")
+            logD("   - Duplicate prevention by trace_id")
+            logD("   - Operations: insertSwipe, getSwipes, exportToJSON, importFromJSON")
+            logD("   - Statistics: total_swipes, calibration_swipes, user_swipes")
+            logD("   - Thread-safe singleton pattern")
+            logD("   - 573 lines of ML data storage logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize swipe ML data store", e)
         }
     }
 
