@@ -1105,12 +1105,27 @@ class CleverKeysService : InputMethodService(),
                 // Set up callbacks for modifier state changes
                 setOnModifierStateChangedListener { modifier, state ->
                     logD("Sticky modifier state changed: $modifier → $state")
-                    // TODO: Update visual feedback in keyboard view
+                    // Update visual feedback in keyboard view
+                    try {
+                        keyboardView?.invalidate()  // Trigger redraw to show modifier state
+                        logD("Updated visual feedback for sticky key: $modifier")
+                    } catch (e: Exception) {
+                        logE("Failed to update visual feedback", e)
+                    }
                 }
 
                 setOnVisualFeedbackListener { modifier, state ->
                     logD("Visual feedback requested: $modifier ($state)")
-                    // TODO: Trigger visual feedback (highlight key, show indicator)
+                    // Trigger visual feedback (highlight key, show indicator)
+                    try {
+                        // Trigger haptic feedback for visual confirmation
+                        keyboardView?.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+                        // Trigger redraw to highlight the sticky key
+                        keyboardView?.invalidate()
+                        logD("Triggered visual feedback for: $modifier ($state)")
+                    } catch (e: Exception) {
+                        logE("Failed to trigger visual feedback", e)
+                    }
                 }
             }
 
@@ -1774,41 +1789,56 @@ class CleverKeysService : InputMethodService(),
                 override fun onTwoFingerSwipe(direction: MultiTouchHandler.SwipeDirection, velocity: Float) {
                     logD("Two-finger swipe: ${direction.name} at ${velocity}px/s")
                     // Trigger appropriate keyboard action via KeyEventHandler
-                    keyEventHandler?.let { handler ->
-                        val event = when (direction) {
-                            MultiTouchHandler.SwipeDirection.LEFT -> KeyValue.Event.TWO_FINGER_SWIPE_LEFT
-                            MultiTouchHandler.SwipeDirection.RIGHT -> KeyValue.Event.TWO_FINGER_SWIPE_RIGHT
-                            MultiTouchHandler.SwipeDirection.UP -> KeyValue.Event.TWO_FINGER_SWIPE_UP
-                            MultiTouchHandler.SwipeDirection.DOWN -> KeyValue.Event.TWO_FINGER_SWIPE_DOWN
+                    try {
+                        config?.handler?.let { handler ->
+                            val event = when (direction) {
+                                MultiTouchHandler.SwipeDirection.LEFT -> KeyValue.Event.TWO_FINGER_SWIPE_LEFT
+                                MultiTouchHandler.SwipeDirection.RIGHT -> KeyValue.Event.TWO_FINGER_SWIPE_RIGHT
+                                MultiTouchHandler.SwipeDirection.UP -> KeyValue.Event.TWO_FINGER_SWIPE_UP
+                                MultiTouchHandler.SwipeDirection.DOWN -> KeyValue.Event.TWO_FINGER_SWIPE_DOWN
+                            }
+                            val keyValue = KeyValue.EventKey(event, event.name)
+                            handler.key_down(keyValue, is_swipe = false)
+                            logD("Triggered two-finger swipe event: $event")
                         }
-                        // TODO: Trigger event through KeyEventHandler
-                        logD("Would trigger event: $event")
+                    } catch (e: Exception) {
+                        logE("Failed to trigger two-finger swipe event", e)
                     }
                 }
 
                 override fun onThreeFingerSwipe(direction: MultiTouchHandler.SwipeDirection) {
                     logD("Three-finger swipe: ${direction.name}")
-                    keyEventHandler?.let { handler ->
-                        val event = when (direction) {
-                            MultiTouchHandler.SwipeDirection.LEFT -> KeyValue.Event.THREE_FINGER_SWIPE_LEFT
-                            MultiTouchHandler.SwipeDirection.RIGHT -> KeyValue.Event.THREE_FINGER_SWIPE_RIGHT
-                            MultiTouchHandler.SwipeDirection.UP -> KeyValue.Event.THREE_FINGER_SWIPE_UP
-                            MultiTouchHandler.SwipeDirection.DOWN -> KeyValue.Event.THREE_FINGER_SWIPE_DOWN
+                    try {
+                        config?.handler?.let { handler ->
+                            val event = when (direction) {
+                                MultiTouchHandler.SwipeDirection.LEFT -> KeyValue.Event.THREE_FINGER_SWIPE_LEFT
+                                MultiTouchHandler.SwipeDirection.RIGHT -> KeyValue.Event.THREE_FINGER_SWIPE_RIGHT
+                                MultiTouchHandler.SwipeDirection.UP -> KeyValue.Event.THREE_FINGER_SWIPE_UP
+                                MultiTouchHandler.SwipeDirection.DOWN -> KeyValue.Event.THREE_FINGER_SWIPE_DOWN
+                            }
+                            val keyValue = KeyValue.EventKey(event, event.name)
+                            handler.key_down(keyValue, is_swipe = false)
+                            logD("Triggered three-finger swipe event: $event")
                         }
-                        // TODO: Trigger event through KeyEventHandler
-                        logD("Would trigger event: $event")
+                    } catch (e: Exception) {
+                        logE("Failed to trigger three-finger swipe event", e)
                     }
                 }
 
                 override fun onPinchGesture(scale: Float) {
                     logD("Pinch gesture: scale = $scale")
-                    val event = if (scale < 1.0f) {
-                        KeyValue.Event.PINCH_IN
-                    } else {
-                        KeyValue.Event.PINCH_OUT
+                    try {
+                        val event = if (scale < 1.0f) {
+                            KeyValue.Event.PINCH_IN
+                        } else {
+                            KeyValue.Event.PINCH_OUT
+                        }
+                        val keyValue = KeyValue.EventKey(event, event.name)
+                        config?.handler?.key_down(keyValue, is_swipe = false)
+                        logD("Triggered pinch gesture event: $event")
+                    } catch (e: Exception) {
+                        logE("Failed to trigger pinch gesture event", e)
                     }
-                    // TODO: Trigger event through KeyEventHandler
-                    logD("Would trigger event: $event")
                 }
 
                 override fun onSimultaneousKeyPress(touchCount: Int) {
