@@ -190,11 +190,11 @@ class CleverKeysService : InputMethodService(),
             initializeThumbModeOptimizer()  // Bug #359 fix - ergonomic thumb typing
             initializeMultiLanguageDictionary()  // Bug #277 fix - multi-language dictionaries
             initializeKeyboardSwipeRecognizer()  // Bug #256 fix - Bayesian swipe recognition
-            initializeBigramModel()  // Bug #255 fix - contextual word prediction
+            initializeBigramModel()  // Bug #255 fix - contextual word prediction (async loading)
             initializeNgramModel()  // Bug #259 fix
-            initializeWordPredictor()  // Bug #262 fix
-            initializeLanguageDetector()  // Bug #257 fix
-            initializeUserAdaptationManager()  // Bug #263 fix
+            initializeLanguageDetector()  // Bug #257 fix - MUST initialize before WordPredictor
+            initializeUserAdaptationManager()  // Bug #263 fix - MUST initialize before WordPredictor
+            initializeWordPredictor()  // Bug #262 fix - wires BigramModel + LanguageDetector + UserAdaptationManager
             initializeSwipeMLTrainer()  // Bug #274 fix
             initializeSwipeMLDataStore()  // SQLite storage for ML training data
             initializeNeuralSwipeTypingEngine()  // Bug #275 dependency - neural prediction engine
