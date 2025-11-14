@@ -736,6 +736,21 @@ class CleverKeysService : InputMethodService(),
                 wordPredictor?.setLanguageDetector(languageDetector)
                 wordPredictor?.setUserAdaptationManager(userAdaptationManager)
 
+                // Load dictionary asynchronously from assets
+                val currentLang = languageManager?.getCurrentLanguage()?.code ?: "en"
+                serviceScope.launch(Dispatchers.IO) {
+                    try {
+                        wordPredictor?.loadDictionary(currentLang)
+                        withContext(Dispatchers.Main) {
+                            logD("✅ WordPredictor dictionary loaded (${wordPredictor?.getDictionarySize() ?: 0} words)")
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            logW("WordPredictor dictionary loading failed (continuing without): ${e.message}")
+                        }
+                    }
+                }
+
                 logD("✅ WordPredictor initialized with prediction components (Bug #262)")
             }
         } catch (e: Exception) {
@@ -2777,14 +2792,10 @@ class CleverKeysService : InputMethodService(),
 
     private fun initializeSwipePruner() {
         try {
-            // Create a placeholder dictionary map
-            // TODO: Replace with actual dictionary from DictionaryManager or WordPredictor
-            val placeholderDictionary = mapOf(
-                "the" to 1000, "and" to 900, "for" to 800, "you" to 700,
-                "that" to 600, "with" to 500, "this" to 400, "have" to 300
-            )
+            // Get dictionary from WordPredictor (may be empty if not loaded yet)
+            val dictionary = wordPredictor?.getDictionary() ?: emptyMap()
 
-            swipePruner = SwipePruner(dictionary = placeholderDictionary)
+            swipePruner = SwipePruner(dictionary = dictionary)
 
             logD("✅ SwipePruner initialized")
             logD("   - Extremity-based dictionary pruning for swipe gestures")
@@ -2800,7 +2811,12 @@ class CleverKeysService : InputMethodService(),
             logD("     * getWordsEndingWith(char) -> words")
             logD("   - Based on FlorisBoard pruning approach")
             logD("   - 228 lines of dictionary pruning logic")
-            logD("   - Dictionary size: ${placeholderDictionary.size} words (placeholder)")
+            logD("   - Dictionary size: ${dictionary.size} words")
+
+            // Note: Dictionary will be updated when WordPredictor finishes loading
+            if (dictionary.isEmpty()) {
+                logW("   ⚠️ Dictionary is empty - WordPredictor may still be loading")
+            }
         } catch (e: Exception) {
             logE("Failed to initialize swipe pruner", e)
         }

@@ -713,6 +713,12 @@ class WordPredictor(
     fun getDictionarySize(): Int = dictionary.size
 
     /**
+     * Get dictionary (for SwipePruner and other components)
+     * Returns an immutable copy to prevent external modification
+     */
+    fun getDictionary(): Map<String, Int> = dictionary.toMap()
+
+    /**
      * Helper data class to store word candidates with scores
      */
     private data class WordCandidate(val word: String, val score: Int)
