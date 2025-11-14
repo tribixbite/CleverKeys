@@ -76,7 +76,7 @@ import java.io.DataInputStream
  * THIS FILE IS AUTO-GENERATED - DO NOT EDIT MANUALLY
  * Run: python3 generate_compose_data.py
  *
- * Source: Unexpected-Keyboard/srcs/compose/*.json and compose/ directory
+ * Source: Unexpected-Keyboard/srcs/compose/ (JSON files) and compose/ directory
  * Generator: generate_compose_data.py (modified from compile.py)
  *
  * Contains {len(machine)} states for {len(entry_states)} entry points.
