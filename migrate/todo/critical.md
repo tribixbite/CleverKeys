@@ -174,11 +174,12 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
   - Integration: Already integrated in CleverKeysService (File 135)
 
 #### Accessibility (Files 167-177) - LEGAL REQUIREMENT
-- [x] **Bug #371**: Switch Access missing (File 169) ✅ **FIXED**
+- [x] **Bug #371**: Switch Access missing (File 169) ✅ **FIXED & INTEGRATED**
   - Impact: Quadriplegic users can NOW use keyboard → ADA/WCAG COMPLIANT
-  - File: SwitchAccessSupport.kt → ✅ Complete implementation (622 lines)
-  - Features: 5 scan modes (LINEAR, ROW_COLUMN, GROUP, AUTO, MANUAL), configurable intervals, hardware key mapping, visual highlighting, accessibility announcements
-  - Commit: (current session)
+  - File: SwitchAccessSupport.kt → ✅ Complete implementation (625 lines)
+  - Features: 5 scan modes (LINEAR, ROW_COLUMN, GROUP, AUTO, MANUAL), configurable intervals (500ms-5000ms), 4 switch types (NEXT/SELECT/BACK/NEXT_SELECT), visual highlighting (cyan borders, 8px stroke), audio feedback (VoiceGuidanceEngine), accessibility events
+  - Integration: CleverKeysService line 134 property, line 184 initialization, line 313 cleanup
+  - Commit: c1dbb88e
 
 - [x] **Bug #375**: Mouse Keys missing (File 173) ✅ **FIXED**
   - Impact: Severely disabled users can NOW interact with UI → ADA/WCAG COMPLIANT
