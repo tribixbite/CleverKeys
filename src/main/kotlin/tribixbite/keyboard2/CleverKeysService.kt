@@ -145,6 +145,7 @@ class CleverKeysService : InputMethodService(),
     private var swipePruner: SwipePruner? = null  // Dictionary pruning for swipe gestures
     private var runtimeTestSuite: RuntimeTestSuite? = null  // Runtime testing and validation
     private var productionInitializer: ProductionInitializer? = null  // Production initialization system
+    private var systemIntegrationTester: SystemIntegrationTester? = null  // End-to-end system integration testing
 
     // Configuration and state
     private var config: Config? = null
@@ -206,6 +207,7 @@ class CleverKeysService : InputMethodService(),
             initializeSwipePruner()  // Dictionary pruning for swipe gestures
             initializeRuntimeTestSuite()  // Runtime testing and validation
             initializeProductionInitializer()  // Production initialization system
+            initializeSystemIntegrationTester()  // End-to-end system integration testing
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -2750,6 +2752,35 @@ class CleverKeysService : InputMethodService(),
             logD("   - 301 lines of production initialization logic")
         } catch (e: Exception) {
             logE("Failed to initialize production initializer", e)
+        }
+    }
+
+    private fun initializeSystemIntegrationTester() {
+        try {
+            systemIntegrationTester = SystemIntegrationTester(context = this)
+
+            logD("✅ SystemIntegrationTester initialized")
+            logD("   - End-to-end system integration testing")
+            logD("   - Tests complete CleverKeys functionality without InputMethodService")
+            logD("   - 7 comprehensive integration test categories:")
+            logD("     1. Production initialization (ProductionInitializer)")
+            logD("     2. Neural prediction accuracy (word accuracy metrics)")
+            logD("     3. Gesture recognition performance (swipe tracking)")
+            logD("     4. Memory management (allocation and cleanup)")
+            logD("     5. Configuration management (settings persistence)")
+            logD("     6. Error handling resilience (graceful degradation)")
+            logD("     7. Performance optimization (benchmark comparison)")
+            logD("   - IntegrationTestResult data class:")
+            logD("     * testName, success, durationMs")
+            logD("     * details, metrics: Map<String, Any>")
+            logD("   - SystemTestSuite data class:")
+            logD("     * results: List<IntegrationTestResult>")
+            logD("     * overallSuccess: Boolean (80% pass rate required)")
+            logD("     * totalDurationMs, successRate: Float")
+            logD("   - Async test execution with coroutines (Dispatchers.Default)")
+            logD("   - 447 lines of integration testing logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize system integration tester", e)
         }
     }
 
