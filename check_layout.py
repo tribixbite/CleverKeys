@@ -116,14 +116,17 @@ def check_layout(layout):
 # Fill 'known_keys', which is used for some checks
 def parse_known_keys():
     global known_keys
-    with open("srcs/juloo.keyboard2/KeyValue.java", "r") as f:
-        known_keys = set(
-                ( m.group(1) for m in re.finditer('case "([^"]+)":', f.read()) )
-                )
+    with open("src/main/kotlin/tribixbite/keyboard2/KeyValue.kt", "r") as f:
+        # Match both Java format (case "key":) and Kotlin format (namedKeys["key"] =)
+        content = f.read()
+        keys = set()
+        keys.update( m.group(1) for m in re.finditer('case "([^"]+)":', content) )
+        keys.update( m.group(1) for m in re.finditer('namedKeys\\["([^"]+)"\\]', content) )
+        known_keys = keys
 
 parse_known_keys()
 
-for fname in sorted(glob.glob("srcs/layouts/*.xml")):
+for fname in sorted(glob.glob("src/main/layouts/*.xml")):
     layout_id, _ = os.path.splitext(os.path.basename(fname))
     if layout_id in KNOWN_NOT_LAYOUT:
         continue

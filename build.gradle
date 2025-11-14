@@ -239,6 +239,7 @@ tasks.register('compileComposeSequences') {
     workingDir = projectDir
     commandLine("python3", "generate_compose_data.py")
     standardOutput = new FileOutputStream("${projectDir}/${out}")
+    errorOutput = System.err  // Keep warnings/errors in console, not in generated file
   }
 }
 
