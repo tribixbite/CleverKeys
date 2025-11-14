@@ -103,6 +103,12 @@ Backup: ~/storage/shared/CleverKeys-debug.apk
 4. Find **"CleverKeys (Debug)"** and toggle **ON**
 5. Open any text app and select CleverKeys from keyboard switcher (⌨️)
 
+### 🛠️ **Helper Scripts** (NEW!)
+```bash
+./check-keyboard-status.sh   # Verify installation and status
+./quick-test-guide.sh         # Interactive 5-test guide
+```
+
 ### ✅ **Quick Test** (2 minutes)
 
 Once CleverKeys is active:
