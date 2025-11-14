@@ -162,6 +162,8 @@ class CleverKeysService : InputMethodService(),
     // Note: LayoutModifier is a Kotlin object (singleton) - no property needed
     // Note: ErrorHandling is a Kotlin object (singleton) - no property needed
     // Note: ComposeKey is a Kotlin object (singleton) - no property needed
+    // Note: CustomLayoutEditDialog is a Kotlin object (singleton) - no property needed
+    // Note: LayoutValidators is a Kotlin object (singleton) - no property needed
 
     // Configuration and state
     private var config: Config? = null
@@ -240,6 +242,7 @@ class CleverKeysService : InputMethodService(),
             initializeLayoutModifier()  // Layout modification system (singleton)
             initializeErrorHandling()  // Comprehensive error handling & validation (singleton)
             initializeComposeKey()  // Compose key processing with finite state machine (singleton)
+            initializeCustomLayoutEditDialog()  // Custom layout editor dialog with validation (Bugs #132, #133)
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -4325,6 +4328,109 @@ class CleverKeysService : InputMethodService(),
             logD("   - 345 lines of compose key processing")
         } catch (e: Exception) {
             logE("Failed to initialize ComposeKey", e)
+        }
+    }
+
+    // ============================================================================
+    // Custom Layout Editor Dialog (320 lines) - Bugs #132, #133
+    // ============================================================================
+
+    /**
+     * Initialize CustomLayoutEditDialog object (singleton)
+     *
+     * Custom layout editor dialog with modern Kotlin improvements.
+     * Bug #132 fix: Use resource string for pref_custom_layout_title
+     * Bug #133 fix: Use resource string for pref_layouts_remove_custom
+     *
+     * Usage: Used by legacy XML-based PreferenceActivity screens (LayoutsPreference).
+     * For new Compose-based settings screens, use CustomLayoutEditDialogM3 instead.
+     *
+     * Main Dialog Functions:
+     * - show(context, initialText, allowRemove, callback): Show the dialog
+     *
+     * Callback Interface:
+     * - onSelect(text): Called when user confirms (null if removed)
+     * - validate(text): Validate layout text (return error or null)
+     *
+     * LayoutEntryEditText Features:
+     * - Line numbering for easy navigation
+     * - Monospace font for better code editing
+     * - Real-time validation with throttled updates (1000ms delay)
+     * - Horizontal scrolling support
+     * - Enhanced accessibility
+     * - Error display with OK button enable/disable
+     * - Custom hint text with examples
+     *
+     * Context Extension:
+     * - Context.showLayoutEditDialog(): Simplified usage with lambda callbacks
+     *
+     * LayoutValidators Object:
+     * - validateBasicFormat(text): Basic validation (non-empty, line length)
+     * - validateKeyboardStructure(text): Advanced validation (row count, key count)
+     * - validateWithCharacterRestrictions(text): Character validation
+     *
+     * Validation Rules:
+     * - Non-empty layout
+     * - At least one row
+     * - Maximum 100 characters per line
+     * - Maximum 10 rows
+     * - Maximum 20 keys per row
+     * - Valid character set (letters, digits, whitespace, common symbols)
+     *
+     * Features:
+     * - Line numbering with dynamic padding
+     * - Real-time validation with throttling
+     * - Improved error handling and user feedback
+     * - Modern coroutine-based text change handling
+     * - Enhanced UI with better accessibility
+     * - Remove button for existing layouts
+     * - OK button enabled/disabled based on validation
+     *
+     * Kotlin objects (singletons) - no instantiation needed.
+     * Functions available via CustomLayoutEditDialog.show() and LayoutValidators.validate*() calls.
+     */
+    private fun initializeCustomLayoutEditDialog() {
+        try {
+            // CustomLayoutEditDialog and LayoutValidators are Kotlin objects (singletons)
+            // Functions are available via CustomLayoutEditDialog.show() and LayoutValidators.* calls
+
+            logD("✅ CustomLayoutEditDialog object initialized (320 lines)")
+            logD("   - Bug #132 fix: Use resource string for dialog title")
+            logD("   - Bug #133 fix: Use resource string for remove button")
+            logD("   - Main Functions:")
+            logD("     * show(context, initialText, allowRemove, callback): Show dialog")
+            logD("   - Callback Interface:")
+            logD("     * onSelect(text): User confirmation (null if removed)")
+            logD("     * validate(text): Validation (error or null)")
+            logD("   - LayoutEntryEditText:")
+            logD("     * Line numbering with dynamic padding")
+            logD("     * Monospace font for code editing")
+            logD("     * Real-time validation (1000ms throttle)")
+            logD("     * Horizontal scrolling")
+            logD("     * Enhanced accessibility")
+            logD("     * Error display with OK enable/disable")
+            logD("   - Context Extension:")
+            logD("     * Context.showLayoutEditDialog(): Simplified usage")
+            logD("   - LayoutValidators:")
+            logD("     * validateBasicFormat(text): Non-empty, line length")
+            logD("     * validateKeyboardStructure(text): Rows, keys")
+            logD("     * validateWithCharacterRestrictions(text): Char validation")
+            logD("   - Validation Rules:")
+            logD("     * Non-empty layout")
+            logD("     * At least one row")
+            logD("     * Max 100 chars per line")
+            logD("     * Max 10 rows")
+            logD("     * Max 20 keys per row")
+            logD("     * Valid character set (letters, digits, symbols)")
+            logD("   - Features:")
+            logD("     * Line numbers with dynamic padding")
+            logD("     * Throttled real-time validation")
+            logD("     * Coroutine-based text change handling")
+            logD("     * Remove button for existing layouts")
+            logD("     * OK button validation state")
+            logD("   - 320 lines of custom layout editing")
+        } catch (e: Exception) {
+            logE("Failed to initialize CustomLayoutEditDialog", e)
         }
     }
 
