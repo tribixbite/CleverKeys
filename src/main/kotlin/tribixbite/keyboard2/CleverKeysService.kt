@@ -1816,9 +1816,10 @@ class CleverKeysService : InputMethodService(),
      */
     private fun initializeSoundEffectManager() {
         try {
-            // TODO: Get enabled state and volume from user preferences
-            val soundsEnabled = true  // Default to enabled
-            val volume = 0.5f         // Default volume (50%)
+            // Get enabled state and volume from user preferences
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+            val soundsEnabled = prefs.getBoolean("sound_effects_enabled", true)
+            val volume = prefs.getFloat("sound_effects_volume", 0.5f).coerceIn(0f, 1f)
 
             soundEffectManager = SoundEffectManager(
                 context = this,
@@ -1842,9 +1843,10 @@ class CleverKeysService : InputMethodService(),
      */
     private fun initializeAnimationManager() {
         try {
-            // TODO: Get enabled state and duration scale from user preferences
-            val animationsEnabled = true  // Default to enabled
-            val durationScale = 1.0f      // Default scale (normal speed)
+            // Get enabled state and duration scale from user preferences
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+            val animationsEnabled = prefs.getBoolean("animations_enabled", true)
+            val durationScale = prefs.getFloat("animations_duration_scale", 1.0f).coerceIn(0.5f, 2.0f)
 
             animationManager = AnimationManager(
                 context = this,
@@ -1865,9 +1867,10 @@ class CleverKeysService : InputMethodService(),
      */
     private fun initializeKeyPreviewManager() {
         try {
-            // TODO: Get enabled state and duration from user preferences
-            val previewsEnabled = true   // Default to enabled
-            val previewDuration = 100L   // Default duration (100ms)
+            // Get enabled state and duration from user preferences
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+            val previewsEnabled = prefs.getBoolean("key_preview_enabled", true)
+            val previewDuration = prefs.getLong("key_preview_duration", 100L).coerceIn(50L, 500L)
 
             keyPreviewManager = KeyPreviewManager(
                 context = this,
@@ -1888,8 +1891,9 @@ class CleverKeysService : InputMethodService(),
      */
     private fun initializeGestureTrailRenderer() {
         try {
-            // TODO: Get enabled state from user preferences
-            val trailsEnabled = true   // Default to enabled
+            // Get enabled state from user preferences
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+            val trailsEnabled = prefs.getBoolean("gesture_trail_enabled", true)
 
             gestureTrailRenderer = GestureTrailRenderer(
                 context = this,
@@ -1909,10 +1913,11 @@ class CleverKeysService : InputMethodService(),
      */
     private fun initializeKeyRepeatHandler() {
         try {
-            // TODO: Get enabled state and timing from user preferences
-            val repeatEnabled = true     // Default to enabled
-            val initialDelay = 400L      // Default initial delay (400ms)
-            val repeatInterval = 50L     // Default repeat interval (50ms)
+            // Get enabled state and timing from user preferences
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+            val repeatEnabled = prefs.getBoolean("key_repeat_enabled", true)
+            val initialDelay = prefs.getLong("key_repeat_initial_delay", 400L).coerceIn(200L, 1000L)
+            val repeatInterval = prefs.getLong("key_repeat_interval", 50L).coerceIn(30L, 200L)
 
             keyRepeatHandler = KeyRepeatHandler(
                 enabled = repeatEnabled,
@@ -1935,9 +1940,10 @@ class CleverKeysService : InputMethodService(),
      */
     private fun initializeLayoutSwitchAnimator() {
         try {
-            // TODO: Get enabled state and duration from user preferences
-            val animationsEnabled = true  // Default to enabled
-            val duration = 250L           // Default animation duration (250ms)
+            // Get enabled state and duration from user preferences
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+            val animationsEnabled = prefs.getBoolean("layout_animations_enabled", true)
+            val duration = prefs.getLong("layout_animation_duration", 250L).coerceIn(100L, 500L)
 
             layoutSwitchAnimator = LayoutSwitchAnimator(
                 context = this,
@@ -1960,8 +1966,9 @@ class CleverKeysService : InputMethodService(),
      */
     private fun initializeOneHandedModeManager() {
         try {
-            // TODO: Get enabled state from user preferences
-            val oneHandedEnabled = false  // Default to disabled (full-width mode)
+            // Get enabled state from user preferences
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+            val oneHandedEnabled = prefs.getBoolean("one_handed_mode_enabled", false)
 
             oneHandedModeManager = OneHandedModeManager(
                 context = this,
@@ -1983,8 +1990,9 @@ class CleverKeysService : InputMethodService(),
      */
     private fun initializeFloatingKeyboardManager() {
         try {
-            // TODO: Get enabled state from user preferences
-            val floatingEnabled = false  // Default to disabled (docked mode)
+            // Get enabled state from user preferences
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+            val floatingEnabled = prefs.getBoolean("floating_keyboard_enabled", false)
 
             floatingKeyboardManager = FloatingKeyboardManager(
                 context = this,
@@ -2006,8 +2014,9 @@ class CleverKeysService : InputMethodService(),
      */
     private fun initializeSplitKeyboardManager() {
         try {
-            // TODO: Get enabled state from user preferences
-            val splitEnabled = false  // Default to disabled (unified keyboard)
+            // Get enabled state from user preferences
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+            val splitEnabled = prefs.getBoolean("split_keyboard_enabled", false)
 
             splitKeyboardManager = SplitKeyboardManager(
                 context = this,
