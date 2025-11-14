@@ -150,6 +150,7 @@ class CleverKeysService : InputMethodService(),
     private var voiceImeSwitcher: VoiceImeSwitcher? = null  // Bug #264 fix - voice IME switching
     private var vibratorCompat: VibratorCompat? = null  // Cross-platform vibration for haptic feedback
     private var gestureClassifier: GestureClassifier? = null  // Unified TAP vs SWIPE gesture classification
+    private var emoji: Emoji? = null  // Emoji management system with search and grouping
     // Note: SwipeResampler is a Kotlin object (singleton) - no property needed
     // Note: DirectBootAwarePreferences is a Kotlin object (singleton) - no property needed
     // Note: Logs is a Kotlin object (singleton) - no property needed
@@ -222,6 +223,7 @@ class CleverKeysService : InputMethodService(),
             initializeSwipeResampler()  // Swipe trajectory resampling utility (singleton)
             initializeDirectBootAwarePreferences()  // Device-protected storage preferences (singleton)
             initializeLogs()  // Centralized logging system (singleton)
+            initializeEmoji()  // Emoji management system with search and grouping
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -3032,6 +3034,61 @@ class CleverKeysService : InputMethodService(),
             logD("   - 120 lines of centralized logging logic")
         } catch (e: Exception) {
             logE("Failed to initialize logs", e)
+        }
+    }
+
+    private fun initializeEmoji() {
+        try {
+            emoji = Emoji.getInstance(context = this)
+
+            logD("✅ Emoji initialized (singleton instance)")
+            logD("   - Emoji management system with search and grouping")
+            logD("   - Features:")
+            logD("     * Emoji data loading from assets/raw/emojis.txt")
+            logD("     * Keyword-based emoji search")
+            logD("     * Emoji grouping (smileys, animals, food, etc.)")
+            logD("     * Recent emoji tracking (20 most recent)")
+            logD("     * SharedPreferences persistence for recent emojis")
+            logD("   - Data Structure:")
+            logD("     * EmojiData(emoji, description, group, keywords)")
+            logD("     * Groups: smileys, animals, food, activities, travel, objects, symbols, flags")
+            logD("   - Search:")
+            logD("     * searchEmojis(query): Search by description or keywords")
+            logD("     * Returns up to 20 matching emojis")
+            logD("     * Case-insensitive keyword matching")
+            logD("   - Grouping:")
+            logD("     * getEmojisByGroup(group): Get all emojis in a group")
+            logD("     * getGroups(): Get list of all available groups")
+            logD("   - Recent Emojis:")
+            logD("     * getRecentEmojis(context): Get 20 most recently used emojis")
+            logD("     * recordEmojiUsage(context, emoji): Record emoji usage")
+            logD("     * Pipe-separated storage in SharedPreferences")
+            logD("     * Auto-deduplication (moves to front if already in list)")
+            logD("   - API Methods:")
+            logD("     * getInstance(context): Get singleton instance")
+            logD("     * loadEmojis(): Async emoji data loading")
+            logD("     * searchEmojis(query): Keyword search")
+            logD("     * getEmojisByGroup(group): Group filtering")
+            logD("     * getGroups(): Available groups")
+            logD("     * getRecentEmojis(context): Recent usage")
+            logD("     * recordEmojiUsage(context, emoji): Track usage")
+            logD("   - Async Loading:")
+            logD("     * Uses Dispatchers.IO for file reading")
+            logD("     * Parses semicolon-delimited emoji data")
+            logD("     * Builds group index for fast filtering")
+            logD("   - 187 lines of emoji management logic")
+
+            // Async load emoji data
+            serviceScope.launch {
+                val loaded = emoji?.loadEmojis() ?: false
+                if (loaded) {
+                    logD("✅ Emoji data loaded successfully")
+                } else {
+                    logW("Failed to load emoji data from assets")
+                }
+            }
+        } catch (e: Exception) {
+            logE("Failed to initialize emoji system", e)
         }
     }
 
