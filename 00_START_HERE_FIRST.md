@@ -24,6 +24,11 @@ CleverKeys is a **modern Android keyboard** with neural swipe typing, built from
 
 ## 🚀 **What You Need to Do (3 minutes):**
 
+### Quick Tools (NEW!)
+Before manual steps, try these helper scripts:
+- **`./check-keyboard-status.sh`** - Verify installation and status
+- **`./quick-test-guide.sh`** - Interactive 5-test guide
+
 ### Step 1: Enable Keyboard (90 seconds)
 1. Open **Settings** app on your Android device
 2. Go to: **System** → **Languages & input** → **On-screen keyboard**
@@ -77,6 +82,32 @@ Try these 5 quick tests:
 ### Ignore These (Informational Only)
 - All other `.txt` files - Just status reports
 - All other `.md` files in root - Historical context
+
+---
+
+## 🛠️ **Helper Scripts**
+
+Two interactive scripts make testing easier:
+
+### check-keyboard-status.sh
+```bash
+./check-keyboard-status.sh
+```
+- Verifies APK is installed
+- Checks if keyboard is enabled (when possible)
+- Checks if keyboard is active (when possible)
+- Provides clear next steps
+
+### quick-test-guide.sh
+```bash
+./quick-test-guide.sh
+```
+- Interactive guide through 5 essential tests
+- Step-by-step instructions
+- Pass/fail tracking
+- Final summary with recommendations
+
+**Tip**: Run these scripts for a structured testing experience!
 
 ---
 
