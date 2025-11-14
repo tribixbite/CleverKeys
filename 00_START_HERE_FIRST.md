@@ -90,7 +90,8 @@ Try these 5 quick tests:
 
 ## 🛠️ **Helper Scripts**
 
-Five automation scripts make testing and building easier:
+Five automation scripts make testing and building easier.
+**Tip**: All scripts support `--help` for detailed usage information!
 
 ### build-and-verify.sh (🚀 For Rebuilds)
 ```bash

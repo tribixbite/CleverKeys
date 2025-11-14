@@ -110,6 +110,9 @@ Backup: ~/storage/shared/CleverKeys-debug.apk
 ./check-keyboard-status.sh    # Quick status check
 ./quick-test-guide.sh         # Interactive 5-test guide
 ./diagnose-issues.sh          # Diagnostics & troubleshooting
+
+# All scripts support --help for detailed usage information
+./script-name.sh --help       # Show comprehensive help
 ```
 
 ### ✅ **Quick Test** (2 minutes)
