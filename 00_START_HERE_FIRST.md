@@ -26,8 +26,10 @@ CleverKeys is a **modern Android keyboard** with neural swipe typing, built from
 
 ### Quick Tools (NEW!)
 Before manual steps, try these helper scripts:
+- **`./run-all-checks.sh`** - 🌟 Complete verification suite (recommended)
 - **`./check-keyboard-status.sh`** - Verify installation and status
 - **`./quick-test-guide.sh`** - Interactive 5-test guide
+- **`./diagnose-issues.sh`** - Comprehensive diagnostics & log collection
 
 ### Step 1: Enable Keyboard (90 seconds)
 1. Open **Settings** app on your Android device
@@ -87,16 +89,25 @@ Try these 5 quick tests:
 
 ## 🛠️ **Helper Scripts**
 
-Two interactive scripts make testing easier:
+Four interactive scripts make testing easier:
+
+### run-all-checks.sh (⭐ Recommended)
+```bash
+./run-all-checks.sh
+```
+- Complete verification suite (runs all tools)
+- Status check → Diagnostics → Guided testing
+- Integrated workflow with summary
+- Best for first-time verification
 
 ### check-keyboard-status.sh
 ```bash
 ./check-keyboard-status.sh
 ```
-- Verifies APK is installed
-- Checks if keyboard is enabled (when possible)
-- Checks if keyboard is active (when possible)
-- Provides clear next steps
+- Quick status verification
+- Checks installation, enablement, activation
+- Color-coded output
+- Clear next steps
 
 ### quick-test-guide.sh
 ```bash
@@ -107,7 +118,17 @@ Two interactive scripts make testing easier:
 - Pass/fail tracking
 - Final summary with recommendations
 
-**Tip**: Run these scripts for a structured testing experience!
+### diagnose-issues.sh
+```bash
+./diagnose-issues.sh
+```
+- Comprehensive system diagnostics
+- Collects logs and system info
+- Detects common issues
+- Generates diagnostic report file
+- Use for troubleshooting/bug reporting
+
+**Tip**: Start with `run-all-checks.sh` for a complete verification!
 
 ---
 
