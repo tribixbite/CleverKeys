@@ -1147,7 +1147,14 @@ class CleverKeysService : InputMethodService(),
                 serviceScope.launch {
                     getFoldStateFlow().collect { isUnfolded ->
                         logD("Fold state changed: ${if (isUnfolded) "UNFOLDED" else "FOLDED"}")
-                        // TODO: Adjust keyboard layout/size based on fold state
+                        // Adjust keyboard layout/size based on fold state
+                        try {
+                            config?.refresh(resources, isUnfolded)
+                            keyboardView?.requestLayout()
+                            logD("Keyboard adjusted for fold state: ${if (isUnfolded) "UNFOLDED" else "FOLDED"}")
+                        } catch (e: Exception) {
+                            logE("Failed to adjust keyboard for fold state", e)
+                        }
                     }
                 }
             }
@@ -1187,7 +1194,13 @@ class CleverKeysService : InputMethodService(),
                 serviceScope.launch {
                     themeConfig.collect { config ->
                         logD("Theme config changed: darkMode=${config.darkMode}, dynamicColor=${config.useDynamicColor}")
-                        // TODO: Apply theme changes to keyboard view
+                        // Apply theme changes to keyboard view
+                        try {
+                            keyboardView?.invalidate()  // Trigger redraw with new theme
+                            logD("Applied theme changes to keyboard view")
+                        } catch (e: Exception) {
+                            logE("Failed to apply theme changes", e)
+                        }
                     }
                 }
             }
@@ -3175,8 +3188,16 @@ class CleverKeysService : InputMethodService(),
             // Create autocapitalisation with callback for shift state updates
             val callback = object : Autocapitalisation.Callback {
                 override fun updateShiftState(shouldEnable: Boolean, shouldDisable: Boolean) {
-                    // TODO: Update keyboard shift state based on autocapitalisation
-                    logD("Autocapitalisation shift state: enable=$shouldEnable, disable=$shouldDisable")
+                    // Update keyboard shift state based on autocapitalisation
+                    try {
+                        when {
+                            shouldEnable -> keyboardView?.setShiftState(latched = true, lock = false)
+                            shouldDisable -> keyboardView?.setShiftState(latched = false, lock = false)
+                        }
+                        logD("Autocapitalisation shift state updated: enable=$shouldEnable, disable=$shouldDisable")
+                    } catch (e: Exception) {
+                        logE("Failed to update shift state from autocapitalisation", e)
+                    }
                 }
             }
 
