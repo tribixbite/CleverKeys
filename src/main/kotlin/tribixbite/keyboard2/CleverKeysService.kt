@@ -3936,18 +3936,51 @@ class CleverKeysService : InputMethodService(),
         }
 
         override fun switchToMainLayout() {
-            // TODO: Implement layout switching
-            logD("switchToMainLayout() called - not yet implemented")
+            try {
+                val config = Config.globalConfig()
+                if (config.layouts.isNotEmpty()) {
+                    // Switch to first layout (main layout)
+                    keyboardView?.setKeyboard(config.layouts[0])
+                    logD("Switched to main layout")
+                } else {
+                    logW("No layouts available to switch to")
+                }
+            } catch (e: Exception) {
+                logE("Failed to switch to main layout", e)
+            }
         }
 
         override fun switchToNumericLayout() {
-            // TODO: Implement layout switching
-            logD("switchToNumericLayout() called - not yet implemented")
+            try {
+                // Load numeric layout from resources
+                val numericResourceId = resources.getIdentifier("numeric", "xml", packageName)
+                if (numericResourceId != 0) {
+                    val numericLayout = KeyboardData.load(resources, numericResourceId)
+                    if (numericLayout != null) {
+                        keyboardView?.setKeyboard(numericLayout)
+                        logD("Switched to numeric layout")
+                    } else {
+                        logW("Failed to load numeric layout")
+                    }
+                } else {
+                    logW("Numeric layout resource not found")
+                }
+            } catch (e: Exception) {
+                logE("Failed to switch to numeric layout", e)
+            }
         }
 
         override fun switchToEmojiLayout() {
-            // TODO: Implement layout switching
-            logD("switchToEmojiLayout() called - not yet implemented")
+            // Emoji layout switching requires more complex implementation
+            // (emoji picker UI, emoji categories, emoji search, etc.)
+            // For now, log that it's not yet fully implemented
+            logD("switchToEmojiLayout() called - emoji layout system pending implementation")
+            // TODO: Implement emoji layout system with picker UI
+            // - Load emoji data from resources
+            // - Create emoji picker with categories (Smileys, Animals, Food, etc.)
+            // - Implement emoji search functionality
+            // - Handle emoji skin tone modifiers
+            // - Support emoji sequences (flags, families, etc.)
         }
 
         override fun openSettings() {
