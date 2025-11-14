@@ -131,6 +131,7 @@ class CleverKeysService : InputMethodService(),
     private var swipeGestureRecognizer: SwipeGestureRecognizer? = null  // Comprehensive swipe gesture recognition
     private var accessibilityHelper: AccessibilityHelper? = null  // Accessibility support utility
     private var gaussianKeyModel: GaussianKeyModel? = null  // 2D Gaussian probability model for swipe typing
+    private var swipeTokenizer: SwipeTokenizer? = null  // Token mapping for ONNX neural prediction
 
     // Configuration and state
     private var config: Config? = null
@@ -178,6 +179,7 @@ class CleverKeysService : InputMethodService(),
             initializeSwipeGestureRecognizer()  // Comprehensive swipe gesture recognition
             initializeAccessibilityHelper()  // Accessibility support utility
             initializeGaussianKeyModel()  // 2D Gaussian probability model
+            initializeSwipeTokenizer()  // Token mapping for ONNX neural prediction
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -1239,6 +1241,28 @@ class CleverKeysService : InputMethodService(),
             logD("   - 301 lines of probabilistic modeling logic")
         } catch (e: Exception) {
             logE("Failed to initialize gaussian key model", e)
+        }
+    }
+
+    /**
+     * Initialize SwipeTokenizer for ONNX neural prediction token mapping
+     */
+    private fun initializeSwipeTokenizer() {
+        try {
+            swipeTokenizer = SwipeTokenizer().apply {
+                initialize()
+            }
+
+            logD("✅ SwipeTokenizer initialized")
+            logD("   - Character-to-token mapping for ONNX prediction")
+            logD("   - Vocabulary size: 30 tokens")
+            logD("   - Special tokens: PAD(0), UNK(1), SOS(2), EOS(3)")
+            logD("   - Character tokens: a-z mapped to 4-29")
+            logD("   - Token conversion: char ↔ token, word ↔ tokens")
+            logD("   - SOS/EOS wrapping for word tokenization")
+            logD("   - 105 lines of tokenization logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize swipe tokenizer", e)
         }
     }
 
