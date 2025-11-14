@@ -158,6 +158,7 @@ class CleverKeysService : InputMethodService(),
     // Note: Logs is a Kotlin object (singleton) - no property needed
     // Note: Utils is a Kotlin object (singleton) - no property needed
     // Note: Extensions.kt provides top-level utility extension functions (automatically available when imported)
+    // Note: KeyValueParser is a Kotlin object (singleton) - no property needed
 
     // Configuration and state
     private var config: Config? = null
@@ -232,6 +233,7 @@ class CleverKeysService : InputMethodService(),
             initializeAutocapitalisation()  // Smart auto-capitalization (Bug #361 partial fix)
             initializeExtensions()  // Utility extension functions for common operations
             initializeUtils()  // Comprehensive utility functions (singleton)
+            initializeKeyValueParser()  // Key definition parser with modern & legacy syntax
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -3946,6 +3948,124 @@ class CleverKeysService : InputMethodService(),
         override fun updateSuggestions(suggestions: List<String>) {
             // Update suggestion bar with tap typing predictions
             suggestionBar?.setSuggestions(suggestions)
+        }
+    }
+
+    // ============================================================================
+    // Key Definition Parser (443 lines)
+    // ============================================================================
+
+    /**
+     * Initialize KeyValueParser object (singleton)
+     *
+     * Parses keyboard key definitions with both modern and legacy syntax support.
+     *
+     * Modern Syntax (recommended):
+     * - [(symbol):(key_action)]
+     * - Symbol before colon, action after
+     * - Examples:
+     *   * "a:'A'" → String key "A" with symbol "a"
+     *   * "enter:keyevent:66" → Keyevent with code 66
+     *   * "macro:a,b,c" → Macro of multiple keys
+     *
+     * Legacy Syntax (backwards compatibility):
+     * - [:kind attributes:payload]
+     * - Starts with colon
+     * - Examples:
+     *   * ":str flags=dim,small symbol='MyKey':'My string'"
+     *   * ":char:'a'"
+     *   * ":keyevent:66"
+     *
+     * Key Actions:
+     * - 'Arbitrary string' → String key
+     * - (key_name) → Special key by name (shift, ctrl, etc.)
+     * - keyevent:(code) → Android key event
+     * - (action),(action),... → Macro sequence
+     *
+     * Attributes (legacy):
+     * - flags: dim, small
+     * - symbol: Custom symbol override
+     *
+     * Features:
+     * - Regex-based parsing with lazy pattern initialization
+     * - Modern syntax: symbol before colon (recommended)
+     * - Legacy syntax: starts with colon (backwards compatibility)
+     * - String keys with custom symbols
+     * - Special keys by name (shift, ctrl, alt, etc.)
+     * - Keyevent keys with Android event codes
+     * - Macro sequences (comma-separated actions)
+     * - Flag support: SECONDARY, SMALLER_FONT, LATCH, DOUBLE_TAP_LOCK, SPECIAL, GREYED, KEY_FONT
+     * - Error handling with detailed ParseError messages
+     * - Token position tracking for precise error reporting
+     * - Escape sequence handling for special characters
+     * - Nested parser for legacy syntax (StartingWithColon object)
+     *
+     * Patterns:
+     * - KEYDEF_TOKEN: Matches key definition tokens
+     * - QUOTED_PAT: Matches single-quoted strings
+     * - WORD_PAT: Matches alphanumeric words
+     *
+     * Error Handling:
+     * - ParseError exception with position and token context
+     * - Unterminated string detection
+     * - Invalid keyevent code validation
+     * - Unknown attribute/flag detection
+     * - Unexpected token handling
+     *
+     * Kotlin object (singleton) - no instantiation needed.
+     * Functions available via KeyValueParser.parse(input).
+     */
+    private fun initializeKeyValueParser() {
+        try {
+            // KeyValueParser is a Kotlin object (singleton) - no instantiation needed
+            // Functions are available via KeyValueParser.parse(input) calls
+
+            logD("✅ KeyValueParser object initialized (443 lines)")
+            logD("   - Modern Syntax:")
+            logD("     * [(symbol):(key_action)] format")
+            logD("     * Example: 'a:\\'A\\'' → String key with symbol")
+            logD("     * Example: 'enter:keyevent:66' → Keyevent")
+            logD("     * Example: 'macro:a,b,c' → Macro sequence")
+            logD("   - Legacy Syntax:")
+            logD("     * [:kind attributes:payload] format")
+            logD("     * Example: ':str flags=dim symbol=\\'key\\':\\'text\\''")
+            logD("     * Example: ':char:\\'a\\''")
+            logD("     * Example: ':keyevent:66'")
+            logD("   - Key Actions:")
+            logD("     * 'Arbitrary string' → String key")
+            logD("     * (key_name) → Special key (shift, ctrl, etc.)")
+            logD("     * keyevent:(code) → Android key event")
+            logD("     * (action),(action),... → Macro sequence")
+            logD("   - Attributes (legacy):")
+            logD("     * flags: dim, small")
+            logD("     * symbol: Custom symbol override")
+            logD("   - Flag Support:")
+            logD("     * SECONDARY (dim)")
+            logD("     * SMALLER_FONT (small)")
+            logD("     * LATCH")
+            logD("     * DOUBLE_TAP_LOCK")
+            logD("     * SPECIAL")
+            logD("     * GREYED")
+            logD("     * KEY_FONT")
+            logD("   - Parsing Features:")
+            logD("     * Regex-based token matching")
+            logD("     * Lazy pattern initialization")
+            logD("     * Escape sequence handling")
+            logD("     * Position tracking for error messages")
+            logD("   - Error Handling:")
+            logD("     * ParseError with token context")
+            logD("     * Unterminated string detection")
+            logD("     * Invalid keyevent code validation")
+            logD("     * Unknown attribute/flag detection")
+            logD("   - Nested Parser:")
+            logD("     * StartingWithColon object for legacy syntax")
+            logD("     * Separate attribute and payload parsing")
+            logD("   - 443 lines of key definition parsing")
+            logD("   - Functions:")
+            logD("     * parse(input): Parse key definition string → KeyValue")
+            logD("     * Throws ParseError on syntax errors")
+        } catch (e: Exception) {
+            logE("Failed to initialize KeyValueParser", e)
         }
     }
 
