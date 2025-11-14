@@ -48,8 +48,8 @@
 #### Features & Issues
 | File | Purpose | Status |
 |------|---------|--------|
-| `MISSING_FEATURES.md` | Feature parity tracking | 🔄 Needs consolidation |
-| `ISSUES.md` | Known issues log | 🔄 Needs consolidation |
+| `MISSING_FEATURES.md` | Feature parity tracking | ✅ Consolidated into TODO files |
+| `ISSUES.md` | Known issues log | ✅ Consolidated into TODO files |
 
 #### Model & Neural Pipeline
 | File | Purpose | Status |
@@ -70,26 +70,26 @@
 |------|---------|--------|
 | `REVIEW_FILE_82_ExtraKeys.md` | ExtraKeys.java review | ✅ Implemented |
 | `REVIEW_FILE_83_FoldStateTracker.md` | FoldStateTracker review | ✅ Enhanced |
-| `REVIEW_FILE_84_Gesture.md` | Gesture.java review | ❌ Missing - HIGH PRIORITY |
-| `REVIEW_FILE_85_GestureClassifier.md` | GestureClassifier review | ❓ Needs audit |
+| `REVIEW_FILE_84_Gesture.md` | Gesture.java review | ✅ Complete (Bug #267 fixed) |
+| `REVIEW_FILE_85_GestureClassifier.md` | GestureClassifier review | ✅ Complete |
 
-#### Legacy/Deprecated (Consolidate)
+#### Legacy/Deprecated (All Cleaned Up ✅)
 | File | Purpose | Status |
 |------|---------|--------|
-| `CURRENT_SESSION_STATUS.md` | Old status tracker | ⚠️ Migrated - Delete |
-| `REVIEW_COMPLETED.md` | Old review log | ⚠️ Migrated - Delete |
-| `FINAL_STATUS.md` | Old status file | 🔄 Merge or delete |
-| `TODO.md` | Legacy TODO | 🔄 Consolidate |
-| `TODONOW.md` | Legacy urgent TODO | 🔄 Consolidate |
-| `TODO_ARCHITECTURAL.md` | Architecture TODOs | 🔄 Consolidate |
-| `TODO_CRITICAL_BUGS.md` | Critical bug list | 🔄 Consolidate |
-| `TODO_HIGH_PRIORITY.md` | High priority list | 🔄 Consolidate |
-| `TODO_MEDIUM_LOW.md` | Medium/low priority | 🔄 Consolidate |
-| `REVIEW_TODO_CORE.md` | Core review TODOs | 🔄 Consolidate |
-| `REVIEW_TODO_GESTURES.md` | Gesture TODOs | 🔄 Consolidate |
-| `REVIEW_TODO_LAYOUT.md` | Layout TODOs | 🔄 Consolidate |
-| `REVIEW_TODO_ML_DATA.md` | ML data TODOs | 🔄 Consolidate |
-| `REVIEW_TODO_NEURAL.md` | Neural TODOs | 🔄 Consolidate |
+| `CURRENT_SESSION_STATUS.md` | Old status tracker | ✅ Deleted (migrated) |
+| `REVIEW_COMPLETED.md` | Old review log | ✅ Deleted (migrated) |
+| `FINAL_STATUS.md` | Old status file | ✅ Deleted (consolidated) |
+| `TODO.md` | Legacy TODO | ✅ Deleted (consolidated) |
+| `TODONOW.md` | Legacy urgent TODO | ✅ Deleted (consolidated) |
+| `TODO_ARCHITECTURAL.md` | Architecture TODOs | ✅ Deleted (consolidated) |
+| `TODO_CRITICAL_BUGS.md` | Critical bug list | ✅ Deleted (consolidated) |
+| `TODO_HIGH_PRIORITY.md` | High priority list | ✅ Deleted (consolidated) |
+| `TODO_MEDIUM_LOW.md` | Medium/low priority | ✅ Deleted (consolidated) |
+| `REVIEW_TODO_CORE.md` | Core review TODOs | ✅ Deleted (consolidated) |
+| `REVIEW_TODO_GESTURES.md` | Gesture TODOs | ✅ Deleted (consolidated) |
+| `REVIEW_TODO_LAYOUT.md` | Layout TODOs | ✅ Deleted (consolidated) |
+| `REVIEW_TODO_ML_DATA.md` | ML data TODOs | ✅ Deleted (consolidated) |
+| `REVIEW_TODO_NEURAL.md` | Neural TODOs | ✅ Deleted (consolidated) |
 
 ### `/migrate/` Migration Directory
 
@@ -104,12 +104,12 @@
 #### Categorized TODOs (`/migrate/todo/`)
 | File | Purpose | Status |
 |------|---------|--------|
-| `critical.md` | P0 showstoppers | ✅ Active - **FIX #51-53 DONE** |
-| `core.md` | Core keyboard bugs | ✅ Active |
-| `features.md` | Missing features | ✅ Active |
-| `neural.md` | ONNX pipeline issues | ✅ Active |
-| `settings.md` | Settings bugs | ✅ Active |
-| `ui.md` | UI/UX issues | ✅ Active |
+| `critical.md` | P0 showstoppers | ✅ **ALL RESOLVED** (45 bugs: 38 fixed, 7 false) |
+| `core.md` | Core keyboard bugs | ✅ Complete |
+| `features.md` | Missing features | ✅ Complete |
+| `neural.md` | ONNX pipeline issues | ✅ Complete |
+| `settings.md` | Settings bugs | ✅ Complete |
+| `ui.md` | UI/UX issues | ✅ Complete |
 
 ### `/docs/` Documentation Directory
 
@@ -120,13 +120,13 @@
 | `README.md` | **Master ToC for all 10 specs** | ✅ Created 2025-11-14 |
 | `SPEC_TEMPLATE.md` | Template for new specs | ✅ Active |
 | `core-keyboard-system.md` | Core keyboard operations (P0) | ✅ Implemented |
-| `gesture-system.md` | Gesture recognition (P0) | 🟡 Partial (1 bug) |
+| `gesture-system.md` | Gesture recognition (P0) | ✅ Implemented (Bug #267 fixed) |
 | `neural-prediction.md` | ONNX prediction pipeline (P0) | ✅ Updated 2025-11-14 |
-| `layout-system.md` | Layout & extra keys (P1) | 🟡 Partial (1 bug) |
-| `settings-system.md` | Settings & preferences (P1) | 🟡 Partial |
+| `layout-system.md` | Layout & extra keys (P1) | ✅ Implemented (Bug #266 fixed) |
+| `settings-system.md` | Settings & preferences (P1) | ✅ Implemented |
 | `ui-material3-modernization.md` | Material 3 UI (P2) | ✅ Implemented |
-| `performance-optimization.md` | Performance & monitoring (P2) | 🟡 In Progress |
-| `test-suite.md` | Testing infrastructure (P2) | 🟢 Script Complete |
+| `performance-optimization.md` | Performance & monitoring (P2) | ✅ Complete |
+| `test-suite.md` | Testing infrastructure (P2) | ✅ Complete |
 | `architectural-decisions.md` | 6 ADRs (Reference) | ✅ Active |
 
 #### History (`/docs/history/`)
