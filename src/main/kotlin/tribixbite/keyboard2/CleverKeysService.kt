@@ -147,6 +147,7 @@ class CleverKeysService : InputMethodService(),
     private var productionInitializer: ProductionInitializer? = null  // Production initialization system
     private var systemIntegrationTester: SystemIntegrationTester? = null  // End-to-end system integration testing
     private var predictionRepository: PredictionRepository? = null  // Modern coroutine-based prediction repository
+    private var voiceImeSwitcher: VoiceImeSwitcher? = null  // Bug #264 fix - voice IME switching
 
     // Configuration and state
     private var config: Config? = null
@@ -210,6 +211,7 @@ class CleverKeysService : InputMethodService(),
             initializeProductionInitializer()  // Production initialization system
             initializeSystemIntegrationTester()  // End-to-end system integration testing
             initializePredictionRepository()  // Modern coroutine-based prediction repository
+            initializeVoiceImeSwitcher()  // Bug #264 fix - voice IME switching
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -2817,6 +2819,35 @@ class CleverKeysService : InputMethodService(),
             }
         } catch (e: Exception) {
             logE("Failed to initialize prediction repository", e)
+        }
+    }
+
+    private fun initializeVoiceImeSwitcher() {
+        try {
+            voiceImeSwitcher = VoiceImeSwitcher(context = this)
+
+            logD("✅ VoiceImeSwitcher initialized (Bug #264)")
+            logD("   - Voice IME switching using InputMethodManager")
+            logD("   - Bug #264 fix: Switches to voice-capable IME instead of launching speech recognizer")
+            logD("   - Features:")
+            logD("     * Finds voice-enabled IMEs from enabled input methods")
+            logD("     * Shows IME picker for voice input selection")
+            logD("     * No special permissions required (uses showInputMethodPicker)")
+            logD("     * Checks for voice subtypes in IME capabilities")
+            logD("   - API Methods:")
+            logD("     * isVoiceInputAvailable(): Boolean (check if voice IME exists)")
+            logD("     * switchToVoiceInput(): Boolean (show picker for voice IME)")
+            logD("   - Voice detection:")
+            logD("     * Searches enabled IMEs for voice subtype support")
+            logD("     * Checks subtype mode for 'voice' capability")
+            logD("     * Falls back to showing all IMEs if no voice IME found")
+            logD("   - Safe implementation:")
+            logD("     * No WRITE_SECURE_SETTINGS permission required")
+            logD("     * Uses system IME picker for user selection")
+            logD("     * Graceful fallback if no voice IME available")
+            logD("   - 170 lines of voice IME switching logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize voice IME switcher", e)
         }
     }
 
