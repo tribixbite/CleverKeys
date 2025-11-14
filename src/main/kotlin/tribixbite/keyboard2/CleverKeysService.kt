@@ -140,6 +140,7 @@ class CleverKeysService : InputMethodService(),
     private var dictionaryManager: DictionaryManager? = null  // Bug #345 fix - multi-language dictionary management
     private var swipeTokenizer: SwipeTokenizer? = null  // Token mapping for ONNX neural prediction
     private var configurationManager: ConfigurationManager? = null  // Bug #382 fix - advanced configuration management
+    private var benchmarkSuite: BenchmarkSuite? = null  // Comprehensive performance testing suite
 
     // Configuration and state
     private var config: Config? = null
@@ -196,6 +197,7 @@ class CleverKeysService : InputMethodService(),
             initializeSwipeTokenizer()  // Token mapping for ONNX neural prediction
             initializeDictionaryManager()  // Bug #345 fix - multi-language dictionaries
             initializeConfigurationManager()  // Bug #382 fix - advanced configuration management
+            initializeBenchmarkSuite()  // Comprehensive performance testing
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -329,6 +331,7 @@ class CleverKeysService : InputMethodService(),
             mouseKeysEmulation?.disable()  // Bug #375 - disable mouse keys emulation
             dictionaryManager?.cleanup()  // Bug #345 - cleanup dictionary manager
             configurationManager?.cleanup()  // Bug #382 - cleanup configuration manager
+            benchmarkSuite?.cleanup()  // Cleanup benchmark suite
             runtimeValidator?.cleanup()  // Cleanup runtime validator
             foldStateTracker?.cleanup()  // Cleanup fold state tracker
             predictionCache?.clear()  // Clear prediction cache
@@ -2600,6 +2603,30 @@ class CleverKeysService : InputMethodService(),
             }
         } catch (e: Exception) {
             logE("Failed to initialize configuration manager", e)
+        }
+    }
+
+    private fun initializeBenchmarkSuite() {
+        try {
+            benchmarkSuite = BenchmarkSuite(context = this)
+
+            logD("✅ BenchmarkSuite initialized")
+            logD("   - Comprehensive performance testing for CleverKeys")
+            logD("   - 7 benchmark categories:")
+            logD("     1. Neural prediction performance (100 iterations)")
+            logD("     2. Gesture recognition speed (swipe tracking)")
+            logD("     3. Memory allocation patterns (pooling efficiency)")
+            logD("     4. Configuration loading (SharedPreferences)")
+            logD("     5. Template matching algorithms (gesture recognition)")
+            logD("     6. Vocabulary filtering (dictionary queries)")
+            logD("     7. Complete pipeline (end-to-end prediction)")
+            logD("   - Statistical metrics: avg/min/max time, std dev, throughput")
+            logD("   - Java comparison: speedup factor, memory reduction, code reduction")
+            logD("   - 100 iterations per benchmark with 10 warmup iterations")
+            logD("   - Coroutine-based async execution with Dispatchers.Default")
+            logD("   - 524 lines of performance testing logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize benchmark suite", e)
         }
     }
 
