@@ -129,6 +129,7 @@ class CleverKeysService : InputMethodService(),
     private var swipeDetector: SwipeDetector? = null  // Swipe gesture quality detection
     private var autoCorrectionEngine: AutoCorrectionEngine? = null  // Bug #310 fix - typo correction with edit distance
     private var swipeGestureRecognizer: SwipeGestureRecognizer? = null  // Comprehensive swipe gesture recognition
+    private var accessibilityHelper: AccessibilityHelper? = null  // Accessibility support utility
 
     // Configuration and state
     private var config: Config? = null
@@ -174,6 +175,7 @@ class CleverKeysService : InputMethodService(),
             initializeSwipeDetector()  // Swipe gesture quality detection
             initializeAutoCorrectionEngine()  // Bug #310 fix - typo correction
             initializeSwipeGestureRecognizer()  // Comprehensive swipe gesture recognition
+            initializeAccessibilityHelper()  // Accessibility support utility
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -1190,6 +1192,23 @@ class CleverKeysService : InputMethodService(),
             logD("   - 366 lines of gesture recognition logic")
         } catch (e: Exception) {
             logE("Failed to initialize swipe gesture recognizer", e)
+        }
+    }
+
+    private fun initializeAccessibilityHelper() {
+        try {
+            accessibilityHelper = AccessibilityHelper(context = this)
+
+            logD("✅ AccessibilityHelper initialized")
+            logD("   - Keyboard accessibility setup support")
+            logD("   - Custom accessibility delegate creation")
+            logD("   - Key accessibility descriptions")
+            logD("   - Announcement support for screen readers")
+            logD("   - Content descriptions for keyboard elements")
+            logD("   - Accessibility action handling")
+            logD("   - 79 lines of accessibility support logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize accessibility helper", e)
         }
     }
 
