@@ -148,6 +148,7 @@ class CleverKeysService : InputMethodService(),
     private var systemIntegrationTester: SystemIntegrationTester? = null  // End-to-end system integration testing
     private var predictionRepository: PredictionRepository? = null  // Modern coroutine-based prediction repository
     private var voiceImeSwitcher: VoiceImeSwitcher? = null  // Bug #264 fix - voice IME switching
+    private var vibratorCompat: VibratorCompat? = null  // Cross-platform vibration for haptic feedback
 
     // Configuration and state
     private var config: Config? = null
@@ -212,6 +213,7 @@ class CleverKeysService : InputMethodService(),
             initializeSystemIntegrationTester()  // End-to-end system integration testing
             initializePredictionRepository()  // Modern coroutine-based prediction repository
             initializeVoiceImeSwitcher()  // Bug #264 fix - voice IME switching
+            initializeVibratorCompat()  // Cross-platform vibration for haptic feedback
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -2848,6 +2850,34 @@ class CleverKeysService : InputMethodService(),
             logD("   - 170 lines of voice IME switching logic")
         } catch (e: Exception) {
             logE("Failed to initialize voice IME switcher", e)
+        }
+    }
+
+    private fun initializeVibratorCompat() {
+        try {
+            vibratorCompat = VibratorCompat(context = this)
+
+            logD("✅ VibratorCompat initialized")
+            logD("   - Cross-platform vibration support for haptic feedback")
+            logD("   - Features:")
+            logD("     * Android API compatibility (pre-O, O+, S+)")
+            logD("     * VibratorManager support for Android 12+ (API 31)")
+            logD("     * Legacy Vibrator support for older devices")
+            logD("     * VibrationEffect with amplitude control (API 26+)")
+            logD("     * Graceful degradation for older Android versions")
+            logD("   - API Methods:")
+            logD("     * performHapticFeedback(duration: Long): Generic haptic feedback")
+            logD("     * performClickFeedback(): 50ms click feedback")
+            logD("     * performLongPressFeedback(): 100ms long press feedback")
+            logD("     * hasVibrator: Boolean (check vibrator availability)")
+            logD("   - Platform support:")
+            logD("     * Android S+ (API 31+): VibratorManager with VibrationEffect")
+            logD("     * Android O+ (API 26+): VibrationEffect with amplitude")
+            logD("     * Pre-O: Legacy vibrate() API with duration only")
+            logD("     * Safe error handling for devices without vibrator")
+            logD("   - 69 lines of cross-platform haptic feedback logic")
+        } catch (e: Exception) {
+            logE("Failed to initialize vibrator compatibility", e)
         }
     }
 
