@@ -27,7 +27,7 @@
 - ✅ Editor info: inputType, imeOptions, packageName captured
 - ✅ Gesture support: SELECT, INSERT, DELETE, REMOVE_SPACE, etc.
 
-### ✅ TODO RESOLUTION: 13 TODOS COMPLETED
+### ✅ TODO RESOLUTION: 17 TODOS COMPLETED
 
 **Layout Switching Implementation** (3 TODOs):
 1. `switchToMainLayout()`: Switches to Config.layouts[0]
@@ -47,23 +47,40 @@ Replaced hardcoded defaults with SharedPreferences for 10 keyboard managers:
 8. **Floating Keyboard**: floating_keyboard_enabled
 9. **Split Keyboard**: split_keyboard_enabled
 
+**Configuration Adjustment Callbacks** (3 TODOs):
+Implemented reactive configuration adjustments:
+
+1. **Fold State**: Adjusts keyboard layout/size on device fold/unfold
+   - Calls config.refresh(resources, isUnfolded) + keyboardView.requestLayout()
+2. **Theme Application**: Applies Material 3 theme changes to keyboard
+   - Calls keyboardView.invalidate() on theme config change
+3. **Autocapitalization**: Updates shift key state from autocap engine
+   - Calls keyboardView.setShiftState(latched, lock) on autocap events
+
+**Input Feedback Implementation** (1 TODO):
+1. **Vibration Callback**: Haptic feedback for long press via performHapticFeedback(KEYBOARD_TAP)
+
 **Technical Details**:
 - Uses DirectBootAwarePreferences.get_shared_preferences()
 - All values coerced to safe ranges with .coerceIn()
 - Sensible defaults maintained
 - Non-fatal initialization with try-catch blocks
-- Comprehensive logging of loaded values
+- Comprehensive error handling and logging
+- Reactive coroutine-based configuration updates
 
 **Commits**:
 - bd35b7f8 - feat: add automated keyboard testing via ADB with swipe simulation
 - af40fce1 - docs: update TESTING_CHECKLIST with automated test results
 - d0e7c246 - feat: implement layout switching methods (3 TODOs resolved)
 - cc811b8f - feat: integrate user preferences for keyboard managers (10 TODOs resolved)
+- 8fd480da - docs: update project_status with TODO resolution progress
+- 436a7e33 - feat: implement configuration adjustment callbacks (3 TODOs resolved)
+- f069d6aa - feat: implement haptic feedback for long press vibration (TODO resolved)
 
 **Status**:
-- ✅ 13 TODO comments resolved
+- ✅ 17 TODO comments resolved
 - ✅ Automated testing passing
-- ⏳ 14 TODOs remaining in CleverKeysService.kt
+- ⏳ 10 TODOs remaining in CleverKeysService.kt
 
 ---
 
