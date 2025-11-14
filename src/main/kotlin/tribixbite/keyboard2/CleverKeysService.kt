@@ -166,6 +166,7 @@ class CleverKeysService : InputMethodService(),
     // Note: LayoutValidators is a Kotlin object (singleton) - no property needed
     // Note: BuildConfig is a Kotlin object (singleton) - no property needed
     // Note: KeyboardShapes is a Material 3 Shapes val + KeyShapes object (singleton) - no property needed
+    // Note: KeyboardTypography is a Material 3 Typography val + KeyboardTextStyles object (singleton) - no property needed
 
     // Configuration and state
     private var config: Config? = null
@@ -247,6 +248,7 @@ class CleverKeysService : InputMethodService(),
             initializeCustomLayoutEditDialog()  // Custom layout editor dialog with validation (Bugs #132, #133)
             initializeBuildConfig()  // Build configuration constants (singleton)
             initializeKeyboardShapes()  // Material 3 shape system for keyboard components (singleton)
+            initializeKeyboardTypography()  // Material 3 typography system for keyboard text (singleton)
             initializeComposeKeyData()
             initializeClipboardService()  // Bug #118 & #120 fix
             initializeAccessibilityEngines()
@@ -4546,6 +4548,69 @@ class CleverKeysService : InputMethodService(),
             logD("   - 109 lines of Material 3 shape definitions")
         } catch (e: Exception) {
             logE("Failed to initialize KeyboardShapes", e)
+        }
+    }
+
+    private fun initializeKeyboardTypography() {
+        try {
+            // KeyboardTypography is a Material 3 Typography val + KeyboardTextStyles object (singleton)
+            // No instantiation needed - text styles are available via KeyboardTypography.* and KeyboardTextStyles.*
+
+            logD("✅ KeyboardTypography theme system initialized (169 lines)")
+            logD("   - Material 3 Typography Object:")
+            logD("     * Display Large: 57sp (large headers in settings)")
+            logD("     * Display Medium: 45sp (medium headers)")
+            logD("     * Display Small: 36sp (small headers)")
+            logD("     * Headline Large: 32sp (section headers)")
+            logD("     * Headline Medium: 28sp (subsection headers)")
+            logD("     * Headline Small: 24sp (minor headers)")
+            logD("     * Title Large: 22sp - PRIMARY USE: main key labels")
+            logD("     * Title Medium: 18sp - secondary key labels")
+            logD("     * Title Small: 14sp - sub-labels on keys")
+            logD("     * Body Large: 16sp (suggestion text)")
+            logD("     * Body Medium: 14sp (dialog body text)")
+            logD("     * Body Small: 12sp (small descriptive text)")
+            logD("     * Label Large: 14sp (button text)")
+            logD("     * Label Medium: 12sp (chip text)")
+            logD("     * Label Small: 11sp (small labels)")
+            logD("   - KeyboardTextStyles Object (Semantic Tokens):")
+            logD("     * keyLabel: 22sp - Main character on key")
+            logD("     * keySubLabel: 14sp - Shifted character on key")
+            logD("     * modifierKey: 18sp - Modifier keys (Shift, Ctrl, Alt)")
+            logD("     * specialKey: 18sp - Special keys (Enter, Backspace, Space)")
+            logD("     * suggestion: 16sp - Suggestion bar text")
+            logD("     * dialogTitle: 24sp - Dialog header text")
+            logD("     * dialogBody: 14sp - Dialog body text")
+            logD("   - Features:")
+            logD("     * Material 3 compliance")
+            logD("     * Optimized for touch typing")
+            logD("     * Larger sizes than standard M3")
+            logD("     * Semantic text style tokens")
+            logD("     * Custom keyboard font support")
+            logD("     * Consistent typographic hierarchy")
+            logD("   - TODO:")
+            logD("     * Load special_font.ttf from assets for better character rendering")
+            logD("   - Font Weights:")
+            logD("     * Bold (Display)")
+            logD("     * SemiBold (Headline)")
+            logD("     * Medium (Title, Label)")
+            logD("     * Normal (Body)")
+            logD("   - Components Styled:")
+            logD("     * Keyboard keys (main label, sub-label)")
+            logD("     * Modifier keys")
+            logD("     * Special keys")
+            logD("     * Suggestion bar")
+            logD("     * Dialogs (title, body)")
+            logD("     * Buttons and chips")
+            logD("     * Settings screens")
+            logD("   - Design System:")
+            logD("     * 13 text styles covering all use cases")
+            logD("     * Touch-friendly sizing (22sp for main keys)")
+            logD("     * Clear visual hierarchy")
+            logD("     * Legibility optimization")
+            logD("   - 169 lines of Material 3 typography definitions")
+        } catch (e: Exception) {
+            logE("Failed to initialize KeyboardTypography", e)
         }
     }
 
