@@ -7,6 +7,30 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 
 ---
 
+## 🔄 PRIORITY 0: UPSTREAM SYNC (CRITICAL - Added 2025-11-14)
+
+**Task**: Sync all changes from Unexpected-Keyboard Java repo since first file review
+
+**Scope**:
+1. Find all commits in Julow/Unexpected-Keyboard since we started reviewing (Oct 2025)
+2. Git diff original Java files vs latest upstream commit
+3. Systematically update Kotlin code with ALL new features and changes
+4. Ensure 100% feature parity with upstream
+
+**Method**:
+- Clone/update Unexpected-Keyboard repo
+- Identify commit range from start of review to HEAD
+- Analyze each commit for feature additions, bug fixes, improvements
+- Map changes to Kotlin equivalents
+- Implement missing features
+- Verify parity
+
+**Impact**: CRITICAL - May be missing new features, bug fixes, improvements from upstream
+
+**Status**: 🔄 IN PROGRESS (Added to memory)
+
+---
+
 ## ✅ COMPLETED QUICK WINS (2025-10-20)
 
 **Fix #51: Config.handler = null** ✅ DONE
