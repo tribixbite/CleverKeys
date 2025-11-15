@@ -517,11 +517,14 @@ class Keyboard2View @JvmOverloads constructor(
         }
 
         val dm = resources.displayMetrics
-        val windowWidth = getWindowWidth(dm)
+        var windowWidth = getWindowWidth(dm)
 
         // Calculate margins and insets
         calculateInsets()
         calculateMargins(windowWidth)
+
+        // Fix insets being excluded from computed width (#1127)
+        windowWidth += insetsLeft + insetsRight
 
         // Calculate keyboard dimensions
         val keyboardWidth = windowWidth - marginLeft - marginRight - insetsLeft - insetsRight

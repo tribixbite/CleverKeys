@@ -24,9 +24,6 @@ import kotlinx.coroutines.sync.withLock
  */
 object ClipboardHistoryService {
 
-    /** Maximum time entries stay in history (5 minutes) */
-    const val HISTORY_TTL_MS = 5L * 60 * 1000
-
     // Internal state
     @Volatile
     private var _service: ClipboardHistoryServiceImpl? = null
@@ -191,7 +188,13 @@ class ClipboardHistoryServiceImpl(private val context: Context) {
         val trimmedClip = clip.trim()
         if (trimmedClip.isEmpty()) return@withLock
 
-        val expiryTime = System.currentTimeMillis() + ClipboardHistoryService.HISTORY_TTL_MS
+        // Get configurable TTL from settings (-1 means never expire)
+        val historyTtlMinutes = Config.globalConfig().clipboard_history_duration
+        val expiryTime = if (historyTtlMinutes >= 0) {
+            System.currentTimeMillis() + java.util.concurrent.TimeUnit.MINUTES.toMillis(historyTtlMinutes.toLong())
+        } else {
+            Long.MAX_VALUE
+        }
         val added = database.addClipboardEntry(trimmedClip, expiryTime).getOrElse { false }
 
         if (added) {

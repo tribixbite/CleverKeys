@@ -438,13 +438,16 @@ data class KeyboardData(
 
         private fun parseRow(parser: XmlPullParser): Row {
             val keys = mutableListOf<Key>()
-            val height = attributeFloat(parser, "height", 1f)
+            val rawHeight = attributeFloat(parser, "height", 1f)
             val shift = attributeFloat(parser, "shift", 0f)
             val scale = attributeFloat(parser, "scale", 0f)
 
             while (expectTag(parser, "key")) {
                 keys.add(parseKey(parser))
             }
+
+            // Allow height = 0.0f for empty rows, otherwise enforce minimum 0.5f
+            val height = maxOf(rawHeight, if (keys.isEmpty()) 0.0f else 0.5f)
 
             val row = Row(keys, height, shift)
             return if (scale > 0f) row.updateWidth(scale) else row

@@ -165,6 +165,7 @@ class Config private constructor(
     var circle_sensitivity = 2
     var clipboard_history_enabled = false
     var clipboard_history_limit = 6
+    var clipboard_history_duration = 5  // Duration in minutes, -1 for never expire
     var swipe_typing_enabled = true
 
     // Legacy swipe parameters (for compatibility with existing WordPredictor)
@@ -324,6 +325,8 @@ class Config private constructor(
             intValue
         }
 
+        clipboard_history_duration = (prefs.getString("clipboard_history_duration", "5") ?: "5").toIntOrNull() ?: 5
+
         swipe_typing_enabled = prefs.getBoolean("swipe_typing_enabled", true)
 
         // Legacy swipe parameters (for compatibility)
@@ -441,6 +444,10 @@ class Config private constructor(
                 }
             }
             "rosepine" -> R.style.RosePine
+            "everforestlight" -> R.style.EverforestLight
+            "cobalt" -> R.style.Cobalt
+            "pine" -> R.style.Pine
+            "epaperblack" -> R.style.ePaperBlack
             "system", "" -> {
                 if ((nightMode and Configuration.UI_MODE_NIGHT_NO) != 0) {
                     R.style.Light
