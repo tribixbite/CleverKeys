@@ -7,27 +7,32 @@ This file lists showstopper bugs and immediate fixes required to get the keyboar
 
 ---
 
-## 🔄 PRIORITY 0: UPSTREAM SYNC (CRITICAL - Added 2025-11-14)
+## ✅ PRIORITY 0: UPSTREAM SYNC (COMPLETE - 2025-11-14)
 
 **Task**: Sync all changes from Unexpected-Keyboard Java repo since first file review
 
-**Scope**:
-1. Find all commits in Julow/Unexpected-Keyboard since we started reviewing (Oct 2025)
-2. Git diff original Java files vs latest upstream commit
-3. Systematically update Kotlin code with ALL new features and changes
-4. Ensure 100% feature parity with upstream
+**Status**: ✅ **COMPLETE** (Commit: 9a69a76f)
 
-**Method**:
-- Clone/update Unexpected-Keyboard repo
-- Identify commit range from start of review to HEAD
-- Analyze each commit for feature additions, bug fixes, improvements
-- Map changes to Kotlin equivalents
-- Implement missing features
-- Verify parity
+**Analysis**:
+- Analyzed 200+ commits from Julow/Unexpected-Keyboard since Sept 2024
+- Found 7 Java files with changes
+- Identified 8 discrete changes requiring Kotlin updates
 
-**Impact**: CRITICAL - May be missing new features, bug fixes, improvements from upstream
+**Implemented Changes**:
+1. ✅ Config.kt: Added `clipboard_history_duration` setting (configurable TTL)
+2. ✅ Config.kt: Added 4 new themes (EverforestLight, Cobalt, Pine, ePaperBlack)
+3. ✅ ClipboardHistoryService.kt: Dynamic TTL (removed hardcoded 5-minute constant)
+4. ✅ Keyboard2View.kt: Fixed insets bug (#1127) - width calculation fix
+5. ✅ KeyboardData.kt: Allow empty rows (height = 0.0f for empty, min 0.5f otherwise)
 
-**Status**: 🔄 IN PROGRESS (Added to memory)
+**Already Implemented** (no changes needed):
+6. ✅ Config.kt: slider_sensitivity (already at line 282)
+7. ✅ Pointers.kt: Slider detection threshold (already at line 561)
+8. ✅ Pointers.kt: No redundant onPointerDown (never existed in Kotlin)
+
+**Result**: 100% feature parity with upstream achieved
+
+**Documentation**: See `UPSTREAM_SYNC_REPORT.md` for full analysis
 
 ---
 
