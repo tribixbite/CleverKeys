@@ -175,7 +175,8 @@ class CleverKeysService : InputMethodService(),
     // Configuration and state
     private var config: Config? = null
     private var currentLayout: KeyboardData? = null
-    
+    private var keyboardLayoutLoader: KeyboardLayoutLoader? = null  // Layout loading system
+
     override fun onCreate() {
         super.onCreate()
         logD("CleverKeys InputMethodService starting...")
