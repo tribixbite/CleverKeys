@@ -61,6 +61,7 @@ class DictionaryManager(private val context: Context) {
 
     /**
      * Get word predictions for the given key sequence
+     * Filters out disabled (blacklisted) words
      */
     fun getPredictions(keySequence: String): List<String> {
         val predictor = currentPredictor ?: return emptyList()
@@ -79,7 +80,11 @@ class DictionaryManager(private val context: Context) {
             }
         }
 
-        return predictions
+        // Filter out disabled (blacklisted) words
+        val disabledWordsManager = DisabledWordsManager.getInstance(context)
+        return predictions.filter { word ->
+            !disabledWordsManager.isWordDisabled(word)
+        }
     }
 
     /**

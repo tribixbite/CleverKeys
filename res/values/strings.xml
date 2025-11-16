@@ -348,8 +348,46 @@
     <string name="dictionary_error_load">Failed to load custom words</string>
     <string name="dictionary_error_add">Failed to add word</string>
     <string name="dictionary_error_delete">Failed to delete word</string>
+    <string name="dictionary_empty_search">No words match your search</string>
 
     <!-- Dictionary Toast Messages -->
     <string name="dictionary_toast_word_added">Added \"%1$s\" to dictionary</string>
     <string name="dictionary_toast_word_deleted">Removed \"%1$s\" from dictionary</string>
+
+    <!-- Dictionary Tabs -->
+    <string name="tab_user_words">User Words</string>
+    <string name="tab_builtin_dict">Built-in (10k)</string>
+    <string name="tab_disabled_words">Disabled</string>
+
+    <!-- Built-in Dictionary Tab -->
+    <string name="builtin_dict_search_hint">Search 10,000 words…</string>
+    <string name="builtin_dict_showing_count">Showing %1$d of %2$d words</string>
+    <string name="builtin_dict_all_count">%1$d words</string>
+    <string name="builtin_dict_disable_button">Disable</string>
+    <string name="builtin_dict_loading">Loading dictionary…</string>
+    <string name="builtin_dict_error_load">Failed to load built-in dictionary</string>
+    <string name="builtin_dict_no_results">No words match your search</string>
+    <string name="builtin_dict_language">Language:</string>
+    <string name="builtin_dict_rank">Rank #%1$d</string>
+
+    <!-- Disabled Words Tab -->
+    <string name="disabled_words_search_hint">Search disabled words…</string>
+    <string name="disabled_words_count">%1$d words disabled</string>
+    <string name="disabled_words_empty_title">No disabled words</string>
+    <string name="disabled_words_empty_desc">Words you disable from the built-in dictionary will appear here</string>
+    <string name="disabled_words_enable_button">Enable</string>
+    <string name="disabled_words_clear_all">Clear All</string>
+    <string name="disabled_words_no_results">No disabled words match your search</string>
+
+    <!-- User Dictionary Tab (Enhanced) -->
+    <string name="user_dict_search_hint">Search your words…</string>
+    <string name="user_dict_export">Export</string>
+    <string name="user_dict_import">Import</string>
+
+    <!-- Actions Toast Messages -->
+    <string name="toast_word_disabled">Disabled \"%1$s\" from predictions</string>
+    <string name="toast_word_enabled">Enabled \"%1$s\" in predictions</string>
+    <string name="toast_all_disabled_cleared">All disabled words cleared</string>
+    <string name="toast_dictionary_exported">Dictionary exported to %1$s</string>
+    <string name="toast_dictionary_imported">Imported %1$d words</string>
 </resources>
