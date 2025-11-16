@@ -12,7 +12,7 @@ The new file starts with "00_" so it **sorts to the top** of file listings, maki
 
 ## Why the change?
 
-In Part 6.2 (Nov 14, 2025), we created `00_START_HERE_FIRST.md` to solve a discoverability problem:
+In Part 6.2 (Nov 14-16, 2025), we created `00_START_HERE_FIRST.md` to solve a discoverability problem:
 - **Problem**: With 40+ markdown files in root, `START_HERE.md` was buried in the middle
 - **Solution**: Use "00_" prefix so it sorts first in alphabetical listings
 - **Result**: New users see the entry point immediately
