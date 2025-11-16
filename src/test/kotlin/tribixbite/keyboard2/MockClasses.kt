@@ -112,62 +112,35 @@ class MockSharedPreferences : SharedPreferences {
  * Mock Context for testing
  */
 class MockContext : Context() {
-    
-    private val mockAssets = MockAssetManager()
-    private val mockResources = MockResources()
-    
-    override fun getAssets() = mockAssets
-    override fun getResources() = mockResources
+
+    private val mockPrefs = MockSharedPreferences()
+
+    override fun getAssets(): android.content.res.AssetManager {
+        throw UnsupportedOperationException("getAssets() not supported in MockContext")
+    }
+
+    override fun getResources(): Resources {
+        throw UnsupportedOperationException("getResources() not supported in MockContext")
+    }
+
+    override fun getPackageManager(): android.content.pm.PackageManager {
+        throw UnsupportedOperationException("getPackageManager() not supported in MockContext")
+    }
+
+    override fun getContentResolver(): android.content.ContentResolver {
+        throw UnsupportedOperationException("getContentResolver() not supported in MockContext")
+    }
+
     override fun getPackageName() = "tribixbite.keyboard2.test"
     override fun getApplicationContext() = this
-    
+
     // Stub implementations for required methods
     override fun getSystemService(name: String): Any? = null
-    override fun getString(resId: Int): String = "test_string"
-    override fun getSharedPreferences(name: String, mode: Int): SharedPreferences = MockSharedPreferences()
-    
+    override fun getSharedPreferences(name: String, mode: Int): SharedPreferences = mockPrefs
+
     // Other required overrides with minimal implementations
     override fun getTheme(): android.content.res.Resources.Theme? = null
     override fun getClassLoader(): ClassLoader = javaClass.classLoader
     override fun getMainLooper(): android.os.Looper = android.os.Looper.getMainLooper()
     override fun getApplicationInfo(): android.content.pm.ApplicationInfo = android.content.pm.ApplicationInfo()
-}
-
-/**
- * Mock AssetManager for testing
- */
-class MockAssetManager : android.content.res.AssetManager() {
-    
-    private val mockFiles = mapOf(
-        "dictionaries/en.txt" to "the\nand\nfor\nyou\nthat\nhello\nworld\ntest",
-        "dictionaries/en_enhanced.txt" to "keyboard\nswipe\ntyping\nneural\nprediction"
-    )
-    
-    override fun open(fileName: String): java.io.InputStream {
-        val content = mockFiles[fileName] ?: throw java.io.FileNotFoundException("Mock file not found: $fileName")
-        return content.byteInputStream()
-    }
-}
-
-/**
- * Mock Resources for testing
- */
-class MockResources : Resources(MockAssetManager(), android.util.DisplayMetrics(), android.content.res.Configuration()) {
-    
-    override fun getIdentifier(name: String, defType: String, defPackage: String): Int {
-        return when (name) {
-            "app_name" -> 1
-            "latn_qwerty_us" -> 2
-            else -> 0
-        }
-    }
-    
-    override fun getString(id: Int): String {
-        return when (id) {
-            1 -> "CleverKeys Test"
-            else -> "test_string_$id"
-        }
-    }
-    
-    override fun getDimension(id: Int): Float = 16f
 }
