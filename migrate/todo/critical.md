@@ -2,8 +2,12 @@
 
 This file lists showstopper bugs and immediate fixes required to get the keyboard functional.
 
-**Last Updated**: 2025-11-14
-**Status**: ✅ ALL RESOLVED - APK builds successfully (50MB)
+**Last Updated**: 2025-11-16
+**Status**: ✅ ALL RESOLVED - APK builds successfully (52MB)
+
+**Recent Fixes** (Nov 16, 2025):
+- ✅ **Bug #473**: Dictionary Manager (3-tab UI) implemented
+- ✅ **Keyboard Crash**: Duplicate loadDefaultKeyboardLayout() removed (keys now display)
 
 ---
 
