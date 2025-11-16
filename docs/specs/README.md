@@ -72,9 +72,9 @@ This directory contains feature specifications and architectural decision record
 
 9. **[Architectural Decisions](./architectural-decisions.md)** - Reference
    - Status: ✅ Complete (Living document)
-   - Contains: 6 ADRs (ONNX-only architecture, coroutines, etc.)
-   - Last Updated: 2025-10-20
-   - Outstanding: Add ADR for recent initialization order fix
+   - Contains: 7 ADRs (ONNX architecture, coroutines, initialization order, etc.)
+   - Last Updated: 2025-11-16
+   - Outstanding: None (all documented)
 
 10. **[SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md)** - Template
     - Template for creating new feature specifications

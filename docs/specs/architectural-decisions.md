@@ -1,8 +1,10 @@
 # Architectural Decisions - CleverKeys
 
-**Last Updated**: 2025-10-20
+**Last Updated**: 2025-11-16
 
 This document tracks intentional architectural changes from the original Unexpected-Keyboard Java implementation. These are NOT bugs to fix, but rather modern design improvements.
+
+**Total ADRs**: 7
 
 ---
 
@@ -198,6 +200,76 @@ Replace Gaussian key modeling with neural network spatial encoding.
 - Reduced code complexity (2000+ lines of Java not ported)
 - Better async patterns with coroutines
 - Scalable to larger models with external training
+
+---
+
+### ADR-007: Component Initialization Order Dependencies
+**Status**: ✅ ACCEPTED
+**Date**: 2025-11-14
+
+**Context**:
+- CleverKeysService.kt initializes 90+ components in `onCreate()`
+- Some components have dependencies on other components
+- WordPredictor requires LanguageDetector and UserAdaptationManager references
+- Initial implementation had wrong initialization order causing null references
+
+**Problem**:
+Early implementation initialized WordPredictor before its dependencies:
+```kotlin
+// WRONG ORDER (before fix)
+wordPredictor = initializeWordPredictor()  // Called first
+languageDetector = LanguageDetector()      // Called later - too late!
+userAdaptationManager = UserAdaptationManager() // Called later - too late!
+```
+
+This caused WordPredictor to receive null references for language detection and user adaptation features.
+
+**Decision**:
+Enforce strict initialization order for components with dependencies:
+1. Initialize standalone components first (no dependencies)
+2. Initialize dependency components next
+3. Initialize dependent components last
+
+**Implementation** (Commit 6aab63a4):
+```kotlin
+// CORRECT ORDER (after fix)
+// Step 1: Initialize dependencies first
+languageDetector = LanguageDetector()
+userAdaptationManager = UserAdaptationManager(context)
+
+// Step 2: Initialize components that depend on them
+wordPredictor = initializeWordPredictor(
+    languageDetector = languageDetector,
+    userAdaptationManager = userAdaptationManager
+)
+```
+
+**Rationale**:
+- Prevents null reference bugs at initialization
+- Makes dependency relationships explicit
+- Enables proper feature integration
+- Follows dependency injection principles
+- Ensures all features work correctly from first use
+
+**Consequences**:
+- ✅ Language detection now works correctly
+- ✅ User adaptation features fully functional
+- ✅ No null pointer exceptions during initialization
+- ✅ Clear dependency chain documented in code
+- ⚠️ Must maintain correct order when adding new components
+- ⚠️ Adding new dependencies requires order review
+
+**Best Practice Established**:
+When adding new components to CleverKeysService initialization:
+1. Identify all dependencies (what does it need?)
+2. Place initialization AFTER all dependencies
+3. Pass dependencies explicitly via constructor/method parameters
+4. Document dependency chain in comments if complex
+
+**References**:
+- Commit: 6aab63a4
+- Files: CleverKeysService.kt lines 311-406 (onCreate initialization)
+- Related: WordPredictor.kt, LanguageDetector.kt, UserAdaptationManager.kt
 
 ---
 
