@@ -56,16 +56,30 @@
   - Documented all 8 changes
   - Result: 100% feature parity achieved
 
+**Theme Definitions Added** (Nov 15, 2025 - Continuation):
+- ✅ **themes.xml** - Created 4 missing theme style definitions (73 lines)
+  - **EverforestLight**: Light forest-inspired theme (#f8f5e4 keyboard, #e5e2d1 keys)
+  - **Cobalt**: Dark blue accent theme (#000000 keyboard, #78bfff activation)
+  - **Pine**: Dark green accent theme (#000000 keyboard, #74cc8a activation)
+  - **ePaperBlack**: High-contrast e-paper theme (1dp/5dp borders, #ffffff labels)
+
+- ✅ All themes synced with exact upstream color values
+- ✅ Build verified: APK compiles successfully (50MB)
+- ✅ Fixes compilation errors in Config.kt theme references
+
 **Commits**:
 - 2755037a - docs: add comprehensive upstream sync report
 - 9a69a76f - feat: sync all upstream changes (5 implementations)
 - cb0f6b74 - docs: mark upstream sync complete
+- f22cf5a1 - feat: add 4 new upstream themes (EverforestLight, Cobalt, Pine, ePaperBlack)
+- 4ceed0b7 - docs: update upstream sync report - all phases complete
 
-**Files Modified**: 4 files, 22 insertions, 6 deletions
-- Config.kt (clipboard_history_duration, 4 themes)
+**Files Modified**: 5 files, 95 insertions, 6 deletions
+- Config.kt (clipboard_history_duration, 4 theme mappings)
 - ClipboardHistoryService.kt (dynamic TTL)
 - Keyboard2View.kt (insets fix)
 - KeyboardData.kt (empty row handling)
+- themes.xml (4 theme definitions)
 
 **Result**: ✅ **CleverKeys now has 100% feature parity with upstream Unexpected-Keyboard**
 
