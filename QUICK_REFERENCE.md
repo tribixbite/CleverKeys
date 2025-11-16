@@ -75,6 +75,11 @@ Settings → System → Languages & input → On-screen keyboard → Manage keyb
 4. → Check logs: `logcat | grep CleverKeys`
 
 ### Keyboard Crashes
+⚠️ **Note**: Critical keyboard crash bug was fixed on Nov 16, 2025!
+- Issue: Duplicate function caused keys to not display
+- Status: ✅ FIXED - Keys should now display correctly
+
+If crashes still occur:
 ```bash
 # Get crash logs
 logcat -d | grep -E "(CleverKeys|FATAL|AndroidRuntime)" > crash.log
@@ -101,6 +106,7 @@ logcat | grep -E "(CleverKeys|FATAL)" > crash2.log
 - BigramModel (context-aware: "I am" → "the", "going")
 - Spell checking (red underlines)
 - Multi-language (20 languages)
+- Dictionary Manager (3-tab UI: User Words | Built-in 10k | Disabled) ⭐ NEW
 - Clipboard history
 - Settings system
 
@@ -122,7 +128,8 @@ logcat | grep -E "(CleverKeys|FATAL)" > crash2.log
 
 | Priority | File | Purpose |
 |----------|------|---------|
-| **START** | `PROJECT_COMPLETE.md` | Full project summary |
+| **START** | `PRODUCTION_READY_NOV_16_2025.md` | ⭐ Production readiness report |
+| **SESSION** | `EXTENDED_SESSION_NOV_16_2025.md` | Latest session summary (Nov 16) |
 | **ENABLE** | `TESTING_NEXT_STEPS.md` | Step-by-step activation |
 | **TEST** | `MANUAL_TESTING_GUIDE.md` | Systematic testing (5 priorities) |
 | **CHECK** | `TESTING_CHECKLIST.md` | Feature checklist (50+ items) |
@@ -219,7 +226,7 @@ Template in `INSTALLATION_STATUS.md`:
 - **Languages**: 20 supported
 - **Layouts**: 100+ keyboard layouts
 - **Tests**: 1,612 lines documentation
-- **APK**: 50MB, 0 compilation errors
+- **APK**: 52MB, 0 compilation errors
 
 ---
 
@@ -233,5 +240,5 @@ Template in `INSTALLATION_STATUS.md`:
 
 ---
 
-**Last Updated**: 2025-11-14 06:35
-**Status**: ✅ READY - Enable keyboard and start testing!
+**Last Updated**: 2025-11-16 15:45
+**Status**: ✅ PRODUCTION READY - All critical work complete!
