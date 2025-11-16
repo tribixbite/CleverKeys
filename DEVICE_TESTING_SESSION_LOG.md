@@ -30,15 +30,15 @@
 ### Installation Steps
 - [x] APK copied to Downloads folder (50MB)
 - [x] termux-open executed successfully
-- [ ] Android installer UI appeared
-- [ ] User approved installation
-- [ ] Installation completed successfully
-- [ ] CleverKeys appears in app list
-- [ ] CleverKeys appears in keyboard settings
+- [x] Android installer UI appeared
+- [x] User approved installation
+- [x] Installation completed successfully (verified via pm path + timestamp)
+- [x] CleverKeys package installed: tribixbite.keyboard2.debug
+- [ ] CleverKeys enabled in keyboard settings (requires manual verification)
 
-**Installation Result**: ⬜ Success / ⬜ Failed
+**Installation Result**: ✅ **SUCCESS** (Confirmed: 51MB APK installed Nov 16 @ 1:18 PM)
 
-**Notes**:
+**Notes**: Installation verified via package manager. Installed APK size (51MB) and timestamp (Nov 16 13:18) match the new build with Bug #471 and #472 fixes.
 
 
 ---
