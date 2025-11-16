@@ -2,7 +2,78 @@
 
 **Porting Progress: 251/251 Java files reviewed (100.0%) 🎉 REVIEW COMPLETE!**
 
-## Latest Session (Nov 14, 2025 - Part 6.4) - COMPREHENSIVE TOOLING COMPLETE ✅
+## Latest Session (Nov 14, 2025 - Part 6.10) - UPSTREAM SYNC COMPLETE ✅
+
+### ✅ UPSTREAM SYNCHRONIZATION - 100% FEATURE PARITY ACHIEVED
+
+**Achievement**: Analyzed and implemented ALL changes from Julow/Unexpected-Keyboard (200+ commits since Sept 2024)
+
+**Analysis Scope**:
+- **Commits analyzed**: 200+ from upstream since September 2024
+- **Java files changed**: 7 files identified
+- **Changes required**: 8 discrete modifications (5 implemented, 3 already present)
+
+**Implemented Changes** (5 new features):
+1. **Config.kt** - Added `clipboard_history_duration` setting
+   - Configurable clipboard TTL (default: 5 minutes, -1 for never expire)
+   - Property added at line 168
+   - Loading logic at line 328
+
+2. **Config.kt** - Added 4 new themes
+   - EverforestLight (line 447)
+   - Cobalt (line 448)
+   - Pine (line 449)
+   - ePaperBlack (line 450)
+
+3. **ClipboardHistoryService.kt** - Dynamic TTL implementation
+   - Removed hardcoded `HISTORY_TTL_MS` constant (was 5 minutes)
+   - Now reads from `Config.clipboard_history_duration` (lines 191-197)
+   - Supports Long.MAX_VALUE for never-expiring entries
+
+4. **Keyboard2View.kt** - Fixed insets bug (upstream #1127)
+   - Corrected width calculation that excluded system insets
+   - Added `windowWidth += insetsLeft + insetsRight` (line 527)
+   - Prevents keyboard width errors on devices with insets
+
+5. **KeyboardData.kt** - Allow empty rows
+   - Added height validation (line 450): 0.0f for empty rows, min 0.5f otherwise
+   - Matches upstream: `max(h, keys.isEmpty() ? 0.0f : 0.5f)`
+
+**Already Implemented** (3 changes - no action needed):
+6. **Config.kt** - `slider_sensitivity` setting already at line 282
+7. **Pointers.kt** - Slider detection threshold already at line 561
+8. **Pointers.kt** - No redundant onPointerDown (never existed in Kotlin)
+
+**Documentation**:
+- ✅ Created **UPSTREAM_SYNC_REPORT.md** (373 lines)
+  - Complete analysis of all upstream changes
+  - Detailed implementation checklist
+  - Phase-by-phase breakdown
+  - Completion status documented
+
+- ✅ Updated **critical.md**
+  - Marked Priority 0 upstream sync as COMPLETE
+  - Documented all 8 changes
+  - Result: 100% feature parity achieved
+
+**Commits**:
+- 2755037a - docs: add comprehensive upstream sync report
+- 9a69a76f - feat: sync all upstream changes (5 implementations)
+- cb0f6b74 - docs: mark upstream sync complete
+
+**Files Modified**: 4 files, 22 insertions, 6 deletions
+- Config.kt (clipboard_history_duration, 4 themes)
+- ClipboardHistoryService.kt (dynamic TTL)
+- Keyboard2View.kt (insets fix)
+- KeyboardData.kt (empty row handling)
+
+**Result**: ✅ **CleverKeys now has 100% feature parity with upstream Unexpected-Keyboard**
+
+**Next Action**: Continue with testing and validation
+
+---
+
+## Previous Session (Nov 14, 2025 - Part 6.4) - COMPREHENSIVE TOOLING COMPLETE ✅
 
 ### ✅ DIAGNOSTICS & VERIFICATION SUITE - COMPLETE TESTING INFRASTRUCTURE
 
