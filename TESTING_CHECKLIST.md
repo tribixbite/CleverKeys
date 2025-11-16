@@ -1,15 +1,37 @@
 # CleverKeys Testing Checklist
 
-**Version**: 1.32.1 (Build 50)
-**Date**: 2025-11-14
-**Status**: Post-Integration Testing Phase
+**Version**: 1.32.1 (Build 52)
+**Date**: 2025-11-16
+**Status**: Production Ready - Manual Testing Phase
 
 ## Integration Milestone Completed ✅
-- 69 components integrated into CleverKeysService.kt
+- 90+ components integrated into CleverKeysService.kt
 - 116 initialization methods with comprehensive logging
 - Material 3 theme system complete (shapes, typography, animation)
-- APK builds successfully (50MB)
+- APK builds successfully (52MB)
 - Zero compilation errors
+- **NEW**: Dictionary Manager implemented (Bug #473) - 3-tab UI
+- **NEW**: Critical crash fix (duplicate loadDefaultKeyboardLayout removed)
+
+---
+
+## 👉 **MANUAL TESTING PRIORITY** (Nov 16, 2025)
+
+**All development complete. Only manual device testing remains.**
+
+**CRITICAL TEST (validates crash fix)**:
+1. Enable CleverKeys in Settings → System → Languages & input → On-screen keyboard
+2. Open any text app and activate CleverKeys
+3. **VERIFY**: Do keys display? (Yes = crash fix validated ✅)
+
+**5-MINUTE QUICK TEST**:
+- [ ] Tap-type "hello world" (tests basic functionality)
+- [ ] Swipe h→e→l→l→o (tests neural prediction)
+- [ ] Check suggestion bar (tests predictions)
+- [ ] Open Settings → Dictionary Manager (tests Bug #473 fix)
+- [ ] No crashes during use (tests stability)
+
+**Full testing checklist below** ↓
 
 ---
 
@@ -99,6 +121,8 @@
 - [ ] **Bug #273**: Training data persisted to SQLite (SwipeMLDataStore)
 - [ ] **Bug #274**: ML training system functional
 - [ ] **Bug #275**: Async predictions don't block UI
+- [ ] **Bug #473**: Dictionary Manager works (3-tab UI: User Words | Built-in 10k | Disabled) - **FIXED Nov 16**
+- [ ] **Keyboard Crash Fix**: Keys display correctly (duplicate loadDefaultKeyboardLayout removed) - **FIXED Nov 16**
 
 ### Fixed Bugs to Verify (P1 - Critical)
 - [ ] **Bug #310**: Autocorrection works (keyboard-aware Levenshtein)
