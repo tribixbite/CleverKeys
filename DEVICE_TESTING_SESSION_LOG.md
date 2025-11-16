@@ -1,9 +1,14 @@
-# Device Testing Session Log - CleverKeys v1.0
+# Device Testing Session Log - CleverKeys v1.0 (WITH FIXES)
 
 **Session Date**: November 16, 2025
-**APK Version**: CleverKeys-v1.0-debug.apk (50MB)
-**Build Date**: November 16, 2025 @ 10:29 AM
-**Testing Status**: 🔄 IN PROGRESS
+**APK Version**: CleverKeys-v1.0-with-fixes.apk (51MB)
+**Build Date**: November 16, 2025 @ 1:17 PM
+**Testing Status**: 🔄 READY FOR TESTING
+
+**Features Included in This Build**:
+- ✅ Bug #471 FIX: Clipboard search/filter (Commit b791dd64)
+- ✅ Bug #472 FIX: Dictionary management UI (Commit 0d1591dc)
+- ✅ All previous features from 100% code review
 
 ---
 
@@ -18,9 +23,9 @@
 
 ## 🚀 Installation Status
 
-**APK Location**: `~/storage/shared/Download/CleverKeys-v1.0-debug.apk`
+**APK Location**: `~/storage/shared/Download/CleverKeys-v1.0-with-fixes.apk`
 **Installation Method**: termux-open (Android package installer)
-**Installation Triggered**: ✅ Yes (Nov 16, 2025 12:28 PM)
+**Installation Triggered**: ✅ Yes (Nov 16, 2025 1:18 PM)
 
 ### Installation Steps
 - [x] APK copied to Downloads folder (50MB)
@@ -162,7 +167,7 @@
 
 ---
 
-#### 2.6 Clipboard Management
+#### 2.6 Clipboard Management (Basic)
 - [ ] Copy text from another app
 - [ ] Access clipboard history from keyboard
 - [ ] Paste from clipboard history
@@ -171,6 +176,123 @@
 - [ ] Clipboard persists across keyboard closures
 
 **Result**: ⬜ Pass / ⬜ Fail
+
+**Notes**:
+
+
+---
+
+#### 2.7 Clipboard Search/Filter (Bug #471 FIX - CRITICAL)
+**This is a NEW feature added in this build - must be tested!**
+
+- [ ] Open clipboard history (should have 5+ items for testing)
+- [ ] Verify search field appears at top of clipboard view
+- [ ] Search field shows hint text "Search clipboard…"
+- [ ] Type partial text in search field (e.g., "test")
+- [ ] Verify clipboard items filter in real-time as you type
+- [ ] Verify only matching items shown
+- [ ] Test case-insensitive matching:
+  - [ ] Clipboard has "Hello World"
+  - [ ] Search for "hello" (lowercase) → Should find "Hello World"
+  - [ ] Search for "WORLD" (uppercase) → Should find "Hello World"
+- [ ] Type nonsense query (e.g., "xyzabc123")
+- [ ] Verify "No matching items found" message appears
+- [ ] Clear search field
+- [ ] Verify all items shown again
+- [ ] Pin/delete operations work with search active
+- [ ] Empty clipboard shows correct message (not "No results")
+
+**Search Performance**:
+- [ ] Filtering is instant (<100ms)
+- [ ] No lag with 20+ clipboard items
+- [ ] UI remains responsive during search
+
+**Result**: ⬜ Pass / ⬜ Fail
+
+**Critical Issues Found**:
+
+
+**Notes**:
+
+
+---
+
+#### 2.8 Dictionary Management (Bug #472 FIX - CRITICAL)
+**This is a NEW feature added in this build - must be tested!**
+
+**2.8.1 Access Dictionary Manager**:
+- [ ] Open CleverKeys Settings
+- [ ] Verify "📖 Dictionary" section appears
+- [ ] Section shows description text
+- [ ] Tap "Manage Custom Words" button
+- [ ] DictionaryManagerActivity opens
+
+**2.8.2 Empty State**:
+- [ ] First time: "No custom words yet" message shown
+- [ ] "Add Your First Word" button visible
+- [ ] Word count shows "0 custom words"
+- [ ] FAB (+ button) visible at bottom right
+
+**2.8.3 Add Word - Validation**:
+- [ ] Tap FAB or "Add Your First Word" button
+- [ ] "Add Custom Word" dialog opens
+- [ ] Try adding empty word → Error: "Word cannot be empty"
+- [ ] Try adding "A" (1 char) → Error: "Word must be at least 2 characters"
+- [ ] Add "Anthropic" → Success
+- [ ] Toast message: "Added 'Anthropic' to dictionary"
+- [ ] Word appears in list
+- [ ] Word count updates to "1 custom words"
+- [ ] Try adding "Anthropic" again → Error: "This word is already in your dictionary"
+
+**2.8.4 Word List Display**:
+- [ ] Add multiple words: "Kubernetes", "PostgreSQL", "Docker", "React"
+- [ ] Verify words appear alphabetically sorted
+- [ ] Each word shows:
+  - [ ] Word text (left side)
+  - [ ] Delete button (red trash icon, right side)
+- [ ] Word count updates correctly
+- [ ] List scrolls smoothly (test with 20+ words)
+
+**2.8.5 Delete Word**:
+- [ ] Tap delete button on "Anthropic"
+- [ ] Word removed from list immediately
+- [ ] Toast message: "Removed 'Anthropic' from dictionary"
+- [ ] Word count decreases
+- [ ] No confirmation dialog (immediate delete)
+
+**2.8.6 Integration with Predictions**:
+- [ ] Add custom word "CleverKeys"
+- [ ] Open any text field
+- [ ] Type "Clever" or "Clev"
+- [ ] Verify "CleverKeys" appears in prediction/suggestion bar
+- [ ] Delete "CleverKeys" from dictionary
+- [ ] Type "Clever" again
+- [ ] Verify "CleverKeys" NO LONGER appears in predictions
+
+**2.8.7 Navigation**:
+- [ ] Back button returns to Settings
+- [ ] System back button works
+- [ ] Activity title shows "Custom Dictionary"
+- [ ] Can reopen dictionary manager (words persist)
+
+**2.8.8 Persistence**:
+- [ ] Add 5 words
+- [ ] Close dictionary manager
+- [ ] Close Settings
+- [ ] Reboot device (optional but recommended)
+- [ ] Reopen dictionary manager
+- [ ] Verify all 5 words still present
+
+**2.8.9 Performance**:
+- [ ] Add 50 words
+- [ ] List renders quickly (<500ms)
+- [ ] Scrolling is smooth (60fps target)
+- [ ] Search/add/delete operations remain instant
+
+**Result**: ⬜ Pass / ⬜ Fail
+
+**Critical Issues Found**:
+
 
 **Notes**:
 
