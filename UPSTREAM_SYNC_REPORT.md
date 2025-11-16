@@ -279,17 +279,17 @@ height = max(h, if (keys.isEmpty()) 0.0f else 0.5f)
 ## 📝 IMPLEMENTATION CHECKLIST
 
 ### Phase 1: Critical Settings (HIGH PRIORITY)
-- [ ] Add `clipboardHistoryDuration` to Config.kt
-- [ ] Add `sliderSensitivity` to Config.kt
-- [ ] Update ClipboardHistoryService.kt with configurable TTL
-- [ ] Fix Keyboard2View.kt insets bug
-- [ ] Add 4 new themes to Config.kt
-- [ ] Create 4 theme XML files
+- [x] Add `clipboardHistoryDuration` to Config.kt
+- [x] Add `sliderSensitivity` to Config.kt (already present)
+- [x] Update ClipboardHistoryService.kt with configurable TTL
+- [x] Fix Keyboard2View.kt insets bug
+- [x] Add 4 new themes to Config.kt
+- [x] Create 4 theme XML files
 
 ### Phase 2: Behavior Improvements (MEDIUM PRIORITY)
-- [ ] Update Pointers.kt slider detection threshold
-- [ ] Remove redundant onPointerDown call in Pointers.kt
-- [ ] Update KeyboardData.kt to allow empty rows
+- [x] Update Pointers.kt slider detection threshold (already present)
+- [x] Remove redundant onPointerDown call in Pointers.kt (never existed in Kotlin)
+- [x] Update KeyboardData.kt to allow empty rows
 
 ### Phase 3: Data Updates (LOW PRIORITY)
 - [ ] Update ComposeKeyData with latest compose sequences
@@ -364,7 +364,14 @@ height = max(h, if (keys.isEmpty()) 0.0f else 0.5f)
 3. Keyboard2View.kt (fixed insets calculation)
 4. KeyboardData.kt (added height validation for empty rows)
 
-**Total Changes**: 4 files, 22 insertions, 6 deletions
+**Total Changes**: 5 files, 95 insertions, 6 deletions
+
+**Theme Definitions Added** (Commit: f22cf5a1):
+- themes.xml: Added 73 lines for 4 new themes
+  - EverforestLight: Light forest-inspired theme
+  - Cobalt: Dark blue accent theme
+  - Pine: Dark green accent theme
+  - ePaperBlack: High-contrast e-paper optimized theme
 
 ---
 
