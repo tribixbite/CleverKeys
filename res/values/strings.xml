@@ -177,6 +177,8 @@
 
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_history_title">Clipboard History</string>
+    <string name="clipboard_search_hint">Search clipboard…</string>
+    <string name="clipboard_no_results">No matching items found</string>
     <string name="clipboard_clear_all">Clear all</string>
     <string name="clipboard_close">Close</string>
     <string name="clipboard_item_lines">%1$d lines</string>

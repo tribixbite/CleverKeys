@@ -2,6 +2,8 @@ package tribixbite.keyboard2
 
 import android.content.Context
 import android.graphics.Color
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.View
 import android.widget.*
@@ -10,8 +12,10 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 /**
- * Clipboard history view with reactive updates
+ * Clipboard history view with reactive updates and search/filter
  * Kotlin implementation with Flow-based data binding
+ *
+ * Fix for Bug #471: Added search/filter functionality for clipboard history
  */
 class ClipboardHistoryView(
     context: Context,
@@ -24,6 +28,10 @@ class ClipboardHistoryView(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var onItemSelected: ((String) -> Unit)? = null
+
+    // Store all clipboard items for filtering (Bug #471 fix)
+    private var allClipboardItems: List<String> = emptyList()
+    private var searchEditText: EditText? = null
     
     init {
         orientation = VERTICAL
@@ -40,6 +48,7 @@ class ClipboardHistoryView(
     
     /**
      * Setup initial view
+     * Bug #471 fix: Added search field for filtering clipboard items
      */
     private fun setupHistoryView() {
         // Header
@@ -49,17 +58,36 @@ class ClipboardHistoryView(
             setPadding(16, 16, 16, 8)
             setTypeface(typeface, android.graphics.Typeface.BOLD)
         })
-        
-        // Scroll view for history items
+
+        // Bug #471 fix: Search/Filter field
+        searchEditText = EditText(context).apply {
+            hint = context.getString(R.string.clipboard_search_hint)
+            setPadding(16, 8, 16, 8)
+            setSingleLine(true)
+
+            // Real-time filtering as user types
+            addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: Editable?) {
+                    filterClipboardItems(s?.toString() ?: "")
+                }
+            })
+
+            layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
+        }
+        addView(searchEditText)
+
+        // Scroll view for history items (now filtered)
         addView(ScrollView(context).apply {
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f)
-            
+
             addView(LinearLayout(context).apply {
                 orientation = VERTICAL
                 id = android.R.id.list // Use as container for history items
             })
         })
-        
+
         // Control buttons
         addView(createControlButtons())
     }
@@ -96,6 +124,7 @@ class ClipboardHistoryView(
     
     /**
      * Observe clipboard history changes
+     * Bug #471 fix: Store all items for filtering
      */
     private fun observeClipboardHistory() {
         scope.launch {
@@ -104,21 +133,58 @@ class ClipboardHistoryView(
                 ?.flowOn(Dispatchers.Default)
                 ?.collect { historyItems ->
                     withContext(Dispatchers.Main) {
-                        updateHistoryDisplay(historyItems)
+                        // Store all items for filtering (Bug #471)
+                        allClipboardItems = historyItems
+                        // Apply current filter
+                        val query = searchEditText?.text?.toString() ?: ""
+                        filterClipboardItems(query)
                     }
                 }
         }
     }
-    
+
     /**
-     * Update history display
+     * Filter clipboard items based on search query
+     * Bug #471 fix: Real-time filtering of clipboard history
      */
-    private fun updateHistoryDisplay(items: List<String>) {
+    private fun filterClipboardItems(query: String) {
+        val filtered = if (query.isBlank()) {
+            allClipboardItems
+        } else {
+            allClipboardItems.filter { item ->
+                item.contains(query, ignoreCase = true)
+            }
+        }
+        updateHistoryDisplay(filtered, query)
+    }
+
+    /**
+     * Update history display with filtered items
+     * Bug #471 fix: Show "No results" message when filter returns empty
+     */
+    private fun updateHistoryDisplay(items: List<String>, searchQuery: String = "") {
         val container = findViewById<LinearLayout>(android.R.id.list) ?: return
         container.removeAllViews()
 
-        items.forEach { item ->
-            container.addView(createHistoryItemView(item))
+        if (items.isEmpty()) {
+            // Show "No results" message when filtered list is empty
+            val message = if (searchQuery.isNotBlank()) {
+                context.getString(R.string.clipboard_no_results)
+            } else {
+                context.getString(R.string.clipboard_empty_title)
+            }
+
+            container.addView(TextView(context).apply {
+                text = message
+                textSize = 14f
+                setPadding(16, 32, 16, 32)
+                setTextColor(Color.GRAY)
+                gravity = android.view.Gravity.CENTER
+            })
+        } else {
+            items.forEach { item ->
+                container.addView(createHistoryItemView(item))
+            }
         }
     }
     
