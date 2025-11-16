@@ -319,4 +319,37 @@
     <string name="settings_legacy_calibration_button">📊 Neural Calibration</string>
     <string name="settings_legacy_version">CleverKeys v2.0 (Kotlin)\n\nNote: Compose UI unavailable. Using legacy settings.</string>
     <string name="settings_legacy_error">Settings UI failed to load: %1$s</string>
+
+    <!-- Dictionary Management Section (Bug #472 fix) -->
+    <string name="settings_section_dictionary">📖 Dictionary</string>
+    <string name="settings_dictionary_manage_button">Manage Custom Words</string>
+    <string name="settings_dictionary_desc">Add custom words to improve predictions for technical terms, names, and specialized vocabulary</string>
+
+    <!-- Dictionary Manager Activity -->
+    <string name="dictionary_title">Custom Dictionary</string>
+    <string name="dictionary_word_count">%1$d custom words</string>
+    <string name="dictionary_back">Back</string>
+    <string name="dictionary_add_word">Add Word</string>
+    <string name="dictionary_delete_word">Delete</string>
+    <string name="dictionary_empty_title">No custom words yet</string>
+    <string name="dictionary_empty_desc">Add words to improve predictions for terms not in the default dictionary</string>
+    <string name="dictionary_add_first_word">Add Your First Word</string>
+
+    <!-- Add Word Dialog -->
+    <string name="dialog_add_word_title">Add Custom Word</string>
+    <string name="dialog_add_word_hint">Enter word</string>
+    <string name="dialog_add_word_confirm">Add</string>
+    <string name="dialog_add_word_error_empty">Word cannot be empty</string>
+    <string name="dialog_add_word_error_too_short">Word must be at least 2 characters</string>
+    <string name="dialog_add_word_error_duplicate">This word is already in your dictionary</string>
+
+    <!-- Dictionary Error Messages -->
+    <string name="dictionary_error_init">Failed to initialize dictionary manager</string>
+    <string name="dictionary_error_load">Failed to load custom words</string>
+    <string name="dictionary_error_add">Failed to add word</string>
+    <string name="dictionary_error_delete">Failed to delete word</string>
+
+    <!-- Dictionary Toast Messages -->
+    <string name="dictionary_toast_word_added">Added \"%1$s\" to dictionary</string>
+    <string name="dictionary_toast_word_deleted">Removed \"%1$s\" from dictionary</string>
 </resources>

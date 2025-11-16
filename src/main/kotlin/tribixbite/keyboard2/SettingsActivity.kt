@@ -382,6 +382,23 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }
 
+            // Dictionary Section (Bug #472 fix)
+            SettingsSection(stringResource(R.string.settings_section_dictionary)) {
+                Button(
+                    onClick = { openDictionaryManager() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.settings_dictionary_manage_button))
+                }
+
+                Text(
+                    text = stringResource(R.string.settings_dictionary_desc),
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
             // Advanced Section
             SettingsSection(stringResource(R.string.settings_section_advanced)) {
                 SettingsSwitch(
@@ -733,6 +750,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     private fun openCalibration() {
         startActivity(Intent(this, SwipeCalibrationActivity::class.java))
+    }
+
+    private fun openDictionaryManager() {
+        startActivity(Intent(this, DictionaryManagerActivity::class.java))
     }
 
     private fun resetAllSettings() {
