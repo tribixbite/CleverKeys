@@ -60,16 +60,28 @@ This file tracks bugs and missing features in the core keyboard logic (parsing, 
 - File 2: 23 critical (Keyboard2 ~800 lines missing)
 - File 4: 1 critical (Config.handler = null)
 - File 7: 8 critical (KeyEventHandler 22% missing - no macros, editing keys, sliders)
-- File 11: **11 CATASTROPHIC** (KeyModifier - modify() broken, 335 lines missing, 63% reduction)
+- File 11: **11 CATASTROPHIC → ✅ ALL FALSE** (KeyModifier - ✅ VERIFIED 2025-11-16: 192 lines functional, proper sealed classes, modify() works, modern Kotlin idioms)
+  - **Status**: ❌ FALSE - All 11 bugs are documentation errors
+  - **Evidence**: Sealed class hierarchy (Shift/Ctrl/Alt/Meta/Fn), ModifierState with active/locked/temp, applyToKey() working
+  - **Commits**: 68f381e4, 38d5d670, f95df799
+  - **Verification**: VERIFICATION_FILES_11_16_51.md
 - File 12: **✅ 0 bugs** (Modmap - PROPERLY IMPLEMENTED, improvements over Java)
 - File 13: **1 bug** (ComposeKey - ✅ FIXED Bug #75 flags hardcoded; ⏳ REMAINING: 90 lines unused code)
 - File 14: **✅ 0 bugs** (ComposeKeyData - ✅ FIXED with code generation: Bug #78 FIXED - 8659 states loaded from compose_data.bin)
 - File 15: **0 bugs** (Autocapitalisation - ❌ Bug #80 FALSE: trigger logic identical to Java)
-- File 16: **1 CATASTROPHIC** (ExtraKeys - 95% missing, architectural mismatch)
+- File 16: **1 CATASTROPHIC → ✅ FIXED** (ExtraKeys - ✅ VERIFIED 2025-11-16: 197 lines, Bug #266 P0 explicitly FIXED)
+  - **Status**: ✅ FIXED - Complete ExtraKeys system implementation
+  - **Evidence**: CustomExtraKeysPreference integrated, R.string resources used properly
+  - **Commits**: 22b9c323 (Bug #266 fix), 38f62d8f, 4cf39084
+  - **Verification**: VERIFICATION_FILES_11_16_51.md
 - File 17: **1 CRITICAL → 0 bugs** (DirectBootAwarePreferences - ✅ FIXED: device-protected storage, migration logic, full implementation)
 - File 18: **✅ 0 bugs** (Utils - ✅ EXEMPLARY! 7X expansion with enhancements)
 - File 20: **3 bugs → 0 bugs** (Logs - ✅ FIXED: TAG constant, debug_startup_input_view(), trace())
-- File 51: **4 CATASTROPHIC bugs** (R.kt - 💀 Manual stub instead of generated R class; CRITICAL - missing 95% resource types, wrong ID format, build system not generating R properly)
+- File 51: **4 CATASTROPHIC bugs → ✅ ALL FALSE** (R.kt - ✅ VERIFIED 2025-11-16: R class auto-generated correctly by Android build system)
+  - **Status**: ❌ FALSE - All 4 bugs are documentation errors, build system works correctly
+  - **Evidence**: No manual R.kt in src/main/, :processDebugResources succeeds, multiple files import tribixbite.keyboard2.R successfully, 50MB APK compiles
+  - **Note**: BuildConfig.kt is separate configuration object (not R class)
+  - **Verification**: VERIFICATION_FILES_11_16_51.md
 - File 52: **5 bugs** (Resources.kt - CRITICAL: entire file is band-aid for R.kt issue; HIGH: silent failures without logging; MEDIUM: wrong type handling for Int, catches all exceptions; LOW: inconsistent fallback API)
 - File 101: ✅ **ErrorHandling.java (est. 300-400 lines) vs ErrorHandling.kt (252 lines) - ✅ EXCELLENT**
 - File 105: ✅ **ConfigurationManager.java (est. 700-900 lines) vs ConfigurationManager.kt (513 lines) - ✅ EXCELLENT (CRITICAL memory leak Bug #291)**
