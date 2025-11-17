@@ -14,6 +14,32 @@ Users need a comprehensive, intuitive settings system to customize keyboard beha
 
 ---
 
+## 📋 Feature Parity Status (2025-11-16)
+
+**For complete analysis of missing settings compared to original Unexpected-Keyboard, see:**
+**[SETTINGS_COMPARISON_MISSING_ITEMS.md](../../SETTINGS_COMPARISON_MISSING_ITEMS.md)**
+
+### Current Status Summary:
+- **CleverKeys Implementation**: ~20 settings across 7 sections (50% parity)
+- **Original Unexpected-Keyboard**: 40+ settings across 4 categories
+- **Missing Settings**: ~25 settings requiring implementation
+- **Estimated Implementation Time**: 17-24 hours for 100% parity
+
+### Priority Breakdown:
+- **P1 - CRITICAL** (7-10 hours): Layout Manager UI, Extra Keys Configuration, Adaptive Layout Settings
+- **P2 - HIGH** (7-9 hours): Gesture Sensitivity, Long Press Config, Visual Customization, Spacing Controls
+- **P3 - MEDIUM** (3-5 hours): Number Row, NumPad, Borders, Pin Entry
+- **P4 - LOW** (30 min): Double Tap Shift for Caps Lock
+
+### CleverKeys Exclusive Features (Not in Original):
+- ✅ Neural Prediction Configuration (4 settings) - ONNX beam width, max length, confidence
+- ✅ Accessibility Enhancements (3 settings) - Sticky keys, voice guidance
+- ✅ Dictionary Manager UI - User dictionary management
+- ✅ Advanced Features - Debug mode, neural calibration
+- ✅ Material 3 Compose UI - Modern reactive settings interface
+
+---
+
 ## ⚠️ KNOWN ISSUES (From Historical Review)
 
 ### CRITICAL Issues (Fixed)

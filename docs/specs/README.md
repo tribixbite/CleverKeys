@@ -43,10 +43,12 @@ This directory contains feature specifications and architectural decision record
 ### Supporting System Specifications
 
 5. **[Settings System](./settings-system.md)** - P1
-   - Status: 🟡 Partially Implemented
+   - Status: 🟡 Partially Implemented (50% feature parity)
    - Covers: User preferences, theme settings, keyboard behavior
    - Recent Updates: ✅ User preferences integration complete (2025-11-14)
-   - Outstanding: Settings UI improvements, export/import functionality
+   - Recent Updates: ✅ Comprehensive feature parity analysis complete (2025-11-16)
+   - Outstanding: ~25 missing settings from original (see [SETTINGS_COMPARISON_MISSING_ITEMS.md](../../SETTINGS_COMPARISON_MISSING_ITEMS.md))
+   - Implementation Time: 17-24 hours for 100% parity
 
 6. **[UI & Material 3 Modernization](./ui-material3-modernization.md)** - P2
    - Status: ✅ Complete (All phases implemented - updated 2025-11-16)
@@ -127,7 +129,7 @@ This directory contains feature specifications and architectural decision record
 
 - **P1 (High)**: 2 specs (Layout, Settings)
   - Layout: ✅ Implemented (Bug #266 resolved)
-  - Settings: 🟡 Partially (user prefs ✅ complete, UI enhancements pending)
+  - Settings: 🟡 Partially (50% parity: ~20/45 settings, 17-24h remaining for 100%)
 
 - **P2 (Medium)**: 3 specs (UI, Performance, Testing)
   - UI: ✅ Implemented
