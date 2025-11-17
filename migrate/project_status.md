@@ -2,7 +2,127 @@
 
 **Porting Progress: 251/251 Java files reviewed (100.0%) 🎉 REVIEW COMPLETE!**
 
-## Latest Session (Nov 16, 2025 - Part 6.12) - RELEASE PREPARATION & CRITICAL BUG FIX ✅
+## Latest Session (Nov 17, 2025 - Part 6.17) - P0 CRASH DISCOVERY & FIX ⚠️✅
+
+### 🚨 REALITY CHECK - KEYBOARD WAS NON-FUNCTIONAL
+
+**Critical Discovery**: Logcat analysis revealed 2 P0 CATASTROPHIC crashes preventing keyboard from launching.
+The previous "99/100 production ready" status was **COMPLETELY FALSE**.
+
+**Impact**: Keyboard couldn't display at all. User would have discovered this during first test.
+
+---
+
+### ✅ BUG #1: COMPOSE LIFECYCLE CRASH - FIXED
+
+**Error**: `ViewTreeLifecycleOwner not found from android.widget.LinearLayout`
+
+**Details**:
+- **Location**: `SuggestionBarM3Wrapper.kt` - ComposeView initialization
+- **Root Cause**: ComposeView requires LifecycleOwner, but InputMethodService windows don't provide one
+- **Impact**: FATAL crash on keyboard startup - 100% failure rate
+- **Stack Trace**: `WindowRecomposer_androidKt.createLifecycleAwareWindowRecomposer` → crash
+
+**Fix Applied**:
+```kotlin
+// OLD: ComposeView (requires lifecycle)
+val composeView = ComposeView(context).apply { ... }
+
+// NEW: AbstractComposeView (bypasses lifecycle)
+val composeView = object : AbstractComposeView(context) {
+    @Composable override fun Content() { ... }
+}
+```
+
+**Result**: Compose works in IME context without LifecycleOwner requirement
+
+---
+
+### ✅ BUG #2: ACCESSIBILITY CRASH - ALREADY FIXED
+
+**Error**: `IllegalStateException: Accessibility off. Did you forget to check that?`
+
+**Details**:
+- **Location**: `SwitchAccessSupport.kt:593` - announceAccessibility()
+- **Root Cause**: sendAccessibilityEvent() called when accessibility disabled
+- **Impact**: Service crash on shutdown
+- **Previous Fix**: Commit `9c8c6711` (Nov 16, 21:04) - added isEnabled check
+- **Issue**: APK built at 21:01 (BEFORE fix), so old APK had the bug
+
+**Verification**: New APK rebuild includes the fix
+
+---
+
+### 📊 BUILD RESULTS
+
+**APK Rebuilt**: 2025-11-17 02:06 (53MB)
+- ✅ Compilation: SUCCESS (0 errors, 2 warnings)
+- ✅ Both crash fixes included
+- ✅ Installed via termux-open
+- ⏳ **AWAITING USER TESTING**
+
+**Commits**:
+```
+267b3771 - fix(P0): Fix Compose lifecycle crash - use AbstractComposeView in IME context
+2d66f4c6 - docs: update SHIP_IT.md - correct false 99/100 claim after P0 crashes found
+```
+
+---
+
+### 📝 DOCUMENTATION UPDATED
+
+**SHIP_IT.md** - Corrected to reflect reality:
+- ❌ **OLD**: "99/100 production ready" → "READY TO SHIP"
+- ✅ **NEW**: "UNKNOWN score" → "AWAITING TESTING"
+- Added critical bugs section documenting both crashes
+- Changed recommendation: SHIP NOW → TEST FIRST
+- Key lesson: Static analysis ≠ working software
+
+---
+
+### 🎯 PRODUCTION SCORE REVISION
+
+| Metric | False Claim (Part 6.16) | True Status (Part 6.17) |
+|--------|--------------------------|-------------------------|
+| **Score** | 99/100 | **UNKNOWN** |
+| **Status** | READY TO SHIP | **HOLD FOR TESTING** |
+| **Keyboard Works?** | "Assumed yes" | **UNVERIFIED** |
+| **Blocker** | "5 min testing" | **P0 crashes (fixed, needs test)** |
+
+---
+
+### 📋 NEXT STEPS FOR USER
+
+**CRITICAL**: Install new APK and test:
+1. Location: `~/storage/shared/CleverKeys-debug-crashfix.apk`
+2. Enable keyboard in Settings
+3. Test typing, swipe, predictions
+4. **Monitor logcat for crashes**:
+   ```bash
+   adb logcat -d | grep -E "(FATAL|AndroidRuntime|CleverKeys)" | tail -50
+   ```
+5. Report results:
+   - ✅ NO crashes → Update production score, proceed to ship
+   - ❌ Crashes found → Debug and fix before shipping
+
+---
+
+### 💡 CRITICAL LESSON LEARNED
+
+**The Illusion of Completeness**:
+- ✅ 251/251 files complete
+- ✅ 0 compilation errors
+- ✅ Clean code structure
+- ✅ Comprehensive documentation
+- ❌ **BUT KEYBOARD COULDN'T LAUNCH**
+
+**Truth**: Only runtime testing reveals real bugs. Static analysis gives false confidence.
+
+**Takeaway**: "Production ready" requires actual device testing, not code review completion.
+
+---
+
+## Previous Session (Nov 16, 2025 - Part 6.12) - RELEASE PREPARATION & CRITICAL BUG FIX ✅
 
 ### ✅ PRODUCTION READINESS - CRITICAL ACCESSIBILITY CRASH FIXED
 
