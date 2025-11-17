@@ -1,6 +1,6 @@
 # CleverKeys Documentation - Table of Contents
 
-**Last Updated**: 2025-11-14
+**Last Updated**: 2025-11-16
 **Review Status**: Files 251 of 251 (100% complete) ✅
 
 ## 📋 Quick Navigation
@@ -64,6 +64,13 @@
 | `MANUAL_TESTING_GUIDE.md` | Manual testing procedures | ✅ Active |
 | `TESTING_CHECKLIST.md` | Feature checklist | ✅ Active |
 | `test-keyboard-automated.sh` | ADB testing script | ✅ Active |
+
+#### Session Summaries
+| File | Purpose | Status |
+|------|---------|--------|
+| `SESSION_SUMMARY_100_PERCENT_PARITY_2025-11-16.md` | 100% settings parity achievement (3 sessions) | ✅ Complete |
+| `SESSION_SUMMARY_SETTINGS_IMPLEMENTATION_2025-11-16.md` | Initial settings implementation (Session 1) | ✅ Complete |
+| `PRODUCTION_READY_NOV_16_2025.md` | Production readiness report (95/100, Grade A+) | ✅ Complete |
 
 #### Review Files (Files 82-85)
 | File | Purpose | Status |
