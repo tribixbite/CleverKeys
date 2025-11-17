@@ -328,10 +328,14 @@ CleverKeys is based on [Unexpected-Keyboard](https://github.com/Julow/Unexpected
 
 ## 📞 **Support**
 
-- **Documentation**: Start with [`00_START_HERE_FIRST.md`](00_START_HERE_FIRST.md)
-- **Troubleshooting**: See [`INSTALLATION_STATUS.md`](INSTALLATION_STATUS.md)
-- **Logs**: `logcat | grep CleverKeys`
-- **Bug Reports**: Template in `INSTALLATION_STATUS.md`
+**Need help?** See [`SUPPORT.md`](SUPPORT.md) for complete support information.
+
+**Quick Links**:
+- 📖 **[User Manual](USER_MANUAL.md)** - Complete guide
+- ❓ **[FAQ](FAQ.md)** - 80+ answered questions
+- 🐛 **[Bug Reports](https://github.com/OWNER/cleverkeys/issues/new?template=bug_report.yml)** - Report issues
+- 💬 **[Discussions](https://github.com/OWNER/cleverkeys/discussions)** - Ask questions
+- 🔒 **[Security](SECURITY.md)** - Report vulnerabilities privately
 
 ---
 
