@@ -17,7 +17,7 @@
 **New Features**: ✅ Dictionary Manager + 100% Settings Parity (45/45)
 **Performance**: ✅ Verified (hardware accel + 90+ cleanup)
 **Production Score**: ✅ **95/100 (Grade A+)**
-**Documentation**: ✅ 6,600+ lines
+**Documentation**: ✅ 7,200+ lines
 **Automation**: ✅ Automated verification (18/18 checks pass)
 
 ### 👉 **START HERE**: [`00_START_HERE_FIRST.md`](00_START_HERE_FIRST.md)
@@ -159,12 +159,24 @@ Once CleverKeys is active:
 - [`INDEX.md`](INDEX.md) - Complete documentation index (40+ files organized)
 - [`SCRIPTS_REFERENCE.md`](SCRIPTS_REFERENCE.md) - Complete guide to all 25 shell scripts
 
+### 📖 **User Documentation** (2,590 lines)
+- [`USER_MANUAL.md`](USER_MANUAL.md) - **Comprehensive guide** (12 sections, 70+ subsections)
+- [`FAQ.md`](FAQ.md) - Frequently asked questions (80+ Q&A pairs)
+- [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) - Privacy commitment and compliance
+- [`RELEASE_NOTES_v1.0.0.md`](RELEASE_NOTES_v1.0.0.md) - Version 1.0.0 features
+
 ### 🧪 **Testing Guides** (1,849 lines)
 - [`PROJECT_COMPLETE.md`](PROJECT_COMPLETE.md) - Full completion summary
 - [`MANUAL_TESTING_GUIDE.md`](MANUAL_TESTING_GUIDE.md) - Systematic testing (5 priorities)
 - [`TESTING_CHECKLIST.md`](TESTING_CHECKLIST.md) - 50+ item checklist
 - [`INSTALLATION_STATUS.md`](INSTALLATION_STATUS.md) - Troubleshooting guide
 - [`TESTING_NEXT_STEPS.md`](TESTING_NEXT_STEPS.md) - Step-by-step activation
+
+### 🤝 **Community & Contributing**
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) - How to contribute (code, docs, testing)
+- [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) - Community guidelines and standards
+- [`CHANGELOG.md`](CHANGELOG.md) - Version history and changes
+- [`.github/pull_request_template.md`](.github/pull_request_template.md) - PR submission template
 
 ### 📊 **Project Documentation**
 - [`migrate/project_status.md`](migrate/project_status.md) - Complete development history (3,460+ lines)
