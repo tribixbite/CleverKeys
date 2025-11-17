@@ -621,6 +621,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Input Behavior Section
             SettingsSection(stringResource(R.string.settings_section_input)) {
+                // Keyboard Layouts Manager button
+                Button(
+                    onClick = { openLayoutManager() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Manage Keyboard Layouts")
+                }
+
                 SettingsSwitch(
                     title = stringResource(R.string.settings_auto_capitalization_title),
                     description = stringResource(R.string.settings_auto_capitalization_desc),
@@ -1272,6 +1280,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     private fun openDictionaryManager() {
         startActivity(Intent(this, DictionaryManagerActivity::class.java))
+    }
+
+    private fun openLayoutManager() {
+        startActivity(Intent(this, LayoutManagerActivity::class.java))
     }
 
     private fun resetAllSettings() {

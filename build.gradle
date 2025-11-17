@@ -19,6 +19,9 @@ dependencies {
   implementation "androidx.compose.material3:material3:1.1.2"
   implementation "androidx.compose.foundation:foundation:1.5.4"
 
+  // Reorderable for drag-and-drop in Layout Manager
+  implementation "org.burnoutcrew.composereorderable:reorderable:0.9.6"
+
   // ONNX Runtime for neural swipe prediction (upgraded for boolean tensor support)
   implementation "com.microsoft.onnxruntime:onnxruntime-android:1.20.0"
 
