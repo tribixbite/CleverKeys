@@ -629,6 +629,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     Text("Manage Keyboard Layouts")
                 }
 
+                // Extra Keys Configuration button
+                Button(
+                    onClick = { openExtraKeysConfig() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Configure Extra Keys")
+                }
+
                 SettingsSwitch(
                     title = stringResource(R.string.settings_auto_capitalization_title),
                     description = stringResource(R.string.settings_auto_capitalization_desc),
@@ -1284,6 +1292,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     private fun openLayoutManager() {
         startActivity(Intent(this, LayoutManagerActivity::class.java))
+    }
+
+    private fun openExtraKeysConfig() {
+        startActivity(Intent(this, ExtraKeysConfigActivity::class.java))
     }
 
     private fun resetAllSettings() {
