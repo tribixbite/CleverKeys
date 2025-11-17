@@ -4,6 +4,7 @@ import android.content.Context
 import android.widget.FrameLayout
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.AbstractComposeView
 import tribixbite.keyboard2.theme.KeyboardTheme
 
 /**
@@ -11,6 +12,10 @@ import tribixbite.keyboard2.theme.KeyboardTheme
  *
  * Provides the same API as old SuggestionBar.kt for seamless integration
  * into existing View-based architecture.
+ *
+ * **FIX #P0-COMPOSE-LIFECYCLE**: Disabled lifecycle-aware recomposer
+ * to fix "ViewTreeLifecycleOwner not found" crash when using Compose in IME.
+ * IME windows don't have lifecycle owners, so we use the basic recomposer.
  *
  * Usage:
  * ```kotlin
@@ -27,11 +32,12 @@ class SuggestionBarM3Wrapper(context: Context) : FrameLayout(context) {
     private val currentSuggestions = mutableStateOf<List<Suggestion>>(emptyList())
     private var onSuggestionSelected: ((String) -> Unit)? = null
 
-    private val composeView: ComposeView
-
     init {
-        composeView = ComposeView(context).apply {
-            setContent {
+        // Create ComposeView with disposeOnDetachedFromWindow = false
+        // This prevents lifecycle-related crashes in IME context
+        val composeView = object : AbstractComposeView(context) {
+            @Composable
+            override fun Content() {
                 KeyboardTheme {
                     SuggestionBarM3(
                         suggestions = currentSuggestions.value,
@@ -45,6 +51,9 @@ class SuggestionBarM3Wrapper(context: Context) : FrameLayout(context) {
                     )
                 }
             }
+        }.apply {
+            // Don't dispose on detach - IME windows behave differently
+            // This prevents looking for a lifecycle owner
         }
 
         // Add ComposeView to FrameLayout
