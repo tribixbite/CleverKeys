@@ -60,10 +60,46 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var confidenceThreshold by mutableStateOf(0.1f)
     private var currentTheme by mutableStateOf(R.style.Dark)
     private var keyboardHeight by mutableStateOf(35)
+    private var keyboardHeightLandscape by mutableStateOf(50)
     private var vibrationEnabled by mutableStateOf(false)
     private var debugEnabled by mutableStateOf(false)
     private var clipboardHistoryEnabled by mutableStateOf(true)
     private var autoCapitalizationEnabled by mutableStateOf(true)
+
+    // Adaptive layout settings (for feature parity)
+    private var marginBottomPortrait by mutableStateOf(7)
+    private var marginBottomLandscape by mutableStateOf(3)
+    private var horizontalMarginPortrait by mutableStateOf(3)
+    private var horizontalMarginLandscape by mutableStateOf(28)
+
+    // Gesture sensitivity settings
+    private var swipeDistance by mutableStateOf(15)
+    private var circleSensitivity by mutableStateOf(2)
+
+    // Long press settings
+    private var longPressTimeout by mutableStateOf(600)
+    private var longPressInterval by mutableStateOf(65)
+    private var keyRepeatEnabled by mutableStateOf(true)
+
+    // Visual customization settings
+    private var labelBrightness by mutableStateOf(100)
+    private var keyboardOpacity by mutableStateOf(100)
+    private var keyOpacity by mutableStateOf(100)
+    private var keyActivatedOpacity by mutableStateOf(100)
+
+    // Spacing and sizing settings
+    private var characterSize by mutableStateOf(115)
+    private var keyVerticalMargin by mutableStateOf(150)
+    private var keyHorizontalMargin by mutableStateOf(200)
+
+    // Border customization settings
+    private var borderConfigEnabled by mutableStateOf(false)
+    private var customBorderRadius by mutableStateOf(0)
+    private var customBorderLineWidth by mutableStateOf(0)
+
+    // Behavior settings
+    private var doubleTapLockShift by mutableStateOf(false)
+    private var switchInputImmediate by mutableStateOf(false)
 
     // Accessibility settings (Bug #373, #368, #377)
     private var stickyKeysEnabled by mutableStateOf(false)
@@ -171,6 +207,79 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
             "voice_guidance_enabled" -> {
                 voiceGuidanceEnabled = prefs.getBoolean(key, false)
+            }
+            // Adaptive layout settings
+            "keyboard_height_landscape" -> {
+                keyboardHeightLandscape = prefs.getInt(key, 50)
+            }
+            "margin_bottom_portrait" -> {
+                marginBottomPortrait = prefs.getInt(key, 7)
+            }
+            "margin_bottom_landscape" -> {
+                marginBottomLandscape = prefs.getInt(key, 3)
+            }
+            "horizontal_margin_portrait" -> {
+                horizontalMarginPortrait = prefs.getInt(key, 3)
+            }
+            "horizontal_margin_landscape" -> {
+                horizontalMarginLandscape = prefs.getInt(key, 28)
+            }
+            // Gesture sensitivity settings
+            "swipe_dist" -> {
+                swipeDistance = (prefs.getString(key, "15") ?: "15").toIntOrNull() ?: 15
+            }
+            "circle_sensitivity" -> {
+                circleSensitivity = (prefs.getString(key, "2") ?: "2").toIntOrNull() ?: 2
+            }
+            // Long press settings
+            "longpress_timeout" -> {
+                longPressTimeout = prefs.getInt(key, 600)
+            }
+            "longpress_interval" -> {
+                longPressInterval = prefs.getInt(key, 65)
+            }
+            "keyrepeat_enabled" -> {
+                keyRepeatEnabled = prefs.getBoolean(key, true)
+            }
+            // Visual customization settings
+            "label_brightness" -> {
+                labelBrightness = prefs.getInt(key, 100)
+            }
+            "keyboard_opacity" -> {
+                keyboardOpacity = prefs.getInt(key, 100)
+            }
+            "key_opacity" -> {
+                keyOpacity = prefs.getInt(key, 100)
+            }
+            "key_activated_opacity" -> {
+                keyActivatedOpacity = prefs.getInt(key, 100)
+            }
+            // Spacing and sizing settings
+            "character_size" -> {
+                characterSize = (prefs.getFloat(key, 1.15f) * 100).toInt()
+            }
+            "key_vertical_margin" -> {
+                keyVerticalMargin = (prefs.getFloat(key, 1.5f) * 100).toInt()
+            }
+            "key_horizontal_margin" -> {
+                keyHorizontalMargin = (prefs.getFloat(key, 2.0f) * 100).toInt()
+            }
+            // Border customization settings
+            "border_config" -> {
+                borderConfigEnabled = prefs.getBoolean(key, false)
+            }
+            "custom_border_radius" -> {
+                customBorderRadius = prefs.getInt(key, 0)
+            }
+            "custom_border_line_width" -> {
+                customBorderLineWidth = prefs.getInt(key, 0)
+            }
+            // Behavior settings
+            "lock_double_tap" -> {
+                doubleTapLockShift = prefs.getBoolean(key, false)
+            }
+            "switch_input_immediate" -> {
+                switchInputImmediate = prefs.getBoolean(key, false)
             }
         }
     }
@@ -284,8 +393,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
 
                 SettingsSlider(
-                    title = stringResource(R.string.settings_keyboard_height_title),
-                    description = stringResource(R.string.settings_keyboard_height_desc),
+                    title = "Keyboard Height (Portrait)",
+                    description = "Adjust keyboard height in portrait mode",
                     value = keyboardHeight.toFloat(),
                     valueRange = 20f..60f,
                     steps = 40,
@@ -293,8 +402,202 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         keyboardHeight = it.toInt()
                         saveSetting("keyboard_height_percent", keyboardHeight)
                     },
-                    displayValue = stringResource(R.string.settings_keyboard_height_value, keyboardHeight)
+                    displayValue = "$keyboardHeight%"
                 )
+
+                SettingsSlider(
+                    title = "Keyboard Height (Landscape)",
+                    description = "Adjust keyboard height in landscape mode",
+                    value = keyboardHeightLandscape.toFloat(),
+                    valueRange = 20f..60f,
+                    steps = 40,
+                    onValueChange = {
+                        keyboardHeightLandscape = it.toInt()
+                        saveSetting("keyboard_height_landscape", keyboardHeightLandscape)
+                    },
+                    displayValue = "$keyboardHeightLandscape%"
+                )
+
+                SettingsSlider(
+                    title = "Bottom Margin (Portrait)",
+                    description = "Vertical margin from bottom edge (portrait)",
+                    value = marginBottomPortrait.toFloat(),
+                    valueRange = 0f..30f,
+                    steps = 30,
+                    onValueChange = {
+                        marginBottomPortrait = it.toInt()
+                        saveSetting("margin_bottom_portrait", marginBottomPortrait)
+                    },
+                    displayValue = "${marginBottomPortrait}dp"
+                )
+
+                SettingsSlider(
+                    title = "Bottom Margin (Landscape)",
+                    description = "Vertical margin from bottom edge (landscape)",
+                    value = marginBottomLandscape.toFloat(),
+                    valueRange = 0f..30f,
+                    steps = 30,
+                    onValueChange = {
+                        marginBottomLandscape = it.toInt()
+                        saveSetting("margin_bottom_landscape", marginBottomLandscape)
+                    },
+                    displayValue = "${marginBottomLandscape}dp"
+                )
+
+                SettingsSlider(
+                    title = "Horizontal Margin (Portrait)",
+                    description = "Side margins in portrait mode",
+                    value = horizontalMarginPortrait.toFloat(),
+                    valueRange = 0f..50f,
+                    steps = 50,
+                    onValueChange = {
+                        horizontalMarginPortrait = it.toInt()
+                        saveSetting("horizontal_margin_portrait", horizontalMarginPortrait)
+                    },
+                    displayValue = "${horizontalMarginPortrait}dp"
+                )
+
+                SettingsSlider(
+                    title = "Horizontal Margin (Landscape)",
+                    description = "Side margins in landscape mode",
+                    value = horizontalMarginLandscape.toFloat(),
+                    valueRange = 0f..50f,
+                    steps = 50,
+                    onValueChange = {
+                        horizontalMarginLandscape = it.toInt()
+                        saveSetting("horizontal_margin_landscape", horizontalMarginLandscape)
+                    },
+                    displayValue = "${horizontalMarginLandscape}dp"
+                )
+
+                SettingsSlider(
+                    title = "Label Brightness",
+                    description = "Brightness of key labels (0-100%)",
+                    value = labelBrightness.toFloat(),
+                    valueRange = 0f..100f,
+                    steps = 100,
+                    onValueChange = {
+                        labelBrightness = it.toInt()
+                        saveSetting("label_brightness", labelBrightness)
+                    },
+                    displayValue = "$labelBrightness%"
+                )
+
+                SettingsSlider(
+                    title = "Keyboard Opacity",
+                    description = "Opacity of keyboard background",
+                    value = keyboardOpacity.toFloat(),
+                    valueRange = 0f..100f,
+                    steps = 100,
+                    onValueChange = {
+                        keyboardOpacity = it.toInt()
+                        saveSetting("keyboard_opacity", keyboardOpacity)
+                    },
+                    displayValue = "$keyboardOpacity%"
+                )
+
+                SettingsSlider(
+                    title = "Key Opacity",
+                    description = "Opacity of individual keys",
+                    value = keyOpacity.toFloat(),
+                    valueRange = 0f..100f,
+                    steps = 100,
+                    onValueChange = {
+                        keyOpacity = it.toInt()
+                        saveSetting("key_opacity", keyOpacity)
+                    },
+                    displayValue = "$keyOpacity%"
+                )
+
+                SettingsSlider(
+                    title = "Activated Key Opacity",
+                    description = "Opacity when key is pressed",
+                    value = keyActivatedOpacity.toFloat(),
+                    valueRange = 0f..100f,
+                    steps = 100,
+                    onValueChange = {
+                        keyActivatedOpacity = it.toInt()
+                        saveSetting("key_activated_opacity", keyActivatedOpacity)
+                    },
+                    displayValue = "$keyActivatedOpacity%"
+                )
+
+                SettingsSlider(
+                    title = "Character Size",
+                    description = "Size multiplier for key labels",
+                    value = characterSize.toFloat(),
+                    valueRange = 50f..200f,
+                    steps = 150,
+                    onValueChange = {
+                        characterSize = it.toInt()
+                        saveSetting("character_size", characterSize / 100f)
+                    },
+                    displayValue = "${characterSize}%"
+                )
+
+                SettingsSlider(
+                    title = "Key Vertical Margin",
+                    description = "Vertical spacing between keys",
+                    value = keyVerticalMargin.toFloat(),
+                    valueRange = 0f..500f,
+                    steps = 100,
+                    onValueChange = {
+                        keyVerticalMargin = it.toInt()
+                        saveSetting("key_vertical_margin", keyVerticalMargin / 100f)
+                    },
+                    displayValue = "${keyVerticalMargin / 100f}%"
+                )
+
+                SettingsSlider(
+                    title = "Key Horizontal Margin",
+                    description = "Horizontal spacing between keys",
+                    value = keyHorizontalMargin.toFloat(),
+                    valueRange = 0f..500f,
+                    steps = 100,
+                    onValueChange = {
+                        keyHorizontalMargin = it.toInt()
+                        saveSetting("key_horizontal_margin", keyHorizontalMargin / 100f)
+                    },
+                    displayValue = "${keyHorizontalMargin / 100f}%"
+                )
+
+                SettingsSwitch(
+                    title = "Custom Border Config",
+                    description = "Enable custom key border styling",
+                    checked = borderConfigEnabled,
+                    onCheckedChange = {
+                        borderConfigEnabled = it
+                        saveSetting("border_config", it)
+                    }
+                )
+
+                if (borderConfigEnabled) {
+                    SettingsSlider(
+                        title = "Border Radius",
+                        description = "Corner radius for keys (dp)",
+                        value = customBorderRadius.toFloat(),
+                        valueRange = 0f..20f,
+                        steps = 20,
+                        onValueChange = {
+                            customBorderRadius = it.toInt()
+                            saveSetting("custom_border_radius", customBorderRadius)
+                        },
+                        displayValue = "${customBorderRadius}dp"
+                    )
+
+                    SettingsSlider(
+                        title = "Border Line Width",
+                        description = "Width of key borders (dp)",
+                        value = customBorderLineWidth.toFloat(),
+                        valueRange = 0f..10f,
+                        steps = 10,
+                        onValueChange = {
+                            customBorderLineWidth = it.toInt()
+                            saveSetting("custom_border_line_width", customBorderLineWidth)
+                        },
+                        displayValue = "${customBorderLineWidth}dp"
+                    )
+                }
             }
 
             // Input Behavior Section
@@ -326,6 +629,88 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     onCheckedChange = {
                         vibrationEnabled = it
                         saveSetting("vibration_enabled", it)
+                    }
+                )
+
+                SettingsSlider(
+                    title = "Swipe Distance Threshold",
+                    description = "Minimum distance for swipe gestures (units)",
+                    value = swipeDistance.toFloat(),
+                    valueRange = 5f..30f,
+                    steps = 25,
+                    onValueChange = {
+                        swipeDistance = it.toInt()
+                        saveSetting("swipe_dist", swipeDistance.toString())
+                    },
+                    displayValue = "$swipeDistance"
+                )
+
+                SettingsSlider(
+                    title = "Circle Gesture Sensitivity",
+                    description = "Sensitivity for loop/circle gestures",
+                    value = circleSensitivity.toFloat(),
+                    valueRange = 1f..5f,
+                    steps = 4,
+                    onValueChange = {
+                        circleSensitivity = it.toInt()
+                        saveSetting("circle_sensitivity", circleSensitivity.toString())
+                    },
+                    displayValue = "$circleSensitivity"
+                )
+
+                SettingsSlider(
+                    title = "Long Press Timeout",
+                    description = "Duration to trigger long press (milliseconds)",
+                    value = longPressTimeout.toFloat(),
+                    valueRange = 200f..1000f,
+                    steps = 16,
+                    onValueChange = {
+                        longPressTimeout = it.toInt()
+                        saveSetting("longpress_timeout", longPressTimeout)
+                    },
+                    displayValue = "${longPressTimeout}ms"
+                )
+
+                SettingsSlider(
+                    title = "Long Press Interval",
+                    description = "Key repeat interval when long-pressed (milliseconds)",
+                    value = longPressInterval.toFloat(),
+                    valueRange = 25f..200f,
+                    steps = 35,
+                    onValueChange = {
+                        longPressInterval = it.toInt()
+                        saveSetting("longpress_interval", longPressInterval)
+                    },
+                    displayValue = "${longPressInterval}ms"
+                )
+
+                SettingsSwitch(
+                    title = "Key Repeat Enabled",
+                    description = "Allow keys to repeat when long-pressed",
+                    checked = keyRepeatEnabled,
+                    onCheckedChange = {
+                        keyRepeatEnabled = it
+                        saveSetting("keyrepeat_enabled", it)
+                    }
+                )
+
+                SettingsSwitch(
+                    title = "Double Tap Shift for Caps Lock",
+                    description = "Lock shift key by tapping twice quickly",
+                    checked = doubleTapLockShift,
+                    onCheckedChange = {
+                        doubleTapLockShift = it
+                        saveSetting("lock_double_tap", it)
+                    }
+                )
+
+                SettingsSwitch(
+                    title = "Immediate Keyboard Switching",
+                    description = "Switch keyboards immediately instead of showing menu",
+                    checked = switchInputImmediate,
+                    onCheckedChange = {
+                        switchInputImmediate = it
+                        saveSetting("switch_input_immediate", it)
                     }
                 )
             }
@@ -650,16 +1035,61 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Helper functions
     private fun loadCurrentSettings() {
+        // Neural prediction settings
         neuralPredictionEnabled = prefs.getBoolean("neural_prediction_enabled", true)
         beamWidth = prefs.getInt("neural_beam_width", 8)
         maxLength = prefs.getInt("neural_max_length", 35)
         confidenceThreshold = prefs.getFloat("neural_confidence_threshold", 0.1f)
+
+        // Appearance settings
         currentTheme = prefs.getInt("theme", R.style.Dark)
         keyboardHeight = prefs.getInt("keyboard_height_percent", 35)
+        keyboardHeightLandscape = prefs.getInt("keyboard_height_landscape", 50)
+
+        // Adaptive layout settings
+        marginBottomPortrait = prefs.getInt("margin_bottom_portrait", 7)
+        marginBottomLandscape = prefs.getInt("margin_bottom_landscape", 3)
+        horizontalMarginPortrait = prefs.getInt("horizontal_margin_portrait", 3)
+        horizontalMarginLandscape = prefs.getInt("horizontal_margin_landscape", 28)
+
+        // Visual customization settings
+        labelBrightness = prefs.getInt("label_brightness", 100)
+        keyboardOpacity = prefs.getInt("keyboard_opacity", 100)
+        keyOpacity = prefs.getInt("key_opacity", 100)
+        keyActivatedOpacity = prefs.getInt("key_activated_opacity", 100)
+
+        // Spacing and sizing settings
+        characterSize = (prefs.getFloat("character_size", 1.15f) * 100).toInt()
+        keyVerticalMargin = (prefs.getFloat("key_vertical_margin", 1.5f) * 100).toInt()
+        keyHorizontalMargin = (prefs.getFloat("key_horizontal_margin", 2.0f) * 100).toInt()
+
+        // Border customization settings
+        borderConfigEnabled = prefs.getBoolean("border_config", false)
+        customBorderRadius = prefs.getInt("custom_border_radius", 0)
+        customBorderLineWidth = prefs.getInt("custom_border_line_width", 0)
+
+        // Input behavior settings
         vibrationEnabled = prefs.getBoolean("vibration_enabled", false)
-        debugEnabled = prefs.getBoolean("debug_enabled", false)
         clipboardHistoryEnabled = prefs.getBoolean("clipboard_history_enabled", true)
         autoCapitalizationEnabled = prefs.getBoolean("auto_capitalization_enabled", true)
+
+        // Gesture sensitivity settings
+        swipeDistance = (prefs.getString("swipe_dist", "15") ?: "15").toIntOrNull() ?: 15
+        circleSensitivity = (prefs.getString("circle_sensitivity", "2") ?: "2").toIntOrNull() ?: 2
+
+        // Long press settings
+        longPressTimeout = prefs.getInt("longpress_timeout", 600)
+        longPressInterval = prefs.getInt("longpress_interval", 65)
+        keyRepeatEnabled = prefs.getBoolean("keyrepeat_enabled", true)
+
+        // Behavior settings
+        doubleTapLockShift = prefs.getBoolean("lock_double_tap", false)
+        switchInputImmediate = prefs.getBoolean("switch_input_immediate", false)
+
+        // Advanced settings
+        debugEnabled = prefs.getBoolean("debug_enabled", false)
+
+        // Accessibility settings
         stickyKeysEnabled = prefs.getBoolean("sticky_keys_enabled", false)
         stickyKeysTimeout = prefs.getInt("sticky_keys_timeout_ms", 5000)
         voiceGuidanceEnabled = prefs.getBoolean("voice_guidance_enabled", false)
