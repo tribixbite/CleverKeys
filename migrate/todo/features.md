@@ -142,8 +142,8 @@ All 8 clipboard bugs resolved:
 - ContinuousGestureRecognizer replaced by ONNX (architectural)
 
 **Remaining Java Files Needing Review**:
-- [ ] SwipeGestureRecognizer.java
-- [ ] ImprovedSwipeGestureRecognizer.java
+- [x] SwipeGestureRecognizer.java ✅ PORTED → KeyboardSwipeRecognizer.kt (580 lines)
+- [x] ImprovedSwipeGestureRecognizer.java ✅ PORTED → EnhancedSwipeGestureRecognizer.kt (94 lines)
 - [x] LoopGestureDetector.java (Bug #258) ✅ FIXED (already implemented)
   - File: LoopGestureDetector.kt (360 lines) - COMPLETE
   - Features: Geometric loop detection (center, radius, angle), angle validation (270-450°), radius validation (15px min, 1.5x key size max), closure detection (30px threshold), repeat count estimation (360° = 2 letters, 540° = 3 letters), loop application to key sequences
@@ -174,8 +174,8 @@ All 8 clipboard bugs resolved:
 - UserAdaptationManager.java (File 65) - Bug #263 CATASTROPHIC
 
 **Remaining Java Files Needing Review**:
-- [ ] PersonalizationManager.java
-- [ ] SwipePruner.java
+- [x] PersonalizationManager.java ✅ PORTED → PersonalizationManager.kt (326 lines)
+- [x] SwipePruner.java ✅ PORTED → SwipePruner.kt
 
 ---
 
