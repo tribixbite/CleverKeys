@@ -590,15 +590,20 @@ class SwitchAccessSupport(
      * Announce text for accessibility
      */
     private fun announceAccessibility(announcement: String) {
-        accessibilityManager?.sendAccessibilityEvent(
-            AccessibilityEvent.obtain().apply {
-                eventType = AccessibilityEvent.TYPE_ANNOUNCEMENT
-                this.text.add(announcement)
-                className = SwitchAccessSupport::class.java.name
-                packageName = context.packageName
-            }
-        )
-        Log.d(TAG, "Announced: $announcement")
+        // Check if accessibility is enabled before sending event
+        if (accessibilityManager?.isEnabled == true) {
+            accessibilityManager?.sendAccessibilityEvent(
+                AccessibilityEvent.obtain().apply {
+                    eventType = AccessibilityEvent.TYPE_ANNOUNCEMENT
+                    this.text.add(announcement)
+                    className = SwitchAccessSupport::class.java.name
+                    packageName = context.packageName
+                }
+            )
+            Log.d(TAG, "Announced: $announcement")
+        } else {
+            Log.d(TAG, "Accessibility disabled, skipping announcement: $announcement")
+        }
     }
 
     /**
