@@ -216,7 +216,7 @@ cd cleverkeys
 
 ### 📊 **Model Specifications**
 ```
-Total APK Size: 50MB
+Total APK Size: 52MB
 Encoder Model: 5.3MB
 Decoder Model: 7.2MB
 Memory Usage: 15-25MB additional RAM

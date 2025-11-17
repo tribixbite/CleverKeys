@@ -94,7 +94,7 @@ This directory contains feature specifications and architectural decision record
 
 ### In Testing Phase 🧪
 - **Manual Testing Ready** (2025-11-14)
-  - APK built and installed (51MB)
+  - APK built and installed (52MB)
   - Comprehensive testing documentation created:
     - MANUAL_TESTING_GUIDE.md
     - ASSET_FILES_NEEDED.md
