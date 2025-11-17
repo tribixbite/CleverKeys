@@ -101,6 +101,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var doubleTapLockShift by mutableStateOf(false)
     private var switchInputImmediate by mutableStateOf(false)
 
+    // Number row and numpad settings
+    private var numberRowMode by mutableStateOf("no_number_row") // "no_number_row", "no_symbols", "symbols"
+    private var showNumpadMode by mutableStateOf("never") // "never", "landscape", "always"
+    private var numpadLayout by mutableStateOf("default") // "default", "low_first"
+    private var pinEntryEnabled by mutableStateOf(false)
+
     // Accessibility settings (Bug #373, #368, #377)
     private var stickyKeysEnabled by mutableStateOf(false)
     private var stickyKeysTimeout by mutableStateOf(5000) // milliseconds
@@ -280,6 +286,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
             "switch_input_immediate" -> {
                 switchInputImmediate = prefs.getBoolean(key, false)
+            }
+            // Number row and numpad settings
+            "number_row" -> {
+                numberRowMode = prefs.getString(key, "no_number_row") ?: "no_number_row"
+            }
+            "show_numpad" -> {
+                showNumpadMode = prefs.getString(key, "never") ?: "never"
+            }
+            "numpad_layout" -> {
+                numpadLayout = prefs.getString(key, "default") ?: "default"
+            }
+            "pin_entry_enabled" -> {
+                pinEntryEnabled = prefs.getBoolean(key, false)
             }
         }
     }
@@ -713,6 +732,69 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         saveSetting("switch_input_immediate", it)
                     }
                 )
+
+                SettingsDropdown(
+                    title = "Number Row",
+                    description = "Show number row at top of keyboard",
+                    options = listOf("Hidden", "Numbers Only", "Numbers + Symbols"),
+                    selectedIndex = when (numberRowMode) {
+                        "no_number_row" -> 0
+                        "no_symbols" -> 1
+                        "symbols" -> 2
+                        else -> 0
+                    },
+                    onSelectionChange = { index ->
+                        numberRowMode = when (index) {
+                            0 -> "no_number_row"
+                            1 -> "no_symbols"
+                            2 -> "symbols"
+                            else -> "no_number_row"
+                        }
+                        saveSetting("number_row", numberRowMode)
+                    }
+                )
+
+                SettingsDropdown(
+                    title = "Show Numpad",
+                    description = "When to display the numeric keypad",
+                    options = listOf("Never", "Landscape Only", "Always"),
+                    selectedIndex = when (showNumpadMode) {
+                        "never" -> 0
+                        "landscape" -> 1
+                        "always" -> 2
+                        else -> 0
+                    },
+                    onSelectionChange = { index ->
+                        showNumpadMode = when (index) {
+                            0 -> "never"
+                            1 -> "landscape"
+                            2 -> "always"
+                            else -> "never"
+                        }
+                        saveSetting("show_numpad", showNumpadMode)
+                    }
+                )
+
+                SettingsDropdown(
+                    title = "Numpad Layout",
+                    description = "Digit order on numeric keypad",
+                    options = listOf("High First (7-8-9 on top)", "Low First (1-2-3 on top)"),
+                    selectedIndex = if (numpadLayout == "low_first") 1 else 0,
+                    onSelectionChange = { index ->
+                        numpadLayout = if (index == 1) "low_first" else "default"
+                        saveSetting("numpad_layout", numpadLayout)
+                    }
+                )
+
+                SettingsSwitch(
+                    title = "Pin Entry Layout",
+                    description = "Activate specialized layout for typing numbers/dates/phone numbers",
+                    checked = pinEntryEnabled,
+                    onCheckedChange = {
+                        pinEntryEnabled = it
+                        saveSetting("pin_entry_enabled", it)
+                    }
+                )
             }
 
             // Accessibility Section (Fix for Bug #373, #368, #377)
@@ -1085,6 +1167,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Behavior settings
         doubleTapLockShift = prefs.getBoolean("lock_double_tap", false)
         switchInputImmediate = prefs.getBoolean("switch_input_immediate", false)
+
+        // Number row and numpad settings
+        numberRowMode = prefs.getString("number_row", "no_number_row") ?: "no_number_row"
+        showNumpadMode = prefs.getString("show_numpad", "never") ?: "never"
+        numpadLayout = prefs.getString("numpad_layout", "default") ?: "default"
+        pinEntryEnabled = prefs.getBoolean("pin_entry_enabled", false)
 
         // Advanced settings
         debugEnabled = prefs.getBoolean("debug_enabled", false)
