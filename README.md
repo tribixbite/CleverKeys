@@ -1,5 +1,12 @@
 # CleverKeys 🧠⌨️
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Android](https://img.shields.io/badge/Android-8.0%2B-green.svg)](https://developer.android.com)
+[![Kotlin](https://img.shields.io/badge/Kotlin-1.9.20-purple.svg)](https://kotlinlang.org)
+[![Version](https://img.shields.io/badge/Version-1.0.0-brightgreen.svg)](RELEASE_NOTES_v1.0.0.md)
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-success.svg)](PROJECT_COMPLETE.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 **Modern Android Keyboard with Neural Swipe Typing**
 
 > **CleverKeys** is a complete Kotlin rewrite of [Unexpected Keyboard](https://github.com/Julow/Unexpected-Keyboard) with cutting-edge neural prediction technology. Experience lightning-fast swipe typing powered by ONNX models running entirely on your device.
