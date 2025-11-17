@@ -2,20 +2,70 @@
 .gradle/
 build/
 *.class
+.gradletasknamecache
+gradle-app.setting
 
 # Android
 *.apk
 *.ap_
 *.dex
+*.aab
 local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+output.json
+google-services.json
+
+# Kotlin
+*.kotlin_module
+*.kotlin_metadata
+
+# Generated files
+bin/
+gen/
+out/
+release/
+
+# Keystore files
+*.jks
+*.keystore
 
 # IDE
 .idea/
 *.iml
 .vscode/
+*.swp
+*.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
 *.output
 cleverkeys-diagnostic-*.txt
+
+# Testing
+*.log
+/captures
+/androidTest-results/
+/test-results/
+
+# Lint
+lint-report.html
+lint-report.xml
+lint-results.xml
+
+# NDK
+obj/
+.cxx/
+
+# Backup files
+*.bak
+*~
+*.backup
+
+# Temporary files
+tmp/
+temp/
+*.tmp
