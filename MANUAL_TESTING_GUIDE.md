@@ -1,10 +1,10 @@
 # CleverKeys Manual Testing Guide
 
-**Version**: 1.32.1 (Build 50+)
+**Version**: 1.32.1 (Build 52)
 **Date**: 2025-11-14
 **Focus**: Verify TODO resolution integrations + initialization order fix
 
-## 🐛 Critical Bug Fix (Build 50+)
+## 🐛 Critical Bug Fix (Build 52)
 **Initialization Order Bug Fixed**: WordPredictor now properly receives LanguageDetector and UserAdaptationManager references (previously null due to wrong initialization order).
 
 **Impact**: Language detection and user adaptation features should now work correctly.
@@ -204,7 +204,7 @@ If you encounter issues, provide:
 2. **Expected behavior**
 3. **Actual behavior**
 4. **Logcat output** (CleverKeys:D and AndroidRuntime:E)
-5. **APK version** (Build 50+)
+5. **APK version** (Build 52)
 
 Example:
 ```
