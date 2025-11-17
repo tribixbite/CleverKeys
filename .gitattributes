@@ -1,0 +1,66 @@
+# Git attributes for CleverKeys
+# https://git-scm.com/docs/gitattributes
+
+# Auto-detect text files and perform LF normalization
+* text=auto
+
+# Explicitly declare text files
+*.kt text
+*.java text
+*.xml text
+*.gradle text
+*.kts text
+*.properties text
+*.md text
+*.txt text
+*.json text
+*.yml text
+*.yaml text
+*.sh text eol=lf
+
+# Declare files that will always have CRLF line endings on checkout
+*.bat text eol=crlf
+
+# Denote all files that are truly binary and should not be modified
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mov binary
+*.mp4 binary
+*.mp3 binary
+*.flv binary
+*.fla binary
+*.swf binary
+*.gz binary
+*.zip binary
+*.7z binary
+*.ttf binary
+*.eot binary
+*.woff binary
+*.woff2 binary
+*.pyc binary
+*.pdf binary
+*.ez binary
+*.bz2 binary
+*.swp binary
+*.apk binary
+*.aab binary
+*.jar binary
+*.so binary
+*.class binary
+*.dex binary
+
+# GitHub linguist overrides
+# Mark documentation as not vendored
+docs/** linguist-documentation
+*.md linguist-documentation
+
+# Mark generated files as generated
+build/** linguist-generated
+.gradle/** linguist-generated
+
+# Language statistics
+*.kt linguist-language=Kotlin
+*.xml linguist-language=XML

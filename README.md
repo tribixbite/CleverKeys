@@ -183,6 +183,7 @@ Once CleverKeys is active:
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) - How to contribute (code, docs, testing)
 - [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) - Community guidelines and standards
 - [`CHANGELOG.md`](CHANGELOG.md) - Version history and changes
+- [`ROADMAP.md`](ROADMAP.md) - Future plans (v1.1, v2.0, and beyond)
 - [`.github/pull_request_template.md`](.github/pull_request_template.md) - PR submission template
 
 ### 📊 **Project Documentation**
