@@ -28,13 +28,13 @@ Useful links.
   https://unexpected-keyboard-layout-editor.lixquid.com
 
 - Full guide on how to edit the layout.
-  https://github.com/Julow/Unexpected-Keyboard/tree/master/doc/Custom-layouts.md
+  https://github.com/tribixbite/CleverKeys/tree/main/doc/Custom-layouts.md
 
 - Current definition of the bottom row (for easy importing).
-  https://github.com/Julow/Unexpected-Keyboard/tree/master/res/xml/bottom_row.xml
+  https://github.com/tribixbite/CleverKeys/tree/main/res/xml/bottom_row.xml
 
 - Built-in layouts (for easy importing)
-  https://github.com/Julow/Unexpected-Keyboard/tree/master/srcs/layouts
+  https://github.com/tribixbite/CleverKeys/tree/main/src/main/layouts
 
 -->
 <keyboard name="QWERTY (US)" script="latin">
