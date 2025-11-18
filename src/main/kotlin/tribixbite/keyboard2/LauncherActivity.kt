@@ -1,425 +1,509 @@
 package tribixbite.keyboard2
 
-import android.annotation.TargetApi
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Animatable
-import android.os.Build
+import android.graphics.*
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.Message
 import android.provider.Settings
 import android.util.Log
-import android.view.*
-import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
-import android.widget.ImageView
+import android.view.Gravity
+import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.BounceInterpolator
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
-import kotlinx.coroutines.*
-import tribixbite.keyboard2.R
 
 /**
- * Modern Kotlin launcher activity for CleverKeys.
+ * Cute raccoon-themed launcher activity for CleverKeys.
  *
  * Features:
- * - Keyboard setup guidance with animations
- * - Interactive keyboard testing area
- * - Settings access via menu
- * - Input method management
- * - Key event monitoring and display
- * - Coroutine-based async operations
- * - Enhanced error handling
+ * - Animated cute raccoon mascot
+ * - Clear setup instructions
+ * - Quick access to system keyboard settings
  */
-class LauncherActivity : Activity(), Handler.Callback {
+class LauncherActivity : Activity() {
 
     companion object {
         private const val TAG = "LauncherActivity"
-        private const val ANIMATION_RESTART_DELAY = 3000L
-        private const val ANIMATION_START_DELAY = 500L
-        private const val MESSAGE_RESTART_ANIMATIONS = 0
     }
 
-    // UI Components
-    private lateinit var tryhereText: TextView
-    private lateinit var tryhereArea: EditText
-
-    // Animation management
-    private val animations = mutableListOf<Animatable>()
-    private lateinit var animationHandler: Handler
-
-    // Coroutine scope for async operations
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private lateinit var raccoonView: RaccoonAnimationView
+    private var animatorSet: AnimatorSet? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         try {
-            val layoutId = resources.getIdentifier("launcher_activity", "layout", packageName)
-            setContentView(layoutId)
-            setupViews()
-            setupAnimationHandler()
+            createUI()
             Log.i(TAG, "LauncherActivity created successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Error creating LauncherActivity", e)
-            // Fallback to programmatic UI if layout fails
-            setupFallbackUI()
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        setupAnimations()
-        startAnimationCycle()
+    override fun onResume() {
+        super.onResume()
+        startAnimations()
     }
 
-    override fun onStop() {
-        super.onStop()
-        stopAnimationCycle()
+    override fun onPause() {
+        super.onPause()
+        stopAnimations()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        scope.cancel()
-        animations.clear()
+        animatorSet?.cancel()
     }
 
-    private fun setupViews() {
-        val textId = resources.getIdentifier("launcher_tryhere_text", "id", packageName)
-        val areaId = resources.getIdentifier("launcher_tryhere_area", "id", packageName)
-        tryhereText = findViewById(textId)
-        tryhereArea = findViewById(areaId)
-
-        // Add key event listener for API 28+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            tryhereArea.addOnUnhandledKeyEventListener(TryhereOnUnhandledKeyEventListener())
-        }
-    }
-
-    private fun setupAnimationHandler() {
-        animationHandler = Handler(Looper.getMainLooper(), this)
-    }
-
-    private fun setupAnimations() {
-        animations.clear()
-
-        try {
-            // Add animations if they exist in the layout
-            val swipeId = resources.getIdentifier("launcher_anim_swipe", "id", packageName)
-            val roundTripId = resources.getIdentifier("launcher_anim_round_trip", "id", packageName)
-            val circleId = resources.getIdentifier("launcher_anim_circle", "id", packageName)
-            findAnimation(swipeId)?.let { animations.add(it) }
-            findAnimation(roundTripId)?.let { animations.add(it) }
-            findAnimation(circleId)?.let { animations.add(it) }
-
-            Log.d(TAG, "Loaded ${animations.size} animations")
-        } catch (e: Exception) {
-            Log.w(TAG, "Error loading animations", e)
-        }
-    }
-
-    private fun findAnimation(id: Int): Animatable? {
-        return try {
-            val imageView = findViewById<ImageView>(id)
-            imageView?.drawable as? Animatable
-        } catch (e: Exception) {
-            Log.w(TAG, "Animation not found for id: $id", e)
-            null
-        }
-    }
-
-    private fun startAnimationCycle() {
-        animationHandler.removeMessages(MESSAGE_RESTART_ANIMATIONS)
-        animationHandler.sendEmptyMessageDelayed(MESSAGE_RESTART_ANIMATIONS, ANIMATION_START_DELAY)
-    }
-
-    private fun stopAnimationCycle() {
-        animationHandler.removeMessages(MESSAGE_RESTART_ANIMATIONS)
-        // Stop all running animations
-        animations.forEach { animation ->
-            try {
-                if (animation.isRunning) {
-                    animation.stop()
-                }
-            } catch (e: Exception) {
-                Log.w(TAG, "Error stopping animation", e)
-            }
-        }
-    }
-
-    override fun handleMessage(msg: Message): Boolean {
-        return when (msg.what) {
-            MESSAGE_RESTART_ANIMATIONS -> {
-                restartAnimations()
-                // Schedule next restart
-                animationHandler.sendEmptyMessageDelayed(MESSAGE_RESTART_ANIMATIONS, ANIMATION_RESTART_DELAY)
-                true
-            }
-            else -> false
-        }
-    }
-
-    private fun restartAnimations() {
-        animations.forEach { animation ->
-            try {
-                animation.start()
-            } catch (e: Exception) {
-                Log.w(TAG, "Error starting animation", e)
-            }
-        }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        return try {
-            val menuId = resources.getIdentifier("launcher_menu", "menu", packageName)
-            menuInflater.inflate(menuId, menu)
-            true
-        } catch (e: Exception) {
-            Log.e(TAG, "Error creating options menu", e)
-            false
-        }
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val btnId = resources.getIdentifier("btnLaunchSettingsActivity", "id", packageName)
-        return when (item.itemId) {
-            btnId -> {
-                launchSettingsActivity()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    /**
-     * Launch the main settings activity
-     */
-    private fun launchSettingsActivity() {
-        scope.launch {
-            try {
-                val intent = Intent(this@LauncherActivity, SettingsActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                startActivity(intent)
-                Log.d(TAG, "Launched SettingsActivity")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error launching SettingsActivity", e)
-                showError("Could not open settings: ${e.message}")
-            }
-        }
-    }
-
-    /**
-     * Launch system input method settings (called from XML button)
-     */
-    fun launch_imesettings(view: View) {
-        scope.launch {
-            try {
-                startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
-                Log.d(TAG, "Launched IME settings")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error launching IME settings", e)
-                showError("Could not open keyboard settings: ${e.message}")
-            }
-        }
-    }
-
-    /**
-     * Launch input method picker (called from XML button)
-     */
-    fun launch_imepicker(view: View) {
-        scope.launch {
-            try {
-                // Bug #150 fix: Use safe cast to handle null service gracefully
-                val imm = getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager
-                if (imm == null) {
-                    Log.e(TAG, "Input method service not available")
-                    showError("Keyboard service not available")
-                    return@launch
-                }
-                imm.showInputMethodPicker()
-                Log.d(TAG, "Launched IME picker")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error launching IME picker", e)
-                showError("Could not open keyboard picker: ${e.message}")
-            }
-        }
-    }
-
-    /**
-     * Launch neural settings activity (called from XML button)
-     */
-    fun launch_neural_settings(view: View) {
-        scope.launch {
-            try {
-                val intent = Intent(this@LauncherActivity, NeuralSettingsActivity::class.java)
-                startActivity(intent)
-                Log.d(TAG, "Launched NeuralSettingsActivity")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error launching NeuralSettingsActivity", e)
-                showError("Could not open neural settings: ${e.message}")
-            }
-        }
-    }
-
-    /**
-     * Launch calibration activity (called from XML button)
-     */
-    fun launch_calibration(view: View) {
-        scope.launch {
-            try {
-                val intent = Intent(this@LauncherActivity, SwipeCalibrationActivity::class.java)
-                startActivity(intent)
-                Log.d(TAG, "Launched SwipeCalibrationActivity")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error launching SwipeCalibrationActivity", e)
-                showError("Could not open calibration: ${e.message}")
-            }
-        }
-    }
-
-    /**
-     * Test neural prediction system (called from XML button)
-     */
-    fun test_neural_prediction(view: View) {
-        scope.launch {
-            var neuralEngine: NeuralSwipeEngine? = null
-            try {
-                Log.d(TAG, "Starting neural prediction test")
-
-                // Create test swipe input
-                val testPoints = listOf(
-                    android.graphics.PointF(100f, 200f),
-                    android.graphics.PointF(200f, 200f),
-                    android.graphics.PointF(300f, 200f)
-                )
-                val testTimestamps = listOf(0L, 100L, 200L)
-                val testInput = SwipeInput(testPoints, testTimestamps, emptyList())
-
-                neuralEngine = NeuralSwipeEngine(this@LauncherActivity, Config.globalConfig())
-
-                if (neuralEngine.initialize()) {
-                    val result = neuralEngine.predictAsync(testInput)
-
-                    withContext(Dispatchers.Main) {
-                        val message = if (result.isEmpty) {
-                            "❌ Neural test failed: No predictions generated"
-                        } else {
-                            "✅ Neural test passed!\n\nTop predictions:\n${result.words.take(3).joinToString("\n") { "• $it" }}"
-                        }
-
-                        android.app.AlertDialog.Builder(this@LauncherActivity)
-                            .setTitle("🧠 Neural Prediction Test")
-                            .setMessage(message)
-                            .setPositiveButton("OK", null)
-                            .show()
-
-                        Log.d(TAG, "Neural test completed: ${result.words.size} predictions")
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        showError("❌ Neural engine initialization failed")
-                    }
-                    Log.e(TAG, "Neural engine failed to initialize")
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Neural test failed", e)
-                withContext(Dispatchers.Main) {
-                    showError("❌ Neural test failed: ${e.message}")
-                }
-            } finally {
-                // Clean up neural engine resources
-                neuralEngine?.cleanup()
-            }
-        }
-    }
-
-    private fun showError(message: String) {
-        android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_LONG).show()
-    }
-
-    /**
-     * Fallback UI creation if layout inflation fails
-     */
-    private fun setupFallbackUI() {
-        // Convert dp to pixels for density-independent padding
+    private fun createUI() {
         val density = resources.displayMetrics.density
-        val dp32 = (32 * density).toInt()
-        val dp16 = (16 * density).toInt()
-        val dp8 = (8 * density).toInt()
 
-        val layout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(dp32, dp32, dp32, dp32)
+        // Root scroll view for small screens
+        val scrollView = ScrollView(this).apply {
+            setBackgroundColor(0xFF1A1A2E.toInt()) // Dark blue-purple background
+            isFillViewport = true
         }
 
-        // Title
-        val title = android.widget.TextView(this).apply {
-            text = "⌨️ CleverKeys Launcher"
-            textSize = 24f
-            setPadding(0, 0, 0, dp16)
+        // Main container
+        val mainLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(
+                (32 * density).toInt(),
+                (48 * density).toInt(),
+                (32 * density).toInt(),
+                (32 * density).toInt()
+            )
         }
-        layout.addView(title)
 
-        // Try here text (fallback)
-        tryhereText = android.widget.TextView(this).apply {
-            text = "Type here to test keyboard..."
+        // Cute raccoon animation view
+        raccoonView = RaccoonAnimationView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                (200 * density).toInt(),
+                (200 * density).toInt()
+            ).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+                bottomMargin = (32 * density).toInt()
+            }
+        }
+        mainLayout.addView(raccoonView)
+
+        // App title
+        val titleText = TextView(this).apply {
+            text = "CleverKeys"
+            setTextColor(0xFFE94560.toInt()) // Vibrant pink/red
+            textSize = 32f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = (24 * density).toInt()
+            }
+        }
+        mainLayout.addView(titleText)
+
+        // Instructions text
+        val instructionsText = TextView(this).apply {
+            text = "This application is a virtual keyboard. Go to the system settings by clicking on the button below and enable CleverKeys."
+            setTextColor(0xFFE0E0E0.toInt()) // Light gray
             textSize = 16f
-            setPadding(0, 0, 0, dp8)
+            gravity = Gravity.CENTER
+            setLineSpacing(8f, 1f)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = (32 * density).toInt()
+            }
         }
-        layout.addView(tryhereText)
+        mainLayout.addView(instructionsText)
 
-        // Try here area (fallback)
-        tryhereArea = android.widget.EditText(this).apply {
-            hint = "Test typing here"
-            setPadding(dp16, dp16, dp16, dp16)
+        // Enable keyboard button
+        val enableButton = Button(this).apply {
+            text = "⚙️ Enable Keyboard"
+            setTextColor(0xFFFFFFFF.toInt())
+            textSize = 18f
+            isAllCaps = false
+
+            // Create gradient background
+            val gradientDrawable = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = 24 * density
+                colors = intArrayOf(0xFFE94560.toInt(), 0xFF0F3460.toInt())
+                orientation = android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT
+            }
+            background = gradientDrawable
+
+            setPadding(
+                (32 * density).toInt(),
+                (16 * density).toInt(),
+                (32 * density).toInt(),
+                (16 * density).toInt()
+            )
+
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+                bottomMargin = (24 * density).toInt()
+            }
+
+            setOnClickListener {
+                launchKeyboardSettings()
+            }
         }
-        layout.addView(tryhereArea)
+        mainLayout.addView(enableButton)
 
-        // Add key event listener for API 28+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            tryhereArea.addOnUnhandledKeyEventListener(TryhereOnUnhandledKeyEventListener())
+        // Settings button (secondary)
+        val settingsButton = Button(this).apply {
+            text = "🎛️ App Settings"
+            setTextColor(0xFFE0E0E0.toInt())
+            textSize = 14f
+            isAllCaps = false
+
+            // Outline style button
+            val outlineDrawable = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = 16 * density
+                setStroke((2 * density).toInt(), 0xFFE94560.toInt())
+                setColor(Color.TRANSPARENT)
+            }
+            background = outlineDrawable
+
+            setPadding(
+                (24 * density).toInt(),
+                (12 * density).toInt(),
+                (24 * density).toInt(),
+                (12 * density).toInt()
+            )
+
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+            }
+
+            setOnClickListener {
+                launchAppSettings()
+            }
         }
+        mainLayout.addView(settingsButton)
 
-        setContentView(layout)
-        Log.i(TAG, "Fallback UI created")
+        scrollView.addView(mainLayout)
+        setContentView(scrollView)
     }
 
-    /**
-     * Key event listener for the test area
-     */
-    @TargetApi(Build.VERSION_CODES.P)
-    inner class TryhereOnUnhandledKeyEventListener : View.OnUnhandledKeyEventListener {
-
-        override fun onUnhandledKeyEvent(view: View, event: KeyEvent): Boolean {
-            // Don't handle the back key
-            if (event.keyCode == KeyEvent.KEYCODE_BACK) {
-                return false
-            }
-
-            // Key release of modifiers would erase interesting data
-            if (KeyEvent.isModifierKey(event.keyCode)) {
-                return false
-            }
-
-            // Build modifier string
-            val modifiers = buildString {
-                if (event.isAltPressed) append("Alt+")
-                if (event.isShiftPressed) append("Shift+")
-                if (event.isCtrlPressed) append("Ctrl+")
-                if (event.isMetaPressed) append("Meta+")
-            }
-
-            // Get key name
-            val keyName = KeyEvent.keyCodeToString(event.keyCode)
-                .removePrefix("KEYCODE_")
-
-            // Update display
-            val displayText = "$modifiers$keyName"
-            tryhereText.text = displayText
-
-            Log.d(TAG, "Key event: $displayText")
-            return false
+    private fun startAnimations() {
+        // Bounce animation for raccoon
+        val bounceY = ObjectAnimator.ofFloat(raccoonView, "translationY", 0f, -20f, 0f).apply {
+            duration = 1500
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = BounceInterpolator()
         }
+
+        // Gentle rotation for playfulness
+        val tilt = ObjectAnimator.ofFloat(raccoonView, "rotation", -5f, 5f, -5f).apply {
+            duration = 2000
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = AccelerateDecelerateInterpolator()
+        }
+
+        // Eye blink animation (scale raccoon slightly)
+        val blink = ObjectAnimator.ofFloat(raccoonView, "scaleY", 1f, 0.95f, 1f).apply {
+            duration = 3000
+            repeatCount = ValueAnimator.INFINITE
+            startDelay = 2000
+        }
+
+        animatorSet = AnimatorSet().apply {
+            playTogether(bounceY, tilt, blink)
+            start()
+        }
+
+        // Start internal raccoon animations
+        raccoonView.startBlinking()
+    }
+
+    private fun stopAnimations() {
+        animatorSet?.cancel()
+        raccoonView.stopBlinking()
+    }
+
+    private fun launchKeyboardSettings() {
+        try {
+            startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
+            Log.d(TAG, "Launched keyboard settings")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error launching keyboard settings", e)
+            android.widget.Toast.makeText(
+                this,
+                "Could not open keyboard settings",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    private fun launchAppSettings() {
+        try {
+            startActivity(Intent(this, SettingsActivity::class.java))
+            Log.d(TAG, "Launched app settings")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error launching app settings", e)
+        }
+    }
+}
+
+/**
+ * Custom view that draws and animates a cute raccoon character.
+ */
+class RaccoonAnimationView(context: Context) : View(context) {
+
+    private val facePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = 0xFF8B7355.toInt() // Brown-gray fur color
+        style = Paint.Style.FILL
+    }
+
+    private val darkFurPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = 0xFF4A4A4A.toInt() // Dark gray for mask and ears
+        style = Paint.Style.FILL
+    }
+
+    private val lightFurPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = 0xFFD4C4B0.toInt() // Light cream for snout
+        style = Paint.Style.FILL
+    }
+
+    private val eyeWhitePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = 0xFFFFFFFF.toInt()
+        style = Paint.Style.FILL
+    }
+
+    private val eyePupilPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = 0xFF2C2C2C.toInt()
+        style = Paint.Style.FILL
+    }
+
+    private val eyeHighlightPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = 0xFFFFFFFF.toInt()
+        style = Paint.Style.FILL
+    }
+
+    private val nosePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = 0xFF3D3D3D.toInt()
+        style = Paint.Style.FILL
+    }
+
+    private val blushPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = 0x40FF69B4.toInt() // Semi-transparent pink
+        style = Paint.Style.FILL
+    }
+
+    // Blink animation state
+    private var blinkProgress = 0f
+    private var isBlinking = false
+    private val blinkHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val blinkRunnable = object : Runnable {
+        override fun run() {
+            // Quick blink animation
+            animateBlink()
+            // Schedule next blink (random interval 2-5 seconds)
+            blinkHandler.postDelayed(this, (2000..5000).random().toLong())
+        }
+    }
+
+    fun startBlinking() {
+        isBlinking = true
+        blinkHandler.postDelayed(blinkRunnable, 1500)
+    }
+
+    fun stopBlinking() {
+        isBlinking = false
+        blinkHandler.removeCallbacks(blinkRunnable)
+    }
+
+    private fun animateBlink() {
+        val animator = ValueAnimator.ofFloat(0f, 1f, 0f).apply {
+            duration = 150
+            addUpdateListener {
+                blinkProgress = it.animatedValue as Float
+                invalidate()
+            }
+        }
+        animator.start()
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+
+        val centerX = width / 2f
+        val centerY = height / 2f
+        val size = minOf(width, height) * 0.4f
+
+        // Draw ears (dark gray triangular shapes)
+        drawEars(canvas, centerX, centerY, size)
+
+        // Draw face (main brown-gray circle)
+        canvas.drawCircle(centerX, centerY, size, facePaint)
+
+        // Draw mask (dark patches around eyes)
+        drawMask(canvas, centerX, centerY, size)
+
+        // Draw snout (light cream area)
+        drawSnout(canvas, centerX, centerY, size)
+
+        // Draw eyes
+        drawEyes(canvas, centerX, centerY, size)
+
+        // Draw nose
+        val noseY = centerY + size * 0.2f
+        canvas.drawCircle(centerX, noseY, size * 0.12f, nosePaint)
+
+        // Draw cute blush marks
+        drawBlush(canvas, centerX, centerY, size)
+
+        // Draw whisker dots
+        drawWhiskers(canvas, centerX, centerY, size)
+    }
+
+    private fun drawEars(canvas: Canvas, centerX: Float, centerY: Float, size: Float) {
+        val earSize = size * 0.5f
+        val earOffset = size * 0.7f
+
+        // Left ear
+        val leftEarPath = Path().apply {
+            moveTo(centerX - earOffset, centerY - size * 0.3f)
+            lineTo(centerX - earOffset - earSize * 0.3f, centerY - size - earSize * 0.5f)
+            lineTo(centerX - earOffset + earSize * 0.5f, centerY - size * 0.5f)
+            close()
+        }
+        canvas.drawPath(leftEarPath, darkFurPaint)
+
+        // Right ear
+        val rightEarPath = Path().apply {
+            moveTo(centerX + earOffset, centerY - size * 0.3f)
+            lineTo(centerX + earOffset + earSize * 0.3f, centerY - size - earSize * 0.5f)
+            lineTo(centerX + earOffset - earSize * 0.5f, centerY - size * 0.5f)
+            close()
+        }
+        canvas.drawPath(rightEarPath, darkFurPaint)
+    }
+
+    private fun drawMask(canvas: Canvas, centerX: Float, centerY: Float, size: Float) {
+        // Left mask patch
+        val leftMaskRect = RectF(
+            centerX - size * 0.8f,
+            centerY - size * 0.5f,
+            centerX - size * 0.1f,
+            centerY + size * 0.1f
+        )
+        canvas.drawOval(leftMaskRect, darkFurPaint)
+
+        // Right mask patch
+        val rightMaskRect = RectF(
+            centerX + size * 0.1f,
+            centerY - size * 0.5f,
+            centerX + size * 0.8f,
+            centerY + size * 0.1f
+        )
+        canvas.drawOval(rightMaskRect, darkFurPaint)
+    }
+
+    private fun drawSnout(canvas: Canvas, centerX: Float, centerY: Float, size: Float) {
+        val snoutRect = RectF(
+            centerX - size * 0.4f,
+            centerY - size * 0.1f,
+            centerX + size * 0.4f,
+            centerY + size * 0.6f
+        )
+        canvas.drawOval(snoutRect, lightFurPaint)
+    }
+
+    private fun drawEyes(canvas: Canvas, centerX: Float, centerY: Float, size: Float) {
+        val eyeY = centerY - size * 0.15f
+        val eyeSpacing = size * 0.35f
+        val eyeRadius = size * 0.18f
+        val pupilRadius = size * 0.1f
+
+        // Calculate eye height based on blink progress (1.0 = fully closed)
+        val eyeScaleY = 1f - blinkProgress * 0.9f
+
+        // Left eye white
+        canvas.save()
+        canvas.scale(1f, eyeScaleY, centerX - eyeSpacing, eyeY)
+        canvas.drawCircle(centerX - eyeSpacing, eyeY, eyeRadius, eyeWhitePaint)
+
+        if (eyeScaleY > 0.3f) {
+            // Left pupil
+            canvas.drawCircle(centerX - eyeSpacing, eyeY, pupilRadius, eyePupilPaint)
+            // Left highlight
+            canvas.drawCircle(
+                centerX - eyeSpacing - pupilRadius * 0.3f,
+                eyeY - pupilRadius * 0.3f,
+                pupilRadius * 0.3f,
+                eyeHighlightPaint
+            )
+        }
+        canvas.restore()
+
+        // Right eye white
+        canvas.save()
+        canvas.scale(1f, eyeScaleY, centerX + eyeSpacing, eyeY)
+        canvas.drawCircle(centerX + eyeSpacing, eyeY, eyeRadius, eyeWhitePaint)
+
+        if (eyeScaleY > 0.3f) {
+            // Right pupil
+            canvas.drawCircle(centerX + eyeSpacing, eyeY, pupilRadius, eyePupilPaint)
+            // Right highlight
+            canvas.drawCircle(
+                centerX + eyeSpacing - pupilRadius * 0.3f,
+                eyeY - pupilRadius * 0.3f,
+                pupilRadius * 0.3f,
+                eyeHighlightPaint
+            )
+        }
+        canvas.restore()
+    }
+
+    private fun drawBlush(canvas: Canvas, centerX: Float, centerY: Float, size: Float) {
+        val blushY = centerY + size * 0.05f
+        val blushSpacing = size * 0.55f
+        val blushRadius = size * 0.15f
+
+        // Left blush
+        canvas.drawCircle(centerX - blushSpacing, blushY, blushRadius, blushPaint)
+        // Right blush
+        canvas.drawCircle(centerX + blushSpacing, blushY, blushRadius, blushPaint)
+    }
+
+    private fun drawWhiskers(canvas: Canvas, centerX: Float, centerY: Float, size: Float) {
+        val whiskerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xFF6B6B6B.toInt()
+            style = Paint.Style.FILL
+        }
+
+        val whiskerY = centerY + size * 0.25f
+        val whiskerSpacing = size * 0.25f
+        val dotSize = size * 0.04f
+
+        // Left whisker dots
+        canvas.drawCircle(centerX - whiskerSpacing, whiskerY - size * 0.05f, dotSize, whiskerPaint)
+        canvas.drawCircle(centerX - whiskerSpacing - size * 0.1f, whiskerY, dotSize, whiskerPaint)
+        canvas.drawCircle(centerX - whiskerSpacing, whiskerY + size * 0.05f, dotSize, whiskerPaint)
+
+        // Right whisker dots
+        canvas.drawCircle(centerX + whiskerSpacing, whiskerY - size * 0.05f, dotSize, whiskerPaint)
+        canvas.drawCircle(centerX + whiskerSpacing + size * 0.1f, whiskerY, dotSize, whiskerPaint)
+        canvas.drawCircle(centerX + whiskerSpacing, whiskerY + size * 0.05f, dotSize, whiskerPaint)
     }
 }
