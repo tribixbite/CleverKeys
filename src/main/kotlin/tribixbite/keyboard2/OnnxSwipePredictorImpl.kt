@@ -940,16 +940,20 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     }
 
     /**
-     * Debug logging
+     * Debug logging - sends to both callback and global DebugLoggingManager
      */
     private fun logDebug(message: String) {
         Log.d(TAG, message)
         debugLogger?.invoke(message)
+        // Also send to SwipeDebugActivity via broadcast if debug mode is enabled
+        DebugLoggingManager.sendDebugLog(message)
     }
     
     private fun logE(message: String, throwable: Throwable) {
         Log.e(TAG, message, throwable)
         debugLogger?.invoke("ERROR: $message - ${throwable.message}")
+        // Also send errors to SwipeDebugActivity
+        DebugLoggingManager.sendDebugLog("ERROR: $message - ${throwable.message}")
     }
     
     /**
@@ -1320,6 +1324,8 @@ class SwipeTrajectoryProcessor {
 
     private fun logD(message: String) {
         Log.d(TAG, message)
+        // Also send to SwipeDebugActivity
+        DebugLoggingManager.sendDebugLog(message)
     }
 }
 

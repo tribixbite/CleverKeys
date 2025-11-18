@@ -101,6 +101,13 @@
     </activity>
 
     <activity android:name="tribixbite.keyboard2.TestActivity" android:exported="true"/>
+
+    <activity android:name="tribixbite.keyboard2.SwipeDebugActivity" android:label="Swipe Debug Log" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+      </intent-filter>
+    </activity>
   </application>
 
   <!-- To query enabled input methods for voice IME detection -->
