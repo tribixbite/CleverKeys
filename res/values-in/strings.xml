@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">Unexpected Keyboard</string>
-    <string name="app_name_debug">Unexpected Keyboard (Debug)</string>
+    <string name="app_name_release">CleverKeys</string>
+    <string name="app_name_debug">CleverKeys (Debug)</string>
     <string name="short_description">Keyboard virtual yang ringan dan sadar privasi untuk Android.</string>
     <string name="store_description">Fitur utamanya adalah Anda dapat mengetik lebih banyak karakter dengan menggeser tombol ke arah sudut.\n\nAplikasi ini awalnya dirancang untuk programmer yang menggunakan Termux.\nSekarang sempurna untuk penggunaan sehari-hari.\n\nAplikasi ini tidak berisi iklan, tidak membuat permintaan jaringan dan Open Source.</string>
     <string name="pref_portrait">Dalam mode potret</string>
@@ -96,7 +96,7 @@
     <string name="key_action_send">Kirim</string>
     <string name="launcher_button_imesettings">Aktifkan keyboard</string>
     <string name="launcher_button_imepicker">Pilih keyboard</string>
-    <string name="launcher_description">Aplikasi ini adalah keyboard virtual. Buka pengaturan sistem dengan mengklik tombol di bawah ini dan aktifkan Unexpected-Keyboard.</string>
+    <string name="launcher_description">Aplikasi ini adalah keyboard virtual. Buka pengaturan sistem dengan mengklik tombol di bawah ini dan aktifkan CleverKeys.</string>
     <string name="launcher_sourcecode">Ini adalah aplikasi sumber terbuka dan gratis. Anda dapat menemukan kode sumber atau melaporkan bug di GitHub.</string>
     <string name="launcher_tryhere">Setelah mengaktifkan, Anda dapat mencoba keyboard di sini:</string>
     <string name="launcher_tryhere_hint">Ketik disini</string>

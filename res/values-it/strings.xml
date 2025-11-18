@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">Unexpected Keyboard</string>
-    <string name="app_name_debug">Unexpected Keyboard (debug)</string>
+    <string name="app_name_release">CleverKeys</string>
+    <string name="app_name_debug">CleverKeys (debug)</string>
     <string name="short_description">Una Tastiera Virtuale Leggera Per La Programmazione</string>
     <string name="store_description">La principale funzionalita` e\' che si possono digitare caratteri aggiuntivi scorrendo sui tasti verso gli angoli.\n.\nQuesta app e\' stata inizialmente progettata per i programmatori che usavano Termux.\nOggi e\' perfetta per l\'utilizzo quotidiano,\n.\nQuesta app non contiene pubblicita`, non genera chiamate di rete ed e\' Open Source.</string>
     <string name="pref_portrait">In modalita` verticale</string>
@@ -96,7 +96,7 @@
     <string name="key_action_send">Invia</string>
     <!-- <string name="launcher_button_imesettings">Enable keyboard</string> -->
     <!-- <string name="launcher_button_imepicker">Select keyboard</string> -->
-    <!-- <string name="launcher_description">This application is a virtual keyboard. Go to the system settings by clicking on the button below and enable Unexpected-Keyboard.</string> -->
+    <!-- <string name="launcher_description">This application is a virtual keyboard. Go to the system settings by clicking on the button below and enable CleverKeys.</string> -->
     <!-- <string name="launcher_sourcecode">This is a free and open source application. You can find the source code or report bugs on GitHub.</string> -->
     <!-- <string name="launcher_tryhere">After enabling, you can try the keyboard here:</string> -->
     <!-- <string name="launcher_tryhere_hint">Try here</string> -->

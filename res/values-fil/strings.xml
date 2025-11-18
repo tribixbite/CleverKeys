@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">Unexpected Keyboard</string>
-    <string name="app_name_debug">Unexpected Keyboard (Debug)</string>
+    <string name="app_name_release">CleverKeys</string>
+    <string name="app_name_debug">CleverKeys (Debug)</string>
     <string name="short_description">Magaan at privacy-conscious na virtual keyboard sa Android.</string>
     <string name="store_description">Ang pangunahing feature ay maaari kang mag-type ng mas marami pang karakter sa pag-swipe sa gilid ng mga key.\n\nNoong simula, ginawa itong application para sa mga programmer sa na nagte-Termux.\nNgayo\'y perpekto na sa pang-araw-araw.\n\nWalang ads, hindi nagne-network request at Open Source ang application na ito.</string>
     <string name="pref_portrait">Nakapatayo</string>
@@ -96,7 +96,7 @@
     <string name="key_action_send">Send</string>
     <string name="launcher_button_imesettings">Paganahin ang keyboard</string>
     <string name="launcher_button_imepicker">Pumili ng keyboard</string>
-    <string name="launcher_description">Itong application ay isang virtual keyboard. Pindutin ang buton sa ilalim nang pumunta sa system settings at buksan ang Unexpected-Keyboard.</string>
+    <string name="launcher_description">Itong application ay isang virtual keyboard. Pindutin ang buton sa ilalim nang pumunta sa system settings at buksan ang CleverKeys.</string>
     <string name="launcher_sourcecode">Libre at open source ito na application. Maaaring makita ang source code o makapagreport ng bugs sa Github.</string>
     <string name="launcher_tryhere">Pagkatapos buksan, masusubukan mo ang keyboard dito:</string>
     <string name="launcher_tryhere_hint">Subukan dito</string>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">Unexpected Keyboard</string>
-    <string name="app_name_debug">Unexpected Keyboard (Debug)</string>
+    <string name="app_name_release">CleverKeys</string>
+    <string name="app_name_debug">CleverKeys (Debug)</string>
     <string name="short_description">Eine schlanke, datenschutzfreundliche Bildschirmtastatur für Android.</string>
     <string name="store_description">Diese Tastatur zeichnet sich dadurch aus, dass man zusätzliche Zeichen durch Wischgesten in Richtung der Tastenecken eingeben kann.\n\nDie Anwendung wurde ursprünglich für das Programmieren in Termux entwickelt.\nMittlerweile ist sie auch für den täglichen Gebrauch perfekt geeignet.\n\nDiese App enthält keine Werbung, benötigt keinen Netzwerkzugriff und ist quelloffen.</string>
     <string name="pref_portrait">Im Hochformatmodus</string>
@@ -96,7 +96,7 @@
     <string name="key_action_send">Senden</string>
     <string name="launcher_button_imesettings">Tastatur aktivieren</string>
     <string name="launcher_button_imepicker">Tastatur auswählen</string>
-    <string name="launcher_description">Diese App ist eine virtuelle Tastatur. Tippe auf den Button unten und aktivere Unexpected Keyboard in den Systemeinstellungen.</string>
+    <string name="launcher_description">Diese App ist eine virtuelle Tastatur. Tippe auf den Button unten und aktivere CleverKeys in den Systemeinstellungen.</string>
     <string name="launcher_sourcecode">Dies ist eine freie und quelloffene App. Du findest den Quellcode auf Github. Dort können auch Bugs gemeldet werden.</string>
     <string name="launcher_tryhere">Nach Aktivierung kannst du die Tastatur hier ausprobieren:</string>
     <string name="launcher_tryhere_hint">Hier ausprobieren</string>

@@ -3,7 +3,7 @@
     <string name="app_name_release">CleverKeys</string>
     <string name="app_name_debug">CleverKeys (Debug)</string>
     <string name="short_description">AI-powered swipe typing keyboard with neural predictions running entirely on-device.</string>
-    <string name="store_description">CleverKeys combines privacy-first design with cutting-edge neural prediction technology. Features include:\n\n• Neural swipe typing with ONNX transformer models\n• 8-directional gesture support for programming symbols\n• 100% local processing - no cloud, no data collection\n• Hardware acceleration for modern Android devices\n• Real-time calibration and personalized training\n\nBuilt upon Unexpected Keyboard with enhanced neural intelligence.</string>
+    <string name="store_description">CleverKeys combines privacy-first design with cutting-edge neural prediction technology. Features include:\n\n• Neural swipe typing with ONNX transformer models\n• 8-directional gesture support for programming symbols\n• 100% local processing - no cloud, no data collection\n• Hardware acceleration for modern Android devices\n• Real-time calibration and personalized training\n\nBuilt upon CleverKeys with enhanced neural intelligence.</string>
     <string name="pref_portrait">In portrait mode</string>
     <string name="pref_portrait_unfolded">In portrait mode unfolded</string>
     <string name="pref_landscape">In landscape mode</string>
@@ -119,7 +119,7 @@
     <string name="key_action_send">Send</string>
     <string name="launcher_button_imesettings">Enable keyboard</string>
     <string name="launcher_button_imepicker">Select keyboard</string>
-    <string name="launcher_description">This application is a virtual keyboard. Go to the system settings by clicking on the button below and enable Unexpected-Keyboard.</string>
+    <string name="launcher_description">This application is a virtual keyboard. Go to the system settings by clicking on the button below and enable CleverKeys.</string>
     <string name="launcher_sourcecode">This is a free and open source application. You can find the source code or report bugs on GitHub.</string>
     <string name="launcher_tryhere">After enabling, you can try the keyboard here:</string>
     <string name="launcher_tryhere_hint">Try here</string>

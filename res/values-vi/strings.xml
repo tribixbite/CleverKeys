@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">Unexpected Keyboard</string>
-    <string name="app_name_debug">Unexpected Keyboard (gỡ lỗi)</string>
+    <string name="app_name_release">CleverKeys</string>
+    <string name="app_name_debug">CleverKeys (gỡ lỗi)</string>
     <string name="short_description">Bàn phím ảo gọn nhẹ và tôn trọng quyền riêng tư cho Android.</string>
     <string name="store_description">Chức năng chính là dễ dàng gõ nhiều ký tự bằng cách kéo phím về góc của nó.\n\nỨng dụng này ban đầu được thiết kế cho các lập trình viên dùng Termux.\nBây giờ đã hoàn hảo cho việc sử dụng hàng ngày.\n\nỨng dụng này không chứa quảng cáo, không cần đến mạng, và có mã nguồn mở.</string>
     <string name="pref_portrait">Trong chế độ chân dung</string>
@@ -96,7 +96,7 @@
     <string name="key_action_send">Gửi</string>
     <!-- <string name="launcher_button_imesettings">Enable keyboard</string> -->
     <!-- <string name="launcher_button_imepicker">Select keyboard</string> -->
-    <!-- <string name="launcher_description">This application is a virtual keyboard. Go to the system settings by clicking on the button below and enable Unexpected-Keyboard.</string> -->
+    <!-- <string name="launcher_description">This application is a virtual keyboard. Go to the system settings by clicking on the button below and enable CleverKeys.</string> -->
     <!-- <string name="launcher_sourcecode">This is a free and open source application. You can find the source code or report bugs on GitHub.</string> -->
     <!-- <string name="launcher_tryhere">After enabling, you can try the keyboard here:</string> -->
     <!-- <string name="launcher_tryhere_hint">Try here</string> -->

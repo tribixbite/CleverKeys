@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">Unexpected Keyboard</string>
-    <string name="app_name_debug">Unexpected Keyboard (Налагодження)</string>
+    <string name="app_name_release">CleverKeys</string>
+    <string name="app_name_debug">CleverKeys (Налагодження)</string>
     <string name="short_description">Легка та конфіденційна віртуальна клавіатура для Android.</string>
     <string name="store_description">Головна особливість полягає в тому, що ви можете вводити більше символів, проводячи клавіші до кутів.\n\nЦя програма спочатку була розроблена для програмістів, які використовують Termux.\nТепер ідеально підходить для щоденного використання.\n\nЦя програма не містить реклами, не надсилає жодних мережевих запитів і має відкритий код.</string>
     <string name="pref_portrait">У портретному режимі</string>
@@ -96,7 +96,7 @@
     <string name="key_action_send">Надіслати</string>
     <string name="launcher_button_imesettings">Увімкнути клавіатуру</string>
     <string name="launcher_button_imepicker">Вибрати клавіатуру</string>
-    <string name="launcher_description">Ця програма є віртуальною клавіатурою. Перейдіть до системних налаштувань, натиснувши кнопку нижче, і ввімкніть Unexpected-Keyboard.</string>
+    <string name="launcher_description">Ця програма є віртуальною клавіатурою. Перейдіть до системних налаштувань, натиснувши кнопку нижче, і ввімкніть CleverKeys.</string>
     <string name="launcher_sourcecode">Це безкоштовна програма з відкритим кодом. Ви можете знайти початковий код або повідомити про помилки на GitHub.</string>
     <string name="launcher_tryhere">Після ввімкнення ви можете спробувати клавіатуру тут:</string>
     <string name="launcher_tryhere_hint">Спробуйте тут</string>
