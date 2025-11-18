@@ -111,7 +111,7 @@ android {
       kotlin.srcDirs = ['src/main/kotlin']
       java.srcDirs = ['src/main/java']
       res.srcDirs = ['res', 'build/generated-resources']
-      assets.srcDirs = ['assets']
+      assets.srcDirs = ['assets', 'src/main/assets']
     }
 
     test {
