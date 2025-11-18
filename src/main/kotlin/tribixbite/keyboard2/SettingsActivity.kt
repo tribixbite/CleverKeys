@@ -83,6 +83,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Gesture sensitivity settings
     private var swipeDistance by mutableStateOf(15)
     private var circleSensitivity by mutableStateOf(2)
+    private var sliderSensitivity by mutableStateOf(30) // Phase 5: Space bar slider (0-100%)
 
     // Long press settings
     private var longPressTimeout by mutableStateOf(600)
@@ -326,6 +327,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
             "swipe_show_debug_scores" -> {
                 swipeDebugEnabled = prefs.getBoolean(key, false)
+            }
+            // Phase 5: Gesture settings listeners
+            "slider_sensitivity" -> {
+                sliderSensitivity = (prefs.getString(key, "30") ?: "30").toIntOrNull() ?: 30
             }
         }
     }
@@ -790,6 +795,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         saveSetting("circle_sensitivity", circleSensitivity.toString())
                     },
                     displayValue = "$circleSensitivity"
+                )
+
+                SettingsSlider(
+                    title = "Space Bar Slider Sensitivity",
+                    description = "Sensitivity for cursor movement via space bar horizontal swipe",
+                    value = sliderSensitivity.toFloat(),
+                    valueRange = 0f..100f,
+                    steps = 100,
+                    onValueChange = {
+                        sliderSensitivity = it.toInt()
+                        saveSetting("slider_sensitivity", sliderSensitivity.toString())
+                    },
+                    displayValue = "$sliderSensitivity%"
                 )
 
                 SettingsSlider(
@@ -1301,6 +1319,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Gesture sensitivity settings
         swipeDistance = (prefs.getString("swipe_dist", "15") ?: "15").toIntOrNull() ?: 15
         circleSensitivity = (prefs.getString("circle_sensitivity", "2") ?: "2").toIntOrNull() ?: 2
+        sliderSensitivity = (prefs.getString("slider_sensitivity", "30") ?: "30").toIntOrNull() ?: 30
 
         // Long press settings
         longPressTimeout = prefs.getInt("longpress_timeout", 600)
