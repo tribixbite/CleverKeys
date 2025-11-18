@@ -1016,6 +1016,23 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }
 
+            // Backup & Restore Section (Phase 7)
+            SettingsSection("Backup & Restore") {
+                Button(
+                    onClick = { openBackupRestore() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Backup & Restore Settings")
+                }
+
+                Text(
+                    text = "Export and import keyboard configuration",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
             // Advanced Section
             SettingsSection(stringResource(R.string.settings_section_advanced)) {
                 SettingsSwitch(
@@ -1724,5 +1741,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     private fun openClipboardSettings() {
         startActivity(Intent(this, ClipboardSettingsActivity::class.java))
+    }
+
+    private fun openBackupRestore() {
+        startActivity(Intent(this, BackupRestoreActivity::class.java))
     }
 }

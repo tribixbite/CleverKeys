@@ -93,6 +93,13 @@
       </intent-filter>
     </activity>
 
+    <activity android:name="tribixbite.keyboard2.BackupRestoreActivity" android:label="Backup &amp; Restore" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+      </intent-filter>
+    </activity>
+
     <activity android:name="tribixbite.keyboard2.TestActivity" android:exported="true"/>
   </application>
 
