@@ -343,12 +343,14 @@
 ### Phase 4: 10/10 tasks complete (100%) ✅ COMPLETE (ClipboardSettingsActivity)
 ### Phase 5: 1/6 tasks complete (17%) ✅ COMPLETE (4 tasks skipped, 1 task implemented)
 ### Phase 6: 7/7 tasks complete (100%) ✅ VERIFIED (DictionaryManagerActivity production-ready)
-### Phase 7: 0/9 tasks complete (0%) ⏳ PENDING
+### Phase 7: 2/9 tasks complete (22%) ⚠️ PARTIAL (Backend only, NO UI)
 ### Phase 8: 5/5 tasks complete (100%) ✅ VERIFIED (NeuralSettingsActivity production-ready)
 ### Phase 9: 5/5 tasks complete (100%) ✅ VERIFIED (LayoutManager + ExtraKeys fully functional)
 
-**Overall: 42/66 tasks (63.6%), 15 tasks skipped (architectural incompatibility)**
+**Overall: 44/66 tasks (66.7%), 15 tasks skipped (architectural incompatibility)**
 **Feature Parity Boost: +24% (from 42/51 to 56/51 exposed settings)**
+
+**Phase 7 Status**: Backend complete (BackupRestoreManager.kt 594 lines), but NO UI activity. User cannot access backup/restore functionality. 7 tasks remaining (UI, dictionary export/import, clipboard export/import, directory management).
 
 ---
 
@@ -615,20 +617,125 @@ However, investigation revealed that **all these features are already implemente
 
 ---
 
+## ⚠️ **PHASE 7 PARTIAL** (2025-11-18)
+**Status**: Backend Only (50% complete - **NO UI**)
+**Time**: ~15 minutes verification
+**Commit**: (documentation only)
+
+**Backend Audited**: BackupRestoreManager.kt (594 lines, 23KB)
+
+**Implemented Backend Features** (50% of Phase 7 requirements):
+1. ✅ **Configuration Export/Import** (SharedPreferences only)
+   - JSON serialization with Gson (pretty-printed export, compact import)
+   - Metadata tracking:
+     • App version (versionName, versionCode)
+     • Export date (ISO 8601 timestamp)
+     • Screen dimensions (width, height, density)
+     • Android SDK version
+
+2. ✅ **Version-Tolerant Parsing** - Robust import validation
+   - Type detection: Boolean, Int, Float, String, StringSet
+   - Special handling for JSON-string preferences (layouts, extra_keys, custom_extra_keys)
+   - Screen size mismatch detection (20% threshold)
+   - Internal preference filtering (version, current_layout_*)
+   - Extensive validation rules:
+     • Opacity values (0-100%)
+     • Keyboard height (10-100% portrait, 20-65% landscape)
+     • Margins (0-200dp), border radius (0-100%)
+     • Timing (vibrate_duration, longpress_timeout, longpress_interval)
+     • Neural parameters (beam_width 1-16, max_length 10-50, etc.)
+     • Auto-correction thresholds
+     • Clipboard history limits
+
+3. ✅ **Storage Access Framework (SAF)** - Android 15+ compatible
+   - Uses Uri from ACTION_CREATE_DOCUMENT (export)
+   - Uses Uri from ACTION_OPEN_DOCUMENT (import)
+   - No direct file system access (scoped storage compliant)
+
+4. ✅ **Error Handling** - Production-ready
+   - Try-catch around all I/O operations
+   - Detailed logging with TAG "BackupRestoreManager"
+   - ImportResult data class with statistics
+   - Rollback-safe (uses editor.apply() after all validation)
+
+**Missing Features** (50% of Phase 7 requirements):
+1. ❌ **NO UI Activity** - No user interface to trigger backup/restore
+   - BackupRestoreActivity.kt does NOT exist
+   - No AndroidManifest.xml registration
+   - No navigation from SettingsActivity
+   - User cannot access backup/restore functionality
+
+2. ❌ **Dictionary Export/Import** (Task 7.4-7.5)
+   - Only exports SharedPreferences (configuration)
+   - Does NOT export user dictionary words
+   - Does NOT export disabled words
+   - Does NOT export built-in dictionary modifications
+
+3. ❌ **Clipboard Export/Import** (Task 7.6-7.7)
+   - Only exports SharedPreferences (configuration)
+   - Does NOT export clipboard history entries
+   - Does NOT export pinned clips
+
+4. ❌ **Directory Management** (Task 7.8)
+   - No backup listing functionality
+   - No "restore from previous backup" UI
+   - No automatic cleanup of old backups
+
+**Phase 7 Task Analysis**:
+- Tasks 7.2-7.3 (Configuration Export/Import): ✅ 100% complete (backend only)
+- Task 7.1 (Create Activity): ❌ 0% complete
+- Tasks 7.4-7.5 (Dictionary): ❌ 0% complete
+- Tasks 7.6-7.7 (Clipboard): ❌ 0% complete
+- Task 7.8 (Directory Management): ❌ 0% complete
+- Task 7.9 (Error Handling): ✅ 100% complete (backend only)
+
+**Implementation Estimate**:
+To complete Phase 7 fully:
+1. **Create BackupRestoreActivity** (6-8 hours):
+   - Material 3 Compose UI
+   - Export settings button → launches ACTION_CREATE_DOCUMENT
+   - Import settings button → launches ACTION_OPEN_DOCUMENT
+   - Export all data button (settings + dictionaries + clipboard)
+   - Import all data button
+   - Backup list with timestamps
+   - Result dialogs showing import statistics
+
+2. **Extend BackupRestoreManager** (6-8 hours):
+   - Add dictionary export/import methods
+   - Add clipboard history export/import methods
+   - Backup directory management
+   - Atomic "export all" and "import all" operations
+
+3. **Register and wire** (2 hours):
+   - Add activity to AndroidManifest.xml
+   - Add navigation from SettingsActivity
+   - Add string resources
+   - Testing
+
+**Total Remaining**: 14-18 hours to complete Phase 7 fully
+
+**Conclusion**: BackupRestoreManager is production-quality backend code, but **Phase 7 cannot be marked complete without a UI**. Current state: 50% (backend only), functionally 0% (user cannot access).
+
+---
+
 ## 🎯 **CURRENT FOCUS**
 **Phases Complete**: 1, 2, 4, 5, 6, 8, 9 ✅ (7 phases, 42/66 tasks)
 **Phases Skipped**: 3 (CGR incompatibility, 11 tasks) + 4 Phase 5 tasks (short gestures feature doesn't exist)
-**Remaining**: Phase 7 only (9 tasks, 16-20 hours estimated)
+**Phase Partial**: 7 (2/9 tasks, backend only, NO UI)
+
+**Progress**: 44/66 tasks (66.7%), 15 tasks skipped, 7 tasks remaining
 
 **Recent Verifications** (2025-11-18):
 - ✅ **Phase 6**: DictionaryManagerActivity - 891 lines, 80% feature complete, production-ready
 - ✅ **Phase 8**: NeuralSettingsActivity - 483 lines, 100% feature complete, all 10 neural parameters exposed
 - ✅ **Phase 9**: LayoutManager + ExtraKeys - fully functional with Material 3 UI
+- ⚠️ **Phase 7**: BackupRestoreManager - 594 lines backend, NO UI activity (user cannot access)
 
-**Final Remaining Phase**:
-- **Phase 7**: Backup & Restore System (9 tasks, 16-20 hours estimated)
-  - Export/import SharedPreferences settings
-  - Export/import dictionary data (user words, disabled words)
-  - Export/import clipboard history
-  - Directory management (/sdcard/CleverKeys/)
-  - Error handling and rollback logic
+**Remaining Work (Phase 7)**:
+- **Task 7.1**: Create BackupRestoreActivity with Material 3 Compose UI (6-8 hours)
+- **Tasks 7.4-7.5**: Dictionary export/import (3-4 hours)
+- **Tasks 7.6-7.7**: Clipboard history export/import (3-4 hours)
+- **Task 7.8**: Directory management and backup listing (2 hours)
+- **Integration**: AndroidManifest, navigation, string resources, testing (2 hours)
+
+**Total Remaining**: 14-18 hours to complete Phase 7 fully
