@@ -3,241 +3,67 @@ package tribixbite.keyboard2
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.*
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-import android.view.Gravity
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.BounceInterpolator
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.ScrollView
-import android.widget.TextView
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import tribixbite.keyboard2.theme.KeyboardTheme
 
 /**
- * Cute raccoon-themed launcher activity for CleverKeys.
+ * Material 3 Compose launcher activity for CleverKeys.
  *
  * Features:
  * - Animated cute raccoon mascot
  * - Clear setup instructions
  * - Quick access to system keyboard settings
+ * - GitHub repository link
  */
-class LauncherActivity : Activity() {
+class LauncherActivity : ComponentActivity() {
 
     companion object {
         private const val TAG = "LauncherActivity"
+        private const val GITHUB_URL = "https://github.com/tribixbite/CleverKeys"
     }
-
-    private lateinit var raccoonView: RaccoonAnimationView
-    private var animatorSet: AnimatorSet? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         try {
-            createUI()
+            setContent {
+                KeyboardTheme {
+                    LauncherScreen(
+                        onEnableKeyboard = { launchKeyboardSettings() },
+                        onOpenSettings = { launchAppSettings() },
+                        onOpenGitHub = { openGitHub() }
+                    )
+                }
+            }
             Log.i(TAG, "LauncherActivity created successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Error creating LauncherActivity", e)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        startAnimations()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        stopAnimations()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        animatorSet?.cancel()
-    }
-
-    private fun createUI() {
-        val density = resources.displayMetrics.density
-
-        // Root scroll view for small screens
-        val scrollView = ScrollView(this).apply {
-            setBackgroundColor(0xFF1A1A2E.toInt()) // Dark blue-purple background
-            isFillViewport = true
-        }
-
-        // Main container
-        val mainLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(
-                (32 * density).toInt(),
-                (48 * density).toInt(),
-                (32 * density).toInt(),
-                (32 * density).toInt()
-            )
-        }
-
-        // Cute raccoon animation view
-        raccoonView = RaccoonAnimationView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                (200 * density).toInt(),
-                (200 * density).toInt()
-            ).apply {
-                gravity = Gravity.CENTER_HORIZONTAL
-                bottomMargin = (32 * density).toInt()
-            }
-        }
-        mainLayout.addView(raccoonView)
-
-        // App title
-        val titleText = TextView(this).apply {
-            text = "CleverKeys"
-            setTextColor(0xFFE94560.toInt()) // Vibrant pink/red
-            textSize = 32f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = (24 * density).toInt()
-            }
-        }
-        mainLayout.addView(titleText)
-
-        // Instructions text
-        val instructionsText = TextView(this).apply {
-            text = "This application is a virtual keyboard. Go to the system settings by clicking on the button below and enable CleverKeys."
-            setTextColor(0xFFE0E0E0.toInt()) // Light gray
-            textSize = 16f
-            gravity = Gravity.CENTER
-            setLineSpacing(8f, 1f)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = (32 * density).toInt()
-            }
-        }
-        mainLayout.addView(instructionsText)
-
-        // Enable keyboard button
-        val enableButton = Button(this).apply {
-            text = "⚙️ Enable Keyboard"
-            setTextColor(0xFFFFFFFF.toInt())
-            textSize = 18f
-            isAllCaps = false
-
-            // Create gradient background
-            val gradientDrawable = android.graphics.drawable.GradientDrawable().apply {
-                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-                cornerRadius = 24 * density
-                colors = intArrayOf(0xFFE94560.toInt(), 0xFF0F3460.toInt())
-                orientation = android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT
-            }
-            background = gradientDrawable
-
-            setPadding(
-                (32 * density).toInt(),
-                (16 * density).toInt(),
-                (32 * density).toInt(),
-                (16 * density).toInt()
-            )
-
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.CENTER_HORIZONTAL
-                bottomMargin = (24 * density).toInt()
-            }
-
-            setOnClickListener {
-                launchKeyboardSettings()
-            }
-        }
-        mainLayout.addView(enableButton)
-
-        // Settings button (secondary)
-        val settingsButton = Button(this).apply {
-            text = "🎛️ App Settings"
-            setTextColor(0xFFE0E0E0.toInt())
-            textSize = 14f
-            isAllCaps = false
-
-            // Outline style button
-            val outlineDrawable = android.graphics.drawable.GradientDrawable().apply {
-                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-                cornerRadius = 16 * density
-                setStroke((2 * density).toInt(), 0xFFE94560.toInt())
-                setColor(Color.TRANSPARENT)
-            }
-            background = outlineDrawable
-
-            setPadding(
-                (24 * density).toInt(),
-                (12 * density).toInt(),
-                (24 * density).toInt(),
-                (12 * density).toInt()
-            )
-
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.CENTER_HORIZONTAL
-            }
-
-            setOnClickListener {
-                launchAppSettings()
-            }
-        }
-        mainLayout.addView(settingsButton)
-
-        scrollView.addView(mainLayout)
-        setContentView(scrollView)
-    }
-
-    private fun startAnimations() {
-        // Bounce animation for raccoon
-        val bounceY = ObjectAnimator.ofFloat(raccoonView, "translationY", 0f, -20f, 0f).apply {
-            duration = 1500
-            repeatCount = ValueAnimator.INFINITE
-            interpolator = BounceInterpolator()
-        }
-
-        // Gentle rotation for playfulness
-        val tilt = ObjectAnimator.ofFloat(raccoonView, "rotation", -5f, 5f, -5f).apply {
-            duration = 2000
-            repeatCount = ValueAnimator.INFINITE
-            interpolator = AccelerateDecelerateInterpolator()
-        }
-
-        // Eye blink animation (scale raccoon slightly)
-        val blink = ObjectAnimator.ofFloat(raccoonView, "scaleY", 1f, 0.95f, 1f).apply {
-            duration = 3000
-            repeatCount = ValueAnimator.INFINITE
-            startDelay = 2000
-        }
-
-        animatorSet = AnimatorSet().apply {
-            playTogether(bounceY, tilt, blink)
-            start()
-        }
-
-        // Start internal raccoon animations
-        raccoonView.startBlinking()
-    }
-
-    private fun stopAnimations() {
-        animatorSet?.cancel()
-        raccoonView.stopBlinking()
     }
 
     private fun launchKeyboardSettings() {
@@ -262,6 +88,163 @@ class LauncherActivity : Activity() {
             Log.e(TAG, "Error launching app settings", e)
         }
     }
+
+    private fun openGitHub() {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_URL))
+            startActivity(intent)
+            Log.d(TAG, "Opened GitHub repository")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error opening GitHub", e)
+            android.widget.Toast.makeText(
+                this,
+                "Could not open browser",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+}
+
+@Composable
+fun LauncherScreen(
+    onEnableKeyboard: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenGitHub: () -> Unit
+) {
+    val scrollState = rememberScrollState()
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Animated raccoon mascot
+            RaccoonMascot(
+                modifier = Modifier
+                    .size(180.dp)
+                    .padding(bottom = 24.dp)
+            )
+
+            // App title
+            Text(
+                text = "CleverKeys",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 36.sp
+                ),
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Subtitle
+            Text(
+                text = "Neural Keyboard",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Instructions card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Text(
+                    text = "This application is a virtual keyboard. Go to the system settings by clicking on the button below and enable CleverKeys.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Enable keyboard button (primary)
+            Button(
+                onClick = onEnableKeyboard,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(
+                    text = "Enable Keyboard",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // App settings button (secondary)
+            OutlinedButton(
+                onClick = onOpenSettings,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text(
+                    text = "App Settings",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // GitHub link at bottom
+            Text(
+                text = "tribixbite/CleverKeys",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    textDecoration = TextDecoration.Underline
+                ),
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .clickable { onOpenGitHub() }
+                    .padding(16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+fun RaccoonMascot(modifier: Modifier = Modifier) {
+    var raccoonView by remember { mutableStateOf<RaccoonAnimationView?>(null) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            raccoonView?.stopBlinking()
+        }
+    }
+
+    AndroidView(
+        factory = { context ->
+            RaccoonAnimationView(context).also {
+                raccoonView = it
+                it.startBlinking()
+            }
+        },
+        modifier = modifier,
+        update = { view ->
+            // Start animations when view is updated
+            view.startAnimations()
+        }
+    )
 }
 
 /**
@@ -322,6 +305,8 @@ class RaccoonAnimationView(context: Context) : View(context) {
         }
     }
 
+    private var animatorSet: AnimatorSet? = null
+
     fun startBlinking() {
         isBlinking = true
         blinkHandler.postDelayed(blinkRunnable, 1500)
@@ -330,6 +315,30 @@ class RaccoonAnimationView(context: Context) : View(context) {
     fun stopBlinking() {
         isBlinking = false
         blinkHandler.removeCallbacks(blinkRunnable)
+        animatorSet?.cancel()
+    }
+
+    fun startAnimations() {
+        if (animatorSet?.isRunning == true) return
+
+        // Bounce animation
+        val bounceY = ObjectAnimator.ofFloat(this, "translationY", 0f, -15f, 0f).apply {
+            duration = 1500
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = BounceInterpolator()
+        }
+
+        // Gentle rotation for playfulness
+        val tilt = ObjectAnimator.ofFloat(this, "rotation", -3f, 3f, -3f).apply {
+            duration = 2000
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = AccelerateDecelerateInterpolator()
+        }
+
+        animatorSet = AnimatorSet().apply {
+            playTogether(bounceY, tilt)
+            start()
+        }
     }
 
     private fun animateBlink() {
