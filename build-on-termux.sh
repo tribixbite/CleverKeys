@@ -1,13 +1,13 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Complete build script for Unexpected Keyboard on Termux ARM64
+# Complete build script for CleverKeys on Termux ARM64
 # This script handles all the compatibility issues
 # Usage: ./build-on-termux.sh [debug|release]
 
 BUILD_TYPE="${1:-debug}"
 BUILD_TYPE_LOWER=$(echo "$BUILD_TYPE" | tr '[:upper:]' '[:lower:]')
 
-echo "=== Unexpected Keyboard Termux Build Script ==="
+echo "=== CleverKeys Termux Build Script ==="
 echo "Building $BUILD_TYPE_LOWER APK on Termux ARM64"
 echo
 
@@ -245,7 +245,7 @@ if [ -f "$APK_PATH" ]; then
                 echo
                 echo "To enable it:"
                 echo "  1. Go to Settings → System → Languages & input → Virtual keyboard"
-                echo "  2. Enable 'Unexpected Keyboard'"
+                echo "  2. Enable 'CleverKeys Neural Keyboard'"
                 echo "  3. Switch to it using the keyboard selector"
             else
                 echo "ADB install failed, falling back to manual installation"
