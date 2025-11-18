@@ -13,7 +13,7 @@ import android.util.Log
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.BounceInterpolator
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -40,7 +40,7 @@ import tribixbite.keyboard2.theme.KeyboardTheme
  * - Quick access to system keyboard settings
  * - GitHub repository link
  */
-class LauncherActivity : ComponentActivity() {
+class LauncherActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "LauncherActivity"
