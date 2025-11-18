@@ -545,8 +545,143 @@ class BackupRestoreManager(private val context: Context) {
     }
 
     /**
-     * Validate string preference values
+     * Export dictionaries (user words and disabled words) to JSON file
+     * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
+     * @return true if successful
+     * @throws Exception if export fails
      */
+    @Throws(Exception::class)
+    fun exportDictionaries(uri: Uri): Boolean {
+        try {
+            val root = JsonObject()
+            val metadata = JsonObject()
+
+            // App version
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            metadata.addProperty("app_version", packageInfo.versionName)
+            metadata.addProperty("export_date",
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date()))
+            metadata.addProperty("export_type", "dictionaries")
+
+            root.add("metadata", metadata)
+
+            // Export user dictionary
+            val userDictPrefs = context.getSharedPreferences("user_dictionary", Context.MODE_PRIVATE)
+            val userWords = userDictPrefs.getStringSet("user_words", emptySet()) ?: emptySet()
+            root.add("user_words", gson.toJsonTree(userWords.toList().sorted()))
+
+            // Export disabled words
+            val disabledWordsPrefs = context.getSharedPreferences("disabled_words", Context.MODE_PRIVATE)
+            val disabledWords = disabledWordsPrefs.getStringSet("words", emptySet()) ?: emptySet()
+            root.add("disabled_words", gson.toJsonTree(disabledWords.toList().sorted()))
+
+            // Write to file
+            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                OutputStreamWriter(outputStream).use { writer ->
+                    gson.toJson(root, writer)
+                    writer.flush()
+                }
+            } ?: throw Exception("Failed to open output stream")
+
+            Log.i(TAG, "Exported ${userWords.size} user words, ${disabledWords.size} disabled words")
+            return true
+        } catch (e: Exception) {
+            Log.e(TAG, "Dictionary export failed", e)
+            throw Exception("Dictionary export failed: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Result of dictionary import operation
+     */
+    data class DictionaryImportResult(
+        var userWordsImported: Int = 0,
+        var disabledWordsImported: Int = 0,
+        var sourceVersion: String = "unknown"
+    )
+
+    /**
+     * Import dictionaries from JSON file with merge logic
+     * @param uri URI from Storage Access Framework (ACTION_OPEN_DOCUMENT)
+     * @return DictionaryImportResult with statistics
+     * @throws Exception if import fails
+     */
+    @Throws(Exception::class)
+    fun importDictionaries(uri: Uri): DictionaryImportResult {
+        try {
+            // Read JSON file
+            val jsonBuilder = StringBuilder()
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                    var line: String?
+                    while (reader.readLine().also { line = it } != null) {
+                        jsonBuilder.append(line)
+                    }
+                }
+            } ?: throw Exception("Failed to open input stream")
+
+            val root = JsonParser.parseString(jsonBuilder.toString()).asJsonObject
+
+            // Parse metadata
+            val result = DictionaryImportResult()
+            if (root.has("metadata")) {
+                val metadata = root.getAsJsonObject("metadata")
+                result.sourceVersion = if (metadata.has("app_version")) {
+                    metadata.get("app_version").asString
+                } else "unknown"
+            }
+
+            // Import user words (merge with existing)
+            if (root.has("user_words")) {
+                val userDictPrefs = context.getSharedPreferences("user_dictionary", Context.MODE_PRIVATE)
+                val existingWords = userDictPrefs.getStringSet("user_words", emptySet()) ?: emptySet()
+                val newWords = mutableSetOf<String>()
+                newWords.addAll(existingWords)
+
+                val importedWords = root.getAsJsonArray("user_words")
+                for (word in importedWords) {
+                    if (word.isJsonPrimitive && word.asJsonPrimitive.isString) {
+                        newWords.add(word.asString)
+                    }
+                }
+
+                userDictPrefs.edit()
+                    .putStringSet("user_words", newWords)
+                    .apply()
+
+                result.userWordsImported = newWords.size - existingWords.size
+                Log.i(TAG, "Imported ${result.userWordsImported} new user words")
+            }
+
+            // Import disabled words (merge with existing)
+            if (root.has("disabled_words")) {
+                val disabledWordsPrefs = context.getSharedPreferences("disabled_words", Context.MODE_PRIVATE)
+                val existingWords = disabledWordsPrefs.getStringSet("words", emptySet()) ?: emptySet()
+                val newWords = mutableSetOf<String>()
+                newWords.addAll(existingWords)
+
+                val importedWords = root.getAsJsonArray("disabled_words")
+                for (word in importedWords) {
+                    if (word.isJsonPrimitive && word.asJsonPrimitive.isString) {
+                        newWords.add(word.asString)
+                    }
+                }
+
+                disabledWordsPrefs.edit()
+                    .putStringSet("words", newWords)
+                    .apply()
+
+                result.disabledWordsImported = newWords.size - existingWords.size
+                Log.i(TAG, "Imported ${result.disabledWordsImported} new disabled words")
+            }
+
+            return result
+        } catch (e: Exception) {
+            Log.e(TAG, "Dictionary import failed", e)
+            throw Exception("Dictionary import failed: ${e.message}", e)
+        }
+    }
+
     private fun validateStringPreference(key: String, value: String?): Boolean {
         if (value == null) return false
 

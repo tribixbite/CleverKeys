@@ -98,6 +98,19 @@ class BackupRestoreActivity : ComponentActivity() {
             uri?.let { performImport(it) }
         }
 
+        // Dictionary export/import launchers
+        val exportDictionaryLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.CreateDocument("application/json")
+        ) { uri ->
+            uri?.let { performExportDictionaries(it) }
+        }
+
+        val importDictionaryLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument()
+        ) { uri ->
+            uri?.let { performImportDictionaries(it) }
+        }
+
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -241,6 +254,68 @@ class BackupRestoreActivity : ComponentActivity() {
                     }
                 }
 
+                // Dictionary Backup section
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "Dictionary Backup",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Text(
+                            text = "Export and import your custom dictionaries including user words and disabled words. " +
+                                    "Import merges with existing words without overwriting.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 16.sp
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+                                    val filename = "CleverKeys_dictionaries_$timestamp.json"
+                                    exportDictionaryLauncher.launch(filename)
+                                },
+                                modifier = Modifier.weight(1f),
+                                enabled = !isProcessing,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary
+                                )
+                            ) {
+                                Text("Export")
+                            }
+
+                            Button(
+                                onClick = {
+                                    importDictionaryLauncher.launch(arrayOf("application/json"))
+                                },
+                                modifier = Modifier.weight(1f),
+                                enabled = !isProcessing,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary
+                                )
+                            ) {
+                                Text("Import")
+                            }
+                        }
+                    }
+                }
+
                 // Warning card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -261,9 +336,10 @@ class BackupRestoreActivity : ComponentActivity() {
                         )
                         Text(
                             text = "• Importing settings will overwrite your current configuration\n" +
+                                    "• Dictionary imports merge with existing words (non-destructive)\n" +
                                     "• Some settings may not import if they are invalid or incompatible\n" +
                                     "• After importing, restart the keyboard for all changes to take effect\n" +
-                                    "• Currently only exports keyboard settings (not dictionaries or clipboard history)",
+                                    "• Clipboard history export/import coming soon",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             lineHeight = 16.sp
@@ -367,6 +443,73 @@ class BackupRestoreActivity : ComponentActivity() {
                 resultTitle = "Import Failed"
                 resultMessage = "Failed to import configuration:\n\n${e.message}\n\n" +
                         "Make sure the file is a valid CleverKeys backup file."
+                showResultDialog = true
+            } finally {
+                isProcessing = false
+            }
+        }
+    }
+
+    private fun performExportDictionaries(uri: Uri) {
+        lifecycleScope.launch {
+            isProcessing = true
+            try {
+                withContext(Dispatchers.IO) {
+                    backupRestoreManager.exportDictionaries(uri)
+                }
+
+                resultTitle = "Dictionary Export Successful"
+                resultMessage = "Dictionaries exported successfully.\n\n" +
+                        "File: ${uri.lastPathSegment}\n\n" +
+                        "Includes:\n" +
+                        "• User dictionary words\n" +
+                        "• Disabled words\n\n" +
+                        "You can now transfer this file to another device or keep it as a backup."
+                showResultDialog = true
+
+                android.util.Log.i(TAG, "Dictionary export successful: $uri")
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Dictionary export failed", e)
+                resultTitle = "Dictionary Export Failed"
+                resultMessage = "Failed to export dictionaries:\n\n${e.message}"
+                showResultDialog = true
+            } finally {
+                isProcessing = false
+            }
+        }
+    }
+
+    private fun performImportDictionaries(uri: Uri) {
+        lifecycleScope.launch {
+            isProcessing = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    backupRestoreManager.importDictionaries(uri)
+                }
+
+                // Build result message
+                val messageBuilder = StringBuilder()
+                messageBuilder.append("Dictionary import completed successfully!\n\n")
+                messageBuilder.append("Statistics:\n")
+                messageBuilder.append("• New user words: ${result.userWordsImported}\n")
+                messageBuilder.append("• New disabled words: ${result.disabledWordsImported}\n")
+
+                if (result.sourceVersion != "unknown") {
+                    messageBuilder.append("• Source version: ${result.sourceVersion}\n")
+                }
+
+                messageBuilder.append("\nNote: Import merges with existing words without overwriting.")
+
+                resultTitle = "Dictionary Import Successful"
+                resultMessage = messageBuilder.toString()
+                showResultDialog = true
+
+                android.util.Log.i(TAG, "Dictionary import successful: userWords=${result.userWordsImported}, disabledWords=${result.disabledWordsImported}")
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Dictionary import failed", e)
+                resultTitle = "Dictionary Import Failed"
+                resultMessage = "Failed to import dictionaries:\n\n${e.message}\n\n" +
+                        "Make sure the file is a valid CleverKeys dictionary backup file."
                 showResultDialog = true
             } finally {
                 isProcessing = false
