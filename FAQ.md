@@ -1,7 +1,7 @@
 # CleverKeys - Frequently Asked Questions (FAQ)
 
-**Last Updated**: 2025-11-16
-**Version**: 1.0.0
+**Last Updated**: 2025-11-18
+**Version**: 2.0.0
 
 ---
 
@@ -220,7 +220,11 @@
 **A**: No, we don't have cloud backups. Your data is only on your device. Sorry!
 
 ### Q: Can I export my settings?
-**A**: Not yet in v1.0.0. Settings export/import feature planned for v1.1.
+**A**: Yes! v2.0.0 includes complete Backup & Restore functionality:
+- **Export/Import Settings**: Full configuration backup to JSON
+- **Export/Import Dictionary**: User words + disabled words list
+- **Export/Import Clipboard**: Complete history with timestamps & pins
+- Access via Settings → Backup & Restore → Export/Import buttons
 
 ---
 
