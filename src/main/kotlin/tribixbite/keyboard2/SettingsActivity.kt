@@ -713,11 +713,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                 if (autoCorrectEnabled) {
                     Button(
-                        onClick = {
-                            Toast.makeText(this@SettingsActivity,
-                                "Auto-Correction Settings screen coming in Phase 2",
-                                Toast.LENGTH_SHORT).show()
-                        },
+                        onClick = { openAutoCorrectionSettings() },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Auto-Correction Settings")
@@ -1418,6 +1414,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     private fun openExtraKeysConfig() {
         startActivity(Intent(this, ExtraKeysConfigActivity::class.java))
+    }
+
+    private fun openAutoCorrectionSettings() {
+        startActivity(Intent(this, AutoCorrectionSettingsActivity::class.java))
     }
 
     private fun resetAllSettings() {

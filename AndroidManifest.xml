@@ -65,6 +65,13 @@
       </intent-filter>
     </activity>
 
+    <activity android:name="tribixbite.keyboard2.AutoCorrectionSettingsActivity" android:label="Auto-Correction Settings" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+      </intent-filter>
+    </activity>
+
     <activity android:name="tribixbite.keyboard2.NeuralBrowserActivity" android:label="Neural Model Browser (Legacy)" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
