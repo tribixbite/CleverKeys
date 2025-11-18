@@ -66,6 +66,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var clipboardHistoryEnabled by mutableStateOf(true)
     private var autoCapitalizationEnabled by mutableStateOf(true)
 
+    // Phase 1: Expose existing Config.kt settings
+    private var wordPredictionEnabled by mutableStateOf(false)
+    private var suggestionBarOpacity by mutableStateOf(90)
+    private var autoCorrectEnabled by mutableStateOf(true)
+    private var termuxModeEnabled by mutableStateOf(false)
+    private var vibrationDuration by mutableStateOf(20)
+    private var swipeDebugEnabled by mutableStateOf(false)
+
     // Adaptive layout settings (for feature parity)
     private var marginBottomPortrait by mutableStateOf(7)
     private var marginBottomLandscape by mutableStateOf(3)
@@ -300,6 +308,25 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             "pin_entry_enabled" -> {
                 pinEntryEnabled = prefs.getBoolean(key, false)
             }
+            // Phase 1: Exposed Config.kt settings listeners
+            "word_prediction_enabled" -> {
+                wordPredictionEnabled = prefs.getBoolean(key, false)
+            }
+            "suggestion_bar_opacity" -> {
+                suggestionBarOpacity = Config.safeGetInt(prefs, key, 90)
+            }
+            "autocorrect_enabled" -> {
+                autoCorrectEnabled = prefs.getBoolean(key, true)
+            }
+            "termux_mode_enabled" -> {
+                termuxModeEnabled = prefs.getBoolean(key, false)
+            }
+            "vibrate_duration" -> {
+                vibrationDuration = prefs.getInt(key, 20)
+            }
+            "swipe_show_debug_scores" -> {
+                swipeDebugEnabled = prefs.getBoolean(key, false)
+            }
         }
     }
 
@@ -381,6 +408,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             saveSetting("neural_confidence_threshold", confidenceThreshold)
                         },
                         displayValue = "%.3f".format(confidenceThreshold)
+                    )
+
+                    // Phase 1: Termux Mode Toggle
+                    SettingsSwitch(
+                        title = "Termux Mode",
+                        description = "Insert predictions in Termux-compatible way for terminal usage",
+                        checked = termuxModeEnabled,
+                        onCheckedChange = {
+                            termuxModeEnabled = it
+                            saveSetting("termux_mode_enabled", it)
+                        }
                     )
 
                     Button(
@@ -637,6 +675,55 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     Text("Configure Extra Keys")
                 }
 
+                // Phase 1: Typing/Prediction Settings
+                SettingsSwitch(
+                    title = "Enable Word Predictions",
+                    description = "Show word suggestions while typing",
+                    checked = wordPredictionEnabled,
+                    onCheckedChange = {
+                        wordPredictionEnabled = it
+                        saveSetting("word_prediction_enabled", it)
+                    }
+                )
+
+                if (wordPredictionEnabled) {
+                    SettingsSlider(
+                        title = "Suggestion Bar Opacity",
+                        description = "Transparency of the suggestion bar",
+                        value = suggestionBarOpacity.toFloat(),
+                        valueRange = 0f..100f,
+                        steps = 100,
+                        onValueChange = {
+                            suggestionBarOpacity = it.toInt()
+                            saveSetting("suggestion_bar_opacity", suggestionBarOpacity)
+                        },
+                        displayValue = "$suggestionBarOpacity%"
+                    )
+                }
+
+                SettingsSwitch(
+                    title = "Enable Auto-Correction",
+                    description = "Automatically correct misspelled words",
+                    checked = autoCorrectEnabled,
+                    onCheckedChange = {
+                        autoCorrectEnabled = it
+                        saveSetting("autocorrect_enabled", it)
+                    }
+                )
+
+                if (autoCorrectEnabled) {
+                    Button(
+                        onClick = {
+                            Toast.makeText(this@SettingsActivity,
+                                "Auto-Correction Settings screen coming in Phase 2",
+                                Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Auto-Correction Settings")
+                    }
+                }
+
                 SettingsSwitch(
                     title = stringResource(R.string.settings_auto_capitalization_title),
                     description = stringResource(R.string.settings_auto_capitalization_desc),
@@ -666,6 +753,22 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         saveSetting("vibration_enabled", it)
                     }
                 )
+
+                // Phase 1: Vibration Duration Slider (conditional)
+                if (vibrationEnabled) {
+                    SettingsSlider(
+                        title = "Vibration Duration",
+                        description = "Length of haptic feedback in milliseconds",
+                        value = vibrationDuration.toFloat(),
+                        valueRange = 5f..100f,
+                        steps = 19,
+                        onValueChange = {
+                            vibrationDuration = it.toInt()
+                            saveSetting("vibrate_duration", vibrationDuration)
+                        },
+                        displayValue = "${vibrationDuration}ms"
+                    )
+                }
 
                 SettingsSlider(
                     title = "Swipe Distance Threshold",
@@ -891,6 +994,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     onCheckedChange = {
                         debugEnabled = it
                         saveSetting("debug_enabled", it)
+                    }
+                )
+
+                // Phase 1: Swipe Debug Log Toggle
+                SettingsSwitch(
+                    title = "Swipe Debug Log",
+                    description = "Real-time pipeline analysis for swipe gestures (requires logcat)",
+                    checked = swipeDebugEnabled,
+                    onCheckedChange = {
+                        swipeDebugEnabled = it
+                        saveSetting("swipe_show_debug_scores", it)
                     }
                 )
 
@@ -1197,6 +1311,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         stickyKeysEnabled = prefs.getBoolean("sticky_keys_enabled", false)
         stickyKeysTimeout = prefs.getInt("sticky_keys_timeout_ms", 5000)
         voiceGuidanceEnabled = prefs.getBoolean("voice_guidance_enabled", false)
+
+        // Phase 1: Load exposed Config.kt settings
+        wordPredictionEnabled = prefs.getBoolean("word_prediction_enabled", false)
+        suggestionBarOpacity = Config.safeGetInt(prefs, "suggestion_bar_opacity", 90)
+        autoCorrectEnabled = prefs.getBoolean("autocorrect_enabled", true)
+        termuxModeEnabled = prefs.getBoolean("termux_mode_enabled", false)
+        vibrationDuration = prefs.getInt("vibrate_duration", 20)
+        swipeDebugEnabled = prefs.getBoolean("swipe_show_debug_scores", false)
     }
 
     private fun saveSetting(key: String, value: Any) {
