@@ -682,6 +682,145 @@ class BackupRestoreManager(private val context: Context) {
         }
     }
 
+    /**
+     * Export clipboard history to JSON file
+     * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
+     * @return true if successful
+     * @throws Exception if export fails
+     */
+    @Throws(Exception::class)
+    suspend fun exportClipboardHistory(uri: Uri): Boolean {
+        try {
+            val root = JsonObject()
+            val metadata = JsonObject()
+
+            // App version
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            metadata.addProperty("app_version", packageInfo.versionName)
+            metadata.addProperty("export_date",
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date()))
+            metadata.addProperty("export_type", "clipboard_history")
+
+            root.add("metadata", metadata)
+
+            // Export clipboard entries
+            val clipboardDatabase = ClipboardDatabase.getInstance(context)
+            val entriesResult = clipboardDatabase.getAllEntriesForExport().getOrNull()
+
+            if (entriesResult == null) {
+                throw Exception("Failed to retrieve clipboard entries from database")
+            }
+
+            // Convert to JSON array
+            val entriesJson = entriesResult.map { entry ->
+                JsonObject().apply {
+                    addProperty("content", entry.content)
+                    addProperty("timestamp", entry.timestamp)
+                    addProperty("expiry_timestamp", entry.expiryTimestamp)
+                    addProperty("is_pinned", entry.isPinned)
+                }
+            }
+
+            root.add("clipboard_entries", gson.toJsonTree(entriesJson))
+
+            // Write to file
+            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                OutputStreamWriter(outputStream).use { writer ->
+                    gson.toJson(root, writer)
+                    writer.flush()
+                }
+            } ?: throw Exception("Failed to open output stream")
+
+            Log.i(TAG, "Exported ${entriesResult.size} clipboard entries")
+            return true
+        } catch (e: Exception) {
+            Log.e(TAG, "Clipboard export failed", e)
+            throw Exception("Clipboard export failed: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Result of clipboard import operation
+     */
+    data class ClipboardImportResult(
+        var importedCount: Int = 0,
+        var skippedCount: Int = 0,
+        var sourceVersion: String = "unknown"
+    )
+
+    /**
+     * Import clipboard history from JSON file with merge logic
+     * @param uri URI from Storage Access Framework (ACTION_OPEN_DOCUMENT)
+     * @return ClipboardImportResult with statistics
+     * @throws Exception if import fails
+     */
+    @Throws(Exception::class)
+    suspend fun importClipboardHistory(uri: Uri): ClipboardImportResult {
+        try {
+            // Read JSON file
+            val jsonBuilder = StringBuilder()
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                    var line: String?
+                    while (reader.readLine().also { line = it } != null) {
+                        jsonBuilder.append(line)
+                    }
+                }
+            } ?: throw Exception("Failed to open input stream")
+
+            val root = JsonParser.parseString(jsonBuilder.toString()).asJsonObject
+
+            // Parse metadata
+            val result = ClipboardImportResult()
+            if (root.has("metadata")) {
+                val metadata = root.getAsJsonObject("metadata")
+                result.sourceVersion = if (metadata.has("app_version")) {
+                    metadata.get("app_version").asString
+                } else "unknown"
+            }
+
+            // Import clipboard entries (merge with existing)
+            if (root.has("clipboard_entries")) {
+                val clipboardDatabase = ClipboardDatabase.getInstance(context)
+                val importedEntries = root.getAsJsonArray("clipboard_entries")
+
+                for (entryJson in importedEntries) {
+                    try {
+                        val entry = entryJson.asJsonObject
+                        val content = entry.get("content").asString
+                        val timestamp = entry.get("timestamp").asLong
+                        val expiryTimestamp = entry.get("expiry_timestamp").asLong
+                        val isPinned = entry.get("is_pinned").asBoolean
+
+                        // Add entry to database (duplicate check is handled by addClipboardEntry)
+                        val addResult = clipboardDatabase.addClipboardEntry(content, expiryTimestamp).getOrNull()
+
+                        if (addResult == true) {
+                            result.importedCount++
+
+                            // If entry was pinned in the backup, pin it now
+                            if (isPinned) {
+                                clipboardDatabase.setPinnedStatus(content, true)
+                            }
+                        } else {
+                            result.skippedCount++
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to import clipboard entry", e)
+                        result.skippedCount++
+                    }
+                }
+
+                Log.i(TAG, "Imported ${result.importedCount} clipboard entries, skipped ${result.skippedCount}")
+            }
+
+            return result
+        } catch (e: Exception) {
+            Log.e(TAG, "Clipboard import failed", e)
+            throw Exception("Clipboard import failed: ${e.message}", e)
+        }
+    }
+
     private fun validateStringPreference(key: String, value: String?): Boolean {
         if (value == null) return false
 

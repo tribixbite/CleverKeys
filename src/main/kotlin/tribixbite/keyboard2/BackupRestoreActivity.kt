@@ -111,6 +111,19 @@ class BackupRestoreActivity : ComponentActivity() {
             uri?.let { performImportDictionaries(it) }
         }
 
+        // Clipboard export/import launchers
+        val exportClipboardLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.CreateDocument("application/json")
+        ) { uri ->
+            uri?.let { performExportClipboard(it) }
+        }
+
+        val importClipboardLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument()
+        ) { uri ->
+            uri?.let { performImportClipboard(it) }
+        }
+
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -316,6 +329,68 @@ class BackupRestoreActivity : ComponentActivity() {
                     }
                 }
 
+                // Clipboard History Backup section
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "Clipboard History Backup",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Text(
+                            text = "Export and import your clipboard history including all entries, timestamps, and pinned status. " +
+                                    "Import merges with existing history without overwriting.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 16.sp
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+                                    val filename = "CleverKeys_clipboard_$timestamp.json"
+                                    exportClipboardLauncher.launch(filename)
+                                },
+                                modifier = Modifier.weight(1f),
+                                enabled = !isProcessing,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary
+                                )
+                            ) {
+                                Text("Export")
+                            }
+
+                            Button(
+                                onClick = {
+                                    importClipboardLauncher.launch(arrayOf("application/json"))
+                                },
+                                modifier = Modifier.weight(1f),
+                                enabled = !isProcessing,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary
+                                )
+                            ) {
+                                Text("Import")
+                            }
+                        }
+                    }
+                }
+
                 // Warning card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -336,10 +411,9 @@ class BackupRestoreActivity : ComponentActivity() {
                         )
                         Text(
                             text = "• Importing settings will overwrite your current configuration\n" +
-                                    "• Dictionary imports merge with existing words (non-destructive)\n" +
+                                    "• Dictionary and clipboard imports merge with existing data (non-destructive)\n" +
                                     "• Some settings may not import if they are invalid or incompatible\n" +
-                                    "• After importing, restart the keyboard for all changes to take effect\n" +
-                                    "• Clipboard history export/import coming soon",
+                                    "• After importing, restart the keyboard for all changes to take effect",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             lineHeight = 16.sp
@@ -510,6 +584,73 @@ class BackupRestoreActivity : ComponentActivity() {
                 resultTitle = "Dictionary Import Failed"
                 resultMessage = "Failed to import dictionaries:\n\n${e.message}\n\n" +
                         "Make sure the file is a valid CleverKeys dictionary backup file."
+                showResultDialog = true
+            } finally {
+                isProcessing = false
+            }
+        }
+    }
+
+    private fun performExportClipboard(uri: Uri) {
+        lifecycleScope.launch {
+            isProcessing = true
+            try {
+                withContext(Dispatchers.IO) {
+                    backupRestoreManager.exportClipboardHistory(uri)
+                }
+
+                resultTitle = "Clipboard Export Successful"
+                resultMessage = "Clipboard history exported successfully.\n\n" +
+                        "File: ${uri.lastPathSegment}\n\n" +
+                        "Includes:\n" +
+                        "• All clipboard entries\n" +
+                        "• Timestamps and expiry times\n" +
+                        "• Pinned status\n\n" +
+                        "You can now transfer this file to another device or keep it as a backup."
+                showResultDialog = true
+
+                android.util.Log.i(TAG, "Clipboard export successful: $uri")
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Clipboard export failed", e)
+                resultTitle = "Clipboard Export Failed"
+                resultMessage = "Failed to export clipboard history:\n\n${e.message}"
+                showResultDialog = true
+            } finally {
+                isProcessing = false
+            }
+        }
+    }
+
+    private fun performImportClipboard(uri: Uri) {
+        lifecycleScope.launch {
+            isProcessing = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    backupRestoreManager.importClipboardHistory(uri)
+                }
+
+                val messageBuilder = StringBuilder()
+                messageBuilder.append("Clipboard import completed successfully!\n\n")
+                messageBuilder.append("Statistics:\n")
+                messageBuilder.append("• Imported: ${result.importedCount} entries\n")
+                messageBuilder.append("• Skipped: ${result.skippedCount} entries\n")
+
+                if (result.sourceVersion != "unknown") {
+                    messageBuilder.append("• Source version: ${result.sourceVersion}\n")
+                }
+
+                messageBuilder.append("\nNote: Import merges with existing history without overwriting.")
+
+                resultTitle = "Clipboard Import Successful"
+                resultMessage = messageBuilder.toString()
+                showResultDialog = true
+
+                android.util.Log.i(TAG, "Clipboard import successful: imported=${result.importedCount}, skipped=${result.skippedCount}")
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Clipboard import failed", e)
+                resultTitle = "Clipboard Import Failed"
+                resultMessage = "Failed to import clipboard history:\n\n${e.message}\n\n" +
+                        "Make sure the file is a valid CleverKeys clipboard backup file."
                 showResultDialog = true
             } finally {
                 isProcessing = false

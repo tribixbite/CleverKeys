@@ -441,6 +441,52 @@ class ClipboardDatabase private constructor(context: Context) : SQLiteOpenHelper
         }
 
     /**
+     * Data class for clipboard entry export/import
+     */
+    data class ClipboardEntry(
+        val content: String,
+        val timestamp: Long,
+        val expiryTimestamp: Long,
+        val isPinned: Boolean
+    )
+
+    /**
+     * Get all clipboard entries for export (including expired entries)
+     *
+     * @return Result containing list of all clipboard entries with metadata
+     */
+    suspend fun getAllEntriesForExport(): Result<List<ClipboardEntry>> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val entries = mutableListOf<ClipboardEntry>()
+
+                val query = """
+                    SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP, $COLUMN_EXPIRY_TIMESTAMP, $COLUMN_IS_PINNED
+                    FROM $TABLE_CLIPBOARD
+                    ORDER BY $COLUMN_TIMESTAMP DESC
+                """.trimIndent()
+
+                readableDatabase.rawQuery(query, null).use { cursor ->
+                    while (cursor.moveToNext()) {
+                        entries.add(
+                            ClipboardEntry(
+                                content = cursor.getString(0),
+                                timestamp = cursor.getLong(1),
+                                expiryTimestamp = cursor.getLong(2),
+                                isPinned = cursor.getInt(3) == 1
+                            )
+                        )
+                    }
+                }
+
+                Log.d("ClipboardDatabase", "Retrieved ${entries.size} clipboard entries for export")
+                entries
+            }.onFailure { exception ->
+                Log.e("ClipboardDatabase", "Error retrieving entries for export", exception)
+            }
+        }
+
+    /**
      * Get database statistics for monitoring and debugging.
      *
      * @return Map containing various database statistics
