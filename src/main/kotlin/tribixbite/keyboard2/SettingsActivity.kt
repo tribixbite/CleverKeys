@@ -981,6 +981,23 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }
 
+            // Clipboard Section
+            SettingsSection("Clipboard") {
+                Button(
+                    onClick = { openClipboardSettings() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Clipboard Settings")
+                }
+
+                Text(
+                    text = "Configure clipboard history, limits, and duration",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
             // Advanced Section
             SettingsSection(stringResource(R.string.settings_section_advanced)) {
                 SettingsSwitch(
@@ -1684,5 +1701,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             Toast.makeText(this, getString(R.string.settings_legacy_error, e.message ?: ""), Toast.LENGTH_LONG).show()
             finish()
         }
+    }
+
+    private fun openClipboardSettings() {
+        startActivity(Intent(this, ClipboardSettingsActivity::class.java))
     }
 }
