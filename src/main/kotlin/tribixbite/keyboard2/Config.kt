@@ -284,6 +284,10 @@ class Config private constructor(
         val swipeDistValue = (prefs.getString("swipe_dist", "15") ?: "15").toFloat()
         swipe_dist_px = swipeDistValue / 25f * swipeScaling
 
+        // Short gesture distance (uses same scaling as swipe_dist for consistency)
+        val shortGestureDistValue = safeGetInt(prefs, "short_gesture_min_distance", 15).toFloat()
+        short_gesture_min_distance = shortGestureDistValue / 25f * swipeScaling
+
         val sliderSensitivity = (prefs.getString("slider_sensitivity", "30") ?: "30").toFloat() / 100f
         slide_step_px = sliderSensitivity * swipeScaling
 
@@ -333,9 +337,8 @@ class Config private constructor(
 
         swipe_typing_enabled = prefs.getBoolean("swipe_typing_enabled", true)
 
-        // Short gesture settings (key direction swipes)
+        // Short gesture enable flag (distance loaded above with other swipe settings)
         short_gestures_enabled = prefs.getBoolean("short_gestures_enabled", true)
-        short_gesture_min_distance = safeGetInt(prefs, "short_gesture_min_distance", 15).toFloat()
 
         // Legacy swipe parameters (for compatibility)
         swipe_confidence_shape_weight = safeGetInt(prefs, "swipe_confidence_shape_weight", 90) / 100f
