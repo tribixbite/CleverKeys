@@ -269,6 +269,12 @@ Requires ADB connection to device.
     - Matches Java slider behavior for text selection
     - Commit: 6570da64
 
+41. ✅ **Ctrl+C/V/A Key Events Fix** (Nov 19)
+    - CRITICAL: sendKeyEvent() was not including metaState
+    - Ctrl+C, Ctrl+V, Ctrl+A and all other Ctrl combinations now work
+    - KeyEvents now include META_CTRL_ON, META_ALT_ON, META_SHIFT_ON flags
+    - Commit: 7c180559
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
