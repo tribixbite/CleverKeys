@@ -168,6 +168,10 @@ class Config private constructor(
     var clipboard_history_duration = 5  // Duration in minutes, -1 for never expire
     var swipe_typing_enabled = true
 
+    // Short gesture settings (key direction swipes for secondary characters)
+    var short_gestures_enabled = true
+    var short_gesture_min_distance = 15f  // Minimum distance in pixels for key direction swipes
+
     // Legacy swipe parameters (for compatibility with existing WordPredictor)
     var swipe_confidence_shape_weight = 0.9f
     var swipe_confidence_location_weight = 1.3f
@@ -328,6 +332,10 @@ class Config private constructor(
         clipboard_history_duration = (prefs.getString("clipboard_history_duration", "5") ?: "5").toIntOrNull() ?: 5
 
         swipe_typing_enabled = prefs.getBoolean("swipe_typing_enabled", true)
+
+        // Short gesture settings (key direction swipes)
+        short_gestures_enabled = prefs.getBoolean("short_gestures_enabled", true)
+        short_gesture_min_distance = safeGetInt(prefs, "short_gesture_min_distance", 15).toFloat()
 
         // Legacy swipe parameters (for compatibility)
         swipe_confidence_shape_weight = safeGetInt(prefs, "swipe_confidence_shape_weight", 90) / 100f
