@@ -263,6 +263,12 @@ Requires ADB connection to device.
     - Note: Row.copy() intentionally does deep copy for safety
     - Commit: b48d2752
 
+40. ✅ **Selection Cursor Slider Fix** (Nov 19)
+    - Selection_cursor_left/right now use SHIFT+DPAD for proper selection extension
+    - Previously just moved cursor without extending selection
+    - Matches Java slider behavior for text selection
+    - Commit: 6570da64
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
