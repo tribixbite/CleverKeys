@@ -299,7 +299,8 @@ sealed class KeyValue : Comparable<KeyValue> {
     }
 
     fun withSymbol(newSymbol: String): KeyValue {
-        val adjustedFlags = flags - setOf(Flag.KEY_FONT, Flag.SMALLER_FONT) +
+        // Preserve KEY_FONT for special font rendering, only adjust SMALLER_FONT
+        val adjustedFlags = flags - setOf(Flag.SMALLER_FONT) +
                            if (newSymbol.length > 1) setOf(Flag.SMALLER_FONT) else emptySet()
 
         return when (this) {
@@ -320,7 +321,8 @@ sealed class KeyValue : Comparable<KeyValue> {
 
     fun withChar(newChar: Char): KeyValue {
         val newSymbol = newChar.toString()
-        val adjustedFlags = flags - setOf(Flag.KEY_FONT, Flag.SMALLER_FONT)
+        // Preserve KEY_FONT for special font rendering
+        val adjustedFlags = flags - setOf(Flag.SMALLER_FONT)
         return CharKey(newChar, newSymbol, adjustedFlags)
     }
 
