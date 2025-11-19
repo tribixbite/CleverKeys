@@ -47,11 +47,17 @@ class KeyEventHandler(
     }
 
     // State management
-    private var shouldCapitalizeNext = true
     private var mods = Pointers.Modifiers.EMPTY
     private var metaState = 0
     private var moveCursorForceFallback = false
     private var inputConnection: InputConnection? = null
+
+    // Autocapitalisation (P0-1 fix)
+    private val autocap = Autocapitalisation(callback = object : Autocapitalisation.Callback {
+        override fun updateShiftState(shouldEnable: Boolean, shouldDisable: Boolean) {
+            receiver.setShiftState(shouldEnable, shouldDisable)
+        }
+    })
 
     // Tap typing prediction state (Fix for Bug #359)
     private var currentWord = StringBuilder()
@@ -73,6 +79,7 @@ class KeyEventHandler(
         fun switchToEmojiLayout()
         fun openSettings()
         fun updateSuggestions(suggestions: List<String>) {} // Default empty implementation for tap typing predictions
+        fun setShiftState(shouldEnable: Boolean, shouldDisable: Boolean) {} // For autocapitalisation
     }
     
     override fun key_down(value: KeyValue, is_swipe: Boolean) {
@@ -123,7 +130,7 @@ class KeyEventHandler(
     private fun handleCharacterKey(char: Char, isSwipe: Boolean) {
         val inputConnection = receiver.getInputConnection() ?: return
 
-        val finalChar = if (shouldCapitalizeNext && char.isLetter()) {
+        val finalChar = if (autocap.shouldShiftBeEnabled() && char.isLetter()) {
             char.uppercaseChar()
         } else {
             char
@@ -135,8 +142,8 @@ class KeyEventHandler(
             val expanded = textExpander?.processText(inputConnection, finalChar)
             if (expanded == true) {
                 // Text was expanded - don't insert the trigger character
-                // Update capitalization state
-                shouldCapitalizeNext = finalChar in ".!?"
+                // Notify autocap
+                autocap.typed(finalChar.toString())
                 receiver.performVibration()
 
                 // Update tap typing context
@@ -156,13 +163,15 @@ class KeyEventHandler(
         if (processedText != null) {
             // Smart punctuation modified the input
             inputConnection.commitText(processedText, processedText.length)
+            // Notify autocap
+            autocap.typed(processedText)
         } else {
             // No modification, commit as-is
             inputConnection.commitText(finalChar.toString(), 1)
+            // Notify autocap
+            autocap.typed(finalChar.toString())
         }
 
-        // Update capitalization state
-        shouldCapitalizeNext = finalChar in ".!?"
         receiver.performVibration()
 
         // Update tap typing predictions (Fix for Bug #359)
@@ -248,10 +257,14 @@ class KeyEventHandler(
         when (modifier) {
             KeyValue.Modifier.SHIFT -> {
                 // Shift state handled by Pointers for latching/locking
-                shouldCapitalizeNext = isPressed
+                // Don't affect autocap here - it manages itself
+                logD("Shift ${if (isPressed) "activated" else "deactivated"}")
             }
             KeyValue.Modifier.CTRL, KeyValue.Modifier.ALT, KeyValue.Modifier.META -> {
-                // Control modifiers - state tracked in mods
+                // System modifiers stop autocap when pressed
+                if (isPressed) {
+                    autocap.stop()
+                }
                 logD("Control modifier ${modifier.name} ${if (isPressed) "activated" else "deactivated"}")
             }
             else -> {
@@ -294,10 +307,9 @@ class KeyEventHandler(
         inputConnection.sendKeyEvent(downEvent)
         inputConnection.sendKeyEvent(upEvent)
 
-        // Toggle the shouldCapitalizeNext state
-        shouldCapitalizeNext = !shouldCapitalizeNext
-
-        logD("Caps lock toggled, capitalize=$shouldCapitalizeNext")
+        // Notify autocap that system caps lock was toggled
+        // Autocap will handle the shift state update
+        logD("Caps lock toggled")
     }
 
     /**
@@ -772,6 +784,9 @@ class KeyEventHandler(
 
         receiver.performVibration()
 
+        // Notify autocap about deletion
+        autocap.eventSent(KeyEvent.KEYCODE_DEL, metaState)
+
         // Update tap typing predictions (Fix for Bug #359)
         if (typingPredictionEngine != null) {
             updateTapTypingPredictions()
@@ -880,10 +895,11 @@ class KeyEventHandler(
             EditorInfo.IME_ACTION_DONE -> receiver.performAction(EditorInfo.IME_ACTION_DONE)
             else -> {
                 receiver.getInputConnection()?.commitText("\n", 1)
+                // Notify autocap about enter/newline
+                autocap.eventSent(KeyEvent.KEYCODE_ENTER, 0)
             }
         }
-        
-        shouldCapitalizeNext = true
+
         receiver.performVibration()
     }
     
@@ -893,7 +909,8 @@ class KeyEventHandler(
     private fun handleSpace() {
         val inputConnection = receiver.getInputConnection() ?: return
         inputConnection.commitText(" ", 1)
-        // Don't change capitalization state after space
+        // Notify autocap about space
+        autocap.typed(" ")
         receiver.performVibration()
 
         // Finish current word and update predictions (Fix for Bug #359)

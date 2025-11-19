@@ -73,6 +73,7 @@ class Autocapitalisation(
      * Handle text typed by the user
      */
     fun typed(text: CharSequence) {
+        if (!enabled) return
         for (i in text.indices) {
             typeOneChar(text[i])
         }
@@ -83,9 +84,11 @@ class Autocapitalisation(
      * Handle key events sent to the editor
      */
     fun eventSent(code: Int, meta: Int) {
+        if (!enabled) return
+
+        // Stop autocap if system modifiers are active
         if (meta != 0) {
-            shouldEnableShift = false
-            shouldUpdateCapsMode = false
+            stop()
             return
         }
 
@@ -105,7 +108,10 @@ class Autocapitalisation(
      * Stop autocapitalisation
      */
     fun stop() {
+        if (!enabled) return
+        enabled = false
         shouldEnableShift = false
+        shouldDisableShift = true
         shouldUpdateCapsMode = false
         callbackNow(true)
     }
@@ -136,6 +142,7 @@ class Autocapitalisation(
      * Called when the cursor position changes
      */
     fun selectionUpdated(oldCursor: Int, newCursor: Int) {
+        if (!enabled) return
         if (newCursor == cursor) { // Just typing
             return
         }
@@ -179,7 +186,8 @@ class Autocapitalisation(
         shouldDisableShift = mightDisable
         // The callback must be delayed because getCursorCapsMode would sometimes
         // be called before the editor finished handling the previous event
-        handler.postDelayed(delayedCallback, 50)
+        handler.removeCallbacks(delayedCallback)
+        handler.postDelayed(delayedCallback, 1)
     }
 
     /**
