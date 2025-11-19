@@ -93,6 +93,9 @@ class Keyboard2View @JvmOverloads constructor(
         // Color will be set from theme in updateSwipeTrailColor()
     }
 
+    // Shared rect for key frame drawing (matches Java _tmpRect for proper border clipping)
+    private val tmpRect = RectF()
+
     /**
      * Update swipe trail color from Material 3 theme.
      * Called when theme is available.
@@ -680,8 +683,9 @@ class Keyboard2View @JvmOverloads constructor(
         val w = tc.borderWidth
         val padding = w / 2f
 
-        val rect = RectF(x + padding, y + padding, x + keyWidth - padding, y + keyHeight - padding)
-        canvas.drawRoundRect(rect, r, r, tc.bgPaint)
+        // Set shared rect for background and border drawing (matches Java _tmpRect)
+        tmpRect.set(x + padding, y + padding, x + keyWidth - padding, y + keyHeight - padding)
+        canvas.drawRoundRect(tmpRect, r, r, tc.bgPaint)
 
         if (w > 0f) {
             val overlap = r - r * 0.85f + w // sin(45°)
@@ -692,17 +696,24 @@ class Keyboard2View @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Clip canvas and draw border segment. This allows calling drawRoundRect
+     * several times with the same rect but different paint colors (matches Java).
+     */
     private fun drawBorder(
         canvas: Canvas,
-        left: Float,
-        top: Float,
-        right: Float,
-        bottom: Float,
+        clipLeft: Float,
+        clipTop: Float,
+        clipRight: Float,
+        clipBottom: Float,
         paint: Paint,
         tc: Theme.Computed.Key
     ) {
-        val rect = RectF(left, top, right, bottom)
-        canvas.drawRoundRect(rect, tc.borderRadius, tc.borderRadius, paint)
+        val r = tc.borderRadius
+        canvas.save()
+        canvas.clipRect(clipLeft, clipTop, clipRight, clipBottom)
+        canvas.drawRoundRect(tmpRect, r, r, paint)
+        canvas.restore()
     }
 
     private fun drawLabel(
@@ -795,6 +806,10 @@ class Keyboard2View @JvmOverloads constructor(
         canvas.drawText(label, 0, labelLen, textX, textY, paint)
     }
 
+    /**
+     * Draw key indication text (matches Java behavior).
+     * This draws the indication string at 4/5 of key height, used for hints.
+     */
     private fun drawIndication(
         canvas: Canvas,
         key: KeyboardData.Key,
@@ -804,31 +819,20 @@ class Keyboard2View @JvmOverloads constructor(
         keyHeight: Float,
         tc: Theme.Computed
     ) {
-        // Draw additional key indicators (shift state, locked keys, etc.)
-        key.keys.getOrNull(0)?.let { keyValue ->
-            val isLocked = pointers.isKeyLocked(keyValue)
-            val isLatched = pointers.isKeyLatched(keyValue)
+        // Draw indication text if present (matches Java)
+        val indication = key.indication
+        if (indication.isNullOrEmpty()) return
 
-            if (isLocked || isLatched) {
-                val indicatorSize = keyWidth * 0.1f
-                val paint = Paint().apply {
-                    color = if (isLocked) {
-                        keyboardColors?.keyActivated?.toArgb() ?: android.graphics.Color.YELLOW
-                    } else {
-                        keyboardColors?.keySecondaryLabel?.toArgb() ?: android.graphics.Color.GRAY
-                    }
-                    style = Paint.Style.FILL
-                    alpha = if (isLocked) 255 else 180
-                }
-                // Draw indicator dot in top-right corner
-                canvas.drawCircle(
-                    x + keyWidth - indicatorSize * 1.5f,
-                    y + indicatorSize * 1.5f,
-                    indicatorSize / 2f,
-                    paint
-                )
-            }
-        }
+        val paint = tc.indicationPaint
+        paint.textSize = subLabelSize
+        canvas.drawText(
+            indication,
+            0,
+            indication.length,
+            x + keyWidth / 2f,
+            (keyHeight - paint.ascent() - paint.descent()) * 4f / 5f + y,
+            paint
+        )
     }
 
     private fun vibrate() {
