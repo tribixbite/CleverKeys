@@ -254,8 +254,14 @@ class Pointers(
                     // Start sliding mode for slider keys
                     if (newValue.isSlider()) {
                         startSliding(pointer, x, adjustedY, dx, dy, newValue)
+                        handler.onPointerDown(newValue, true)
+                    } else if (!config.swipe_typing_enabled) {
+                        // Only fire onPointerDown immediately if swipe typing is disabled
+                        // If enabled, defer to onPointerUp to prevent double output with swipe predictions
+                        handler.onPointerDown(newValue, true)
                     }
-                    handler.onPointerDown(newValue, true)
+                    // When swipe typing enabled, visual feedback comes from pointer.value being set
+                    // Actual key output deferred to onPointerUp
                 }
             } else {
                 pointer.gesture?.let { gesture ->
@@ -332,6 +338,14 @@ class Pointers(
             clearLatched()
             removePointer(pointer)
             if (pointerValue != null) {
+                // Fire deferred onPointerDown for direction gestures when swipe typing is enabled
+                // This prevents double output with swipe predictions
+                val wasDeferredGesture = config.swipe_typing_enabled &&
+                    pointer.gesture != null &&
+                    !pointerValue.isSlider()
+                if (wasDeferredGesture) {
+                    handler.onPointerDown(pointerValue, true)
+                }
                 handler.onPointerUp(pointerValue, pointer.modifiers)
             }
         }
