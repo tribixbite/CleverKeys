@@ -52,6 +52,47 @@ class CleverKeysService : InputMethodService(),
 
     companion object {
         private const val TAG = "CleverKeysService"
+
+        // Known terminal emulator packages for auto terminal mode
+        private val TERMINAL_PACKAGES = setOf(
+            "com.termux",
+            "com.termux.tasker",
+            "com.termux.api",
+            "jackpal.androidterm",
+            "yarolegovich.materialterminal",
+            "com.offsec.nhterm",
+            "com.jrummyapps.busybox.installer",
+            "org.nickmkhulu.keepassxcandroid"
+        )
+
+        /**
+         * Check if the given package name is a terminal emulator
+         */
+        fun isTerminalApp(packageName: String?): Boolean {
+            return packageName != null && (
+                TERMINAL_PACKAGES.contains(packageName) ||
+                packageName.contains("term", ignoreCase = true) ||
+                packageName.contains("shell", ignoreCase = true) ||
+                packageName.contains("console", ignoreCase = true)
+            )
+        }
+    }
+
+    /**
+     * SharedPreferences wrapper that overrides termux_mode_enabled
+     * Used for auto-terminal mode detection
+     */
+    private class AutoTerminalModePrefs(
+        private val delegate: SharedPreferences,
+        private val termuxModeOverride: Boolean
+    ) : SharedPreferences by delegate {
+        override fun getBoolean(key: String?, defValue: Boolean): Boolean {
+            return if (key == "termux_mode_enabled") {
+                termuxModeOverride
+            } else {
+                delegate.getBoolean(key, defValue)
+            }
+        }
     }
 
     // Lifecycle support for Compose in InputMethodService
@@ -3572,8 +3613,29 @@ class CleverKeysService : InputMethodService(),
         logD("Starting input view: package=${editorInfo?.packageName}, restarting=$restarting")
 
         try {
+            // Check if current app is a terminal emulator for auto terminal mode
+            val isTerminalApp = isTerminalApp(editorInfo?.packageName)
+
             // Refresh configuration (includes terminal mode bottom row changes)
             config?.refresh(resources, null)
+
+            // Auto-enable terminal mode for terminal apps
+            // This temporarily overrides the setting for this session
+            if (isTerminalApp && config?.termux_mode_enabled == false) {
+                logD("Auto-enabling terminal mode for terminal app: ${editorInfo?.packageName}")
+                // Reload layouts with terminal mode enabled
+                val prefs = getSharedPreferences("${packageName}_preferences", android.content.Context.MODE_PRIVATE)
+                val layouts = tribixbite.keyboard2.prefs.LayoutsPreference.loadFromPreferences(
+                    resources,
+                    AutoTerminalModePrefs(prefs, true)
+                ).filterNotNull()
+                config?.let { cfg ->
+                    // Update config.layouts with terminal mode layouts
+                    val layoutsField = cfg::class.java.getDeclaredField("layouts")
+                    layoutsField.isAccessible = true
+                    layoutsField.set(cfg, layouts)
+                }
+            }
 
             // Update currentLayout from refreshed config.layouts
             // This ensures terminal mode toggle takes effect immediately
