@@ -779,6 +779,24 @@ sealed class KeyValue : Comparable<KeyValue> {
         }
 
         /**
+         * Check if a string contains Tamil, Sinhala, or other scripts requiring smaller font
+         * Matches Java behavior for proper rendering of complex scripts
+         */
+        private fun needsSmallerFont(text: String): Boolean {
+            if (text.isEmpty()) return false
+            val codePoint = text.codePointAt(0)
+            return when {
+                // Tamil range (0x0B80-0x0BFF)
+                codePoint in 0x0B80..0x0BFF -> true
+                // Sinhala range (0x0D80-0x0DFF)
+                codePoint in 0x0D80..0x0DFF -> true
+                // Sinhala archaic digits (U+111E1-U+111F4)
+                codePoint in 0x111E1..0x111F4 -> true
+                else -> false
+            }
+        }
+
+        /**
          * Get a key by its string name, with fallback parsing
          */
         fun getKeyByName(name: String): KeyValue {
@@ -786,8 +804,12 @@ sealed class KeyValue : Comparable<KeyValue> {
                 // Try parsing as a key value expression
                 parseKeyValue(name)
             } catch (e: Exception) {
-                // Fall back to string key
-                makeStringKey(name)
+                // Fall back to string key with smaller font for complex scripts
+                if (needsSmallerFont(name)) {
+                    makeStringKey(name, Flag.SMALLER_FONT)
+                } else {
+                    makeStringKey(name)
+                }
             }
         }
 
