@@ -240,6 +240,8 @@ class KeyEventHandler(
             KeyEvent.KEYCODE_TAB -> handleTab()
             KeyEvent.KEYCODE_DPAD_LEFT -> moveCursor(-1)
             KeyEvent.KEYCODE_DPAD_RIGHT -> moveCursor(1)
+            KeyEvent.KEYCODE_DPAD_UP -> moveCursorVertical(-1)
+            KeyEvent.KEYCODE_DPAD_DOWN -> moveCursorVertical(1)
             else -> sendKeyEvent(keyCode)
         }
     }
@@ -936,8 +938,15 @@ class KeyEventHandler(
      */
     private fun moveCursor(offset: Int) {
         val inputConnection = receiver.getInputConnection() ?: return
-        
-        if (!moveCursorForceFallback) {
+
+        // Check if we can use setSelection (P0-2 fix)
+        // Can't use setSelection when system modifiers are active
+        val canSetSelection = !moveCursorForceFallback &&
+            !hasModifier(KeyValue.Modifier.CTRL) &&
+            !hasModifier(KeyValue.Modifier.ALT) &&
+            !hasModifier(KeyValue.Modifier.META)
+
+        if (canSetSelection) {
             // Try using setSelection for better performance
             try {
                 val extractedText = inputConnection.getExtractedText(ExtractedTextRequest(), 0)
@@ -958,7 +967,18 @@ class KeyEventHandler(
             sendKeyEvent(keyCode)
         }
     }
-    
+
+    /**
+     * Move cursor vertically by relative offset (P0-3 fix)
+     * Always uses arrow keys since there's no setSelection alternative for vertical movement
+     */
+    private fun moveCursorVertical(offset: Int) {
+        val keyCode = if (offset > 0) KeyEvent.KEYCODE_DPAD_DOWN else KeyEvent.KEYCODE_DPAD_UP
+        repeat(kotlin.math.abs(offset)) {
+            sendKeyEvent(keyCode)
+        }
+    }
+
     /**
      * Send raw key event
      */
