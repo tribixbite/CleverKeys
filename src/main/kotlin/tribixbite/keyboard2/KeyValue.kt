@@ -437,13 +437,13 @@ sealed class KeyValue : Comparable<KeyValue> {
             KeyEventKey(keyCode, symbol, flags.toSet())
 
         fun makeKeyEventKey(symbolCode: Int, keyCode: Int, vararg flags: Flag): KeyEventKey =
-            KeyEventKey(keyCode, String(intArrayOf(symbolCode), 0, 1), flags.toSet())
+            KeyEventKey(keyCode, String(intArrayOf(symbolCode), 0, 1), (flags.toSet() + Flag.KEY_FONT))
 
         fun makeEventKey(symbol: String, event: Event, vararg flags: Flag): EventKey =
             EventKey(event, symbol, flags.toSet())
 
         fun makeEventKey(symbolCode: Int, event: Event, vararg flags: Flag): EventKey =
-            EventKey(event, String(intArrayOf(symbolCode), 0, 1), flags.toSet())
+            EventKey(event, String(intArrayOf(symbolCode), 0, 1), (flags.toSet() + Flag.KEY_FONT))
 
         fun makeModifierKey(symbol: String, modifier: Modifier, vararg flags: Flag): ModifierKey =
             ModifierKey(modifier, symbol, flags.toSet())

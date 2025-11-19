@@ -59,8 +59,11 @@ class Theme(context: Context, attrs: AttributeSet? = null) {
         fun getKeyFont(context: Context): Typeface {
             if (keyFont == null) {
                 keyFont = try {
-                    Typeface.createFromAsset(context.assets, "special_font.ttf")
+                    val font = Typeface.createFromAsset(context.assets, "special_font.ttf")
+                    android.util.Log.d("Theme", "✅ special_font.ttf loaded successfully: $font")
+                    font
                 } catch (e: Exception) {
+                    android.util.Log.e("Theme", "❌ Failed to load special_font.ttf: ${e.message}", e)
                     Typeface.DEFAULT // Fallback to default font
                 }
             }
