@@ -201,6 +201,16 @@ Requires ADB connection to device.
     - Near-complete feature parity with Java KeyValue
     - Commit: f87c9799
 
+32. ✅ **Cursor Slider Keys** (Nov 19)
+    - Changed Slider from data class to enum matching Java
+    - Added Cursor_left/right/up/down enum values
+    - Added Selection_cursor_left/right enum values
+    - Added cursor_left/right/up/down named keys
+    - Added selection_cursor_left/right named keys
+    - Added compose_cancel placeholder key
+    - Updated handleSliderKey for enum-based dispatch
+    - Commit: fcdb8401
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
