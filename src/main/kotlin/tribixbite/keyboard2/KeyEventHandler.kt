@@ -608,28 +608,43 @@ class KeyEventHandler(
     private fun handleSliderKey(slider: KeyValue.Slider, repeat: Int, keyDown: Boolean) {
         val inputConnection = receiver.getInputConnection() ?: return
 
-        // Use repeat value as the amount of movement
-        val amount = if (repeat > 0) repeat else 1
+        // Use repeat value as the amount of movement (absolute value)
+        val amount = kotlin.math.abs(if (repeat != 0) repeat else 1)
 
-        // Slider increment determines direction
-        // Positive = right/down, Negative = left/up
-        when {
-            slider.increment > 0 -> {
-                // Move cursor right
+        // Handle slider based on type
+        when (slider) {
+            KeyValue.Slider.Cursor_left -> {
+                for (i in 0 until amount) {
+                    moveCursor(-1)
+                }
+            }
+            KeyValue.Slider.Cursor_right -> {
                 for (i in 0 until amount) {
                     moveCursor(1)
                 }
             }
-            slider.increment < 0 -> {
-                // Move cursor left
+            KeyValue.Slider.Cursor_up -> {
+                moveCursorVertical(-amount)
+            }
+            KeyValue.Slider.Cursor_down -> {
+                moveCursorVertical(amount)
+            }
+            KeyValue.Slider.Selection_cursor_left -> {
+                // TODO: Implement selection-aware cursor movement
                 for (i in 0 until amount) {
                     moveCursor(-1)
+                }
+            }
+            KeyValue.Slider.Selection_cursor_right -> {
+                // TODO: Implement selection-aware cursor movement
+                for (i in 0 until amount) {
+                    moveCursor(1)
                 }
             }
         }
 
         receiver.performVibration()
-        logD("Slider key: increment=${slider.increment}, repeat=$repeat")
+        logD("Slider key: type=${slider.name}, repeat=$repeat")
     }
 
     /**

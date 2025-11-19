@@ -409,16 +409,18 @@ sealed class KeyValue : Comparable<KeyValue> {
     }
 
     /**
-     * Slider implementation for continuous input
+     * Slider types for cursor movement (matches Java enum)
      */
-    data class Slider(
-        val increment: Float,
-        val precision: Int = 2
-    ) {
-        fun getDisplayValue(repeat: Int): String {
-            val value = increment * repeat
-            return "%.${precision}f".format(value)
-        }
+    enum class Slider(val symbolCode: Int) {
+        Cursor_left(0xE008),
+        Cursor_right(0xE006),
+        Cursor_up(0xE005),
+        Cursor_down(0xE007),
+        Selection_cursor_left(0xE008),
+        Selection_cursor_right(0xE006);
+
+        val symbol: String = String(intArrayOf(symbolCode), 0, 1)
+        override fun toString(): String = symbol
     }
 
     companion object {
@@ -472,7 +474,7 @@ sealed class KeyValue : Comparable<KeyValue> {
             CharKey((precomposed + finalIndex).toChar())
 
         fun makeSlider(slider: Slider, repeat: Int = 0): SliderKey =
-            SliderKey(slider, repeat, slider.getDisplayValue(repeat))
+            SliderKey(slider, repeat, slider.symbol)
 
         fun makeMacro(symbol: String, keys: Array<KeyValue>, vararg flags: Flag): MacroKey {
             val adjustedFlags = if (symbol.length > 1) (flags.toSet() + Flag.SMALLER_FONT) else flags.toSet()
@@ -761,6 +763,19 @@ sealed class KeyValue : Comparable<KeyValue> {
             namedKeys["ㅌ"] = makeHangulInitial("ㅌ", 16)
             namedKeys["ㅍ"] = makeHangulInitial("ㅍ", 17)
             namedKeys["ㅎ"] = makeHangulInitial("ㅎ", 18)
+
+            // Cursor slider keys
+            namedKeys["cursor_left"] = makeSlider(Slider.Cursor_left, 1)
+            namedKeys["cursor_right"] = makeSlider(Slider.Cursor_right, 1)
+            namedKeys["cursor_up"] = makeSlider(Slider.Cursor_up, 1)
+            namedKeys["cursor_down"] = makeSlider(Slider.Cursor_down, 1)
+            namedKeys["selection_cursor_left"] = makeSlider(Slider.Selection_cursor_left, -1)
+            namedKeys["selection_cursor_right"] = makeSlider(Slider.Selection_cursor_right, 1)
+
+            // Compose keys (require ComposeKeyData which may not be available)
+            // TODO: Add compose key support when ComposeKeyData is implemented
+            // namedKeys["compose"] = makeComposePending(0xE016, ComposeKeyData.compose, Flag.SECONDARY)
+            namedKeys["compose_cancel"] = makePlaceholder(0xE01A, Placeholder.COMPOSE_CANCEL, Flag.SECONDARY)
         }
 
         /**
