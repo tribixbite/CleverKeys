@@ -275,6 +275,13 @@ Requires ADB connection to device.
     - KeyEvents now include META_CTRL_ON, META_ALT_ON, META_SHIFT_ON flags
     - Commit: 7c180559
 
+42. ✅ **Short Swipe Double Output Fix** (Nov 19)
+    - Direction gestures were firing onPointerDown immediately
+    - Then swipe typing would also fire, causing double output
+    - Now defers direction key output to touch up when swipe typing enabled
+    - Prevents symbol + swipe prediction double output
+    - Commit: 02b980cb
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
