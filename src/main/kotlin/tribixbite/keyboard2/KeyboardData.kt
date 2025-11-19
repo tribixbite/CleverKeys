@@ -377,7 +377,12 @@ data class KeyboardData(
          * Load a row from XML resource
          */
         fun loadRow(resources: Resources, resourceId: Int): Row {
-            return parseRow(resources.getXml(resourceId))
+            val parser = resources.getXml(resourceId)
+            // Navigate to the <row> tag
+            if (!expectTag(parser, "row")) {
+                throw Exception("Expected <row> tag in resource $resourceId")
+            }
+            return parseRow(parser)
         }
 
         /**
