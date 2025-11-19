@@ -16,11 +16,11 @@
 ## ⚡ **Current Status: PRODUCTION READY** 🎉
 
 **Last Updated**: 2025-11-19
-**Version**: 2.0.0 (Build 54) 🆕
+**Version**: 2.0.1 (Build 55) 🆕
 **APK**: ✅ Built and Installed (57MB) - [`LATEST_BUILD.md`](LATEST_BUILD.md)
 **Development**: ✅ 100% Complete (251/251 files reviewed)
 **Bugs**: ✅ All P0/P1 Resolved + Terminal Mode Added (Nov 19)
-**New Features**: ✅ Phase 7 Backup & Restore System (Config/Dictionary/Clipboard) 🆕
+**New Features**: ✅ Terminal Mode with Auto-Detect + English Bigrams (320 word pairs) 🆕
 **Settings Parity**: ✅ 8/9 Phases Complete (100+ configurable options)
 **Performance**: ✅ Verified (hardware accel + 90+ cleanup)
 **Production Score**: ✅ **98/100 (Grade A+)** 🎯
