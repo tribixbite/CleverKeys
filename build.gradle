@@ -200,6 +200,15 @@ android {
   }
 }
 
+// Skip Robolectric tests on ARM64 (no Conscrypt native libraries available)
+def isArm64 = System.getProperty("os.arch") in ["aarch64", "arm64"]
+if (isArm64) {
+  tasks.withType(Test).configureEach {
+    enabled = false
+    println "⚠️ Skipping unit tests on ARM64 architecture (Robolectric requires x86_64)"
+  }
+}
+
 tasks.register('buildKeyboardFont') {
   // Skip font building if font already exists
   def fontFile = file("assets/special_font.ttf")
