@@ -23,28 +23,37 @@
 
 ---
 
-## 📋 NEXT TASK (ONLY ONE REMAINS)
+## 📋 NEXT STEPS
 
-### Manual Device Testing ⏳ **REQUIRES USER**
+### Manual Feature Testing ⏳ **RECOMMENDED**
 
-**What**: Test keyboard on physical Android device
-**Why**: Validate crash fix and verify all features work
-**Who**: User (cannot be automated)
+**What**: Comprehensive feature verification
+**Why**: Validate all features work correctly
+**Who**: User
 **When**: Now
-**How**: 3 minutes
+**How**: Use `docs/TEST_CHECKLIST.md`
 
-**Steps**:
-1. Open Settings on Android device
-2. Go to: System → Languages & input → On-screen keyboard
-3. Enable "CleverKeys (Debug)"
-4. Open any text app
-5. Activate CleverKeys keyboard
-6. **CRITICAL**: Verify keys display (crash fix validation)
-7. Test typing "hello world"
-8. Report back results
+**Quick Test (3 minutes)**:
+1. Open any text app
+2. Type "hello world" - verify keys work
+3. Swipe "the" - verify swipe works
+4. Go to Settings > Dictionary
+5. Verify "Built-in Dictionary" shows ~49k words
+6. Add custom word "mytest123"
+7. Verify it appears in suggestions
+8. Done!
 
-**Time Required**: 3 minutes
-**Blocking**: Yes - all other work complete
+**Full Test**: See `docs/TEST_CHECKLIST.md` (35 test items)
+
+### Instrumented Tests (Optional)
+
+To run automated tests on device:
+```bash
+adb connect <device-ip>:5555
+./gradlew connectedAndroidTest
+```
+
+Requires ADB connection to device.
 
 ---
 
