@@ -386,6 +386,12 @@ Requires ADB connection to device.
     - Fixes "Dictionary/bigram asset files not included" limitation
     - Commit: 69087d3f
 
+14. ✅ **Multi-Language Bigram Models** (Nov 19)
+    - Added bigrams for all 6 supported languages (~800 word pairs total)
+    - Spanish (120), French (100), German (97), Italian (83), Portuguese (80)
+    - Complete context-aware prediction for EN, ES, FR, DE, IT, PT
+    - Commit: 2c838ddd
+
 ### Recent Completions (Nov 16, 2025)
 
 1. ✅ Bug #473: Dictionary Manager (3-tab UI)
