@@ -5,6 +5,10 @@ import android.widget.FrameLayout
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.AbstractComposeView
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.savedstate.SavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import tribixbite.keyboard2.theme.KeyboardTheme
 
 /**
@@ -26,15 +30,20 @@ import tribixbite.keyboard2.theme.KeyboardTheme
  * suggestionBar.setSuggestions(listOf("hello", "world", "test"))
  * ```
  */
-class SuggestionBarM3Wrapper(context: Context) : FrameLayout(context) {
+class SuggestionBarM3Wrapper(
+    context: Context,
+    lifecycleOwner: LifecycleOwner,
+    savedStateRegistryOwner: SavedStateRegistryOwner
+) : FrameLayout(context) {
 
     // Mutable state for suggestions (use .value to access/modify)
     private val currentSuggestions = mutableStateOf<List<Suggestion>>(emptyList())
     private var onSuggestionSelected: ((String) -> Unit)? = null
 
     init {
-        // Create ComposeView with disposeOnDetachedFromWindow = false
-        // This prevents lifecycle-related crashes in IME context
+        // Create ComposeView and set lifecycle owners directly on it
+        // This fixes "ViewTreeLifecycleOwner not found" crash in IME context
+        // because IME's parentPanel intercepts view tree lookup
         val composeView = object : AbstractComposeView(context) {
             @Composable
             override fun Content() {
@@ -52,8 +61,12 @@ class SuggestionBarM3Wrapper(context: Context) : FrameLayout(context) {
                 }
             }
         }.apply {
-            // Don't dispose on detach - IME windows behave differently
-            // This prevents looking for a lifecycle owner
+            // Set lifecycle owners directly on AbstractComposeView
+            // This is required because IME windows don't have lifecycle owners
+            // and the parentPanel intercepts view tree lookup
+            setViewTreeLifecycleOwner(lifecycleOwner)
+            setViewTreeSavedStateRegistryOwner(savedStateRegistryOwner)
+            android.util.Log.d("SuggestionBar", "✅ Lifecycle owners set on AbstractComposeView")
         }
 
         // Add ComposeView to FrameLayout

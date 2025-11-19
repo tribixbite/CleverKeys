@@ -20,6 +20,10 @@ dependencies {
   implementation "androidx.compose.material3:material3:1.1.2"
   implementation "androidx.compose.foundation:foundation:1.5.4"
 
+  // Lifecycle dependencies for Compose in InputMethodService (Fix ViewTreeLifecycleOwner crash)
+  implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
+  implementation "androidx.savedstate:savedstate-ktx:1.2.1"
+
   // Reorderable for drag-and-drop in Layout Manager
   implementation "org.burnoutcrew.composereorderable:reorderable:0.9.6"
 

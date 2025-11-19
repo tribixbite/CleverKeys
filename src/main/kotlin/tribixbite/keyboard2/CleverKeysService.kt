@@ -12,6 +12,15 @@ import android.view.inputmethod.InputConnection
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import tribixbite.keyboard2.ui.SuggestionBarM3Wrapper
+// Lifecycle support for Compose in InputMethodService (Fix ViewTreeLifecycleOwner crash)
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.savedstate.SavedStateRegistry
+import androidx.savedstate.SavedStateRegistryController
+import androidx.savedstate.SavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import tribixbite.keyboard2.data.BigramModel as DataBigramModel
 import tribixbite.keyboard2.data.LanguageDetector as DataLanguageDetector
 import tribixbite.keyboard2.data.UserAdaptationManager as DataUserAdaptationManager
@@ -31,19 +40,34 @@ private fun logW(message: String) = logW("CleverKeysService", message)
 /**
  * Modern Kotlin InputMethodService for CleverKeys
  * Replaces Keyboard2.java with coroutines, null safety, and clean architecture
+ *
+ * Implements LifecycleOwner and SavedStateRegistryOwner to support Compose views
+ * in the keyboard UI (fixes ViewTreeLifecycleOwner crash).
  */
 class CleverKeysService : InputMethodService(),
     SharedPreferences.OnSharedPreferenceChangeListener,
-    ClipboardPasteCallback {
-    
+    ClipboardPasteCallback,
+    LifecycleOwner,
+    SavedStateRegistryOwner {
+
     companion object {
         private const val TAG = "CleverKeysService"
     }
-    
+
+    // Lifecycle support for Compose in InputMethodService
+    private val lifecycleRegistry = LifecycleRegistry(this)
+    private val savedStateRegistryController = SavedStateRegistryController.create(this)
+
+    override val lifecycle: Lifecycle
+        get() = lifecycleRegistry
+
+    override val savedStateRegistry: SavedStateRegistry
+        get() = savedStateRegistryController.savedStateRegistry
+
     // Service scope for coroutine management
     private val serviceScope = CoroutineScope(
-        SupervisorJob() + 
-        Dispatchers.Main.immediate + 
+        SupervisorJob() +
+        Dispatchers.Main.immediate +
         CoroutineName("CleverKeysService")
     )
     
@@ -181,6 +205,11 @@ class CleverKeysService : InputMethodService(),
         super.onCreate()
         logD("CleverKeys InputMethodService starting...")
 
+        // Initialize lifecycle for Compose support (Fix ViewTreeLifecycleOwner crash)
+        savedStateRegistryController.performRestore(null)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        logD("✅ Lifecycle initialized for Compose support")
+
         try {
             // Initialize components in dependency order
             initializeConfiguration()
@@ -311,6 +340,10 @@ class CleverKeysService : InputMethodService(),
     override fun onDestroy() {
         super.onDestroy()
         logD("CleverKeys service stopping...")
+
+        // Handle lifecycle destruction for Compose support
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        logD("✅ Lifecycle destroyed")
 
         // Unregister preference listener to prevent memory leak
         try {
@@ -3445,9 +3478,13 @@ class CleverKeysService : InputMethodService(),
             }
             keyboardView = kbView
 
-            // Create Material 3 suggestion bar
-            logD("Creating Material 3 SuggestionBar...")
-            val sugBar = SuggestionBarM3Wrapper(this).apply {
+            // Create Material 3 suggestion bar with lifecycle support
+            logD("Creating Material 3 SuggestionBar with lifecycle owners...")
+            val sugBar = SuggestionBarM3Wrapper(
+                this,
+                this@CleverKeysService,  // LifecycleOwner
+                this@CleverKeysService   // SavedStateRegistryOwner
+            ).apply {
                 setOnSuggestionSelectedListener { word ->
                     logD("User selected suggestion: '$word'")
                     currentInputConnection?.commitText(word + " ", 1)
@@ -3459,6 +3496,11 @@ class CleverKeysService : InputMethodService(),
             logD("Creating LinearLayout container...")
             val container = android.widget.LinearLayout(this).apply {
                 orientation = android.widget.LinearLayout.VERTICAL
+
+                // Set lifecycle owners for Compose support (Fix ViewTreeLifecycleOwner crash)
+                setViewTreeLifecycleOwner(this@CleverKeysService)
+                setViewTreeSavedStateRegistryOwner(this@CleverKeysService)
+                logD("✅ ViewTree lifecycle owners set on container")
 
                 // Add suggestion bar on top (40dp height)
                 val suggestionParams = android.widget.LinearLayout.LayoutParams(
@@ -3477,6 +3519,11 @@ class CleverKeysService : InputMethodService(),
                 addView(kbView)
             }
             inputViewContainer = container
+
+            // Move lifecycle to RESUMED state for Compose to function
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+            logD("✅ Lifecycle moved to RESUMED state")
 
             logD("✅ Container created successfully with suggestion bar + keyboard view")
             container
