@@ -1011,7 +1011,7 @@ class KeyEventHandler(
      * Check if modifiers contain a specific modifier
      */
     private fun hasModifier(modifier: KeyValue.Modifier): Boolean {
-        return mods.contains(modifier)
+        return mods.has(modifier)
     }
 
     /**

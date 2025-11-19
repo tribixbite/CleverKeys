@@ -4,6 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import kotlin.math.*
+import java.util.NoSuchElementException
 
 /**
  * Modern Kotlin implementation of pointer management and gesture recognition
@@ -67,7 +68,7 @@ class Pointers(
     fun getModifiers(): Modifiers = getModifiers(false)
 
     private fun getModifiers(skipLatched: Boolean): Modifiers {
-        val keyValues = mutableListOf<KeyValue>()
+        val keyValues = mutableListOf<KeyValue?>()
 
         for (pointer in pointers) {
             val value = pointer.value
@@ -621,18 +622,14 @@ class Pointers(
         }
 
         private fun updateSpeed(travelled: Float, x: Float, y: Float) {
-            val currentMs = System.currentTimeMillis()
-            val elapsed = currentMs - lastMoveMs
-
-            if (elapsed > 0) {
-                val currentSpeed = travelled / elapsed
-                speed = speed * SPEED_SMOOTHING + currentSpeed * (1 - SPEED_SMOOTHING)
-                speed = min(speed, SPEED_MAX)
-            }
-
+            val now = System.currentTimeMillis()
+            // Matches Java: instant_speed = min(SPEED_MAX, travelled / elapsed + 1.0f)
+            val instantSpeed = min(SPEED_MAX, travelled / (now - lastMoveMs).toFloat() + 1f)
+            // Matches Java: speed = speed + (instant_speed - speed) * SPEED_SMOOTHING
+            speed = speed + (instantSpeed - speed) * SPEED_SMOOTHING
+            lastMoveMs = now
             lastX = x
             lastY = y
-            lastMoveMs = currentMs
         }
     }
 
@@ -715,38 +712,71 @@ class Pointers(
     }
 
     /**
-     * Modifier state representation
+     * Modifier state representation (matches Java Modifiers class)
+     * Sorted in the order they should be evaluated.
      */
-    data class Modifiers(private val keys: Array<KeyValue>, private val size: Int) {
+    class Modifiers private constructor(private val _mods: Array<KeyValue>, private val _size: Int) {
         companion object {
             val EMPTY = Modifiers(emptyArray(), 0)
 
-            fun ofArray(keys: Array<KeyValue>, size: Int): Modifiers {
-                val truncatedKeys = Array(size) { keys[it] }
-                return Modifiers(truncatedKeys, size)
+            /**
+             * Create Modifiers from array, sorting and removing duplicates/nulls (matches Java)
+             */
+            fun ofArray(mods: Array<KeyValue?>, size: Int): Modifiers {
+                if (size == 0) return EMPTY
+
+                // Filter nulls and copy to mutable array
+                val filtered = mods.filterNotNull().take(size).toMutableList()
+
+                if (filtered.size > 1) {
+                    // Sort and remove duplicates (matches Java behavior)
+                    filtered.sortWith { a, b -> a.compareTo(b) }
+                    val deduped = mutableListOf<KeyValue>()
+                    for (i in filtered.indices) {
+                        val m = filtered[i]
+                        if (i + 1 >= filtered.size || m != filtered[i + 1]) {
+                            deduped.add(m)
+                        }
+                    }
+                    return Modifiers(deduped.toTypedArray(), deduped.size)
+                }
+
+                return Modifiers(filtered.toTypedArray(), filtered.size)
             }
         }
 
-        fun withExtraMod(extraMod: KeyValue): Modifiers {
-            val newKeys = Array(size + 1) { i ->
-                if (i < size) keys[i] else extraMod
-            }
-            return Modifiers(newKeys, size + 1)
-        }
+        /** Get modifier at index (reversed order like Java) */
+        fun get(i: Int): KeyValue = _mods[_size - 1 - i]
 
-        fun isEmpty(): Boolean = size == 0
+        /** Get size of modifiers */
+        fun size(): Int = _size
+
+        /** Check if modifiers is empty */
+        fun isEmpty(): Boolean = _size == 0
 
         /**
-         * Check if this modifier set contains a specific modifier
+         * Check if this modifier set contains a specific modifier (matches Java has() method)
          */
-        fun contains(modifier: KeyValue.Modifier): Boolean {
-            for (i in 0 until size) {
-                val key = keys[i]
-                if (key is KeyValue.ModifierKey && key.modifier == modifier) {
+        fun has(modifier: KeyValue.Modifier): Boolean {
+            for (i in 0 until _size) {
+                val kv = _mods[i]
+                if (kv.isModifier() && kv.getModifierValue() == modifier) {
                     return true
                 }
             }
             return false
+        }
+
+        /** Return a copy of this object with an extra modifier added. */
+        fun withExtraMod(extraMod: KeyValue): Modifiers {
+            val newMods = _mods.copyOf(_size + 1)
+            newMods[_size] = extraMod
+            return ofArray(newMods, newMods.size)
+        }
+
+        /** Returns the activated modifiers that are not in [other]. */
+        fun diff(other: Modifiers): Iterator<KeyValue> {
+            return ModifiersDiffIterator(this, other)
         }
 
         /**
@@ -754,10 +784,10 @@ class Pointers(
          */
         fun getModifiers(): List<KeyValue.Modifier> {
             val modifiers = mutableListOf<KeyValue.Modifier>()
-            for (i in 0 until size) {
-                val key = keys[i]
-                if (key is KeyValue.ModifierKey) {
-                    modifiers.add(key.modifier)
+            for (i in 0 until _size) {
+                val kv = _mods[i]
+                if (kv.isModifier()) {
+                    kv.getModifierValue()?.let { modifiers.add(it) }
                 }
             }
             return modifiers
@@ -766,14 +796,49 @@ class Pointers(
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is Modifiers) return false
-            if (size != other.size) return false
-            return keys.contentEquals(other.keys)
+            return _mods.contentEquals(other._mods)
         }
 
-        override fun hashCode(): Int {
-            var result = keys.contentHashCode()
-            result = 31 * result + size
-            return result
+        override fun hashCode(): Int = _mods.contentHashCode()
+
+        /**
+         * Iterator that returns modifiers in this but not in other (matches Java)
+         */
+        private class ModifiersDiffIterator(
+            private val m1: Modifiers,
+            private val m2: Modifiers
+        ) : Iterator<KeyValue> {
+            private var i1 = 0
+            private var i2 = 0
+
+            init {
+                advance()
+            }
+
+            override fun hasNext(): Boolean = i1 < m1._size
+
+            override fun next(): KeyValue {
+                if (i1 >= m1._size) throw NoSuchElementException()
+                val m = m1._mods[i1]
+                i1++
+                advance()
+                return m
+            }
+
+            /** Advance to the next element if i1 is not a valid element */
+            private fun advance() {
+                while (i1 < m1._size) {
+                    val m = m1._mods[i1]
+                    while (true) {
+                        if (i2 >= m2._size) return
+                        val cmp = m.compareTo(m2._mods[i2])
+                        if (cmp < 0) return
+                        i2++
+                        if (cmp == 0) break
+                    }
+                    i1++
+                }
+            }
         }
     }
 }
