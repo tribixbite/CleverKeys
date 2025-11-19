@@ -18,16 +18,16 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     companion object {
         private const val TAG = "OnnxSwipePredictor"
 
-        // CRITICAL: Sequence length constants matching web demo
+        // CRITICAL: Sequence length constants matching ONNX model v106
         // These MUST match the ONNX model's expected input shapes
-        private const val MAX_SEQUENCE_LENGTH = 150  // Encoder input sequence length (web demo: MAX_SEQUENCE_LENGTH)
-        private const val DECODER_SEQ_LENGTH = 20     // Decoder input sequence length (web demo: DECODER_SEQ_LENGTH)
+        private const val MAX_SEQUENCE_LENGTH = 250  // Encoder input sequence length (model_config.json: max_seq_length)
+        private const val DECODER_SEQ_LENGTH = 20     // Decoder input sequence length (model_config.json: max_word_length)
 
         private const val TRAJECTORY_FEATURES = 6 // x, y, vx, vy, ax, ay
         private const val NORMALIZED_WIDTH = 1.0f
         private const val NORMALIZED_HEIGHT = 1.0f
         private const val DEFAULT_BEAM_WIDTH = 8
-        private const val DEFAULT_MAX_LENGTH = 35
+        private const val DEFAULT_MAX_LENGTH = 20  // model_config.json: max_word_length
         private const val DEFAULT_CONFIDENCE_THRESHOLD = 0.1f
 
         // Special tokens
@@ -87,8 +87,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         try {
             logDebug("🔄 Loading ONNX transformer models...")
             
-            // Load encoder model with validation
-            val encoderData = loadModelFromAssets("models/swipe_model_character_quant.onnx")
+            // Load encoder model with validation (ONNX model v106)
+            val encoderData = loadModelFromAssets("models/swipe_encoder_android.onnx")
             logDebug("📥 Encoder model data loaded: ${encoderData.size} bytes")
 
             encoderSession = ortEnvironment.createSession(encoderData, createSessionOptions("Encoder"))
@@ -108,8 +108,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 }
             }
 
-            // Load decoder model with validation
-            val decoderData = loadModelFromAssets("models/swipe_decoder_character_quant.onnx")
+            // Load decoder model with validation (ONNX model v106)
+            val decoderData = loadModelFromAssets("models/swipe_decoder_android.onnx")
             logDebug("📥 Decoder model data loaded: ${decoderData.size} bytes")
 
             decoderSession = ortEnvironment.createSession(decoderData, createSessionOptions("Decoder"))
@@ -1016,10 +1016,10 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
  * Complete trajectory processor matching Java implementation
  */
 class SwipeTrajectoryProcessor {
-    
+
     companion object {
         private const val TAG = "SwipeTrajectoryProcessor"
-        private const val MAX_TRAJECTORY_POINTS = 150
+        private const val MAX_TRAJECTORY_POINTS = 250  // Match ONNX model v106 max_seq_length
         private const val SMOOTHING_WINDOW = 3
     }
     

@@ -13,12 +13,12 @@ class NeuralConfig(private val prefs: SharedPreferences) {
     // Preference delegation for automatic persistence
     var neuralPredictionEnabled: Boolean by BooleanPreference("neural_prediction_enabled", true)
     var beamWidth: Int by IntPreference("neural_beam_width", 8)
-    var maxLength: Int by IntPreference("neural_max_length", 35)
+    var maxLength: Int by IntPreference("neural_max_length", 20)  // ONNX model v106: max_word_length
     var confidenceThreshold: Float by FloatPreference("neural_confidence_threshold", 0.1f)
-    
+
     // Validation ranges
     val beamWidthRange = 1..16
-    val maxLengthRange = 10..50
+    val maxLengthRange = 1..20  // Match model_config.json: max_word_length
     val confidenceRange = 0.0f..1.0f
     
     /**
@@ -36,7 +36,7 @@ class NeuralConfig(private val prefs: SharedPreferences) {
     fun resetToDefaults() {
         neuralPredictionEnabled = true
         beamWidth = 8
-        maxLength = 35
+        maxLength = 20  // ONNX model v106: max_word_length
         confidenceThreshold = 0.1f
     }
 
