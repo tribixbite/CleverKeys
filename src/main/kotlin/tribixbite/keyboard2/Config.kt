@@ -171,6 +171,7 @@ class Config private constructor(
     // Short gesture settings (key direction swipes for secondary characters)
     var short_gestures_enabled = true
     var short_gesture_min_distance = 15f  // Minimum distance in pixels for key direction swipes
+    var swipe_typing_min_distance = 50f   // Minimum distance before swipe typing mode activates
 
     // Legacy swipe parameters (for compatibility with existing WordPredictor)
     var swipe_confidence_shape_weight = 0.9f
@@ -287,6 +288,10 @@ class Config private constructor(
         // Short gesture distance (uses same scaling as swipe_dist for consistency)
         val shortGestureDistValue = safeGetInt(prefs, "short_gesture_min_distance", 15).toFloat()
         short_gesture_min_distance = shortGestureDistValue / 25f * swipeScaling
+
+        // Swipe typing minimum distance (before activating swipe typing mode)
+        val swipeTypingMinDistValue = safeGetInt(prefs, "swipe_typing_min_distance", 50).toFloat()
+        swipe_typing_min_distance = swipeTypingMinDistValue / 25f * swipeScaling
 
         val sliderSensitivity = (prefs.getString("slider_sensitivity", "30") ?: "30").toFloat() / 100f
         slide_step_px = sliderSensitivity * swipeScaling

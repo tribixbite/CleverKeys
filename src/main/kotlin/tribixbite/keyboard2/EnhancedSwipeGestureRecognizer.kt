@@ -12,6 +12,14 @@ class EnhancedSwipeGestureRecognizer {
     private val timestamps = mutableListOf<Long>()
     private var startTime: Long = 0
     private var isTracking = false
+    private var minSwipeTypingDistance = 50f  // Configurable threshold
+
+    /**
+     * Set minimum distance required before swipe typing mode activates
+     */
+    fun setMinSwipeTypingDistance(distance: Float) {
+        minSwipeTypingDistance = distance
+    }
 
     /**
      * Start tracking a new swipe gesture
@@ -98,7 +106,7 @@ class EnhancedSwipeGestureRecognizer {
 
         // Require minimum distance to consider it swipe typing (not just a direction gesture)
         // This threshold allows short direction gestures to work
-        return totalDistance > 50f
+        return totalDistance > minSwipeTypingDistance
     }
 
     /**

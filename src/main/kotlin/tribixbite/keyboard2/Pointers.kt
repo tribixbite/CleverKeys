@@ -43,6 +43,11 @@ class Pointers(
     private val pointers = mutableListOf<Pointer>()
     val swipeRecognizer = EnhancedSwipeGestureRecognizer()
 
+    init {
+        // Configure swipe recognizer threshold from config
+        swipeRecognizer.setMinSwipeTypingDistance(config.swipe_typing_min_distance)
+    }
+
     /**
      * Pointer event handler interface
      */
