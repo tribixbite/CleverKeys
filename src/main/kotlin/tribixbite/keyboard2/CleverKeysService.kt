@@ -3509,6 +3509,30 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
+     * Track cursor/selection changes in the editor
+     * Matches Java Keyboard2.onUpdateSelection()
+     */
+    override fun onUpdateSelection(
+        oldSelStart: Int,
+        oldSelEnd: Int,
+        newSelStart: Int,
+        newSelEnd: Int,
+        candidatesStart: Int,
+        candidatesEnd: Int
+    ) {
+        super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
+
+        // Track selection state changes
+        val hadSelection = oldSelStart != oldSelEnd
+        val hasSelection = newSelStart != newSelEnd
+        if (hadSelection != hasSelection) {
+            logD("Selection state changed: hasSelection=$hasSelection")
+            // TODO: Update keyboard view selection state when method is available
+            // keyboardView?.set_selection_state(hasSelection)
+        }
+    }
+
+    /**
      * Switch to a different keyboard layout by index
      */
     private fun switchToLayout(layoutIndex: Int) {
