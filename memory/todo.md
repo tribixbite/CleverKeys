@@ -2,8 +2,8 @@
 
 **⚠️ THIS FILE REPLACED - See Current Status Below**
 
-**Last Updated**: 2025-11-16
-**Status**: ✅ **PRODUCTION READY**
+**Last Updated**: 2025-11-18
+**Status**: ✅ **PRODUCTION READY** (Critical bugs fixed)
 
 ---
 
@@ -54,6 +54,31 @@
 
 **This file originally listed 38 Java-to-Kotlin migration tasks.**
 **Status**: ✅ **ALL COMPLETED** over the past 10 months
+
+### Critical Bug Fixes (Nov 18, 2025)
+
+1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
+   - SuggestionBarM3Wrapper now implements LifecycleOwner/SavedStateRegistryOwner
+   - Proper lifecycle management for AbstractComposeView
+   - Uses AndroidUiDispatcher.Main for MonotonicFrameClock
+   - Commit: 6b30bf3f
+
+2. ✅ **LanguageManager Initialization Crash**
+   - Fixed property initialization order
+   - availableLanguages map now initialized before _languageState
+   - Commit: cf6d3f75
+
+3. ✅ **WordPredictor ConcurrentModificationException**
+   - Replaced mutable collections with thread-safe versions
+   - dictionary: ConcurrentHashMap
+   - prefixIndex: ConcurrentHashMap
+   - recentWords/disabledWords: synchronized collections
+   - Commit: 415e9853
+
+4. ✅ **Empty Keyboard Layouts**
+   - SystemLayout now loads qwerty_us as default
+   - Fallback to any available layout if qwerty_us not found
+   - Commit: 9582e2db
 
 ### Recent Completions (Nov 16, 2025)
 
