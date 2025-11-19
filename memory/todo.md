@@ -14,7 +14,7 @@
 ### Current Status (Nov 19, 2025)
 - ✅ **183/183 files** reviewed and implemented (100%)
 - ✅ **0 P0/P1 bugs** remaining (all fixed)
-- ✅ **APK built** successfully (57MB with 49k dictionary)
+- ✅ **APK built** successfully (79MB with ONNX v106 models + 49k dictionary)
 - ✅ **Dictionary Manager** implemented (Bug #473) - now shows 49k words
 - ✅ **Keyboard layout** displays correctly (screenshot verified)
 - ✅ **Swipe gestures** recognized (logcat verified)

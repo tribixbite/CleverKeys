@@ -17,7 +17,7 @@
 
 **Last Updated**: 2025-11-19
 **Version**: 2.0.1 (Build 55) 🆕
-**APK**: ✅ Built and Installed (57MB) - [`LATEST_BUILD.md`](LATEST_BUILD.md)
+**APK**: ✅ Built and Installed (79MB) - [`LATEST_BUILD.md`](LATEST_BUILD.md)
 **Development**: ✅ 100% Complete (251/251 files reviewed)
 **Bugs**: ✅ All P0/P1 Resolved + Terminal Mode Added (Nov 19)
 **New Features**: ✅ Terminal Mode with Auto-Detect + English Bigrams (320 word pairs) 🆕
@@ -117,11 +117,11 @@ English, Spanish, French, German, Italian, Portuguese, Russian, Chinese, Japanes
 The APK is already built and installed:
 ```
 Package: tribixbite.keyboard2.debug
-Location: build/outputs/apk/debug/tribixbite.keyboard2.debug.apk (53MB)
+Location: build/outputs/apk/debug/tribixbite.keyboard2.debug.apk (79MB)
 Backup: ~/storage/shared/CleverKeys-v2-with-backup.apk
-Build Date: 2025-11-18 09:00
+Build Date: 2025-11-19
 Status: Production Ready (Score: 98/100, Grade A+)
-Features: All Phase 1-9 settings + Complete Backup System
+Features: All Phase 1-9 settings + ONNX v106 Models (72% accuracy)
 ```
 
 **📋 Installation Guide**: See [`LATEST_BUILD.md`](LATEST_BUILD.md) for comprehensive installation instructions and testing checklist.
@@ -248,9 +248,12 @@ cd cleverkeys
 
 ### 📊 **Model Specifications**
 ```
-Total APK Size: 53MB (v2.0.0)
-Encoder Model: 5.3MB
-Decoder Model: 7.2MB
+Total APK Size: 79MB (v2.0.1)
+Encoder Model: 5.4MB (v106)
+Decoder Model: 7.4MB (v106)
+Max Sequence Length: 250 points
+Max Word Length: 20 characters
+Word Accuracy: 72%
 Memory Usage: 15-25MB additional RAM
 Prediction Latency: 50-200ms (device dependent)
 ```
