@@ -29,6 +29,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.Image
 import tribixbite.keyboard2.theme.KeyboardTheme
 
 /**
@@ -112,6 +114,19 @@ fun LauncherScreen(
     onOpenGitHub: () -> Unit
 ) {
     val scrollState = rememberScrollState()
+    var testText by remember { mutableStateOf("") }
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // Load raccoon logo from assets
+    val raccoonBitmap = remember {
+        try {
+            context.assets.open("raccoon_logo.webp").use { inputStream ->
+                android.graphics.BitmapFactory.decodeStream(inputStream)
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -126,12 +141,23 @@ fun LauncherScreen(
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Animated raccoon mascot
-            RaccoonMascot(
-                modifier = Modifier
-                    .size(180.dp)
-                    .padding(bottom = 24.dp)
-            )
+            // Raccoon logo from assets
+            if (raccoonBitmap != null) {
+                Image(
+                    bitmap = raccoonBitmap.asImageBitmap(),
+                    contentDescription = "CleverKeys Raccoon Logo",
+                    modifier = Modifier
+                        .size(180.dp)
+                        .padding(bottom = 24.dp)
+                )
+            } else {
+                // Fallback to animated mascot if image not found
+                RaccoonMascot(
+                    modifier = Modifier
+                        .size(180.dp)
+                        .padding(bottom = 24.dp)
+                )
+            }
 
             // App title
             Text(
@@ -170,7 +196,21 @@ fun LauncherScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Test input field
+            OutlinedTextField(
+                value = testText,
+                onValueChange = { testText = it },
+                label = { Text("Test Keyboard Here") },
+                placeholder = { Text("Type to test...") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = false,
+                minLines = 3,
+                maxLines = 5
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Enable keyboard button (primary)
             Button(
