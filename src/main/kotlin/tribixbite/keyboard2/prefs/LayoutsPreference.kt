@@ -58,16 +58,10 @@ class LayoutsPreference(
         fun getLayoutNames(resources: Resources): List<String> {
             if (unsafeLayoutIdsStr == null) {
                 try {
-                    // Load from R.array.pref_layout_values
-                    val layoutValuesId = resources.getIdentifier("pref_layout_values", "array", null)
-                    if (layoutValuesId != 0) {
-                        unsafeLayoutIdsStr = resources.getStringArray(layoutValuesId).toList()
-                    } else {
-                        // Fallback to minimal set if resource not found
-                        unsafeLayoutIdsStr = listOf("system", "custom")
-                    }
+                    // Use R class directly for compile-time safety
+                    unsafeLayoutIdsStr = resources.getStringArray(R.array.pref_layout_values).toList()
                 } catch (e: Exception) {
-                    // Fallback on error
+                    // Fallback to minimal set if resource not found
                     unsafeLayoutIdsStr = listOf("system", "custom")
                 }
             }
@@ -82,11 +76,8 @@ class LayoutsPreference(
         fun layoutIdOfName(resources: Resources, name: String): Int {
             if (unsafeLayoutIdsRes == null) {
                 try {
-                    // Load from R.array.layout_ids TypedArray
-                    val layoutIdsArrayId = resources.getIdentifier("layout_ids", "array", null)
-                    if (layoutIdsArrayId != 0) {
-                        unsafeLayoutIdsRes = resources.obtainTypedArray(layoutIdsArrayId)
-                    }
+                    // Use R class directly for compile-time safety
+                    unsafeLayoutIdsRes = resources.obtainTypedArray(R.array.layout_ids)
                 } catch (e: Exception) {
                     return -1
                 }
