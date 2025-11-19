@@ -102,16 +102,19 @@ class LayoutsPreference(
             // Load layout list using ListGroupPreference's load_from_preferences
             val layoutItems = load_from_preferences(KEY, prefs, DEFAULT, SERIALIZER)
 
+            // Check if terminal mode is enabled (for bottom row selection)
+            val termuxModeEnabled = prefs.getBoolean("termux_mode_enabled", false)
+
             for (layout in layoutItems) {
                 when (layout) {
-                    is NamedLayout -> layouts.add(addBottomRowIfNeeded(resources, layoutOfString(resources, layout.name)))
-                    is CustomLayout -> layouts.add(addBottomRowIfNeeded(resources, layout.parsed))
+                    is NamedLayout -> layouts.add(addBottomRowIfNeeded(resources, layoutOfString(resources, layout.name), termuxModeEnabled))
+                    is CustomLayout -> layouts.add(addBottomRowIfNeeded(resources, layout.parsed, termuxModeEnabled))
                     is SystemLayout -> {
                         // For SystemLayout, load a default layout (qwerty_us)
                         // This prevents empty layouts list when filterNotNull() is called
                         val defaultLayout = layoutOfString(resources, "qwerty_us")
                         if (defaultLayout != null) {
-                            layouts.add(addBottomRowIfNeeded(resources, defaultLayout))
+                            layouts.add(addBottomRowIfNeeded(resources, defaultLayout, termuxModeEnabled))
                         } else {
                             // Fallback: try to load any available layout
                             val layoutNames = getLayoutNames(resources)
@@ -120,7 +123,7 @@ class LayoutsPreference(
                                 if (name != "system" && name != "custom") {
                                     val fallback = layoutOfString(resources, name)
                                     if (fallback != null) {
-                                        layouts.add(addBottomRowIfNeeded(resources, fallback))
+                                        layouts.add(addBottomRowIfNeeded(resources, fallback, termuxModeEnabled))
                                         found = true
                                         break
                                     }
@@ -141,13 +144,24 @@ class LayoutsPreference(
         /**
          * Add the bottom row to a keyboard layout if it needs one.
          * The bottom row contains spacebar, enter, Fn, Ctrl, arrows, etc.
+         *
+         * @param resources Android resources
+         * @param layout Keyboard layout to add bottom row to
+         * @param termuxModeEnabled If true, use terminal-style bottom row with Ctrl, Meta, PageUp/Down.
+         *                          If false, use standard phone keyboard bottom row.
          */
-        private fun addBottomRowIfNeeded(resources: Resources, layout: KeyboardData?): KeyboardData? {
+        private fun addBottomRowIfNeeded(resources: Resources, layout: KeyboardData?, termuxModeEnabled: Boolean): KeyboardData? {
             if (layout == null) return null
             if (!layout.bottomRow) return layout  // Layout doesn't want bottom row
 
             return try {
-                val bottomRow = KeyboardData.loadRow(resources, R.xml.bottom_row)
+                // Select bottom row based on terminal mode setting
+                val bottomRowId = if (termuxModeEnabled) {
+                    R.xml.bottom_row  // Terminal-style with Ctrl, Meta, PageUp/Down, Home/End
+                } else {
+                    R.xml.bottom_row_standard  // Standard phone keyboard style
+                }
+                val bottomRow = KeyboardData.loadRow(resources, bottomRowId)
                 layout.insertRow(bottomRow, layout.rows.size)
             } catch (e: Exception) {
                 Logs.e("LayoutsPreference", "Failed to load bottom row", e)

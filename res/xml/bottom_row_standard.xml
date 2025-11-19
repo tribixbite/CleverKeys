@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Standard phone keyboard bottom row (non-terminal mode)
+     This is the default bottom row for normal keyboard usage.
+     For terminal mode with Ctrl, Meta, PageUp/Down, see bottom_row.xml
+-->
+<row height="0.95">
+  <key width="1.3" key0="ctrl" key1="loc fn" key2="loc alt" key3="switch_emoji" key4="switch_numeric"/>
+  <key width="1.1" key0="," key1="!" key2="?" key3=":" key4=";"/>
+  <key width="4.4" key0="space" key7="switch_forward" key8="switch_backward" key5="cursor_left" key6="cursor_right"/>
+  <key width="1.1" key0="." key1="'" key2="&quot;" key3="-" key4="@"/>
+  <key width="2.1" key0="enter" key1="loc voice_typing" key2="action"/>
+</row>
