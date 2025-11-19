@@ -99,6 +99,17 @@ Requires ADB connection to device.
    - Changed to load en_enhanced.txt (49,296 words) instead of en.txt (10k)
    - Commit: 63aa4f82, b36fb201
 
+7. ✅ **Unit Test Infrastructure** (Nov 19)
+   - Added Robolectric testing framework
+   - Fixed MockClasses.kt (ContextWrapper pattern)
+   - Fixed TensorInfo.shape access in OnnxPredictionTest
+   - Commits: b0d19b85, a697e655
+
+8. ✅ **Lint Baseline Setup** (Nov 19)
+   - Created lint-baseline.xml tracking 464 pre-existing issues
+   - Build now passes lint checks
+   - Commit: 6646501a
+
 ### Recent Completions (Nov 16, 2025)
 
 1. ✅ Bug #473: Dictionary Manager (3-tab UI)
