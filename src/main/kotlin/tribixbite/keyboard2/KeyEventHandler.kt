@@ -652,12 +652,81 @@ class KeyEventHandler(
     }
 
     /**
-     * Apply modifiers to a key value (simplified version of KeyModifier.modify)
+     * Apply modifiers to a key value (matches Java KeyModifier.modify)
+     * Handles shift, accents, and other modifiers for macro execution
      */
     private fun applyModifiers(key: KeyValue, mods: Pointers.Modifiers): KeyValue? {
-        // For now, return the key unmodified
-        // Full implementation would apply shift, accents, etc.
-        return key
+        var result: KeyValue = key
+
+        // Get the list of active modifiers
+        val modifierList = mods.getModifiers()
+
+        // Apply each modifier in order
+        for (modifier in modifierList) {
+            when (modifier) {
+                KeyValue.Modifier.SHIFT -> {
+                    // Apply shift - convert to uppercase for char keys
+                    result = when (result) {
+                        is KeyValue.CharKey -> {
+                            val upperChar = result.char.uppercaseChar()
+                            if (upperChar != result.char) {
+                                result.copy(char = upperChar, displayString = upperChar.toString())
+                            } else {
+                                result
+                            }
+                        }
+                        else -> result
+                    }
+                }
+                KeyValue.Modifier.CTRL, KeyValue.Modifier.ALT, KeyValue.Modifier.META -> {
+                    // These modifiers affect meta state, not the key itself
+                    // They're handled by updateMetaState()
+                }
+                // Accent modifiers - apply diacritics
+                KeyValue.Modifier.AIGU -> result = applyDiacritic(result, '\u0301') // combining acute
+                KeyValue.Modifier.GRAVE -> result = applyDiacritic(result, '\u0300') // combining grave
+                KeyValue.Modifier.CIRCONFLEXE -> result = applyDiacritic(result, '\u0302') // combining circumflex
+                KeyValue.Modifier.TILDE -> result = applyDiacritic(result, '\u0303') // combining tilde
+                KeyValue.Modifier.TREMA -> result = applyDiacritic(result, '\u0308') // combining diaeresis
+                KeyValue.Modifier.CEDILLE -> result = applyDiacritic(result, '\u0327') // combining cedilla
+                KeyValue.Modifier.CARON -> result = applyDiacritic(result, '\u030C') // combining caron
+                KeyValue.Modifier.RING -> result = applyDiacritic(result, '\u030A') // combining ring
+                KeyValue.Modifier.MACRON -> result = applyDiacritic(result, '\u0304') // combining macron
+                KeyValue.Modifier.OGONEK -> result = applyDiacritic(result, '\u0328') // combining ogonek
+                KeyValue.Modifier.DOT_ABOVE -> result = applyDiacritic(result, '\u0307') // combining dot above
+                KeyValue.Modifier.DOT_BELOW -> result = applyDiacritic(result, '\u0323') // combining dot below
+                KeyValue.Modifier.BREVE -> result = applyDiacritic(result, '\u0306') // combining breve
+                KeyValue.Modifier.HORN -> result = applyDiacritic(result, '\u031B') // combining horn
+                KeyValue.Modifier.HOOK_ABOVE -> result = applyDiacritic(result, '\u0309') // combining hook above
+                else -> {
+                    // Other modifiers (FN, GESTURE, etc.) - pass through
+                }
+            }
+        }
+
+        return result
+    }
+
+    /**
+     * Apply a combining diacritic to a character key
+     */
+    private fun applyDiacritic(key: KeyValue, combiningChar: Char): KeyValue {
+        return when (key) {
+            is KeyValue.CharKey -> {
+                // Use KeyCharacterMap.getDeadChar for proper composition
+                val composed = android.view.KeyCharacterMap.getDeadChar(
+                    combiningChar.code,
+                    key.char.code
+                )
+                if (composed != 0) {
+                    KeyValue.CharKey(composed.toChar())
+                } else {
+                    // No composition available, return base + combining character
+                    KeyValue.StringKey("${key.char}$combiningChar")
+                }
+            }
+            else -> key
+        }
     }
     
     /**

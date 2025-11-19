@@ -148,6 +148,19 @@ Requires ADB connection to device.
     - Macros clear modifiers and execute keys in sequence
     - Latch keys accumulate modifiers during macro execution
 
+24. ✅ **Macro Modifier Application** (Nov 19)
+    - Implemented applyModifiers() with full modifier support
+    - Handles SHIFT for uppercase conversion
+    - Handles all diacritic modifiers (AIGU, GRAVE, TILDE, etc.)
+    - Uses KeyCharacterMap.getDeadChar for proper composition
+
+25. ✅ **Advanced Gesture Recognition** (Nov 19)
+    - Implemented Gesture state machine with direction history
+    - Detects ROUNDTRIP (back and forth gesture)
+    - Detects CIRCLE (clockwise rotation)
+    - Detects ANTICIRCLE (counter-clockwise rotation)
+    - Tracks totalRotation for circle detection
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME

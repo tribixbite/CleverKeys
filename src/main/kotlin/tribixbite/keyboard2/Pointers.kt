@@ -637,20 +637,69 @@ class Pointers(
     }
 
     /**
-     * Gesture recognition state
+     * Gesture recognition state machine (matches Java implementation)
+     * Tracks direction history to detect ROUNDTRIP, CIRCLE, and ANTICIRCLE gestures
      */
-    private data class Gesture(private var direction: Int) {
+    private class Gesture(initialDirection: Int) {
         enum class Name { NONE, SWIPE, ROUNDTRIP, CIRCLE, ANTICIRCLE }
 
         private var inProgress = true
+        private var direction = initialDirection
+
+        // Direction history for pattern detection
+        // Directions are 1-8 representing 8 compass directions
+        private val directionHistory = mutableListOf(initialDirection)
+        private var totalRotation = 0 // Positive for clockwise, negative for counter-clockwise
 
         fun isInProgress(): Boolean = inProgress
         fun currentDirection(): Int = direction
-        fun getGesture(): Name = Name.SWIPE // Simplified for now
+
+        /**
+         * Determine gesture type from direction history (matches Java logic)
+         */
+        fun getGesture(): Name {
+            if (directionHistory.size < 2) return Name.SWIPE
+
+            // Check for roundtrip: gesture goes in one direction then returns
+            // e.g., left -> right or up -> down
+            val first = directionHistory.first()
+            val last = directionHistory.last()
+
+            // Directions are opposite if they differ by 4 (on 8-direction compass)
+            val isOpposite = kotlin.math.abs(first - last) == 4 ||
+                            (first == 8 && last == 4) || (first == 4 && last == 8)
+
+            if (isOpposite && directionHistory.size >= 2) {
+                return Name.ROUNDTRIP
+            }
+
+            // Check for circle gestures based on total rotation
+            // A full circle is 8 direction changes
+            if (kotlin.math.abs(totalRotation) >= 6) {
+                return if (totalRotation > 0) Name.CIRCLE else Name.ANTICIRCLE
+            }
+
+            return Name.SWIPE
+        }
 
         fun changedDirection(newDirection: Int): Boolean {
             if (direction != newDirection) {
+                // Calculate rotation (handles wrap-around for 8 directions)
+                val delta = newDirection - direction
+                val rotation = when {
+                    delta > 4 -> delta - 8  // Wrapped counter-clockwise
+                    delta < -4 -> delta + 8 // Wrapped clockwise
+                    else -> delta
+                }
+                totalRotation += rotation
+
                 direction = newDirection
+                directionHistory.add(newDirection)
+
+                // Limit history size to prevent memory issues
+                if (directionHistory.size > 16) {
+                    directionHistory.removeAt(0)
+                }
                 return true
             }
             return false
