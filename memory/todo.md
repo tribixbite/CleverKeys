@@ -110,6 +110,18 @@ Requires ADB connection to device.
     - Pointers: Use swipe_dist_px for short gesture threshold (not custom setting)
     - Commit: 169cd6b8
 
+18. ✅ **Border Rendering Fix** (Nov 19)
+    - Use shared tmpRect and canvas.clipRect like Java
+    - Draw same rounded rect with different paints per border side
+    - Borders now properly join at corners (not separate rects)
+    - Commit: 66d0574b
+
+19. ✅ **Indication Drawing Fix** (Nov 19)
+    - Restored original Java functionality (draw key.indication text)
+    - Was incorrectly drawing lock/latch indicator dots
+    - Now draws hint text at 4/5 of key height
+    - Commit: 66d0574b
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
