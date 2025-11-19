@@ -104,14 +104,14 @@ class LayoutsPreference(
 
             for (layout in layoutItems) {
                 when (layout) {
-                    is NamedLayout -> layouts.add(layoutOfString(resources, layout.name))
-                    is CustomLayout -> layouts.add(layout.parsed)
+                    is NamedLayout -> layouts.add(addBottomRowIfNeeded(resources, layoutOfString(resources, layout.name)))
+                    is CustomLayout -> layouts.add(addBottomRowIfNeeded(resources, layout.parsed))
                     is SystemLayout -> {
                         // For SystemLayout, load a default layout (qwerty_us)
                         // This prevents empty layouts list when filterNotNull() is called
                         val defaultLayout = layoutOfString(resources, "qwerty_us")
                         if (defaultLayout != null) {
-                            layouts.add(defaultLayout)
+                            layouts.add(addBottomRowIfNeeded(resources, defaultLayout))
                         } else {
                             // Fallback: try to load any available layout
                             val layoutNames = getLayoutNames(resources)
@@ -120,7 +120,7 @@ class LayoutsPreference(
                                 if (name != "system" && name != "custom") {
                                     val fallback = layoutOfString(resources, name)
                                     if (fallback != null) {
-                                        layouts.add(fallback)
+                                        layouts.add(addBottomRowIfNeeded(resources, fallback))
                                         found = true
                                         break
                                     }
@@ -136,6 +136,23 @@ class LayoutsPreference(
             }
 
             return layouts
+        }
+
+        /**
+         * Add the bottom row to a keyboard layout if it needs one.
+         * The bottom row contains spacebar, enter, Fn, Ctrl, arrows, etc.
+         */
+        private fun addBottomRowIfNeeded(resources: Resources, layout: KeyboardData?): KeyboardData? {
+            if (layout == null) return null
+            if (!layout.bottomRow) return layout  // Layout doesn't want bottom row
+
+            return try {
+                val bottomRow = KeyboardData.loadRow(resources, R.xml.bottom_row)
+                layout.insertRow(bottomRow, layout.rows.size)
+            } catch (e: Exception) {
+                Logs.e("LayoutsPreference", "Failed to load bottom row", e)
+                layout  // Return layout without bottom row on error
+            }
         }
 
         /**
