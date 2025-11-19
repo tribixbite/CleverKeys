@@ -150,7 +150,22 @@ class LanguageManager(
     // SharedPreferences
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    // State
+    // Available languages database - MUST be initialized before _languageState
+    // which calls getDefaultLanguageInfo() that accesses this map
+    private val availableLanguages = ConcurrentHashMap<String, LanguageInfo>()
+
+    // Enabled languages
+    private val enabledLanguages = Collections.synchronizedList(mutableListOf<LanguageInfo>())
+
+    // Recent languages
+    private val recentLanguages = Collections.synchronizedList(mutableListOf<LanguageInfo>())
+
+    // Current language - initialized in init block after availableLanguages
+    private var currentLanguage: LanguageInfo
+
+    private var callback: Callback? = null
+
+    // State - initialized after availableLanguages so getDefaultLanguageInfo() can access it
     private val _languageState = MutableStateFlow(
         LanguageState(
             currentLanguage = getDefaultLanguageInfo(),
@@ -161,20 +176,6 @@ class LanguageManager(
         )
     )
     val languageState: StateFlow<LanguageState> = _languageState.asStateFlow()
-
-    private var callback: Callback? = null
-
-    // Available languages database
-    private val availableLanguages = ConcurrentHashMap<String, LanguageInfo>()
-
-    // Current language
-    private var currentLanguage: LanguageInfo
-
-    // Enabled languages
-    private val enabledLanguages = Collections.synchronizedList(mutableListOf<LanguageInfo>())
-
-    // Recent languages
-    private val recentLanguages = Collections.synchronizedList(mutableListOf<LanguageInfo>())
 
     init {
         logD("LanguageManager initialized")
