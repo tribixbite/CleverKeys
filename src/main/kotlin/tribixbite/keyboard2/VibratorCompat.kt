@@ -5,65 +5,71 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.view.HapticFeedbackConstants
+import android.view.View
 
 /**
- * Cross-platform vibration compatibility
- * Kotlin implementation with modern Android API support
+ * Cross-platform vibration compatibility (matches Java implementation)
+ *
+ * Handles both system haptic feedback and custom vibration durations
  */
-class VibratorCompat(private val context: Context) {
-    
-    private val vibrator: Vibrator? by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
-            vibratorManager?.defaultVibrator
+object VibratorCompat {
+
+    private var vibratorService: Vibrator? = null
+
+    /**
+     * Perform vibration based on config settings (matches Java behavior)
+     */
+    @JvmStatic
+    fun vibrate(view: View, config: Config) {
+        if (config.vibrate_custom) {
+            // Custom vibration with user-specified duration
+            if (config.vibrate_duration > 0) {
+                vibratorVibrate(view, config.vibrate_duration)
+            }
         } else {
-            @Suppress("DEPRECATION")
-            context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+            // System default haptic feedback
+            // FLAG_IGNORE_VIEW_SETTING ensures feedback even if user disabled in system settings
+            view.performHapticFeedback(
+                HapticFeedbackConstants.KEYBOARD_TAP,
+                HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING
+            )
         }
     }
-    
+
     /**
-     * Perform haptic feedback
+     * Use the older Vibrator API when the newer API is not available
+     * or the user wants more control over duration
      */
-    fun performHapticFeedback(duration: Long = 20L) {
-        val vib = vibrator ?: return
-        
-        if (!vib.hasVibrator()) return
-        
+    private fun vibratorVibrate(view: View, duration: Long) {
         try {
+            val vibrator = getVibrator(view)
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val effect = VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)
-                vib.vibrate(effect)
+                val effect = VibrationEffect.createOneShot(
+                    duration,
+                    VibrationEffect.DEFAULT_AMPLITUDE
+                )
+                vibrator.vibrate(effect)
             } else {
                 @Suppress("DEPRECATION")
-                vib.vibrate(duration)
+                vibrator.vibrate(duration)
             }
         } catch (e: Exception) {
-            logE("Vibration failed", e)
+            // Silently ignore vibration failures (matches Java)
         }
     }
-    
-    /**
-     * Perform click feedback
-     */
-    fun performClickFeedback() {
-        performHapticFeedback(50L)
-    }
-    
-    /**
-     * Perform long press feedback
-     */
-    fun performLongPressFeedback() {
-        performHapticFeedback(100L)
-    }
-    
-    /**
-     * Check if vibrator is available
-     */
-    val hasVibrator: Boolean
-        get() = vibrator?.hasVibrator() ?: false
 
-    private fun logE(message: String, throwable: Throwable) {
-        android.util.Log.e("VibratorCompat", message, throwable)
+    private fun getVibrator(view: View): Vibrator {
+        if (vibratorService == null) {
+            vibratorService = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibratorManager = view.context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+                vibratorManager?.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                view.context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+            }
+        }
+        return vibratorService ?: throw IllegalStateException("Vibrator service not available")
     }
 }

@@ -836,10 +836,9 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     private fun vibrate() {
-        if (config?.vibrate_custom == true) {
-            // Trigger haptic feedback
-            performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
-        }
+        val cfg = config ?: return
+        // Use VibratorCompat for proper vibration handling (matches Java)
+        VibratorCompat.vibrate(this, cfg)
     }
 
     private fun scaleTextSize(keyValue: KeyValue, isMainLabel: Boolean): Float {
