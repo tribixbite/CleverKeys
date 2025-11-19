@@ -211,6 +211,15 @@ Requires ADB connection to device.
     - Updated handleSliderKey for enum-based dispatch
     - Commit: fcdb8401
 
+33. ✅ **Tamil/Sinhala Font Sizing** (Nov 19)
+    - Added needsSmallerFont() helper function
+    - Auto-detects Tamil (U+0B80-U+0BFF)
+    - Auto-detects Sinhala (U+0D80-U+0DFF)
+    - Auto-detects Sinhala archaic digits (U+111E1-U+111F4)
+    - Applies FLAG_SMALLER_FONT automatically in getKeyByName()
+    - Matches Java behavior for complex script rendering
+    - Commit: 56ba7698
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
