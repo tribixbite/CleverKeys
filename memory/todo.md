@@ -290,6 +290,13 @@ Requires ADB connection to device.
     - Automatic bottom row selection based on user preference
     - Commit: 75ada979
 
+44. ✅ **Standard Bottom Row GBoard-Style Layout** (Nov 19)
+    - Updated standard mode first key from Ctrl to ?123 (switch_numeric)
+    - Swipe up for emoji, swipe down for change_method
+    - Matches typical phone keyboard layouts (GBoard, Samsung)
+    - Standard mode now has no terminal-specific keys
+    - Commit: 0ab0435e
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
