@@ -105,6 +105,7 @@ English, Spanish, French, German, Italian, Portuguese, Russian, Chinese, Japanes
 - **Macro Expansion**: Text shortcuts and abbreviations
 - **Keyboard Shortcuts**: Ctrl+C/X/V/Z/Y/A support
 - **One-Handed Mode**: Shift keyboard left/right for thumb typing
+- **Terminal Mode**: Toggle in Settings for Ctrl/Meta/PageUp/Down keys (great for Termux)
 - **100+ Layouts**: Complete layout support from Unexpected-Keyboard
 
 ---
