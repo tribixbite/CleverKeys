@@ -122,6 +122,13 @@ Requires ADB connection to device.
     - Now draws hint text at 4/5 of key height
     - Commit: 66d0574b
 
+20. ✅ **VibratorCompat Java Parity** (Nov 19)
+    - Rewritten from class to object (singleton) like Java
+    - Implemented vibrate(View, Config) matching Java signature
+    - Supports both system haptic and custom duration vibration
+    - Uses FLAG_IGNORE_VIEW_SETTING for system feedback
+    - Commit: 862930f4
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
