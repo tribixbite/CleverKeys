@@ -161,6 +161,13 @@ Requires ADB connection to device.
     - Detects ANTICIRCLE (counter-clockwise rotation)
     - Tracks totalRotation for circle detection
 
+26. ✅ **Word Deletion State Machine** (Nov 19)
+    - Reimplemented deleteWord() with proper state machine
+    - States: INITIAL, SKIP_WHITESPACE, DELETE_WORD, DELETE_PUNCT
+    - Added getCharClass() helper (0=whitespace, 1=word, 2=punct)
+    - Properly handles mixed content like "hello, world"
+    - Matches Java delete_word behavior exactly
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME

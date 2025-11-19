@@ -780,6 +780,7 @@ class KeyEventHandler(
 
     /**
      * Delete a whole word (used for ctrl+backspace)
+     * Uses state machine for proper word boundary detection
      */
     private fun deleteWord(inputConnection: InputConnection) {
         try {
@@ -788,33 +789,60 @@ class KeyEventHandler(
 
             if (textBefore.isEmpty()) return
 
-            // Find the start of the current word
+            // State machine for word deletion
+            // States: INITIAL, SKIP_WHITESPACE, DELETE_WORD, DELETE_PUNCT
+            var state = 0 // INITIAL
             var deleteCount = 0
-            var foundNonWhitespace = false
+            var i = textBefore.length - 1
 
-            for (i in textBefore.length - 1 downTo 0) {
+            while (i >= 0) {
                 val char = textBefore[i]
+                val charClass = getCharClass(char)
 
-                if (char.isWhitespace()) {
-                    if (foundNonWhitespace) {
-                        // Stop at whitespace after finding a word
-                        break
-                    }
-                    // Skip leading whitespace
-                    deleteCount++
-                } else {
-                    foundNonWhitespace = true
-                    if (char.isLetterOrDigit() || char == '_') {
-                        deleteCount++
-                    } else {
-                        // Stop at punctuation
-                        if (foundNonWhitespace && deleteCount > 0) {
-                            break
+                when (state) {
+                    0 -> { // INITIAL - determine what to delete based on first char
+                        when (charClass) {
+                            0 -> { // Whitespace - skip it, then delete word
+                                deleteCount++
+                                state = 1 // SKIP_WHITESPACE
+                            }
+                            1 -> { // Word char - delete the word
+                                deleteCount++
+                                state = 2 // DELETE_WORD
+                            }
+                            2 -> { // Punctuation - delete punctuation run
+                                deleteCount++
+                                state = 3 // DELETE_PUNCT
+                            }
                         }
-                        deleteCount++
-                        break
+                    }
+                    1 -> { // SKIP_WHITESPACE - consume whitespace, then switch
+                        when (charClass) {
+                            0 -> deleteCount++ // More whitespace
+                            1 -> { // Word char - start deleting word
+                                deleteCount++
+                                state = 2 // DELETE_WORD
+                            }
+                            2 -> { // Punctuation - delete punctuation run
+                                deleteCount++
+                                state = 3 // DELETE_PUNCT
+                            }
+                        }
+                    }
+                    2 -> { // DELETE_WORD - delete word chars until boundary
+                        when (charClass) {
+                            1 -> deleteCount++ // More word chars
+                            else -> break // Stop at whitespace or punct
+                        }
+                    }
+                    3 -> { // DELETE_PUNCT - delete punctuation until boundary
+                        when (charClass) {
+                            2 -> deleteCount++ // More punctuation
+                            else -> break // Stop at whitespace or word
+                        }
                     }
                 }
+                i--
             }
 
             if (deleteCount > 0) {
@@ -824,6 +852,18 @@ class KeyEventHandler(
             logE("Failed to delete word", e)
             // Fallback to single character delete
             inputConnection.deleteSurroundingText(1, 0)
+        }
+    }
+
+    /**
+     * Get character class for word deletion
+     * Returns: 0 = whitespace, 1 = word char, 2 = punctuation
+     */
+    private fun getCharClass(char: Char): Int {
+        return when {
+            char.isWhitespace() -> 0
+            char.isLetterOrDigit() || char == '_' || char == '\'' -> 1
+            else -> 2
         }
     }
     
