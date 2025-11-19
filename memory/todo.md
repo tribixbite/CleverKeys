@@ -64,6 +64,19 @@ Requires ADB connection to device.
 **This file originally listed 38 Java-to-Kotlin migration tasks.**
 **Status**: ✅ **ALL COMPLETED** over the past 10 months
 
+### Critical Bug Fixes (Nov 19, 2025)
+
+11. ✅ **Chinese Characters on Keys** (Nov 19)
+    - Added FLAG.KEY_FONT to makeKeyEventKey and makeEventKey factory methods
+    - Private Use Area Unicode now renders with special_font.ttf
+    - Fixes BACKSPACE, ENTER, arrows, config, switch_emoji symbols
+    - Commits: 5f270f86
+
+12. ✅ **Short Gesture Settings** (Nov 19)
+    - Added short_gestures_enabled and short_gesture_min_distance settings
+    - Integrated into Pointers.kt for key direction swipe threshold
+    - Commit: 585f8508
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
