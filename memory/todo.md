@@ -89,6 +89,27 @@ Requires ADB connection to device.
     - Allows fine-tuning when swipe typing mode activates
     - Commit: f975a851
 
+15. ✅ **ROOT CAUSE: Theme.keyFont Qualification** (Nov 19)
+    - CRITICAL: Theme.kt lines 333, 335 used `keyFont` without `Theme.` prefix
+    - Kotlin nested classes cannot access companion object properties unqualified
+    - Result: null typeface → system font → Chinese characters for PUA symbols
+    - Fixed by qualifying as `Theme.keyFont`
+    - Commit: ae4ac4d9
+
+16. ✅ **getNearestKeyAtDirection Arc Search** (Nov 19)
+    - Kotlin version only checked exact direction (index mapping)
+    - Java version searches arc [0, -1, +1, -2, +2, -3, +3] for forgiveness
+    - Added handler.modifyKey() calls for proper key transformation
+    - Added slider key special handling (only within 18% of direction)
+    - Commit: ae4ac4d9
+
+17. ✅ **Java Parity Fixes** (Nov 19)
+    - KeyValue.withSymbol/withChar: Strip KEY_FONT when changing chars (matches Java)
+    - Config: Added swipe_velocity_std, swipe_turning_point_threshold
+    - Config: Fixed swipe_typing_enabled default to false
+    - Pointers: Use swipe_dist_px for short gesture threshold (not custom setting)
+    - Commit: 169cd6b8
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
