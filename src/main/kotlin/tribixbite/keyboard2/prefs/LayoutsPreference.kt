@@ -115,7 +115,32 @@ class LayoutsPreference(
                 when (layout) {
                     is NamedLayout -> layouts.add(layoutOfString(resources, layout.name))
                     is CustomLayout -> layouts.add(layout.parsed)
-                    else -> layouts.add(null) // SystemLayout
+                    is SystemLayout -> {
+                        // For SystemLayout, load a default layout (qwerty_us)
+                        // This prevents empty layouts list when filterNotNull() is called
+                        val defaultLayout = layoutOfString(resources, "qwerty_us")
+                        if (defaultLayout != null) {
+                            layouts.add(defaultLayout)
+                        } else {
+                            // Fallback: try to load any available layout
+                            val layoutNames = getLayoutNames(resources)
+                            var found = false
+                            for (name in layoutNames) {
+                                if (name != "system" && name != "custom") {
+                                    val fallback = layoutOfString(resources, name)
+                                    if (fallback != null) {
+                                        layouts.add(fallback)
+                                        found = true
+                                        break
+                                    }
+                                }
+                            }
+                            if (!found) {
+                                layouts.add(null) // Last resort
+                            }
+                        }
+                    }
+                    else -> layouts.add(null)
                 }
             }
 
