@@ -220,6 +220,28 @@ Requires ADB connection to device.
     - Matches Java behavior for complex script rendering
     - Commit: 56ba7698
 
+34. ✅ **Config Migration Version 2->3** (Nov 19)
+    - Fixed missing pin_entry_enabled to number_entry_layout migration
+    - Rewrote migrate() with sequential if checks for proper fallthrough
+    - Now matches Java switch fallthrough behavior exactly
+    - All 50 Java Config settings verified present in Kotlin
+    - Commit: 0af097f7
+
+35. ✅ **Pointers.Modifiers Java Parity** (Nov 19)
+    - Added get(i) method with reversed order access like Java
+    - Added size() method for modifier count
+    - Added has(Modifier) method matching Java implementation
+    - Added diff(Modifiers) iterator for modifier differences
+    - ofArray() now sorts and removes duplicates/nulls like Java
+    - Changed from data class to regular class for encapsulation
+    - Commit: 768b3003
+
+36. ✅ **Sliding.updateSpeed() Formula Fix** (Nov 19)
+    - instant_speed = min(SPEED_MAX, travelled / elapsed + 1.0f)
+    - speed = speed + (instant_speed - speed) * SPEED_SMOOTHING
+    - Now matches Java slider behavior exactly
+    - Commit: 768b3003
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
