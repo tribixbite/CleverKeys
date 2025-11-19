@@ -75,6 +75,7 @@ class Config private constructor(
 
         /**
          * Configuration migration logic
+         * Uses sequential checks to emulate Java switch fallthrough behavior
          */
         fun migrate(prefs: SharedPreferences) {
             val savedVersion = prefs.getInt("version", 0)
@@ -84,32 +85,38 @@ class Config private constructor(
             val editor = prefs.edit()
             editor.putInt("version", CONFIG_VERSION)
 
-            when (savedVersion) {
-                0 -> {
-                    // Migrate primary, secondary and custom layout options to new Layouts option
-                    val layouts = mutableListOf<LayoutsPreference.Layout>()
-                    layouts.add(migrateLayout(prefs.getString("layout", "system") ?: "system"))
+            // Migrations use sequential ifs for fallthrough behavior (matches Java)
+            // Version 0 users get ALL migrations, version 1 users get 1->2 and 2->3, etc.
 
-                    val secondLayout = prefs.getString("second_layout", "none")
-                    if (!secondLayout.isNullOrEmpty() && secondLayout != "none") {
-                        layouts.add(migrateLayout(secondLayout))
-                    }
+            if (savedVersion < 1) {
+                // Version 0->1: Migrate primary, secondary and custom layout options to new Layouts option
+                val layouts = mutableListOf<LayoutsPreference.Layout>()
+                layouts.add(migrateLayout(prefs.getString("layout", "system") ?: "system"))
 
-                    val customLayout = prefs.getString("custom_layout", "")
-                    if (!customLayout.isNullOrEmpty()) {
-                        layouts.add(LayoutsPreference.CustomLayout.parse(customLayout))
-                    }
-
-                    LayoutsPreference.saveToPreferences(editor, layouts)
-                    // Fallthrough
+                val secondLayout = prefs.getString("second_layout", "none")
+                if (!secondLayout.isNullOrEmpty() && secondLayout != "none") {
+                    layouts.add(migrateLayout(secondLayout))
                 }
-                1 -> {
-                    val addNumberRow = prefs.getBoolean("number_row", false)
-                    editor.putString("number_row", if (addNumberRow) "no_symbols" else "no_number_row")
-                    // Fallthrough
+
+                val customLayout = prefs.getString("custom_layout", "")
+                if (!customLayout.isNullOrEmpty()) {
+                    layouts.add(LayoutsPreference.CustomLayout.parse(customLayout))
                 }
-                2 -> {
-                    // Additional migrations for version 2->3 if needed
+
+                LayoutsPreference.saveToPreferences(editor, layouts)
+            }
+
+            if (savedVersion < 2) {
+                // Version 1->2: Migrate number_row boolean to string
+                val addNumberRow = prefs.getBoolean("number_row", false)
+                editor.putString("number_row", if (addNumberRow) "no_symbols" else "no_number_row")
+            }
+
+            if (savedVersion < 3) {
+                // Version 2->3: Migrate pin_entry_enabled to number_entry_layout
+                if (!prefs.contains("number_entry_layout")) {
+                    val usePinLayout = prefs.getBoolean("pin_entry_enabled", true)
+                    editor.putString("number_entry_layout", if (usePinLayout) "pin" else "number")
                 }
             }
 
