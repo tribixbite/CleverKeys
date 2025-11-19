@@ -792,7 +792,9 @@ class KeyEventHandler(
             // Smart punctuation handles paired characters (Fix for Bug #316 & #361)
             smartPunctuationHandler?.handleBackspace(inputConnection)
 
-            inputConnection.deleteSurroundingText(1, 0)
+            // Send actual DEL key event - works in terminals and all apps
+            // (deleteSurroundingText doesn't work in Termux and other terminal emulators)
+            sendKeyEvent(KeyEvent.KEYCODE_DEL)
             // Remove last character from current word
             if (currentWord.isNotEmpty()) {
                 currentWord.deleteCharAt(currentWord.length - 1)
