@@ -83,8 +83,23 @@ class EnhancedSwipeGestureRecognizer {
 
     /**
      * Check if currently swipe typing
+     * Requires minimum distance to distinguish from short direction gestures
      */
-    fun isSwipeTyping(): Boolean = isTracking && trajectory.size >= 2
+    fun isSwipeTyping(): Boolean {
+        if (!isTracking || trajectory.size < 3) return false
+
+        // Calculate total distance traveled
+        var totalDistance = 0f
+        for (i in 1 until trajectory.size) {
+            val dx = trajectory[i].x - trajectory[i - 1].x
+            val dy = trajectory[i].y - trajectory[i - 1].y
+            totalDistance += kotlin.math.sqrt(dx * dx + dy * dy)
+        }
+
+        // Require minimum distance to consider it swipe typing (not just a direction gesture)
+        // This threshold allows short direction gestures to work
+        return totalDistance > 50f
+    }
 
     /**
      * Reset - alias for clear
