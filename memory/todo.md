@@ -373,6 +373,12 @@ Requires ADB connection to device.
     - No manual toggle required for terminal apps
     - Commit: c81672b2
 
+12. ✅ **Layout Parity Review** (Nov 19)
+    - Verified 84/84 layouts match Unexpected-Keyboard
+    - Only branding changes (package name, GitHub URLs)
+    - bottom_row_standard.xml is new GBoard-style addition
+    - All res/xml files verified
+
 ### Recent Completions (Nov 16, 2025)
 
 1. ✅ Bug #473: Dictionary Manager (3-tab UI)
