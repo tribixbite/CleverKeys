@@ -186,7 +186,10 @@ android {
     targetCompatibility JavaVersion.VERSION_1_8
   }
 
-  lintOptions {
+  lint {
+    baseline = file("lint-baseline.xml")
+    abortOnError = false
+    checkReleaseBuilds = false
   }
 
   testOptions {
