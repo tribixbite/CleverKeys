@@ -3572,8 +3572,15 @@ class CleverKeysService : InputMethodService(),
         logD("Starting input view: package=${editorInfo?.packageName}, restarting=$restarting")
 
         try {
-            // Refresh configuration
+            // Refresh configuration (includes terminal mode bottom row changes)
             config?.refresh(resources, null)
+
+            // Update currentLayout from refreshed config.layouts
+            // This ensures terminal mode toggle takes effect immediately
+            config?.let { cfg ->
+                val layoutIndex = cfg.get_current_layout()
+                currentLayout = cfg.layouts.getOrNull(layoutIndex) ?: cfg.layouts.firstOrNull()
+            }
 
             // Update keyboard view with current layout
             keyboardView?.let { view ->
