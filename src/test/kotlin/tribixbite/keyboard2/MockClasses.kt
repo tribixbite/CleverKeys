@@ -109,37 +109,20 @@ class MockSharedPreferences : SharedPreferences {
 }
 
 /**
- * Mock Context for testing
+ * Mock Context for testing using ContextWrapper
+ * This avoids having to implement all abstract Context methods
  */
-class MockContext : Context() {
+class MockContext : android.content.ContextWrapper(null) {
 
     private val mockPrefs = MockSharedPreferences()
 
-    override fun getAssets(): android.content.res.AssetManager {
-        throw UnsupportedOperationException("getAssets() not supported in MockContext")
-    }
-
-    override fun getResources(): Resources {
-        throw UnsupportedOperationException("getResources() not supported in MockContext")
-    }
-
-    override fun getPackageManager(): android.content.pm.PackageManager {
-        throw UnsupportedOperationException("getPackageManager() not supported in MockContext")
-    }
-
-    override fun getContentResolver(): android.content.ContentResolver {
-        throw UnsupportedOperationException("getContentResolver() not supported in MockContext")
-    }
-
     override fun getPackageName() = "tribixbite.keyboard2.test"
-    override fun getApplicationContext() = this
+    override fun getApplicationContext(): Context = this
 
     // Stub implementations for required methods
     override fun getSystemService(name: String): Any? = null
     override fun getSharedPreferences(name: String, mode: Int): SharedPreferences = mockPrefs
 
-    // Other required overrides with minimal implementations
-    override fun getTheme(): android.content.res.Resources.Theme? = null
     override fun getClassLoader(): ClassLoader = javaClass.classLoader
     override fun getMainLooper(): android.os.Looper = android.os.Looper.getMainLooper()
     override fun getApplicationInfo(): android.content.pm.ApplicationInfo = android.content.pm.ApplicationInfo()

@@ -77,11 +77,12 @@ class OnnxPredictionTest {
         // Validate encoder inputs
         println("\nEncoder inputs:")
         encoder.inputInfo.forEach { (name, info) ->
-            println("   $name: ${info.info.shape.contentToString()}")
+            val tensorInfo = info.info as? ai.onnxruntime.TensorInfo
+            println("   $name: ${tensorInfo?.shape?.contentToString() ?: "unknown"}")
         }
 
         val nearestKeysInput = encoder.inputInfo["nearest_keys"]
-        val nearestKeysShape = nearestKeysInput?.info?.shape
+        val nearestKeysShape = (nearestKeysInput?.info as? ai.onnxruntime.TensorInfo)?.shape
         assertEquals("nearest_keys should be 2D", 2, nearestKeysShape?.size)
         println("\n✅ VALIDATION PASSED: nearest_keys is 2D ${nearestKeysShape?.contentToString()}")
     }
