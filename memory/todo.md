@@ -282,6 +282,14 @@ Requires ADB connection to device.
     - Prevents symbol + swipe prediction double output
     - Commit: 02b980cb
 
+43. ✅ **Terminal Mode Toggle for Bottom Row** (Nov 19)
+    - Added bottom_row_standard.xml for standard phone keyboard layout
+    - Uses termux_mode_enabled config to select bottom row style
+    - Terminal mode: Ctrl, Meta, PageUp/Down, Home/End keys
+    - Standard mode: Comma, period, numeric switch keys
+    - Automatic bottom row selection based on user preference
+    - Commit: 75ada979
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
