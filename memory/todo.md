@@ -366,6 +366,13 @@ Requires ADB connection to device.
     - This was preventing bottom row from being loaded
     - Commit: 45622af9
 
+11. ✅ **Auto-Detect Terminal Apps** (Nov 19)
+    - Automatically enables Terminal Mode when typing in Termux or other terminal emulators
+    - Detects by package name (com.termux, jackpal.androidterm, etc.)
+    - Also checks for "term", "shell", "console" in package name
+    - No manual toggle required for terminal apps
+    - Commit: c81672b2
+
 ### Recent Completions (Nov 16, 2025)
 
 1. ✅ Bug #473: Dictionary Manager (3-tab UI)
