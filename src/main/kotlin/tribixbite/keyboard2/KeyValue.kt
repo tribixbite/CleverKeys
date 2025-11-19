@@ -299,9 +299,12 @@ sealed class KeyValue : Comparable<KeyValue> {
     }
 
     fun withSymbol(newSymbol: String): KeyValue {
-        // Preserve KEY_FONT for special font rendering, only adjust SMALLER_FONT
-        val adjustedFlags = flags - setOf(Flag.SMALLER_FONT) +
-                           if (newSymbol.length > 1) setOf(Flag.SMALLER_FONT) else emptySet()
+        // Strip KEY_FONT and SMALLER_FONT when changing symbol (matches Java behavior)
+        // New symbols are standard characters, not Private Use Area symbols
+        var adjustedFlags = flags - setOf(Flag.KEY_FONT, Flag.SMALLER_FONT)
+        if (newSymbol.length > 1) {
+            adjustedFlags = adjustedFlags + Flag.SMALLER_FONT
+        }
 
         return when (this) {
             is CharKey -> copy(displayString = newSymbol, flags = adjustedFlags)
@@ -321,8 +324,8 @@ sealed class KeyValue : Comparable<KeyValue> {
 
     fun withChar(newChar: Char): KeyValue {
         val newSymbol = newChar.toString()
-        // Preserve KEY_FONT for special font rendering
-        val adjustedFlags = flags - setOf(Flag.SMALLER_FONT)
+        // Strip KEY_FONT and SMALLER_FONT when changing character (matches Java behavior)
+        val adjustedFlags = flags - setOf(Flag.KEY_FONT, Flag.SMALLER_FONT)
         return CharKey(newChar, newSymbol, adjustedFlags)
     }
 

@@ -226,14 +226,8 @@ class Pointers(
         val dy = adjustedY - pointer.downY
         val distance = abs(dx) + abs(dy)
 
-        // Use short gesture threshold if enabled, otherwise use standard swipe distance
-        val directionThreshold = if (config.short_gestures_enabled) {
-            config.short_gesture_min_distance
-        } else {
-            config.swipe_dist_px
-        }
-
-        if (distance < directionThreshold) {
+        // Use standard swipe distance threshold for direction gestures (matches Java)
+        if (distance < config.swipe_dist_px) {
             // Pointer is still in center
             pointer.gesture?.let { gesture ->
                 if (gesture.isInProgress()) {

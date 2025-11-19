@@ -166,7 +166,7 @@ class Config private constructor(
     var clipboard_history_enabled = false
     var clipboard_history_limit = 6
     var clipboard_history_duration = 5  // Duration in minutes, -1 for never expire
-    var swipe_typing_enabled = true
+    var swipe_typing_enabled = false  // Default false to match Java
 
     // Short gesture settings (key direction swipes for secondary characters)
     var short_gestures_enabled = true
@@ -178,6 +178,8 @@ class Config private constructor(
     var swipe_confidence_location_weight = 1.3f
     var swipe_confidence_frequency_weight = 0.8f
     var swipe_confidence_velocity_weight = 0.6f
+    var swipe_velocity_std = 1.0f  // Velocity standard deviation factor
+    var swipe_turning_point_threshold = 45  // Turning point detection threshold
     var swipe_first_letter_weight = 1.5f
     var swipe_last_letter_weight = 1.5f
     var swipe_endpoint_bonus_weight = 2.0f
@@ -340,7 +342,7 @@ class Config private constructor(
 
         clipboard_history_duration = (prefs.getString("clipboard_history_duration", "5") ?: "5").toIntOrNull() ?: 5
 
-        swipe_typing_enabled = prefs.getBoolean("swipe_typing_enabled", true)
+        swipe_typing_enabled = prefs.getBoolean("swipe_typing_enabled", false)  // Default false to match Java
 
         // Short gesture enable flag (distance loaded above with other swipe settings)
         short_gestures_enabled = prefs.getBoolean("short_gestures_enabled", true)
@@ -350,6 +352,8 @@ class Config private constructor(
         swipe_confidence_location_weight = safeGetInt(prefs, "swipe_confidence_location_weight", 130) / 100f
         swipe_confidence_frequency_weight = safeGetInt(prefs, "swipe_confidence_frequency_weight", 80) / 100f
         swipe_confidence_velocity_weight = safeGetInt(prefs, "swipe_confidence_velocity_weight", 60) / 100f
+        swipe_velocity_std = safeGetInt(prefs, "swipe_velocity_std", 100) / 100f
+        swipe_turning_point_threshold = safeGetInt(prefs, "swipe_turning_point_threshold", 45)
         swipe_first_letter_weight = safeGetInt(prefs, "swipe_first_letter_weight", 150) / 100f
         swipe_last_letter_weight = safeGetInt(prefs, "swipe_last_letter_weight", 150) / 100f
         swipe_endpoint_bonus_weight = safeGetInt(prefs, "swipe_endpoint_bonus_weight", 200) / 100f
