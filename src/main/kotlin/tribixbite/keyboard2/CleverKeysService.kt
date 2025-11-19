@@ -3478,13 +3478,9 @@ class CleverKeysService : InputMethodService(),
             }
             keyboardView = kbView
 
-            // Create Material 3 suggestion bar with lifecycle support
-            logD("Creating Material 3 SuggestionBar with lifecycle owners...")
-            val sugBar = SuggestionBarM3Wrapper(
-                this,
-                this@CleverKeysService,  // LifecycleOwner
-                this@CleverKeysService   // SavedStateRegistryOwner
-            ).apply {
+            // Create Material 3 suggestion bar with custom Recomposer (no lifecycle needed)
+            logD("Creating Material 3 SuggestionBar...")
+            val sugBar = SuggestionBarM3Wrapper(this).apply {
                 setOnSuggestionSelectedListener { word ->
                     logD("User selected suggestion: '$word'")
                     currentInputConnection?.commitText(word + " ", 1)
@@ -3496,11 +3492,6 @@ class CleverKeysService : InputMethodService(),
             logD("Creating LinearLayout container...")
             val container = android.widget.LinearLayout(this).apply {
                 orientation = android.widget.LinearLayout.VERTICAL
-
-                // Set lifecycle owners for Compose support (Fix ViewTreeLifecycleOwner crash)
-                setViewTreeLifecycleOwner(this@CleverKeysService)
-                setViewTreeSavedStateRegistryOwner(this@CleverKeysService)
-                logD("✅ ViewTree lifecycle owners set on container")
 
                 // Add suggestion bar on top (40dp height)
                 val suggestionParams = android.widget.LinearLayout.LayoutParams(

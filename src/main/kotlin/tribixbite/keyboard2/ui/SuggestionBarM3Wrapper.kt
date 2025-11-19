@@ -3,12 +3,18 @@ package tribixbite.keyboard2.ui
 import android.content.Context
 import android.widget.FrameLayout
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.AndroidUiDispatcher
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.savedstate.SavedStateRegistry
+import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import tribixbite.keyboard2.theme.KeyboardTheme
 
 /**
@@ -30,20 +36,39 @@ import tribixbite.keyboard2.theme.KeyboardTheme
  * suggestionBar.setSuggestions(listOf("hello", "world", "test"))
  * ```
  */
-class SuggestionBarM3Wrapper(
-    context: Context,
-    lifecycleOwner: LifecycleOwner,
-    savedStateRegistryOwner: SavedStateRegistryOwner
-) : FrameLayout(context) {
+class SuggestionBarM3Wrapper(context: Context) : FrameLayout(context), LifecycleOwner, SavedStateRegistryOwner {
 
     // Mutable state for suggestions (use .value to access/modify)
     private val currentSuggestions = mutableStateOf<List<Suggestion>>(emptyList())
     private var onSuggestionSelected: ((String) -> Unit)? = null
 
+    // Custom recomposer for IME context (no lifecycle owner required)
+    // AndroidUiDispatcher.Main provides MonotonicFrameClock required by Compose
+    private val recomposer = Recomposer(AndroidUiDispatcher.Main)
+    private val recomposerScope = CoroutineScope(AndroidUiDispatcher.Main)
+
+    // Lifecycle support for Compose in IME context
+    private val lifecycleRegistry = LifecycleRegistry(this)
+    private val savedStateRegistryController = SavedStateRegistryController.create(this)
+
+    override val lifecycle: Lifecycle get() = lifecycleRegistry
+    override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
+
     init {
-        // Create ComposeView and set lifecycle owners directly on it
+        // Initialize lifecycle to CREATED then STARTED then RESUMED
+        // This is required for Compose to work properly
+        savedStateRegistryController.performRestore(null)
+        lifecycleRegistry.currentState = Lifecycle.State.RESUMED
+        android.util.Log.d("SuggestionBar", "Lifecycle initialized to RESUMED state")
+
+        // Start the recomposer
+        recomposerScope.launch {
+            recomposer.runRecomposeAndApplyChanges()
+        }
+
+        // Create ComposeView with custom Recomposer
         // This fixes "ViewTreeLifecycleOwner not found" crash in IME context
-        // because IME's parentPanel intercepts view tree lookup
+        // by providing our own composition context that doesn't require lifecycle
         val composeView = object : AbstractComposeView(context) {
             @Composable
             override fun Content() {
@@ -61,16 +86,28 @@ class SuggestionBarM3Wrapper(
                 }
             }
         }.apply {
-            // Set lifecycle owners directly on AbstractComposeView
-            // This is required because IME windows don't have lifecycle owners
-            // and the parentPanel intercepts view tree lookup
-            setViewTreeLifecycleOwner(lifecycleOwner)
-            setViewTreeSavedStateRegistryOwner(savedStateRegistryOwner)
-            android.util.Log.d("SuggestionBar", "✅ Lifecycle owners set on AbstractComposeView")
+            // Set ViewTree owners on the AbstractComposeView
+            // This is CRITICAL: AndroidComposeView.onAttachedToWindow() checks for these
+            setViewTreeLifecycleOwner(this@SuggestionBarM3Wrapper)
+            setViewTreeSavedStateRegistryOwner(this@SuggestionBarM3Wrapper)
+
+            // Set custom composition context
+            setParentCompositionContext(recomposer)
+            android.util.Log.d("SuggestionBar", "✅ ViewTree lifecycle owners and Recomposer set on AbstractComposeView")
         }
 
         // Add ComposeView to FrameLayout
         addView(composeView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+    }
+
+    /**
+     * Clean up the recomposer and lifecycle when the view is detached
+     */
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
+        recomposer.cancel()
+        android.util.Log.d("SuggestionBar", "Lifecycle destroyed and recomposer cancelled on detach")
     }
 
     /**
