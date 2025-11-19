@@ -13,6 +13,8 @@ import tribixbite.keyboard2.data.UserAdaptationManager
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+import java.util.Collections
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.ln1p
 import kotlin.math.max
 
@@ -64,11 +66,11 @@ class WordPredictor(
     private var languageDetector: LanguageDetector? = null
     private var adaptationManager: UserAdaptationManager? = null
 
-    // Core data structures
-    private val dictionary = mutableMapOf<String, Int>()
-    private val prefixIndex = mutableMapOf<String, MutableSet<String>>()
-    private val recentWords = mutableListOf<String>()
-    private val disabledWords = mutableSetOf<String>()
+    // Core data structures - thread-safe for concurrent access during dictionary loading
+    private val dictionary = ConcurrentHashMap<String, Int>()
+    private val prefixIndex = ConcurrentHashMap<String, MutableSet<String>>()
+    private val recentWords = Collections.synchronizedList(mutableListOf<String>())
+    private val disabledWords = Collections.synchronizedSet(mutableSetOf<String>())
 
     // State
     private var currentLanguage = "en"
