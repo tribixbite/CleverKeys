@@ -330,9 +330,9 @@ class Theme(context: Context, attrs: AttributeSet? = null) {
                 borderBottomPaint = initBorderPaint(config, borderWidth, theme.keyBorderColorBottom)
 
                 labelPaint = initLabelPaint(config, null)
-                specialLabelPaint = initLabelPaint(config, keyFont)
+                specialLabelPaint = initLabelPaint(config, Theme.keyFont)
                 subLabelPaint = initLabelPaint(config, null)
-                specialSubLabelPaint = initLabelPaint(config, keyFont)
+                specialSubLabelPaint = initLabelPaint(config, Theme.keyFont)
                 labelAlphaBits = (config.labelBrightness and 0xFF) shl 24
             }
 

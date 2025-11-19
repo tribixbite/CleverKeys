@@ -445,9 +445,38 @@ class Pointers(
         return handler.modifyKey(keyValue, newModifiers)
     }
 
+    /**
+     * Get the key nearest to [direction] that is not key0. Takes care
+     * of applying [handler.modifyKey] to the selected key in the same
+     * operation to be sure to treat removed keys correctly.
+     * Returns null if no key could be found in the given direction or
+     * if the selected key didn't change.
+     */
     private fun getNearestKeyAtDirection(pointer: Pointer, direction: Int): KeyValue? {
-        val index = DIRECTION_TO_INDEX.getOrNull(direction) ?: return null
-        return pointer.key.keys.getOrNull(index)
+        // Search in an arc around the direction: [0, -1, +1, -2, +2, -3, +3]
+        // This scans 43% of the circle's area, centered on the initial swipe direction
+        var i = 0
+        while (i > -4) {
+            val d = (direction + i + 16) % 16
+            val index = DIRECTION_TO_INDEX.getOrNull(d) ?: continue
+            val rawKey = pointer.key.keys.getOrNull(index)
+
+            // Don't make the difference between a key that doesn't exist and a key
+            // that is removed by handler. Triggers side effects.
+            val k = handler.modifyKey(rawKey, pointer.modifiers)
+            if (k != null) {
+                // When the nearest key is a slider, it is only selected if it's placed
+                // within 18% of the original swipe direction (abs(i) < 2)
+                if (k.isSlider() && kotlin.math.abs(i) >= 2) {
+                    i = if (i <= 0) -i + 1 else -i
+                    continue
+                }
+                return k
+            }
+            // Compute next i: [0, -1, +1, -2, +2, -3, +3]
+            i = if (i <= 0) -i + 1 else -i
+        }
+        return null
     }
 
     // Pointer management
