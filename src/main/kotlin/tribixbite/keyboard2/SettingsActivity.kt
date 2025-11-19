@@ -417,8 +417,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                     // Phase 1: Termux Mode Toggle
                     SettingsSwitch(
-                        title = "Termux Mode",
-                        description = "Insert predictions in Termux-compatible way for terminal usage",
+                        title = "Terminal Mode",
+                        description = "Show Ctrl, Meta, PageUp/Down keys. OFF for standard phone layout",
                         checked = termuxModeEnabled,
                         onCheckedChange = {
                             termuxModeEnabled = it
