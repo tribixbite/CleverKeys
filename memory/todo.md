@@ -379,6 +379,13 @@ Requires ADB connection to device.
     - bottom_row_standard.xml is new GBoard-style addition
     - All res/xml files verified
 
+13. ✅ **English Bigram Model** (Nov 19)
+    - Created bigrams/en_bigrams.json with 320 common word pairs
+    - Enables context-aware predictions (e.g., "the" → "house")
+    - Probabilities range 0.75-0.94 for word pair likelihood
+    - Fixes "Dictionary/bigram asset files not included" limitation
+    - Commit: 69087d3f
+
 ### Recent Completions (Nov 16, 2025)
 
 1. ✅ Bug #473: Dictionary Manager (3-tab UI)
