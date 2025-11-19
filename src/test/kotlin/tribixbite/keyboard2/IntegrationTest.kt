@@ -1,31 +1,38 @@
 package tribixbite.keyboard2
 
+import android.content.Context
 import android.graphics.PointF
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.*
 import org.junit.Test
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Integration tests for complete CleverKeys system
  * Tests end-to-end functionality from gesture to prediction
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [28], manifest = Config.NONE)
 class IntegrationTest {
-    
+
     private lateinit var testScope: TestScope
-    private lateinit var mockContext: MockContext
-    
+    private lateinit var context: Context
+
     @Before
     fun setup() {
         testScope = TestScope()
-        mockContext = MockContext()
+        context = ApplicationProvider.getApplicationContext()
     }
     
     @Test
     fun testCompleteNeuralPredictionPipeline() = testScope.runTest {
         // Initialize pipeline
-        val pipeline = NeuralPredictionPipeline(mockContext)
+        val pipeline = NeuralPredictionPipeline(context)
         val initialized = pipeline.initialize()
         
         // Skip if initialization fails (expected in test environment)
@@ -72,7 +79,7 @@ class IntegrationTest {
     
     @Test
     fun testConfigurationManagement() = testScope.runTest {
-        val configManager = ConfigurationManager(mockContext)
+        val configManager = ConfigurationManager(context)
         val initialized = configManager.initialize()
         
         assertTrue("Configuration manager should initialize", initialized)
@@ -94,7 +101,7 @@ class IntegrationTest {
     
     @Test
     fun testPerformanceOptimizations() = testScope.runTest {
-        val profiler = PerformanceProfiler(mockContext)
+        val profiler = PerformanceProfiler(context)
         
         // Test multiple operations
         repeat(10) { i ->

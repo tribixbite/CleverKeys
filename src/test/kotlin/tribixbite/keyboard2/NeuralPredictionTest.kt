@@ -1,20 +1,26 @@
 package tribixbite.keyboard2
 
 import android.graphics.PointF
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.*
 import org.junit.Test
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Comprehensive tests for neural prediction system
- * Kotlin implementation with coroutine testing
+ * Kotlin implementation with coroutine testing and Robolectric
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [28], manifest = Config.NONE)
 class NeuralPredictionTest {
-    
+
     private lateinit var testScope: TestScope
-    
+
     @Before
     fun setup() {
         testScope = TestScope()

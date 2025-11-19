@@ -2,6 +2,9 @@ package tribixbite.keyboard2
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Unit tests for ComposeKey functionality.
@@ -18,6 +21,8 @@ import org.junit.Test
  *
  * Ported from Java to Kotlin with identical test coverage.
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [28], manifest = Config.NONE)
 class ComposeKeyTest {
 
     /**
