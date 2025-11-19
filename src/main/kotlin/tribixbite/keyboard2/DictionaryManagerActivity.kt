@@ -37,7 +37,7 @@ import java.io.BufferedReader
  *
  * Features:
  * - **Tab 1: User Dictionary** - Add/remove custom words with search
- * - **Tab 2: Built-in Dictionary** - Browse 10k built-in words, disable unwanted words
+ * - **Tab 2: Built-in Dictionary** - Browse 49k built-in words, disable unwanted words
  * - **Tab 3: Disabled Words** - Manage blacklisted words that won't appear in predictions
  *
  * Backend: DictionaryManager.kt, DisabledWordsManager.kt
@@ -680,7 +680,8 @@ class DictionaryManagerActivity : ComponentActivity() {
             try {
                 isLoadingBuiltIn = true
                 val words = withContext(Dispatchers.IO) {
-                    val inputStream = assets.open("dictionaries/en.txt")
+                    // Load enhanced dictionary (49k words) instead of basic (10k)
+                    val inputStream = assets.open("dictionaries/en_enhanced.txt")
                     val reader = BufferedReader(inputStream.reader())
                     val wordList = mutableListOf<DictionaryWord>()
 
