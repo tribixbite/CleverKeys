@@ -75,7 +75,8 @@ Requires ADB connection to device.
 12. ✅ **Short Gesture Settings** (Nov 19)
     - Added short_gestures_enabled and short_gesture_min_distance settings
     - Integrated into Pointers.kt for key direction swipe threshold
-    - Commit: 585f8508
+    - Added DPI scaling for consistent behavior across screens
+    - Commits: 585f8508, 8cd4ce6d
 
 ### Critical Bug Fixes (Nov 18, 2025)
 
