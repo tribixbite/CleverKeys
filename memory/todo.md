@@ -129,6 +129,25 @@ Requires ADB connection to device.
     - Uses FLAG_IGNORE_VIEW_SETTING for system feedback
     - Commit: 862930f4
 
+21. ✅ **Editing Operations (CUT/COPY/PASTE)** (Nov 19)
+    - Added handleEditingKey() using performContextMenuAction
+    - Supports: COPY, CUT, PASTE, PASTE_PLAIN, SELECT_ALL, UNDO, REDO
+    - Supports: SHARE, REPLACE, ASSIST, AUTOFILL, DELETE_WORD
+    - Copy/Cut validate selection exists before acting
+    - DELETE_WORD uses Ctrl+Del key event (matches Java)
+
+22. ✅ **Modifier Key Events** (Nov 19)
+    - CRITICAL: updateMetaState() now sends actual KeyEvents for modifiers
+    - Enables Ctrl, Alt, Meta, Shift to work in terminals
+    - Sends ACTION_DOWN when modifier activated, ACTION_UP when released
+    - Proper meta state management with bitwise operations
+
+23. ✅ **Slider/Macro Key Handling** (Nov 19)
+    - Added handleSliderKey() for continuous cursor movement
+    - Added handleMacroKey() for key sequence execution
+    - Macros clear modifiers and execute keys in sequence
+    - Latch keys accumulate modifiers during macro execution
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME

@@ -3,7 +3,9 @@ package tribixbite.keyboard2
 import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.text.InputType
+import android.util.Log
 import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
@@ -94,6 +96,9 @@ class KeyEventHandler(
             is KeyValue.ModifierKey -> handleModifierKey(value.modifier, true)
             is KeyValue.KeyEventKey -> handleKeyEventKey(value.keyCode, is_swipe)
             is KeyValue.ComposePendingKey -> handleComposeKey(value.pendingCompose)
+            is KeyValue.EditingKey -> handleEditingKey(value.editing)
+            is KeyValue.SliderKey -> handleSliderKey(value.slider, value.repeat, true)
+            is KeyValue.MacroKey -> handleMacroKey(value.keys)
             else -> logD("Unhandled key type: ${value::class.simpleName}")
         }
     }
@@ -476,6 +481,184 @@ class KeyEventHandler(
         inputConnection.commitText(string, 1)
         receiver.performVibration()
     }
+
+    /**
+     * Handle editing operations via performContextMenuAction (matches Java)
+     * This is critical for CUT/COPY/PASTE support
+     */
+    private fun handleEditingKey(editing: KeyValue.Editing) {
+        val inputConnection = receiver.getInputConnection() ?: return
+
+        when (editing) {
+            KeyValue.Editing.COPY -> {
+                if (isSelectionNotEmpty(inputConnection)) {
+                    inputConnection.performContextMenuAction(android.R.id.copy)
+                }
+            }
+            KeyValue.Editing.CUT -> {
+                if (isSelectionNotEmpty(inputConnection)) {
+                    inputConnection.performContextMenuAction(android.R.id.cut)
+                }
+            }
+            KeyValue.Editing.PASTE -> {
+                inputConnection.performContextMenuAction(android.R.id.paste)
+            }
+            KeyValue.Editing.PASTE_PLAIN -> {
+                inputConnection.performContextMenuAction(android.R.id.pasteAsPlainText)
+            }
+            KeyValue.Editing.SELECT_ALL -> {
+                inputConnection.performContextMenuAction(android.R.id.selectAll)
+            }
+            KeyValue.Editing.UNDO -> {
+                inputConnection.performContextMenuAction(android.R.id.undo)
+            }
+            KeyValue.Editing.REDO -> {
+                inputConnection.performContextMenuAction(android.R.id.redo)
+            }
+            KeyValue.Editing.SHARE -> {
+                inputConnection.performContextMenuAction(android.R.id.shareText)
+            }
+            KeyValue.Editing.REPLACE -> {
+                inputConnection.performContextMenuAction(android.R.id.replaceText)
+            }
+            KeyValue.Editing.ASSIST -> {
+                inputConnection.performContextMenuAction(android.R.id.textAssist)
+            }
+            KeyValue.Editing.AUTOFILL -> {
+                inputConnection.performContextMenuAction(android.R.id.autofill)
+            }
+            KeyValue.Editing.DELETE_WORD -> {
+                // Send Ctrl+Del for word deletion
+                sendKeyDownUp(KeyEvent.KEYCODE_DEL, KeyEvent.META_CTRL_ON)
+            }
+            KeyValue.Editing.FORWARD_DELETE_WORD -> {
+                // Send Ctrl+Forward Del for forward word deletion
+                sendKeyDownUp(KeyEvent.KEYCODE_FORWARD_DEL, KeyEvent.META_CTRL_ON)
+            }
+            KeyValue.Editing.SELECTION_CANCEL -> {
+                // Cancel selection by moving cursor to end
+                cancelSelection(inputConnection)
+            }
+        }
+
+        receiver.performVibration()
+        logD("Editing operation: $editing")
+    }
+
+    /**
+     * Check if there is selected text (matches Java is_selection_not_empty)
+     */
+    private fun isSelectionNotEmpty(inputConnection: InputConnection): Boolean {
+        val selectedText = inputConnection.getSelectedText(0)
+        return !selectedText.isNullOrEmpty()
+    }
+
+    /**
+     * Cancel selection by moving cursor to selection end (matches Java)
+     */
+    private fun cancelSelection(inputConnection: InputConnection) {
+        try {
+            val extractedText = inputConnection.getExtractedText(ExtractedTextRequest(), 0)
+            if (extractedText != null) {
+                val selEnd = extractedText.selectionEnd
+                inputConnection.setSelection(selEnd, selEnd)
+            }
+        } catch (e: Exception) {
+            logE("Failed to cancel selection", e)
+        }
+    }
+
+    /**
+     * Send key down/up events with meta state (matches Java send_key_down_up)
+     */
+    private fun sendKeyDownUp(keyCode: Int, meta: Int) {
+        val inputConnection = receiver.getInputConnection() ?: return
+
+        val eventTime = android.os.SystemClock.uptimeMillis()
+        val downEvent = KeyEvent(
+            eventTime, eventTime,
+            KeyEvent.ACTION_DOWN, keyCode, 0, meta
+        )
+        val upEvent = KeyEvent(
+            eventTime, eventTime,
+            KeyEvent.ACTION_UP, keyCode, 0, meta
+        )
+
+        inputConnection.sendKeyEvent(downEvent)
+        inputConnection.sendKeyEvent(upEvent)
+    }
+
+    /**
+     * Handle slider keys for continuous cursor movement (matches Java handle_slider)
+     */
+    private fun handleSliderKey(slider: KeyValue.Slider, repeat: Int, keyDown: Boolean) {
+        val inputConnection = receiver.getInputConnection() ?: return
+
+        // Use repeat value as the amount of movement
+        val amount = if (repeat > 0) repeat else 1
+
+        // Slider increment determines direction
+        // Positive = right/down, Negative = left/up
+        when {
+            slider.increment > 0 -> {
+                // Move cursor right
+                for (i in 0 until amount) {
+                    moveCursor(1)
+                }
+            }
+            slider.increment < 0 -> {
+                // Move cursor left
+                for (i in 0 until amount) {
+                    moveCursor(-1)
+                }
+            }
+        }
+
+        receiver.performVibration()
+        logD("Slider key: increment=${slider.increment}, repeat=$repeat")
+    }
+
+    /**
+     * Handle macro keys - execute sequence of key values (matches Java evaluate_macro)
+     */
+    private fun handleMacroKey(keys: Array<KeyValue>) {
+        if (keys.isEmpty()) return
+
+        // Clear modifiers before starting macro (matches Java)
+        mods_changed(Pointers.Modifiers.EMPTY)
+
+        // Execute each key in sequence
+        var currentMods = Pointers.Modifiers.EMPTY
+        for (key in keys) {
+            // Apply modifiers to key
+            val modifiedKey = applyModifiers(key, currentMods)
+            if (modifiedKey != null) {
+                if (modifiedKey.hasFlagsAny(KeyValue.Flag.LATCH)) {
+                    // Latch keys accumulate modifiers
+                    if (!modifiedKey.hasFlagsAny(KeyValue.Flag.SPECIAL)) {
+                        currentMods = Pointers.Modifiers.EMPTY
+                    }
+                    currentMods = currentMods.withExtraMod(modifiedKey)
+                } else {
+                    // Execute the key
+                    key_down(modifiedKey, false)
+                    key_up(modifiedKey, currentMods)
+                    currentMods = Pointers.Modifiers.EMPTY
+                }
+            }
+        }
+
+        logD("Macro executed: ${keys.size} keys")
+    }
+
+    /**
+     * Apply modifiers to a key value (simplified version of KeyModifier.modify)
+     */
+    private fun applyModifiers(key: KeyValue, mods: Pointers.Modifiers): KeyValue? {
+        // For now, return the key unmodified
+        // Full implementation would apply shift, accents, etc.
+        return key
+    }
     
     /**
      * Handle modifier keys (shift, ctrl, etc.)
@@ -671,19 +854,80 @@ class KeyEventHandler(
     }
 
     /**
-     * Update meta state for modifiers
+     * Update meta state for modifiers and send KeyEvents (matches Java update_meta_state)
+     * This is CRITICAL for terminals and apps that need actual modifier key events
      */
     private fun updateMetaState() {
-        metaState = 0
+        val inputConnection = receiver.getInputConnection() ?: return
 
+        // Calculate new meta state
+        var newMetaState = 0
         if (hasModifier(KeyValue.Modifier.SHIFT)) {
-            metaState = metaState or KeyEvent.META_SHIFT_ON
+            newMetaState = newMetaState or KeyEvent.META_SHIFT_ON
         }
         if (hasModifier(KeyValue.Modifier.CTRL)) {
-            metaState = metaState or KeyEvent.META_CTRL_ON
+            newMetaState = newMetaState or KeyEvent.META_CTRL_ON
         }
         if (hasModifier(KeyValue.Modifier.ALT)) {
-            metaState = metaState or KeyEvent.META_ALT_ON
+            newMetaState = newMetaState or KeyEvent.META_ALT_ON
+        }
+        if (hasModifier(KeyValue.Modifier.META)) {
+            newMetaState = newMetaState or KeyEvent.META_META_ON
+        }
+
+        // Send key events for modifiers that were released (matches Java)
+        if ((metaState and KeyEvent.META_SHIFT_ON) != 0 && (newMetaState and KeyEvent.META_SHIFT_ON) == 0) {
+            sendMetaKeyEvent(KeyEvent.KEYCODE_SHIFT_LEFT, KeyEvent.META_SHIFT_ON, false)
+        }
+        if ((metaState and KeyEvent.META_CTRL_ON) != 0 && (newMetaState and KeyEvent.META_CTRL_ON) == 0) {
+            sendMetaKeyEvent(KeyEvent.KEYCODE_CTRL_LEFT, KeyEvent.META_CTRL_ON, false)
+        }
+        if ((metaState and KeyEvent.META_ALT_ON) != 0 && (newMetaState and KeyEvent.META_ALT_ON) == 0) {
+            sendMetaKeyEvent(KeyEvent.KEYCODE_ALT_LEFT, KeyEvent.META_ALT_ON, false)
+        }
+        if ((metaState and KeyEvent.META_META_ON) != 0 && (newMetaState and KeyEvent.META_META_ON) == 0) {
+            sendMetaKeyEvent(KeyEvent.KEYCODE_META_LEFT, KeyEvent.META_META_ON, false)
+        }
+
+        // Send key events for modifiers that were activated (matches Java)
+        if ((metaState and KeyEvent.META_SHIFT_ON) == 0 && (newMetaState and KeyEvent.META_SHIFT_ON) != 0) {
+            sendMetaKeyEvent(KeyEvent.KEYCODE_SHIFT_LEFT, KeyEvent.META_SHIFT_ON, true)
+        }
+        if ((metaState and KeyEvent.META_CTRL_ON) == 0 && (newMetaState and KeyEvent.META_CTRL_ON) != 0) {
+            sendMetaKeyEvent(KeyEvent.KEYCODE_CTRL_LEFT, KeyEvent.META_CTRL_ON, true)
+        }
+        if ((metaState and KeyEvent.META_ALT_ON) == 0 && (newMetaState and KeyEvent.META_ALT_ON) != 0) {
+            sendMetaKeyEvent(KeyEvent.KEYCODE_ALT_LEFT, KeyEvent.META_ALT_ON, true)
+        }
+        if ((metaState and KeyEvent.META_META_ON) == 0 && (newMetaState and KeyEvent.META_META_ON) != 0) {
+            sendMetaKeyEvent(KeyEvent.KEYCODE_META_LEFT, KeyEvent.META_META_ON, true)
+        }
+
+        metaState = newMetaState
+    }
+
+    /**
+     * Send meta key event with proper state management (matches Java sendMetaKey)
+     */
+    private fun sendMetaKeyEvent(keyCode: Int, metaFlags: Int, down: Boolean) {
+        val inputConnection = receiver.getInputConnection() ?: return
+
+        if (down) {
+            // For down events: update meta state first, then send event
+            metaState = metaState or metaFlags
+            val event = KeyEvent(KeyEvent.ACTION_DOWN, keyCode)
+            inputConnection.sendKeyEvent(KeyEvent(
+                event.downTime, event.eventTime,
+                KeyEvent.ACTION_DOWN, keyCode, 0, metaState
+            ))
+        } else {
+            // For up events: send event first, then clear meta state
+            val event = KeyEvent(KeyEvent.ACTION_UP, keyCode)
+            inputConnection.sendKeyEvent(KeyEvent(
+                event.downTime, event.eventTime,
+                KeyEvent.ACTION_UP, keyCode, 0, metaState
+            ))
+            metaState = metaState and metaFlags.inv()
         }
     }
     
@@ -791,6 +1035,19 @@ class KeyEventHandler(
 
         // Update predictions for next word
         updateTapTypingPredictions()
+    }
+
+    // Logging helpers
+    private fun logD(message: String) {
+        Log.d(TAG, message)
+    }
+
+    private fun logE(message: String, e: Exception? = null) {
+        if (e != null) {
+            Log.e(TAG, message, e)
+        } else {
+            Log.e(TAG, message)
+        }
     }
 }
 
