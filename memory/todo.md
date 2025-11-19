@@ -297,6 +297,17 @@ Requires ADB connection to device.
     - Standard mode now has no terminal-specific keys
     - Commit: 0ab0435e
 
+45. ✅ **Settings UI Terminal Mode Description** (Nov 19)
+    - Renamed "Termux Mode" to "Terminal Mode"
+    - Updated description to explain bottom row switching behavior
+    - Commit: c750e6bb
+
+46. ✅ **Immediate Layout Refresh on Settings Change** (Nov 19)
+    - Layout now refreshes from config each time keyboard is shown
+    - Terminal Mode toggle takes effect immediately (no restart needed)
+    - Updated onStartInputView to reload currentLayout from config.layouts
+    - Commit: 69750704
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
