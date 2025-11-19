@@ -242,6 +242,27 @@ Requires ADB connection to device.
     - Now matches Java slider behavior exactly
     - Commit: 768b3003
 
+37. ✅ **KeyModifier.kt Complete Rewrite** (Nov 19)
+    - Implemented all 31 modifier cases (SHIFT, CTRL, FN, diacritics, etc.)
+    - Added apply_compose() using ComposeKeyData state machine binary search
+    - Added turn_into_keyevent() for Ctrl+A/C/V key combinations (64 chars)
+    - Added apply_dead_char() with KeyCharacterMap.getDeadChar()
+    - Added Hangul composition methods for Korean input
+    - Updated Modmap to use builder pattern
+    - Commit: d3bea6d2
+
+38. ✅ **KeyValue.kt Type Methods** (Nov 19)
+    - Added isPlaceholder(), isHangulInitial(), isHangulMedial()
+    - Added getPlaceholderValue(), getHangulInitialIndex(), getHangulMedialIndex()
+    - Added getComposePendingValue() for compose state access
+    - Commit: d3bea6d2
+
+39. ✅ **KeyboardData.kt Parity Fixes** (Nov 19)
+    - Fixed keysHeight to include row.shift (not just height)
+    - Removed duplicate top-level PreferredPos class
+    - Note: Row.copy() intentionally does deep copy for safety
+    - Commit: b48d2752
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
