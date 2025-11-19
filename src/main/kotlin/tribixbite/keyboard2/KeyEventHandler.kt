@@ -995,14 +995,22 @@ class KeyEventHandler(
     }
 
     /**
-     * Send raw key event
+     * Send raw key event with current meta state
+     * CRITICAL: Includes metaState for Ctrl+C, Ctrl+V, etc. to work
      */
     private fun sendKeyEvent(keyCode: Int) {
         val inputConnection = receiver.getInputConnection() ?: return
-        
-        val downEvent = KeyEvent(KeyEvent.ACTION_DOWN, keyCode)
-        val upEvent = KeyEvent(KeyEvent.ACTION_UP, keyCode)
-        
+
+        val eventTime = android.os.SystemClock.uptimeMillis()
+        val downEvent = KeyEvent(
+            eventTime, eventTime,
+            KeyEvent.ACTION_DOWN, keyCode, 0, metaState
+        )
+        val upEvent = KeyEvent(
+            eventTime, eventTime,
+            KeyEvent.ACTION_UP, keyCode, 0, metaState
+        )
+
         inputConnection.sendKeyEvent(downEvent)
         inputConnection.sendKeyEvent(upEvent)
     }
