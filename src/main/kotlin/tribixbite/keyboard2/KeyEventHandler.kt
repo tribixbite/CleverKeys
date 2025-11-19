@@ -630,15 +630,15 @@ class KeyEventHandler(
                 moveCursorVertical(amount)
             }
             KeyValue.Slider.Selection_cursor_left -> {
-                // TODO: Implement selection-aware cursor movement
+                // Extend selection left using SHIFT+DPAD (matches Java)
                 for (i in 0 until amount) {
-                    moveCursor(-1)
+                    sendKeyDownUp(KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.META_SHIFT_ON)
                 }
             }
             KeyValue.Slider.Selection_cursor_right -> {
-                // TODO: Implement selection-aware cursor movement
+                // Extend selection right using SHIFT+DPAD (matches Java)
                 for (i in 0 until amount) {
-                    moveCursor(1)
+                    sendKeyDownUp(KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.META_SHIFT_ON)
                 }
             }
         }
