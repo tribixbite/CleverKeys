@@ -78,6 +78,12 @@ Requires ADB connection to device.
     - Added DPI scaling for consistent behavior across screens
     - Commits: 585f8508, 8cd4ce6d
 
+13. ✅ **Short Gestures Not Working** (Nov 19)
+    - CRITICAL: isSwipeTyping() triggered after just 2 points, blocking direction gestures
+    - Added minimum distance requirement (>50px) before swipe typing mode
+    - Short direction gestures now work properly
+    - Commit: cce6bef6
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
