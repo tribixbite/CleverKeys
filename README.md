@@ -314,8 +314,8 @@ Prediction Latency: 50-200ms (device dependent)
 ## ⚠️ **Known Limitations**
 
 ### Non-Blocking Issues
-- **Dictionary/bigram asset files not included**: Slightly reduced prediction accuracy (user dictionary still works)
 - **Unit tests blocked**: Test-only issues, doesn't affect app functionality
+- **Additional language bigrams**: Only English bigrams included (320 word pairs), other languages use basic predictions
 
 ### Deferred to v2
 - **Emoji picker UI**: Complex implementation
