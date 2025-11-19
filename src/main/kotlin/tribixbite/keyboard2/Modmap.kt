@@ -1,36 +1,48 @@
 package tribixbite.keyboard2
 
 /**
- * FULL Modmap implementation for keyboard modifiers
- * NO STUBS, NO MOCKS - COMPLETE IMPLEMENTATION ONLY
+ * Modmap for custom key remapping matching Java KeyModifier.Modmap
+ * Provides shift, fn, and ctrl key mappings
  */
-class Modmap {
+class Modmap(
+    val shift: Map<KeyValue, KeyValue>? = null,
+    val fn: Map<KeyValue, KeyValue>? = null,
+    val ctrl: Map<KeyValue, KeyValue>? = null
+) {
+    /**
+     * Builder for constructing Modmap with fluent API
+     */
+    class Builder {
+        private val shiftMap = mutableMapOf<KeyValue, KeyValue>()
+        private val fnMap = mutableMapOf<KeyValue, KeyValue>()
+        private val ctrlMap = mutableMapOf<KeyValue, KeyValue>()
 
-    enum class Modifier {
-        SHIFT,
-        FN,
-        CTRL
-    }
+        fun addShift(from: KeyValue, to: KeyValue): Builder {
+            shiftMap[from] = to
+            return this
+        }
 
-    private val mappings = mutableMapOf<Pair<Modifier, KeyValue>, KeyValue>()
+        fun addFn(from: KeyValue, to: KeyValue): Builder {
+            fnMap[from] = to
+            return this
+        }
 
-    fun addMapping(modifier: Modifier, from: KeyValue, to: KeyValue) {
-        mappings[Pair(modifier, from)] = to
-    }
+        fun addCtrl(from: KeyValue, to: KeyValue): Builder {
+            ctrlMap[from] = to
+            return this
+        }
 
-    fun applyModifier(modifier: Modifier, key: KeyValue): KeyValue {
-        return mappings[Pair(modifier, key)] ?: key
-    }
-
-    fun hasMapping(modifier: Modifier, key: KeyValue): Boolean {
-        return mappings.containsKey(Pair(modifier, key))
-    }
-
-    fun getAllMappings(): Map<Pair<Modifier, KeyValue>, KeyValue> {
-        return mappings.toMap()
+        fun build(): Modmap {
+            return Modmap(
+                shift = shiftMap.ifEmpty { null },
+                fn = fnMap.ifEmpty { null },
+                ctrl = ctrlMap.ifEmpty { null }
+            )
+        }
     }
 
     companion object {
+        fun builder(): Builder = Builder()
         fun empty(): Modmap = Modmap()
     }
 }

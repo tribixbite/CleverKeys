@@ -270,7 +270,7 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     private fun modifyKeyInternal(keyValue: KeyValue, mods: Pointers.Modifiers): KeyValue {
-        return KeyModifier.modify(keyValue, mods)
+        return KeyModifier.modify(keyValue, mods) ?: keyValue
     }
 
     // Pointer event handlers

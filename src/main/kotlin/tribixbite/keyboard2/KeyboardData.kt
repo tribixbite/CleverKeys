@@ -487,22 +487,20 @@ data class KeyboardData(
         }
 
         private fun parseModmap(parser: XmlPullParser): Modmap {
-            val modmap = Modmap()
+            val builder = Modmap.builder()
 
             while (nextTag(parser)) {
-                val modifier = when (parser.name) {
-                    "shift" -> Modmap.Modifier.SHIFT
-                    "fn" -> Modmap.Modifier.FN
-                    "ctrl" -> Modmap.Modifier.CTRL
-                    else -> throw parseError(parser, "Expecting tag <shift>, <fn>, or <ctrl>, got <${parser.name}>")
+                val modifierName = parser.name
+                if (modifierName !in listOf("shift", "fn", "ctrl")) {
+                    throw parseError(parser, "Expecting tag <shift>, <fn>, or <ctrl>, got <$modifierName>")
                 }
-                parseModmapMapping(parser, modmap, modifier)
+                parseModmapMapping(parser, builder, modifierName)
             }
 
-            return modmap
+            return builder.build()
         }
 
-        private fun parseModmapMapping(parser: XmlPullParser, modmap: Modmap, modifier: Modmap.Modifier) {
+        private fun parseModmapMapping(parser: XmlPullParser, builder: Modmap.Builder, modifierName: String) {
             val keyA = KeyValue.getKeyByName(parser.getAttributeValue(null, "a"))
             val keyB = KeyValue.getKeyByName(parser.getAttributeValue(null, "b"))
 
@@ -510,7 +508,11 @@ data class KeyboardData(
                 // Skip content
             }
 
-            modmap.addMapping(modifier, keyA, keyB)
+            when (modifierName) {
+                "shift" -> builder.addShift(keyA, keyB)
+                "fn" -> builder.addFn(keyA, keyB)
+                "ctrl" -> builder.addCtrl(keyA, keyB)
+            }
         }
 
         private fun getKeyAttr(parser: XmlPullParser, synonym1: String, synonym2: String): String? {

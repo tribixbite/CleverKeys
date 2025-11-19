@@ -358,6 +358,9 @@ sealed class KeyValue : Comparable<KeyValue> {
     fun isModifier(): Boolean = this is ModifierKey
     fun isEditing(): Boolean = this is EditingKey
     fun isMacro(): Boolean = this is MacroKey
+    fun isPlaceholder(): Boolean = this is PlaceholderKey
+    fun isHangulInitial(): Boolean = this is HangulInitialKey
+    fun isHangulMedial(): Boolean = this is HangulMedialKey
 
     // Safe casting with default values
     fun getCharValue(): Char = (this as? CharKey)?.char ?: '\u0000'
@@ -367,6 +370,10 @@ sealed class KeyValue : Comparable<KeyValue> {
     fun getModifierValue(): Modifier? = (this as? ModifierKey)?.modifier
     fun getEditingValue(): Editing? = (this as? EditingKey)?.editing
     fun getMacroValue(): Array<KeyValue> = (this as? MacroKey)?.keys ?: emptyArray()
+    fun getPlaceholderValue(): Placeholder? = (this as? PlaceholderKey)?.placeholder
+    fun getHangulInitialIndex(): Int = (this as? HangulInitialKey)?.initialIndex ?: -1
+    fun getHangulMedialIndex(): Int = (this as? HangulMedialKey)?.medialIndex ?: -1
+    fun getComposePendingValue(): Int = (this as? ComposePendingKey)?.pendingCompose ?: -1
 
     // Comparison for sorting and equality
     override fun compareTo(other: KeyValue): Int {
