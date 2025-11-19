@@ -84,6 +84,11 @@ Requires ADB connection to device.
     - Short direction gestures now work properly
     - Commit: cce6bef6
 
+14. ✅ **Configurable Swipe Typing Threshold** (Nov 19)
+    - Added swipe_typing_min_distance setting with DPI scaling
+    - Allows fine-tuning when swipe typing mode activates
+    - Commit: f975a851
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
