@@ -168,6 +168,39 @@ Requires ADB connection to device.
     - Properly handles mixed content like "hello, world"
     - Matches Java delete_word behavior exactly
 
+27. ✅ **Autocapitalisation Integration** (Nov 19)
+    - Integrated Autocapitalisation class with KeyEventHandler
+    - Added typed() and eventSent() callbacks
+    - Added cursor tracking and delayed shift state updates
+    - Fixed enabled checks in stop(), typed(), eventSent()
+    - Commits: 7788f54d
+
+28. ✅ **can_set_selection Check** (Nov 19)
+    - Added canSetSelection check in moveCursor()
+    - Prevents setSelection when Ctrl/Alt/Meta active
+    - Fixes cursor movement in terminal emulators
+    - Commit: 7621439b
+
+29. ✅ **Vertical Cursor Movement** (Nov 19)
+    - Added DPAD_UP/DOWN handling in handleKeyEventKey
+    - Added moveCursorVertical() function
+    - Commit: 7621439b
+
+30. ✅ **Launcher Logo and Test Input** (Nov 19)
+    - Compressed raccoon_logo.png (2MB) to webp (130KB)
+    - Updated LauncherActivity with Image loading
+    - Added OutlinedTextField for keyboard testing
+    - Commits: ea56475a, 57d45408, 0a3a5b7b
+
+31. ✅ **100+ Missing Named Keys** (Nov 19)
+    - Added 45 combining diacritics
+    - Added 17 Hebrew niqqud keys
+    - Added 14 editing keys (copy, paste, cut, undo, redo, etc.)
+    - Added 19 Korean Hangul initial consonants
+    - Added zero-width joiners, placeholders, scroll_lock
+    - Near-complete feature parity with Java KeyValue
+    - Commit: f87c9799
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
