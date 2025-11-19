@@ -110,6 +110,12 @@ Requires ADB connection to device.
    - Build now passes lint checks
    - Commit: 6646501a
 
+9. ✅ **Missing Bottom Row** (Nov 19)
+   - CRITICAL: Bottom row (spacebar, enter, Fn, arrows) was never being loaded
+   - Added addBottomRowIfNeeded() to LayoutsPreference.kt
+   - Loads R.xml.bottom_row and inserts into layouts
+   - Commit: 5850b8cb
+
 ### Recent Completions (Nov 16, 2025)
 
 1. ✅ Bug #473: Dictionary Manager (3-tab UI)
