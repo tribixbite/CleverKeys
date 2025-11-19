@@ -116,6 +116,12 @@ Requires ADB connection to device.
    - Loads R.xml.bottom_row and inserts into layouts
    - Commit: 5850b8cb
 
+10. ✅ **loadRow Parser Navigation** (Nov 19)
+    - CRITICAL: loadRow() wasn't navigating to <row> tag before parsing
+    - Added expectTag(parser, "row") call before parseRow()
+    - This was preventing bottom row from being loaded
+    - Commit: 45622af9
+
 ### Recent Completions (Nov 16, 2025)
 
 1. ✅ Bug #473: Dictionary Manager (3-tab UI)
