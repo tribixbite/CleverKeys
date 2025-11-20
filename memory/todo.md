@@ -308,6 +308,16 @@ Requires ADB connection to device.
     - Updated onStartInputView to reload currentLayout from config.layouts
     - Commit: 69750704
 
+47. ✅ **ONNX Model v106 Format Upgrade** (Nov 19)
+    - Updated OnnxSwipePredictorImpl.kt for new model input format
+    - Changed from src_mask (bool[]) to actual_length (int32)
+    - Changed nearest_keys and target_tokens from int64 to int32
+    - Decoder uses actual_src_length instead of src_mask
+    - Sequence length: 250 encoder, 20 decoder
+    - Model accuracy: 73.37% (vs 72.07% old), Decoder: 4.8MB (vs 7.4MB)
+    - Updated TestOnnxPrediction.kt for new format
+    - Commits: 8079e673, 7006ceb6
+
 ### Critical Bug Fixes (Nov 18, 2025)
 
 1. ✅ **ViewTreeLifecycleOwner Crash** - Compose in IME
