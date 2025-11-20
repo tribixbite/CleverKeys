@@ -3528,6 +3528,23 @@ class CleverKeysService : InputMethodService(),
                 )
                 kbView.layoutParams = keyboardParams
                 addView(kbView)
+
+                // Bug #473: Add clipboard view to hierarchy (initially hidden)
+                logD("Creating ClipboardHistoryView...")
+                val clipView = ClipboardHistoryView(this@CleverKeysService).apply {
+                    visibility = android.view.View.GONE  // Start hidden
+                    val clipboardParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+                    )
+                    layoutParams = clipboardParams
+                    setOnItemSelectedListener { text ->
+                        handleClipboardSelection(text)
+                    }
+                }
+                clipboardView = clipView
+                addView(clipView)
+                logD("✅ ClipboardView added to container (hidden)")
             }
             inputViewContainer = container
 
@@ -3658,19 +3675,16 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
-     * Switch to clipboard history view (Bug #473 fix)
+     * Switch to clipboard history view (Bug #473 fix v2)
      * Shows clipboard history overlay, hiding keyboard
+     * Note: clipboardView is now created in onCreateInputView()
      */
     private fun switchToClipboardView() {
         try {
-            // Initialize clipboard view if needed
+            // Verify clipboard view exists (should be created in onCreateInputView)
             if (clipboardView == null) {
-                clipboardView = ClipboardHistoryView(this).apply {
-                    visibility = android.view.View.GONE
-                    setOnItemSelectedListener { text ->
-                        handleClipboardSelection(text)
-                    }
-                }
+                logE("ClipboardView is null - should have been created in onCreateInputView")
+                return
             }
 
             // Toggle visibility

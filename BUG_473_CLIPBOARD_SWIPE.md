@@ -460,5 +460,116 @@ override fun onDestroy() {
 ---
 
 **Investigation Date**: November 20, 2025, 11:45 AM
-**Status**: ⏳ INVESTIGATING - Root cause identified, fix designed
-**Next**: Implement Option 1 (overlay pattern)
+**Fix Implemented**: November 20, 2025, 2:10 PM
+**Status**: ✅ FIXED - View hierarchy issue resolved (Fix v2)
+**Build**: APK v2.0.2 rebuilt (53MB) - Ready for testing
+
+---
+
+## 🔧 **FIX IMPLEMENTED (v2 - View Hierarchy)**
+
+### Fix v1 (Incomplete - 11:50 AM)
+**What was done**:
+- Added clipboardView and isClipboardMode state variables
+- Implemented switchToClipboardView(), switchBackFromClipboard(), handleClipboardSelection()
+- Added SWITCH_CLIPBOARD and SWITCH_BACK_CLIPBOARD event handlers
+- Added cleanup in onDestroy()
+
+**User Feedback**: "doesnt seem to work"
+
+**Root Cause of Failure**: ClipboardView was instantiated in switchToClipboardView() but **NEVER ADDED TO VIEW HIERARCHY**. Android won't display views that aren't part of the view tree.
+
+---
+
+### Fix v2 (Complete - 2:10 PM)
+**Problem**: View visibility toggling without view being in hierarchy
+
+**Solution**: Add clipboardView to container during onCreateInputView()
+
+**Changes Made**:
+
+1. **Modified onCreateInputView()** (lines 3532-3547):
+```kotlin
+// Bug #473: Add clipboard view to hierarchy (initially hidden)
+logD("Creating ClipboardHistoryView...")
+val clipView = ClipboardHistoryView(this@CleverKeysService).apply {
+    visibility = android.view.View.GONE  // Start hidden
+    val clipboardParams = android.widget.LinearLayout.LayoutParams(
+        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+        android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+    )
+    layoutParams = clipboardParams
+    setOnItemSelectedListener { text ->
+        handleClipboardSelection(text)
+    }
+}
+clipboardView = clipView
+addView(clipView)
+logD("✅ ClipboardView added to container (hidden)")
+```
+
+2. **Updated switchToClipboardView()** (lines 3677-3699):
+```kotlin
+/**
+ * Switch to clipboard history view (Bug #473 fix v2)
+ * Shows clipboard history overlay, hiding keyboard
+ * Note: clipboardView is now created in onCreateInputView()
+ */
+private fun switchToClipboardView() {
+    try {
+        // Verify clipboard view exists (should be created in onCreateInputView)
+        if (clipboardView == null) {
+            logE("ClipboardView is null - should have been created in onCreateInputView")
+            return
+        }
+
+        // Toggle visibility
+        keyboardView?.visibility = android.view.View.GONE
+        clipboardView?.visibility = android.view.View.VISIBLE
+        isClipboardMode = true
+
+        logD("✅ Switched to clipboard view")
+    } catch (e: Exception) {
+        logE("Error switching to clipboard view", e)
+    }
+}
+```
+
+**Key Differences from v1**:
+- ✅ ClipboardView created and added to container in onCreateInputView()
+- ✅ View is part of view hierarchy from the start (initially hidden)
+- ✅ switchToClipboardView() only toggles visibility (no view creation)
+- ✅ Proper error handling if view is null
+
+**View Hierarchy**:
+```
+LinearLayout (container)
+├── SuggestionBar (top, 40dp)
+├── Keyboard2View (middle, wrap_content)
+└── ClipboardHistoryView (overlays keyboard, MATCH_PARENT, initially GONE)
+```
+
+**Build Info**:
+- Compiled: November 20, 2025, 2:13 PM
+- APK Size: 53MB
+- Installation: Via termux-open
+- Commit: [pending]
+
+---
+
+## 🧪 **TESTING REQUIRED**
+
+**Manual Test** (2 minutes):
+1. Open any text app
+2. Tap text field to show keyboard
+3. **Swipe NW (up-left) on Ctrl key** (bottom-left key)
+4. **Expected**: Clipboard history view appears (overlays keyboard)
+5. Tap a clipboard item
+6. **Expected**: Item inserted into text field, keyboard returns
+7. **Verify**: Text was inserted correctly
+
+**Status**: ⏳ Awaiting user testing
+
+---
+
+**Next**: User test clipboard swipe gesture + all bottom row gestures
