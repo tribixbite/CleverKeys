@@ -41,6 +41,7 @@ class SuggestionBarM3Wrapper(context: Context) : FrameLayout(context), Lifecycle
     // Mutable state for suggestions (use .value to access/modify)
     private val currentSuggestions = mutableStateOf<List<Suggestion>>(emptyList())
     private var onSuggestionSelected: ((String) -> Unit)? = null
+    private var onSuggestionDismissed: ((String) -> Unit)? = null
 
     // Custom recomposer for IME context (no lifecycle owner required)
     // AndroidUiDispatcher.Main provides MonotonicFrameClock required by Compose
@@ -81,6 +82,10 @@ class SuggestionBarM3Wrapper(context: Context) : FrameLayout(context), Lifecycle
                         onSuggestionLongPress = { word ->
                             // TODO: Show word info dialog
                             android.util.Log.d("SuggestionBar", "Long press on: $word")
+                        },
+                        onSuggestionDismiss = { word ->
+                            onSuggestionDismissed?.invoke(word)
+                            android.util.Log.d("SuggestionBar", "Dismissed: $word")
                         }
                     )
                 }
@@ -150,5 +155,14 @@ class SuggestionBarM3Wrapper(context: Context) : FrameLayout(context), Lifecycle
      */
     fun setOnSuggestionSelectedListener(listener: (String) -> Unit) {
         onSuggestionSelected = listener
+    }
+
+    /**
+     * Set suggestion dismiss callback - v2.1 swipe-to-dismiss feature.
+     *
+     * @param listener Callback invoked when user swipes to dismiss a suggestion
+     */
+    fun setOnSuggestionDismissListener(listener: (String) -> Unit) {
+        onSuggestionDismissed = listener
     }
 }
