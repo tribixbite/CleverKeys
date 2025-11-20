@@ -36,9 +36,16 @@ class MaterialThemeManager(private val context: Context) {
         Context.MODE_PRIVATE
     )
 
+    // Custom theme manager integration
+    private val customThemeManager = CustomThemeManager(context)
+
     // Reactive theme configuration
     private val _themeConfig = MutableStateFlow(loadThemeConfig())
     val themeConfig: StateFlow<ThemeConfig> = _themeConfig.asStateFlow()
+
+    // Selected theme ID
+    private val _selectedThemeId = MutableStateFlow(loadSelectedThemeId())
+    val selectedThemeId: StateFlow<String> = _selectedThemeId.asStateFlow()
 
     companion object {
         private const val PREFS_NAME = "keyboard_theme"
@@ -47,10 +54,12 @@ class MaterialThemeManager(private val context: Context) {
         private const val KEY_KEY_BORDER_RADIUS = "key_border_radius"
         private const val KEY_ENABLE_ANIMATIONS = "enable_animations"
         private const val KEY_THEME_VARIANT = "theme_variant"
+        private const val KEY_SELECTED_THEME_ID = "selected_theme_id"
 
         // Default values
         private const val DEFAULT_KEY_BORDER_RADIUS = 12f
         private const val DEFAULT_ENABLE_ANIMATIONS = true
+        private const val DEFAULT_THEME_ID = "default"
     }
 
     /**
@@ -84,15 +93,25 @@ class MaterialThemeManager(private val context: Context) {
     }
 
     /**
-     * Get keyboard-specific color scheme.
+     * Get keyboard-specific color scheme based on selected theme.
      *
-     * Generates KeyboardColorScheme that harmonizes with Material 3 ColorScheme
-     * by extracting primary/secondary colors and applying them to keyboard elements.
+     * If a custom or predefined theme is selected, returns that theme's colors.
+     * Otherwise, generates colors from Material 3 ColorScheme.
      *
-     * @param darkTheme Whether to use dark theme
+     * @param darkTheme Whether to use dark theme (ignored for predefined themes)
      * @return KeyboardColorScheme with all keyboard-specific colors
      */
     fun getKeyboardColorScheme(darkTheme: Boolean): KeyboardColorScheme {
+        val selectedId = _selectedThemeId.value
+
+        // Check if a predefined or custom theme is selected
+        if (selectedId != DEFAULT_THEME_ID) {
+            customThemeManager.getThemeByIdAny(selectedId)?.let { theme ->
+                return theme.colorScheme
+            }
+        }
+
+        // Fall back to Material-based colors
         val materialColors = getColorScheme(darkTheme)
 
         return keyboardColorSchemeFromMaterial(
@@ -100,6 +119,55 @@ class MaterialThemeManager(private val context: Context) {
             secondary = materialColors.secondary,
             isDark = darkTheme
         )
+    }
+
+    /**
+     * Select a theme by ID (predefined or custom).
+     *
+     * @param themeId ID of theme to select
+     * @return true if theme exists and was selected, false otherwise
+     */
+    fun selectTheme(themeId: String): Boolean {
+        // Verify theme exists
+        if (themeId != DEFAULT_THEME_ID && customThemeManager.getThemeByIdAny(themeId) == null) {
+            return false
+        }
+
+        _selectedThemeId.value = themeId
+        saveSelectedThemeId(themeId)
+        return true
+    }
+
+    /**
+     * Get currently selected theme info.
+     *
+     * @return ThemeInfo if a specific theme is selected, null for default
+     */
+    fun getSelectedTheme(): ThemeInfo? {
+        val selectedId = _selectedThemeId.value
+        return if (selectedId == DEFAULT_THEME_ID) {
+            null
+        } else {
+            customThemeManager.getThemeByIdAny(selectedId)
+        }
+    }
+
+    /**
+     * Get all available themes (predefined + custom).
+     *
+     * @return Map of category to themes
+     */
+    fun getAllThemes(): Map<ThemeCategory, List<ThemeInfo>> {
+        return customThemeManager.getAllThemes()
+    }
+
+    /**
+     * Get custom theme manager for direct access to custom theme operations.
+     *
+     * @return CustomThemeManager instance
+     */
+    fun getCustomThemeManager(): CustomThemeManager {
+        return customThemeManager
     }
 
     /**
@@ -175,6 +243,22 @@ class MaterialThemeManager(private val context: Context) {
             putString(KEY_THEME_VARIANT, config.themeVariant.name)
             apply()
         }
+    }
+
+    /**
+     * Load selected theme ID from SharedPreferences.
+     */
+    private fun loadSelectedThemeId(): String {
+        return prefs.getString(KEY_SELECTED_THEME_ID, DEFAULT_THEME_ID) ?: DEFAULT_THEME_ID
+    }
+
+    /**
+     * Save selected theme ID to SharedPreferences.
+     */
+    private fun saveSelectedThemeId(themeId: String) {
+        prefs.edit()
+            .putString(KEY_SELECTED_THEME_ID, themeId)
+            .apply()
     }
 
     /**
@@ -268,11 +352,21 @@ data class ThemeConfig(
 )
 
 /**
- * Theme variant options for future customization.
+ * Theme variant options - DEPRECATED.
+ * Use ThemeCategory and PredefinedThemes instead.
  */
+@Deprecated("Use ThemeCategory and theme selection from PredefinedThemes")
 enum class ThemeVariant {
     DEFAULT,        // CleverKeys branded colors
     HIGH_CONTRAST,  // Enhanced contrast for accessibility
     COLORFUL,       // More vibrant colors
     MINIMAL         // Monochrome minimal theme
 }
+
+/**
+ * Current selected theme ID storage.
+ */
+data class ThemeSelection(
+    val themeId: String = "default",  // ID of selected theme (predefined or custom)
+    val isDarkMode: Boolean = false    // Whether dark mode is enabled (for light/dark variants)
+)
