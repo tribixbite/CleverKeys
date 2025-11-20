@@ -162,3 +162,40 @@ This indicates either:
 **Test Date**: November 20, 2025, 3:45 PM
 **Status**: ❌ **2/3 FAILED** - Manual testing required
 **Next**: User must manually test to distinguish automation vs. code issues
+
+---
+
+## ✅ UPDATE: ROOT CAUSE IDENTIFIED & FIXED
+
+**Time**: November 20, 2025, 4:00 PM
+**Bug Number**: #474 - Incorrect Directional Gesture Position Mappings
+
+### Root Cause Found
+Investigation of test failures revealed **layout definition error** in `res/xml/bottom_row.xml`:
+- Clipboard gesture mapped to wrong position (N instead of NE)
+- Numeric gesture mapped to wrong position (NE instead of SW)
+- Settings gesture mapped to wrong position (W instead of SE)
+
+### Fix Applied
+Corrected key position indices in bottom_row.xml (Lines 3-4):
+```xml
+<!-- BEFORE (WRONG) -->
+<key ... key2="loc switch_clipboard" key3="switch_numeric" ... />
+<key ... key4="config" ... />
+
+<!-- AFTER (CORRECT) -->
+<key ... key3="loc switch_clipboard" key6="switch_numeric" ... />
+<key ... key8="config" ... />
+```
+
+### Status
+- ✅ **Bug fixed** in commit 2d8a8f3b
+- ✅ **APK rebuilt** (v2.0.3 Build 58)
+- ✅ **APK installed** to device
+- ⏳ **Manual testing required** to verify fix
+
+### Related Documents
+- **BUG_474_LAYOUT_POSITION_FIX.md**: Complete bug analysis
+- **RETEST_RESULTS_NOV_20.md**: Retest results and manual testing guide
+
+**Conclusion**: Automated testing successfully identified a critical bug that would have gone unnoticed. The test failures were caused by an actual layout definition error, not automation limitations. Fix has been applied and awaits manual user verification.
