@@ -405,12 +405,11 @@ Requires ADB connection to device.
 15. ✅ **ONNX Test Configuration & Documentation** (Nov 19)
     - Investigated model version mismatch between test and production
     - Production (OnnxSwipePredictorImpl.kt) uses v106 models with 250 seq length
-    - CLI tests use web_demo quantized models (Sep 15) with 150 seq length
-    - Added documentation in test files explaining the discrepancy
+    - CLI tests updated to use v106 models from assets (was web_demo Sep 15 models)
+    - TestOnnxPrediction.kt updated for new format (actual_length, int32)
     - Fixed run_onnx_cli_test.sh class name (Test_onnx_cliKt)
     - Note: CLI tests require glibc (Linux), not available in Termux
-    - TODO: Export quantized v106 models to replace web_demo models
-    - Commits: 4302b396 (initial), pending (revert with docs)
+    - Commits: 4302b396, 8079e673, 7006ceb6
 
 ### Recent Completions (Nov 16, 2025)
 
