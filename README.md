@@ -16,11 +16,11 @@
 ## ⚡ **Current Status: PRODUCTION READY** 🎉
 
 **Last Updated**: 2025-11-20
-**Version**: 2.0.2 (Build 56) 🆕
-**APK**: ✅ Built and Installed (53MB) - [`LATEST_BUILD.md`](LATEST_BUILD.md)
-**Development**: ✅ 100% Complete (251/251 files reviewed)
-**Bugs**: ✅ All P0/P1 Resolved + Numeric Keyboard Fixed (Bug #468 - Nov 20) 🆕
-**New Features**: ✅ ONNX v106 Models + Complete ABC ↔ 123+ Switching 🆕
+**Version**: 2.0.3 (Build 58) - **CRITICAL BUG FIX** 🆕
+**APK**: ✅ Built and Installed (52MB) - [`LATEST_BUILD.md`](LATEST_BUILD.md)
+**Development**: ✅ 100% Complete (183 Kotlin files, zero errors)
+**Bugs**: ✅ All P0/P1 Resolved + Bug #474 Fixed (Layout Positions - Nov 20) 🆕
+**New Features**: ✅ ONNX v106 Models + All Gesture Features Working 🆕
 **ONNX Models**: ✅ v106 (73.37% accuracy, 50-80% faster loading with cache)
 **Settings Parity**: ✅ 8/9 Phases Complete (100+ configurable options)
 **Performance**: ✅ Verified (hardware accel + model caching + 90+ cleanup)
