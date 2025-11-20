@@ -51,25 +51,25 @@ Useful links.
     <key c="p" ne="0"/>
   </row>
   <row>
-    <key shift="0.5" c="a" nw="at" ne="`"/>
-    <key c="s" nw="as"/>
-    <key c="d" nw="so" sw="do"/>
+    <key shift="0.5" c="a" nw="at" ne="as" se="loc f1_menu"/>
+    <key c="s" nw="so"/>
+    <key c="d" nw="do"/>
     <key c="f"/>
-    <key c="g" nw="go" ne="-" sw="_"/>
-    <key c="h" nw="hi" ne="loc f1_menu"/>
+    <key c="g" ne="go" sw="-" se="_"/>
+    <key c="h" ne="hi"/>
     <key c="j" se="}" sw="{"/>
     <key c="k" sw="[" se="]"/>
     <key c="l" ne="|" sw="\\"/>
   </row>
   <row>
     <key width="1.5" c="shift" ne="loc capslock"/>
-    <key c="z" nw="loc f1_cut"/>
-    <key c="x" nw="loc f1_copy"/>
-    <key c="c" nw="by" ne="&lt;" sw="."/>
-    <key c="v" nw="loc f1_paste" ne="&gt;" sw=","/>
-    <key c="b" nw="be" ne="\?" sw="/"/>
+    <key c="z" se="loc f1_undo"/>
+    <key c="x" se="loc f1_cut"/>
+    <key c="c" se="loc f1_copy"/>
+    <key c="v" se="loc f1_paste" ne="&gt;" sw=","/>
+    <key c="b" nw="be" ne="by" sw="/"/>
     <key c="n" nw="no" ne=":" sw=";"/>
     <key c="m" nw="me" ne="&quot;" sw="'"/>
-    <key width="1.5" c="backspace" nw="loc f1_undo" ne="delete" sw="loc f1_word"/>
+    <key width="1.5" c="backspace" nw="loc f1_word" ne="delete"/>
   </row>
 </keyboard>
