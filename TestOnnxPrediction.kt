@@ -11,7 +11,7 @@ import kotlin.math.ln
  * Run: java -jar test.jar
  */
 
-const val MAX_SEQUENCE_LENGTH = 150
+const val MAX_SEQUENCE_LENGTH = 250
 const val DECODER_SEQ_LENGTH = 20
 const val TRAJECTORY_FEATURES = 6
 const val PAD_IDX = 0

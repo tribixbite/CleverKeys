@@ -37,7 +37,7 @@ data class PredictionResult(
 // Constants
 // ============================================================================
 
-const val MAX_TRAJECTORY_POINTS = 150
+const val MAX_TRAJECTORY_POINTS = 250
 const val KEYBOARD_WIDTH = 1080f
 const val KEYBOARD_HEIGHT = 400f
 const val BEAM_WIDTH = 8
