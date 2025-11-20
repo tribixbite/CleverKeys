@@ -37,7 +37,10 @@ data class PredictionResult(
 // Constants
 // ============================================================================
 
-const val MAX_TRAJECTORY_POINTS = 250
+// NOTE: This test uses web_demo quantized models which expect 150 sequence length.
+// Production Android code (OnnxSwipePredictorImpl.kt) uses v106 models with 250.
+// When v106 quantized models are available, update this to 250.
+const val MAX_TRAJECTORY_POINTS = 150
 const val KEYBOARD_WIDTH = 1080f
 const val KEYBOARD_HEIGHT = 400f
 const val BEAM_WIDTH = 8

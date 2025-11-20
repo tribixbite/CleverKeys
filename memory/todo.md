@@ -392,14 +392,15 @@ Requires ADB connection to device.
     - Complete context-aware prediction for EN, ES, FR, DE, IT, PT
     - Commit: 2c838ddd
 
-15. ✅ **ONNX Test Sequence Length Fix** (Nov 19)
-    - Updated test files from 150 to 250 sequence length (matches v106 model)
-    - Fixed test_onnx_cli.kt MAX_TRAJECTORY_POINTS = 250
-    - Fixed TestOnnxPrediction.kt MAX_SEQUENCE_LENGTH = 250
+15. ✅ **ONNX Test Configuration & Documentation** (Nov 19)
+    - Investigated model version mismatch between test and production
+    - Production (OnnxSwipePredictorImpl.kt) uses v106 models with 250 seq length
+    - CLI tests use web_demo quantized models (Sep 15) with 150 seq length
+    - Added documentation in test files explaining the discrepancy
     - Fixed run_onnx_cli_test.sh class name (Test_onnx_cliKt)
-    - Production OnnxSwipePredictorImpl.kt already used 250/20 correctly
     - Note: CLI tests require glibc (Linux), not available in Termux
-    - Commit: 4302b396
+    - TODO: Export quantized v106 models to replace web_demo models
+    - Commits: 4302b396 (initial), pending (revert with docs)
 
 ### Recent Completions (Nov 16, 2025)
 

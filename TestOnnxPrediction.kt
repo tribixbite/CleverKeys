@@ -9,9 +9,13 @@ import kotlin.math.ln
  * Standalone Kotlin test for ONNX swipe predictions
  * Compile: kotlinc -cp onnxruntime-android-1.20.0.jar:. TestOnnxPrediction.kt -include-runtime -d test.jar
  * Run: java -jar test.jar
+ *
+ * NOTE: This test uses web_demo quantized models which expect 150 sequence length.
+ * Production Android code (OnnxSwipePredictorImpl.kt) uses v106 models with 250.
+ * When v106 quantized models are available, update this to 250.
  */
 
-const val MAX_SEQUENCE_LENGTH = 250
+const val MAX_SEQUENCE_LENGTH = 150
 const val DECODER_SEQ_LENGTH = 20
 const val TRAJECTORY_FEATURES = 6
 const val PAD_IDX = 0
