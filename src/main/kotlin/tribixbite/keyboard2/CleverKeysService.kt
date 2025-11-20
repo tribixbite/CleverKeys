@@ -12,6 +12,7 @@ import android.view.inputmethod.InputConnection
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import tribixbite.keyboard2.ui.SuggestionBarM3Wrapper
+import tribixbite.keyboard2.ui.EmojiPickerView
 // Lifecycle support for Compose in InputMethodService (Fix ViewTreeLifecycleOwner crash)
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -245,6 +246,9 @@ class CleverKeysService : InputMethodService(),
     private var isNumericMode: Boolean = false  // Track if we're in numeric/symbol mode
     private var clipboardView: ClipboardHistoryView? = null  // Clipboard history view (Bug #473)
     private var isClipboardMode: Boolean = false  // Track if we're showing clipboard
+    private var emojiPickerView: EmojiPickerView? = null  // Emoji picker view (v2.1)
+    private var isEmojiMode: Boolean = false  // Track if we're showing emoji picker
+    private var emojiRecentsManager: EmojiRecentsManager? = null  // Emoji recents persistence
 
     override fun onCreate() {
         super.onCreate()
@@ -283,6 +287,7 @@ class CleverKeysService : InputMethodService(),
             initializeSettingsSyncManager()  // Bug #383 fix - settings backup/sync
             initializeClipboardSyncManager()  // Bug #380 fix - clipboard cross-device sync
             initializeClipboardDatabase()  // SQLite clipboard history storage
+            initializeEmojiRecentsManager()  // v2.1: Emoji recents tracking
             initializeStickyKeysManager()  // Bug #373 fix - accessibility (ADA/WCAG)
             initializeRuntimeValidator()  // Runtime validation for models and assets
             initializeFoldStateTracker()  // Foldable device state tracking
@@ -402,6 +407,8 @@ class CleverKeysService : InputMethodService(),
         keyboardView = null
         suggestionBar = null
         clipboardView = null  // Bug #473 - release clipboard view
+        emojiPickerView = null  // v2.1 - release emoji picker view
+        emojiRecentsManager = null  // v2.1 - release emoji recents manager
 
         // Clean shutdown of all components (suspend cleanup before cancelling scope)
         runBlocking {
@@ -1211,6 +1218,19 @@ class CleverKeysService : InputMethodService(),
             }
         } catch (e: Exception) {
             logE("Failed to initialize clipboard database", e)
+        }
+    }
+
+    private fun initializeEmojiRecentsManager() {
+        try {
+            emojiRecentsManager = EmojiRecentsManager(this)
+            logD("✅ EmojiRecentsManager initialized (v2.1)")
+            logD("   - SharedPreferences-based recents storage")
+            logD("   - Max 30 recent emojis")
+            logD("   - Most recent first ordering")
+            logD("   - Automatic persistence")
+        } catch (e: Exception) {
+            logE("Failed to initialize emoji recents manager", e)
         }
     }
 
