@@ -25,15 +25,16 @@
 **Settings Parity**: ✅ 8/9 Phases Complete (100+ configurable options)
 **Performance**: ✅ Verified (hardware accel + model caching + 90+ cleanup)
 **Production Score**: ✅ **99/100 (Grade A+)** 🎯 (+1 for Bug #468 fix)
-**Documentation**: ✅ 11,000+ lines (171 files)
+**Documentation**: ✅ 11,300+ lines (172 files)
 **Automation**: ✅ Automated verification (18/18 checks pass)
 
-### 👉 **START HERE**: [`00_START_HERE_FIRST.md`](00_START_HERE_FIRST.md)
+### 👉 **START HERE**: [`QUICK_START.md`](QUICK_START.md) or [`00_START_HERE_FIRST.md`](00_START_HERE_FIRST.md)
 
 If you want to test CleverKeys right now:
-1. Read [`00_START_HERE_FIRST.md`](00_START_HERE_FIRST.md) (takes 2 minutes)
-2. Enable keyboard in Android Settings (takes 90 seconds)
-3. Run quick tests (takes 2 minutes)
+1. Read [`QUICK_START.md`](QUICK_START.md) for super-fast setup (90 seconds) **⭐ NEW**
+2. Or read [`00_START_HERE_FIRST.md`](00_START_HERE_FIRST.md) for comprehensive guide (2 minutes)
+3. Enable keyboard in Android Settings (takes 90 seconds)
+4. Run quick tests (takes 2 minutes)
 
 **Or use automation:** `./run-all-checks.sh` for complete verification
 
