@@ -3565,6 +3565,28 @@ class CleverKeysService : InputMethodService(),
                 clipboardView = clipView
                 addView(clipView)
                 logD("✅ ClipboardView added to container (hidden)")
+
+                // v2.1: Add emoji picker view to hierarchy (initially hidden)
+                logD("Creating EmojiPickerView...")
+                val emojiPicker = EmojiPickerView(this@CleverKeysService).apply {
+                    visibility = android.view.View.GONE  // Start hidden
+                    val emojiPickerParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+                    )
+                    layoutParams = emojiPickerParams
+                    onEmojiSelected = { emoji ->
+                        handleEmojiSelection(emoji)
+                    }
+                    onDismiss = {
+                        hideEmojiPicker()
+                    }
+                    // Load recent emojis from storage
+                    loadRecents(emojiRecentsManager?.getRecentsSync() ?: emptyList())
+                }
+                emojiPickerView = emojiPicker
+                addView(emojiPicker)
+                logD("✅ EmojiPickerView added to container (hidden)")
             }
             inputViewContainer = container
 
@@ -3744,6 +3766,55 @@ class CleverKeysService : InputMethodService(),
             logD("✅ Inserted clipboard text: ${text.take(50)}...")
         } catch (e: Exception) {
             logE("Error inserting clipboard text", e)
+        }
+    }
+
+    /**
+     * Handle emoji selection from emoji picker (v2.1)
+     */
+    private fun handleEmojiSelection(emoji: String) {
+        try {
+            val ic = currentInputConnection
+            if (ic == null) {
+                logE("InputConnection is null - cannot insert emoji")
+                return
+            }
+
+            // Insert emoji into text field
+            ic.commitText(emoji, 1)
+
+            // Add to recents (synchronous for immediate feedback)
+            emojiRecentsManager?.addRecentSync(emoji)
+
+            // Optionally hide picker after selection (keep visible for multiple emoji insertion)
+            // hideEmojiPicker()
+
+            logD("✅ Emoji inserted: $emoji")
+        } catch (e: Exception) {
+            logE("Failed to insert emoji", e)
+        }
+    }
+
+    /**
+     * Hide emoji picker and return to keyboard (v2.1)
+     */
+    private fun hideEmojiPicker() {
+        try {
+            logD("hideEmojiPicker() called")
+
+            if (!isEmojiMode) {
+                logD("Not in emoji mode, nothing to hide")
+                return
+            }
+
+            // Hide emoji picker and show keyboard
+            emojiPickerView?.visibility = android.view.View.GONE
+            keyboardView?.visibility = android.view.View.VISIBLE
+            isEmojiMode = false
+
+            logD("✅ Emoji picker hidden, keyboard restored")
+        } catch (e: Exception) {
+            logE("Failed to hide emoji picker", e)
         }
     }
 
@@ -4346,16 +4417,39 @@ class CleverKeysService : InputMethodService(),
         }
 
         override fun switchToEmojiLayout() {
-            // Emoji layout switching requires more complex implementation
-            // (emoji picker UI, emoji categories, emoji search, etc.)
-            // For now, log that it's not yet fully implemented
-            logD("switchToEmojiLayout() called - emoji layout system pending implementation")
-            // TODO: Implement emoji layout system with picker UI
-            // - Load emoji data from resources
-            // - Create emoji picker with categories (Smileys, Animals, Food, etc.)
-            // - Implement emoji search functionality
-            // - Handle emoji skin tone modifiers
-            // - Support emoji sequences (flags, families, etc.)
+            logD("switchToEmojiLayout() called - showing emoji picker (v2.1)")
+
+            if (emojiPickerView == null) {
+                logE("EmojiPickerView is null - should have been created in onCreateInputView")
+                return
+            }
+
+            // Hide clipboard if showing
+            if (isClipboardMode) {
+                clipboardView?.visibility = android.view.View.GONE
+                isClipboardMode = false
+            }
+
+            // Hide keyboard and show emoji picker
+            keyboardView?.visibility = android.view.View.GONE
+            emojiPickerView?.visibility = android.view.View.VISIBLE
+            isEmojiMode = true
+
+            // Load recent emojis (async)
+            emojiRecentsManager?.let { manager ->
+                serviceScope.launch {
+                    try {
+                        val recents = manager.getRecents()
+                        withContext(Dispatchers.Main) {
+                            emojiPickerView?.loadRecents(recents)
+                        }
+                    } catch (e: Exception) {
+                        logE("Failed to load emoji recents", e)
+                    }
+                }
+            }
+
+            logD("✅ Emoji picker displayed (400+ emojis, 9 categories, search enabled)")
         }
 
         override fun openSettings() {
