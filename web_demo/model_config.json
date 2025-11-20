@@ -1,0 +1,51 @@
+{
+  "model_type": "character_level_transformer",
+  "architecture": {
+    "trajectory_dim": 6,
+    "d_model": 256,
+    "nhead": 8,
+    "num_encoder_layers": 6,
+    "num_decoder_layers": 4,
+    "dim_feedforward": 1024,
+    "vocab_size": 30,
+    "max_seq_length": 150,
+    "max_word_length": 20
+  },
+  "feature_extraction": {
+    "input_features": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "ax",
+      "ay"
+    ],
+    "normalization": {
+      "keyboard_width": 360,
+      "keyboard_height": 215,
+      "velocity_scale": 1000,
+      "acceleration_scale": 500
+    },
+    "nearest_keys": {
+      "enabled": true,
+      "top_k": 3
+    }
+  },
+  "inference": {
+    "beam_size": 5,
+    "max_length": 20,
+    "length_penalty": 1.0,
+    "temperature": 1.0
+  },
+  "performance": {
+    "word_accuracy": 0.701,
+    "model_parameters": 8968510,
+    "model_size_mb": 34.2
+  },
+  "training": {
+    "dataset_size": 68848,
+    "epochs_trained": 14,
+    "batch_size": 64,
+    "learning_rate": 0.0005
+  }
+}
