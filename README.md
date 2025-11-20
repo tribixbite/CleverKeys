@@ -3,8 +3,8 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Android](https://img.shields.io/badge/Android-8.0%2B-green.svg)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.9.20-purple.svg)](https://kotlinlang.org)
-[![Version](https://img.shields.io/badge/Version-2.0.0-brightgreen.svg)](RELEASE_NOTES_v1.0.0.md)
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success.svg)](PROJECT_COMPLETE.md)
+[![Version](https://img.shields.io/badge/Version-2.0.2-brightgreen.svg)](RELEASE_NOTES_v1.0.0.md)
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-success.svg)](PROJECT_STATUS.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 **Modern Android Keyboard with Neural Swipe Typing**
@@ -25,7 +25,7 @@
 **Settings Parity**: ✅ 8/9 Phases Complete (100+ configurable options)
 **Performance**: ✅ Verified (hardware accel + model caching + 90+ cleanup)
 **Production Score**: ✅ **99/100 (Grade A+)** 🎯 (+1 for Bug #468 fix)
-**Documentation**: ✅ 9,000+ lines (146 files)
+**Documentation**: ✅ 11,000+ lines (171 files)
 **Automation**: ✅ Automated verification (18/18 checks pass)
 
 ### 👉 **START HERE**: [`00_START_HERE_FIRST.md`](00_START_HERE_FIRST.md)
