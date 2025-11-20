@@ -243,6 +243,8 @@ class CleverKeysService : InputMethodService(),
     private var keyboardLayoutLoader: KeyboardLayoutLoader? = null  // Layout loading system
     private var mainTextLayout: KeyboardData? = null  // Stores main text layout for returning from numeric
     private var isNumericMode: Boolean = false  // Track if we're in numeric/symbol mode
+    private var clipboardView: ClipboardHistoryView? = null  // Clipboard history view (Bug #473)
+    private var isClipboardMode: Boolean = false  // Track if we're showing clipboard
 
     override fun onCreate() {
         super.onCreate()
@@ -399,6 +401,7 @@ class CleverKeysService : InputMethodService(),
         // Clear view references to prevent memory leaks
         keyboardView = null
         suggestionBar = null
+        clipboardView = null  // Bug #473 - release clipboard view
 
         // Clean shutdown of all components (suspend cleanup before cancelling scope)
         runBlocking {
@@ -3655,6 +3658,62 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
+     * Switch to clipboard history view (Bug #473 fix)
+     * Shows clipboard history overlay, hiding keyboard
+     */
+    private fun switchToClipboardView() {
+        try {
+            // Initialize clipboard view if needed
+            if (clipboardView == null) {
+                clipboardView = ClipboardHistoryView(this).apply {
+                    visibility = android.view.View.GONE
+                    setOnItemSelectedListener { text ->
+                        handleClipboardSelection(text)
+                    }
+                }
+            }
+
+            // Toggle visibility
+            keyboardView?.visibility = android.view.View.GONE
+            clipboardView?.visibility = android.view.View.VISIBLE
+            isClipboardMode = true
+
+            logD("✅ Switched to clipboard view")
+        } catch (e: Exception) {
+            logE("Error switching to clipboard view", e)
+        }
+    }
+
+    /**
+     * Switch back from clipboard to keyboard (Bug #473 fix)
+     */
+    private fun switchBackFromClipboard() {
+        try {
+            clipboardView?.visibility = android.view.View.GONE
+            keyboardView?.visibility = android.view.View.VISIBLE
+            isClipboardMode = false
+
+            logD("✅ Switched back from clipboard")
+        } catch (e: Exception) {
+            logE("Error switching back from clipboard", e)
+        }
+    }
+
+    /**
+     * Handle clipboard item selection (Bug #473 fix)
+     * Inserts selected text and returns to keyboard
+     */
+    private fun handleClipboardSelection(text: String) {
+        try {
+            currentInputConnection?.commitText(text, 1)
+            switchBackFromClipboard()
+            logD("✅ Inserted clipboard text: ${text.take(50)}...")
+        } catch (e: Exception) {
+            logE("Error inserting clipboard text", e)
+        }
+    }
+
+    /**
      * Handle input starting
      */
     override fun onStartInput(editorInfo: EditorInfo?, restarting: Boolean) {
@@ -3941,6 +4000,16 @@ class CleverKeysService : InputMethodService(),
                 // Switch to numeric/symbol input mode
                 logD("Switching to numeric mode (123+)")
                 switchToNumericLayout()
+            }
+            KeyValue.Event.SWITCH_CLIPBOARD -> {
+                // Switch to clipboard history view (Bug #473 fix)
+                logD("Switching to clipboard view")
+                switchToClipboardView()
+            }
+            KeyValue.Event.SWITCH_BACK_CLIPBOARD -> {
+                // Switch back from clipboard to keyboard (Bug #473 fix)
+                logD("Switching back from clipboard")
+                switchBackFromClipboard()
             }
             KeyValue.Event.SWITCH_EMOJI -> {
                 // Switch to emoji input mode
