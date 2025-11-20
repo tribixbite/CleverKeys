@@ -10,12 +10,13 @@ import kotlin.math.ln
  * Compile: kotlinc -cp onnxruntime-android-1.20.0.jar:. TestOnnxPrediction.kt -include-runtime -d test.jar
  * Run: java -jar test.jar
  *
- * NOTE: This test uses web_demo quantized models which expect 150 sequence length.
- * Production Android code (OnnxSwipePredictorImpl.kt) uses v106 models with 250.
- * When v106 quantized models are available, update this to 250.
+ * Updated for new ONNX model format (Nov 2025):
+ * - Uses actual_length (int32) instead of src_mask (bool[])
+ * - Uses int32 for nearest_keys and target_tokens
+ * - Sequence length: 250 (matches production models)
  */
 
-const val MAX_SEQUENCE_LENGTH = 150
+const val MAX_SEQUENCE_LENGTH = 250
 const val DECODER_SEQ_LENGTH = 20
 const val TRAJECTORY_FEATURES = 6
 const val PAD_IDX = 0
@@ -32,7 +33,8 @@ val QWERTY_LAYOUT = listOf(
 )
 
 data class SwipeTest(val word: String, val xCoords: List<Float>, val yCoords: List<Float>)
-data class TrajectoryFeatures(val trajectory: FloatArray, val nearestKeys: LongArray, val srcMask: BooleanArray, val actualLength: Int)
+// Updated for new model format: int32 for nearestKeys, actualLength as single int
+data class TrajectoryFeatures(val trajectory: FloatArray, val nearestKeys: IntArray, val actualLength: Int)
 
 fun loadSwipesFromJson(path: String): List<SwipeTest> {
     val tests = mutableListOf<SwipeTest>()
@@ -79,7 +81,8 @@ fun extractFeatures(test: SwipeTest): TrajectoryFeatures {
     val normalizedY = test.yCoords.map { it / 280.0f }
 
     val trajectory = FloatArray(MAX_SEQUENCE_LENGTH * TRAJECTORY_FEATURES)
-    val nearestKeys = LongArray(MAX_SEQUENCE_LENGTH) { PAD_IDX.toLong() }
+    // New model format uses int32 for nearest_keys
+    val nearestKeys = IntArray(MAX_SEQUENCE_LENGTH) { PAD_IDX }
 
     for (i in 0 until MAX_SEQUENCE_LENGTH) {
         val idx = i * TRAJECTORY_FEATURES
@@ -103,7 +106,7 @@ fun extractFeatures(test: SwipeTest): TrajectoryFeatures {
             trajectory[idx + 4] = ax
             trajectory[idx + 5] = ay
 
-            nearestKeys[i] = getNearestKey(test.xCoords[i], test.yCoords[i]).toLong()
+            nearestKeys[i] = getNearestKey(test.xCoords[i], test.yCoords[i])
         } else {
             if (actualLength > 0) {
                 val lastIdx = (actualLength - 1) * TRAJECTORY_FEATURES
@@ -113,8 +116,8 @@ fun extractFeatures(test: SwipeTest): TrajectoryFeatures {
         }
     }
 
-    val srcMask = BooleanArray(MAX_SEQUENCE_LENGTH) { it >= actualLength }
-    return TrajectoryFeatures(trajectory, nearestKeys, srcMask, actualLength)
+    // New model format uses actualLength instead of srcMask
+    return TrajectoryFeatures(trajectory, nearestKeys, actualLength)
 }
 
 fun createTensorFromFeatures(env: OrtEnvironment, features: TrajectoryFeatures): Triple<OnnxTensor, OnnxTensor, OnnxTensor> {
@@ -133,63 +136,51 @@ fun createTensorFromFeatures(env: OrtEnvironment, features: TrajectoryFeatures):
 
     val trajTensor = OnnxTensor.createTensor(env, trajBuffer.asFloatBuffer(), longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong(), TRAJECTORY_FEATURES.toLong()))
 
-    val keysBuffer = ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * 8)
-    keysBuffer.order(ByteOrder.nativeOrder())
-    keysBuffer.asLongBuffer().put(features.nearestKeys)
+    // New model format uses int32 for nearest_keys
+    val keysTensor = OnnxTensor.createTensor(env, Array(1) { features.nearestKeys })
 
-    // HEX DUMP: First 15 long values
-    val readKeysBuffer = keysBuffer.asLongBuffer()
-    readKeysBuffer.position(0)
-    println("🔬 CLI Nearest keys tensor hex dump (first 15 longs):")
+    // HEX DUMP: First 15 int values
+    println("🔬 CLI Nearest keys tensor hex dump (first 15 ints):")
     for (i in 0 until 15) {
-        val value = readKeysBuffer.get()
-        println(String.format("   [%2d] %d (0x%016x)", i, value, value))
+        println(String.format("   [%2d] %d", i, features.nearestKeys[i]))
     }
 
-    val keysTensor = OnnxTensor.createTensor(env, keysBuffer.asLongBuffer(), longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong()))
+    // New model format uses actual_length (int32) instead of src_mask
+    val actualLengthTensor = OnnxTensor.createTensor(env, intArrayOf(features.actualLength))
 
-    val maskData = Array(1) { features.srcMask }
-    val maskTensor = OnnxTensor.createTensor(env, maskData)
-
-    return Triple(trajTensor, keysTensor, maskTensor)
+    return Triple(trajTensor, keysTensor, actualLengthTensor)
 }
 
-fun runBeamSearch(env: OrtEnvironment, decoder: OrtSession, memory: OnnxTensor, beamSize: Int = 8, maxLen: Int = 20): String {
+// Updated for new model format with actual_src_length instead of masks
+fun runBeamSearch(env: OrtEnvironment, decoder: OrtSession, memory: OnnxTensor, actualLength: Int, beamSize: Int = 8, maxLen: Int = 20): String {
     // EXACTLY matching Python: (last_token, sequence, score)
     data class Beam(val lastToken: Int, val sequence: List<Int>, val score: Float)
 
     // Initialize beams with <sos> token
     var beams = listOf(Beam(SOS_IDX, listOf(SOS_IDX), 0.0f))
 
+    // Create actual_src_length tensor once (reused for all beams)
+    val actualSrcLengthTensor = OnnxTensor.createTensor(env, intArrayOf(actualLength))
+
     for (step in 0 until maxLen) {
         val candidates = mutableListOf<Beam>()
 
         for (beam in beams) {
-            // CRITICAL: Pad sequence to DECODER_SEQ_LENGTH (matches Python line 133)
-            val tgtTokens = LongArray(DECODER_SEQ_LENGTH) { PAD_IDX.toLong() }
+            // New model format: target_tokens as int32
+            val tgtTokens = IntArray(maxLen) { PAD_IDX }
             for (i in beam.sequence.indices) {
-                if (i < DECODER_SEQ_LENGTH) {
-                    tgtTokens[i] = beam.sequence[i].toLong()
+                if (i < maxLen) {
+                    tgtTokens[i] = beam.sequence[i]
                 }
             }
 
-            // Create target mask (false = valid, true = padded) - matches Python line 138
-            val tgtMask = BooleanArray(DECODER_SEQ_LENGTH) { true }
-            for (i in beam.sequence.indices) {
-                tgtMask[i] = false  // Mark valid positions
-            }
-
-            // Create src_mask (all zeros = all valid) - matches Python line 142
-            val srcMaskTensor = OnnxTensor.createTensor(env, Array(1) { BooleanArray(MAX_SEQUENCE_LENGTH) { false } })
             val tgtTokensTensor = OnnxTensor.createTensor(env, Array(1) { tgtTokens })
-            val tgtMaskTensor = OnnxTensor.createTensor(env, Array(1) { tgtMask })
 
-            // Run decoder
+            // Run decoder with new input format
             val decoderInputs = mapOf(
                 "memory" to memory,
                 "target_tokens" to tgtTokensTensor,
-                "src_mask" to srcMaskTensor,
-                "target_mask" to tgtMaskTensor
+                "actual_src_length" to actualSrcLengthTensor
             )
 
             val result = decoder.run(decoderInputs)
@@ -197,8 +188,6 @@ fun runBeamSearch(env: OrtEnvironment, decoder: OrtSession, memory: OnnxTensor, 
 
             result.close()
             tgtTokensTensor.close()
-            tgtMaskTensor.close()
-            srcMaskTensor.close()
 
             // Get logits for last valid position (Python line 155)
             val currentPos = beam.sequence.size - 1
@@ -241,6 +230,9 @@ fun runBeamSearch(env: OrtEnvironment, decoder: OrtSession, memory: OnnxTensor, 
         }
     }
 
+    // Cleanup actualSrcLengthTensor
+    actualSrcLengthTensor.close()
+
     // Return best beam (Python line 175)
     val bestBeam = beams.firstOrNull() ?: return ""
     return bestBeam.sequence
@@ -255,8 +247,9 @@ fun main() {
     println("Kotlin CLI Test - 10 Valid Swipes (No Negative Coordinates)")
     println("=".repeat(70))
 
-    val encoderPath = "assets/models/swipe_model_character_quant.onnx"
-    val decoderPath = "assets/models/swipe_decoder_character_quant.onnx"
+    // New model format (Nov 2025) with actual_length inputs
+    val encoderPath = "src/main/assets/models/swipe_encoder_android.onnx"
+    val decoderPath = "src/main/assets/models/swipe_decoder_android.onnx"
     val swipesPath = "test_swipes_10.jsonl"
 
     if (!File(encoderPath).exists()) {
@@ -299,13 +292,14 @@ fun main() {
     tests.forEachIndexed { i, test ->
         try {
             val features = extractFeatures(test)
-            val (trajTensor, keysTensor, maskTensor) = createTensorFromFeatures(env, features)
+            val (trajTensor, keysTensor, actualLengthTensor) = createTensorFromFeatures(env, features)
 
-            val encoderInputs = mapOf("trajectory_features" to trajTensor, "nearest_keys" to keysTensor, "src_mask" to maskTensor)
+            // New model format uses actual_length instead of src_mask
+            val encoderInputs = mapOf("trajectory_features" to trajTensor, "nearest_keys" to keysTensor, "actual_length" to actualLengthTensor)
             val encoderResult = encoder.run(encoderInputs)
             val memory = encoderResult[0] as OnnxTensor
 
-            val predicted = runBeamSearch(env, decoder, memory)
+            val predicted = runBeamSearch(env, decoder, memory, features.actualLength)
 
             val isCorrect = predicted == test.word
             val status = if (isCorrect) "✅" else "❌"
@@ -318,7 +312,7 @@ fun main() {
             encoderResult.close()
             trajTensor.close()
             keysTensor.close()
-            maskTensor.close()
+            actualLengthTensor.close()
 
         } catch (e: Exception) {
             println("  [${i+1}/${tests.size}] Target: '${test.word.padEnd(10)}' → ERROR: ${e.message} ❌")
@@ -343,8 +337,8 @@ fun main() {
     }
 
     println("\n✅ PREDICTION TEST COMPLETE")
-    println("   ✅ Model accepts [batch, 150] nearest_keys (2D)")
-    println("   ✅ Encoder+decoder pipeline working")
+    println("   ✅ Model accepts [batch, 250] nearest_keys (int32)")
+    println("   ✅ Encoder+decoder pipeline working with actual_length format")
     val emoji = if (correctCount == tests.size) "✅" else "⚠️"
     println("   $emoji  Prediction accuracy: ${"%.1f".format(accuracy)}%")
 
