@@ -392,6 +392,15 @@ Requires ADB connection to device.
     - Complete context-aware prediction for EN, ES, FR, DE, IT, PT
     - Commit: 2c838ddd
 
+15. ✅ **ONNX Test Sequence Length Fix** (Nov 19)
+    - Updated test files from 150 to 250 sequence length (matches v106 model)
+    - Fixed test_onnx_cli.kt MAX_TRAJECTORY_POINTS = 250
+    - Fixed TestOnnxPrediction.kt MAX_SEQUENCE_LENGTH = 250
+    - Fixed run_onnx_cli_test.sh class name (Test_onnx_cliKt)
+    - Production OnnxSwipePredictorImpl.kt already used 250/20 correctly
+    - Note: CLI tests require glibc (Linux), not available in Termux
+    - Commit: 4302b396
+
 ### Recent Completions (Nov 16, 2025)
 
 1. ✅ Bug #473: Dictionary Manager (3-tab UI)
