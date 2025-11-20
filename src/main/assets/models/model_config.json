@@ -1,49 +1,29 @@
 {
-  "model_type": "character_level_transformer",
-  "architecture": {
-    "trajectory_dim": 6,
+  "meta": {
+    "accuracy": "0.7337",
     "d_model": 256,
     "nhead": 8,
     "num_encoder_layers": 6,
     "num_decoder_layers": 4,
-    "dim_feedforward": 1024,
-    "vocab_size": 30,
-    "max_seq_length": 250,
-    "max_word_length": 20
+    "dim_feedforward": 1024
   },
-  "feature_extraction": {
-    "input_features": [
-      "x",
-      "y",
-      "vx",
-      "vy",
-      "ax",
-      "ay"
+  "limits": {
+    "max_seq_len": 250,
+    "max_word_len": 20
+  },
+  "inputs": {
+    "encoder": [
+      "trajectory_features (f32)",
+      "nearest_keys (i32)",
+      "actual_length (i32)"
     ],
-    "normalization": {
-      "keyboard_width": 1.0,
-      "keyboard_height": 1.0,
-      "velocity_clipping": [
-        -10,
-        10
-      ],
-      "acceleration_clipping": [
-        -10,
-        10
-      ]
-    }
-  },
-  "inference": {
-    "beam_size": 5,
-    "max_length": 20,
-    "length_penalty": 1.0,
-    "temperature": 1.0
-  },
-  "performance": {
-    "word_accuracy": 0.7207098205283323,
-    "deployment_targets": [
-      "web",
-      "android"
+    "decoder": [
+      "memory (f32)",
+      "target_tokens (i32)",
+      "actual_src_length (i32)"
     ]
+  },
+  "outputs": {
+    "decoder": "log_probs (f32)"
   }
 }

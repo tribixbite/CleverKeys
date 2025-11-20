@@ -68,8 +68,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     private var debugLogger: ((String) -> Unit)? = null
     
     // Pre-allocated tensors for performance
-    private var reusableTokensArray = LongArray(DECODER_SEQ_LENGTH)
-    private var reusableTargetMaskArray = Array(1) { BooleanArray(DECODER_SEQ_LENGTH) }
+    // Changed from LongArray to IntArray for new model format (int32)
+    private var reusableTokensArray = IntArray(DECODER_SEQ_LENGTH)
 
     // High-performance tensor pooling for 50-70% speedup
     private val tensorPool = OptimizedTensorPool.getInstance(ortEnvironment)
@@ -101,8 +101,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 logDebug("   Encoder inputs: ${inputInfo.keys}")
                 logDebug("   Encoder outputs: ${outputInfo.keys}")
 
-                // Validate expected input names
-                val expectedInputs = setOf("trajectory_features", "nearest_keys", "src_mask")
+                // Validate expected input names (new model format uses actual_length instead of src_mask)
+                val expectedInputs = setOf("trajectory_features", "nearest_keys", "actual_length")
                 if (!inputInfo.keys.containsAll(expectedInputs)) {
                     throw RuntimeException("Encoder missing expected inputs: $expectedInputs")
                 }
@@ -122,8 +122,8 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 logDebug("   Decoder inputs: ${inputInfo.keys}")
                 logDebug("   Decoder outputs: ${outputInfo.keys}")
 
-                // Validate expected input names
-                val expectedInputs = setOf("memory", "target_tokens", "src_mask", "target_mask")
+                // Validate expected input names (new model format uses actual_src_length instead of masks)
+                val expectedInputs = setOf("memory", "target_tokens", "actual_src_length")
                 if (!inputInfo.keys.containsAll(expectedInputs)) {
                     throw RuntimeException("Decoder missing expected inputs: $expectedInputs")
                 }
@@ -178,13 +178,13 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
             // Run encoder
             val encoderResult = runEncoder(features)
             val memory = encoderResult.get(0) as OnnxTensor
-            
-            // Create source mask
-            val srcMaskTensor = createSourceMaskTensor(features)
+
+            // Create actual_length tensor (new model format)
+            val actualLengthTensor = createActualLengthTensor(features)
 
             // Run beam search decoder
             logDebug("🔍 Starting beam search decoder...")
-            val candidates = runBeamSearch(memory, srcMaskTensor, features)
+            val candidates = runBeamSearch(memory, actualLengthTensor, features)
             logDebug("✅ Beam search returned ${candidates.size} candidates")
 
             // Create final prediction result
@@ -204,19 +204,19 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
      */
     private suspend fun runEncoder(features: SwipeTrajectoryProcessor.TrajectoryFeatures): OrtSession.Result {
         val encoderSession = this.encoderSession ?: throw IllegalStateException("Encoder not loaded")
-        
-        // Create input tensors
+
+        // Create input tensors (new model format with int32 and actual_length)
         val trajectoryTensor = createTrajectoryTensor(features)
         val nearestKeysTensor = createNearestKeysTensor(features)
-        val srcMaskTensor = createSourceMaskTensor(features)
-        
-        // Run encoder
+        val actualLengthTensor = createActualLengthTensor(features)
+
+        // Run encoder (new model format: actual_length instead of src_mask)
         val inputs = mapOf(
             "trajectory_features" to trajectoryTensor,
             "nearest_keys" to nearestKeysTensor,
-            "src_mask" to srcMaskTensor
+            "actual_length" to actualLengthTensor
         )
-        
+
         return encoderSession.run(inputs)
     }
     
@@ -225,7 +225,7 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
      */
     private suspend fun runBeamSearch(
         memory: OnnxTensor,
-        srcMaskTensor: OnnxTensor,
+        actualLengthTensor: OnnxTensor,
         features: SwipeTrajectoryProcessor.TrajectoryFeatures
     ): List<BeamSearchCandidate> = withContext(Dispatchers.Default) {
 
@@ -253,7 +253,7 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
 
                 // BATCHED PROCESSING: Process all beams in single inference call (30-50% speedup)
                 // Returns beamWidth globally-selected beams (already sorted and pruned)
-                val newBeams = processBatchedBeams(activeBeams, memory, srcMaskTensor, decoderSession)
+                val newBeams = processBatchedBeams(activeBeams, memory, actualLengthTensor, decoderSession)
 
                 // Separate new finished beams from still-active ones
                 val newFinished = newBeams.filter { it.finished }
@@ -302,11 +302,12 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     /**
      * CRITICAL OPTIMIZATION: Process all beams in single batched inference call
      * Enhanced with tensor pooling for 50-70% additional speedup
+     * Updated for new model format with actual_src_length instead of src_mask
      */
     private suspend fun processBatchedBeams(
         activeBeams: List<BeamSearchState>,
         memory: OnnxTensor,
-        srcMaskTensor: OnnxTensor,
+        actualLengthTensor: OnnxTensor,
         decoderSession: OrtSession
     ): List<BeamSearchState> = withContext(Dispatchers.Default) {
 
@@ -314,7 +315,7 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         val seqLength = DECODER_SEQ_LENGTH // Standard decoder sequence length (matches web demo)
 
         // CRITICAL FIX: Expand memory tensor to match batch size
-        // Memory shape is [1, 150, 256], need [batchSize, 150, 256]
+        // Memory shape is [1, seq_len, 256], need [batchSize, seq_len, 256]
         val memoryShape = memory.info.shape
         val expandedMemoryShape = longArrayOf(batchSize.toLong(), memoryShape[1], memoryShape[2])
 
@@ -324,49 +325,40 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
             memory  // No expansion needed for single beam
         }
 
-        // CRITICAL FIX: Create all-zeros src_mask for decoder (matches web demo line 1232)
-        // The working web demo passes srcMaskArray.fill(0) to the decoder, meaning ALL positions are valid
-        // This differs from the encoder which uses a proper mask for padding
-        // Shape: [batchSize, 150] filled with false (0 = valid, 1 = masked)
-        val decoderSrcMaskShape = longArrayOf(batchSize.toLong(), memoryShape[1])
-        val decoderSrcMaskData = Array(batchSize) { BooleanArray(memoryShape[1].toInt()) { false } }
-        val decoderSrcMask = OnnxTensor.createTensor(ortEnvironment, decoderSrcMaskData)
-
         // OPTIMIZATION: Use tensor pool for batched tensors - eliminates allocation overhead
+        // Changed to int32 for new model format
         val batchedTokensShape = longArrayOf(batchSize.toLong(), seqLength.toLong())
-        val batchedMaskShape = longArrayOf(batchSize.toLong(), seqLength.toLong())
 
-        tensorPool.useTensor(batchedTokensShape, "long") { batchedTokensTensor ->
-            tensorPool.useTensor(batchedMaskShape, "boolean") { batchedMaskTensor ->
+        // Create batched target_tokens tensor (int32 for new model format)
+        val batchedTokensData = Array(batchSize) { IntArray(seqLength) }
+        populateBatchedTokens(activeBeams, batchedTokensData, seqLength)
+        val batchedTokensTensor = OnnxTensor.createTensor(ortEnvironment, batchedTokensData)
 
-                // Fill tensor data directly from pool buffers
-                populateBatchedTensors(activeBeams, batchedTokensTensor, batchedMaskTensor, seqLength)
+        try {
+            // Prepare decoder inputs (new model format: actual_src_length instead of masks)
+            val decoderInputs = mapOf(
+                "memory" to expandedMemory,
+                "target_tokens" to batchedTokensTensor,
+                "actual_src_length" to actualLengthTensor
+            )
 
-                // Prepare decoder inputs with optimized tensors
-                val decoderInputs = mapOf(
-                    "memory" to expandedMemory,
-                    "target_tokens" to batchedTokensTensor,
-                    "target_mask" to batchedMaskTensor,
-                    "src_mask" to decoderSrcMask  // All-zeros mask for decoder
-                )
+            // SINGLE BATCHED INFERENCE
+            val batchedOutput = decoderSession.run(decoderInputs)
 
-                // SINGLE BATCHED INFERENCE with tensor pool optimization
-                val batchedOutput = decoderSession.run(decoderInputs)
+            // Process batched results with enhanced error handling
+            val newBeamCandidates = processBatchedResults(batchedOutput, activeBeams)
 
-                // Process batched results with enhanced error handling
-                val newBeamCandidates = processBatchedResults(batchedOutput, activeBeams)
-
-                // Automatic cleanup via tensor pool
-                batchedOutput.close()
-
-                // Clean up created tensors
-                decoderSrcMask.close()
-                if (batchSize > 1 && expandedMemory != memory) {
-                    expandedMemory.close()
-                }
-
-                newBeamCandidates
+            // Cleanup
+            batchedOutput.close()
+            batchedTokensTensor.close()
+            if (batchSize > 1 && expandedMemory != memory) {
+                expandedMemory.close()
             }
+
+            newBeamCandidates
+        } catch (e: Exception) {
+            logE("❌ Batched beam processing failed", e)
+            emptyList()
         }
     }
 
@@ -661,28 +653,25 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
     }
     
     /**
-     * Create nearest keys tensor - 2D format matching trained model
+     * Create nearest keys tensor - int32 format for new model
      */
     private fun createNearestKeysTensor(features: SwipeTrajectoryProcessor.TrajectoryFeatures): OnnxTensor {
-        // EXACT CLI test pattern: create ByteBuffer, fill via one LongBuffer view, create tensor with fresh view
-        val byteBuffer = java.nio.ByteBuffer.allocateDirect(MAX_SEQUENCE_LENGTH * 8) // 8 bytes per long
-        byteBuffer.order(java.nio.ByteOrder.nativeOrder()) // Match CLI test (line 123)
+        // New model uses int32 for nearest_keys
+        val keysData = IntArray(MAX_SEQUENCE_LENGTH)
 
         // FIX #41: Verify nearest_keys list size matches expected length
         if (features.nearestKeys.size != MAX_SEQUENCE_LENGTH) {
             logD("⚠️ WARNING: nearest_keys size (${features.nearestKeys.size}) != MAX_SEQUENCE_LENGTH ($MAX_SEQUENCE_LENGTH)")
         }
 
-        // Fill buffer via first LongBuffer view
-        val fillBuffer = byteBuffer.asLongBuffer()
+        // Fill array
         for (i in 0 until MAX_SEQUENCE_LENGTH) {
-            if (i < features.nearestKeys.size) {
-                val keyIndex = features.nearestKeys[i]
-                fillBuffer.put(keyIndex.toLong())
+            keysData[i] = if (i < features.nearestKeys.size) {
+                features.nearestKeys[i]
             } else {
                 // Should never reach here if Fix #36 is working
                 logD("⚠️ BUG: Padding nearest_keys with PAD at index $i")
-                fillBuffer.put(PAD_IDX.toLong())
+                PAD_IDX
             }
         }
 
@@ -690,47 +679,58 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
         val last10 = features.nearestKeys.takeLast(10)
         logD("   Last 10 nearest keys: $last10")
 
-        // HEX DUMP: First 15 long values
-        val readBuffer = byteBuffer.asLongBuffer()
-        readBuffer.position(0)
-        val hexDump = StringBuilder("🔬 Nearest keys tensor hex dump (first 15 longs):\n")
+        // HEX DUMP: First 15 values
+        val hexDump = StringBuilder("🔬 Nearest keys tensor hex dump (first 15 ints):\n")
         for (i in 0 until 15) {
-            val value = readBuffer.get()
-            hexDump.append(String.format("   [%2d] %d (0x%016x)\n", i, value, value))
+            hexDump.append(String.format("   [%2d] %d\n", i, keysData[i]))
         }
         logD(hexDump.toString())
 
-        // Create tensor with FRESH LongBuffer view (position=0) - matches CLI test (line 125)
-        return OnnxTensor.createTensor(ortEnvironment, byteBuffer.asLongBuffer(), longArrayOf(1, MAX_SEQUENCE_LENGTH.toLong()))
+        // Create tensor with shape [1, MAX_SEQUENCE_LENGTH] as int32
+        return OnnxTensor.createTensor(ortEnvironment, Array(1) { keysData })
     }
-    
+
     /**
-     * Create source mask tensor - EXACT Java implementation match
+     * Create actual_length tensor for new model format
+     * This replaces the src_mask boolean tensor
      */
-    private fun createSourceMaskTensor(features: SwipeTrajectoryProcessor.TrajectoryFeatures): OnnxTensor {
-        // Create 2D boolean array for proper tensor shape [1, MAX_SEQUENCE_LENGTH] - exactly like Java
-        val maskData = Array(1) { BooleanArray(MAX_SEQUENCE_LENGTH) }
+    private fun createActualLengthTensor(features: SwipeTrajectoryProcessor.TrajectoryFeatures): OnnxTensor {
+        // New model uses actual_length as int32 scalar [1]
+        val lengthData = intArrayOf(features.actualLength)
+        logD("📏 Creating actual_length tensor: ${features.actualLength}")
+        return OnnxTensor.createTensor(ortEnvironment, lengthData)
+    }
 
-        // Mask padded positions (true = masked/padded, false = valid) - matching Java logic
-        for (i in 0 until MAX_SEQUENCE_LENGTH) {
-            maskData[0][i] = (i >= features.actualLength)
+    /**
+     * Populate batched tokens tensor with int32 format for new model
+     */
+    private fun populateBatchedTokens(
+        activeBeams: List<BeamSearchState>,
+        tokensData: Array<IntArray>,
+        seqLength: Int
+    ) {
+        activeBeams.forEachIndexed { batchIndex, beam ->
+            val tokensArray = tokensData[batchIndex]
+
+            // Fill tokens for this beam
+            for (seqIndex in 0 until seqLength) {
+                tokensArray[seqIndex] = if (seqIndex < beam.tokens.size) {
+                    beam.tokens[seqIndex].toInt()
+                } else {
+                    PAD_IDX
+                }
+            }
         }
-
-        // Use 2D boolean array - ONNX API will infer shape as [1, MAX_SEQUENCE_LENGTH]
-        return OnnxTensor.createTensor(ortEnvironment, maskData)
     }
     
     /**
-     * Update reusable token arrays for beam
-     * CRITICAL: Mask convention is 1 = PADDED, 0 = VALID (matches web demo)
+     * Update reusable token arrays for beam (int32 format for new model)
      */
     private fun updateReusableTokens(beam: BeamSearchState, seqLength: Int) {
-        reusableTokensArray.fill(PAD_IDX.toLong())
-        reusableTargetMaskArray[0].fill(true)  // Default: all padded (1)
+        reusableTokensArray.fill(PAD_IDX)
 
         for (i in 0 until minOf(beam.tokens.size, seqLength)) {
-            reusableTokensArray[i] = beam.tokens[i]
-            reusableTargetMaskArray[0][i] = false  // Mark as VALID (0)
+            reusableTokensArray[i] = beam.tokens[i].toInt()
         }
     }
 
@@ -904,12 +904,12 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
             // Test encoder
             val trajectoryTensor = createTrajectoryTensor(features)
             val nearestKeysTensor = createNearestKeysTensor(features)
-            val srcMaskTensor = createSourceMaskTensor(features)
+            val actualLengthTensor = createActualLengthTensor(features)
 
             logDebug("   Tensor creation successful:")
             logDebug("     Trajectory: ${trajectoryTensor.info.shape.contentToString()}")
             logDebug("     Nearest keys: ${nearestKeysTensor.info.shape.contentToString()}")
-            logDebug("     Source mask: ${srcMaskTensor.info.shape.contentToString()}")
+            logDebug("     Actual length: ${actualLengthTensor.info.shape.contentToString()}")
 
             // Test encoder inference
             val encoderResult = runEncoder(features)
@@ -922,13 +922,13 @@ class OnnxSwipePredictorImpl private constructor(private val context: Context) {
                 logE("Decoder session not initialized for validation")
                 return
             }
-            val candidates = processBatchedBeams(beams, memory, srcMaskTensor, session)
+            val candidates = processBatchedBeams(beams, memory, actualLengthTensor, session)
             logDebug("   Decoder inference: ${candidates.size} beam candidates generated")
 
             // Cleanup test tensors
             trajectoryTensor.close()
             nearestKeysTensor.close()
-            srcMaskTensor.close()
+            actualLengthTensor.close()
             encoderResult.close()
 
             logDebug("✅ Complete pipeline validation successful")
