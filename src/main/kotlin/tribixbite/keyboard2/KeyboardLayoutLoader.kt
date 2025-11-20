@@ -49,10 +49,11 @@ class KeyboardLayoutLoader(private val context: Context) {
         // Map layout names to XML resources
         val layoutResources = mapOf(
             "qwerty" to "latn_qwerty_us",
-            "qwertz" to "latn_qwertz", 
+            "qwertz" to "latn_qwertz",
             "azerty" to "latn_azerty_fr",
             "dvorak" to "latn_dvorak",
-            "colemak" to "latn_colemak"
+            "colemak" to "latn_colemak",
+            "numeric" to "numeric"  // Numeric/symbol keyboard layout
         )
         
         val resourceName = layoutResources[layoutName] ?: layoutName

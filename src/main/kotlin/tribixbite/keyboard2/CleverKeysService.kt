@@ -241,6 +241,8 @@ class CleverKeysService : InputMethodService(),
     private var config: Config? = null
     private var currentLayout: KeyboardData? = null
     private var keyboardLayoutLoader: KeyboardLayoutLoader? = null  // Layout loading system
+    private var mainTextLayout: KeyboardData? = null  // Stores main text layout for returning from numeric
+    private var isNumericMode: Boolean = false  // Track if we're in numeric/symbol mode
 
     override fun onCreate() {
         super.onCreate()
@@ -3598,6 +3600,61 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
+     * Switch to numeric/symbol keyboard layout
+     */
+    private fun switchToNumericLayout() {
+        serviceScope.launch {
+            try {
+                // Save current text layout if not already in numeric mode
+                if (!isNumericMode) {
+                    mainTextLayout = currentLayout
+                }
+
+                // Load numeric layout using KeyboardLayoutLoader
+                val numericLayout = keyboardLayoutLoader?.loadLayout("numeric")
+                if (numericLayout != null) {
+                    currentLayout = numericLayout
+                    keyboardView?.setKeyboard(numericLayout)
+                    isNumericMode = true
+                    logD("✅ Switched to numeric layout")
+                } else {
+                    logE("Failed to load numeric layout")
+                }
+            } catch (e: Exception) {
+                logE("Error switching to numeric layout", e)
+            }
+        }
+    }
+
+    /**
+     * Switch back to main text keyboard layout (ABC)
+     */
+    private fun switchToTextLayout() {
+        try {
+            // Restore the saved main text layout
+            val textLayout = mainTextLayout ?: run {
+                // Fallback: get current layout from config
+                val cfg = config ?: run {
+                    logE("Cannot switch to text layout: config not initialized")
+                    return
+                }
+                cfg.layouts.getOrNull(cfg.get_current_layout()) ?: cfg.layouts.firstOrNull()
+            }
+
+            if (textLayout != null) {
+                currentLayout = textLayout
+                keyboardView?.setKeyboard(textLayout)
+                isNumericMode = false
+                logD("✅ Switched back to text layout")
+            } else {
+                logE("No text layout available to switch to")
+            }
+        } catch (e: Exception) {
+            logE("Error switching to text layout", e)
+        }
+    }
+
+    /**
      * Handle input starting
      */
     override fun onStartInput(editorInfo: EditorInfo?, restarting: Boolean) {
@@ -3876,8 +3933,14 @@ class CleverKeysService : InputMethodService(),
                 logD("Opening configuration")
             }
             KeyValue.Event.SWITCH_TEXT -> {
-                // Switch to text input mode
-                logD("Switching to text mode")
+                // Switch back to text/ABC input mode
+                logD("Switching to text mode (ABC)")
+                switchToTextLayout()
+            }
+            KeyValue.Event.SWITCH_NUMERIC -> {
+                // Switch to numeric/symbol input mode
+                logD("Switching to numeric mode (123+)")
+                switchToNumericLayout()
             }
             KeyValue.Event.SWITCH_EMOJI -> {
                 // Switch to emoji input mode
