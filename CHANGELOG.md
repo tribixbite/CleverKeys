@@ -9,20 +9,92 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for v1.1
+### Planned for v2.1
 
 - Custom emoji picker with categories and search
 - Long-press popup UI for alternate characters
 - 50k dictionary assets for 20 languages
-- Theme customization UI
-- Settings export/import functionality
-- Cloud backup with end-to-end encryption (optional)
-- Performance profiling results
-- Battery usage optimization
+- Theme customization UI (visual color picker)
+- Performance optimization (model quantization)
 
 ---
 
-## [1.0.0] - 2025-11-16 (Pending Release)
+## [2.0.2] - 2025-11-20
+
+### Fixed
+- **Bug #468** (P0): Complete ABC ↔ 123+ numeric keyboard switching
+  - Fixed bottom row key mapping (Ctrl primary, 123+ at SE corner)
+  - Added complete numeric.xml layout with 30+ keys
+  - Implemented bidirectional keyboard switching
+  - Added ABC return button in numeric mode
+  - Proper state management for layout preservation
+
+### Documentation
+- Added QUICK_START.md for new users (90-second setup)
+- Added comprehensive Bug #468 testing guide
+- Added PROJECT_STATUS.md as authoritative status document
+- Updated README with v2.0.2 information
+
+---
+
+## [2.0.1] - 2025-11-18
+
+### Added
+- **Terminal Mode**: Auto-detect terminal apps (Termux, etc.)
+  - Automatically enables Ctrl, Meta, PageUp/Down keys
+  - Special bottom row for terminal use
+- **ONNX Models v106**: Updated neural prediction models
+  - 73.37% accuracy (vs 72.07% old)
+  - 50-80% faster loading with model caching
+  - New input format (actual_length instead of src_mask)
+- **Bigram Models**: Context-aware predictions for 6 languages
+  - English (320 pairs), Spanish (120), French (100)
+  - German (97), Italian (83), Portuguese (80)
+
+### Fixed
+- 47 critical Java-to-Kotlin parity fixes
+  - Theme.keyFont qualification issue
+  - getNearestKeyAtDirection arc search
+  - Border rendering and indication drawing
+  - VibratorCompat rewrite
+  - Modifier key events for terminals
+  - And 42 more (see migrate/todo/critical.md)
+
+---
+
+## [2.0.0] - 2025-11-16
+
+### Added - Data Portability 🎉
+- **Settings Export/Import**: Full configuration backup to JSON
+- **Dictionary Export/Import**: User words + disabled words backup
+- **Clipboard Export/Import**: Complete history with timestamps & pins
+- **Non-destructive Merge**: Import adds to existing data
+- **Screen Size Detection**: Warns on settings import across devices
+- **Import Statistics**: Shows new/skipped counts after import
+
+### Added - Dictionary Manager (Bug #472, #473)
+- **3-Tab UI**: User Words | Built-in (49k) | Disabled Words
+- Add custom words to personal dictionary
+- Browse 9,999 built-in words with search
+- Word blacklist - disable unwanted predictions
+- Material 3 design with FAB, search, sort
+
+### Added - Clipboard Search (Bug #471)
+- Real-time search/filter in clipboard history
+- EditText field with TextWatcher
+- "No results" message when filter empty
+- Useful for large clipboard histories (50+ items)
+
+### Fixed
+- **Critical Crash #1**: Compose lifecycle in IME (ViewTreeLifecycleOwner)
+- **Critical Crash #2**: LanguageManager initialization order
+- Bug #471: Clipboard search/filter missing
+- Bug #472: Dictionary Manager UI completely missing
+- Bug #473: Dictionary tab improvements
+
+---
+
+## [1.0.0] - 2025-11-16
 
 ### 🎉 Initial Release - Complete Kotlin Rewrite
 
