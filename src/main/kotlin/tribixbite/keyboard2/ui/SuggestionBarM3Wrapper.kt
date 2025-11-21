@@ -43,6 +43,11 @@ class SuggestionBarM3Wrapper(context: Context) : FrameLayout(context), Lifecycle
     private var onSuggestionSelected: ((String) -> Unit)? = null
     private var onSuggestionDismissed: ((String) -> Unit)? = null
 
+    // Word info dialog state (v2.1 Priority 2 Feature #4)
+    private val showWordInfoDialog = mutableStateOf(false)
+    private val wordInfoDialogWord = mutableStateOf("")
+    private val wordInfoDialogConfidence = mutableStateOf<Float?>(null)
+
     // Custom recomposer for IME context (no lifecycle owner required)
     // AndroidUiDispatcher.Main provides MonotonicFrameClock required by Compose
     private val recomposer = Recomposer(AndroidUiDispatcher.Main)
@@ -80,14 +85,31 @@ class SuggestionBarM3Wrapper(context: Context) : FrameLayout(context), Lifecycle
                             onSuggestionSelected?.invoke(word)
                         },
                         onSuggestionLongPress = { word ->
-                            // TODO: Show word info dialog
-                            android.util.Log.d("SuggestionBar", "Long press on: $word")
+                            // v2.1 Priority 2 Feature #4: Show word info dialog on long press
+                            showWordInfoDialog(word)
                         },
                         onSuggestionDismiss = { word ->
                             onSuggestionDismissed?.invoke(word)
                             android.util.Log.d("SuggestionBar", "Dismissed: $word")
                         }
                     )
+
+                    // Word info dialog (v2.1 Priority 2 Feature #4)
+                    if (showWordInfoDialog.value) {
+                        WordInfoDialog(
+                            word = wordInfoDialogWord.value,
+                            confidence = wordInfoDialogConfidence.value,
+                            source = "Neural Prediction",
+                            onDismiss = {
+                                showWordInfoDialog.value = false
+                            },
+                            onInsertWord = { word ->
+                                // Insert word and close dialog
+                                onSuggestionSelected?.invoke(word)
+                                showWordInfoDialog.value = false
+                            }
+                        )
+                    }
                 }
             }
         }.apply {
@@ -164,5 +186,22 @@ class SuggestionBarM3Wrapper(context: Context) : FrameLayout(context), Lifecycle
      */
     fun setOnSuggestionDismissListener(listener: (String) -> Unit) {
         onSuggestionDismissed = listener
+    }
+
+    /**
+     * Show word info dialog for a suggestion.
+     * v2.1 Priority 2 Feature #4: Long-press word info.
+     *
+     * @param word The word to show information for
+     */
+    private fun showWordInfoDialog(word: String) {
+        // Find suggestion to get confidence score
+        val suggestion = currentSuggestions.value.find { it.word == word }
+
+        wordInfoDialogWord.value = word
+        wordInfoDialogConfidence.value = suggestion?.confidence
+        showWordInfoDialog.value = true
+
+        android.util.Log.d("SuggestionBar", "Showing word info for: $word (confidence: ${suggestion?.confidence})")
     }
 }
