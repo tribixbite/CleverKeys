@@ -343,3 +343,51 @@ All technical work is complete. Comprehensive documentation and automation tools
 **Created**: November 21, 2025
 **Purpose**: Quick reference index for Nov 21 session
 **Status**: Complete ✅
+
+---
+
+## 🔧 Nov 21 Evening Session - Critical Bug Fix
+
+**Time**: 17:00-17:31 (31 minutes)
+**Focus**: Investigating keyboard rendering failure
+
+### Problem Discovered
+User reported: "keyboard crashes and won't even load"
+Actually: Keyboard service runs but view doesn't render (more subtle bug)
+
+### Root Cause Found
+1. **onCreate() was stubbed out** for testing (ULTRA-MINIMAL mode)
+   - No configuration loading
+   - No layout loading  
+   - Service started but had no data
+
+2. **Fixed by restoring proper onCreate()**:
+   - Lifecycle initialization
+   - Configuration loading via initializeConfiguration()
+   - Layout loading via loadDefaultKeyboardLayout()
+
+### Current Status
+**PARTIALLY FIXED**:
+- ✅ Service initializes successfully
+- ✅ Configuration loads
+- ✅ Layout loads
+- ✅ onStartInput() fires when text fields focused
+- ❌ onCreateInputView() never called
+- ❌ Keyboard view not rendered
+
+### Commits Made
+1. `38d74db2` - fix: restore onCreate initialization and add debug logging
+2. `d0a6fc2b` - docs: document onCreateInputView investigation findings
+
+### Files Modified
+- `src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt` - Restored onCreate()
+- `src/main/kotlin/tribixbite/keyboard2/Keyboard2View.kt` - Added debug logging
+- `INFERENCE_BUGS_NOV_21.md` - Created investigation doc
+
+### Next Session Tasks
+1. Investigate why onCreateInputView() isn't being called
+2. Check onStartInputView() lifecycle method
+3. Verify InputMethodService contract compliance
+4. Test with full service restart (reboot device if needed)
+
+---
