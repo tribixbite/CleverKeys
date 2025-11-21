@@ -158,15 +158,17 @@ android {
       minifyEnabled true
       shrinkResources true
       debuggable false
-      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
       resValue "string", "app_name", "@string/app_name_release"
       signingConfig signingConfigs.release
     }
 
     debug {
-      minifyEnabled false
+      // THEORY #3: Enable minification with keep rules to test if R8 is stripping classes
+      minifyEnabled true
       shrinkResources false
       debuggable true
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
       // TEST: Removed applicationIdSuffix to isolate crash
       // applicationIdSuffix ".debug"
       resValue "string", "app_name", "@string/app_name_debug"
