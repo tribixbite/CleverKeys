@@ -97,8 +97,9 @@ class CleverKeysService : InputMethodService(),
     }
 
     // Lifecycle support for Compose in InputMethodService
-    private val lifecycleRegistry = LifecycleRegistry(this)
-    private val savedStateRegistryController = SavedStateRegistryController.create(this)
+    // CRITICAL FIX: Use by lazy to avoid "leaking this" crash during class initialization
+    private val lifecycleRegistry by lazy { LifecycleRegistry(this) }
+    private val savedStateRegistryController by lazy { SavedStateRegistryController.create(this) }
 
     override val lifecycle: Lifecycle
         get() = lifecycleRegistry
