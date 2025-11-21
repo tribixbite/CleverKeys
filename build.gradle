@@ -164,13 +164,12 @@ android {
     }
 
     debug {
-      // THEORY #3: Enable minification with keep rules to test if R8 is stripping classes
-      minifyEnabled true
+      // FIX: Removed applicationIdSuffix ".debug" to fix keyboard service crash
+      // The .debug suffix prevented Android from properly binding InputMethodService
+      minifyEnabled false
       shrinkResources false
       debuggable true
-      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-      // TEST: Removed applicationIdSuffix to isolate crash
-      // applicationIdSuffix ".debug"
+      // applicationIdSuffix ".debug"  // DO NOT ADD THIS BACK - it breaks IME binding!
       resValue "string", "app_name", "@string/app_name_debug"
       resValue "bool", "debug_logs", "true"
       signingConfig signingConfigs.debug
