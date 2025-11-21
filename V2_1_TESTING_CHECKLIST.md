@@ -1,9 +1,9 @@
 # CleverKeys v2.1 Testing Checklist
 
-**Build Date**: November 20, 2025, 7:15 PM
+**Build Date**: November 20, 2025, 7:42 PM (Updated)
 **APK Location**: `build/outputs/apk/debug/tribixbite.keyboard2.debug.apk`
 **APK Size**: 53MB
-**Features to Test**: 3 Priority 1 features (Emoji Picker, Swipe-to-Dismiss, Layout Test Interface)
+**Features to Test**: 3 Priority 1 + 1 Priority 2 = 4 features total
 
 ---
 
@@ -168,13 +168,60 @@ adb install -r build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
 
 ---
 
+## ✅ Feature #4: Word Info Dialog (Priority 2)
+
+### Access Method
+1. Open text field with keyboard visible
+2. Type a word to show suggestions (e.g., "hel" → "hello", "help")
+3. **Long-press** (tap and hold) any suggestion chip
+4. Word info dialog should appear
+
+### Test Cases
+
+#### TC4.1: Dialog Display
+- [ ] **PASS/FAIL**: Dialog opens on long-press
+- [ ] **PASS/FAIL**: Dialog title shows "Word Information"
+- [ ] **PASS/FAIL**: Info icon visible in header
+- [ ] **PASS/FAIL**: Dialog positioned centrally on screen
+
+#### TC4.2: Word Display
+- [ ] **PASS/FAIL**: Large word display in card
+- [ ] **PASS/FAIL**: Word text is readable and clear
+- [ ] **PASS/FAIL**: Card has proper background color
+- [ ] **PASS/FAIL**: Word matches long-pressed suggestion
+
+#### TC4.3: Information Display
+- [ ] **PASS/FAIL**: Confidence score shows (if available)
+- [ ] **PASS/FAIL**: Confidence displayed as percentage (0-100%)
+- [ ] **PASS/FAIL**: Source label shows "Neural Prediction"
+- [ ] **PASS/FAIL**: Word length shows correctly (character count)
+
+#### TC4.4: Dialog Actions
+- [ ] **PASS/FAIL**: "Insert Word" button visible
+- [ ] **PASS/FAIL**: "Close" button visible
+- [ ] **PASS/FAIL**: Tapping "Insert Word" inserts suggestion
+- [ ] **PASS/FAIL**: Dialog closes after inserting word
+- [ ] **PASS/FAIL**: "Close" button dismisses dialog
+- [ ] **PASS/FAIL**: Can reopen dialog after closing
+
+#### TC4.5: Material 3 Design
+- [ ] **PASS/FAIL**: Proper elevation and shadows
+- [ ] **PASS/FAIL**: Material 3 color scheme
+- [ ] **PASS/FAIL**: Smooth open/close animations
+- [ ] **PASS/FAIL**: Responsive touch interactions
+
+**Word Info Dialog Score**: ___/18 tests passed
+
+---
+
 ## 📊 Overall Test Results
 
 **Feature #1 (Emoji Picker)**: ___/20 passed (___%)
 **Feature #2 (Swipe-to-Dismiss)**: ___/17 passed (___%)
 **Feature #3 (Layout Test Interface)**: ___/25 passed (___%)
+**Feature #4 (Word Info Dialog)**: ___/18 passed (___%)
 
-**Total Score**: ___/62 tests passed (___%)
+**Total Score**: ___/80 tests passed (___%)
 
 ---
 
@@ -183,7 +230,7 @@ adb install -r build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
 If any test fails, document here:
 
 ### Bug #___: [Short Description]
-- **Feature**: Emoji Picker / Swipe-to-Dismiss / Layout Test Interface
+- **Feature**: Emoji Picker / Swipe-to-Dismiss / Layout Test Interface / Word Info Dialog
 - **Test Case**: TC#.#
 - **Expected**: [What should happen]
 - **Actual**: [What actually happened]
@@ -198,7 +245,7 @@ If any test fails, document here:
 
 ## ✅ Testing Complete Checklist
 
-- [ ] All 62 test cases executed
+- [ ] All 80 test cases executed
 - [ ] Test scores calculated
 - [ ] Bug reports documented (if any)
 - [ ] APK tested on device (not emulator)
@@ -214,5 +261,6 @@ If any test fails, document here:
 
 ---
 
-*v2.1 Priority 1 Features Testing Checklist*
+*v2.1 Features Testing Checklist (Priority 1 + Priority 2)*
 *Generated: November 20, 2025*
+*Updated: November 20, 2025, 7:42 PM*
