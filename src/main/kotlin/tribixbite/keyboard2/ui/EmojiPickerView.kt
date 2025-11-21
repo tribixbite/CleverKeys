@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
-import androidx.lifecycle.ViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
@@ -82,7 +82,7 @@ class EmojiPickerView @JvmOverloads constructor(
 
     init {
         // Setup lifecycle and saved state
-        ViewTreeLifecycleOwner.set(this, this)
+        setViewTreeLifecycleOwner(this)
         setViewTreeSavedStateRegistryOwner(this)
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.currentState = Lifecycle.State.CREATED

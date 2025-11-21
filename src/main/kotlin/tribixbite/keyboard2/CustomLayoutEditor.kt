@@ -309,15 +309,133 @@ class CustomLayoutEditor : Activity() {
             .setMessage("Reset to default QWERTY layout?")
             .setPositiveButton("Reset") { _, _ ->
                 initializeDefaultLayout()
-                toast("Layout reset to QWERTY")
+                Toast.makeText(this, "Layout reset to QWERTY", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancel", null)
             .show()
     }
+
+    /**
+     * Show a toast message (helper function).
+     */
+    private fun toast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
     
+    /**
+     * Test layout in interactive mode with live preview.
+     * v2.1 Priority 1 Feature #3: Layout Test Interface
+     */
     private fun testLayout() {
-        // TODO: Open test interface for layout
-        toast("Test layout (TODO: Implement test interface)")
+        if (currentLayout.isEmpty()) {
+            toast("❌ Layout is empty - nothing to test")
+            return
+        }
+
+        // Create test dialog with full-screen keyboard preview
+        val testDialog = AlertDialog.Builder(this)
+            .setTitle("🧪 Test Layout - Interactive Mode")
+            .setView(createTestView())
+            .setPositiveButton("Close") { dialog, _ -> dialog.dismiss() }
+            .setCancelable(true)
+            .create()
+
+        testDialog.show()
+
+        // Make dialog wide for better keyboard preview
+        testDialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.95).toInt(),
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+    }
+
+    /**
+     * Create interactive test view with live keyboard preview.
+     * Shows real-time feedback for key presses.
+     */
+    private fun createTestView(): View {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(16, 16, 16, 16)
+
+            // Instructions
+            addView(TextView(this@CustomLayoutEditor).apply {
+                text = "Tap keys to test layout behavior"
+                textSize = 14f
+                setPadding(0, 0, 0, 16)
+            })
+
+            // Feedback display (shows last pressed key)
+            val feedbackView = TextView(this@CustomLayoutEditor).apply {
+                text = "Tap a key to see output..."
+                textSize = 18f
+                setBackgroundColor(Color.LTGRAY)
+                setPadding(16, 24, 16, 24)
+                gravity = android.view.Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    120
+                )
+            }
+            addView(feedbackView)
+
+            // Spacing
+            addView(Space(this@CustomLayoutEditor).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    16
+                )
+            })
+
+            // Interactive keyboard preview
+            val testKeyboard = TestKeyboardView(this@CustomLayoutEditor).apply {
+                setLayout(currentLayout)
+                onKeyPressed = { key ->
+                    handleTestKeyPress(key, feedbackView)
+                }
+            }
+            addView(testKeyboard, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                400
+            ))
+
+            // Test statistics
+            addView(TextView(this@CustomLayoutEditor).apply {
+                text = "Layout: ${currentLayout.size} rows, ${currentLayout.sumOf { it.size }} keys"
+                textSize = 12f
+                setPadding(0, 16, 0, 0)
+                setTextColor(Color.DKGRAY)
+            })
+        }
+    }
+
+    /**
+     * Handle key press in test mode - show feedback.
+     */
+    private fun handleTestKeyPress(key: KeyboardData.Key, feedbackView: TextView) {
+        val primaryKey = key.keys[0]
+        if (primaryKey == null) {
+            feedbackView.text = "❌ Empty key"
+            return
+        }
+
+        val keyLabel = when (primaryKey) {
+            is KeyValue.CharKey -> "Char: '${primaryKey.char}'"
+            is KeyValue.StringKey -> "String: \"${primaryKey.string}\""
+            is KeyValue.EventKey -> "Event: ${primaryKey.event.name}"
+            is KeyValue.ModifierKey -> "Modifier: ${primaryKey.modifier.name}"
+            else -> "Key: $primaryKey"
+        }
+
+        feedbackView.text = "✅ $keyLabel"
+
+        // Vibrate for tactile feedback (if available)
+        try {
+            val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as? android.os.Vibrator
+            vibrator?.vibrate(20)
+        } catch (e: Exception) {
+            // Vibration not available
+        }
     }
     
     /**
@@ -448,6 +566,161 @@ class CustomLayoutEditor : Activity() {
                 
                 addView(grid)
             }
+        }
+    }
+
+    /**
+     * Test keyboard view for interactive layout testing.
+     * v2.1 Priority 1 Feature #3: Interactive test mode with touch feedback.
+     */
+    private class TestKeyboardView(context: Context) : View(context) {
+
+        private var layout: List<List<KeyboardData.Key>> = emptyList()
+        private val keys = mutableListOf<KeyRect>()
+        var onKeyPressed: ((KeyboardData.Key) -> Unit)? = null
+
+        private val keyPaint = Paint().apply {
+            color = Color.parseColor("#E0E0E0")
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        }
+
+        private val keyPressedPaint = Paint().apply {
+            color = Color.parseColor("#BDBDBD")
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        }
+
+        private val borderPaint = Paint().apply {
+            color = Color.parseColor("#757575")
+            style = Paint.Style.STROKE
+            strokeWidth = 2f
+            isAntiAlias = true
+        }
+
+        private val textPaint = Paint().apply {
+            color = Color.BLACK
+            textAlign = Paint.Align.CENTER
+            textSize = 20f
+            isAntiAlias = true
+        }
+
+        private var pressedKeyIndex: Int? = null
+
+        data class KeyRect(
+            val rect: RectF,
+            val key: KeyboardData.Key,
+            val row: Int,
+            val col: Int
+        )
+
+        fun setLayout(newLayout: List<List<KeyboardData.Key>>) {
+            layout = newLayout
+            calculateKeyRects()
+            invalidate()
+        }
+
+        private fun calculateKeyRects() {
+            keys.clear()
+
+            if (layout.isEmpty()) return
+
+            val keyHeight = height.toFloat() / layout.size
+
+            layout.forEachIndexed { rowIndex, row ->
+                if (row.isEmpty()) return@forEachIndexed
+
+                var xOffset = 0f
+                val totalWidth = row.sumOf { it.width.toDouble() }.toFloat()
+                val keyUnitWidth = width.toFloat() / totalWidth
+
+                row.forEachIndexed { colIndex, key ->
+                    val keyWidth = key.width * keyUnitWidth
+                    val x = xOffset + (key.shift * keyUnitWidth)
+                    val y = rowIndex * keyHeight
+
+                    val rect = RectF(
+                        x,
+                        y,
+                        x + keyWidth,
+                        y + keyHeight
+                    )
+
+                    keys.add(KeyRect(rect, key, rowIndex, colIndex))
+                    xOffset = x + keyWidth
+                }
+            }
+        }
+
+        override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+            super.onSizeChanged(w, h, oldw, oldh)
+            calculateKeyRects()
+        }
+
+        override fun onDraw(canvas: Canvas) {
+            super.onDraw(canvas)
+
+            keys.forEachIndexed { index, keyRect ->
+                // Draw key background (pressed or normal)
+                val paint = if (index == pressedKeyIndex) keyPressedPaint else keyPaint
+                canvas.drawRoundRect(
+                    keyRect.rect,
+                    8f, 8f,
+                    paint
+                )
+
+                // Draw key border
+                canvas.drawRoundRect(
+                    keyRect.rect,
+                    8f, 8f,
+                    borderPaint
+                )
+
+                // Draw key label
+                val primaryKey = keyRect.key.keys[0]
+                val label = when (primaryKey) {
+                    is KeyValue.CharKey -> primaryKey.char.toString()
+                    is KeyValue.StringKey -> primaryKey.string.take(8)
+                    is KeyValue.EventKey -> primaryKey.event.name.take(8)
+                    is KeyValue.ModifierKey -> primaryKey.modifier.name.take(8)
+                    null -> "—"
+                    else -> "?"
+                }
+
+                val centerX = keyRect.rect.centerX()
+                val centerY = keyRect.rect.centerY() - (textPaint.descent() + textPaint.ascent()) / 2
+
+                canvas.drawText(
+                    label,
+                    centerX,
+                    centerY,
+                    textPaint
+                )
+            }
+        }
+
+        override fun onTouchEvent(event: MotionEvent): Boolean {
+            when (event.action) {
+                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                    // Find touched key
+                    val touchedKeyIndex = keys.indexOfFirst { keyRect ->
+                        keyRect.rect.contains(event.x, event.y)
+                    }
+
+                    if (touchedKeyIndex >= 0 && touchedKeyIndex != pressedKeyIndex) {
+                        pressedKeyIndex = touchedKeyIndex
+                        invalidate()
+
+                        // Trigger callback
+                        onKeyPressed?.invoke(keys[touchedKeyIndex].key)
+                    }
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    pressedKeyIndex = null
+                    invalidate()
+                }
+            }
+            return true
         }
     }
 }
