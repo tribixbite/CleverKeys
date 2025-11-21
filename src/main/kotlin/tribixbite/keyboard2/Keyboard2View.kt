@@ -96,6 +96,20 @@ class Keyboard2View @JvmOverloads constructor(
     // Shared rect for key frame drawing (matches Java _tmpRect for proper border clipping)
     private val tmpRect = RectF()
 
+    // Branding paint for spacebar (jewel tone purple, small font, silver background)
+    private val brandingPaint = Paint().apply {
+        textSize = 20f  // Small font
+        color = 0xFF9B59B6.toInt()  // Jewel tone purple (amethyst)
+        isAntiAlias = true
+        textAlign = Paint.Align.RIGHT
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+    }
+
+    private val brandingBgPaint = Paint().apply {
+        color = 0xFFC0C0C0.toInt()  // Silver background
+        style = Paint.Style.FILL
+    }
+
     /**
      * Update swipe trail color from Material 3 theme.
      * Called when theme is available.
@@ -645,6 +659,14 @@ class Keyboard2View @JvmOverloads constructor(
                 }
 
                 drawIndication(canvas, key, x, y, keyWidth, keyHeight, tc)
+
+                // Draw CleverKeys branding on spacebar (bottom right)
+                key.keys[0]?.let { keyValue ->
+                    if (keyValue is KeyValue.CharKey && keyValue.char == ' ') {
+                        drawSpacebarBranding(canvas, x, y, keyWidth, keyHeight)
+                    }
+                }
+
                 x += this.keyWidth * key.width
             }
             y += row.height * tc.rowHeight
@@ -653,6 +675,48 @@ class Keyboard2View @JvmOverloads constructor(
         // Draw neural swipe trail
         if (config?.swipe_typing_enabled == true && isSwipeActive) {
             drawSwipeTrail(canvas)
+        }
+    }
+
+    /**
+     * Draw CleverKeys branding on spacebar
+     * Shows "CleverKeys#XXXX" where XXXX is the build number
+     * Jewel tone purple text on silver background (1px padding)
+     */
+    private fun drawSpacebarBranding(canvas: Canvas, x: Float, y: Float, keyWidth: Float, keyHeight: Float) {
+        try {
+            // Get build number from version_info resource
+            val versionText = context.resources.openRawResource(
+                context.resources.getIdentifier("version_info", "raw", context.packageName)
+            ).bufferedReader().use { reader ->
+                val lines = reader.readLines()
+                val buildNumber = lines.find { it.startsWith("build_number=") }
+                    ?.substringAfter("=")
+                    ?.takeLast(4) // Last 4 digits
+                    ?: "0001"
+                "CleverKeys#$buildNumber"
+            }
+
+            // Measure text
+            val textBounds = Rect()
+            brandingPaint.getTextBounds(versionText, 0, versionText.length, textBounds)
+
+            // Position in bottom right corner with 1px padding
+            val padding = 1f * resources.displayMetrics.density
+            val bgX = x + keyWidth - textBounds.width() - padding * 3
+            val bgY = y + keyHeight - textBounds.height() - padding * 3
+            val bgWidth = textBounds.width() + padding * 2
+            val bgHeight = textBounds.height() + padding * 2
+
+            // Draw silver background
+            canvas.drawRect(bgX, bgY, bgX + bgWidth, bgY + bgHeight, brandingBgPaint)
+
+            // Draw text
+            val textX = x + keyWidth - padding * 2
+            val textY = y + keyHeight - padding * 2
+            canvas.drawText(versionText, textX, textY, brandingPaint)
+        } catch (e: Exception) {
+            // Silently fail if version_info doesn't exist yet
         }
     }
 

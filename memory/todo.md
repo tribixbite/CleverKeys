@@ -24,6 +24,28 @@
 
 ---
 
+## ⚠️ CRITICAL VERIFICATION PROTOCOL
+
+**BEFORE ASSUMING A KEYBOARD SCREENSHOT IS CLEVERKEYS:**
+
+1. **CHECK FOR BRANDING**: Look for "CleverKeys#XXXX" text in jewel-tone purple on silver background at the bottom-right corner of the spacebar
+2. **IF NO BRANDING**: The keyboard is NOT CleverKeys - it's the original Java Unexpected-Keyboard
+3. **NEVER BLINDLY ASSUME**: Always verify branding before making claims about CleverKeys functionality
+
+**Why This Matters:**
+- Multiple keyboards may be installed (CleverKeys + Unexpected-Keyboard)
+- Screenshots without branding = wrong keyboard being tested
+- False positive testing wastes time and creates incorrect documentation
+
+**Branding Details:**
+- Location: Bottom-right corner of spacebar key
+- Text: "CleverKeys#[4-digit build number]"
+- Font: Small (20sp), jewel-tone purple (#9B59B6)
+- Background: 1px padding, silver (#C0C0C0)
+- Added: Nov 21, 2025 to prevent misidentification
+
+---
+
 ## 📋 NEXT STEPS
 
 ### Manual Feature Testing ⏳ **RECOMMENDED**
