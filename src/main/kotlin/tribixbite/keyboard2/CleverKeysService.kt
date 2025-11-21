@@ -108,11 +108,14 @@ class CleverKeysService : InputMethodService(),
         get() = savedStateRegistryController.savedStateRegistry
 
     // Service scope for coroutine management
-    private val serviceScope = CoroutineScope(
-        SupervisorJob() +
-        Dispatchers.Main.immediate +
-        CoroutineName("CleverKeysService")
-    )
+    // CRITICAL FIX: Use by lazy to avoid accessing Dispatchers.Main before framework init
+    private val serviceScope by lazy {
+        CoroutineScope(
+            SupervisorJob() +
+            Dispatchers.Main.immediate +
+            CoroutineName("CleverKeysService")
+        )
+    }
     
     // Core components with null safety
     private var keyboardView: Keyboard2View? = null
