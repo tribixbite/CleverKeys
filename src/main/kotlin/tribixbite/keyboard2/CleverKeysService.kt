@@ -253,27 +253,10 @@ class CleverKeysService : InputMethodService(),
 
     override fun onCreate() {
         super.onCreate()
-        logD("🔧 CleverKeys starting (MINIMAL MODE - crash recovery)...")
-
-        // Initialize lifecycle for Compose support (REQUIRED)
-        savedStateRegistryController.performRestore(null)
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-        logD("✅ Lifecycle initialized")
-
-        try {
-            // ONLY 2 essential initializations (down from 130+)
-            initializeConfiguration()  // Load basic preferences
-            logD("✅ Configuration loaded")
-
-            loadDefaultKeyboardLayout()  // Load basic QWERTY
-            logD("✅ Default layout loaded")
-
-            logD("✅ CleverKeys minimal initialization complete")
-        } catch (e: Exception) {
-            logE("❌ Minimal initialization failed", e)
-            e.printStackTrace()
-            throw RuntimeException("CleverKeys minimal mode failed: ${e.message}", e)
-        }
+        Log.d("CleverKeys", "🔧 ULTRA-MINIMAL MODE - Testing if service can start at all")
+        Log.d("CleverKeys", "✅ onCreate() reached successfully!")
+        // NOTE: Removed ALL initialization to test if service can start
+        // If this works, we'll add back features one at a time
     }
     
     override fun onDestroy() {
