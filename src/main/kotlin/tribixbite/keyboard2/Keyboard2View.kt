@@ -230,6 +230,7 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     fun setKeyboard(keyboardData: KeyboardData) {
+        android.util.Log.d("Keyboard2View", "setKeyboard called: layout=${keyboardData.name}")
         keyboard = keyboardData
         shiftKeyValue = KeyValue.getKeyByName("shift")
         shiftKey = shiftKeyValue?.let { keyboardData.findKeyWithValue(it) }
@@ -238,6 +239,7 @@ class Keyboard2View @JvmOverloads constructor(
 
         KeyModifier.set_modmap(keyboardData.modmap)
         reset()
+        android.util.Log.d("Keyboard2View", "setKeyboard complete, calling requestLayout")
     }
 
     fun reset() {
@@ -527,8 +529,10 @@ class Keyboard2View @JvmOverloads constructor(
 
     // Layout and drawing
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        android.util.Log.d("Keyboard2View", "onMeasure called, keyboard=${keyboard != null}")
         val kbd = keyboard
         if (kbd == null) {
+            android.util.Log.e("Keyboard2View", "onMeasure: keyboard is NULL! Setting dimensions to 0x0")
             setMeasuredDimension(0, 0)
             return
         }
