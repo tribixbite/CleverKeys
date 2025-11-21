@@ -252,138 +252,26 @@ class CleverKeysService : InputMethodService(),
 
     override fun onCreate() {
         super.onCreate()
-        logD("CleverKeys InputMethodService starting...")
+        logD("🔧 CleverKeys starting (MINIMAL MODE - crash recovery)...")
 
-        // Initialize lifecycle for Compose support (Fix ViewTreeLifecycleOwner crash)
+        // Initialize lifecycle for Compose support (REQUIRED)
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-        logD("✅ Lifecycle initialized for Compose support")
+        logD("✅ Lifecycle initialized")
 
         try {
-            // Initialize components in dependency order
-            initializeConfiguration()
-            initializeLanguageManager()  // Bug #344 fix - foundational for multi-language
-            initializeIMELanguageSelector()  // Bug #347 fix - language selection UI
-            initializeRTLLanguageHandler()  // Bug #349 fix - RTL text support
-            initializeComprehensiveTraceAnalyzer()  // Bug #276 fix - advanced gesture analysis
-            initializeThumbModeOptimizer()  // Bug #359 fix - ergonomic thumb typing
-            initializeMultiLanguageDictionary()  // Bug #277 fix - multi-language dictionaries
-            initializeKeyboardSwipeRecognizer()  // Bug #256 fix - Bayesian swipe recognition
-            initializeBigramModel()  // Bug #255 fix - contextual word prediction (async loading)
-            initializeNgramModel()  // Bug #259 fix
-            initializeLanguageDetector()  // Bug #257 fix - MUST initialize before WordPredictor
-            initializeUserAdaptationManager()  // Bug #263 fix - MUST initialize before WordPredictor
-            initializeWordPredictor()  // Bug #262 fix - wires BigramModel + LanguageDetector + UserAdaptationManager
-            initializeSwipeMLTrainer()  // Bug #274 fix
-            initializeSwipeMLDataStore()  // SQLite storage for ML training data
-            initializeNeuralSwipeTypingEngine()  // Bug #275 dependency - neural prediction engine
-            initializeTensorMemoryManager()  // ONNX tensor memory management with pooling
-            initializeBatchedMemoryOptimizer()  // GPU-optimized batched memory for ONNX
-            initializeAsyncPredictionHandler()  // Bug #275 fix - async prediction processing
-            initializeInputConnectionManager()  // Advanced input connection management
-            initializePersonalizationManager()  // Word frequency tracking and bigram learning
-            initializeLongPressManager()  // Bug #327 fix - long-press behavior
-            initializeBackupRestoreManager()  // Configuration backup/restore with SAF
-            initializeSettingsSyncManager()  // Bug #383 fix - settings backup/sync
-            initializeClipboardSyncManager()  // Bug #380 fix - clipboard cross-device sync
-            initializeClipboardDatabase()  // SQLite clipboard history storage
-            initializeEmojiRecentsManager()  // v2.1: Emoji recents tracking
-            initializeStickyKeysManager()  // Bug #373 fix - accessibility (ADA/WCAG)
-            initializeRuntimeValidator()  // Runtime validation for models and assets
-            initializeFoldStateTracker()  // Foldable device state tracking
-            initializePredictionCache()  // LRU cache for neural predictions
-            initializeMaterialThemeManager()  // Material 3 theming
-            loadDefaultKeyboardLayout()
-            initializeLoopGestureDetector()  // Bug #258 fix - loop gesture detection
-            initializeEnhancedSwipeGestureRecognizer()  // Enhanced swipe tracking
-            initializeProbabilisticKeyDetector()  // Probabilistic key detection for swipes
-            initializeSwipeDetector()  // Swipe gesture quality detection
-            initializeAutoCorrectionEngine()  // Bug #310 fix - typo correction
-            initializeSwipeGestureRecognizer()  // Comprehensive swipe gesture recognition
-            initializeAccessibilityHelper()  // Accessibility support utility
-            initializeSwitchAccessSupport()  // Bug #371 fix - switch access for quadriplegic users
-            initializeMouseKeysEmulation()  // Bug #375 fix - mouse keys for severely disabled users
-            initializeGaussianKeyModel()  // 2D Gaussian probability model
-            initializeSwipeTokenizer()  // Token mapping for ONNX neural prediction
-            initializeDictionaryManager()  // Bug #345 fix - multi-language dictionaries
-            initializeConfigurationManager()  // Bug #382 fix - advanced configuration management
-            initializeBenchmarkSuite()  // Comprehensive performance testing
-            initializeSwipePredictionService()  // Modern coroutine-based prediction
-            initializeSwipePruner()  // Dictionary pruning for swipe gestures
-            initializeRuntimeTestSuite()  // Runtime testing and validation
-            initializeProductionInitializer()  // Production initialization system
-            initializeSystemIntegrationTester()  // End-to-end system integration testing
-            initializePredictionRepository()  // Modern coroutine-based prediction repository
-            initializeVoiceImeSwitcher()  // Bug #264 fix - voice IME switching
-            // Note: VibratorCompat is a Kotlin object (singleton) - no initialization needed
-            initializeGestureClassifier()  // Unified TAP vs SWIPE gesture classification
-            initializeSwipeResampler()  // Swipe trajectory resampling utility (singleton)
-            initializeDirectBootAwarePreferences()  // Device-protected storage preferences (singleton)
-            initializeLogs()  // Centralized logging system (singleton)
-            initializeEmoji()  // Emoji management system with search and grouping
-            initializeModmap()  // Keyboard modifier key mappings (Shift, Fn, Ctrl)
-            initializeAutocapitalisation()  // Smart auto-capitalization (Bug #361 partial fix)
-            initializeExtensions()  // Utility extension functions for common operations
-            initializeUtils()  // Comprehensive utility functions (singleton)
-            initializeKeyValueParser()  // Key definition parser with modern & legacy syntax
-            initializeLayoutModifier()  // Layout modification system (singleton)
-            initializeErrorHandling()  // Comprehensive error handling & validation (singleton)
-            initializeComposeKey()  // Compose key processing with finite state machine (singleton)
-            initializeCustomLayoutEditDialog()  // Custom layout editor dialog with validation (Bugs #132, #133)
-            initializeBuildConfig()  // Build configuration constants (singleton)
-            initializeKeyboardShapes()  // Material 3 shape system for keyboard components (singleton)
-            initializeKeyboardTypography()  // Material 3 typography system for keyboard text (singleton)
-            initializeMaterialMotion()  // Material 3 animation system for keyboard motion (singleton)
-            initializeComposeKeyData()
-            initializeClipboardService()  // Bug #118 & #120 fix
-            initializeAccessibilityEngines()
-            initializeSpellChecker()
-            initializeSmartPunctuation()  // Bug #316 & #361 fix
-            initializeCaseConverter()      // Bug #318 fix
-            initializeTextExpander()       // Bug #319 fix
-            initializeCursorMovementManager()  // Bug #322 fix
-            initializeMultiTouchHandler()  // Bug #323 fix
-            initializeSoundEffectManager()  // Bug #324 fix
-            initializeAnimationManager()    // Bug #325 fix
-            initializeKeyPreviewManager()   // Bug #326 fix
-            initializeGestureTrailRenderer()  // Bug #328 fix
-            initializeKeyRepeatHandler()    // Bug #330 fix
-            initializeLayoutSwitchAnimator()  // Bug #329 fix
-            initializeOneHandedModeManager()  // Bug #331 fix
-            initializeFloatingKeyboardManager()  // Bug #332 fix
-            initializeSplitKeyboardManager()  // Bug #333 fix
-            initializeDarkModeManager()  // Bug #334 fix
-            initializeAdaptiveLayoutManager()  // Bug #335 fix
-            initializeTypingStatisticsCollector()  // Bug #336 fix
-            initializeKeyBorderRenderer()  // Bug #337 fix
-            initializeLocaleManager()  // Bug #346 fix
-            initializeCharacterSetManager()  // Bug #350 fix
-            initializeUnicodeNormalizer()  // Bug #351 fix
-            initializeTranslationEngine()  // Bug #348 fix
-            initializeAutoCorrection()  // Bug #310 fix
-            initializeCustomSpellChecker()  // Bug #311 fix
-            initializeFrequencyModel()  // Bug #312 fix
-            initializeTextPredictionEngine()  // Bug #313 fix
-            initializeCompletionEngine()  // Bug #314 fix
-            initializeContextAnalyzer()  // Bug #315 fix
-            initializeGrammarChecker()  // Bug #317 fix
-            initializeUndoRedoManager()  // Bug #320 fix
-            initializeSelectionManager()  // Bug #321 fix
-            initializeMacroExpander()  // Bug #354 fix
-            initializeShortcutManager()  // Bug #355 fix
-            initializeGestureTypingCustomizer()  // Bug #356 fix
-            initializeContinuousInputManager()  // Bug #357 fix
-            initializeHandwritingRecognizer()  // Bug #352 fix
-            initializeVoiceTypingEngine()  // Bug #353 fix
-            initializeKeyEventHandler()
-            initializePerformanceProfiler()
-            initializeNeuralComponents()
-            initializePredictionPipeline()
+            // ONLY 2 essential initializations (down from 130+)
+            initializeConfiguration()  // Load basic preferences
+            logD("✅ Configuration loaded")
 
-            logD("✅ CleverKeys service initialization completed successfully")
+            loadDefaultKeyboardLayout()  // Load basic QWERTY
+            logD("✅ Default layout loaded")
+
+            logD("✅ CleverKeys minimal initialization complete")
         } catch (e: Exception) {
-            logE("Critical service initialization failure", e)
-            throw RuntimeException("CleverKeys service failed to initialize", e)
+            logE("❌ Minimal initialization failed", e)
+            e.printStackTrace()
+            throw RuntimeException("CleverKeys minimal mode failed: ${e.message}", e)
         }
     }
     
