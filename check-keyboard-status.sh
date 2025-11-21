@@ -1,187 +1,67 @@
 #!/data/data/com.termux/files/usr/bin/bash
-#
-# CleverKeys Status Checker
-# Verifies installation and provides next steps
-#
 
-set -e
+# Quick status checker for CleverKeys
 
-# Help function
-show_help() {
-    cat << EOF
-CleverKeys Status Checker
+echo "════════════════════════════════════════════════════════"
+echo "  CleverKeys Status Check"
+echo "════════════════════════════════════════════════════════"
+echo
 
-DESCRIPTION:
-    Verifies CleverKeys installation status and provides next steps.
-    Checks: APK installation, keyboard enablement, keyboard activation.
-
-USAGE:
-    ./check-keyboard-status.sh [OPTIONS]
-
-OPTIONS:
-    -h, --help      Show this help message and exit
-
-EXAMPLES:
-    ./check-keyboard-status.sh              # Check installation status
-    ./check-keyboard-status.sh --help       # Show this help
-
-OUTPUT:
-    - Installation status (installed/not installed)
-    - Enablement status (enabled/not enabled)
-    - Activation status (active/not active)
-    - Next steps based on current state
-
-EXIT CODES:
-    0    All checks passed (keyboard ready)
-    1    Some checks failed (action needed)
-
-EOF
-    exit 0
-}
-
-# Parse arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        -h|--help)
-            show_help
-            ;;
-        *)
-            echo "Unknown option: $1"
-            echo "Use --help for usage information"
-            exit 1
-            ;;
-    esac
-    shift
-done
-
-echo "╔════════════════════════════════════════════════════════════════════════════╗"
-echo "║                    CleverKeys - Installation Status                        ║"
-echo "╚════════════════════════════════════════════════════════════════════════════╝"
-echo ""
-
-# Colors
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Check 1: APK Installation
-echo "1. Checking APK installation..."
-if pm list packages | grep -q "tribixbite.keyboard2.debug"; then
-    echo -e "   ${GREEN}✅ INSTALLED${NC}: tribixbite.keyboard2.debug"
-
-    # Get APK path
-    APK_PATH=$(pm path tribixbite.keyboard2.debug | cut -d: -f2)
-    echo "   📦 Location: $APK_PATH"
-
-    # Get APK size
-    if [ -f "$APK_PATH" ]; then
-        SIZE=$(du -h "$APK_PATH" | cut -f1)
-        echo "   💾 Size: $SIZE"
-    fi
+# Check if APK exists
+if [ -f "build/outputs/apk/debug/tribixbite.keyboard2.apk" ]; then
+    APK_SIZE=$(du -h "build/outputs/apk/debug/tribixbite.keyboard2.apk" | cut -f1)
+    APK_DATE=$(stat -c '%y' "build/outputs/apk/debug/tribixbite.keyboard2.apk" | cut -d' ' -f1,2 | cut -d'.' -f1)
+    echo "✅ APK Ready: $APK_SIZE (built: $APK_DATE)"
 else
-    echo -e "   ${RED}❌ NOT INSTALLED${NC}"
-    echo "   ⚠️  Run: ./gradlew assembleDebug && termux-open build/outputs/apk/debug/*.apk"
-    exit 1
+    echo "❌ APK not found"
 fi
 
-echo ""
+# Try to check installation status via ADB
+echo
+echo "ADB Status:"
+echo "───────────────────────────────────────────────────────"
 
-# Check 2: Keyboard Enablement (attempt to check)
-echo "2. Checking keyboard status..."
-echo "   ℹ️  Checking if keyboard is enabled requires Settings access"
-echo "   ℹ️  I'll attempt to check via ime list..."
-
-# Try to get enabled IMEs
-ENABLED_IMES=$(settings get secure enabled_input_methods 2>/dev/null || echo "Permission denied")
-
-if [[ "$ENABLED_IMES" == *"tribixbite.keyboard2"* ]]; then
-    echo -e "   ${GREEN}✅ ENABLED${NC}: CleverKeys is in enabled keyboards list"
-elif [[ "$ENABLED_IMES" == "Permission denied"* ]]; then
-    echo -e "   ${YELLOW}⚠️  UNKNOWN${NC}: Cannot check (Termux permission limitation)"
-    echo "   📝 You must verify manually in Settings"
-else
-    echo -e "   ${RED}❌ NOT ENABLED${NC}: CleverKeys not in enabled keyboards list"
-    echo "   📝 Enable it in: Settings → System → Languages & input → Manage keyboards"
-fi
-
-echo ""
-
-# Check 3: Active Keyboard
-echo "3. Checking if keyboard is active..."
-CURRENT_IME=$(settings get secure default_input_method 2>/dev/null || echo "Permission denied")
-
-if [[ "$CURRENT_IME" == *"tribixbite.keyboard2"* ]]; then
-    echo -e "   ${GREEN}✅ ACTIVE${NC}: CleverKeys is currently selected"
-    echo "   🎉 You're ready to test!"
-elif [[ "$CURRENT_IME" == "Permission denied"* ]]; then
-    echo -e "   ${YELLOW}⚠️  UNKNOWN${NC}: Cannot check (Termux permission limitation)"
-    echo "   📝 You must verify manually by opening a text app"
-else
-    echo -e "   ${YELLOW}⚠️  NOT ACTIVE${NC}: Current keyboard: $CURRENT_IME"
-    echo "   📝 Switch keyboards: Open text app → Tap keyboard switcher (⌨️) → Select CleverKeys"
-fi
-
-echo ""
-echo "════════════════════════════════════════════════════════════════════════════"
-echo ""
-
-# Summary and Next Steps
-echo "📋 SUMMARY:"
-echo ""
-
-if pm list packages | grep -q "tribixbite.keyboard2.debug"; then
-    if [[ "$ENABLED_IMES" == *"tribixbite.keyboard2"* ]]; then
+# Check ADB devices
+DEVICES=$(adb devices 2>&1 | grep -v "List of devices" | grep -E "device|offline" | wc -l)
+if [ "$DEVICES" -gt 0 ]; then
+    adb devices | grep -v "List of devices"
+    
+    # Try to get package info
+    echo
+    echo "Checking installed keyboards..."
+    adb shell pm list packages 2>/dev/null | grep -E "tribixbite|juloo" | sed 's/package:/  /'
+    
+    echo
+    echo "Current default keyboard:"
+    CURRENT_IME=$(adb shell settings get secure default_input_method 2>/dev/null)
+    if [ -n "$CURRENT_IME" ]; then
+        echo "  $CURRENT_IME"
         if [[ "$CURRENT_IME" == *"tribixbite.keyboard2"* ]]; then
-            echo -e "${GREEN}🎉 ALL SET!${NC} CleverKeys is installed, enabled, and active."
-            echo ""
-            echo "🧪 RUN QUICK TESTS:"
-            echo "   1. Open any text app (Messages, Notes, etc.)"
-            echo "   2. Type: hello world"
-            echo "   3. Type: th (check predictions)"
-            echo "   4. Swipe: h→e→l→l→o"
-            echo "   5. Type: teh  (check autocorrect)"
-            echo ""
-            echo "📖 See: 00_START_HERE_FIRST.md for detailed testing"
+            echo "  ✅ CleverKeys is active!"
         else
-            echo -e "${YELLOW}⚠️  ALMOST READY${NC} - CleverKeys is installed and enabled"
-            echo ""
-            echo "📝 NEXT STEPS:"
-            echo "   1. Open any text app"
-            echo "   2. Tap a text field"
-            echo "   3. Tap keyboard switcher icon (⌨️)"
-            echo "   4. Select 'CleverKeys (Debug)'"
-            echo "   5. Run quick tests (see above)"
+            echo "  ℹ️  CleverKeys not active (using other keyboard)"
         fi
+    fi
+    
+    # Check if CleverKeys service is running
+    echo
+    echo "CleverKeys process status:"
+    CLEVERKEYS_PID=$(adb shell pidof tribixbite.keyboard2 2>/dev/null)
+    if [ -n "$CLEVERKEYS_PID" ]; then
+        echo "  ✅ Running (PID: $CLEVERKEYS_PID)"
     else
-        echo -e "${YELLOW}⚠️  NOT ENABLED YET${NC} - CleverKeys is installed but not enabled"
-        echo ""
-        echo "📝 NEXT STEPS:"
-        echo "   1. Open Settings app"
-        echo "   2. Go to: System → Languages & input → Manage keyboards"
-        echo "   3. Toggle 'CleverKeys (Debug)' to ON"
-        echo "   4. Accept any permission requests"
-        echo "   5. Then run this script again to verify"
+        echo "  ⚠️  Not running (service not started or not installed)"
     fi
 else
-    echo -e "${RED}❌ NOT INSTALLED${NC}"
-    echo ""
-    echo "📝 INSTALLATION STEPS:"
-    echo "   1. Run: ./gradlew assembleDebug"
-    echo "   2. Run: termux-open build/outputs/apk/debug/*.apk"
-    echo "   3. Install the APK"
-    echo "   4. Then run this script again to verify"
+    echo "  ⚠️  No ADB devices connected"
+    echo "  (Cannot check installation status remotely)"
 fi
 
-echo ""
-echo "════════════════════════════════════════════════════════════════════════════"
-echo ""
-echo "📖 Documentation:"
-echo "   • Quick Start: 00_START_HERE_FIRST.md"
-echo "   • Cheat Sheet: QUICK_REFERENCE.md"
-echo "   • Full Guide: MANUAL_TESTING_GUIDE.md"
-echo "   • All Files: INDEX.md"
-echo ""
-echo "🐛 Found a bug? Report it with details!"
-echo "✅ Everything works? Let me know: 'It works!'"
-echo ""
+echo
+echo "════════════════════════════════════════════════════════"
+echo "  Manual Check Steps:"
+echo "════════════════════════════════════════════════════════"
+echo "1. Open Settings → Languages & Input"
+echo "2. Check if 'CleverKeys Neural Keyboard' is listed"
+echo "3. If not, run: ./install-cleverkeys.sh"
+echo "════════════════════════════════════════════════════════"
