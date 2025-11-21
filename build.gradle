@@ -167,7 +167,8 @@ android {
       minifyEnabled false
       shrinkResources false
       debuggable true
-      applicationIdSuffix ".debug"
+      // TEST: Removed applicationIdSuffix to isolate crash
+      // applicationIdSuffix ".debug"
       resValue "string", "app_name", "@string/app_name_debug"
       resValue "bool", "debug_logs", "true"
       signingConfig signingConfigs.debug
