@@ -15,19 +15,19 @@
 
 ## ⚡ **Current Status: PRODUCTION READY** 🎉
 
-**Last Updated**: 2025-11-20 (Layout Verification Complete)
-**Version**: v1.32.525 - **ALL LAYOUT CORRECTIONS VERIFIED** ✅ 🆕
-**APK**: ✅ Built and Installed (53MB) - [`CleverKeys_FIXED.apk`](VERIFICATION_NOV_20.md)
+**Last Updated**: 2025-11-21 (Branding System Added) 🆕
+**Version**: v1.32.525 with Visual Branding
+**APK**: ✅ Built (51MB) - Build #4018 with "CleverKeys#4018" branding 🆕
 **Development**: ✅ 100% Complete (183 Kotlin files, zero errors)
-**Bugs**: ✅ All P0/P1 Resolved + Bug #474 Fixed + 11 Layout Corrections Verified 🆕
-**Layout Verification**: ✅ ADB Screenshot Verified (all Row 2/3 corrections confirmed) 🆕
-**New Features**: ✅ ONNX v106 Models + All Gesture Features Working 🆕
+**Bugs**: ✅ All P0/P1 Resolved + Visual Identification Added 🆕
+**Branding**: ✅ Spacebar shows "CleverKeys#XXXX" (jewel purple on silver) 🆕
+**New Features**: ✅ ONNX v106 Models + All Gesture Features Working
 **ONNX Models**: ✅ v106 (73.37% accuracy, 50-80% faster loading with cache)
 **Settings Parity**: ✅ 8/9 Phases Complete (100+ configurable options)
 **Performance**: ✅ Verified (hardware accel + model caching + 90+ cleanup)
-**Production Score**: ✅ **100/100 (Grade A+)** 🎯 🎉 (All manual verification complete)
-**Documentation**: ✅ 11,400+ lines (175 files including verification docs)
-**Automation**: ✅ Automated verification (18/18 checks pass) + Manual ADB verification
+**Production Score**: ✅ **100/100 (Grade A+)** 🎯 🎉
+**Documentation**: ✅ 11,400+ lines (176 files including Nov 21 session)
+**Automation**: ✅ Automated verification (18/18 checks pass)
 
 ### 👉 **START HERE**: [`QUICK_START.md`](QUICK_START.md) or [`00_START_HERE_FIRST.md`](00_START_HERE_FIRST.md)
 
@@ -46,6 +46,7 @@ That's it! Full testing guides and 25 shell scripts available (see [`SCRIPTS_REF
 ## ✨ **Why CleverKeys?**
 
 - **🔒 Privacy-First**: 100% local processing - no cloud, no data collection, no tracking
+- **🔖 Visual Branding**: "CleverKeys#XXXX" identifier on spacebar (jewel purple) 🆕
 - **🧠 Neural Intelligence**: ONNX transformer models for accurate swipe predictions
 - **⚡ Modern Kotlin**: Reactive programming with Coroutines and Flow
 - **🎨 Material 3 UI**: Beautiful design with smooth animations
@@ -89,6 +90,12 @@ English, Spanish, French, German, Italian, Portuguese, Russian, Chinese, Japanes
 - **High Contrast**: Visual highlighting for scanning
 
 ### 🚀 **Advanced Features**
+- **Visual Branding System** 🆕 NEW Nov 21: Keyboard identification
+  - **Spacebar Branding**: "CleverKeys#XXXX" on bottom-right of spacebar
+  - **Jewel Purple Text**: #9B59B6 (amethyst) on silver background
+  - **Auto Build Number**: Last 4 digits of timestamp (e.g., #4018)
+  - **Purpose**: Prevents confusion with original Unexpected-Keyboard
+  - **Always Visible**: Shows on every keyboard view for verification
 - **Backup & Restore System** 🆕 NEW v2.0: Complete data portability
   - **Export/Import Settings**: Full configuration backup to JSON
   - **Export/Import Dictionaries**: User words + disabled words list
