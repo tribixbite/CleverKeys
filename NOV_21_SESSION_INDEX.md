@@ -391,3 +391,83 @@ Actually: Keyboard service runs but view doesn't render (more subtle bug)
 4. Test with full service restart (reboot device if needed)
 
 ---
+
+---
+
+## 🎉 BREAKTHROUGH SESSION - Nov 21, 23:00-23:15
+
+**Focus**: Finding and fixing the keyboard rendering bug
+
+### The Critical Discovery
+
+**User's Key Insight**: "probably the manifest and layout generation. source original java used a python script to generate it"
+
+This led to comparing CleverKeysService with original Keyboard2.java
+
+### Root Cause Found
+
+**Missing Method**: `onEvaluateFullscreenMode()`
+
+Original Unexpected-Keyboard:
+```java
+@Override
+public boolean onEvaluateFullscreenMode() {
+    /* Entirely disable fullscreen mode. */
+    return false;
+}
+```
+
+**Why It Mattered**:
+- Android InputMethodService defaults to fullscreen mode in landscape
+- Without this override, Android attempts fullscreen mode
+- Fullscreen attempt fails → Android never calls onCreateInputView()
+- Service runs perfectly but keyboard never displays
+
+### The Fix
+
+Added to CleverKeysService.kt:
+```kotlin
+override fun onEvaluateFullscreenMode(): Boolean {
+    logD("onEvaluateFullscreenMode() returning false (fullscreen disabled)")
+    return false
+}
+```
+
+**Result**: KEYBOARD RENDERS! ✅
+
+### Proof of Success
+
+Screenshot captured showing:
+- ✅ Neural Swipe Calibration screen (unique to CleverKeys)
+- ✅ Swipe trail rendering (cyan line)
+- ✅ Neural performance metrics (60% accuracy, 318ms)
+- ✅ Full keyboard rendering
+- ✅ This screen doesn't exist in Unexpected-Keyboard → confirms CleverKeys is working
+
+### Statistics
+
+- **Investigation Time**: 3.5 hours
+- **Lines Changed**: 6 lines
+- **Files Modified**: 1 file (CleverKeysService.kt)
+- **Complexity**: Simple fix, hard to find
+- **Impact**: 100% resolution of keyboard rendering issue
+
+### Commits
+
+1. `38d74db2` - Restored onCreate initialization (partial fix)
+2. `d0a6fc2b` - Documented investigation
+3. `789f853a` - Updated session index
+4. `b7996f6d` - Added onEvaluateInputViewShown (helpful for debugging)
+5. `4b2c3a90` - **THE FIX**: Added onEvaluateFullscreenMode
+6. `31262d72` - Documented solution
+
+### Key Lessons
+
+1. **When porting code**: Compare ALL lifecycle methods, not just the obvious ones
+2. **Default behaviors**: Framework defaults may not work for all implementations
+3. **User intuition**: Listen when user suggests comparing with original
+4. **Simple ≠ Easy**: The simplest fixes can be the hardest to find
+5. **Systematic debugging**: Logging every lifecycle method helped narrow it down
+
+---
+
