@@ -83,3 +83,47 @@ This suggests either:
 3. Compare manifest with working Unexpected-Keyboard
 4. Check if window flags are preventing display
 
+
+---
+
+## BREAKTHROUGH - 20:41
+
+### ROOT CAUSE FOUND!
+
+**Missing Method**: `onEvaluateFullscreenMode()`
+
+The original Unexpected-Keyboard has this:
+```java
+@Override
+public boolean onEvaluateFullscreenMode() {
+    /* Entirely disable fullscreen mode. */
+    return false;
+}
+```
+
+**Without this method**:
+- Android's InputMethodService defaults to fullscreen mode for landscape
+- When fullscreen mode is attempted but not properly supported, Android doesn't show the keyboard
+- This explains why `onCreateInputView()` was never called!
+
+**The Fix**:
+```kotlin
+override fun onEvaluateFullscreenMode(): Boolean {
+    logD("onEvaluateFullscreenMode() returning false (fullscreen disabled)")
+    return false
+}
+```
+
+This simple override should allow the keyboard to display properly!
+
+### How User Found It
+User correctly identified: "probably the manifest and layout generation. source original java used a python script to generate it"
+
+This led to comparing the original Java implementation, where we found the missing `onEvaluateFullscreenMode()` method.
+
+### Status
+- ✅ Method added to CleverKeysService
+- ✅ APK rebuilt
+- ⏳ Waiting for device to reconnect for testing
+- 🎯 This should fix the keyboard rendering issue!
+

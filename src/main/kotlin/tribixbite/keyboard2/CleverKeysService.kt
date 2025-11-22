@@ -3516,6 +3516,16 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
+     * CRITICAL FIX: Disable fullscreen mode
+     * The original Unexpected-Keyboard disables this
+     * Without this override, Android may try fullscreen and fail to show keyboard!
+     */
+    override fun onEvaluateFullscreenMode(): Boolean {
+        logD("onEvaluateFullscreenMode() returning false (fullscreen disabled)")
+        return false
+    }
+
+    /**
      * Track cursor/selection changes in the editor
      * Matches Java Keyboard2.onUpdateSelection()
      */
