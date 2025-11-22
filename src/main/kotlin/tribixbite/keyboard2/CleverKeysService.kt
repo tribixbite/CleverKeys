@@ -3806,7 +3806,56 @@ class CleverKeysService : InputMethodService(),
         // Cancel any pending predictions
         predictionService?.cancelAll()
     }
-    
+
+    /**
+     * Handle input view finishing - reset keyboard state
+     * Matches original Keyboard2.onFinishInputView()
+     */
+    override fun onFinishInputView(finishingInput: Boolean) {
+        super.onFinishInputView(finishingInput)
+        logD("Input view finishing: finishingInput=$finishingInput")
+        keyboardView?.reset()
+    }
+
+    /**
+     * Handle subtype changes (language/layout switching)
+     * Matches original Keyboard2.onCurrentInputMethodSubtypeChanged()
+     */
+    override fun onCurrentInputMethodSubtypeChanged(subtype: android.view.inputmethod.InputMethodSubtype?) {
+        super.onCurrentInputMethodSubtypeChanged(subtype)
+        logD("Input method subtype changed: ${subtype?.locale}")
+
+        // Refresh layout for new subtype
+        config?.refresh(resources, null)
+        currentLayout = config?.layouts?.firstOrNull()
+        currentLayout?.let { layout ->
+            keyboardView?.setKeyboard(layout)
+            logD("Layout updated for subtype: ${layout.name}")
+        }
+    }
+
+    /**
+     * Override setInputView to handle view parent management
+     * Matches original Keyboard2.setInputView()
+     */
+    override fun setInputView(view: View?) {
+        view?.let { v ->
+            // Remove from existing parent if any
+            (v.parent as? android.view.ViewGroup)?.removeView(v)
+        }
+        super.setInputView(view)
+    }
+
+    /**
+     * Handle fullscreen mode updates
+     * Matches original Keyboard2.updateFullscreenMode()
+     */
+    override fun updateFullscreenMode() {
+        super.updateFullscreenMode()
+        // Could add custom window layout params here if needed
+        logD("Fullscreen mode updated")
+    }
+
     /**
      * Update keyboard dimensions for neural prediction coordinate normalization
      * Called by Keyboard2View when keyboard is measured
