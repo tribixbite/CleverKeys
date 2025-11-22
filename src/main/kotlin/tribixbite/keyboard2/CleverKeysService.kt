@@ -3506,6 +3506,16 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
+     * CRITICAL: Tell Android whether to show the input view
+     * Without this, onCreateInputView() is never called!
+     */
+    override fun onEvaluateInputViewShown(): Boolean {
+        val shouldShow = super.onEvaluateInputViewShown()
+        logD("onEvaluateInputViewShown() returning: $shouldShow")
+        return shouldShow
+    }
+
+    /**
      * Track cursor/selection changes in the editor
      * Matches Java Keyboard2.onUpdateSelection()
      */
@@ -3716,6 +3726,8 @@ class CleverKeysService : InputMethodService(),
     override fun onStartInput(editorInfo: EditorInfo?, restarting: Boolean) {
         super.onStartInput(editorInfo, restarting)
         logD("Input started: package=${editorInfo?.packageName}, restarting=$restarting")
+        logD("  inputType=${editorInfo?.inputType}, imeOptions=${editorInfo?.imeOptions}")
+        logD("  initialSelStart=${editorInfo?.initialSelStart}, initialSelEnd=${editorInfo?.initialSelEnd}")
     }
 
     /**
