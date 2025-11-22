@@ -5,6 +5,7 @@
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
   <uses-permission android:name="android.permission.RECORD_AUDIO"/>
   <uses-permission android:name="android.permission.INTERNET"/>
+  <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
   <!-- Storage permissions - deprecated on Android 11+ (API 30+), use scoped storage instead -->
   <!-- These are only needed for Android 10 and below -->

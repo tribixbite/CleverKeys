@@ -117,6 +117,10 @@ class CleverKeysService : InputMethodService(),
         )
     }
     
+    // Wake lock to prevent Android Freecess/MARs from freezing IME process
+    // Fix: Keyboard not rendering because process was being frozen by Samsung battery optimization
+    private var wakeLock: android.os.PowerManager.WakeLock? = null
+
     // Core components with null safety
     private var keyboardView: Keyboard2View? = null
     private var neuralEngine: NeuralSwipeEngine? = null
@@ -258,6 +262,21 @@ class CleverKeysService : InputMethodService(),
         super.onCreate()
         logD("CleverKeys service starting...")
 
+        // Acquire wake lock to prevent Freecess/MARs from freezing the process
+        // Fix: Android was freezing CleverKeys preventing onCreateInputView() from being called
+        try {
+            val powerManager = getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager
+            wakeLock = powerManager.newWakeLock(
+                android.os.PowerManager.PARTIAL_WAKE_LOCK,
+                "CleverKeys::IMEWakeLock"
+            ).apply {
+                acquire()
+                logD("✅ Wake lock acquired - process won't be frozen by battery optimization")
+            }
+        } catch (e: Exception) {
+            logE("⚠️ Failed to acquire wake lock - keyboard may be frozen by battery optimization", e)
+        }
+
         // Initialize lifecycle for Compose support (REQUIRED)
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
@@ -282,6 +301,19 @@ class CleverKeysService : InputMethodService(),
     override fun onDestroy() {
         super.onDestroy()
         logD("CleverKeys service stopping...")
+
+        // Release wake lock to save battery
+        try {
+            wakeLock?.let {
+                if (it.isHeld) {
+                    it.release()
+                    logD("✅ Wake lock released")
+                }
+            }
+            wakeLock = null
+        } catch (e: Exception) {
+            logE("⚠️ Failed to release wake lock", e)
+        }
 
         // Handle lifecycle destruction for Compose support
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
