@@ -2,224 +2,145 @@ package tribixbite.keyboard2
 
 import android.app.AlertDialog
 import android.content.Context
-import android.content.SharedPreferences
+import android.text.TextUtils
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.TextView
-import kotlinx.coroutines.*
-import org.json.JSONArray
-import org.json.JSONException
-import tribixbite.keyboard2.R
 
-/**
- * Clipboard pin view for managing pinned clipboard entries
- *
- * Extends NonScrollListView to show a list of pinned clipboard items
- * with paste and remove functionality. Items are persisted to SharedPreferences
- * using JSON serialization.
- */
-class ClipboardPinView : NonScrollListView {
+class ClipboardPinView(ctx: Context, attrs: AttributeSet?) : MaxHeightListView(ctx, attrs) {
 
-    companion object {
-        private const val TAG = "ClipboardPinView"
+    private var entries: List<ClipboardEntry> = emptyList()
+    private val adapter: ClipboardPinEntriesAdapter
+    private val service: ClipboardHistoryService?
+    // Track expanded state: position -> isExpanded
+    private val expandedStates = mutableMapOf<Int, Boolean>()
 
-        /** Preference file name that stores pinned clipboards */
-        private const val PERSIST_FILE_NAME = "clipboards"
-
-        /** Preference name for pinned clipboards */
-        private const val PERSIST_PREF = "pinned"
-
-        /**
-         * Load pinned clipboard entries from SharedPreferences
-         */
-        fun loadFromPrefs(store: SharedPreferences, destination: MutableList<String>) {
-            val arrayString = store.getString(PERSIST_PREF, null) ?: return
-
-            try {
-                val jsonArray = JSONArray(arrayString)
-                for (i in 0 until jsonArray.length()) {
-                    destination.add(jsonArray.getString(i))
-                }
-            } catch (e: JSONException) {
-                android.util.Log.e(TAG, "Failed to load pinned clipboards", e)
-            }
-        }
-
-        /**
-         * Save pinned clipboard entries to SharedPreferences
-         */
-        fun saveToPrefs(store: SharedPreferences, entries: List<String>) {
-            val jsonArray = JSONArray()
-            entries.forEach { entry ->
-                jsonArray.put(entry)
-            }
-
-            store.edit()
-                .putString(PERSIST_PREF, jsonArray.toString())
-                .apply() // Use apply() instead of commit() for better performance
-        }
-    }
-
-    private val entries = mutableListOf<String>()
-    private lateinit var adapter: ClipboardPinEntriesAdapter
-    private lateinit var persistStore: SharedPreferences
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
-        initialize()
-    }
-
-    /**
-     * Initialize the clipboard pin view
-     */
-    private fun initialize() {
-        persistStore = context.getSharedPreferences("pinned_clipboards", Context.MODE_PRIVATE)
-        loadFromPrefs()
+    init {
+        service = ClipboardHistoryService.get_service(ctx)
         adapter = ClipboardPinEntriesAdapter()
         setAdapter(adapter)
+        refresh_pinned_items()
     }
 
-    /**
-     * Pin a clipboard entry and persist the change
-     */
-    fun addEntry(text: String) {
-        if (text.isNotBlank() && !entries.contains(text)) {
-            entries.add(text)
+    /** Refresh pinned items from database */
+    fun refresh_pinned_items() {
+        if (service != null) {
+            entries = service.getPinnedEntries()
             adapter.notifyDataSetChanged()
-            persist()
             invalidate()
+
+            // Set minimum height on parent ScrollView if 2+ items exist
+            // This ensures 2 entries are visible without scrolling
+            updateParentMinHeight()
         }
     }
 
-    /**
-     * Remove the entry at the specified position and persist the change
-     */
-    fun removeEntry(position: Int) {
-        if (position in 0 until entries.size) {
-            entries.removeAt(position)
-            adapter.notifyDataSetChanged()
-            persist()
-            invalidate()
+    /** Update parent ScrollView minHeight based on item count and user preference */
+    private fun updateParentMinHeight() {
+        if (entries.size >= 2) {
+            // Read user preference for pinned section size (default 100dp = 2-3 rows)
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+            val minHeightDp = prefs.getString("clipboard_pinned_rows", "100")?.toIntOrNull() ?: 100
+            val minHeightPx = (minHeightDp * resources.displayMetrics.density).toInt()
+            minimumHeight = minHeightPx
+        } else {
+            // Clear minHeight when less than 2 items
+            minimumHeight = 0
         }
     }
 
-    /**
-     * Paste the specified entry to the editor
-     */
-    fun pasteEntry(position: Int) {
-        if (position in 0 until entries.size) {
-            scope.launch {
-                try {
-                    ClipboardHistoryService.paste(entries[position])
-                } catch (e: Exception) {
-                    logE("Failed to paste clipboard entry", e)
-                }
-            }
+    /** Remove the entry at index [pos] entirely from database. */
+    fun remove_entry(pos: Int) {
+        if (pos < 0 || pos >= entries.size) return
+
+        val clip = entries[pos].content
+
+        // Delete entirely from database
+        service?.removeHistoryEntry(clip)
+        refresh_pinned_items()
+    }
+
+    /** Send the specified entry to the editor. */
+    fun paste_entry(pos: Int) {
+        ClipboardHistoryService.paste(entries[pos].content)
+    }
+
+    override fun onWindowVisibilityChanged(visibility: Int) {
+        if (visibility == View.VISIBLE) {
+            refresh_pinned_items()
         }
     }
 
-    /**
-     * Persist current entries to SharedPreferences
-     */
-    private fun persist() {
-        scope.launch(Dispatchers.IO) {
-            saveToPrefs(persistStore, entries)
-        }
-    }
-
-    /**
-     * Load entries from SharedPreferences
-     */
-    private fun loadFromPrefs() {
-        loadFromPrefs(persistStore, entries)
-    }
-
-    /**
-     * Cleanup coroutines
-     */
-    fun cleanup() {
-        scope.cancel()
-    }
-
-    /**
-     * Adapter for clipboard pin entries
-     */
-    private inner class ClipboardPinEntriesAdapter : BaseAdapter() {
+    inner class ClipboardPinEntriesAdapter : BaseAdapter() {
 
         override fun getCount(): Int = entries.size
 
-        override fun getItem(position: Int): String = entries[position]
+        override fun getItem(pos: Int): Any = entries[pos]
 
-        override fun getItemId(position: Int): Long = entries[position].hashCode().toLong()
+        override fun getItemId(pos: Int): Long = entries[pos].hashCode().toLong()
 
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            // Create simple layout programmatically since R.layout references aren't working
-            val view = convertView ?: LinearLayout(context).apply {
-                orientation = LinearLayout.HORIZONTAL
-                setPadding(16, 8, 16, 8)
+        override fun getView(pos: Int, convertView: View?, parent: ViewGroup): View {
+            val v = convertView ?: View.inflate(context, R.layout.clipboard_pin_entry, null)
 
-                // Text view
-                addView(TextView(context).apply {
-                    id = android.R.id.text1
-                    textSize = 14f
-                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                })
+            val entry = entries[pos]
+            val text = entry.content
+            val textView = v.findViewById<TextView>(R.id.clipboard_pin_text)
+            val expandButton = v.findViewById<View>(R.id.clipboard_pin_expand)
 
-                // Paste button
-                addView(Button(context).apply {
-                    id = android.R.id.button1
-                    text = context.getString(R.string.clipboard_paste)
-                    textSize = 12f
-                    setPadding(8, 4, 8, 4)
-                })
+            // Set text with timestamp appended
+            textView.text = entry.getFormattedText(context)
 
-                // Remove button
-                addView(Button(context).apply {
-                    id = android.R.id.button2
-                    text = context.getString(R.string.clipboard_delete)
-                    textSize = 12f
-                    setPadding(8, 4, 8, 4)
-                })
+            // Check if text contains newlines (multi-line)
+            val isMultiLine = text.contains("\n")
+            val isExpanded = expandedStates[pos] == true
+
+            // Set maxLines based on expanded state (applies to all entries)
+            if (isExpanded) {
+                textView.maxLines = Int.MAX_VALUE
+                textView.ellipsize = null
+            } else {
+                textView.maxLines = 1
+                textView.ellipsize = TextUtils.TruncateAt.END
             }
 
-            // Set the text content
-            val textView = view.findViewById<TextView>(android.R.id.text1)
-            textView.text = entries[position]
+            // Show expand button only for multi-line entries
+            if (isMultiLine) {
+                expandButton.visibility = View.VISIBLE
+                expandButton.rotation = if (isExpanded) 180f else 0f
 
-            // Set up paste button
-            val pasteButton = view.findViewById<View>(android.R.id.button1)
-            pasteButton.setOnClickListener { pasteEntry(position) }
-
-            // Set up remove button with confirmation dialog
-            val removeButton = view.findViewById<View>(android.R.id.button2)
-            removeButton.setOnClickListener { showRemoveConfirmDialog(position) }
-
-            return view
-        }
-
-        /**
-         * Show confirmation dialog before removing entry
-         */
-        private fun showRemoveConfirmDialog(position: Int) {
-            val dialog = AlertDialog.Builder(context)
-                .setTitle(R.string.clipboard_remove_confirm)
-                .setPositiveButton(android.R.string.ok) { _, _ ->
-                    removeEntry(position)
+                // Handle expand button click for multi-line entries
+                expandButton.setOnClickListener {
+                    expandedStates[pos] = !isExpanded
+                    notifyDataSetChanged()
                 }
-                .setNegativeButton(android.R.string.cancel, null)
-                .create()
+            } else {
+                expandButton.visibility = View.GONE
+            }
 
-            dialog.show()
+            // Make text clickable to expand/collapse (all entries)
+            textView.setOnClickListener {
+                expandedStates[pos] = !isExpanded
+                notifyDataSetChanged()
+            }
+
+            v.findViewById<View>(R.id.clipboard_pin_paste).setOnClickListener {
+                paste_entry(pos)
+            }
+
+            v.findViewById<View>(R.id.clipboard_pin_remove).setOnClickListener { view ->
+                val d = AlertDialog.Builder(context)
+                    .setTitle(R.string.clipboard_remove_confirm)
+                    .setPositiveButton(R.string.clipboard_remove_confirmed) { _, _ ->
+                        remove_entry(pos)
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .create()
+                Utils.show_dialog_on_ime(d, view.windowToken)
+            }
+
+            return v
         }
     }
-
-    private fun logE(message: String, throwable: Throwable? = null) {
-        android.util.Log.e(TAG, message, throwable)
-    }
-
 }

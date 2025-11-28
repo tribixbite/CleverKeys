@@ -1,232 +1,141 @@
 package tribixbite.keyboard2
 
-/**
- * Gesture recognition system for directional touch input.
- *
- * Recognizes 4 gesture types:
- * - **Swipe**: Simple directional swipe
- * - **Roundtrip**: Swipe out and return to center
- * - **Circle**: Clockwise rotation
- * - **Anticircle**: Anticlockwise rotation
- *
- * Uses 16-direction quantization (0-15) for precise tracking.
- *
- * Usage:
- * ```kotlin
- * val gesture = Gesture(startingDirection = 0)
- * gesture.changedDirection(4)  // Returns true if state changed
- * val name = gesture.getGesture()  // Get recognized gesture
- * ```
- */
-class Gesture(startingDirection: Int) {
+import kotlin.math.abs
 
-    /** Current pointer direction (0-15) */
+class Gesture(startingDirection: Int) {
+    /** The pointer direction that caused the last state change.
+     * Integer from 0 to 15 (included). */
     var currentDir: Int = startingDirection
         private set
 
-    /** Current gesture state */
     var state: State = State.Swiped
         private set
 
-    /**
-     * Gesture state machine states
-     */
     enum class State {
-        /** Gesture cancelled (rotation reversed) */
         Cancelled,
-
-        /** Simple swipe in progress */
         Swiped,
-
-        /** Clockwise rotation detected */
-        RotatingClockwise,
-
-        /** Anticlockwise rotation detected */
-        RotatingAnticlockwise,
-
-        /** Swipe gesture ended (pointer up) */
-        EndedSwipe,
-
-        /** Swipe ended by returning to center (roundtrip) */
-        EndedCenter,
-
-        /** Clockwise rotation ended */
-        EndedClockwise,
-
-        /** Anticlockwise rotation ended */
-        EndedAnticlockwise
+        Rotating_clockwise,
+        Rotating_anticlockwise,
+        Ended_swipe,
+        Ended_center,
+        Ended_clockwise,
+        Ended_anticlockwise
     }
 
-    /**
-     * Recognized gesture names
-     */
     enum class Name {
-        /** No gesture recognized */
         None,
-
-        /** Simple directional swipe */
         Swipe,
-
-        /** Swipe out and return to center */
         Roundtrip,
-
-        /** Clockwise rotation */
         Circle,
-
-        /** Anticlockwise rotation */
         Anticircle
     }
 
-    companion object {
-        /** Angle to travel before rotation starts (in direction units) */
-        const val ROTATION_THRESHOLD = 2
-
-        /** Number of direction quantization levels */
-        private const val NUM_DIRECTIONS = 16
-
-        /**
-         * Calculate shortest angular difference between two directions.
-         * Uses modulo arithmetic to find shortest circular path.
-         *
-         * @param d1 First direction (0-15)
-         * @param d2 Second direction (0-15)
-         * @return Positive for clockwise, negative for anticlockwise, 0 if equal
-         */
-        fun dirDiff(d1: Int, d2: Int): Int {
-            if (d1 == d2) return 0
-
-            val left = (d1 - d2 + NUM_DIRECTIONS) % NUM_DIRECTIONS
-            val right = (d2 - d1 + NUM_DIRECTIONS) % NUM_DIRECTIONS
-
-            return if (left < right) -left else right
-        }
-    }
-
     /**
-     * Get currently recognized gesture.
-     * May change when [changedDirection] returns true.
-     *
-     * @return Recognized gesture name
+     * Return the currently recognized gesture. Return [null] if no gesture is
+     * recognized. Might change everytime [changed_direction] return [true].
      */
-    fun getGesture(): Name {
+    fun get_gesture(): Name {
         return when (state) {
             State.Cancelled -> Name.None
-            State.Swiped, State.EndedSwipe -> Name.Swipe
-            State.EndedCenter -> Name.Roundtrip
-            State.RotatingClockwise, State.EndedClockwise -> Name.Circle
-            State.RotatingAnticlockwise, State.EndedAnticlockwise -> Name.Anticircle
+            State.Swiped, State.Ended_swipe -> Name.Swipe
+            State.Ended_center -> Name.Roundtrip
+            State.Rotating_clockwise, State.Ended_clockwise -> Name.Circle
+            State.Rotating_anticlockwise, State.Ended_anticlockwise -> Name.Anticircle
         }
     }
 
-    /**
-     * Check if gesture is still in progress.
-     *
-     * @return true if pointer is still down and gesture active
-     */
-    fun isInProgress(): Boolean {
+    fun is_in_progress(): Boolean {
         return when (state) {
-            State.Swiped,
-            State.RotatingClockwise,
-            State.RotatingAnticlockwise -> true
+            State.Swiped, State.Rotating_clockwise, State.Rotating_anticlockwise -> true
             else -> false
         }
     }
 
-    /**
-     * Get current direction (0-15).
-     *
-     * @return Current direction quadrant
-     */
-    fun currentDirection(): Int = currentDir
+    fun current_direction(): Int = currentDir
 
     /**
-     * Pointer changed direction.
-     *
-     * State transitions:
-     * - **Swiped** → **Rotating** if direction change exceeds circle_sensitivity
-     * - **Rotating** → **Cancelled** if rotation reverses direction
-     *
-     * @param direction New direction (0-15)
-     * @return true if gesture state changed and [getGesture] returns different value
+     * The pointer changed direction. Return [true] if the gesture changed
+     * state and [get_gesture] return a different value.
      */
-    fun changedDirection(direction: Int): Boolean {
+    fun changed_direction(direction: Int): Boolean {
         val d = dirDiff(currentDir, direction)
         val clockwise = d > 0
-
         return when (state) {
             State.Swiped -> {
-                if (kotlin.math.abs(d) < Config.globalConfig().circle_sensitivity) {
-                    false
-                } else {
-                    // Start rotation
-                    state = if (clockwise) {
-                        State.RotatingClockwise
-                    } else {
-                        State.RotatingAnticlockwise
-                    }
-                    currentDir = direction
-                    true
+                if (abs(d) < Config.globalConfig().circle_sensitivity) {
+                    return false
                 }
-            }
-
-            State.RotatingClockwise, State.RotatingAnticlockwise -> {
+                // Start a rotation
+                state = if (clockwise) {
+                    State.Rotating_clockwise
+                } else {
+                    State.Rotating_anticlockwise
+                }
                 currentDir = direction
-                // Check if rotation reversed direction
-                if ((state == State.RotatingClockwise) == clockwise) {
-                    false  // Continue same rotation
-                } else {
-                    state = State.Cancelled  // Rotation reversed - cancel
-                    true
-                }
+                true
             }
-
+            // Check that rotation is not reversing
+            State.Rotating_clockwise, State.Rotating_anticlockwise -> {
+                currentDir = direction
+                if ((state == State.Rotating_clockwise) == clockwise) {
+                    return false
+                }
+                state = State.Cancelled
+                true
+            }
             else -> false
         }
     }
 
     /**
-     * Pointer moved back to center.
-     *
-     * State transitions:
-     * - **Swiped** → **EndedCenter** (becomes Roundtrip gesture)
-     * - **RotatingClockwise** → **EndedClockwise**
-     * - **RotatingAnticlockwise** → **EndedAnticlockwise**
-     *
-     * @return true if [getGesture] will return different value
+     * Return [true] if [get_gesture] will return a different value.
      */
-    fun movedToCenter(): Boolean {
+    fun moved_to_center(): Boolean {
         return when (state) {
             State.Swiped -> {
-                state = State.EndedCenter
-                true  // Swipe becomes Roundtrip
+                state = State.Ended_center
+                true
             }
-            State.RotatingClockwise -> {
-                state = State.EndedClockwise
-                false  // Still Circle
+            State.Rotating_clockwise -> {
+                state = State.Ended_clockwise
+                false
             }
-            State.RotatingAnticlockwise -> {
-                state = State.EndedAnticlockwise
-                false  // Still Anticircle
+            State.Rotating_anticlockwise -> {
+                state = State.Ended_anticlockwise
+                false
             }
             else -> false
         }
     }
 
     /**
-     * Pointer lifted up.
-     * Transitions to ended state without changing gesture name.
-     *
-     * State transitions:
-     * - **Swiped** → **EndedSwipe**
-     * - **RotatingClockwise** → **EndedClockwise**
-     * - **RotatingAnticlockwise** → **EndedAnticlockwise**
+     * Will not change the gesture state.
      */
-    fun pointerUp() {
+    fun pointer_up() {
         state = when (state) {
-            State.Swiped -> State.EndedSwipe
-            State.RotatingClockwise -> State.EndedClockwise
-            State.RotatingAnticlockwise -> State.EndedAnticlockwise
+            State.Swiped -> State.Ended_swipe
+            State.Rotating_clockwise -> State.Ended_clockwise
+            State.Rotating_anticlockwise -> State.Ended_anticlockwise
             else -> state
+        }
+    }
+
+    companion object {
+        /** Angle to travel before a rotation gesture starts. A threshold too low
+         * would be too easy to reach while doing back and forth gestures, as the
+         * quadrants are very small. In the same unit as [currentDir] */
+        const val ROTATION_THRESHOLD = 2
+
+        @JvmStatic
+        fun dirDiff(d1: Int, d2: Int): Int {
+            val n = 16
+            // Shortest-path in modulo arithmetic
+            if (d1 == d2) {
+                return 0
+            }
+            val left = (d1 - d2 + n) % n
+            val right = (d2 - d1 + n) % n
+            return if (left < right) -left else right
         }
     }
 }

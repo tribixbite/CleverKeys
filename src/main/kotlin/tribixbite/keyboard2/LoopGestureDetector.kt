@@ -10,44 +10,11 @@ import kotlin.math.*
  * indicating the user wants to type that letter multiple times.
  *
  * Based on analysis of gestures for words like "hello", "book", "coffee", etc.
- *
- * Features:
- * - Geometric loop detection with center, radius, and angle calculation
- * - Angle validation (270-450°) for full/partial loops
- * - Radius validation (15px min, 1.5x key size max)
- * - Closure detection (30px threshold)
- * - Repeat count estimation (360° = 2 letters, 540° = 3 letters)
- * - Loop application to modify recognized key sequences
- *
- * Fix for Bug #258: LoopGestureDetector system missing (CATASTROPHIC)
  */
 class LoopGestureDetector(
     private val keyWidth: Float,
     private val keyHeight: Float
 ) {
-
-    companion object {
-        private const val TAG = "LoopGestureDetector"
-
-        // Minimum angle change to consider a loop (in degrees)
-        private const val MIN_LOOP_ANGLE = 270.0f
-
-        // Maximum angle change for a loop (can't exceed 360 + tolerance)
-        private const val MAX_LOOP_ANGLE = 450.0f
-
-        // Minimum radius for a valid loop (in pixels)
-        private const val MIN_LOOP_RADIUS = 15.0f
-
-        // Maximum radius for a valid loop (relative to key size)
-        private const val MAX_LOOP_RADIUS_FACTOR = 1.5f
-
-        // Minimum points needed to form a loop
-        private const val MIN_LOOP_POINTS = 8
-
-        // Distance threshold to consider points "close" (for loop closure)
-        private const val CLOSURE_THRESHOLD = 30.0f
-    }
-
     /**
      * Represents a detected loop in the swipe path
      */
@@ -59,17 +26,12 @@ class LoopGestureDetector(
         val totalAngle: Float,
         val associatedKey: Char
     ) {
-        /**
-         * Check if loop is clockwise
-         */
         fun isClockwise(): Boolean = totalAngle > 0
 
-        /**
-         * Estimate repeat count based on loop completeness
-         * Full loop (360°) = 2 occurrences of the letter
-         * Half loop (180°) = might be intentional curve, ignore
-         */
         fun getRepeatCount(): Int {
+            // Estimate repeat count based on loop completeness
+            // Full loop (360°) = 2 occurrences of the letter
+            // Half loop (180°) = might be intentional curve, ignore
             val absAngle = abs(totalAngle)
             return when {
                 absAngle >= 520.0f -> 3 // 1.5 loops
@@ -101,9 +63,8 @@ class LoopGestureDetector(
                 detectedLoops.add(loop)
                 // Skip past this loop to avoid duplicate detection
                 i = loop.endIndex
-            } else {
-                i++
             }
+            i++
         }
 
         Log.d(TAG, "Detected ${detectedLoops.size} loops in swipe path")
@@ -122,18 +83,10 @@ class LoopGestureDetector(
         val centerPoint = path[centerIndex]
 
         // Search forward for a point that comes back close
-        var closureIndex = -1
-        for (j in (centerIndex + MIN_LOOP_POINTS) until min(centerIndex + 50, path.size)) {
-            val distance = distance(centerPoint, path[j])
-            if (distance < CLOSURE_THRESHOLD) {
-                closureIndex = j
-                break
-            }
-        }
-
-        if (closureIndex == -1) {
-            return null // No loop closure found
-        }
+        val closureIndex = ((centerIndex + MIN_LOOP_POINTS) until min(centerIndex + 50, path.size))
+            .firstOrNull { j ->
+                distance(centerPoint, path[j]) < CLOSURE_THRESHOLD
+            } ?: return null // No loop closure found
 
         // Extract the potential loop segment
         val loopSegment = path.subList(centerIndex, closureIndex + 1)
@@ -158,12 +111,8 @@ class LoopGestureDetector(
      * Calculate the geometric center of a set of points
      */
     private fun calculateCenter(points: List<PointF>): PointF {
-        var sumX = 0f
-        var sumY = 0f
-        for (p in points) {
-            sumX += p.x
-            sumY += p.y
-        }
+        val sumX = points.sumOf { it.x.toDouble() }.toFloat()
+        val sumY = points.sumOf { it.y.toDouble() }.toFloat()
         return PointF(sumX / points.size, sumY / points.size)
     }
 
@@ -171,11 +120,7 @@ class LoopGestureDetector(
      * Calculate average radius from center to all points
      */
     private fun calculateAverageRadius(points: List<PointF>, center: PointF): Float {
-        var sumRadius = 0f
-        for (p in points) {
-            sumRadius += distance(p, center)
-        }
-        return sumRadius / points.size
+        return points.map { distance(it, center) }.average().toFloat()
     }
 
     /**
@@ -183,9 +128,7 @@ class LoopGestureDetector(
      * Positive = clockwise, Negative = counter-clockwise
      */
     private fun calculateTotalAngle(points: List<PointF>, center: PointF): Float {
-        if (points.size < 3) {
-            return 0f
-        }
+        if (points.size < 3) return 0f
 
         var totalAngle = 0.0
 
@@ -194,19 +137,15 @@ class LoopGestureDetector(
             val p2 = points[i]
 
             // Calculate angles from center
-            val angle1 = atan2((p1.y - center.y).toDouble(), (p1.x - center.x).toDouble())
-            val angle2 = atan2((p2.y - center.y).toDouble(), (p2.x - center.x).toDouble())
+            val angle1 = atan2(p1.y - center.y, p1.x - center.x)
+            val angle2 = atan2(p2.y - center.y, p2.x - center.x)
 
             // Calculate angle difference
             var angleDiff = angle2 - angle1
 
             // Normalize to [-π, π]
-            while (angleDiff > PI) {
-                angleDiff -= 2 * PI
-            }
-            while (angleDiff < -PI) {
-                angleDiff += 2 * PI
-            }
+            while (angleDiff > PI) angleDiff -= (2 * PI).toFloat()
+            while (angleDiff < -PI) angleDiff += (2 * PI).toFloat()
 
             totalAngle += angleDiff
         }
@@ -220,20 +159,14 @@ class LoopGestureDetector(
      */
     private fun isValidLoop(radius: Float, totalAngle: Float): Boolean {
         // Check radius bounds
-        if (radius < MIN_LOOP_RADIUS) {
-            return false
-        }
+        if (radius < MIN_LOOP_RADIUS) return false
 
         val maxRadius = min(keyWidth, keyHeight) * MAX_LOOP_RADIUS_FACTOR
-        if (radius > maxRadius) {
-            return false
-        }
+        if (radius > maxRadius) return false
 
         // Check angle (must complete most of a circle)
         val absAngle = abs(totalAngle)
-        if (absAngle < MIN_LOOP_ANGLE || absAngle > MAX_LOOP_ANGLE) {
-            return false
-        }
+        if (absAngle < MIN_LOOP_ANGLE || absAngle > MAX_LOOP_ANGLE) return false
 
         return true
     }
@@ -246,9 +179,9 @@ class LoopGestureDetector(
         // For now, return the most recent key
         if (keys.isNotEmpty()) {
             val lastKey = keys.last()
-            val keyValue = lastKey.keys.getOrNull(0)
-            if (keyValue is KeyValue.CharKey) {
-                return keyValue.char
+            val kv = lastKey.keys.getOrNull(0)
+            if (kv?.getKind() == KeyValue.Kind.Char) {
+                return kv.getChar()
             }
         }
         return ' '
@@ -272,9 +205,7 @@ class LoopGestureDetector(
      * @return Modified key sequence with repeated letters
      */
     fun applyLoops(keySequence: String, loops: List<Loop>, swipePath: List<PointF>): String {
-        if (loops.isEmpty()) {
-            return keySequence
-        }
+        if (loops.isEmpty()) return keySequence
 
         val result = StringBuilder()
         var sequenceIndex = 0
@@ -320,11 +251,8 @@ class LoopGestureDetector(
      */
     fun matchesLoopPattern(word: String, detectedLoops: List<Loop>): Boolean {
         // Find repeated letters in the word
-        val repeatPositions = mutableListOf<Int>()
-        for (i in 1 until word.length) {
-            if (word[i] == word[i - 1]) {
-                repeatPositions.add(i)
-            }
+        val repeatPositions = (1 until word.length).filter { i ->
+            word[i] == word[i - 1]
         }
 
         // Check if we have loops at approximately the right positions
@@ -332,28 +260,25 @@ class LoopGestureDetector(
         return detectedLoops.size >= repeatPositions.size
     }
 
-    /**
-     * Get loop detection statistics for debugging
-     */
-    fun getLoopStats(loops: List<Loop>): String {
-        if (loops.isEmpty()) {
-            return "No loops detected"
-        }
+    companion object {
+        private const val TAG = "LoopGestureDetector"
 
-        val stats = StringBuilder()
-        stats.append("Loop Detection Statistics:\n")
-        stats.append("- Total loops: ${loops.size}\n\n")
+        // Minimum angle change to consider a loop (in degrees)
+        private const val MIN_LOOP_ANGLE = 270.0f
 
-        loops.forEachIndexed { index, loop ->
-            stats.append("Loop ${index + 1}:\n")
-            stats.append("  - Key: '${loop.associatedKey}'\n")
-            stats.append("  - Repeat count: ${loop.getRepeatCount()}\n")
-            stats.append("  - Angle: ${String.format("%.1f", loop.totalAngle)}°\n")
-            stats.append("  - Radius: ${String.format("%.1f", loop.radius)}px\n")
-            stats.append("  - Direction: ${if (loop.isClockwise()) "Clockwise" else "Counter-clockwise"}\n")
-            stats.append("  - Path indices: ${loop.startIndex} - ${loop.endIndex}\n\n")
-        }
+        // Maximum angle change for a loop (can't exceed 360 + tolerance)
+        private const val MAX_LOOP_ANGLE = 450.0f
 
-        return stats.toString()
+        // Minimum radius for a valid loop (in pixels)
+        private const val MIN_LOOP_RADIUS = 15.0f
+
+        // Maximum radius for a valid loop (relative to key size)
+        private const val MAX_LOOP_RADIUS_FACTOR = 1.5f
+
+        // Minimum points needed to form a loop
+        private const val MIN_LOOP_POINTS = 8
+
+        // Distance threshold to consider points "close" (for loop closure)
+        private const val CLOSURE_THRESHOLD = 30.0f
     }
 }

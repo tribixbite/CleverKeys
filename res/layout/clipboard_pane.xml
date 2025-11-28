@@ -1,12 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:background="?attr/colorKeyboard" android:hardwareAccelerated="false">
-  <ScrollView android:layout_width="fill_parent" android:layout_height="@dimen/clipboard_view_height">
-    <LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content">
-      <CheckBox android:text="@string/clipboard_history_heading" style="@style/clipboardHeading" android:layout_width="fill_parent" android:layout_height="wrap_content"/>
-      <tribixbite.keyboard2.ClipboardHistoryView android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content" android:divider="?attr/clipboard_divider_color" android:dividerHeight="?attr/clipboard_divider_height"/>
-      <TextView android:text="@string/clipboard_pin_heading" style="@style/clipboardHeading" android:layout_width="fill_parent" android:layout_height="wrap_content"/>
-      <LinearLayout android:id="@+id/clipboard_pin_view" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content" android:divider="?attr/clipboard_divider_color" android:dividerHeight="?attr/clipboard_divider_height"/>
-    </LinearLayout>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:background="?attr/colorKeyboard" android:hardwareAccelerated="false" android:layout_width="fill_parent" android:layout_height="fill_parent">
+
+  <!-- Pinned Section (at top, wrap_content with large maxHeight for 2 expanded entries) -->
+  <ScrollView android:layout_width="fill_parent" android:layout_height="wrap_content" android:maxHeight="600dp" android:scrollbars="vertical" android:fadeScrollbars="false">
+    <tribixbite.keyboard2.ClipboardPinView android:id="@+id/clipboard_pin_view" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content" android:divider="?attr/clipboard_divider_color" android:dividerHeight="?attr/clipboard_divider_height"/>
   </ScrollView>
-  <tribixbite.keyboard2.Keyboard2View layout="@xml/clipboard_bottom_row" android:layout_width="fill_parent" android:layout_height="wrap_content" android:background="?attr/colorKeyboard"/>
+
+  <!-- History Section with Search (separate scrolling) -->
+  <LinearLayout android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content" android:paddingLeft="8dp" android:paddingRight="8dp" android:paddingTop="8dp" android:paddingBottom="4dp" android:background="?attr/colorKeyboard" android:gravity="center_vertical" android:baselineAligned="true">
+    <TextView android:text="@string/clipboard_history_heading" style="@style/clipboardHeading" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.45" android:layout_gravity="center_vertical" android:layout_marginTop="0dp" android:layout_marginRight="4dp" android:layout_marginEnd="4dp"/>
+    <TextView android:id="@+id/clipboard_date_filter" android:text="📅" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_vertical" android:textSize="18sp" android:paddingLeft="6dp" android:paddingRight="6dp" android:paddingTop="4dp" android:paddingBottom="4dp" android:layout_marginRight="4dp" android:layout_marginEnd="4dp" android:clickable="true" android:focusable="true"/>
+    <TextView android:id="@+id/clipboard_search" android:hint="Tap to search..." android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.45" android:layout_gravity="center_vertical" android:textSize="14sp" android:textColor="?attr/colorLabel" android:textColorHint="?attr/colorSubLabel" android:paddingLeft="12dp" android:paddingRight="12dp" android:paddingTop="6dp" android:paddingBottom="6dp" android:background="?attr/colorKey" android:singleLine="true" android:ellipsize="end" android:clickable="true" android:focusable="true"/>
+  </LinearLayout>
+
+  <ScrollView android:layout_width="fill_parent" android:layout_height="0dp" android:layout_weight="1">
+    <tribixbite.keyboard2.ClipboardHistoryView android:id="@+id/clipboard_history_view" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content" android:divider="?attr/clipboard_divider_color" android:dividerHeight="?attr/clipboard_divider_height"/>
+  </ScrollView>
+
 </LinearLayout>

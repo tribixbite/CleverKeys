@@ -73,7 +73,7 @@ class SwipePredictionService(
     
     /**
      * Request prediction with callback for Java interop
-     * Maintains compatibility with existing Keyboard2.java
+     * Maintains compatibility with existing CleverKeysService.java
      */
     fun requestPrediction(input: SwipeInput, callback: PredictionCallback) {
         serviceScope.launch {

@@ -8,20 +8,8 @@ import kotlin.math.sqrt
 /**
  * Prunes candidate words for swipe typing based on extremities.
  * Based on FlorisBoard's pruning approach.
- *
- * Features:
- * - Extremity-based pruning (first-last letter pairs)
- * - Path length-based filtering
- * - Fast lookup using HashMap
- * - Fallback strategies when no exact matches
- *
- * This significantly reduces the search space for DTW/prediction algorithms,
- * improving performance by 10-100x for large dictionaries.
- *
- * Ported from Java to Kotlin with improvements.
  */
 class SwipePruner(private val dictionary: Map<String, Int>) {
-
     companion object {
         private const val TAG = "SwipePruner"
 
@@ -33,7 +21,7 @@ class SwipePruner(private val dictionary: Map<String, Int>) {
     }
 
     // Map of first-last letter pairs to words
-    private val extremityMap = mutableMapOf<String, MutableList<String>>()
+    private val extremityMap: MutableMap<String, MutableList<String>> = mutableMapOf()
 
     init {
         buildExtremityMap()
@@ -41,11 +29,6 @@ class SwipePruner(private val dictionary: Map<String, Int>) {
 
     /**
      * Build a map of first-last letter pairs to words for fast lookup
-     *
-     * Example:
-     * "hello" → "ho" → ["hello"]
-     * "help" → "hp" → ["help"]
-     * "the" → "te" → ["the"]
      */
     private fun buildExtremityMap() {
         for (word in dictionary.keys) {
@@ -64,81 +47,131 @@ class SwipePruner(private val dictionary: Map<String, Int>) {
     /**
      * Find candidate words based on the start and end points of a swipe gesture.
      * This significantly reduces the search space for DTW/prediction algorithms.
-     *
-     * @param swipePath The full swipe path
-     * @param touchedChars Characters touched along the swipe (in order)
-     * @return Pruned list of candidate words
      */
-    fun pruneByExtremities(swipePath: List<PointF>, touchedChars: List<Char>): List<String> {
-        if (swipePath.size < 2 || touchedChars.isEmpty()) {
+    fun pruneByExtremities(
+        swipePath: List<PointF>,
+        touchedKeys: List<KeyboardData.Key>
+    ): List<String> {
+        if (swipePath.size < 2 || touchedKeys.isEmpty()) {
             return dictionary.keys.toList()
         }
 
-        // Get start and end characters (use first N_CLOSEST_KEYS from each end)
-        val startKeys = touchedChars.take(N_CLOSEST_KEYS).distinct()
-        val endKeys = touchedChars.takeLast(N_CLOSEST_KEYS).distinct()
+        // Get start and end points
+        val startPoint = swipePath[0]
+        val endPoint = swipePath[swipePath.size - 1]
+
+        // Find the closest keys to start and end points
+        val startKeys = findClosestKeys(startPoint, touchedKeys, N_CLOSEST_KEYS)
+        val endKeys = findClosestKeys(endPoint, touchedKeys, N_CLOSEST_KEYS)
 
         // Build candidate list from all combinations
         val candidates = mutableListOf<String>()
         for (startKey in startKeys) {
             for (endKey in endKeys) {
                 val extremityKey = "$startKey$endKey"
-                extremityMap[extremityKey]?.let { words ->
-                    candidates.addAll(words)
-                }
+                extremityMap[extremityKey]?.let { candidates.addAll(it) }
             }
         }
 
         // If no candidates found with extremities, be less strict
-        if (candidates.isEmpty() && touchedChars.isNotEmpty()) {
-            Log.d(TAG, "No candidates with extremities, falling back to first/last touched")
+        if (candidates.isEmpty()) {
+            Log.d(TAG, "No candidates with extremities, falling back to touched keys")
+            // Fall back to using first and last touched keys
+            if (touchedKeys.isNotEmpty()) {
+                val firstKey = touchedKeys[0]
+                val lastKey = touchedKeys[touchedKeys.size - 1]
 
-            val first = touchedChars.first()
-            val last = touchedChars.last()
-            val extremityKey = "$first$last"
-
-            extremityMap[extremityKey]?.let { words ->
-                candidates.addAll(words)
+                val firstKv = firstKey.keys.getOrNull(0)
+                val lastKv = lastKey.keys.getOrNull(0)
+                if (firstKv != null && lastKv != null) {
+                    val first = firstKv.getString().lowercase()[0]
+                    val last = lastKv.getString().lowercase()[0]
+                    val extremityKey = "$first$last"
+                    extremityMap[extremityKey]?.let { candidates.addAll(it) }
+                }
             }
         }
 
-        val result = if (candidates.isEmpty()) {
-            dictionary.keys.toList()
-        } else {
-            candidates.distinct()
+        Log.d(TAG, "Pruned to ${candidates.size} candidates from ${dictionary.size}")
+
+        return if (candidates.isEmpty()) dictionary.keys.toList() else candidates
+    }
+
+    /**
+     * Find the N closest keys to a given point
+     * Since we don't have key positions, use the touched keys list
+     */
+    private fun findClosestKeys(
+        point: PointF,
+        keys: List<KeyboardData.Key>,
+        n: Int
+    ): List<Char> {
+        val result = mutableListOf<Char>()
+
+        // Since we don't have key positions in KeyboardData.Key,
+        // we'll use the first and last touched keys as approximation
+        // This is a simplified approach - ideally we'd have access to key bounds
+
+        for (key in keys) {
+            val kv = key.keys.getOrNull(0)
+            if (kv == null || !isAlphabeticKey(kv)) continue
+
+            val keyChar = kv.getString().lowercase()[0]
+            if (!result.contains(keyChar)) {
+                result.add(keyChar)
+            }
+
+            if (result.size >= n) break
         }
 
-        Log.d(TAG, "Pruned to ${result.size} candidates from ${dictionary.size}")
         return result
     }
 
     /**
-     * Simplified version that takes start and end characters directly
-     *
-     * @param startChar First character of swipe
-     * @param endChar Last character of swipe
-     * @return Pruned list of candidate words
+     * Calculate distance between two points
      */
-    fun pruneByExtremities(startChar: Char, endChar: Char): List<String> {
-        val extremityKey = "$startChar$endChar"
-        return extremityMap[extremityKey]?.toList() ?: dictionary.keys.toList()
+    private fun distance(x1: Float, y1: Float, x2: Float, y2: Float): Float {
+        val dx = x2 - x1
+        val dy = y2 - y1
+        return sqrt(dx * dx + dy * dy)
     }
+
+    /**
+     * Check if a key value represents an alphabetic character
+     */
+    private fun isAlphabeticKey(kv: KeyValue?): Boolean {
+        if (kv == null) return false
+
+        return when (kv.getKind()) {
+            KeyValue.Kind.Char -> {
+                val c = kv.getChar()
+                c in 'a'..'z' || c in 'A'..'Z'
+            }
+            KeyValue.Kind.String -> {
+                val s = kv.getString()
+                s.length == 1 && (s[0] in 'a'..'z' || s[0] in 'A'..'Z')
+            }
+            else -> false
+        }
+    }
+
+    /**
+     * Simple class to hold key-distance pairs
+     */
+    private data class KeyDistance(
+        val key: Char,
+        val distance: Float
+    )
 
     /**
      * Prune candidates by path length similarity.
      * Words that are too different in length from the swipe path are removed.
-     *
-     * @param swipePath The swipe path
-     * @param candidates Current candidate list
-     * @param keyWidth Average key width (in pixels)
-     * @param lengthThreshold Tolerance factor (default 3.0 = 3x key width)
-     * @return Filtered candidate list
      */
     fun pruneByLength(
         swipePath: List<PointF>,
         candidates: List<String>,
         keyWidth: Float,
-        lengthThreshold: Float = 3.0f
+        lengthThreshold: Float
     ): List<String> {
         if (swipePath.size < 2) return candidates
 
@@ -152,7 +185,7 @@ class SwipePruner(private val dictionary: Map<String, Int>) {
 
         val filtered = candidates.filter { word ->
             // Estimate ideal path length for this word
-            // Approximate as (word.length - 1) * average key distance
+            // Approximate as (word.length() - 1) * average key distance
             val idealLength = (word.length - 1) * keyWidth * 0.8f
 
             // Check if within threshold
@@ -162,67 +195,5 @@ class SwipePruner(private val dictionary: Map<String, Int>) {
         Log.d(TAG, "Length pruning: ${candidates.size} -> ${filtered.size}")
 
         return if (filtered.isEmpty()) candidates else filtered
-    }
-
-    /**
-     * Calculate distance between two points
-     */
-    private fun distance(x1: Float, y1: Float, x2: Float, y2: Float): Float {
-        val dx = x2 - x1
-        val dy = y2 - y1
-        return sqrt(dx * dx + dy * dy)
-    }
-
-    /**
-     * Get all words that start with a specific character
-     */
-    fun getWordsStartingWith(c: Char): List<String> {
-        return dictionary.keys.filter { it.isNotEmpty() && it[0] == c }
-    }
-
-    /**
-     * Get all words that end with a specific character
-     */
-    fun getWordsEndingWith(c: Char): List<String> {
-        return dictionary.keys.filter { it.isNotEmpty() && it[it.length - 1] == c }
-    }
-
-    /**
-     * Get all unique first-last letter pairs in dictionary
-     */
-    fun getExtremityPairs(): Set<String> {
-        return extremityMap.keys
-    }
-
-    /**
-     * Get statistics about the pruner
-     */
-    fun getStats(): String {
-        return buildString {
-            append("SwipePruner Statistics:\n")
-            append("- Dictionary size: ${dictionary.size}\n")
-            append("- Extremity pairs: ${extremityMap.size}\n")
-            append("- Avg words per pair: ${dictionary.size.toFloat() / extremityMap.size.coerceAtLeast(1)}\n")
-
-            val pairCounts = extremityMap.values.map { it.size }.sorted()
-            if (pairCounts.isNotEmpty()) {
-                append("- Min words per pair: ${pairCounts.first()}\n")
-                append("- Max words per pair: ${pairCounts.last()}\n")
-                append("- Median words per pair: ${pairCounts[pairCounts.size / 2]}\n")
-            }
-        }
-    }
-
-    /**
-     * Estimate pruning efficiency for a given extremity pair
-     *
-     * @param startChar First character
-     * @param endChar Last character
-     * @return Reduction ratio (e.g., 0.1 means 90% reduction)
-     */
-    fun estimatePruningEfficiency(startChar: Char, endChar: Char): Float {
-        val extremityKey = "$startChar$endChar"
-        val candidateCount = extremityMap[extremityKey]?.size ?: dictionary.size
-        return candidateCount.toFloat() / dictionary.size
     }
 }

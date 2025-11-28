@@ -1,105 +1,123 @@
 package tribixbite.keyboard2
 
 import android.content.Context
+import android.util.Log
+import com.google.gson.Gson
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
 
 /**
- * Complete tokenizer matching Java implementation
+ * Tokenizer for neural swipe prediction
+ * Handles character-to-index mapping for ONNX model input
+ * Matches the tokenizer configuration from the web demo
  */
 class SwipeTokenizer {
-    
     companion object {
         private const val TAG = "SwipeTokenizer"
-        private const val VOCAB_SIZE = 30
-    }
-    
-    // Character to token mapping
-    private val charToToken = mutableMapOf<Char, Int>()
-    private val tokenToChar = mutableMapOf<Int, Char>()
-    
-    fun initialize() {
-        // Initialize character mappings
-        charToToken.clear()
-        tokenToChar.clear()
-        
-        // Special tokens
-        tokenToChar[0] = '\u0000' // PAD
-        tokenToChar[1] = '\u0001' // UNK  
-        tokenToChar[2] = '\u0002' // SOS
-        tokenToChar[3] = '\u0003' // EOS
-        
-        // Character tokens (4-29 for a-z)
-        ('a'..'z').forEachIndexed { index, char ->
-            val tokenId = index + 4
-            charToToken[char] = tokenId
-            tokenToChar[tokenId] = char
-        }
-        
-        logD("Tokenizer initialized with ${charToToken.size} character mappings")
-    }
-    
-    fun charToToken(char: Char): Int {
-        return charToToken[char.lowercaseChar()] ?: 1 // UNK token
-    }
-    
-    fun tokenToChar(token: Int): Char {
-        return tokenToChar[token] ?: '?'
-    }
-    
-    fun tokensToWord(tokens: List<Long>): String {
-        return tokens.mapNotNull { token ->
-            val char = tokenToChar(token.toInt())
-            if (char.isLetter()) char.toString() else null
-        }.joinToString("")
-    }
-    
-    fun wordToTokens(word: String): List<Long> {
-        val tokens = mutableListOf<Long>()
-        tokens.add(2L) // SOS token
-        
-        word.lowercase().forEach { char ->
-            tokens.add(charToToken(char).toLong())
-        }
-        
-        tokens.add(3L) // EOS token
-        return tokens
-    }
-    
-    fun isValidToken(token: Int): Boolean {
-        return token in 0 until VOCAB_SIZE
-    }
-    
-    val vocabularySize: Int get() = VOCAB_SIZE
 
-    private fun logD(message: String) {
-        android.util.Log.d(TAG, message)
+        // Special token indices (matching web demo)
+        const val PAD_IDX = 0
+        const val UNK_IDX = 1
+        const val SOS_IDX = 2
+        const val EOS_IDX = 3
     }
-}
 
-/**
- * Use complete optimized vocabulary implementation
- */
-class OptimizedVocabulary(context: Context) {
-    private val impl = OptimizedVocabularyImpl(context)
-    
-    suspend fun loadVocabulary(): Boolean = impl.loadVocabulary()
-    fun isLoaded(): Boolean = impl.isLoaded()
-    fun getStats(): VocabStats = impl.getStats().let { stats ->
-        VocabStats(stats.totalWords)
-    }
-    
-    fun filterPredictions(candidates: List<CandidateWord>, stats: SwipeStats): List<FilteredPrediction> {
-        val implCandidates = candidates.map { 
-            OptimizedVocabularyImpl.CandidateWord(it.word, it.confidence) 
+    // Character mappings
+    private val charToIdx: MutableMap<Char, Int> = mutableMapOf()
+    private val idxToChar: MutableMap<Int, Char> = mutableMapOf()
+    private var isLoadedFlag = false
+
+    // Helper class for Gson parsing
+    private data class TokenizerConfig(
+        val char_to_idx: Map<String, Int>?,
+        val idx_to_char: Map<String, String>?
+    )
+
+    /**
+     * Load tokenizer configuration from assets
+     */
+    fun loadFromAssets(context: Context): Boolean {
+        return try {
+            Log.d(TAG, "Loading tokenizer configuration from assets")
+
+            val inputStream = context.assets.open("models/tokenizer_config.json")
+            val reader = BufferedReader(InputStreamReader(inputStream))
+
+            val gson = Gson()
+            val config = gson.fromJson(reader, TokenizerConfig::class.java)
+            reader.close()
+
+            charToIdx.clear()
+            idxToChar.clear()
+
+            // First, load idx_to_char if present
+            config.idx_to_char?.forEach { (key, value) ->
+                // Skip special tokens like <pad>, <sos>, <eos>, <unk>
+                if (value.length == 1) {
+                    val idx = key.toInt()
+                    val ch = value[0]
+                    idxToChar[idx] = ch
+                    // Build reverse mapping
+                    charToIdx[ch] = idx
+                }
+            }
+
+            // If char_to_idx is explicitly provided, use it (overrides auto-generated)
+            config.char_to_idx?.forEach { (key, value) ->
+                if (key.isNotEmpty()) {
+                    charToIdx[key[0]] = value
+                }
+            }
+
+            isLoadedFlag = true
+            Log.d(TAG, "Tokenizer loaded with ${charToIdx.size} characters")
+            true
+        } catch (e: IOException) {
+            Log.w(TAG, "Could not load tokenizer from assets, using defaults: ${e.message}")
+            isLoadedFlag = false
+            false
         }
-        val implStats = OptimizedVocabularyImpl.SwipeStats(stats.pathLength, stats.duration, stats.straightnessRatio)
-        
-        return impl.filterPredictions(implCandidates, implStats).map {
-            FilteredPrediction(it.word, it.score)
-        }
     }
-    
-    data class VocabStats(val totalWords: Int)
-    data class CandidateWord(val word: String, val confidence: Float)
-    data class FilteredPrediction(val word: String, val score: Float)
-    data class SwipeStats(val pathLength: Float, val duration: Float, val straightnessRatio: Float)
+
+    /**
+     * Convert character to token index
+     */
+    fun charToIndex(c: Char): Int {
+        val ch = c.lowercaseChar()
+        return charToIdx[ch] ?: UNK_IDX
+    }
+
+    /**
+     * Convert token index to character
+     */
+    fun indexToChar(idx: Int): Char {
+        return idxToChar[idx] ?: '?'
+    }
+
+    /**
+     * Get vocabulary size
+     */
+    fun getVocabSize(): Int {
+        return charToIdx.size
+    }
+
+    /**
+     * Check if tokenizer is loaded
+     */
+    fun isLoaded(): Boolean {
+        return isLoadedFlag
+    }
+
+    private fun addMapping(idx: Int, ch: Char) {
+        charToIdx[ch] = idx
+        idxToChar[idx] = ch
+    }
+
+    /**
+     * Get character-to-index mapping (for debugging)
+     */
+    fun getCharToIdxMapping(): Map<Char, Int> {
+        return charToIdx.toMap()
+    }
 }

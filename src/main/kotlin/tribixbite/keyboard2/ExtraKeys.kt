@@ -1,197 +1,131 @@
 package tribixbite.keyboard2
 
-/**
- * System for dynamically adding extra keys to keyboard layouts.
- *
- * Supports:
- * - Script-specific key additions (e.g., accents only on Latin layouts)
- * - Alternative key substitution (use alternative if main key unavailable)
- * - Position hints (place key next to another key)
- * - Intelligent merging of multiple extra key sources
- *
- * Example format: "accent_aigu:´@e|f11_placeholder@f10"
- * - accent_aigu is the key, ´ is alternative, place near 'e'
- * - f11_placeholder placed near f10
- */
-data class ExtraKeys(
-    val keys: List<ExtraKey>
-) {
+class ExtraKeys internal constructor(private val ks: Collection<ExtraKey>) {
+
     /**
-     * Add extra keys to destination map based on query context.
-     * Keys already in dst might affect decisions (see ExtraKey.compute).
+     * Add the keys that should be added to the keyboard into [dst]. Keys
+     * already added to [dst] might have an impact, see [ExtraKey.compute].
      */
-    fun compute(dst: MutableMap<KeyValue, KeyboardData.PreferredPos>, query: Query) {
-        keys.forEach { it.compute(dst, query) }
-    }
-
-    companion object {
-        /** Empty extra keys collection */
-        val EMPTY = ExtraKeys(emptyList())
-
-        /**
-         * Parse extra keys from string format: "key1:alt1:alt2@next_to|key2@next_to2"
-         *
-         * Format:
-         * - Keys separated by "|"
-         * - Alternatives separated by ":"
-         * - Position hint after "@"
-         *
-         * Examples:
-         * - "f11_placeholder" - Simple key
-         * - "accent_aigu:´@e" - Key with alternative, place near 'e'
-         * - "f11@f10|f12@f11" - Multiple keys with position hints
-         */
-        fun parse(script: String?, str: String): ExtraKeys {
-            if (str.isBlank()) return EMPTY
-
-            val keys = str.split("|").mapNotNull { keySpec ->
-                if (keySpec.isBlank()) null
-                else ExtraKey.parse(keySpec, script)
-            }
-
-            return ExtraKeys(keys)
-        }
-
-        /**
-         * Merge multiple ExtraKeys collections.
-         *
-         * Behavior:
-         * - Identical keys are merged (alternatives concatenated)
-         * - Script conflicts generalize to null (any script)
-         * - Position hints must match or become null
-         */
-        fun merge(keysList: List<ExtraKeys>): ExtraKeys {
-            val mergedKeys = mutableMapOf<KeyValue, ExtraKey>()
-
-            for (keys in keysList) {
-                for (key in keys.keys) {
-                    val existing = mergedKeys[key.kv]
-                    val merged = if (existing != null) {
-                        key.mergeWith(existing)
-                    } else {
-                        key
-                    }
-                    mergedKeys[key.kv] = merged
-                }
-            }
-
-            return ExtraKeys(mergedKeys.values.toList())
+    fun compute(dst: MutableMap<KeyValue, KeyboardData.PreferredPos>, q: Query) {
+        for (k in ks) {
+            k.compute(dst, q)
         }
     }
 
-    /**
-     * Represents a single extra key with placement constraints.
-     */
-    data class ExtraKey(
-        /** The key to add */
+    internal class ExtraKey(
+        /** The key to add. */
         val kv: KeyValue,
-
-        /** Layout script constraint (null = any script) */
+        /** The key will be added to layouts of the same script. If null, might be
+         * added to layouts of any script. */
         val script: String?,
-
-        /** Alternative keys - prevents addition if all present */
+        /** The key will not be added to layout that already contain all the
+         * alternatives. */
         val alternatives: List<KeyValue>,
-
-        /** Preferred position hint (place next to this key) */
+        /** The key next to which to add. Might be [null]. */
         val nextTo: KeyValue?
     ) {
         /**
-         * Add this key to destination if conditions are met.
-         *
-         * Logic:
-         * 1. If only 1 alternative and main key not in dst → use alternative
-         * 2. Check script compatibility (null matches any)
-         * 3. Check if any alternative is missing from layout
-         * 4. If all pass → add with position hint
+         * Whether the key should be added to the keyboard.
          */
-        fun compute(dst: MutableMap<KeyValue, KeyboardData.PreferredPos>, query: Query) {
-            // Use alternative if it's the only one and main key not already added
+        fun compute(dst: MutableMap<KeyValue, KeyboardData.PreferredPos>, q: Query) {
+            // Add the alternative if it's the only one. The list of alternatives is
+            // enforced to be complete by the merging step. The same [kv] will not
+            // appear again in the list of extra keys with a different list of
+            // alternatives.
+            // Selecting the dead key in the "Add key to the keyboard" option would
+            // disable this behavior for a key.
             val useAlternative = (alternatives.size == 1 && !dst.containsKey(kv))
-
-            // Check script compatibility and alternative presence
-            val scriptMatches = (query.script == null || script == null || query.script == script)
-            val alternativesMissing = (alternatives.isEmpty() || !query.present.containsAll(alternatives))
-
-            if (scriptMatches && alternativesMissing) {
-                val keyToAdd = if (useAlternative) alternatives[0] else kv
-                val pos = if (nextTo != null) {
-                    KeyboardData.PreferredPos(nextTo)
-                } else {
-                    KeyboardData.PreferredPos.DEFAULT
+            if ((q.script == null || script == null || q.script == script) &&
+                (alternatives.isEmpty() || !q.present.containsAll(alternatives))) {
+                val kvToAdd = if (useAlternative) alternatives[0] else kv
+                var pos = KeyboardData.PreferredPos.DEFAULT
+                if (nextTo != null) {
+                    pos = KeyboardData.PreferredPos(pos)
+                    pos.next_to = nextTo
                 }
-                dst[keyToAdd] = pos
+                dst[kvToAdd] = pos
             }
         }
 
         /**
-         * Merge two ExtraKey instances (must have same kv).
-         *
-         * Rules:
-         * - script: null if different, otherwise keep value
-         * - alternatives: concatenate both lists
-         * - nextTo: null if different, otherwise keep value
+         * Return a new key from two. [kv] are expected to be equal. [script] is
+         * generalized to [null] on any conflict. [alternatives] are concatenated.
          */
-        fun mergeWith(other: ExtraKey): ExtraKey {
-            require(kv == other.kv) { "Cannot merge ExtraKeys with different KeyValues" }
-
-            val mergedScript = oneOrNone(script, other.script)
-            val mergedNextTo = oneOrNone(nextTo, other.nextTo)
-            val mergedAlternatives = alternatives + other.alternatives
-
-            return ExtraKey(kv, mergedScript, mergedAlternatives, mergedNextTo)
+        fun mergeWith(k2: ExtraKey): ExtraKey {
+            val mergedScript = oneOrNone(script, k2.script)
+            val mergedAlts = alternatives + k2.alternatives
+            val mergedNextTo = oneOrNone(nextTo, k2.nextTo)
+            return ExtraKey(kv, mergedScript, mergedAlts, mergedNextTo)
         }
 
         /**
-         * Return a if b is null, b if a is null, a if equal, null otherwise.
+         * If one of [a] or [b] is null, return the other. If [a] and [b] are
+         * equal, return [a]. Otherwise, return null.
          */
         private fun <E> oneOrNone(a: E?, b: E?): E? {
             return when {
                 a == null -> b
-                b == null -> a
-                a == b -> a
+                b == null || a == b -> a
                 else -> null
             }
         }
 
         companion object {
             /**
-             * Parse single extra key from string: "key:alt1:alt2@next_to"
-             *
-             * Format:
-             * - Key name first
-             * - Alternatives after ":"
-             * - Position hint after "@"
+             * Extra keys are of the form "key name" or "key name:alt1:alt2@next_to".
              */
-            fun parse(str: String, script: String?): ExtraKey? {
-                if (str.isBlank()) return null
-
-                // Split on @ for position hint
-                val parts = str.split("@", limit = 2)
-                val keyPart = parts[0]
-                val nextToStr = parts.getOrNull(1)
-
-                // Split key part on : for alternatives
-                val keyNames = keyPart.split(":")
-                if (keyNames.isEmpty()) return null
-
-                // First is main key, rest are alternatives
-                val mainKey = KeyValue.getKeyByName(keyNames[0]) ?: return null
-                val alternatives = keyNames.drop(1).mapNotNull { KeyValue.getKeyByName(it) }
-                val nextTo = nextToStr?.let { KeyValue.getKeyByName(it) }
-
-                return ExtraKey(mainKey, script, alternatives, nextTo)
+            @JvmStatic
+            fun parse(str: String, script: String): ExtraKey {
+                val splitOnAt = str.split("@", limit = 2)
+                val keyNames = splitOnAt[0].split(":")
+                val kv = KeyValue.getKeyByName(keyNames[0])
+                val alts = keyNames.drop(1).map { KeyValue.getKeyByName(it) }
+                val nextTo = if (splitOnAt.size > 1) {
+                    KeyValue.getKeyByName(splitOnAt[1])
+                } else {
+                    null
+                }
+                return ExtraKey(kv, script, alts, nextTo)
             }
         }
     }
 
-    /**
-     * Query context for deciding whether to add extra keys.
-     */
-    data class Query(
-        /** Script of current layout (null = any script) */
+    class Query(
+        /** Script of the current layout. Might be null. */
         val script: String?,
-
-        /** Keys already present on the layout */
+        /** Keys present on the layout. */
         val present: Set<KeyValue>
     )
+
+    companion object {
+        @JvmField
+        val EMPTY = ExtraKeys(emptyList())
+
+        @JvmStatic
+        fun parse(script: String, str: String): ExtraKeys {
+            val dst = mutableListOf<ExtraKey>()
+            val ks = str.split("|")
+            for (k in ks) {
+                dst.add(ExtraKey.parse(k, script))
+            }
+            return ExtraKeys(dst)
+        }
+
+        /**
+         * Merge identical keys. This is required to decide whether to add
+         * alternatives. Script is generalized (set to null) on any conflict.
+         */
+        @JvmStatic
+        fun merge(kss: List<ExtraKeys>): ExtraKeys {
+            val mergedKeys = mutableMapOf<KeyValue, ExtraKey>()
+            for (ks in kss) {
+                for (k in ks.ks) {
+                    val k2 = mergedKeys[k.kv]
+                    val mergedKey = if (k2 != null) k.mergeWith(k2) else k
+                    mergedKeys[k.kv] = mergedKey
+                }
+            }
+            return ExtraKeys(mergedKeys.values)
+        }
+    }
 }

@@ -19,6 +19,6 @@
     <TextView android:id="@+id/launcher_tryhere_text" style="@style/paragraph" android:text="@string/launcher_tryhere"/>
     <EditText android:id="@+id/launcher_tryhere_area" style="@style/paragraph" android:inputType="text" android:hint="@string/launcher_tryhere_hint" android:importantForAutofill="no"/>
     <TextView style="@style/paragraph" android:text="@string/launcher_sourcecode"/>
-    <TextView style="@style/paragraph" android:text="https://github.com/tribixbite/CleverKeys" android:autoLink="web" android:linksClickable="true"/>
+    <TextView style="@style/paragraph" android:text="https://github.com/Julow/Unexpected-Keyboard" android:autoLink="web" android:linksClickable="true"/>
   </LinearLayout>
 </ScrollView>

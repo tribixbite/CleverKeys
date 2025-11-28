@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content">
-  <TextView android:id="@+id/clipboard_pin_text" style="@style/clipboardEntry" android:maxLines="3"/>
-  <LinearLayout style="@style/clipboardEntryButtons">
+  <TextView android:id="@+id/clipboard_pin_text" style="@style/clipboardEntry" android:maxLines="1" android:ellipsize="end"/>
+  <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="top" android:layout_marginTop="7dp" android:layout_marginRight="12dp">
+    <View android:id="@+id/clipboard_pin_expand" style="@style/clipboardEntryButton" android:background="@drawable/ic_expand_more" android:visibility="gone" android:layout_marginRight="4dp"/>
     <View android:id="@+id/clipboard_pin_paste" style="@style/clipboardEntryButton" android:background="@drawable/ic_clipboard_paste"/>
     <View android:id="@+id/clipboard_pin_remove" style="@style/clipboardEntryButton" android:background="@drawable/ic_delete"/>
   </LinearLayout>

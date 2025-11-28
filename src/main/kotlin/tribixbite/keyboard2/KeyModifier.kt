@@ -3,438 +3,319 @@ package tribixbite.keyboard2
 import android.view.KeyCharacterMap
 import android.view.KeyEvent
 
-/**
- * Key modifier system matching Java KeyModifier.java
- * Handles shift, ctrl, alt, fn, gesture, and diacritic modifiers
- */
 object KeyModifier {
-
-    // Modmap for custom key remapping (initially null)
+    /** The optional modmap takes priority over modifiers usual behaviors. Set to
+        [null] to disable. */
     private var modmap: Modmap? = null
 
-    /**
-     * Set modmap for keyboard layout customization
-     */
+    @JvmStatic
     fun set_modmap(mm: Modmap?) {
         modmap = mm
     }
 
-    /**
-     * Main modifier application - applies all modifiers in sequence
-     * Matches Java modify(KeyValue k, Pointers.Modifiers mods)
-     */
+    @JvmStatic
+    @Deprecated("Use setModmap instead", ReplaceWith("setModmap(mm)"))
+    fun setModmap(mm: Modmap?) {
+        modmap = mm
+    }
+
+    /** Modify a key according to modifiers. */
+    @JvmStatic
     fun modify(k: KeyValue?, mods: Pointers.Modifiers): KeyValue? {
         if (k == null) return null
-
-        var result: KeyValue? = k
-        for (i in 0 until mods.size()) {
+        val nMods = mods.size()
+        var r: KeyValue = k
+        for (i in 0 until nMods) {
             val mod = mods.get(i)
-            result = modify(result, mod)
-        }
-        return result
-    }
-
-    /**
-     * Modify key value by KeyValue modifier
-     */
-    private fun modify(k: KeyValue?, mod: KeyValue): KeyValue? {
-        if (k == null) return null
-
-        return when {
-            mod.isModifier() -> {
-                val modifier = mod.getModifierValue()
-                if (modifier != null) modify(k, modifier) else k
+            if (mod != null) {
+                r = modify(r, mod)
             }
+        }
+        /* Keys with an empty string are placeholder keys. */
+        if (r.getString().isEmpty()) return null
+        return r
+    }
+
+    @JvmStatic
+    fun modify(k: KeyValue, mod: KeyValue): KeyValue {
+        return when (mod.getKind()) {
+            KeyValue.Kind.Modifier ->
+                modify(k, mod.getModifier())
+            KeyValue.Kind.Compose_pending ->
+                applyComposePending(mod.getPendingCompose(), k)
+            KeyValue.Kind.Hangul_initial -> {
+                if (k == mod) // Allow typing the initial in letter form
+                    KeyValue.makeStringKey(k.getString(), KeyValue.FLAG_GREYED)
+                else
+                    combineHangulInitial(k, mod.getHangulPrecomposed())
+            }
+            KeyValue.Kind.Hangul_medial ->
+                combineHangulMedial(k, mod.getHangulPrecomposed())
             else -> k
         }
     }
 
-    /**
-     * Modify key value by Modifier enum - the core switch statement
-     * Matches Java modify(KeyValue k, KeyValue.Modifier mod)
-     */
-    fun modify(k: KeyValue?, mod: KeyValue.Modifier): KeyValue? {
-        if (k == null) return null
-
+    @JvmStatic
+    fun modify(k: KeyValue, mod: KeyValue.Modifier): KeyValue {
         return when (mod) {
-            KeyValue.Modifier.SHIFT -> apply_shift(k)
-            KeyValue.Modifier.CTRL -> apply_ctrl(k)
-            KeyValue.Modifier.ALT, KeyValue.Modifier.META -> turn_into_keyevent(k)
-            KeyValue.Modifier.FN -> apply_fn(k)
-            KeyValue.Modifier.GESTURE -> apply_gesture(k)
-
-            // Diacritical modifiers
-            KeyValue.Modifier.GRAVE -> apply_dead_char(k, '\u0300')
-            KeyValue.Modifier.AIGU -> apply_dead_char(k, '\u0301')
-            KeyValue.Modifier.CIRCONFLEXE -> apply_dead_char(k, '\u0302')
-            KeyValue.Modifier.TILDE -> apply_dead_char(k, '\u0303')
-            KeyValue.Modifier.CEDILLE -> apply_dead_char(k, '\u0327')
-            KeyValue.Modifier.TREMA -> apply_dead_char(k, '\u0308')
-            KeyValue.Modifier.CARON -> apply_dead_char(k, '\u030C')
-            KeyValue.Modifier.RING -> apply_dead_char(k, '\u030A')
-            KeyValue.Modifier.MACRON -> apply_dead_char(k, '\u0304')
-            KeyValue.Modifier.OGONEK -> apply_dead_char(k, '\u0328')
-            KeyValue.Modifier.DOT_ABOVE -> apply_dead_char(k, '\u0307')
-            KeyValue.Modifier.BREVE -> apply_dead_char(k, '\u0306')
-            KeyValue.Modifier.DOUBLE_AIGU -> apply_compose(k, ComposeKeyData.ACCENT_DOUBLE_AIGU)
-            KeyValue.Modifier.ORDINAL -> apply_compose(k, ComposeKeyData.ACCENT_ORDINAL)
-            KeyValue.Modifier.SUPERSCRIPT -> apply_compose(k, ComposeKeyData.ACCENT_SUPERSCRIPT)
-            KeyValue.Modifier.SUBSCRIPT -> apply_compose(k, ComposeKeyData.ACCENT_SUBSCRIPT)
-            KeyValue.Modifier.ARROWS -> apply_compose(k, ComposeKeyData.ACCENT_ARROWS)
-            KeyValue.Modifier.BOX -> apply_compose(k, ComposeKeyData.ACCENT_BOX)
-            KeyValue.Modifier.SLASH -> apply_compose(k, ComposeKeyData.ACCENT_SLASH)
-            KeyValue.Modifier.BAR -> apply_compose(k, ComposeKeyData.ACCENT_BAR)
-            KeyValue.Modifier.DOT_BELOW -> apply_compose(k, ComposeKeyData.ACCENT_DOT_BELOW)
-            KeyValue.Modifier.HORN -> apply_compose(k, ComposeKeyData.ACCENT_HORN)
-            KeyValue.Modifier.HOOK_ABOVE -> apply_compose(k, ComposeKeyData.ACCENT_HOOK_ABOVE)
-            KeyValue.Modifier.DOUBLE_GRAVE -> apply_dead_char(k, '\u030F')
-            KeyValue.Modifier.ARROW_RIGHT -> apply_combining_char(k, "\u20D7")
-            KeyValue.Modifier.SELECTION_MODE -> apply_selection_mode(k)
-
+            KeyValue.Modifier.CTRL -> applyCtrl(k)
+            KeyValue.Modifier.ALT,
+            KeyValue.Modifier.META -> turnIntoKeyevent(k)
+            KeyValue.Modifier.FN -> applyFn(k)
+            KeyValue.Modifier.GESTURE -> applyGesture(k)
+            KeyValue.Modifier.SHIFT -> applyShift(k)
+            KeyValue.Modifier.GRAVE -> applyComposeOrDeadChar(k, ComposeKeyData.accent_grave, '\u02CB')
+            KeyValue.Modifier.AIGU -> applyComposeOrDeadChar(k, ComposeKeyData.accent_aigu, '\u00B4')
+            KeyValue.Modifier.CIRCONFLEXE -> applyComposeOrDeadChar(k, ComposeKeyData.accent_circonflexe, '\u02C6')
+            KeyValue.Modifier.TILDE -> applyComposeOrDeadChar(k, ComposeKeyData.accent_tilde, '\u02DC')
+            KeyValue.Modifier.CEDILLE -> applyComposeOrDeadChar(k, ComposeKeyData.accent_cedille, '\u00B8')
+            KeyValue.Modifier.TREMA -> applyComposeOrDeadChar(k, ComposeKeyData.accent_trema, '\u00A8')
+            KeyValue.Modifier.CARON -> applyComposeOrDeadChar(k, ComposeKeyData.accent_caron, '\u02C7')
+            KeyValue.Modifier.RING -> applyComposeOrDeadChar(k, ComposeKeyData.accent_ring, '\u02DA')
+            KeyValue.Modifier.MACRON -> applyComposeOrDeadChar(k, ComposeKeyData.accent_macron, '\u00AF')
+            KeyValue.Modifier.OGONEK -> applyComposeOrDeadChar(k, ComposeKeyData.accent_ogonek, '\u02DB')
+            KeyValue.Modifier.DOT_ABOVE -> applyComposeOrDeadChar(k, ComposeKeyData.accent_dot_above, '\u02D9')
+            KeyValue.Modifier.BREVE -> applyDeadChar(k, '\u02D8')
+            KeyValue.Modifier.DOUBLE_AIGU -> applyCompose(k, ComposeKeyData.accent_double_aigu)
+            KeyValue.Modifier.ORDINAL -> applyCompose(k, ComposeKeyData.accent_ordinal)
+            KeyValue.Modifier.SUPERSCRIPT -> applyCompose(k, ComposeKeyData.accent_superscript)
+            KeyValue.Modifier.SUBSCRIPT -> applyCompose(k, ComposeKeyData.accent_subscript)
+            KeyValue.Modifier.ARROWS -> applyCompose(k, ComposeKeyData.accent_arrows)
+            KeyValue.Modifier.BOX -> applyCompose(k, ComposeKeyData.accent_box)
+            KeyValue.Modifier.SLASH -> applyCompose(k, ComposeKeyData.accent_slash)
+            KeyValue.Modifier.BAR -> applyCompose(k, ComposeKeyData.accent_bar)
+            KeyValue.Modifier.DOT_BELOW -> applyCompose(k, ComposeKeyData.accent_dot_below)
+            KeyValue.Modifier.HORN -> applyCompose(k, ComposeKeyData.accent_horn)
+            KeyValue.Modifier.HOOK_ABOVE -> applyCompose(k, ComposeKeyData.accent_hook_above)
+            KeyValue.Modifier.DOUBLE_GRAVE -> applyCompose(k, ComposeKeyData.accent_double_grave)
+            KeyValue.Modifier.ARROW_RIGHT -> applyCombiningChar(k, "\u20D7")
+            KeyValue.Modifier.SELECTION_MODE -> applySelectionMode(k)
             else -> k
         }
     }
 
-    /**
-     * Modify key for long press action
-     */
-    fun modifyLongPress(k: KeyValue): KeyValue {
-        // Check for Event keys that have long press variants
-        if (k.isEvent()) {
-            val event = k.getEventValue()
-            return when (event) {
-                KeyValue.Event.CHANGE_METHOD_AUTO -> KeyValue.getKeyByName("change_method")
-                KeyValue.Event.SWITCH_VOICE_TYPING -> KeyValue.getKeyByName("voice_typing_chooser")
+    /** Modify a key after a long press. */
+    @JvmStatic
+    fun modify_long_press(k: KeyValue): KeyValue {
+        if (k.getKind() == KeyValue.Kind.Event) {
+            return when (k.getEvent()) {
+                KeyValue.Event.CHANGE_METHOD_AUTO ->
+                    KeyValue.getKeyByName("change_method")
+                KeyValue.Event.SWITCH_VOICE_TYPING ->
+                    KeyValue.getKeyByName("voice_typing_chooser")
                 else -> k
             }
         }
         return k
     }
 
-    /**
-     * Modify numpad script for different number systems
-     */
-    fun modify_numpad_script(numpad_script: String?): Int {
-        if (numpad_script == null) return -1
-        return when (numpad_script) {
-            "hindu-arabic" -> ComposeKeyData.NUMPAD_HINDU
-            "bengali" -> ComposeKeyData.NUMPAD_BENGALI
-            "devanagari" -> ComposeKeyData.NUMPAD_DEVANAGARI
-            "persian" -> ComposeKeyData.NUMPAD_PERSIAN
-            "gujarati" -> ComposeKeyData.NUMPAD_GUJARATI
-            "kannada" -> ComposeKeyData.NUMPAD_KANNADA
-            "tamil" -> ComposeKeyData.NUMPAD_TAMIL
+    @JvmStatic
+    @Deprecated("Use modifyLongPress instead", ReplaceWith("modifyLongPress(k)"))
+    fun modifyLongPress(k: KeyValue): KeyValue = modify_long_press(k)
+
+    /** Return the compose state that modifies the numpad script. */
+    @JvmStatic
+    fun modify_numpad_script(numpadScript: String?): Int {
+        if (numpadScript == null) return -1
+        return when (numpadScript) {
+            "hindu-arabic" -> ComposeKeyData.numpad_hindu
+            "bengali" -> ComposeKeyData.numpad_bengali
+            "devanagari" -> ComposeKeyData.numpad_devanagari
+            "persian" -> ComposeKeyData.numpad_persian
+            "gujarati" -> ComposeKeyData.numpad_gujarati
+            "kannada" -> ComposeKeyData.numpad_kannada
+            "tamil" -> ComposeKeyData.numpad_tamil
             else -> -1
         }
     }
 
-    // ========== Apply Methods ==========
+    @JvmStatic
+    @Deprecated("Use modifyNumpadScript instead", ReplaceWith("modifyNumpadScript(numpadScript)"))
+    fun modifyNumpadScript(numpadScript: String?): Int = modify_numpad_script(numpadScript)
 
-    /**
-     * Apply shift modifier
-     */
-    private fun apply_shift(k: KeyValue): KeyValue? {
-        // Check modmap first
-        modmap?.shift?.get(k)?.let { return it }
+    /** Keys that do not match any sequence are greyed. */
+    private fun applyComposePending(state: Int, kv: KeyValue): KeyValue {
+        return when (kv.getKind()) {
+            KeyValue.Kind.Char,
+            KeyValue.Kind.String -> {
+                val res = ComposeKey.apply(state, kv)
+                // Grey-out characters not part of any sequence.
+                if (res == null)
+                    kv.withFlags(kv.getFlags() or KeyValue.FLAG_GREYED)
+                else
+                    res
+            }
+            /* Tapping compose again exits the pending sequence. */
+            KeyValue.Kind.Compose_pending ->
+                KeyValue.getKeyByName("compose_cancel")
+            /* These keys are not greyed. */
+            KeyValue.Kind.Event,
+            KeyValue.Kind.Modifier ->
+                kv
+            /* Other keys cannot be part of sequences. */
+            else ->
+                kv.withFlags(kv.getFlags() or KeyValue.FLAG_GREYED)
+        }
+    }
 
-        // Try compose table for shift mappings
-        val composed = apply_compose(k, ComposeKeyData.shift)
-        if (composed != null && composed != k) return composed
+    /** Apply the given compose state or fallback to the dead_char. */
+    private fun applyComposeOrDeadChar(k: KeyValue, state: Int, deadChar: Char): KeyValue {
+        val r = ComposeKey.apply(state, k)
+        return r ?: applyDeadChar(k, deadChar)
+    }
 
-        // Apply shift to character
-        if (k.isChar()) {
-            val c = k.getCharValue()
-            val upper = Character.toUpperCase(c)
-            if (upper != c) {
-                return k.withChar(upper)
+    private fun applyCompose(k: KeyValue, state: Int): KeyValue {
+        val r = ComposeKey.apply(state, k)
+        return r ?: k
+    }
+
+    private fun applyDeadChar(k: KeyValue, deadChar: Char): KeyValue {
+        if (k.getKind() == KeyValue.Kind.Char) {
+            val c = k.getChar()
+            val modified = KeyCharacterMap.getDeadChar(deadChar.code, c.code).toChar()
+            if (modified.code != 0 && modified != c) {
+                return KeyValue.makeStringKey(modified.toString())
             }
         }
-
-        // Apply shift to string
-        if (k.isString()) {
-            val str = k.getStringValue()
-            if (str.isNotEmpty()) {
-                val upper = str.uppercase()
-                if (upper != str) {
-                    return k.withSymbol(upper)
-                }
-            }
-        }
-
         return k
     }
 
-    /**
-     * Apply ctrl modifier - convert to KeyEvent
-     */
-    private fun apply_ctrl(k: KeyValue): KeyValue? {
-        // Check modmap first
-        modmap?.ctrl?.get(k)?.let { return it }
-
-        return turn_into_keyevent(k)
-    }
-
-    /**
-     * Apply fn modifier
-     */
-    private fun apply_fn(k: KeyValue): KeyValue? {
-        // Check modmap first
-        modmap?.fn?.get(k)?.let { return it }
-
-        // Try compose table for fn mappings
-        val composed = apply_compose(k, ComposeKeyData.fn)
-        if (composed != null && composed != k) return composed
-
-        // Handle KeyEvent cases
-        if (k.isKeyEvent()) {
-            return apply_fn_keyevent(k)
+    private fun applyCombiningChar(k: KeyValue, combining: String): KeyValue {
+        if (k.getKind() == KeyValue.Kind.Char) {
+            return KeyValue.makeStringKey(k.getChar().toString() + combining, k.getFlags())
         }
-
-        // Handle Event cases
-        if (k.isEvent()) {
-            return apply_fn_event(k)
-        }
-
-        // Handle placeholder cases
-        if (k.isPlaceholder()) {
-            return apply_fn_placeholder(k)
-        }
-
-        // Handle editing keys
-        if (k.isEditing()) {
-            return apply_fn_editing(k)
-        }
-
         return k
     }
 
-    private fun apply_fn_keyevent(k: KeyValue): KeyValue {
-        val keycode = k.getKeyEventValue()
-        val name = when (keycode) {
+    private fun applyShift(k: KeyValue): KeyValue {
+        modmap?.let { mm ->
+            val mapped = mm.get(Modmap.M.Shift, k)
+            if (mapped != null) return mapped
+        }
+        val r = ComposeKey.apply(ComposeKeyData.shift, k)
+        if (r != null) return r
+
+        return when (k.getKind()) {
+            KeyValue.Kind.Char -> {
+                val kc = k.getChar()
+                val c = kc.uppercaseChar()
+                if (kc == c) k else k.withChar(c)
+            }
+            KeyValue.Kind.String -> {
+                val ks = k.getString()
+                val s = Utils.capitalize_string(ks)
+                if (s == ks) k else KeyValue.makeStringKey(s, k.getFlags())
+            }
+            else -> k
+        }
+    }
+
+    private fun applyFn(k: KeyValue): KeyValue {
+        modmap?.let { mm ->
+            val mapped = mm.get(Modmap.M.Fn, k)
+            if (mapped != null) return mapped
+        }
+        val name: String? = when (k.getKind()) {
+            KeyValue.Kind.Char,
+            KeyValue.Kind.String -> {
+                val r = ComposeKey.apply(ComposeKeyData.fn, k)
+                return r ?: k
+            }
+            KeyValue.Kind.Keyevent -> applyFnKeyevent(k.getKeyevent())
+            KeyValue.Kind.Event -> applyFnEvent(k.getEvent())
+            KeyValue.Kind.Placeholder -> applyFnPlaceholder(k.getPlaceholder())
+            KeyValue.Kind.Editing -> applyFnEditing(k.getEditing())
+            else -> null
+        }
+        return if (name == null) k else KeyValue.getKeyByName(name)
+    }
+
+    private fun applyFnKeyevent(code: Int): String? {
+        return when (code) {
             KeyEvent.KEYCODE_DPAD_UP -> "page_up"
             KeyEvent.KEYCODE_DPAD_DOWN -> "page_down"
             KeyEvent.KEYCODE_DPAD_LEFT -> "home"
             KeyEvent.KEYCODE_DPAD_RIGHT -> "end"
             KeyEvent.KEYCODE_ESCAPE -> "insert"
-            KeyEvent.KEYCODE_TAB -> return KeyValue.makeCharKey('\t')
-            KeyEvent.KEYCODE_PAGE_UP, KeyEvent.KEYCODE_PAGE_DOWN,
-            KeyEvent.KEYCODE_MOVE_HOME, KeyEvent.KEYCODE_MOVE_END -> return KeyValue.makePlaceholder(KeyValue.Placeholder.REMOVED)
-            else -> return k
-        }
-        return KeyValue.getKeyByName(name)
-    }
-
-    private fun apply_fn_event(k: KeyValue): KeyValue {
-        val event = k.getEventValue()
-        return when (event) {
-            KeyValue.Event.SWITCH_NUMERIC -> KeyValue.getKeyByName("switch_greekmath")
-            else -> k
+            KeyEvent.KEYCODE_TAB -> "\\t"
+            KeyEvent.KEYCODE_PAGE_UP,
+            KeyEvent.KEYCODE_PAGE_DOWN,
+            KeyEvent.KEYCODE_MOVE_HOME,
+            KeyEvent.KEYCODE_MOVE_END -> "removed"
+            else -> null
         }
     }
 
-    private fun apply_fn_placeholder(k: KeyValue): KeyValue {
-        val placeholder = k.getPlaceholderValue()
-        val name = when (placeholder) {
+    private fun applyFnEvent(ev: KeyValue.Event): String? {
+        return when (ev) {
+            KeyValue.Event.SWITCH_NUMERIC -> "switch_greekmath"
+            else -> null
+        }
+    }
+
+    private fun applyFnPlaceholder(p: KeyValue.Placeholder): String? {
+        return when (p) {
             KeyValue.Placeholder.F11 -> "f11"
             KeyValue.Placeholder.F12 -> "f12"
-            else -> return k
+            KeyValue.Placeholder.SHINDOT -> "shindot"
+            KeyValue.Placeholder.SINDOT -> "sindot"
+            KeyValue.Placeholder.OLE -> "ole"
+            KeyValue.Placeholder.METEG -> "meteg"
+            else -> null
         }
-        return KeyValue.getKeyByName(name)
     }
 
-    private fun apply_fn_editing(k: KeyValue): KeyValue {
-        val editing = k.getEditingValue()
-        val name = when (editing) {
+    private fun applyFnEditing(p: KeyValue.Editing): String? {
+        return when (p) {
             KeyValue.Editing.UNDO -> "redo"
             KeyValue.Editing.PASTE -> "pasteAsPlainText"
-            else -> return k
+            else -> null
         }
-        return KeyValue.getKeyByName(name)
     }
 
-    /**
-     * Apply gesture modifier (for roundtrip/circle gestures)
-     */
-    private fun apply_gesture(k: KeyValue): KeyValue? {
-        // Try shift first
-        val shifted = apply_shift(k)
-        if (shifted != null && shifted != k) return shifted
-
-        // Try fn
-        val fned = apply_fn(k)
-        if (fned != null && fned != k) return fned
-
-        // Special cases
-        if (k.isModifier()) {
-            val mod = k.getModifierValue()
-            if (mod == KeyValue.Modifier.SHIFT) {
-                return KeyValue.getKeyByName("capslock")
+    private fun applyCtrl(k: KeyValue): KeyValue {
+        var key = k
+        modmap?.let { mm ->
+            val mapped = mm.get(Modmap.M.Ctrl, k)
+            // Do not return the modified character right away, first turn it into a
+            // key event.
+            if (mapped != null) {
+                key = mapped
             }
         }
-
-        if (k.isKeyEvent()) {
-            val keycode = k.getKeyEventValue()
-            val name = when (keycode) {
-                KeyEvent.KEYCODE_DEL -> "delete_word"
-                KeyEvent.KEYCODE_FORWARD_DEL -> "forward_delete_word"
-                else -> return k
-            }
-            return KeyValue.getKeyByName(name)
-        }
-
-        return k
+        return turnIntoKeyevent(key)
     }
 
-    /**
-     * Apply selection mode modifier
-     */
-    private fun apply_selection_mode(k: KeyValue): KeyValue {
-        // Space cancels selection
-        if (k.isChar() && k.getCharValue() == ' ') {
-            return KeyValue.getKeyByName("selection_cancel")
-        }
+    private fun turnIntoKeyevent(k: KeyValue): KeyValue {
+        if (k.getKind() != KeyValue.Kind.Char) return k
 
-        // Slider keys in selection mode
-        if (k.isSlider()) {
-            val slider = k.getSliderValue()
-            val name = when (slider) {
-                KeyValue.Slider.Cursor_left -> "selection_cursor_left"
-                KeyValue.Slider.Cursor_right -> "selection_cursor_right"
-                else -> return k
-            }
-            return KeyValue.getKeyByName(name)
-        }
-
-        // Escape cancels selection
-        if (k.isKeyEvent() && k.getKeyEventValue() == KeyEvent.KEYCODE_ESCAPE) {
-            return KeyValue.getKeyByName("selection_cancel")
-        }
-
-        return k
-    }
-
-    /**
-     * Apply dead character (diacritic) to key
-     */
-    private fun apply_dead_char(k: KeyValue, deadChar: Char): KeyValue? {
-        if (k.isChar()) {
-            val c = k.getCharValue()
-            val modified = KeyCharacterMap.getDeadChar(deadChar.code, c.code)
-            if (modified != 0 && modified != c.code) {
-                return k.withChar(modified.toChar())
-            }
-        }
-        return k
-    }
-
-    /**
-     * Apply compose table to key using ComposeKeyData state machine
-     * @param k The key to modify
-     * @param composeIndex The starting index in the ComposeKeyData state machine
-     */
-    private fun apply_compose(k: KeyValue, composeIndex: Int): KeyValue? {
-        if (!k.isChar()) return k
-
-        val c = k.getCharValue()
-
-        // Navigate the compose state machine
-        try {
-            val states = ComposeKeyData.states
-            val edges = ComposeKeyData.edges
-
-            // State at composeIndex
-            val header = states[composeIndex].code
-            val length = edges[composeIndex]
-
-            // Header 0 means intermediate state with transitions
-            if (header == 0) {
-                // Binary search for character in transitions
-                var lo = 1
-                var hi = length - 1
-                while (lo <= hi) {
-                    val mid = (lo + hi) / 2
-                    val midChar = states[composeIndex + mid].code
-                    when {
-                        midChar < c.code -> lo = mid + 1
-                        midChar > c.code -> hi = mid - 1
-                        else -> {
-                            // Found the character - get the target state
-                            val targetState = edges[composeIndex + mid]
-                            val targetHeader = states[targetState].code
-                            val targetLength = edges[targetState]
-
-                            return when {
-                                // Single character result
-                                targetHeader > 0 && targetHeader != 0xFFFF -> {
-                                    k.withChar(targetHeader.toChar())
-                                }
-                                // String result
-                                targetHeader == 0xFFFF -> {
-                                    val sb = StringBuilder()
-                                    for (i in 1 until targetLength) {
-                                        sb.append(states[targetState + i])
-                                    }
-                                    k.withSymbol(sb.toString())
-                                }
-                                // Another intermediate state - not supported in single apply
-                                else -> k
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            // ComposeKeyData not initialized or error - return unchanged
-        }
-
-        return k
-    }
-
-    /**
-     * Apply combining character to key
-     */
-    private fun apply_combining_char(k: KeyValue, combining: String): KeyValue {
-        if (k.isChar()) {
-            return k.withSymbol(k.getCharValue().toString() + combining)
-        }
-        return k
-    }
-
-    /**
-     * Convert character key to KeyEvent key
-     * Critical for Ctrl+A, Ctrl+C, Ctrl+V, etc.
-     */
-    private fun turn_into_keyevent(k: KeyValue): KeyValue? {
-        if (!k.isChar()) return k
-
-        val c = k.getCharValue()
-        val keycode = when (c) {
-            'a', 'A' -> KeyEvent.KEYCODE_A
-            'b', 'B' -> KeyEvent.KEYCODE_B
-            'c', 'C' -> KeyEvent.KEYCODE_C
-            'd', 'D' -> KeyEvent.KEYCODE_D
-            'e', 'E' -> KeyEvent.KEYCODE_E
-            'f', 'F' -> KeyEvent.KEYCODE_F
-            'g', 'G' -> KeyEvent.KEYCODE_G
-            'h', 'H' -> KeyEvent.KEYCODE_H
-            'i', 'I' -> KeyEvent.KEYCODE_I
-            'j', 'J' -> KeyEvent.KEYCODE_J
-            'k', 'K' -> KeyEvent.KEYCODE_K
-            'l', 'L' -> KeyEvent.KEYCODE_L
-            'm', 'M' -> KeyEvent.KEYCODE_M
-            'n', 'N' -> KeyEvent.KEYCODE_N
-            'o', 'O' -> KeyEvent.KEYCODE_O
-            'p', 'P' -> KeyEvent.KEYCODE_P
-            'q', 'Q' -> KeyEvent.KEYCODE_Q
-            'r', 'R' -> KeyEvent.KEYCODE_R
-            's', 'S' -> KeyEvent.KEYCODE_S
-            't', 'T' -> KeyEvent.KEYCODE_T
-            'u', 'U' -> KeyEvent.KEYCODE_U
-            'v', 'V' -> KeyEvent.KEYCODE_V
-            'w', 'W' -> KeyEvent.KEYCODE_W
-            'x', 'X' -> KeyEvent.KEYCODE_X
-            'y', 'Y' -> KeyEvent.KEYCODE_Y
-            'z', 'Z' -> KeyEvent.KEYCODE_Z
+        val e = when (k.getChar()) {
+            'a' -> KeyEvent.KEYCODE_A
+            'b' -> KeyEvent.KEYCODE_B
+            'c' -> KeyEvent.KEYCODE_C
+            'd' -> KeyEvent.KEYCODE_D
+            'e' -> KeyEvent.KEYCODE_E
+            'f' -> KeyEvent.KEYCODE_F
+            'g' -> KeyEvent.KEYCODE_G
+            'h' -> KeyEvent.KEYCODE_H
+            'i' -> KeyEvent.KEYCODE_I
+            'j' -> KeyEvent.KEYCODE_J
+            'k' -> KeyEvent.KEYCODE_K
+            'l' -> KeyEvent.KEYCODE_L
+            'm' -> KeyEvent.KEYCODE_M
+            'n' -> KeyEvent.KEYCODE_N
+            'o' -> KeyEvent.KEYCODE_O
+            'p' -> KeyEvent.KEYCODE_P
+            'q' -> KeyEvent.KEYCODE_Q
+            'r' -> KeyEvent.KEYCODE_R
+            's' -> KeyEvent.KEYCODE_S
+            't' -> KeyEvent.KEYCODE_T
+            'u' -> KeyEvent.KEYCODE_U
+            'v' -> KeyEvent.KEYCODE_V
+            'w' -> KeyEvent.KEYCODE_W
+            'x' -> KeyEvent.KEYCODE_X
+            'y' -> KeyEvent.KEYCODE_Y
+            'z' -> KeyEvent.KEYCODE_Z
             '0' -> KeyEvent.KEYCODE_0
             '1' -> KeyEvent.KEYCODE_1
             '2' -> KeyEvent.KEYCODE_2
@@ -465,15 +346,77 @@ object KeyModifier {
             ' ' -> KeyEvent.KEYCODE_SPACE
             else -> return k
         }
-
-        return k.withKeyEvent(keycode)
+        return k.withKeyevent(e)
     }
 
-    /**
-     * Hangul initial consonant combination
-     */
-    fun combine_hangul_initial(medial: Char): Int {
-        return when (medial) {
+    /** Modify a key affected by a round-trip or a clockwise circle gesture. */
+    private fun applyGesture(k: KeyValue): KeyValue {
+        var modified = applyShift(k)
+        if (modified != k) return modified
+
+        modified = applyFn(k)
+        if (modified != k) return modified
+
+        val name: String? = when (k.getKind()) {
+            KeyValue.Kind.Modifier -> {
+                when (k.getModifier()) {
+                    KeyValue.Modifier.SHIFT -> "capslock"
+                    else -> null
+                }
+            }
+            KeyValue.Kind.Keyevent -> {
+                when (k.getKeyevent()) {
+                    KeyEvent.KEYCODE_DEL -> "delete_word"
+                    KeyEvent.KEYCODE_FORWARD_DEL -> "forward_delete_word"
+                    else -> null
+                }
+            }
+            else -> null
+        }
+        return if (name == null) k else KeyValue.getKeyByName(name)
+    }
+
+    private fun applySelectionMode(k: KeyValue): KeyValue {
+        val name: String? = when (k.getKind()) {
+            KeyValue.Kind.Char -> {
+                when (k.getChar()) {
+                    ' ' -> "selection_cancel"
+                    else -> null
+                }
+            }
+            KeyValue.Kind.Slider -> {
+                when (k.getSlider()) {
+                    KeyValue.Slider.Cursor_left -> "selection_cursor_left"
+                    KeyValue.Slider.Cursor_right -> "selection_cursor_right"
+                    else -> null
+                }
+            }
+            KeyValue.Kind.Keyevent -> {
+                when (k.getKeyevent()) {
+                    KeyEvent.KEYCODE_ESCAPE -> "selection_cancel"
+                    else -> null
+                }
+            }
+            else -> null
+        }
+        return if (name == null) k else KeyValue.getKeyByName(name)
+    }
+
+    /** Compose the precomposed initial with the medial [kv]. */
+    private fun combineHangulInitial(kv: KeyValue, precomposed: Int): KeyValue {
+        return when (kv.getKind()) {
+            KeyValue.Kind.Char ->
+                combineHangulInitial(kv, kv.getChar(), precomposed)
+            KeyValue.Kind.Hangul_initial ->
+                // No initials are expected to compose, grey out
+                kv.withFlags(kv.getFlags() or KeyValue.FLAG_GREYED)
+            else -> kv
+        }
+    }
+
+    private fun combineHangulInitial(kv: KeyValue, medial: Char, precomposed: Int): KeyValue {
+        val medialIdx = when (medial) {
+            // Vowels
             'ㅏ' -> 0
             'ㅐ' -> 1
             'ㅑ' -> 2
@@ -495,15 +438,26 @@ object KeyModifier {
             'ㅡ' -> 18
             'ㅢ' -> 19
             'ㅣ' -> 20
-            else -> -1
+            // Grey-out uncomposable characters
+            else -> return kv.withFlags(kv.getFlags() or KeyValue.FLAG_GREYED)
+        }
+        return KeyValue.makeHangulMedial(precomposed, medialIdx)
+    }
+
+    /** Combine the precomposed medial with the final [kv]. */
+    private fun combineHangulMedial(kv: KeyValue, precomposed: Int): KeyValue {
+        return when (kv.getKind()) {
+            KeyValue.Kind.Char ->
+                combineHangulMedial(kv, kv.getChar(), precomposed)
+            KeyValue.Kind.Hangul_initial ->
+                // Finals that can also be initials have this kind.
+                combineHangulMedial(kv, kv.getString()[0], precomposed)
+            else -> kv
         }
     }
 
-    /**
-     * Hangul medial vowel combination
-     */
-    fun combine_hangul_medial(final_cons: Char): Int {
-        return when (final_cons) {
+    private fun combineHangulMedial(kv: KeyValue, c: Char, precomposed: Int): KeyValue {
+        val finalIdx = when (c) {
             ' ' -> 0
             'ㄱ' -> 1
             'ㄲ' -> 2
@@ -532,7 +486,9 @@ object KeyModifier {
             'ㅌ' -> 25
             'ㅍ' -> 26
             'ㅎ' -> 27
-            else -> -1
+            // Grey-out uncomposable characters
+            else -> return kv.withFlags(kv.getFlags() or KeyValue.FLAG_GREYED)
         }
+        return KeyValue.makeHangulFinal(precomposed, finalIdx)
     }
 }

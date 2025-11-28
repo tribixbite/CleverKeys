@@ -1,67 +1,19 @@
 package tribixbite.keyboard2
 
 import android.graphics.PointF
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sqrt
 
 /**
- * Swipe Gesture Recognizer
- *
  * Recognizes swipe gestures across keyboard keys and tracks the path
- * for word prediction. Determines if a gesture qualifies as swipe typing
- * or medium swipe based on distance, velocity, and touched keys.
- *
- * Features:
- * - Distance and velocity-based swipe detection
- * - Medium swipe (2-letter) vs full swipe typing distinction
- * - Point filtering (distance threshold, velocity filtering)
- * - Key dwell time filtering to avoid false registrations
- * - Loop detection for repeated letters
- * - Detailed logging for analysis
- *
- * Thresholds:
- * - MIN_SWIPE_DISTANCE: 50px for full swipe typing
- * - MIN_MEDIUM_SWIPE_DISTANCE: 35px for 2-letter medium swipes
- * - VELOCITY_THRESHOLD: 0.15 px/ms (based on FlorisBoard)
- * - MIN_POINT_DISTANCE: 25px between registered points
- * - MIN_DWELL_TIME: 30ms on a key to register it
- *
- * Usage:
- * ```kotlin
- * val recognizer = SwipeGestureRecognizer()
- * recognizer.setKeyboardDimensions(keyWidth, keyHeight)
- * recognizer.startSwipe(x, y, key)
- * // ... during swipe ...
- * recognizer.addPoint(x, y, key)
- * // ... on touch end ...
- * val keys = recognizer.endSwipe()
- * if (keys != null) {
- *     // Process swipe typing with keys
- * }
- * ```
- *
- * Ported from Java to Kotlin with improvements.
+ * for word prediction.
  */
 class SwipeGestureRecognizer {
-
-    companion object {
-        // Minimum distance to consider it a swipe typing gesture
-        private const val MIN_SWIPE_DISTANCE = 50.0f
-        // Minimum distance for medium swipe (two-letter spans)
-        private const val MIN_MEDIUM_SWIPE_DISTANCE = 35.0f
-        // Maximum time between touch points to continue swipe
-        private const val MAX_POINT_INTERVAL_MS = 500L
-        // Velocity threshold in pixels per millisecond (based on FlorisBoard's 0.10 dp/ms)
-        private const val VELOCITY_THRESHOLD = 0.15f
-        // Minimum distance between points to register (based on FlorisBoard's key_width/4)
-        private const val MIN_POINT_DISTANCE = 25.0f
-        // Minimum dwell time on a key to register it (milliseconds)
-        private const val MIN_DWELL_TIME_MS = 30L
-    }
-
-    private val swipePath = mutableListOf<PointF>()
-    private val touchedKeys = mutableListOf<KeyboardData.Key>()
-    private val timestamps = mutableListOf<Long>()
+    private val swipePath: MutableList<PointF> = mutableListOf()
+    private val touchedKeys: MutableList<KeyboardData.Key> = mutableListOf()
+    private val timestamps: MutableList<Long> = mutableListOf()
     private var isSwipeTyping = false
     private var isMediumSwipe = false
     private var startTime = 0L
@@ -88,17 +40,15 @@ class SwipeGestureRecognizer {
     fun startSwipe(x: Float, y: Float, key: KeyboardData.Key?) {
         reset()
         swipePath.add(PointF(x, y))
-
-        // Add key if it's alphabetic
-        if (key != null) {
-            key.keys.firstOrNull()?.let { keyValue ->
-                if (isAlphabeticKey(keyValue)) {
-                    touchedKeys.add(key)
-                    lastKey = key
-                }
-            }
+        // android.util.Log.d("SwipeGesture", "startSwipe at $x,$y")
+        val firstKey = key?.keys?.get(0)
+        if (key != null && firstKey != null && isAlphabeticKey(firstKey)) {
+            // android.util.Log.d("SwipeGesture", "Started on alphabetic key: ${firstKey.getString()}")
+            touchedKeys.add(key)
+            lastKey = key
+        } else {
+            // android.util.Log.d("SwipeGesture", "Started on non-alphabetic key")
         }
-
         startTime = System.currentTimeMillis()
         timestamps.add(startTime)
         totalDistance = 0f
@@ -121,13 +71,15 @@ class SwipeGestureRecognizer {
                 // Promote from medium swipe to full swipe typing if distance threshold crossed
                 isSwipeTyping = shouldConsiderSwipeTyping()
                 isMediumSwipe = false // Clear medium swipe flag
+                // android.util.Log.d("SwipeGesture", "Swipe typing check: $isSwipeTyping")
             } else if (!isMediumSwipe && totalDistance > MIN_MEDIUM_SWIPE_DISTANCE && timeSinceStart > 200) {
                 // Medium swipe needs slightly more time to avoid conflicts with directional swipes
                 isMediumSwipe = shouldConsiderMediumSwipe()
+                // android.util.Log.d("SwipeGesture", "Medium swipe check: $isMediumSwipe")
             }
         }
 
-        val lastPoint = swipePath.last()
+        val lastPoint = swipePath[swipePath.size - 1]
         val dx = x - lastPoint.x
         val dy = y - lastPoint.y
         val distance = sqrt(dx * dx + dy * dy)
@@ -144,7 +96,7 @@ class SwipeGestureRecognizer {
         timestamps.add(now)
 
         // Calculate velocity for filtering (like FlorisBoard)
-        val timeDelta = if (timestamps.size > 0) {
+        val timeDelta = if (timestamps.isNotEmpty()) {
             now - timestamps[timestamps.size - 1]
         } else {
             0L
@@ -152,29 +104,29 @@ class SwipeGestureRecognizer {
         val velocity = if (timeDelta > 0) distance / timeDelta else 0f
 
         // Add key if it's different from the last one and is alphabetic
-        if (key != null && key != lastKey) {
-            key.keys.firstOrNull()?.let { keyValue ->
-                if (isAlphabeticKey(keyValue)) {
-                    // Apply velocity-based filtering (skip if moving too fast)
-                    if (velocity > VELOCITY_THRESHOLD && timeDelta < MIN_DWELL_TIME_MS) {
-                        // Moving too fast - likely transitioning between keys
-                        return
-                    }
+        val keyVal = key?.keys?.get(0)
+        if (key != null && key != lastKey && keyVal != null && isAlphabeticKey(keyVal)) {
+            // Apply velocity-based filtering (skip if moving too fast)
+            if (velocity > VELOCITY_THRESHOLD && timeDelta < MIN_DWELL_TIME_MS) {
+                // Moving too fast - likely transitioning between keys
+                // android.util.Log.d("SwipeGesture", "Skipping key due to high velocity: $velocity")
+                return
+            }
 
-                    // Check if this key is already in recent keys (avoid duplicates)
-                    val isDuplicate = if (touchedKeys.size >= 3) {
-                        // Check last 3 keys for duplicates (increased from 2)
-                        touchedKeys.takeLast(3).contains(key)
-                    } else {
-                        false
-                    }
+            // Check if this key is already in recent keys (avoid duplicates)
+            val size = touchedKeys.size
+            val isDuplicate = if (size >= 3) {
+                // Check last 3 keys for duplicates (increased from 2)
+                (max(0, size - 3) until size).any { touchedKeys[it] == key }
+            } else {
+                false
+            }
 
-                    // Only add if not a recent duplicate and we've moved enough
-                    if (!isDuplicate && (distance > 35.0f || touchedKeys.isEmpty())) {
-                        touchedKeys.add(key)
-                        lastKey = key
-                    }
-                }
+            // Only add if not a recent duplicate and we've moved enough
+            if (!isDuplicate && (distance > 35.0f || touchedKeys.isEmpty())) {
+                // android.util.Log.d("SwipeGesture", "Adding key: ${key.keys[0].getString()}")
+                touchedKeys.add(key)
+                lastKey = key
             }
         }
     }
@@ -183,17 +135,24 @@ class SwipeGestureRecognizer {
      * End the swipe gesture and return the touched keys if it was swipe typing
      */
     fun endSwipe(): List<KeyboardData.Key>? {
+        // android.util.Log.d("SwipeGesture", "endSwipe: isSwipeTyping=$isSwipeTyping, touchedKeys=${touchedKeys.size}")
+
         // Log detailed swipe data for analysis
         logSwipeData()
 
         return when {
             isSwipeTyping && touchedKeys.size >= 2 -> {
-                ArrayList(touchedKeys)
+                // android.util.Log.d("SwipeGesture", "Returning ${touchedKeys.size} keys")
+                touchedKeys.toList()
             }
             isMediumSwipe && touchedKeys.size == 2 -> {
-                ArrayList(touchedKeys)
+                // android.util.Log.d("SwipeGesture", "Returning medium swipe with 2 keys")
+                touchedKeys.toList()
             }
-            else -> null
+            else -> {
+                // android.util.Log.d("SwipeGesture", "Not enough keys or not swipe typing")
+                null
+            }
         }
     }
 
@@ -206,7 +165,8 @@ class SwipeGestureRecognizer {
 
         // Check if all touched keys are alphabetic
         return touchedKeys.all { key ->
-            key.keys.firstOrNull()?.let { isAlphabeticKey(it) } ?: false
+            val kv = key.keys.getOrNull(0)
+            kv != null && isAlphabeticKey(kv)
         }
     }
 
@@ -218,11 +178,12 @@ class SwipeGestureRecognizer {
         if (touchedKeys.size != 2) return false
 
         // Check if all touched keys are alphabetic
-        val allAlphabetic = touchedKeys.all { key ->
-            key.keys.firstOrNull()?.let { isAlphabeticKey(it) } ?: false
+        if (!touchedKeys.all { key ->
+            val kv = key.keys.getOrNull(0)
+            kv != null && isAlphabeticKey(kv)
+        }) {
+            return false
         }
-
-        if (!allAlphabetic) return false
 
         // Additional check: medium swipe should have moderate distance
         // This helps avoid false positives for quick directional swipes
@@ -233,32 +194,25 @@ class SwipeGestureRecognizer {
      * Check if a KeyValue represents an alphabetic character
      */
     private fun isAlphabeticKey(kv: KeyValue): Boolean {
-        return when (kv) {
-            is KeyValue.CharKey -> kv.char.isLetter()
-            else -> false
-        }
+        if (kv.getKind() != KeyValue.Kind.Char) return false
+        val c = kv.getChar()
+        return c.isLetter()
     }
 
     /**
      * Get the current swipe path for rendering
      */
-    fun getSwipePath(): List<PointF> {
-        return ArrayList(swipePath)
-    }
+    fun getSwipePath(): List<PointF> = swipePath.toList()
 
     /**
      * Check if currently in swipe typing mode
      */
-    fun isSwipeTyping(): Boolean {
-        return isSwipeTyping
-    }
+    fun isSwipeTyping(): Boolean = isSwipeTyping
 
     /**
      * Check if currently in medium swipe mode (exactly 2 letters)
      */
-    fun isMediumSwipe(): Boolean {
-        return isMediumSwipe
-    }
+    fun isMediumSwipe(): Boolean = isMediumSwipe
 
     /**
      * Reset the recognizer for a new gesture
@@ -280,10 +234,13 @@ class SwipeGestureRecognizer {
         if (touchedKeys.isEmpty()) return ""
 
         return buildString {
-            touchedKeys.forEach { key ->
-                val kv = key.keys.firstOrNull()
-                if (kv is KeyValue.CharKey && kv.char.isLetter()) {
-                    append(kv.char)
+            for (key in touchedKeys) {
+                val kv = key.keys.getOrNull(0)
+                if (kv != null && kv.getKind() == KeyValue.Kind.Char) {
+                    val c = kv.getChar()
+                    if (c.isLetter()) {
+                        append(c)
+                    }
                 }
             }
         }
@@ -308,15 +265,14 @@ class SwipeGestureRecognizer {
         // Apply loop detection to enhance the sequence
         val enhanced = loopDetector.applyLoops(baseSequence, loops, swipePath)
 
+        // android.util.Log.d("SwipeGesture", "Enhanced sequence: $baseSequence -> $enhanced")
         return enhanced
     }
 
     /**
      * Get timestamps for ML data collection
      */
-    fun getTimestamps(): List<Long> {
-        return ArrayList(timestamps)
-    }
+    fun getTimestamps(): List<Long> = timestamps.toList()
 
     /**
      * Log comprehensive swipe data for analysis and debugging
@@ -324,43 +280,68 @@ class SwipeGestureRecognizer {
     private fun logSwipeData() {
         if (swipePath.isEmpty()) return
 
-        // All logging is commented out for production
-        // Uncomment for debugging/calibration
+        // android.util.Log.d("SwipeAnalysis", "===== SWIPE DATA ANALYSIS =====")
+        // android.util.Log.d("SwipeAnalysis", "Total points: ${swipePath.size}")
+        // android.util.Log.d("SwipeAnalysis", "Total distance: $totalDistance")
+        // android.util.Log.d("SwipeAnalysis", "Duration: ${System.currentTimeMillis() - startTime}ms")
+        // android.util.Log.d("SwipeAnalysis", "Key sequence: ${getKeySequence()}")
+        // android.util.Log.d("SwipeAnalysis", "Was swipe typing: $isSwipeTyping")
 
         // Log path coordinates for calibration analysis
         val pathStr = buildString {
             append("Path: ")
-            for (i in 0 until minOf(swipePath.size, 20)) {
+            for (i in 0 until min(swipePath.size, 20)) {
                 val p = swipePath[i]
-                append(String.format("(%.0f,%.0f) ", p.x, p.y))
+                append("(%.0f,%.0f) ".format(p.x, p.y))
             }
             if (swipePath.size > 20) {
                 append("... (${swipePath.size - 20} more points)")
             }
         }
+        // android.util.Log.d("SwipeAnalysis", pathStr)
 
         // Log touched keys
         val keysStr = buildString {
             append("Touched keys: ")
-            touchedKeys.forEach { key ->
-                val kv = key.keys.firstOrNull()
-                if (kv is KeyValue.CharKey) {
-                    append(kv.char).append(" ")
+            for (key in touchedKeys) {
+                val kv = key.keys.getOrNull(0)
+                if (kv != null && kv.getKind() == KeyValue.Kind.Char) {
+                    append(kv.getChar()).append(" ")
                 }
             }
         }
+        // android.util.Log.d("SwipeAnalysis", keysStr)
 
         // Log velocity and gesture characteristics
         if (swipePath.size >= 2) {
             val avgVelocity = totalDistance / (System.currentTimeMillis() - startTime)
+            // android.util.Log.d("SwipeAnalysis", "Average velocity: $avgVelocity px/ms")
 
             // Calculate straightness ratio
-            val start = swipePath.first()
-            val end = swipePath.last()
+            val start = swipePath[0]
+            val end = swipePath[swipePath.size - 1]
             val directDistance = sqrt(
                 (end.x - start.x).pow(2) + (end.y - start.y).pow(2)
             )
             val straightnessRatio = directDistance / totalDistance
+            // android.util.Log.d("SwipeAnalysis", "Straightness ratio: $straightnessRatio")
         }
+
+        // android.util.Log.d("SwipeAnalysis", "================================")
+    }
+
+    companion object {
+        // Minimum distance to consider it a swipe typing gesture
+        private const val MIN_SWIPE_DISTANCE = 50.0f
+        // Minimum distance for medium swipe (two-letter spans)
+        private const val MIN_MEDIUM_SWIPE_DISTANCE = 35.0f
+        // Maximum time between touch points to continue swipe
+        private const val MAX_POINT_INTERVAL_MS = 500L
+        // Velocity threshold in pixels per millisecond (based on FlorisBoard's 0.10 dp/ms)
+        private const val VELOCITY_THRESHOLD = 0.15f
+        // Minimum distance between points to register (based on FlorisBoard's key_width/4)
+        private const val MIN_POINT_DISTANCE = 25.0f
+        // Minimum dwell time on a key to register it (milliseconds)
+        private const val MIN_DWELL_TIME_MS = 30L
     }
 }

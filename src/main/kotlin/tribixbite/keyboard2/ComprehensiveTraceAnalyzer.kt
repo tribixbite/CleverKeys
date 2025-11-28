@@ -1,722 +1,657 @@
 package tribixbite.keyboard2
 
-import android.content.Context
 import android.graphics.PointF
+import android.graphics.RectF
 import android.util.Log
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlin.math.*
 
 /**
- * Performs comprehensive analysis of swipe gesture traces.
+ * Comprehensive Trace Analysis Module
  *
- * Provides advanced gesture analysis for swipe typing including geometric
- * features, motion characteristics, pattern recognition, and quality metrics.
- *
- * Features:
- * - Geometric analysis (length, curvature, angles)
- * - Motion analysis (velocity, acceleration, jerk)
- * - Pattern detection (loops, zigzags, curves)
- * - Quality metrics (smoothness, consistency)
- * - Direction changes tracking
- * - Stroke segmentation
- * - Feature vector extraction
- * - Statistical analysis
- * - Outlier detection
- * - Noise filtering
- * - Time-based analysis
- * - Pressure analysis (if available)
- *
- * Bug #276 - CATASTROPHIC: Complete implementation of missing ComprehensiveTraceAnalyzer.java
- *
- * @param context Application context
+ * Maximum modularity, configurability, and scope for swipe gesture analysis
+ * Every parameter configurable through UI elements
  */
 class ComprehensiveTraceAnalyzer(
-    private val context: Context
+    private val templateGenerator: WordGestureTemplateGenerator // Reuse existing generator with keyboard dimensions
 ) {
-    companion object {
-        private const val TAG = "ComprehensiveTraceAnalyzer"
+    // ========== 1. USER TRACE COLLECTION BOUNDING BOX ==========
 
-        // Analysis thresholds
-        private const val MIN_TRACE_LENGTH = 20.0f  // pixels
-        private const val SMOOTHNESS_WINDOW = 5
-        private const val VELOCITY_THRESHOLD = 100.0f  // px/s
-        private const val DIRECTION_CHANGE_THRESHOLD = 30.0  // degrees
-        private const val LOOP_CLOSURE_THRESHOLD = 30.0f  // pixels
-        private const val ZIGZAG_ANGLE_THRESHOLD = 120.0  // degrees
+    // Bounding box parameters (all configurable)
+    private var enableBoundingBoxAnalysis = true
+    private var boundingBoxPadding = 10.0           // Extra space around gesture
+    private var includeBoundingBoxRotation = true  // Analyze rotated bounding box
+    private var boundingBoxAspectRatioWeight = 1.0  // Importance of width/height ratio
 
-        /**
-         * Gesture pattern type.
-         */
-        enum class PatternType {
-            LINEAR,          // Straight line
-            CURVED,          // Smooth curve
-            LOOP,            // Closed loop
-            ZIGZAG,          // Sharp direction changes
-            SPIRAL,          // Spiral pattern
-            COMPLEX,         // Complex multi-pattern
-            UNKNOWN          // Unrecognized
-        }
+    // ========== 2. TOTAL DISTANCE BREAKDOWN ==========
 
-        /**
-         * Gesture quality level.
-         */
-        enum class QualityLevel {
-            EXCELLENT,       // Very smooth and consistent
-            GOOD,            // Smooth with minor variations
-            FAIR,            // Acceptable with some noise
-            POOR,            // Noisy or inconsistent
-            INVALID          // Too short or corrupted
-        }
+    // Directional distance parameters (all configurable)
+    private var enableDirectionalAnalysis = true
+    private var northSouthWeight = 1.0              // Vertical movement importance
+    private var eastWestWeight = 1.0                // Horizontal movement importance
+    private var diagonalMovementWeight = 0.8       // Diagonal vs cardinal movement
+    private var movementSmoothingFactor = 0.9      // Movement direction smoothing
 
-        /**
-         * Trace point with metadata.
-         */
-        data class TracePoint(
-            val point: PointF,
-            val timestamp: Long,
-            val pressure: Float = 1.0f,
-            val distance: Float = 0.0f,  // Cumulative distance
-            val velocity: Float = 0.0f,
-            val angle: Double = 0.0
-        )
+    // ========== 3. PAUSE/STOP DETECTION ==========
 
-        /**
-         * Geometric features.
-         */
-        data class GeometricFeatures(
-            val totalLength: Float,
-            val straightLineDistance: Float,
-            val curvatureIndex: Float,  // length / straightLineDistance
-            val boundingBoxArea: Float,
-            val aspectRatio: Float,
-            val centroid: PointF,
-            val averageAngle: Double,
-            val angleVariance: Double
-        )
+    // Stop detection parameters (all configurable)
+    private var enableStopDetection = true
+    private var stopThresholdMs = 150L                 // Pause duration threshold
+    private var stopPositionTolerance = 15.0       // Position drift during stop
+    private var stopLetterWeight = 2.0              // Extra weight for stopped letters
+    private var minStopDuration = 50                   // Minimum pause to count as stop
+    private var maxStopsPerGesture = 5                 // Maximum stops to consider
 
-        /**
-         * Motion features.
-         */
-        data class MotionFeatures(
-            val averageVelocity: Float,
-            val maxVelocity: Float,
-            val minVelocity: Float,
-            val velocityVariance: Float,
-            val averageAcceleration: Float,
-            val maxAcceleration: Float,
-            val averageJerk: Float,
-            val duration: Long
-        )
+    // ========== 4. ANGLE POINT DETECTION ==========
 
-        /**
-         * Pattern features.
-         */
-        data class PatternFeatures(
-            val patternType: PatternType,
-            val directionChanges: Int,
-            val loopCount: Int,
-            val zigzagCount: Int,
-            val curvaturePoints: Int,
-            val inflectionPoints: Int,
-            val symmetryScore: Float
-        )
+    // Angle detection parameters (all configurable)
+    private var enableAngleDetection = true
+    private var angleDetectionThreshold = 30.0     // Degrees for direction change
+    private var sharpAngleThreshold = 90.0         // Sharp turn detection
+    private var smoothAngleThreshold = 15.0        // Gentle curve detection
+    private var angleAnalysisWindowSize = 5           // Points to analyze for angle
+    private var angleLetterBoost = 1.5             // Boost for letters at angles
 
-        /**
-         * Quality metrics.
-         */
-        data class QualityMetrics(
-            val qualityLevel: QualityLevel,
-            val smoothnessScore: Float,
-            val consistencyScore: Float,
-            val noiseLevel: Float,
-            val outlierCount: Int,
-            val samplingRate: Float  // points per second
-        )
+    // ========== 5. LETTER DETECTION ==========
 
-        /**
-         * Complete trace analysis result.
-         */
-        data class AnalysisResult(
-            val points: List<TracePoint>,
-            val geometricFeatures: GeometricFeatures,
-            val motionFeatures: MotionFeatures,
-            val patternFeatures: PatternFeatures,
-            val qualityMetrics: QualityMetrics,
-            val featureVector: FloatArray
-        ) {
-            override fun equals(other: Any?): Boolean {
-                if (this === other) return true
-                if (javaClass != other?.javaClass) return false
+    // Letter detection parameters (all configurable)
+    private var letterDetectionRadius = 80.0       // Key hit zone
+    private var letterConfidenceThreshold = 0.7    // Minimum confidence for letter
+    private var enableLetterPrediction = true     // Predict missed letters
+    private var letterOrderWeight = 1.2            // Importance of letter sequence
+    private var maxLettersPerGesture = 15              // Maximum letters to detect
 
-                other as AnalysisResult
+    // ========== 6. START/END LETTER ANALYSIS ==========
 
-                if (points != other.points) return false
-                if (geometricFeatures != other.geometricFeatures) return false
-                if (motionFeatures != other.motionFeatures) return false
-                if (patternFeatures != other.patternFeatures) return false
-                if (qualityMetrics != other.qualityMetrics) return false
-                if (!featureVector.contentEquals(other.featureVector)) return false
-
-                return true
-            }
-
-            override fun hashCode(): Int {
-                var result = points.hashCode()
-                result = 31 * result + geometricFeatures.hashCode()
-                result = 31 * result + motionFeatures.hashCode()
-                result = 31 * result + patternFeatures.hashCode()
-                result = 31 * result + qualityMetrics.hashCode()
-                result = 31 * result + featureVector.contentHashCode()
-                return result
-            }
-        }
-    }
-
-    /**
-     * Callback interface for analysis events.
-     */
-    interface Callback {
-        /**
-         * Called when analysis completes.
-         */
-        fun onAnalysisComplete(result: AnalysisResult)
-
-        /**
-         * Called when analysis fails.
-         */
-        fun onAnalysisError(error: String)
-    }
-
-    // Coroutine scope
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
-    // State
-    private val _isAnalyzing = MutableStateFlow(false)
-    val isAnalyzing: StateFlow<Boolean> = _isAnalyzing.asStateFlow()
-
-    private var callback: Callback? = null
-
-    // Statistics cache
-    private var lastAnalysisTime: Long = 0
-    private var totalAnalyses: Int = 0
-    private var averageAnalysisTime: Long = 0
+    // Start/end parameters (all configurable)
+    private var startLetterWeight = 3.0            // Start letter importance
+    private var endLetterWeight = 1.0              // End letter importance
+    private var startPositionTolerance = 25.0      // Start position accuracy
+    private var endPositionTolerance = 50.0        // End position tolerance (less important)
+    private var requireStartLetterMatch = true    // Must match start letter
+    private var requireEndLetterMatch = false     // End letter optional
 
     init {
-        logD("ComprehensiveTraceAnalyzer initialized")
+        Log.d(TAG, "Initialized with shared template generator")
+    }
+
+    // ========== COMPREHENSIVE TRACE ANALYSIS RESULT ==========
+
+    data class TraceAnalysisResult(
+        // Bounding box analysis
+        var boundingBox: RectF? = null,
+        var boundingBoxArea: Double = 0.0,
+        var aspectRatio: Double = 0.0,
+        var boundingBoxRotation: Double = 0.0,
+
+        // Directional distance breakdown
+        var totalDistance: Double = 0.0,
+        var northDistance: Double = 0.0,
+        var southDistance: Double = 0.0,
+        var eastDistance: Double = 0.0,
+        var westDistance: Double = 0.0,
+        var diagonalDistance: Double = 0.0,
+
+        // Stop analysis
+        var stops: MutableList<StopPoint> = mutableListOf(),
+        var totalStops: Int = 0,
+        var stoppedLetters: MutableList<Char> = mutableListOf(),
+        var averageStopDuration: Double = 0.0,
+
+        // Angle analysis
+        var anglePoints: MutableList<AnglePoint> = mutableListOf(),
+        var sharpAngles: Int = 0,
+        var gentleAngles: Int = 0,
+        var angleLetters: MutableList<Char> = mutableListOf(),
+
+        // Letter detection
+        var detectedLetters: MutableList<Char> = mutableListOf(),
+        var letterDetails: MutableList<LetterDetection> = mutableListOf(),
+        var averageLetterConfidence: Double = 0.0,
+
+        // Start/end analysis
+        var startLetter: Char? = null,
+        var endLetter: Char? = null,
+        var startAccuracy: Double = 0.0,
+        var endAccuracy: Double = 0.0,
+        var startLetterMatch: Boolean = false,
+        var endLetterMatch: Boolean = false,
+
+        // Composite scores
+        var overallConfidence: Double = 0.0,
+        var gestureComplexity: Double = 0.0,
+        var recognitionDifficulty: Double = 0.0
+    )
+
+    data class StopPoint(
+        val position: PointF,
+        val duration: Long,
+        val nearestLetter: Char?,
+        val confidence: Double
+    )
+
+    data class AnglePoint(
+        val position: PointF,
+        val angle: Double,
+        val isSharp: Boolean,
+        val nearestLetter: Char?
+    )
+
+    data class LetterDetection(
+        val letter: Char,
+        val position: PointF,
+        val confidence: Double,
+        val hadStop: Boolean,
+        val hadAngle: Boolean,
+        val timeSpent: Long
+    )
+
+    /**
+     * Comprehensive analysis of user swipe trace with full configurability
+     */
+    fun analyzeTrace(swipePath: List<PointF>, timestamps: List<Long>?, targetWord: String): TraceAnalysisResult {
+        val result = TraceAnalysisResult()
+
+        if (swipePath.size < 2) return result
+
+        Log.d(TAG, "Analyzing trace: ${swipePath.size} points for word '$targetWord'")
+
+        // 1. BOUNDING BOX ANALYSIS
+        if (enableBoundingBoxAnalysis) {
+            analyzeBoundingBox(swipePath, result)
+        }
+
+        // 2. DIRECTIONAL DISTANCE BREAKDOWN
+        if (enableDirectionalAnalysis) {
+            analyzeDirectionalMovement(swipePath, result)
+        }
+
+        // 3. STOP/PAUSE DETECTION
+        if (enableStopDetection && timestamps != null) {
+            analyzeStops(swipePath, timestamps, result)
+        }
+
+        // 4. ANGLE POINT DETECTION
+        if (enableAngleDetection) {
+            analyzeAngles(swipePath, result)
+        }
+
+        // 5. LETTER DETECTION
+        analyzeLetters(swipePath, result)
+
+        // 6. START/END ANALYSIS
+        analyzeStartEnd(swipePath, targetWord, result)
+
+        // 7. COMPOSITE SCORING
+        calculateCompositeScores(result)
+
+        Log.d(
+            TAG,
+            "Analysis complete: ${result.detectedLetters.size} letters, ${result.totalStops} stops, " +
+                "${result.anglePoints.size} angles, ${result.totalDistance.toInt()} total distance"
+        )
+
+        return result
     }
 
     /**
-     * Analyze trace comprehensively.
-     *
-     * @param points Raw trace points
-     * @param timestamps Timestamps for each point (optional)
-     * @param pressures Pressure values for each point (optional)
-     * @return Analysis result
+     * 1. BOUNDING BOX ANALYSIS - All parameters configurable
      */
-    suspend fun analyzeTrace(
-        points: List<PointF>,
-        timestamps: List<Long>? = null,
-        pressures: List<Float>? = null
-    ): AnalysisResult = withContext(Dispatchers.Default) {
-        val startTime = System.currentTimeMillis()
-        _isAnalyzing.value = true
-
-        try {
-            // Validate input
-            if (points.size < 2) {
-                throw IllegalArgumentException("Trace must have at least 2 points")
-            }
-
-            // Build trace points with metadata
-            val tracePoints = buildTracePoints(points, timestamps, pressures)
-
-            // Analyze geometric features
-            val geometricFeatures = analyzeGeometry(tracePoints)
-
-            // Analyze motion features
-            val motionFeatures = analyzeMotion(tracePoints)
-
-            // Detect patterns
-            val patternFeatures = detectPatterns(tracePoints, geometricFeatures)
-
-            // Calculate quality metrics
-            val qualityMetrics = calculateQuality(tracePoints, motionFeatures)
-
-            // Extract feature vector
-            val featureVector = extractFeatureVector(
-                geometricFeatures,
-                motionFeatures,
-                patternFeatures,
-                qualityMetrics
-            )
-
-            val result = AnalysisResult(
-                points = tracePoints,
-                geometricFeatures = geometricFeatures,
-                motionFeatures = motionFeatures,
-                patternFeatures = patternFeatures,
-                qualityMetrics = qualityMetrics,
-                featureVector = featureVector
-            )
-
-            // Update statistics
-            val analysisTime = System.currentTimeMillis() - startTime
-            updateStatistics(analysisTime)
-
-            callback?.onAnalysisComplete(result)
-            logD("Analysis complete: ${points.size} points, ${analysisTime}ms")
-
-            result
-        } catch (e: Exception) {
-            logE("Error analyzing trace", e)
-            callback?.onAnalysisError("Analysis failed: ${e.message}")
-            throw e
-        } finally {
-            _isAnalyzing.value = false
-        }
-    }
-
-    /**
-     * Build trace points with metadata.
-     */
-    private fun buildTracePoints(
-        points: List<PointF>,
-        timestamps: List<Long>?,
-        pressures: List<Float>?
-    ): List<TracePoint> {
-        val tracePoints = mutableListOf<TracePoint>()
-        var cumulativeDistance = 0.0f
-        val baseTime = timestamps?.firstOrNull() ?: System.currentTimeMillis()
-
-        for (i in points.indices) {
-            val point = points[i]
-            val timestamp = timestamps?.getOrNull(i) ?: (baseTime + i * 10L)
-            val pressure = pressures?.getOrNull(i) ?: 1.0f
-
-            // Calculate distance from previous point
-            if (i > 0) {
-                val prev = points[i - 1]
-                val dx = point.x - prev.x
-                val dy = point.y - prev.y
-                cumulativeDistance += sqrt(dx * dx + dy * dy)
-            }
-
-            // Calculate velocity
-            val velocity = if (i > 0 && timestamps != null) {
-                val dt = (timestamp - timestamps[i - 1]).toFloat()
-                if (dt > 0) {
-                    val dx = point.x - points[i - 1].x
-                    val dy = point.y - points[i - 1].y
-                    val distance = sqrt(dx * dx + dy * dy)
-                    (distance / dt) * 1000f  // px/s
-                } else {
-                    0f
-                }
-            } else {
-                0f
-            }
-
-            // Calculate angle
-            val angle = if (i > 0) {
-                val dx = point.x - points[i - 1].x
-                val dy = point.y - points[i - 1].y
-                atan2(dy.toDouble(), dx.toDouble())
-            } else {
-                0.0
-            }
-
-            tracePoints.add(
-                TracePoint(
-                    point = point,
-                    timestamp = timestamp,
-                    pressure = pressure,
-                    distance = cumulativeDistance,
-                    velocity = velocity,
-                    angle = angle
-                )
-            )
-        }
-
-        return tracePoints
-    }
-
-    /**
-     * Analyze geometric features.
-     */
-    private fun analyzeGeometry(points: List<TracePoint>): GeometricFeatures {
-        // Total length (cumulative distance)
-        val totalLength = points.lastOrNull()?.distance ?: 0f
-
-        // Straight line distance
-        val first = points.first().point
-        val last = points.last().point
-        val dx = last.x - first.x
-        val dy = last.y - first.y
-        val straightLineDistance = sqrt(dx * dx + dy * dy)
-
-        // Curvature index
-        val curvatureIndex = if (straightLineDistance > 0) {
-            totalLength / straightLineDistance
-        } else {
-            1.0f
-        }
-
-        // Bounding box
+    private fun analyzeBoundingBox(swipePath: List<PointF>, result: TraceAnalysisResult) {
         var minX = Float.MAX_VALUE
-        var minY = Float.MAX_VALUE
         var maxX = Float.MIN_VALUE
+        var minY = Float.MAX_VALUE
         var maxY = Float.MIN_VALUE
 
-        for (tp in points) {
-            minX = min(minX, tp.point.x)
-            minY = min(minY, tp.point.y)
-            maxX = max(maxX, tp.point.x)
-            maxY = max(maxY, tp.point.y)
+        for (point in swipePath) {
+            minX = min(minX, point.x)
+            maxX = max(maxX, point.x)
+            minY = min(minY, point.y)
+            maxY = max(maxY, point.y)
         }
 
-        val width = maxX - minX
-        val height = maxY - minY
-        val boundingBoxArea = width * height
-        val aspectRatio = if (height > 0) width / height else 1.0f
+        // Apply configurable padding
+        result.boundingBox = RectF(
+            minX - boundingBoxPadding.toFloat(),
+            minY - boundingBoxPadding.toFloat(),
+            maxX + boundingBoxPadding.toFloat(),
+            maxY + boundingBoxPadding.toFloat()
+        )
+        result.boundingBoxArea = (result.boundingBox!!.width() * result.boundingBox!!.height()).toDouble()
+        result.aspectRatio = (result.boundingBox!!.width() / result.boundingBox!!.height()).toDouble()
 
-        // Centroid
-        val sumX = points.sumOf { it.point.x.toDouble() }.toFloat()
-        val sumY = points.sumOf { it.point.y.toDouble() }.toFloat()
-        val centroid = PointF(sumX / points.size, sumY / points.size)
+        // IMPLEMENTED: Rotated bounding box analysis for better gesture characterization
+        result.boundingBoxRotation = if (includeBoundingBoxRotation && swipePath.size >= 3) {
+            calculateOptimalRotation(swipePath)
+        } else {
+            0.0
+        }
 
-        // Average angle and variance
-        val angles = points.map { it.angle }
-        val averageAngle = angles.average()
-        val angleVariance = angles.map { (it - averageAngle).pow(2) }.average()
-
-        return GeometricFeatures(
-            totalLength = totalLength,
-            straightLineDistance = straightLineDistance,
-            curvatureIndex = curvatureIndex,
-            boundingBoxArea = boundingBoxArea,
-            aspectRatio = aspectRatio,
-            centroid = centroid,
-            averageAngle = averageAngle,
-            angleVariance = angleVariance
+        Log.d(
+            TAG,
+            "Bounding box: ${result.boundingBox!!.width().toInt()}x${result.boundingBox!!.height().toInt()}, " +
+                "aspect=${String.format("%.2f", result.aspectRatio)}"
         )
     }
 
     /**
-     * Analyze motion features.
+     * 2. DIRECTIONAL DISTANCE BREAKDOWN - All parameters configurable
      */
-    private fun analyzeMotion(points: List<TracePoint>): MotionFeatures {
-        val velocities = points.map { it.velocity }.filter { it > 0 }
+    private fun analyzeDirectionalMovement(swipePath: List<PointF>, result: TraceAnalysisResult) {
+        for (i in 1 until swipePath.size) {
+            val prev = swipePath[i - 1]
+            val curr = swipePath[i]
 
-        val averageVelocity = if (velocities.isNotEmpty()) {
-            velocities.average().toFloat()
-        } else {
-            0f
-        }
+            val dx = curr.x - prev.x
+            val dy = curr.y - prev.y
+            val segmentDistance = sqrt(dx * dx + dy * dy).toDouble()
 
-        val maxVelocity = velocities.maxOrNull() ?: 0f
-        val minVelocity = velocities.minOrNull() ?: 0f
+            result.totalDistance += segmentDistance
 
-        val velocityVariance = if (velocities.isNotEmpty()) {
-            velocities.map { (it - averageVelocity).pow(2) }.average().toFloat()
-        } else {
-            0f
-        }
-
-        // Calculate acceleration
-        val accelerations = mutableListOf<Float>()
-        for (i in 1 until points.size) {
-            val dv = points[i].velocity - points[i - 1].velocity
-            val dt = (points[i].timestamp - points[i - 1].timestamp).toFloat()
-            if (dt > 0) {
-                accelerations.add((dv / dt) * 1000f)  // px/s²
-            }
-        }
-
-        val averageAcceleration = if (accelerations.isNotEmpty()) {
-            accelerations.average().toFloat()
-        } else {
-            0f
-        }
-
-        val maxAcceleration = accelerations.maxOrNull() ?: 0f
-
-        // Calculate jerk (rate of change of acceleration)
-        val jerks = mutableListOf<Float>()
-        for (i in 1 until accelerations.size) {
-            val da = accelerations[i] - accelerations[i - 1]
-            val dt = (points[i + 1].timestamp - points[i].timestamp).toFloat()
-            if (dt > 0) {
-                jerks.add((da / dt) * 1000f)  // px/s³
-            }
-        }
-
-        val averageJerk = if (jerks.isNotEmpty()) {
-            jerks.map { abs(it) }.average().toFloat()
-        } else {
-            0f
-        }
-
-        val duration = points.last().timestamp - points.first().timestamp
-
-        return MotionFeatures(
-            averageVelocity = averageVelocity,
-            maxVelocity = maxVelocity,
-            minVelocity = minVelocity,
-            velocityVariance = velocityVariance,
-            averageAcceleration = averageAcceleration,
-            maxAcceleration = maxAcceleration,
-            averageJerk = averageJerk,
-            duration = duration
-        )
-    }
-
-    /**
-     * Detect patterns in trace.
-     */
-    private fun detectPatterns(
-        points: List<TracePoint>,
-        geometry: GeometricFeatures
-    ): PatternFeatures {
-        // Count direction changes
-        var directionChanges = 0
-        for (i in 2 until points.size) {
-            val angle1 = points[i - 1].angle
-            val angle2 = points[i].angle
-            val angleDiff = abs(angle2 - angle1) * 180 / PI
-
-            if (angleDiff > DIRECTION_CHANGE_THRESHOLD) {
-                directionChanges++
-            }
-        }
-
-        // Detect loops (closed paths)
-        var loopCount = 0
-        for (i in 10 until points.size) {
-            val current = points[i].point
-            for (j in 0 until i - 5) {
-                val prev = points[j].point
-                val dx = current.x - prev.x
-                val dy = current.y - prev.y
-                val distance = sqrt(dx * dx + dy * dy)
-
-                if (distance < LOOP_CLOSURE_THRESHOLD) {
-                    loopCount++
-                    break
+            // Categorize movement direction with configurable weights
+            when {
+                abs(dx) > abs(dy) -> { // Primarily horizontal
+                    if (dx > 0) result.eastDistance += segmentDistance * eastWestWeight
+                    else result.westDistance += segmentDistance * eastWestWeight
+                }
+                abs(dy) > abs(dx) -> { // Primarily vertical
+                    if (dy > 0) result.southDistance += segmentDistance * northSouthWeight
+                    else result.northDistance += segmentDistance * northSouthWeight
+                }
+                else -> { // Diagonal movement
+                    result.diagonalDistance += segmentDistance * diagonalMovementWeight
                 }
             }
         }
 
-        // Count zigzags (sharp angle changes)
-        var zigzagCount = 0
-        for (i in 2 until points.size) {
-            val angle1 = points[i - 1].angle
-            val angle2 = points[i].angle
-            val angleDiff = abs(angle2 - angle1) * 180 / PI
-
-            if (angleDiff > ZIGZAG_ANGLE_THRESHOLD) {
-                zigzagCount++
-            }
-        }
-
-        // Count curvature points (moderate angle changes)
-        var curvaturePoints = 0
-        for (i in 2 until points.size) {
-            val angle1 = points[i - 1].angle
-            val angle2 = points[i].angle
-            val angleDiff = abs(angle2 - angle1) * 180 / PI
-
-            if (angleDiff in DIRECTION_CHANGE_THRESHOLD..ZIGZAG_ANGLE_THRESHOLD) {
-                curvaturePoints++
-            }
-        }
-
-        // Count inflection points (sign changes in curvature)
-        var inflectionPoints = 0
-        for (i in 3 until points.size) {
-            val angle1 = points[i - 2].angle - points[i - 3].angle
-            val angle2 = points[i - 1].angle - points[i - 2].angle
-            val angle3 = points[i].angle - points[i - 1].angle
-
-            if ((angle1 > 0 && angle2 < 0 && angle3 > 0) ||
-                (angle1 < 0 && angle2 > 0 && angle3 < 0)) {
-                inflectionPoints++
-            }
-        }
-
-        // Determine pattern type
-        val patternType = when {
-            loopCount > 0 -> PatternType.LOOP
-            geometry.curvatureIndex < 1.2f -> PatternType.LINEAR
-            zigzagCount > points.size / 10 -> PatternType.ZIGZAG
-            curvaturePoints > points.size / 5 -> PatternType.CURVED
-            directionChanges > points.size / 3 -> PatternType.COMPLEX
-            else -> PatternType.UNKNOWN
-        }
-
-        // Calculate symmetry score (simplified)
-        val symmetryScore = 1.0f / (1.0f + abs(geometry.aspectRatio - 1.0f))
-
-        return PatternFeatures(
-            patternType = patternType,
-            directionChanges = directionChanges,
-            loopCount = loopCount,
-            zigzagCount = zigzagCount,
-            curvaturePoints = curvaturePoints,
-            inflectionPoints = inflectionPoints,
-            symmetryScore = symmetryScore
+        Log.d(
+            TAG,
+            "Directional: N=${result.northDistance.toInt()} S=${result.southDistance.toInt()} " +
+                "E=${result.eastDistance.toInt()} W=${result.westDistance.toInt()} Diag=${result.diagonalDistance.toInt()}"
         )
     }
 
     /**
-     * Calculate quality metrics.
+     * 3. STOP/PAUSE DETECTION - All parameters configurable
      */
-    private fun calculateQuality(
-        points: List<TracePoint>,
-        motion: MotionFeatures
-    ): QualityMetrics {
-        // Smoothness score (based on velocity variance)
-        val smoothnessScore = 1.0f / (1.0f + motion.velocityVariance / 1000f)
+    private fun analyzeStops(swipePath: List<PointF>, timestamps: List<Long>, result: TraceAnalysisResult) {
+        if (timestamps.size != swipePath.size) return
 
-        // Consistency score (based on acceleration)
-        val consistencyScore = 1.0f / (1.0f + abs(motion.averageAcceleration) / 1000f)
+        for (i in 1 until timestamps.size) {
+            if (result.stops.size >= maxStopsPerGesture) break
 
-        // Noise level (based on jerk)
-        val noiseLevel = motion.averageJerk / 1000f
+            val timeDelta = timestamps[i] - timestamps[i - 1]
 
-        // Count outliers (points with unusually high velocity)
-        var outlierCount = 0
-        for (point in points) {
-            if (point.velocity > motion.averageVelocity * 3) {
-                outlierCount++
+            if (timeDelta >= stopThresholdMs) {
+                val stopPosition = swipePath[i]
+
+                // Check if position stayed within tolerance during pause
+                var validStop = true
+                if (i + 1 < swipePath.size) {
+                    val nextPoint = swipePath[i + 1]
+                    val positionDrift = sqrt(
+                        (nextPoint.x - stopPosition.x).pow(2) +
+                            (nextPoint.y - stopPosition.y).pow(2)
+                    ).toDouble()
+                    validStop = positionDrift <= stopPositionTolerance
+                }
+
+                if (validStop && timeDelta >= minStopDuration) {
+                    // Find nearest letter to stop position
+                    val nearestLetter = findNearestLetter(stopPosition)
+                    val confidence = calculateStopConfidence(timeDelta, stopPosition)
+
+                    val stop = StopPoint(stopPosition, timeDelta, nearestLetter, confidence)
+                    result.stops.add(stop)
+
+                    if (nearestLetter != null && !result.stoppedLetters.contains(nearestLetter)) {
+                        result.stoppedLetters.add(nearestLetter)
+                    }
+                }
             }
         }
 
-        // Sampling rate
-        val samplingRate = if (motion.duration > 0) {
-            (points.size.toFloat() / motion.duration) * 1000f  // points/s
+        result.totalStops = result.stops.size
+        result.averageStopDuration = result.stops.map { it.duration }.average().takeIf { !it.isNaN() } ?: 0.0
+
+        Log.d(
+            TAG,
+            "Stops: ${result.totalStops} detected, avg duration ${result.averageStopDuration.toInt()}ms, " +
+                "letters: ${result.stoppedLetters}"
+        )
+    }
+
+    /**
+     * 4. ANGLE POINT DETECTION - All parameters configurable
+     */
+    private fun analyzeAngles(swipePath: List<PointF>, result: TraceAnalysisResult) {
+        for (i in angleAnalysisWindowSize until swipePath.size - angleAnalysisWindowSize) {
+            val angle = calculateDirectionChange(swipePath, i)
+
+            if (abs(angle) >= angleDetectionThreshold) {
+                val anglePosition = swipePath[i]
+                val isSharp = abs(angle) >= sharpAngleThreshold
+                val nearestLetter = findNearestLetter(anglePosition)
+
+                val anglePoint = AnglePoint(anglePosition, angle, isSharp, nearestLetter)
+                result.anglePoints.add(anglePoint)
+
+                if (isSharp) result.sharpAngles++
+                else if (abs(angle) >= smoothAngleThreshold) result.gentleAngles++
+
+                if (nearestLetter != null && !result.angleLetters.contains(nearestLetter)) {
+                    result.angleLetters.add(nearestLetter)
+                }
+            }
+        }
+
+        Log.d(
+            TAG,
+            "Angles: ${result.anglePoints.size} total, ${result.sharpAngles} sharp, " +
+                "${result.gentleAngles} gentle, letters: ${result.angleLetters}"
+        )
+    }
+
+    /**
+     * 5. COMPREHENSIVE LETTER DETECTION - All parameters configurable
+     */
+    private fun analyzeLetters(swipePath: List<PointF>, result: TraceAnalysisResult) {
+        var lastLetter: Char? = null
+        var lastLetterTime = 0L
+
+        for (i in swipePath.indices) {
+            val point = swipePath[i]
+            val nearestLetter = findNearestLetter(point)
+
+            if (nearestLetter != null && nearestLetter != lastLetter) {
+                val confidence = calculateLetterConfidence(point, nearestLetter)
+
+                if (confidence >= letterConfidenceThreshold) {
+                    // Check if this letter had stops or angles
+                    val hadStop = result.stoppedLetters.contains(nearestLetter)
+                    val hadAngle = result.angleLetters.contains(nearestLetter)
+                    val timeSpent = if (i > 0) System.currentTimeMillis() - lastLetterTime else 0L
+
+                    val detection = LetterDetection(nearestLetter, point, confidence, hadStop, hadAngle, timeSpent)
+                    result.letterDetails.add(detection)
+
+                    if (!result.detectedLetters.contains(nearestLetter)) {
+                        result.detectedLetters.add(nearestLetter)
+                    }
+
+                    lastLetter = nearestLetter
+                    lastLetterTime = System.currentTimeMillis()
+                }
+            }
+        }
+
+        result.averageLetterConfidence = result.letterDetails
+            .map { it.confidence }
+            .average()
+            .takeIf { !it.isNaN() } ?: 0.0
+
+        Log.d(
+            TAG,
+            "Letters: ${result.detectedLetters}, avg confidence ${String.format("%.3f", result.averageLetterConfidence)}"
+        )
+    }
+
+    /**
+     * 6. START/END LETTER ANALYSIS - All parameters configurable
+     */
+    private fun analyzeStartEnd(swipePath: List<PointF>, targetWord: String, result: TraceAnalysisResult) {
+        if (swipePath.isEmpty()) return
+
+        // Analyze start letter
+        val startPoint = swipePath[0]
+        result.startLetter = findNearestLetter(startPoint)
+        result.startAccuracy = calculatePositionAccuracy(startPoint, result.startLetter, startPositionTolerance)
+
+        // Analyze end letter
+        val endPoint = swipePath[swipePath.size - 1]
+        result.endLetter = findNearestLetter(endPoint)
+        result.endAccuracy = calculatePositionAccuracy(endPoint, result.endLetter, endPositionTolerance)
+
+        // Check matches against target word
+        if (targetWord.isNotEmpty()) {
+            result.startLetterMatch = targetWord[0] == (result.startLetter ?: '\u0000')
+            result.endLetterMatch = targetWord[targetWord.length - 1] == (result.endLetter ?: '\u0000')
+        }
+
+        Log.d(
+            TAG,
+            "Start: ${result.startLetter ?: '?'} (${String.format("%.3f", result.startAccuracy)}) " +
+                "End: ${result.endLetter ?: '?'} (${String.format("%.3f", result.endAccuracy)}) " +
+                "Matches: ${result.startLetterMatch}/${result.endLetterMatch}"
+        )
+    }
+
+    /**
+     * 7. COMPOSITE SCORING - All weights configurable
+     */
+    private fun calculateCompositeScores(result: TraceAnalysisResult) {
+        // Calculate overall confidence based on all factors
+        var confidence = 0.0
+
+        // Bounding box contribution
+        if (enableBoundingBoxAnalysis) {
+            confidence += if (result.aspectRatio in 0.5..2.0) 0.2 else 0.0
+        }
+
+        // Directional movement contribution
+        if (enableDirectionalAnalysis) {
+            val directionalBalance = 1.0 - abs(0.5 - (result.eastDistance + result.westDistance) / result.totalDistance)
+            confidence += directionalBalance * 0.2
+        }
+
+        // Letter detection contribution
+        confidence += min(1.0, result.averageLetterConfidence) * 0.4
+
+        // Start/end contribution
+        confidence += if (result.startLetterMatch) startLetterWeight * 0.1 else 0.0
+        confidence += if (result.endLetterMatch) endLetterWeight * 0.1 else 0.0
+
+        result.overallConfidence = min(1.0, confidence)
+
+        // Calculate gesture complexity
+        result.gestureComplexity = (result.totalStops * 0.2) + (result.anglePoints.size * 0.3) +
+            (result.detectedLetters.size * 0.1) + (result.totalDistance / 1000.0 * 0.4)
+
+        // Calculate recognition difficulty
+        result.recognitionDifficulty = 1.0 - result.overallConfidence + (result.gestureComplexity * 0.3)
+
+        Log.d(
+            TAG,
+            "Composite: confidence=${String.format("%.3f", result.overallConfidence)}, " +
+                "complexity=${String.format("%.3f", result.gestureComplexity)}, " +
+                "difficulty=${String.format("%.3f", result.recognitionDifficulty)}"
+        )
+    }
+
+    // ========== HELPER METHODS (All using configurable parameters) ==========
+
+    private fun findNearestLetter(point: PointF): Char? {
+        var minDistance = Double.MAX_VALUE
+        var nearestLetter: Char? = null
+
+        // Check all keyboard letters using existing coordinate system
+        val allLetters = "qwertyuiopasdfghjklzxcvbnm"
+        for (c in allLetters) {
+            val coord = templateGenerator.getCharacterCoordinate(c)
+            if (coord != null) {
+                val distance = sqrt((point.x - coord.x).pow(2) + (point.y - coord.y).pow(2)).toDouble()
+
+                // Use configurable letter detection radius
+                if (distance <= letterDetectionRadius && distance < minDistance) {
+                    minDistance = distance
+                    nearestLetter = c
+                }
+            }
+        }
+
+        return nearestLetter
+    }
+
+    private fun calculateDirectionChange(path: List<PointF>, centerIndex: Int): Double {
+        if (centerIndex < angleAnalysisWindowSize || centerIndex >= path.size - angleAnalysisWindowSize)
+            return 0.0
+
+        val before = path[centerIndex - angleAnalysisWindowSize]
+        val center = path[centerIndex]
+        val after = path[centerIndex + angleAnalysisWindowSize]
+
+        val angle1 = atan2((center.y - before.y).toDouble(), (center.x - before.x).toDouble())
+        val angle2 = atan2((after.y - center.y).toDouble(), (after.x - center.x).toDouble())
+
+        var deltaAngle = Math.toDegrees(angle2 - angle1)
+        if (deltaAngle > 180) deltaAngle -= 360
+        if (deltaAngle < -180) deltaAngle += 360
+
+        return deltaAngle
+    }
+
+    private fun calculateStopConfidence(duration: Long, position: PointF): Double {
+        // Confidence based on stop duration and position stability
+        val durationFactor = min(1.0, duration / stopThresholdMs.toDouble())
+        return durationFactor * stopLetterWeight
+    }
+
+    private fun calculateLetterConfidence(point: PointF, letter: Char): Double {
+        // Get actual key center coordinate
+        val keyCenter = templateGenerator.getCharacterCoordinate(letter) ?: return 0.0
+
+        // Calculate distance from point to key center
+        val distance = sqrt((point.x - keyCenter.x).pow(2) + (point.y - keyCenter.y).pow(2)).toDouble()
+
+        // Convert distance to confidence using configurable parameters
+        // Confidence decreases exponentially with distance
+        val confidence = exp(-distance / letterDetectionRadius)
+
+        return min(1.0, confidence)
+    }
+
+    private fun calculatePositionAccuracy(point: PointF, letter: Char?, tolerance: Double): Double {
+        if (letter == null) return 0.0
+
+        // Get actual key center coordinate
+        val keyCenter = templateGenerator.getCharacterCoordinate(letter) ?: return 0.0
+
+        // Calculate distance from point to key center
+        val distance = sqrt((point.x - keyCenter.x).pow(2) + (point.y - keyCenter.y).pow(2)).toDouble()
+
+        // Accuracy is 1.0 if within tolerance, decreasing linearly beyond tolerance
+        return if (distance <= tolerance) {
+            1.0 - (distance / tolerance) * 0.5 // 50-100% accuracy within tolerance
         } else {
-            0f
-        }
-
-        // Determine quality level
-        val qualityLevel = when {
-            points.size < 2 -> QualityLevel.INVALID
-            smoothnessScore > 0.8f && consistencyScore > 0.8f -> QualityLevel.EXCELLENT
-            smoothnessScore > 0.6f && consistencyScore > 0.6f -> QualityLevel.GOOD
-            smoothnessScore > 0.4f && consistencyScore > 0.4f -> QualityLevel.FAIR
-            else -> QualityLevel.POOR
-        }
-
-        return QualityMetrics(
-            qualityLevel = qualityLevel,
-            smoothnessScore = smoothnessScore,
-            consistencyScore = consistencyScore,
-            noiseLevel = noiseLevel,
-            outlierCount = outlierCount,
-            samplingRate = samplingRate
-        )
-    }
-
-    /**
-     * Extract feature vector for machine learning.
-     */
-    private fun extractFeatureVector(
-        geometry: GeometricFeatures,
-        motion: MotionFeatures,
-        pattern: PatternFeatures,
-        quality: QualityMetrics
-    ): FloatArray {
-        return floatArrayOf(
-            // Geometric features (8)
-            geometry.totalLength,
-            geometry.straightLineDistance,
-            geometry.curvatureIndex,
-            geometry.boundingBoxArea,
-            geometry.aspectRatio,
-            geometry.averageAngle.toFloat(),
-            geometry.angleVariance.toFloat(),
-
-            // Motion features (7)
-            motion.averageVelocity,
-            motion.maxVelocity,
-            motion.velocityVariance,
-            motion.averageAcceleration,
-            motion.maxAcceleration,
-            motion.averageJerk,
-            motion.duration.toFloat(),
-
-            // Pattern features (6)
-            pattern.directionChanges.toFloat(),
-            pattern.loopCount.toFloat(),
-            pattern.zigzagCount.toFloat(),
-            pattern.curvaturePoints.toFloat(),
-            pattern.inflectionPoints.toFloat(),
-            pattern.symmetryScore,
-
-            // Quality features (4)
-            quality.smoothnessScore,
-            quality.consistencyScore,
-            quality.noiseLevel,
-            quality.samplingRate
-        )
-    }
-
-    /**
-     * Update analysis statistics.
-     */
-    private fun updateStatistics(analysisTime: Long) {
-        lastAnalysisTime = analysisTime
-        totalAnalyses++
-
-        averageAnalysisTime = ((averageAnalysisTime * (totalAnalyses - 1)) + analysisTime) / totalAnalyses
-    }
-
-    /**
-     * Get analysis statistics.
-     *
-     * @return Map of statistics
-     */
-    fun getStatistics(): Map<String, Any> {
-        return mapOf(
-            "totalAnalyses" to totalAnalyses,
-            "lastAnalysisTime" to lastAnalysisTime,
-            "averageAnalysisTime" to averageAnalysisTime
-        )
-    }
-
-    /**
-     * Set callback for analysis events.
-     */
-    fun setCallback(callback: Callback?) {
-        this.callback = callback
-    }
-
-    /**
-     * Release all resources and cleanup.
-     */
-    fun release() {
-        logD("Releasing ComprehensiveTraceAnalyzer resources...")
-
-        try {
-            scope.cancel()
-            callback = null
-
-            logD("✅ ComprehensiveTraceAnalyzer resources released")
-        } catch (e: Exception) {
-            logE("Error releasing comprehensive trace analyzer resources", e)
+            max(0.0, 0.5 - (distance - tolerance) / tolerance) // Decreasing beyond tolerance
         }
     }
 
-    // Logging helpers
-    private fun logD(message: String) = Log.d(TAG, message)
-    private fun logE(message: String, throwable: Throwable? = null) {
-        if (throwable != null) {
-            Log.e(TAG, message, throwable)
-        } else {
-            Log.e(TAG, message)
+    // ========== CONFIGURATION METHODS ==========
+
+    fun setBoundingBoxParameters(enable: Boolean, padding: Double, rotation: Boolean, aspectWeight: Double) {
+        enableBoundingBoxAnalysis = enable
+        boundingBoxPadding = padding
+        includeBoundingBoxRotation = rotation
+        boundingBoxAspectRatioWeight = aspectWeight
+    }
+
+    fun setDirectionalParameters(enable: Boolean, nsWeight: Double, ewWeight: Double, diagWeight: Double, smoothing: Double) {
+        enableDirectionalAnalysis = enable
+        northSouthWeight = nsWeight
+        eastWestWeight = ewWeight
+        diagonalMovementWeight = diagWeight
+        movementSmoothingFactor = smoothing
+    }
+
+    fun setStopParameters(enable: Boolean, threshold: Long, tolerance: Double, weight: Double, minDur: Int, maxStops: Int) {
+        enableStopDetection = enable
+        stopThresholdMs = threshold
+        stopPositionTolerance = tolerance
+        stopLetterWeight = weight
+        minStopDuration = minDur
+        maxStopsPerGesture = maxStops
+    }
+
+    fun setAngleParameters(enable: Boolean, threshold: Double, sharp: Double, smooth: Double, window: Int, boost: Double) {
+        enableAngleDetection = enable
+        angleDetectionThreshold = threshold
+        sharpAngleThreshold = sharp
+        smoothAngleThreshold = smooth
+        angleAnalysisWindowSize = window
+        angleLetterBoost = boost
+    }
+
+    fun setLetterParameters(radius: Double, confidence: Double, predict: Boolean, order: Double, maxLetters: Int) {
+        letterDetectionRadius = radius
+        letterConfidenceThreshold = confidence
+        enableLetterPrediction = predict
+        letterOrderWeight = order
+        maxLettersPerGesture = maxLetters
+    }
+
+    fun setStartEndParameters(
+        startWeight: Double,
+        endWeight: Double,
+        startTol: Double,
+        endTol: Double,
+        reqStart: Boolean,
+        reqEnd: Boolean
+    ) {
+        startLetterWeight = startWeight
+        endLetterWeight = endWeight
+        startPositionTolerance = startTol
+        endPositionTolerance = endTol
+        requireStartLetterMatch = reqStart
+        requireEndLetterMatch = reqEnd
+    }
+
+    /**
+     * Calculate optimal rotation angle for minimal bounding box
+     */
+    private fun calculateOptimalRotation(points: List<PointF>): Double {
+        var minArea = Double.MAX_VALUE
+        var optimalRotation = 0.0
+
+        // Test rotations from 0 to 180 degrees (in 5-degree increments)
+        for (angle in 0 until 180 step 5) {
+            val radians = Math.toRadians(angle.toDouble())
+
+            // Calculate rotated bounding box
+            var minX = Float.MAX_VALUE
+            var maxX = Float.MIN_VALUE
+            var minY = Float.MAX_VALUE
+            var maxY = Float.MIN_VALUE
+
+            for (point in points) {
+                // Rotate point around origin
+                val rotatedX = (point.x * cos(radians) - point.y * sin(radians)).toFloat()
+                val rotatedY = (point.x * sin(radians) + point.y * cos(radians)).toFloat()
+
+                minX = min(minX, rotatedX)
+                maxX = max(maxX, rotatedX)
+                minY = min(minY, rotatedY)
+                maxY = max(maxY, rotatedY)
+            }
+
+            val area = ((maxX - minX) * (maxY - minY)).toDouble()
+            if (area < minArea) {
+                minArea = area
+                optimalRotation = angle.toDouble()
+            }
         }
+
+        return optimalRotation
+    }
+
+    /**
+     * Set keyboard dimensions for coordinate calculations
+     */
+    fun setKeyboardDimensions(width: Float, height: Float) {
+        templateGenerator.setKeyboardDimensions(width, height)
+        Log.d(TAG, "Keyboard dimensions set: ${width}x$height")
+    }
+
+    companion object {
+        private const val TAG = "ComprehensiveTraceAnalyzer"
     }
 }

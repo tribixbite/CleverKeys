@@ -1,188 +1,768 @@
 package tribixbite.keyboard2
 
-import android.content.Context
-import kotlinx.coroutines.*
+import android.content.res.Resources
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
 
-/**
- * Emoji management system
- * Kotlin implementation with reactive emoji loading
- */
-class Emoji(private val context: Context) {
-    
+class Emoji protected constructor(bytecode: String) {
+    private val kv: KeyValue = KeyValue(bytecode, KeyValue.Kind.String, 0, 0)
+
+    fun kv(): KeyValue = kv
+
     companion object {
-        private const val TAG = "Emoji"
-        private var instance: Emoji? = null
-        
-        fun getInstance(context: Context): Emoji {
-            return instance ?: synchronized(this) {
-                instance ?: Emoji(context).also { instance = it }
+        private val all: MutableList<Emoji> = mutableListOf()
+        private val groups: MutableList<List<Emoji>> = mutableListOf()
+        private val stringMap: MutableMap<String, Emoji> = mutableMapOf()
+
+        @JvmStatic
+        fun init(res: Resources) {
+            if (all.isNotEmpty()) return
+
+            try {
+                val inputStream = res.openRawResource(R.raw.emojis)
+                BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                    // Read emoji (until empty line)
+                    while (true) {
+                        val line = reader.readLine() ?: break
+                        if (line.isEmpty()) break
+                        val e = Emoji(line)
+                        all.add(e)
+                        stringMap[line] = e
+                    }
+
+                    // Read group indices
+                    val groupLine = reader.readLine()
+                    if (groupLine != null) {
+                        val tokens = groupLine.split(" ")
+                        var last = 0
+                        for (i in 1 until tokens.size) {
+                            val next = tokens[i].toInt()
+                            groups.add(all.subList(last, next))
+                            last = next
+                        }
+                        groups.add(all.subList(last, all.size))
+                    }
+                }
+            } catch (e: IOException) {
+                Logs.exn("Emoji.init() failed", e)
             }
         }
-    }
-    
-    private val emojis = mutableListOf<EmojiData>()
-    private val emojiGroups = mutableMapOf<String, List<EmojiData>>()
-    private var isLoaded = false
-    
-    /**
-     * Emoji data class
-     */
-    data class EmojiData(
-        val emoji: String,
-        val description: String,
-        val group: String,
-        val keywords: List<String>
-    )
-    
-    /**
-     * Load emoji data
-     */
-    suspend fun loadEmojis(): Boolean = withContext(Dispatchers.IO) {
-        try {
-            context.assets.open("raw/emojis.txt").bufferedReader().useLines { lines ->
-                lines.forEach { line ->
-                    val parts = line.split(";")
-                    if (parts.size >= 3) {
-                        val emoji = parts[0].trim()
-                        val description = parts[1].trim()
-                        val group = parts.getOrNull(2)?.trim() ?: "other"
-                        val keywords = parts.drop(3).map { it.trim() }
-                        
-                        emojis.add(EmojiData(emoji, description, group, keywords))
+
+        @JvmStatic
+        fun getNumGroups(): Int = groups.size
+
+        @JvmStatic
+        fun getEmojisByGroup(groupIndex: Int): List<Emoji> = groups[groupIndex]
+
+        @JvmStatic
+        fun getEmojiByString(value: String): Emoji? = stringMap[value]
+
+        @JvmStatic
+        @Throws(IllegalArgumentException::class)
+        fun mapOldNameToValue(name: String): String {
+            if (name.matches(Regex(":(u[a-fA-F0-9]{4,5})+:"))) {
+                return buildString {
+                    for (code in name.replace(":", "").substring(1).split("u")) {
+                        try {
+                            append(Character.toChars(Integer.decode("0X$code")))
+                        } catch (e: IllegalArgumentException) {
+                            throw IllegalArgumentException("Failed to parse codepoint '$code' in name '$name'", e)
+                        }
                     }
                 }
             }
-            
-            // Group emojis
-            emojiGroups.clear()
-            emojis.groupBy { it.group }.forEach { (group, emojis) ->
-                emojiGroups[group] = emojis
+
+            return when (name) {
+                ":grinning:" -> "😀"
+                ":smiley:" -> "😃"
+                ":smile:" -> "😄"
+                ":grin:" -> "😁"
+                ":satisfied:" -> "😆"
+                ":sweat_smile:" -> "😅"
+                ":joy:" -> "😂"
+                ":wink:" -> "😉"
+                ":blush:" -> "😊"
+                ":innocent:" -> "😇"
+                ":heart_eyes:" -> "😍"
+                ":kissing_heart:" -> "😘"
+                ":kissing:" -> "😗"
+                ":kissing_closed_eyes:" -> "😚"
+                ":kissing_smiling_eyes:" -> "😙"
+                ":yum:" -> "😋"
+                ":stuck_out_tongue:" -> "😛"
+                ":stuck_out_tongue_winking_eye:" -> "😜"
+                ":stuck_out_tongue_closed_eyes:" -> "😝"
+                ":neutral_face:" -> "😐"
+                ":expressionless:" -> "😑"
+                ":no_mouth:" -> "😶"
+                ":smirk:" -> "😏"
+                ":unamused:" -> "😒"
+                ":grimacing:" -> "😬"
+                ":relieved:" -> "😌"
+                ":pensive:" -> "😔"
+                ":sleepy:" -> "😪"
+                ":sleeping:" -> "😴"
+                ":mask:" -> "😷"
+                ":dizzy_face:" -> "😵"
+                ":sunglasses:" -> "😎"
+                ":confused:" -> "😕"
+                ":worried:" -> "😟"
+                ":open_mouth:" -> "😮"
+                ":hushed:" -> "😯"
+                ":astonished:" -> "😲"
+                ":flushed:" -> "😳"
+                ":frowning:" -> "😦"
+                ":anguished:" -> "😧"
+                ":fearful:" -> "😨"
+                ":cold_sweat:" -> "😰"
+                ":disappointed_relieved:" -> "😥"
+                ":cry:" -> "😢"
+                ":sob:" -> "😭"
+                ":scream:" -> "😱"
+                ":confounded:" -> "😖"
+                ":persevere:" -> "😣"
+                ":disappointed:" -> "😞"
+                ":sweat:" -> "😓"
+                ":weary:" -> "😩"
+                ":tired_face:" -> "😫"
+                ":triumph:" -> "😤"
+                ":rage:" -> "😡"
+                ":angry:" -> "😠"
+                ":smiling_imp:" -> "😈"
+                ":imp:" -> "👿"
+                ":skull:" -> "💀"
+                ":shit:" -> "💩"
+                ":japanese_ogre:" -> "👹"
+                ":japanese_goblin:" -> "👺"
+                ":ghost:" -> "👻"
+                ":alien:" -> "👽"
+                ":space_invader:" -> "👾"
+                ":smiley_cat:" -> "😺"
+                ":smile_cat:" -> "😸"
+                ":joy_cat:" -> "😹"
+                ":heart_eyes_cat:" -> "😻"
+                ":smirk_cat:" -> "😼"
+                ":kissing_cat:" -> "😽"
+                ":scream_cat:" -> "🙀"
+                ":crying_cat_face:" -> "😿"
+                ":pouting_cat:" -> "😾"
+                ":see_no_evil:" -> "🙈"
+                ":hear_no_evil:" -> "🙉"
+                ":speak_no_evil:" -> "🙊"
+                ":kiss:" -> "💋"
+                ":love_letter:" -> "💌"
+                ":cupid:" -> "💘"
+                ":gift_heart:" -> "💝"
+                ":sparkling_heart:" -> "💖"
+                ":heartpulse:" -> "💗"
+                ":heartbeat:" -> "💓"
+                ":revolving_hearts:" -> "💞"
+                ":two_hearts:" -> "💕"
+                ":heart_decoration:" -> "💟"
+                ":broken_heart:" -> "💔"
+                ":yellow_heart:" -> "💛"
+                ":green_heart:" -> "💚"
+                ":blue_heart:" -> "💙"
+                ":purple_heart:" -> "💜"
+                ":100:" -> "💯"
+                ":anger:" -> "💢"
+                ":collision:" -> "💥"
+                ":dizzy:" -> "💫"
+                ":sweat_drops:" -> "💦"
+                ":dash:" -> "💨"
+                ":bomb:" -> "💣"
+                ":speech_balloon:" -> "💬"
+                ":thought_balloon:" -> "💭"
+                ":zzz:" -> "💤"
+                ":wave:" -> "👋"
+                ":ok_hand:" -> "👌"
+                ":point_left:" -> "👈"
+                ":point_right:" -> "👉"
+                ":point_up_2:" -> "👆"
+                ":point_down:" -> "👇"
+                ":thumbsup:" -> "👍"
+                ":thumbsdown:" -> "👎"
+                ":punch:" -> "👊"
+                ":clap:" -> "👏"
+                ":raised_hands:" -> "🙌"
+                ":open_hands:" -> "👐"
+                ":pray:" -> "🙏"
+                ":nail_care:" -> "💅"
+                ":muscle:" -> "💪"
+                ":ear:" -> "👂"
+                ":nose:" -> "👃"
+                ":eyes:" -> "👀"
+                ":tongue:" -> "👅"
+                ":lips:" -> "👄"
+                ":baby:" -> "👶"
+                ":boy:" -> "👦"
+                ":girl:" -> "👧"
+                ":person_with_blond_hair:" -> "👱"
+                ":man:" -> "👨"
+                ":woman:" -> "👩"
+                ":older_man:" -> "👴"
+                ":older_woman:" -> "👵"
+                ":person_frowning:" -> "🙍"
+                ":person_with_pouting_face:" -> "🙎"
+                ":no_good:" -> "🙅"
+                ":ok_woman:" -> "🙆"
+                ":information_desk_person:" -> "💁"
+                ":raising_hand:" -> "🙋"
+                ":bow:" -> "🙇"
+                ":cop:" -> "👮"
+                ":guardsman:" -> "💂"
+                ":construction_worker:" -> "👷"
+                ":princess:" -> "👸"
+                ":man_with_turban:" -> "👳"
+                ":man_with_gua_pi_mao:" -> "👲"
+                ":bride_with_veil:" -> "👰"
+                ":angel:" -> "👼"
+                ":santa:" -> "🎅"
+                ":massage:" -> "💆"
+                ":haircut:" -> "💇"
+                ":walking:" -> "🚶"
+                ":running:" -> "🏃"
+                ":dancer:" -> "💃"
+                ":dancers:" -> "👯"
+                ":horse_racing:" -> "🏇"
+                ":snowboarder:" -> "🏂"
+                ":surfer:" -> "🏄"
+                ":rowboat:" -> "🚣"
+                ":swimmer:" -> "🏊"
+                ":bicyclist:" -> "🚴"
+                ":mountain_bicyclist:" -> "🚵"
+                ":bath:" -> "🛀"
+                ":two_women_holding_hands:" -> "👭"
+                ":couple:" -> "👫"
+                ":two_men_holding_hands:" -> "👬"
+                ":couplekiss:" -> "💏"
+                ":couple_with_heart:" -> "💑"
+                ":family:" -> "👪"
+                ":bust_in_silhouette:" -> "👤"
+                ":busts_in_silhouette:" -> "👥"
+                ":footprints:" -> "👣"
+                ":monkey_face:" -> "🐵"
+                ":monkey:" -> "🐒"
+                ":dog:" -> "🐶"
+                ":dog2:" -> "🐕"
+                ":poodle:" -> "🐩"
+                ":wolf:" -> "🐺"
+                ":cat:" -> "🐱"
+                ":cat2:" -> "🐈"
+                ":tiger:" -> "🐯"
+                ":tiger2:" -> "🐅"
+                ":leopard:" -> "🐆"
+                ":horse:" -> "🐴"
+                ":racehorse:" -> "🐎"
+                ":cow:" -> "🐮"
+                ":ox:" -> "🐂"
+                ":water_buffalo:" -> "🐃"
+                ":cow2:" -> "🐄"
+                ":pig:" -> "🐷"
+                ":pig2:" -> "🐖"
+                ":boar:" -> "🐗"
+                ":pig_nose:" -> "🐽"
+                ":ram:" -> "🐏"
+                ":sheep:" -> "🐑"
+                ":goat:" -> "🐐"
+                ":dromedary_camel:" -> "🐪"
+                ":camel:" -> "🐫"
+                ":elephant:" -> "🐘"
+                ":mouse:" -> "🐭"
+                ":mouse2:" -> "🐁"
+                ":rat:" -> "🐀"
+                ":hamster:" -> "🐹"
+                ":rabbit:" -> "🐰"
+                ":rabbit2:" -> "🐇"
+                ":bear:" -> "🐻"
+                ":koala:" -> "🐨"
+                ":panda_face:" -> "🐼"
+                ":paw_prints:" -> "🐾"
+                ":chicken:" -> "🐔"
+                ":rooster:" -> "🐓"
+                ":hatching_chick:" -> "🐣"
+                ":baby_chick:" -> "🐤"
+                ":hatched_chick:" -> "🐥"
+                ":bird:" -> "🐦"
+                ":penguin:" -> "🐧"
+                ":frog:" -> "🐸"
+                ":crocodile:" -> "🐊"
+                ":turtle:" -> "🐢"
+                ":snake:" -> "🐍"
+                ":dragon_face:" -> "🐲"
+                ":dragon:" -> "🐉"
+                ":whale:" -> "🐳"
+                ":whale2:" -> "🐋"
+                ":flipper:" -> "🐬"
+                ":fish:" -> "🐟"
+                ":tropical_fish:" -> "🐠"
+                ":blowfish:" -> "🐡"
+                ":octopus:" -> "🐙"
+                ":shell:" -> "🐚"
+                ":snail:" -> "🐌"
+                ":bug:" -> "🐛"
+                ":ant:" -> "🐜"
+                ":honeybee:" -> "🐝"
+                ":beetle:" -> "🐞"
+                ":bouquet:" -> "💐"
+                ":cherry_blossom:" -> "🌸"
+                ":white_flower:" -> "💮"
+                ":rose:" -> "🌹"
+                ":hibiscus:" -> "🌺"
+                ":sunflower:" -> "🌻"
+                ":blossom:" -> "🌼"
+                ":tulip:" -> "🌷"
+                ":seedling:" -> "🌱"
+                ":evergreen_tree:" -> "🌲"
+                ":deciduous_tree:" -> "🌳"
+                ":palm_tree:" -> "🌴"
+                ":cactus:" -> "🌵"
+                ":ear_of_rice:" -> "🌾"
+                ":herb:" -> "🌿"
+                ":four_leaf_clover:" -> "🍀"
+                ":maple_leaf:" -> "🍁"
+                ":fallen_leaf:" -> "🍂"
+                ":leaves:" -> "🍃"
+                ":grapes:" -> "🍇"
+                ":melon:" -> "🍈"
+                ":watermelon:" -> "🍉"
+                ":tangerine:" -> "🍊"
+                ":lemon:" -> "🍋"
+                ":banana:" -> "🍌"
+                ":pineapple:" -> "🍍"
+                ":apple:" -> "🍎"
+                ":green_apple:" -> "🍏"
+                ":pear:" -> "🍐"
+                ":peach:" -> "🍑"
+                ":cherries:" -> "🍒"
+                ":strawberry:" -> "🍓"
+                ":tomato:" -> "🍅"
+                ":eggplant:" -> "🍆"
+                ":corn:" -> "🌽"
+                ":mushroom:" -> "🍄"
+                ":chestnut:" -> "🌰"
+                ":bread:" -> "🍞"
+                ":meat_on_bone:" -> "🍖"
+                ":poultry_leg:" -> "🍗"
+                ":hamburger:" -> "🍔"
+                ":fries:" -> "🍟"
+                ":pizza:" -> "🍕"
+                ":egg:" -> "🍳"
+                ":stew:" -> "🍲"
+                ":bento:" -> "🍱"
+                ":rice_cracker:" -> "🍘"
+                ":rice_ball:" -> "🍙"
+                ":rice:" -> "🍚"
+                ":curry:" -> "🍛"
+                ":ramen:" -> "🍜"
+                ":spaghetti:" -> "🍝"
+                ":sweet_potato:" -> "🍠"
+                ":oden:" -> "🍢"
+                ":sushi:" -> "🍣"
+                ":fried_shrimp:" -> "🍤"
+                ":fish_cake:" -> "🍥"
+                ":dango:" -> "🍡"
+                ":icecream:" -> "🍦"
+                ":shaved_ice:" -> "🍧"
+                ":ice_cream:" -> "🍨"
+                ":doughnut:" -> "🍩"
+                ":cookie:" -> "🍪"
+                ":birthday:" -> "🎂"
+                ":cake:" -> "🍰"
+                ":chocolate_bar:" -> "🍫"
+                ":candy:" -> "🍬"
+                ":lollipop:" -> "🍭"
+                ":custard:" -> "🍮"
+                ":honey_pot:" -> "🍯"
+                ":baby_bottle:" -> "🍼"
+                ":tea:" -> "🍵"
+                ":sake:" -> "🍶"
+                ":wine_glass:" -> "🍷"
+                ":cocktail:" -> "🍸"
+                ":tropical_drink:" -> "🍹"
+                ":beer:" -> "🍺"
+                ":beers:" -> "🍻"
+                ":fork_and_knife:" -> "🍴"
+                ":hocho:" -> "🔪"
+                ":earth_africa:" -> "🌍"
+                ":earth_americas:" -> "🌎"
+                ":earth_asia:" -> "🌏"
+                ":globe_with_meridians:" -> "🌐"
+                ":japan:" -> "🗾"
+                ":volcano:" -> "🌋"
+                ":mount_fuji:" -> "🗻"
+                ":house:" -> "🏠"
+                ":house_with_garden:" -> "🏡"
+                ":office:" -> "🏢"
+                ":post_office:" -> "🏣"
+                ":european_post_office:" -> "🏤"
+                ":hospital:" -> "🏥"
+                ":bank:" -> "🏦"
+                ":hotel:" -> "🏨"
+                ":love_hotel:" -> "🏩"
+                ":convenience_store:" -> "🏪"
+                ":school:" -> "🏫"
+                ":department_store:" -> "🏬"
+                ":factory:" -> "🏭"
+                ":japanese_castle:" -> "🏯"
+                ":european_castle:" -> "🏰"
+                ":wedding:" -> "💒"
+                ":tokyo_tower:" -> "🗼"
+                ":statue_of_liberty:" -> "🗽"
+                ":foggy:" -> "🌁"
+                ":stars:" -> "🌃"
+                ":sunrise_over_mountains:" -> "🌄"
+                ":sunrise:" -> "🌅"
+                ":city_sunset:" -> "🌆"
+                ":city_sunrise:" -> "🌇"
+                ":bridge_at_night:" -> "🌉"
+                ":carousel_horse:" -> "🎠"
+                ":ferris_wheel:" -> "🎡"
+                ":roller_coaster:" -> "🎢"
+                ":barber:" -> "💈"
+                ":circus_tent:" -> "🎪"
+                ":steam_locomotive:" -> "🚂"
+                ":train:" -> "🚃"
+                ":bullettrain_side:" -> "🚄"
+                ":bullettrain_front:" -> "🚅"
+                ":train2:" -> "🚆"
+                ":metro:" -> "🚇"
+                ":light_rail:" -> "🚈"
+                ":station:" -> "🚉"
+                ":tram:" -> "🚊"
+                ":monorail:" -> "🚝"
+                ":mountain_railway:" -> "🚞"
+                ":bus:" -> "🚌"
+                ":oncoming_bus:" -> "🚍"
+                ":trolleybus:" -> "🚎"
+                ":minibus:" -> "🚐"
+                ":ambulance:" -> "🚑"
+                ":fire_engine:" -> "🚒"
+                ":police_car:" -> "🚓"
+                ":oncoming_police_car:" -> "🚔"
+                ":taxi:" -> "🚕"
+                ":oncoming_taxi:" -> "🚖"
+                ":red_car:" -> "🚗"
+                ":oncoming_automobile:" -> "🚘"
+                ":blue_car:" -> "🚙"
+                ":truck:" -> "🚚"
+                ":articulated_lorry:" -> "🚛"
+                ":tractor:" -> "🚜"
+                ":bike:" -> "🚲"
+                ":busstop:" -> "🚏"
+                ":rotating_light:" -> "🚨"
+                ":traffic_light:" -> "🚥"
+                ":vertical_traffic_light:" -> "🚦"
+                ":construction:" -> "🚧"
+                ":speedboat:" -> "🚤"
+                ":ship:" -> "🚢"
+                ":seat:" -> "💺"
+                ":helicopter:" -> "🚁"
+                ":suspension_railway:" -> "🚟"
+                ":mountain_cableway:" -> "🚠"
+                ":aerial_tramway:" -> "🚡"
+                ":rocket:" -> "🚀"
+                ":clock12:" -> "🕛"
+                ":clock1230:" -> "🕧"
+                ":clock1:" -> "🕐"
+                ":clock130:" -> "🕜"
+                ":clock2:" -> "🕑"
+                ":clock230:" -> "🕝"
+                ":clock3:" -> "🕒"
+                ":clock330:" -> "🕞"
+                ":clock4:" -> "🕓"
+                ":clock430:" -> "🕟"
+                ":clock5:" -> "🕔"
+                ":clock530:" -> "🕠"
+                ":clock6:" -> "🕕"
+                ":clock630:" -> "🕡"
+                ":clock7:" -> "🕖"
+                ":clock730:" -> "🕢"
+                ":clock8:" -> "🕗"
+                ":clock830:" -> "🕣"
+                ":clock9:" -> "🕘"
+                ":clock930:" -> "🕤"
+                ":clock10:" -> "🕙"
+                ":clock1030:" -> "🕥"
+                ":clock11:" -> "🕚"
+                ":clock1130:" -> "🕦"
+                ":new_moon:" -> "🌑"
+                ":waxing_crescent_moon:" -> "🌒"
+                ":first_quarter_moon:" -> "🌓"
+                ":waxing_gibbous_moon:" -> "🌔"
+                ":full_moon:" -> "🌕"
+                ":waning_gibbous_moon:" -> "🌖"
+                ":last_quarter_moon:" -> "🌗"
+                ":waning_crescent_moon:" -> "🌘"
+                ":crescent_moon:" -> "🌙"
+                ":new_moon_with_face:" -> "🌚"
+                ":first_quarter_moon_with_face:" -> "🌛"
+                ":last_quarter_moon_with_face:" -> "🌜"
+                ":full_moon_with_face:" -> "🌝"
+                ":sun_with_face:" -> "🌞"
+                ":star2:" -> "🌟"
+                ":milky_way:" -> "🌌"
+                ":cyclone:" -> "🌀"
+                ":rainbow:" -> "🌈"
+                ":closed_umbrella:" -> "🌂"
+                ":fire:" -> "🔥"
+                ":droplet:" -> "💧"
+                ":ocean:" -> "🌊"
+                ":jack_o_lantern:" -> "🎃"
+                ":christmas_tree:" -> "🎄"
+                ":fireworks:" -> "🎆"
+                ":sparkler:" -> "🎇"
+                ":balloon:" -> "🎈"
+                ":tada:" -> "🎉"
+                ":confetti_ball:" -> "🎊"
+                ":tanabata_tree:" -> "🎋"
+                ":bamboo:" -> "🎍"
+                ":dolls:" -> "🎎"
+                ":flags:" -> "🎏"
+                ":wind_chime:" -> "🎐"
+                ":rice_scene:" -> "🎑"
+                ":ribbon:" -> "🎀"
+                ":gift:" -> "🎁"
+                ":ticket:" -> "🎫"
+                ":trophy:" -> "🏆"
+                ":basketball:" -> "🏀"
+                ":football:" -> "🏈"
+                ":rugby_football:" -> "🏉"
+                ":tennis:" -> "🎾"
+                ":bowling:" -> "🎳"
+                ":fishing_pole_and_fish:" -> "🎣"
+                ":running_shirt_with_sash:" -> "🎽"
+                ":ski:" -> "🎿"
+                ":dart:" -> "🎯"
+                ":8ball:" -> "🎱"
+                ":crystal_ball:" -> "🔮"
+                ":video_game:" -> "🎮"
+                ":slot_machine:" -> "🎰"
+                ":game_die:" -> "🎲"
+                ":black_joker:" -> "🃏"
+                ":mahjong:" -> "🀄"
+                ":flower_playing_cards:" -> "🎴"
+                ":performing_arts:" -> "🎭"
+                ":art:" -> "🎨"
+                ":eyeglasses:" -> "👓"
+                ":necktie:" -> "👔"
+                ":tshirt:" -> "👕"
+                ":jeans:" -> "👖"
+                ":dress:" -> "👗"
+                ":kimono:" -> "👘"
+                ":bikini:" -> "👙"
+                ":womans_clothes:" -> "👚"
+                ":purse:" -> "👛"
+                ":handbag:" -> "👜"
+                ":pouch:" -> "👝"
+                ":school_satchel:" -> "🎒"
+                ":shoe:" -> "👞"
+                ":athletic_shoe:" -> "👟"
+                ":high_heel:" -> "👠"
+                ":sandal:" -> "👡"
+                ":boot:" -> "👢"
+                ":crown:" -> "👑"
+                ":womans_hat:" -> "👒"
+                ":tophat:" -> "🎩"
+                ":mortar_board:" -> "🎓"
+                ":lipstick:" -> "💄"
+                ":ring:" -> "💍"
+                ":gem:" -> "💎"
+                ":mute:" -> "🔇"
+                ":sound:" -> "🔉"
+                ":speaker:" -> "🔊"
+                ":loudspeaker:" -> "📢"
+                ":mega:" -> "📣"
+                ":postal_horn:" -> "📯"
+                ":bell:" -> "🔔"
+                ":no_bell:" -> "🔕"
+                ":musical_score:" -> "🎼"
+                ":musical_note:" -> "🎵"
+                ":notes:" -> "🎶"
+                ":microphone:" -> "🎤"
+                ":headphones:" -> "🎧"
+                ":radio:" -> "📻"
+                ":saxophone:" -> "🎷"
+                ":guitar:" -> "🎸"
+                ":musical_keyboard:" -> "🎹"
+                ":trumpet:" -> "🎺"
+                ":violin:" -> "🎻"
+                ":iphone:" -> "📱"
+                ":calling:" -> "📲"
+                ":telephone_receiver:" -> "📞"
+                ":pager:" -> "📟"
+                ":fax:" -> "📠"
+                ":battery:" -> "🔋"
+                ":electric_plug:" -> "🔌"
+                ":computer:" -> "💻"
+                ":minidisc:" -> "💽"
+                ":floppy_disk:" -> "💾"
+                ":cd:" -> "💿"
+                ":dvd:" -> "📀"
+                ":movie_camera:" -> "🎥"
+                ":clapper:" -> "🎬"
+                ":tv:" -> "📺"
+                ":camera:" -> "📷"
+                ":video_camera:" -> "📹"
+                ":vhs:" -> "📼"
+                ":mag:" -> "🔍"
+                ":mag_right:" -> "🔎"
+                ":bulb:" -> "💡"
+                ":flashlight:" -> "🔦"
+                ":lantern:" -> "🏮"
+                ":notebook_with_decorative_cover:" -> "📔"
+                ":closed_book:" -> "📕"
+                ":open_book:" -> "📖"
+                ":green_book:" -> "📗"
+                ":blue_book:" -> "📘"
+                ":orange_book:" -> "📙"
+                ":books:" -> "📚"
+                ":notebook:" -> "📓"
+                ":ledger:" -> "📒"
+                ":page_with_curl:" -> "📃"
+                ":scroll:" -> "📜"
+                ":page_facing_up:" -> "📄"
+                ":newspaper:" -> "📰"
+                ":bookmark_tabs:" -> "📑"
+                ":bookmark:" -> "🔖"
+                ":moneybag:" -> "💰"
+                ":yen:" -> "💴"
+                ":dollar:" -> "💵"
+                ":euro:" -> "💶"
+                ":pound:" -> "💷"
+                ":money_with_wings:" -> "💸"
+                ":credit_card:" -> "💳"
+                ":chart:" -> "💹"
+                ":e-mail:" -> "📧"
+                ":incoming_envelope:" -> "📨"
+                ":envelope_with_arrow:" -> "📩"
+                ":outbox_tray:" -> "📤"
+                ":inbox_tray:" -> "📥"
+                ":package:" -> "📦"
+                ":mailbox:" -> "📫"
+                ":mailbox_closed:" -> "📪"
+                ":mailbox_with_mail:" -> "📬"
+                ":mailbox_with_no_mail:" -> "📭"
+                ":postbox:" -> "📮"
+                ":pencil:" -> "📝"
+                ":briefcase:" -> "💼"
+                ":file_folder:" -> "📁"
+                ":open_file_folder:" -> "📂"
+                ":date:" -> "📅"
+                ":calendar:" -> "📆"
+                ":card_index:" -> "📇"
+                ":chart_with_upwards_trend:" -> "📈"
+                ":chart_with_downwards_trend:" -> "📉"
+                ":bar_chart:" -> "📊"
+                ":clipboard:" -> "📋"
+                ":pushpin:" -> "📌"
+                ":round_pushpin:" -> "📍"
+                ":paperclip:" -> "📎"
+                ":straight_ruler:" -> "📏"
+                ":triangular_ruler:" -> "📐"
+                ":lock:" -> "🔒"
+                ":lock_with_ink_pen:" -> "🔏"
+                ":closed_lock_with_key:" -> "🔐"
+                ":key:" -> "🔑"
+                ":hammer:" -> "🔨"
+                ":gun:" -> "🔫"
+                ":wrench:" -> "🔧"
+                ":nut_and_bolt:" -> "🔩"
+                ":link:" -> "🔗"
+                ":microscope:" -> "🔬"
+                ":telescope:" -> "🔭"
+                ":satellite:" -> "📡"
+                ":syringe:" -> "💉"
+                ":pill:" -> "💊"
+                ":door:" -> "🚪"
+                ":toilet:" -> "🚽"
+                ":shower:" -> "🚿"
+                ":bathtub:" -> "🛁"
+                ":smoking:" -> "🚬"
+                ":moyai:" -> "🗿"
+                ":atm:" -> "🏧"
+                ":put_litter_in_its_place:" -> "🚮"
+                ":potable_water:" -> "🚰"
+                ":mens:" -> "🚹"
+                ":womens:" -> "🚺"
+                ":restroom:" -> "🚻"
+                ":baby_symbol:" -> "🚼"
+                ":wc:" -> "🚾"
+                ":passport_control:" -> "🛂"
+                ":customs:" -> "🛃"
+                ":baggage_claim:" -> "🛄"
+                ":left_luggage:" -> "🛅"
+                ":children_crossing:" -> "🚸"
+                ":no_entry_sign:" -> "🚫"
+                ":no_bicycles:" -> "🚳"
+                ":no_smoking:" -> "🚭"
+                ":do_not_litter:" -> "🚯"
+                ":non-potable_water:" -> "🚱"
+                ":no_pedestrians:" -> "🚷"
+                ":no_mobile_phones:" -> "📵"
+                ":underage:" -> "🔞"
+                ":arrows_clockwise:" -> "🔃"
+                ":arrows_counterclockwise:" -> "🔄"
+                ":back:" -> "🔙"
+                ":end:" -> "🔚"
+                ":on:" -> "🔛"
+                ":soon:" -> "🔜"
+                ":top:" -> "🔝"
+                ":six_pointed_star:" -> "🔯"
+                ":twisted_rightwards_arrows:" -> "🔀"
+                ":repeat:" -> "🔁"
+                ":repeat_one:" -> "🔂"
+                ":arrow_up_small:" -> "🔼"
+                ":arrow_down_small:" -> "🔽"
+                ":cinema:" -> "🎦"
+                ":low_brightness:" -> "🔅"
+                ":high_brightness:" -> "🔆"
+                ":signal_strength:" -> "📶"
+                ":vibration_mode:" -> "📳"
+                ":mobile_phone_off:" -> "📴"
+                ":currency_exchange:" -> "💱"
+                ":heavy_dollar_sign:" -> "💲"
+                ":trident:" -> "🔱"
+                ":name_badge:" -> "📛"
+                ":beginner:" -> "🔰"
+                ":keycap_ten:" -> "🔟"
+                ":capital_abcd:" -> "🔠"
+                ":abcd:" -> "🔡"
+                ":1234:" -> "🔢"
+                ":symbols:" -> "🔣"
+                ":abc:" -> "🔤"
+                ":ab:" -> "🆎"
+                ":cl:" -> "🆑"
+                ":cool:" -> "🆒"
+                ":free:" -> "🆓"
+                ":id:" -> "🆔"
+                ":new:" -> "🆕"
+                ":ng:" -> "🆖"
+                ":ok:" -> "🆗"
+                ":sos:" -> "🆘"
+                ":up:" -> "🆙"
+                ":vs:" -> "🆚"
+                ":koko:" -> "🈁"
+                ":ideograph_advantage:" -> "🉐"
+                ":accept:" -> "🉑"
+                ":red_circle:" -> "🔴"
+                ":large_blue_circle:" -> "🔵"
+                ":large_orange_diamond:" -> "🔶"
+                ":large_blue_diamond:" -> "🔷"
+                ":small_orange_diamond:" -> "🔸"
+                ":small_blue_diamond:" -> "🔹"
+                ":small_red_triangle:" -> "🔺"
+                ":small_red_triangle_down:" -> "🔻"
+                ":diamond_shape_with_a_dot_inside:" -> "💠"
+                ":radio_button:" -> "🔘"
+                ":white_square_button:" -> "🔳"
+                ":black_square_button:" -> "🔲"
+                ":checkered_flag:" -> "🏁"
+                ":triangular_flag_on_post:" -> "🚩"
+                ":crossed_flags:" -> "🎌"
+                else -> throw IllegalArgumentException("'$name' is not a valid name")
             }
-            
-            isLoaded = true
-            logD("Loaded ${emojis.size} emojis in ${emojiGroups.size} groups")
-            true
-        } catch (e: Exception) {
-            logE("Failed to load emojis", e)
-            false
         }
-    }
-    
-    /**
-     * Search emojis by keyword
-     */
-    fun searchEmojis(query: String): List<EmojiData> {
-        if (!isLoaded || query.isBlank()) return emptyList()
-        
-        val lowerQuery = query.lowercase()
-        return emojis.filter { emoji ->
-            emoji.description.lowercase().contains(lowerQuery) ||
-            emoji.keywords.any { it.lowercase().contains(lowerQuery) }
-        }.take(20)
-    }
-    
-    /**
-     * Get emojis by group
-     */
-    fun getEmojisByGroup(group: String): List<EmojiData> {
-        return emojiGroups[group] ?: emptyList()
-    }
-    
-    /**
-     * Get all groups
-     */
-    fun getGroups(): List<String> {
-        return emojiGroups.keys.toList()
-    }
-    
-    /**
-     * Get recent emojis from preferences
-     */
-    fun getRecentEmojis(context: android.content.Context): List<EmojiData> {
-        try {
-            val prefs = context.getSharedPreferences("cleverkeys_prefs", android.content.Context.MODE_PRIVATE)
-            val recentString = prefs.getString("recent_emojis", "") ?: ""
-
-            if (recentString.isEmpty()) {
-                return emojis.take(10) // Default to first 10 if no recent history
-            }
-
-            // Recent emojis stored as pipe-separated emoji strings
-            val recentEmojiStrings = recentString.split("|").filter { it.isNotEmpty() }
-            val recentEmojis = mutableListOf<EmojiData>()
-
-            for (emojiStr in recentEmojiStrings) {
-                emojis.find { it.emoji == emojiStr }?.let { recentEmojis.add(it) }
-            }
-
-            return recentEmojis.ifEmpty { emojis.take(10) }
-        } catch (e: Exception) {
-            android.util.Log.e("Emoji", "Failed to load recent emojis", e)
-            return emojis.take(10)
-        }
-    }
-
-    /**
-     * Record emoji usage and update recent list
-     */
-    fun recordEmojiUsage(context: android.content.Context, emoji: EmojiData) {
-        try {
-            val prefs = context.getSharedPreferences("cleverkeys_prefs", android.content.Context.MODE_PRIVATE)
-            val recentString = prefs.getString("recent_emojis", "") ?: ""
-
-            // Parse existing recent emojis
-            val recentEmojiStrings = recentString.split("|")
-                .filter { it.isNotEmpty() }
-                .toMutableList()
-
-            // Remove this emoji if it's already in the list (will be added to front)
-            recentEmojiStrings.remove(emoji.emoji)
-
-            // Add emoji to front
-            recentEmojiStrings.add(0, emoji.emoji)
-
-            // Keep only the 20 most recent
-            val trimmedRecent = recentEmojiStrings.take(20)
-
-            // Save back to preferences
-            val newRecentString = trimmedRecent.joinToString("|")
-            prefs.edit().putString("recent_emojis", newRecentString).apply()
-        } catch (e: Exception) {
-            android.util.Log.e("Emoji", "Failed to record emoji usage", e)
-        }
-    }
-
-    /**
-     * Get emojis by group index (compatibility with original API)
-     */
-    fun getEmojisByGroupIndex(groupIndex: Int): List<EmojiData> {
-        val groupNames = getGroups()
-        return if (groupIndex >= 0 && groupIndex < groupNames.size) {
-            getEmojisByGroup(groupNames[groupIndex])
-        } else {
-            emptyList()
-        }
-    }
-
-    /**
-     * Get number of emoji groups (compatibility with original API)
-     */
-    fun getNumGroups(): Int {
-        return emojiGroups.size
-    }
-
-    /**
-     * Get first emoji of a group (compatibility with original API)
-     */
-    fun getFirstEmojiOfGroup(groupIndex: Int): EmojiData? {
-        return getEmojisByGroupIndex(groupIndex).firstOrNull()
-    }
-
-    private fun logD(message: String) {
-        android.util.Log.d(TAG, message)
-    }
-
-    private fun logE(message: String, throwable: Throwable) {
-        android.util.Log.e(TAG, message, throwable)
     }
 }

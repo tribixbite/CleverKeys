@@ -1,0 +1,316 @@
+package tribixbite.keyboard2
+
+import android.content.Context
+import android.util.Log
+import tribixbite.keyboard2.ml.SwipeMLDataStore
+import kotlin.concurrent.thread
+
+/**
+ * Coordinates prediction engines and manages prediction lifecycle.
+ *
+ * This class centralizes the management of:
+ * - DictionaryManager (dictionary loading and management)
+ * - WordPredictor (typing predictions and context)
+ * - NeuralSwipeTypingEngine (swipe typing ML model)
+ * - AsyncPredictionHandler (asynchronous prediction processing)
+ *
+ * Responsibilities:
+ * - Initialize and configure prediction engines
+ * - Coordinate predictions from multiple sources
+ * - Manage engine lifecycle (shutdown, cleanup)
+ * - Provide unified interface for prediction requests
+ *
+ * NOT included (remains in CleverKeysService):
+ * - SuggestionBar UI integration
+ * - InputConnection text insertion
+ * - Auto-insertion logic
+ *
+ * This class is extracted from CleverKeysService.java for better separation of concerns
+ * and testability (v1.32.346).
+ */
+class PredictionCoordinator(
+    private val context: Context,
+    private var config: Config
+) {
+    companion object {
+        private const val TAG = "PredictionCoordinator"
+    }
+
+    // Prediction engines
+    private var dictionaryManager: DictionaryManager? = null
+    private var wordPredictor: WordPredictor? = null
+    private var neuralEngine: NeuralSwipeTypingEngine? = null
+    private var asyncPredictionHandler: AsyncPredictionHandler? = null
+
+    @Volatile
+    private var isInitializingNeuralEngine = false // v1.32.529: Track initialization state
+
+    // Supporting services
+    private var mlDataStore: SwipeMLDataStore? = null
+    private var adaptationManager: UserAdaptationManager? = null
+
+    // Debug logging
+    private var debugLogger: NeuralSwipeTypingEngine.DebugLogger? = null
+
+    /**
+     * Initializes prediction engines based on configuration.
+     * Should be called during keyboard startup.
+     */
+    fun initialize() {
+        // Initialize ML data store
+        mlDataStore = SwipeMLDataStore.getInstance(context)
+
+        // Initialize user adaptation manager
+        adaptationManager = UserAdaptationManager.getInstance(context)
+
+        // Initialize dictionary manager and word predictor
+        initializeWordPredictor()
+
+        // Initialize neural engine if swipe typing is enabled
+        if (config.swipe_typing_enabled) {
+            // FIX: Initialize neural engine on background thread to avoid blocking startup
+            thread {
+                initializeNeuralEngine()
+            }
+        }
+    }
+
+    /**
+     * Initializes word predictor for typing predictions.
+     */
+    private fun initializeWordPredictor() {
+        dictionaryManager = DictionaryManager(context).apply {
+            setLanguage("en")
+        }
+
+        wordPredictor = WordPredictor().apply {
+            setContext(context) // Enable disabled words filtering
+            setConfig(config)
+            adaptationManager?.let { setUserAdaptationManager(it) }
+
+            // FIX: Load dictionary asynchronously to prevent Main Thread blocking during startup
+            // This prevents ANRs when the keyboard initializes
+            Log.d(TAG, "Starting async dictionary loading...")
+            loadDictionaryAsync(context, "en") {
+                Log.d(TAG, "Dictionary loaded successfully")
+            }
+
+            // OPTIMIZATION: Start observing dictionary changes for automatic updates
+            startObservingDictionaryChanges()
+        }
+
+        Log.d(TAG, "WordPredictor initialized with automatic update observation")
+    }
+
+    /**
+     * Initializes neural engine for swipe typing.
+     * OPTIMIZATION v1.32.529: Removed synchronized as it's now protected by double-checked locking
+     * in ensureNeuralEngineReady and initialize
+     */
+    private fun initializeNeuralEngine() {
+        // Skip if already initialized or initializing
+        if (neuralEngine != null || isInitializingNeuralEngine) {
+            return
+        }
+
+        try {
+            isInitializingNeuralEngine = true
+            val engine = NeuralSwipeTypingEngine(context, config)
+
+            // Set debug logger before initialization so logs appear during model loading
+            debugLogger?.let {
+                engine.setDebugLogger(it)
+                Log.d(TAG, "Debug logger set on neural engine")
+            }
+
+            // CRITICAL: Call initialize() to actually load the ONNX models
+            val success = engine.initialize()
+            if (!success) {
+                Log.e(TAG, "Neural engine initialization returned false")
+                neuralEngine = null
+                asyncPredictionHandler = null
+                return
+            }
+
+            neuralEngine = engine
+
+            // Initialize async prediction handler with context for performance stats
+            asyncPredictionHandler = AsyncPredictionHandler(engine, context)
+
+            Log.d(TAG, "NeuralSwipeTypingEngine initialized successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to initialize neural engine", e)
+            neuralEngine = null
+            asyncPredictionHandler = null
+        } finally {
+            isInitializingNeuralEngine = false
+        }
+    }
+
+    /**
+     * Ensures neural engine is initialized before use.
+     * OPTIMIZATION v1.32.529: Double-checked locking to prevent Main Thread blocking
+     * This allows check to be fast if already initialized, without acquiring lock.
+     */
+    fun ensureNeuralEngineReady() {
+        if (config.swipe_typing_enabled && neuralEngine == null && !isInitializingNeuralEngine) {
+            synchronized(this) {
+                if (neuralEngine == null && !isInitializingNeuralEngine) {
+                    Log.d(TAG, "Lazy-loading neural engine on first swipe...")
+                    initializeNeuralEngine()
+                }
+            }
+        }
+    }
+
+    /**
+     * Sets the debug logger for neural engine logging.
+     * Should be called before initialize() for model loading logs.
+     *
+     * @param logger Debug logger implementation that sends to SwipeDebugActivity
+     */
+    fun setDebugLogger(logger: NeuralSwipeTypingEngine.DebugLogger) {
+        debugLogger = logger
+
+        // Also set on existing engine if already initialized
+        neuralEngine?.let {
+            it.setDebugLogger(logger)
+            Log.d(TAG, "Debug logger updated on existing neural engine")
+        }
+    }
+
+    /**
+     * Ensures word predictor is initialized (lazy initialization).
+     * Called when predictions are first requested.
+     */
+    fun ensureInitialized() {
+        if (wordPredictor == null) {
+            initializeWordPredictor()
+        }
+
+        if (config.swipe_typing_enabled && neuralEngine == null) {
+            initializeNeuralEngine()
+        }
+    }
+
+    /**
+     * Updates configuration and propagates to engines.
+     *
+     * @param newConfig Updated configuration
+     */
+    fun setConfig(newConfig: Config) {
+        config = newConfig
+
+        // Update neural engine config if it exists
+        neuralEngine?.setConfig(config)
+
+        // Update word predictor config if it exists
+        wordPredictor?.setConfig(config)
+    }
+
+    /**
+     * Gets the WordPredictor instance.
+     *
+     * @return WordPredictor for typing predictions, or null if not initialized
+     */
+    fun getWordPredictor(): WordPredictor? {
+        return wordPredictor
+    }
+
+    /**
+     * Gets the NeuralSwipeTypingEngine instance.
+     *
+     * @return Neural engine for swipe predictions, or null if not initialized
+     */
+    fun getNeuralEngine(): NeuralSwipeTypingEngine? {
+        return neuralEngine
+    }
+
+    /**
+     * Gets the AsyncPredictionHandler instance.
+     *
+     * @return Async handler for background predictions, or null if not initialized
+     */
+    fun getAsyncPredictionHandler(): AsyncPredictionHandler? {
+        return asyncPredictionHandler
+    }
+
+    /**
+     * Gets the DictionaryManager instance.
+     *
+     * @return Dictionary manager, or null if not initialized
+     */
+    fun getDictionaryManager(): DictionaryManager? {
+        return dictionaryManager
+    }
+
+    /**
+     * Gets the SwipeMLDataStore instance.
+     *
+     * @return ML data store for swipe training data, or null if not initialized
+     */
+    fun getMlDataStore(): SwipeMLDataStore? {
+        return mlDataStore
+    }
+
+    /**
+     * Gets the UserAdaptationManager instance.
+     *
+     * @return User adaptation manager for learning user preferences, or null if not initialized
+     */
+    fun getAdaptationManager(): UserAdaptationManager? {
+        return adaptationManager
+    }
+
+    /**
+     * Checks if swipe typing is available.
+     *
+     * @return true if neural engine is initialized and ready
+     */
+    fun isSwipeTypingAvailable(): Boolean {
+        return neuralEngine != null
+    }
+
+    /**
+     * Checks if word prediction is available.
+     *
+     * @return true if word predictor is initialized and ready
+     */
+    fun isWordPredictionAvailable(): Boolean {
+        return wordPredictor != null
+    }
+
+    /**
+     * Shuts down all prediction engines and cleans up resources.
+     * Should be called during keyboard shutdown.
+     */
+    fun shutdown() {
+        // Shutdown async prediction handler
+        asyncPredictionHandler?.let {
+            it.shutdown()
+            asyncPredictionHandler = null
+        }
+
+        // Stop observing dictionary changes
+        wordPredictor?.stopObservingDictionaryChanges()
+
+        // Clean up engines
+        neuralEngine = null
+        wordPredictor = null
+        dictionaryManager = null
+
+        Log.d(TAG, "PredictionCoordinator shutdown complete")
+    }
+
+    /**
+     * Gets a debug string showing current state.
+     * Useful for logging and troubleshooting.
+     *
+     * @return Human-readable state description
+     */
+    fun getDebugState(): String {
+        return "PredictionCoordinator{wordPredictor=${if (wordPredictor != null) "initialized" else "null"}, " +
+            "neuralEngine=${if (neuralEngine != null) "initialized" else "null"}, " +
+            "asyncHandler=${if (asyncPredictionHandler != null) "initialized" else "null"}}"
+    }
+}

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+  <!-- Filter Enabled Toggle -->
+  <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="16dp"
+      android:gravity="center_vertical">
+    <TextView
+        android:text="Enable Date Filter"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="16sp"
+        android:textColor="?android:attr/textColorPrimary"/>
+    <Switch
+        android:id="@+id/date_filter_enabled"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="false"/>
+  </LinearLayout>
+
+  <!-- Before/After Toggle -->
+  <LinearLayout
+      android:id="@+id/date_filter_mode_container"
+      android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="16dp"
+      android:gravity="center_vertical">
+    <TextView
+        android:text="Show entries"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textColor="?android:attr/textColorPrimary"
+        android:layout_marginRight="8dp"/>
+    <RadioGroup
+        android:id="@+id/date_filter_mode"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+      <RadioButton
+          android:id="@+id/date_filter_before"
+          android:text="Before"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:textColor="?android:attr/textColorPrimary"
+          android:layout_marginRight="8dp"/>
+      <RadioButton
+          android:id="@+id/date_filter_after"
+          android:text="After"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:textColor="?android:attr/textColorPrimary"
+          android:checked="true"/>
+    </RadioGroup>
+  </LinearLayout>
+
+  <!-- Date Picker -->
+  <LinearLayout
+      android:id="@+id/date_picker_container"
+      android:orientation="vertical"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+    <TextView
+        android:text="Select Date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textColor="?android:attr/textColorPrimary"
+        android:layout_marginBottom="8dp"/>
+    <DatePicker
+        android:id="@+id/date_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:calendarViewShown="false"
+        android:datePickerMode="spinner"
+        android:theme="@android:style/Theme.DeviceDefault.Dialog"/>
+  </LinearLayout>
+
+  <!-- Action Buttons -->
+  <LinearLayout
+      android:orientation="horizontal"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="16dp"
+      android:gravity="end">
+    <Button
+        android:id="@+id/date_filter_clear"
+        android:text="Clear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
+        style="?android:attr/buttonBarButtonStyle"/>
+    <Button
+        android:id="@+id/date_filter_cancel"
+        android:text="@android:string/cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
+        style="?android:attr/buttonBarButtonStyle"/>
+    <Button
+        android:id="@+id/date_filter_apply"
+        android:text="Apply"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="?android:attr/buttonBarButtonStyle"/>
+  </LinearLayout>
+
+</LinearLayout>

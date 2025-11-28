@@ -11,20 +11,9 @@ import kotlin.math.min
 
 /**
  * Word-level bigram model for contextual predictions.
- * Provides P(word | previous_word) probabilities for context-aware word prediction.
- *
- * Features:
- * - 4-language support (en, es, fr, de) with language-specific bigram/unigram probabilities
- * - Linear interpolation smoothing (λ=0.95) between bigram and unigram probabilities
- * - Context multiplier (0.1-10.0x) for boosting/penalizing predictions based on previous word
- * - User adaptation via addBigram() for learning new bigram patterns
- * - File loading for comprehensive bigram data from assets
- * - Singleton pattern for global access
- *
- * Fix for Bug #259: NgramModel system missing (CATASTROPHIC)
+ * Provides P(word | previous_word) probabilities.
  */
 class BigramModel private constructor() {
-
     companion object {
         private const val TAG = "BigramModel"
 
@@ -35,11 +24,8 @@ class BigramModel private constructor() {
         @Volatile
         private var instance: BigramModel? = null
 
-        /**
-         * Get singleton instance for global access
-         */
         @JvmStatic
-        fun getInstance(context: Context? = null): BigramModel {
+        fun getInstance(context: Context?): BigramModel {
             return instance ?: synchronized(this) {
                 instance ?: BigramModel().also { instance = it }
             }
@@ -47,10 +33,10 @@ class BigramModel private constructor() {
     }
 
     // Language-specific bigram models: "language" -> "prev_word|current_word" -> probability
-    private val languageBigramProbs = mutableMapOf<String, MutableMap<String, Float>>()
+    private val languageBigramProbs: MutableMap<String, MutableMap<String, Float>> = mutableMapOf()
 
     // Language-specific unigram models: "language" -> word -> probability
-    private val languageUnigramProbs = mutableMapOf<String, MutableMap<String, Float>>()
+    private val languageUnigramProbs: MutableMap<String, MutableMap<String, Float>> = mutableMapOf()
 
     // Current active language
     private var currentLanguage: String = "en" // Default to English
@@ -74,118 +60,118 @@ class BigramModel private constructor() {
      * Initialize English language model
      */
     private fun initializeEnglishModel() {
-        val enBigrams = mutableMapOf<String, Float>()
-        val enUnigrams = mutableMapOf<String, Float>()
+        val enBigrams = mutableMapOf(
+            // After "the"
+            "the|end" to 0.01f,
+            "the|first" to 0.015f,
+            "the|last" to 0.012f,
+            "the|best" to 0.010f,
+            "the|world" to 0.008f,
+            "the|time" to 0.007f,
+            "the|day" to 0.006f,
+            "the|way" to 0.005f,
 
-        // After "the"
-        enBigrams["the|end"] = 0.01f
-        enBigrams["the|first"] = 0.015f
-        enBigrams["the|last"] = 0.012f
-        enBigrams["the|best"] = 0.010f
-        enBigrams["the|world"] = 0.008f
-        enBigrams["the|time"] = 0.007f
-        enBigrams["the|day"] = 0.006f
-        enBigrams["the|way"] = 0.005f
+            // After "a"
+            "a|lot" to 0.02f,
+            "a|little" to 0.015f,
+            "a|few" to 0.012f,
+            "a|good" to 0.010f,
+            "a|great" to 0.008f,
+            "a|new" to 0.007f,
+            "a|long" to 0.006f,
 
-        // After "a"
-        enBigrams["a|lot"] = 0.02f
-        enBigrams["a|little"] = 0.015f
-        enBigrams["a|few"] = 0.012f
-        enBigrams["a|good"] = 0.010f
-        enBigrams["a|great"] = 0.008f
-        enBigrams["a|new"] = 0.007f
-        enBigrams["a|long"] = 0.006f
+            // After "to"
+            "to|be" to 0.03f,
+            "to|have" to 0.02f,
+            "to|do" to 0.015f,
+            "to|go" to 0.012f,
+            "to|get" to 0.010f,
+            "to|make" to 0.008f,
+            "to|see" to 0.007f,
 
-        // After "to"
-        enBigrams["to|be"] = 0.03f
-        enBigrams["to|have"] = 0.02f
-        enBigrams["to|do"] = 0.015f
-        enBigrams["to|go"] = 0.012f
-        enBigrams["to|get"] = 0.010f
-        enBigrams["to|make"] = 0.008f
-        enBigrams["to|see"] = 0.007f
+            // After "of"
+            "of|the" to 0.05f,
+            "of|course" to 0.02f,
+            "of|all" to 0.015f,
+            "of|this" to 0.012f,
+            "of|his" to 0.010f,
+            "of|her" to 0.008f,
 
-        // After "of"
-        enBigrams["of|the"] = 0.05f
-        enBigrams["of|course"] = 0.02f
-        enBigrams["of|all"] = 0.015f
-        enBigrams["of|this"] = 0.012f
-        enBigrams["of|his"] = 0.010f
-        enBigrams["of|her"] = 0.008f
+            // After "in"
+            "in|the" to 0.04f,
+            "in|a" to 0.02f,
+            "in|this" to 0.015f,
+            "in|order" to 0.012f,
+            "in|fact" to 0.010f,
+            "in|case" to 0.008f,
 
-        // After "in"
-        enBigrams["in|the"] = 0.04f
-        enBigrams["in|a"] = 0.02f
-        enBigrams["in|this"] = 0.015f
-        enBigrams["in|order"] = 0.012f
-        enBigrams["in|fact"] = 0.010f
-        enBigrams["in|case"] = 0.008f
+            // After "I"
+            "i|am" to 0.03f,
+            "i|have" to 0.025f,
+            "i|will" to 0.02f,
+            "i|was" to 0.018f,
+            "i|can" to 0.015f,
+            "i|would" to 0.012f,
+            "i|think" to 0.010f,
+            "i|know" to 0.008f,
+            "i|want" to 0.007f,
 
-        // After "I"
-        enBigrams["i|am"] = 0.03f
-        enBigrams["i|have"] = 0.025f
-        enBigrams["i|will"] = 0.02f
-        enBigrams["i|was"] = 0.018f
-        enBigrams["i|can"] = 0.015f
-        enBigrams["i|would"] = 0.012f
-        enBigrams["i|think"] = 0.010f
-        enBigrams["i|know"] = 0.008f
-        enBigrams["i|want"] = 0.007f
+            // After "you"
+            "you|are" to 0.025f,
+            "you|can" to 0.02f,
+            "you|have" to 0.018f,
+            "you|will" to 0.015f,
+            "you|want" to 0.012f,
+            "you|know" to 0.010f,
+            "you|need" to 0.008f,
 
-        // After "you"
-        enBigrams["you|are"] = 0.025f
-        enBigrams["you|can"] = 0.02f
-        enBigrams["you|have"] = 0.018f
-        enBigrams["you|will"] = 0.015f
-        enBigrams["you|want"] = 0.012f
-        enBigrams["you|know"] = 0.010f
-        enBigrams["you|need"] = 0.008f
+            // After "it"
+            "it|is" to 0.04f,
+            "it|was" to 0.025f,
+            "it|will" to 0.015f,
+            "it|would" to 0.012f,
+            "it|has" to 0.010f,
+            "it|can" to 0.008f,
 
-        // After "it"
-        enBigrams["it|is"] = 0.04f
-        enBigrams["it|was"] = 0.025f
-        enBigrams["it|will"] = 0.015f
-        enBigrams["it|would"] = 0.012f
-        enBigrams["it|has"] = 0.010f
-        enBigrams["it|can"] = 0.008f
+            // After "that"
+            "that|is" to 0.025f,
+            "that|was" to 0.02f,
+            "that|the" to 0.015f,
+            "that|it" to 0.012f,
+            "that|you" to 0.010f,
+            "that|he" to 0.008f,
 
-        // After "that"
-        enBigrams["that|is"] = 0.025f
-        enBigrams["that|was"] = 0.02f
-        enBigrams["that|the"] = 0.015f
-        enBigrams["that|it"] = 0.012f
-        enBigrams["that|you"] = 0.010f
-        enBigrams["that|he"] = 0.008f
+            // After "with"
+            "with|the" to 0.03f,
+            "with|a" to 0.02f,
+            "with|his" to 0.015f,
+            "with|her" to 0.012f,
+            "with|my" to 0.010f,
+            "with|your" to 0.008f
+        )
 
-        // After "with"
-        enBigrams["with|the"] = 0.03f
-        enBigrams["with|a"] = 0.02f
-        enBigrams["with|his"] = 0.015f
-        enBigrams["with|her"] = 0.012f
-        enBigrams["with|my"] = 0.010f
-        enBigrams["with|your"] = 0.008f
-
-        // Common unigram probabilities (fallback)
-        enUnigrams["the"] = 0.07f
-        enUnigrams["be"] = 0.04f
-        enUnigrams["to"] = 0.035f
-        enUnigrams["of"] = 0.03f
-        enUnigrams["and"] = 0.028f
-        enUnigrams["a"] = 0.025f
-        enUnigrams["in"] = 0.022f
-        enUnigrams["that"] = 0.02f
-        enUnigrams["have"] = 0.018f
-        enUnigrams["i"] = 0.017f
-        enUnigrams["it"] = 0.015f
-        enUnigrams["for"] = 0.014f
-        enUnigrams["not"] = 0.013f
-        enUnigrams["on"] = 0.012f
-        enUnigrams["with"] = 0.011f
-        enUnigrams["he"] = 0.010f
-        enUnigrams["as"] = 0.009f
-        enUnigrams["you"] = 0.009f
-        enUnigrams["do"] = 0.008f
-        enUnigrams["at"] = 0.008f
+        val enUnigrams = mutableMapOf(
+            "the" to 0.07f,
+            "be" to 0.04f,
+            "to" to 0.035f,
+            "of" to 0.03f,
+            "and" to 0.028f,
+            "a" to 0.025f,
+            "in" to 0.022f,
+            "that" to 0.02f,
+            "have" to 0.018f,
+            "i" to 0.017f,
+            "it" to 0.015f,
+            "for" to 0.014f,
+            "not" to 0.013f,
+            "on" to 0.012f,
+            "with" to 0.011f,
+            "he" to 0.010f,
+            "as" to 0.009f,
+            "you" to 0.009f,
+            "do" to 0.008f,
+            "at" to 0.008f
+        )
 
         // Store English language models
         languageBigramProbs["en"] = enBigrams
@@ -196,41 +182,41 @@ class BigramModel private constructor() {
      * Initialize Spanish language model
      */
     private fun initializeSpanishModel() {
-        val esBigrams = mutableMapOf<String, Float>()
-        val esUnigrams = mutableMapOf<String, Float>()
+        val esBigrams = mutableMapOf(
+            // Common Spanish bigrams
+            "de|la" to 0.04f,
+            "de|los" to 0.025f,
+            "en|el" to 0.035f,
+            "en|la" to 0.03f,
+            "el|mundo" to 0.012f,
+            "la|vida" to 0.015f,
+            "que|es" to 0.02f,
+            "que|se" to 0.018f,
+            "no|es" to 0.015f,
+            "se|puede" to 0.012f,
+            "por|favor" to 0.025f,
+            "muchas|gracias" to 0.03f,
+            "muy|bien" to 0.02f,
+            "todo|el" to 0.015f
+        )
 
-        // Common Spanish bigrams
-        esBigrams["de|la"] = 0.04f
-        esBigrams["de|los"] = 0.025f
-        esBigrams["en|el"] = 0.035f
-        esBigrams["en|la"] = 0.03f
-        esBigrams["el|mundo"] = 0.012f
-        esBigrams["la|vida"] = 0.015f
-        esBigrams["que|es"] = 0.02f
-        esBigrams["que|se"] = 0.018f
-        esBigrams["no|es"] = 0.015f
-        esBigrams["se|puede"] = 0.012f
-        esBigrams["por|favor"] = 0.025f
-        esBigrams["muchas|gracias"] = 0.03f
-        esBigrams["muy|bien"] = 0.02f
-        esBigrams["todo|el"] = 0.015f
-
-        // Spanish unigrams
-        esUnigrams["de"] = 0.05f
-        esUnigrams["la"] = 0.04f
-        esUnigrams["que"] = 0.035f
-        esUnigrams["el"] = 0.03f
-        esUnigrams["en"] = 0.025f
-        esUnigrams["y"] = 0.022f
-        esUnigrams["a"] = 0.02f
-        esUnigrams["es"] = 0.018f
-        esUnigrams["se"] = 0.015f
-        esUnigrams["no"] = 0.014f
-        esUnigrams["te"] = 0.012f
-        esUnigrams["lo"] = 0.011f
-        esUnigrams["le"] = 0.01f
-        esUnigrams["da"] = 0.009f
-        esUnigrams["su"] = 0.008f
+        val esUnigrams = mutableMapOf(
+            "de" to 0.05f,
+            "la" to 0.04f,
+            "que" to 0.035f,
+            "el" to 0.03f,
+            "en" to 0.025f,
+            "y" to 0.022f,
+            "a" to 0.02f,
+            "es" to 0.018f,
+            "se" to 0.015f,
+            "no" to 0.014f,
+            "te" to 0.012f,
+            "lo" to 0.011f,
+            "le" to 0.01f,
+            "da" to 0.009f,
+            "su" to 0.008f
+        )
 
         languageBigramProbs["es"] = esBigrams
         languageUnigramProbs["es"] = esUnigrams
@@ -240,40 +226,40 @@ class BigramModel private constructor() {
      * Initialize French language model
      */
     private fun initializeFrenchModel() {
-        val frBigrams = mutableMapOf<String, Float>()
-        val frUnigrams = mutableMapOf<String, Float>()
+        val frBigrams = mutableMapOf(
+            // Common French bigrams
+            "de|la" to 0.045f,
+            "de|le" to 0.03f,
+            "dans|le" to 0.025f,
+            "sur|le" to 0.02f,
+            "avec|le" to 0.018f,
+            "pour|le" to 0.015f,
+            "il|y" to 0.025f,
+            "y|a" to 0.03f,
+            "c'est|le" to 0.02f,
+            "je|suis" to 0.025f,
+            "tu|es" to 0.02f,
+            "nous|sommes" to 0.015f,
+            "très|bien" to 0.018f,
+            "tout|le" to 0.022f
+        )
 
-        // Common French bigrams
-        frBigrams["de|la"] = 0.045f
-        frBigrams["de|le"] = 0.03f
-        frBigrams["dans|le"] = 0.025f
-        frBigrams["sur|le"] = 0.02f
-        frBigrams["avec|le"] = 0.018f
-        frBigrams["pour|le"] = 0.015f
-        frBigrams["il|y"] = 0.025f
-        frBigrams["y|a"] = 0.03f
-        frBigrams["c'est|le"] = 0.02f
-        frBigrams["je|suis"] = 0.025f
-        frBigrams["tu|es"] = 0.02f
-        frBigrams["nous|sommes"] = 0.015f
-        frBigrams["très|bien"] = 0.018f
-        frBigrams["tout|le"] = 0.022f
-
-        // French unigrams
-        frUnigrams["de"] = 0.06f
-        frUnigrams["le"] = 0.045f
-        frUnigrams["et"] = 0.035f
-        frUnigrams["à"] = 0.03f
-        frUnigrams["un"] = 0.025f
-        frUnigrams["il"] = 0.022f
-        frUnigrams["être"] = 0.02f
-        frUnigrams["en"] = 0.016f
-        frUnigrams["avoir"] = 0.014f
-        frUnigrams["que"] = 0.012f
-        frUnigrams["pour"] = 0.011f
-        frUnigrams["dans"] = 0.01f
-        frUnigrams["ce"] = 0.009f
-        frUnigrams["son"] = 0.008f
+        val frUnigrams = mutableMapOf(
+            "de" to 0.06f,
+            "le" to 0.045f,
+            "et" to 0.035f,
+            "à" to 0.03f,
+            "un" to 0.025f,
+            "il" to 0.022f,
+            "être" to 0.02f,
+            "en" to 0.016f,
+            "avoir" to 0.014f,
+            "que" to 0.012f,
+            "pour" to 0.011f,
+            "dans" to 0.01f,
+            "ce" to 0.009f,
+            "son" to 0.008f
+        )
 
         languageBigramProbs["fr"] = frBigrams
         languageUnigramProbs["fr"] = frUnigrams
@@ -283,41 +269,41 @@ class BigramModel private constructor() {
      * Initialize German language model
      */
     private fun initializeGermanModel() {
-        val deBigrams = mutableMapOf<String, Float>()
-        val deUnigrams = mutableMapOf<String, Float>()
+        val deBigrams = mutableMapOf(
+            // Common German bigrams
+            "der|die" to 0.03f,
+            "in|der" to 0.035f,
+            "von|der" to 0.025f,
+            "mit|der" to 0.02f,
+            "auf|der" to 0.018f,
+            "zu|der" to 0.015f,
+            "ich|bin" to 0.025f,
+            "du|bist" to 0.02f,
+            "er|ist" to 0.022f,
+            "wir|sind" to 0.018f,
+            "das|ist" to 0.03f,
+            "sehr|gut" to 0.02f,
+            "vielen|dank" to 0.025f,
+            "guten|tag" to 0.015f
+        )
 
-        // Common German bigrams
-        deBigrams["der|die"] = 0.03f
-        deBigrams["in|der"] = 0.035f
-        deBigrams["von|der"] = 0.025f
-        deBigrams["mit|der"] = 0.02f
-        deBigrams["auf|der"] = 0.018f
-        deBigrams["zu|der"] = 0.015f
-        deBigrams["ich|bin"] = 0.025f
-        deBigrams["du|bist"] = 0.02f
-        deBigrams["er|ist"] = 0.022f
-        deBigrams["wir|sind"] = 0.018f
-        deBigrams["das|ist"] = 0.03f
-        deBigrams["sehr|gut"] = 0.02f
-        deBigrams["vielen|dank"] = 0.025f
-        deBigrams["guten|tag"] = 0.015f
-
-        // German unigrams
-        deUnigrams["der"] = 0.055f
-        deUnigrams["die"] = 0.045f
-        deUnigrams["und"] = 0.035f
-        deUnigrams["in"] = 0.03f
-        deUnigrams["den"] = 0.025f
-        deUnigrams["von"] = 0.022f
-        deUnigrams["zu"] = 0.02f
-        deUnigrams["das"] = 0.018f
-        deUnigrams["mit"] = 0.016f
-        deUnigrams["sich"] = 0.014f
-        deUnigrams["auf"] = 0.012f
-        deUnigrams["für"] = 0.011f
-        deUnigrams["ist"] = 0.01f
-        deUnigrams["im"] = 0.009f
-        deUnigrams["dem"] = 0.008f
+        val deUnigrams = mutableMapOf(
+            "der" to 0.055f,
+            "die" to 0.045f,
+            "und" to 0.035f,
+            "in" to 0.03f,
+            "den" to 0.025f,
+            "von" to 0.022f,
+            "zu" to 0.02f,
+            "das" to 0.018f,
+            "mit" to 0.016f,
+            "sich" to 0.014f,
+            "auf" to 0.012f,
+            "für" to 0.011f,
+            "ist" to 0.01f,
+            "im" to 0.009f,
+            "dem" to 0.008f
+        )
 
         languageBigramProbs["de"] = deBigrams
         languageUnigramProbs["de"] = deUnigrams
@@ -339,7 +325,9 @@ class BigramModel private constructor() {
     /**
      * Get the current active language
      */
-    fun getCurrentLanguage(): String = currentLanguage
+    fun getCurrentLanguage(): String {
+        return currentLanguage
+    }
 
     /**
      * Check if a language is supported
@@ -354,20 +342,26 @@ class BigramModel private constructor() {
     fun loadFromFile(context: Context, filename: String) {
         // Load comprehensive bigram data from assets for current language
         // Format: prev_word current_word probability
-        val bigramProbs = languageBigramProbs.getOrPut(currentLanguage) { mutableMapOf() }
+        var bigramProbs = languageBigramProbs[currentLanguage]
+        if (bigramProbs == null) {
+            bigramProbs = mutableMapOf()
+            languageBigramProbs[currentLanguage] = bigramProbs
+        }
 
         try {
-            val reader = BufferedReader(InputStreamReader(context.assets.open(filename)))
-            var line: String?
-            while (reader.readLine().also { line = it } != null) {
-                val parts = line!!.split("\\s+".toRegex())
-                if (parts.size >= 3) {
-                    val bigram = "${parts[0].lowercase()}|${parts[1].lowercase()}"
-                    val prob = parts[2].toFloatOrNull() ?: continue
-                    bigramProbs[bigram] = prob
+            val reader = BufferedReader(
+                InputStreamReader(context.assets.open(filename))
+            )
+            reader.useLines { lines ->
+                lines.forEach { line ->
+                    val parts = line.split("\\s+".toRegex())
+                    if (parts.size >= 3) {
+                        val bigram = "${parts[0].lowercase()}|${parts[1].lowercase()}"
+                        val prob = parts[2].toFloat()
+                        bigramProbs[bigram] = prob
+                    }
                 }
             }
-            reader.close()
             Log.d(TAG, "Loaded ${bigramProbs.size} bigrams for $currentLanguage from $filename")
         } catch (e: IOException) {
             Log.e(TAG, "Failed to load bigram file: $filename", e)
@@ -383,7 +377,7 @@ class BigramModel private constructor() {
             return MIN_PROB
         }
 
-        val lowerWord = word.lowercase()
+        val normalizedWord = word.lowercase()
 
         // Get language-specific probability maps
         var bigramProbs = languageBigramProbs[currentLanguage]
@@ -397,18 +391,18 @@ class BigramModel private constructor() {
 
         // If no context, return unigram probability
         if (context.isNullOrEmpty()) {
-            return unigramProbs?.get(lowerWord) ?: MIN_PROB
+            return unigramProbs?.get(normalizedWord) ?: MIN_PROB
         }
 
         // Get the previous word
         val prevWord = context.last().lowercase()
-        val bigramKey = "$prevWord|$lowerWord"
+        val bigramKey = "$prevWord|$normalizedWord"
 
         // Look up bigram probability
         val bigramProb = bigramProbs?.get(bigramKey) ?: 0.0f
 
         // Look up unigram probability (fallback)
-        val unigramProb = unigramProbs?.get(lowerWord) ?: MIN_PROB
+        val unigramProb = unigramProbs?.get(normalizedWord) ?: MIN_PROB
 
         // Linear interpolation: λ * P(word|prev) + (1-λ) * P(word)
         val interpolatedProb = LAMBDA * bigramProb + (1 - LAMBDA) * unigramProb
@@ -423,7 +417,7 @@ class BigramModel private constructor() {
     fun scoreWord(word: String, context: List<String>?): Float {
         val prob = getContextualProbability(word, context)
         // Return log probability to avoid underflow
-        return ln(prob.toDouble()).toFloat()
+        return ln(prob)
     }
 
     /**
@@ -455,8 +449,10 @@ class BigramModel private constructor() {
      * Add a bigram observation (for user adaptation)
      */
     fun addBigram(prevWord: String, word: String, weight: Float) {
-        val bigramProbs = languageBigramProbs[currentLanguage]
-            ?: languageBigramProbs["en"] // Fallback to English
+        var bigramProbs = languageBigramProbs[currentLanguage]
+        if (bigramProbs == null) {
+            bigramProbs = languageBigramProbs["en"] // Fallback to English
+        }
 
         val bigramKey = "${prevWord.lowercase()}|${word.lowercase()}"
         val currentProb = bigramProbs?.get(bigramKey) ?: 0.0f
@@ -472,16 +468,8 @@ class BigramModel private constructor() {
         val currentBigrams = languageBigramProbs[currentLanguage]
         val currentUnigrams = languageUnigramProbs[currentLanguage]
 
-        var totalBigramCount = 0
-        var totalUnigramCount = 0
-
-        for (bigramMap in languageBigramProbs.values) {
-            totalBigramCount += bigramMap.size
-        }
-
-        for (unigramMap in languageUnigramProbs.values) {
-            totalUnigramCount += unigramMap.size
-        }
+        val totalBigramCount = languageBigramProbs.values.sumOf { it.size }
+        val totalUnigramCount = languageUnigramProbs.values.sumOf { it.size }
 
         return String.format(
             "BigramModel: Current Language: %s (%d bigrams, %d unigrams), Total: %d languages, %d bigrams, %d unigrams",
@@ -500,8 +488,8 @@ class BigramModel private constructor() {
      * @return List of all words in current language
      */
     fun getAllWords(): List<String> {
-        val unigramMap = languageUnigramProbs[currentLanguage] ?: return emptyList()
-        return unigramMap.keys.toList()
+        val unigramMap = languageUnigramProbs[currentLanguage]
+        return unigramMap?.keys?.toList() ?: emptyList()
     }
 
     /**

@@ -1,22 +1,19 @@
 package tribixbite.keyboard2
 
-/**
- * Number layout enumeration
- */
 enum class NumberLayout {
-    PIN, NUMBER, NUMPAD;
+    PIN,
+    NUMBER,
+    NORMAL;
 
     companion object {
-        fun fromString(name: String): NumberLayout {
-            return when (name.lowercase()) {
-                "pin" -> PIN
+        @JvmStatic
+        fun of_string(name: String): NumberLayout {
+            return when (name) {
                 "number" -> NUMBER
-                "numpad" -> NUMPAD
+                "normal" -> NORMAL
+                "pin" -> PIN
                 else -> PIN
             }
         }
-
-        @Deprecated("Use fromString instead", ReplaceWith("fromString(name)"))
-        fun of_string(name: String): NumberLayout = fromString(name)
     }
 }

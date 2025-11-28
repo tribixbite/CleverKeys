@@ -5,137 +5,189 @@ import kotlin.math.*
 
 /**
  * Encapsulates all data from a swipe gesture for prediction
- * Kotlin data class with computed properties and extension functions
  */
-data class SwipeInput(
-    val coordinates: List<PointF>,
-    val timestamps: List<Long>,
-    val touchedKeys: List<KeyboardData.Key>
+class SwipeInput(
+    coordinates: List<PointF>,
+    timestamps: List<Long>,
+    touchedKeys: List<KeyboardData.Key?>
 ) {
-    // Computed properties with lazy initialization for performance
-    val keySequence: String by lazy {
-        buildString {
-            touchedKeys.forEach { key ->
-                key?.keys?.firstOrNull()?.let { kv ->
-                    when (kv) {
-                        is KeyValue.CharKey -> append(kv.char)
-                        else -> { /* Skip non-character keys */ }
+    @JvmField val coordinates: List<PointF> = coordinates.toList()
+    @JvmField val timestamps: List<Long> = timestamps.toList()
+    @JvmField val touchedKeys: List<KeyboardData.Key?> = touchedKeys.toList()
+    @JvmField val keySequence: String
+    @JvmField val pathLength: Float
+    @JvmField val duration: Float
+    @JvmField val directionChanges: Int
+    @JvmField val averageVelocity: Float
+    @JvmField val velocityProfile: List<Float>
+    @JvmField val startPoint: PointF
+    @JvmField val endPoint: PointF
+    @JvmField val keyboardCoverage: Float
+
+    init {
+        // Build key sequence
+        keySequence = buildString {
+            for (key in touchedKeys) {
+                val kv = key?.keys?.getOrNull(0)
+                if (kv != null) {
+                    if (kv.getKind() == KeyValue.Kind.Char) {
+                        append(kv.getChar())
                     }
                 }
             }
         }
+
+        // Calculate metrics
+        pathLength = calculatePathLength()
+        duration = calculateDuration()
+        directionChanges = calculateDirectionChanges()
+        velocityProfile = calculateVelocityProfile()
+        averageVelocity = calculateAverageVelocity()
+        startPoint = if (this.coordinates.isEmpty()) PointF(0f, 0f) else this.coordinates[0]
+        endPoint = if (this.coordinates.isEmpty()) PointF(0f, 0f) else this.coordinates[this.coordinates.size - 1]
+        keyboardCoverage = calculateKeyboardCoverage()
     }
-    
-    val pathLength: Float by lazy { calculatePathLength() }
-    val duration: Float by lazy { calculateDuration() }
-    val directionChanges: Int by lazy { calculateDirectionChanges() }
-    val velocityProfile: List<Float> by lazy { calculateVelocityProfile() }
-    val averageVelocity: Float by lazy { if (duration > 0) pathLength / duration else 0f }
-    val startPoint: PointF by lazy { coordinates.firstOrNull() ?: PointF(0f, 0f) }
-    val endPoint: PointF by lazy { coordinates.lastOrNull() ?: PointF(0f, 0f) }
-    val keyboardCoverage: Float by lazy { calculateKeyboardCoverage() }
-    
+
     private fun calculatePathLength(): Float {
-        return coordinates.zipWithNext { p1, p2 ->
+        var length = 0f
+        for (i in 1 until coordinates.size) {
+            val p1 = coordinates[i - 1]
+            val p2 = coordinates[i]
             val dx = p2.x - p1.x
             val dy = p2.y - p1.y
-            sqrt(dx * dx + dy * dy)
-        }.sum()
+            length += sqrt(dx * dx + dy * dy)
+        }
+        return length
     }
-    
+
     private fun calculateDuration(): Float {
-        return if (timestamps.size < 2) 0f 
-        else (timestamps.last() - timestamps.first()) / 1000f // seconds
+        if (timestamps.size < 2) return 0f
+        return (timestamps[timestamps.size - 1] - timestamps[0]) / 1000.0f // in seconds
     }
-    
+
     private fun calculateDirectionChanges(): Int {
         if (coordinates.size < 3) return 0
-        
-        return coordinates.windowed(3).count { (p1, p2, p3) ->
+
+        var changes = 0
+
+        for (i in 2 until coordinates.size) {
+            val p1 = coordinates[i - 2]
+            val p2 = coordinates[i - 1]
+            val p3 = coordinates[i]
+
             val angle1 = atan2(p2.y - p1.y, p2.x - p1.x)
             val angle2 = atan2(p3.y - p2.y, p3.x - p2.x)
-            
-            val angleDiff = abs(angle2 - angle1).let { diff ->
-                if (diff > PI) 2 * PI - diff else diff
-            }.toFloat()
-            
+
+            var angleDiff = abs(angle2 - angle1)
+            if (angleDiff > PI) {
+                angleDiff = (2 * PI - angleDiff).toFloat()
+            }
+
             // Count as direction change if angle difference > 45 degrees
-            angleDiff > (PI / 4).toFloat()
+            if (angleDiff > PI / 4) {
+                changes++
+            }
         }
+
+        return changes
     }
-    
+
     private fun calculateVelocityProfile(): List<Float> {
-        return coordinates.zip(timestamps).zipWithNext { (p1, t1), (p2, t2) ->
+        val velocities = mutableListOf<Float>()
+
+        for (i in 1 until min(coordinates.size, timestamps.size)) {
+            val p1 = coordinates[i - 1]
+            val p2 = coordinates[i]
+            val t1 = timestamps[i - 1]
+            val t2 = timestamps[i]
+
             val dx = p2.x - p1.x
             val dy = p2.y - p1.y
             val distance = sqrt(dx * dx + dy * dy)
-            val timeDelta = (t2 - t1) / 1000f // seconds
-            
-            if (timeDelta > 0) distance / timeDelta else 0f
+            val timeDelta = (t2 - t1) / 1000.0f // in seconds
+
+            if (timeDelta > 0) {
+                velocities.add(distance / timeDelta)
+            }
         }
+
+        return velocities
     }
-    
+
+    private fun calculateAverageVelocity(): Float {
+        return if (duration > 0) pathLength / duration else 0f
+    }
+
     private fun calculateKeyboardCoverage(): Float {
         if (coordinates.isEmpty()) return 0f
-        
-        val minX = coordinates.minOf { it.x }
-        val maxX = coordinates.maxOf { it.x }
-        val minY = coordinates.minOf { it.y }
-        val maxY = coordinates.maxOf { it.y }
-        
+
+        var minX = Float.MAX_VALUE
+        var maxX = Float.MIN_VALUE
+        var minY = Float.MAX_VALUE
+        var maxY = Float.MIN_VALUE
+
+        for (p in coordinates) {
+            minX = min(minX, p.x)
+            maxX = max(maxX, p.x)
+            minY = min(minY, p.y)
+            maxY = max(maxY, p.y)
+        }
+
         val width = maxX - minX
         val height = maxY - minY
-        
-        // Coverage as diagonal of bounding box
+
+        // Approximate coverage as ratio of bounding box diagonal to expected keyboard size
+        // This is a rough estimate - should be calibrated based on actual keyboard dimensions
         return sqrt(width * width + height * height)
     }
-    
+
     /**
      * Check if this input represents a high-quality swipe
      */
-    val isHighQualitySwipe: Boolean
-        get() = pathLength > 100 &&
-                duration in 0.1f..3.0f &&
-                directionChanges >= 2 &&
-                coordinates.isNotEmpty() &&
-                timestamps.isNotEmpty()
-    
+    fun isHighQualitySwipe(): Boolean {
+        return pathLength > 100 && // Minimum path length
+            duration > 0.1f && // Minimum duration
+            duration < 3.0f && // Maximum duration
+            directionChanges >= 2 && // Has some complexity
+            coordinates.isNotEmpty() &&
+            timestamps.isNotEmpty()
+    }
+
     /**
      * Calculate confidence that this is a swipe vs regular typing
      */
-    val swipeConfidence: Float
-        get() {
-            var confidence = 0f
-            
-            // Path length factor
-            confidence += when {
-                pathLength > 200 -> 0.3f
-                pathLength > 100 -> 0.2f
-                pathLength > 50 -> 0.1f
-                else -> 0f
-            }
-            
-            // Duration factor (swipes are typically 0.3-1.5 seconds)
-            confidence += when {
-                duration in 0.3f..1.5f -> 0.25f
-                duration in 0.2f..2.0f -> 0.15f
-                else -> 0f
-            }
-            
-            // Direction changes
-            confidence += when {
-                directionChanges >= 3 -> 0.25f
-                directionChanges >= 2 -> 0.15f
-                else -> 0f
-            }
-            
-            // Key sequence length
-            confidence += when {
-                keySequence.length > 6 -> 0.2f
-                keySequence.length > 4 -> 0.1f
-                else -> 0f
-            }
-            
-            return confidence.coerceAtMost(1.0f)
+    fun getSwipeConfidence(): Float {
+        var confidence = 0f
+
+        // Path length factor (longer = more likely swipe)
+        confidence += when {
+            pathLength > 200 -> 0.3f
+            pathLength > 100 -> 0.2f
+            pathLength > 50 -> 0.1f
+            else -> 0f
         }
+
+        // Duration factor (swipes are typically 0.3-1.5 seconds)
+        confidence += when {
+            duration > 0.3f && duration < 1.5f -> 0.25f
+            duration > 0.2f && duration < 2.0f -> 0.15f
+            else -> 0f
+        }
+
+        // Direction changes (swipes have multiple direction changes)
+        confidence += when {
+            directionChanges >= 3 -> 0.25f
+            directionChanges >= 2 -> 0.15f
+            else -> 0f
+        }
+
+        // Key sequence length (swipes touch many keys)
+        confidence += when {
+            keySequence.length > 6 -> 0.2f
+            keySequence.length > 4 -> 0.1f
+            else -> 0f
+        }
+
+        return min(1.0f, confidence)
+    }
 }

@@ -1,222 +1,163 @@
 package tribixbite.keyboard2
 
-import android.content.Context
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
-import kotlin.system.measureTimeMillis
+import android.os.Trace
+import android.util.Log
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.max
+import kotlin.math.min
 
 /**
- * Performance profiling system for neural prediction analysis
- * Kotlin implementation with reactive performance monitoring
+ * Performance profiler using Android's standard Trace API.
+ *
+ * OPTIMIZATION v2: Uses android.os.Trace for system-level profiling
+ * - Integrates with Perfetto and Android Studio Profiler
+ * - Zero overhead in release builds (traces are compiled out)
+ * - Provides accurate system-level performance analysis
+ *
+ * Legacy statistics tracking is kept for development but disabled by default.
+ * Enable ENABLE_STATISTICS in debug builds for detailed timing analysis.
  */
-class PerformanceProfiler(private val context: Context) {
-    
-    companion object {
-        private const val TAG = "PerformanceProfiler"
-    }
-    
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val performanceData = mutableListOf<PerformanceMetric>()
-    private val dataLock = Any()
-    private val metricsFlow = MutableSharedFlow<PerformanceMetric>()
-    private var monitoringJob: Job? = null
-    
+object PerformanceProfiler {
+    private const val TAG = "PerfProfiler"
+
+    // OPTIMIZATION: Use BuildConfig for compile-time optimization in release builds
+    private val ENABLE_TRACE = BuildConfig.DEBUG // Android Trace (always enabled in debug)
+    private const val ENABLE_STATISTICS = false // Legacy stats (disabled for performance)
+
+    private val startTimes = ConcurrentHashMap<String, Long>()
+    private val statistics = ConcurrentHashMap<String, Statistics>()
+
     /**
-     * Performance metric data
+     * Statistics for a profiled section (legacy, disabled by default)
      */
-    data class PerformanceMetric(
-        val operation: String,
-        val durationMs: Long,
-        val timestamp: Long = System.currentTimeMillis(),
-        val metadata: Map<String, Any> = emptyMap()
-    )
-    
-    /**
-     * Performance statistics
-     */
-    data class PerformanceStats(
-        val operation: String,
-        val totalCalls: Int,
-        val averageDurationMs: Double,
-        val minDurationMs: Long,
-        val maxDurationMs: Long,
-        val last10Average: Double
-    )
-    
-    /**
-     * Measure operation performance
-     * Bug #178 fix: Thread-safe access to performanceData
-     */
-    suspend fun <T> measureOperation(operation: String, metadata: Map<String, Any> = emptyMap(), block: suspend () -> T): T {
-        val result: T
-        val duration = measureTimeMillis {
-            result = block()
+    private class Statistics {
+        var count: Long = 0
+        var totalTime: Long = 0
+        var minTime: Long = Long.MAX_VALUE
+        var maxTime: Long = 0
+
+        @Synchronized
+        fun record(time: Long) {
+            count++
+            totalTime += time
+            minTime = min(minTime, time)
+            maxTime = max(maxTime, time)
         }
 
-        val metric = PerformanceMetric(operation, duration, metadata = metadata)
-        synchronized(dataLock) {
-            performanceData.add(metric)
-
-            // Keep only recent data (last 1000 metrics)
-            if (performanceData.size > 1000) {
-                performanceData.removeAt(0)
-            }
-        }
-        metricsFlow.emit(metric)
-
-        logD("$operation: ${duration}ms")
-        return result
-    }
-    
-    /**
-     * Get performance statistics
-     * Bug #178 fix: Thread-safe access to performanceData
-     */
-    fun getStats(operation: String): PerformanceStats? {
-        val operationMetrics = synchronized(dataLock) {
-            performanceData.filter { it.operation == operation }
-        }
-        if (operationMetrics.isEmpty()) return null
-
-        val durations = operationMetrics.map { it.durationMs }
-        val last10 = operationMetrics.takeLast(10).map { it.durationMs }
-
-        return PerformanceStats(
-            operation = operation,
-            totalCalls = operationMetrics.size,
-            averageDurationMs = durations.average(),
-            minDurationMs = durations.minOrNull() ?: 0L,
-            maxDurationMs = durations.maxOrNull() ?: 0L,
-            last10Average = if (last10.isNotEmpty()) last10.average() else 0.0
-        )
+        fun getAverage(): Long = if (count > 0) totalTime / count else 0
     }
 
     /**
-     * Get all tracked operations
-     * Bug #178 fix: Thread-safe access to performanceData
+     * Start timing a section.
+     *
+     * OPTIMIZATION v2: Uses android.os.Trace.beginSection() for system-level profiling.
+     * Integrates with Perfetto, Android Studio Profiler, and systrace.
+     *
+     * @param section Section name (max 127 characters)
      */
-    fun getAllOperations(): List<String> {
-        return synchronized(dataLock) {
-            performanceData.map { it.operation }.distinct()
+    @JvmStatic
+    fun start(section: String) {
+        // Android Trace API (compiled out in release builds)
+        if (ENABLE_TRACE) {
+            Trace.beginSection(section)
+        }
+
+        // Legacy statistics (optional, disabled by default for performance)
+        if (ENABLE_STATISTICS) {
+            startTimes[section] = System.currentTimeMillis()
         }
     }
-    
+
     /**
-     * Get performance metrics flow for real-time monitoring
+     * End timing a section.
+     *
+     * OPTIMIZATION v2: Uses android.os.Trace.endSection() for system-level profiling.
      */
-    fun getMetricsFlow(): Flow<PerformanceMetric> = metricsFlow.asSharedFlow()
-    
-    /**
-     * Generate performance report
-     */
-    fun generateReport(): String {
-        val operations = getAllOperations()
-        return buildString {
-            appendLine("📊 Performance Report")
-            appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date())}")
-            appendLine()
-            
-            operations.forEach { operation ->
-                val stats = getStats(operation)
-                if (stats != null) {
-                    appendLine("🔧 $operation:")
-                    appendLine("   Calls: ${stats.totalCalls}")
-                    appendLine("   Average: %.2fms".format(stats.averageDurationMs))
-                    appendLine("   Min/Max: ${stats.minDurationMs}ms / ${stats.maxDurationMs}ms")
-                    appendLine("   Recent avg: %.2fms".format(stats.last10Average))
-                    appendLine()
+    @JvmStatic
+    fun end(section: String) {
+        // Android Trace API (compiled out in release builds)
+        if (ENABLE_TRACE) {
+            Trace.endSection()
+        }
+
+        // Legacy statistics (optional, disabled by default)
+        if (ENABLE_STATISTICS) {
+            val startTime = startTimes.remove(section)
+            if (startTime == null) {
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    Log.w(TAG, "No start time for section: $section")
                 }
+                return
+            }
+
+            val duration = System.currentTimeMillis() - startTime
+
+            val stats = statistics.getOrPut(section) { Statistics() }
+            stats.record(duration)
+
+            // Log if this operation took longer than expected
+            if (duration > getThreshold(section)) {
+                Log.w(TAG, String.format(
+                    "%s took %dms (threshold: %dms)",
+                    section, duration, getThreshold(section)
+                ))
             }
         }
     }
-    
+
     /**
-     * Clear performance data
-     * Bug #178 fix: Thread-safe access to performanceData
+     * Get performance thresholds for different operations
      */
-    fun clearData() {
-        synchronized(dataLock) {
-            performanceData.clear()
+    private fun getThreshold(section: String): Long {
+        // Define expected maximum times for operations
+        return when {
+            section.startsWith("DTW.") -> 30 // DTW should complete within 30ms
+            section.startsWith("Swipe.") -> 50 // Swipe prediction should complete within 50ms
+            section.startsWith("Type.") -> 20 // Regular typing prediction within 20ms
+            section.startsWith("Gaussian.") -> 10 // Gaussian model within 10ms
+            section.startsWith("Ngram.") -> 5 // N-gram lookup within 5ms
+            else -> 100 // Default threshold
         }
-        logD("Performance data cleared")
     }
-    
-    /**
-     * Start continuous monitoring
-     */
-    fun startMonitoring(onMetric: (PerformanceMetric) -> Unit) {
-        // Cancel existing monitoring if any
-        monitoringJob?.cancel()
 
-        monitoringJob = scope.launch {
-            metricsFlow.collect { metric ->
-                onMetric(metric)
-            }
+    /**
+     * Print performance report
+     */
+    @JvmStatic
+    fun report() {
+        if (!ENABLE_STATISTICS || statistics.isEmpty()) return
+
+        Log.d(TAG, "===== PERFORMANCE REPORT =====")
+        for ((section, stats) in statistics) {
+            Log.d(TAG, String.format(
+                "%s: count=%d, avg=%dms, min=%dms, max=%dms, total=%dms",
+                section, stats.count, stats.getAverage(),
+                stats.minTime, stats.maxTime, stats.totalTime
+            ))
         }
-        logD("Performance monitoring started")
+        Log.d(TAG, "==============================")
     }
 
     /**
-     * Stop continuous monitoring
-     * Bug #180 fix: Added stopMonitoring() to cancel monitoring without cleanup
+     * Clear all statistics
      */
-    fun stopMonitoring() {
-        monitoringJob?.cancel()
-        monitoringJob = null
-        logD("Performance monitoring stopped")
+    @JvmStatic
+    fun reset() {
+        startTimes.clear()
+        statistics.clear()
     }
-    
+
     /**
-     * Export performance data
-     * Bug #178 fix: Thread-safe access to performanceData
-     * Bug #179 fix: Safe JSON metadata serialization with error handling
+     * Log a single timing event without tracking statistics
      */
-    suspend fun exportData(): String = withContext(Dispatchers.Default) {
-        val json = org.json.JSONArray()
-        val dataCopy = synchronized(dataLock) {
-            performanceData.toList()
+    @JvmStatic
+    fun logTiming(operation: String, timeMs: Long) {
+        if (!ENABLE_STATISTICS) return
+
+        if (timeMs > getThreshold(operation)) {
+            Log.w(TAG, String.format("%s: %dms (SLOW)", operation, timeMs))
+        } else {
+            Log.d(TAG, String.format("%s: %dms", operation, timeMs))
         }
-        dataCopy.forEach { metric ->
-            val obj = org.json.JSONObject().apply {
-                put("operation", metric.operation)
-                put("duration_ms", metric.durationMs)
-                put("timestamp", metric.timestamp)
-
-                // Safe metadata serialization with error handling
-                val metadataJson = org.json.JSONObject()
-                metric.metadata.forEach { (key, value) ->
-                    try {
-                        // Handle common JSON-serializable types
-                        val jsonValue = when (value) {
-                            is String, is Number, is Boolean -> value
-                            else -> value.toString() // Non-null Any type
-                        }
-                        metadataJson.put(key, jsonValue)
-                    } catch (e: Exception) {
-                        // Skip non-serializable values instead of crashing
-                        logW("Skipping non-serializable metadata: $key = $value")
-                    }
-                }
-                put("metadata", metadataJson)
-            }
-            json.put(obj)
-        }
-        json.toString(2)
-    }
-    
-    /**
-     * Cleanup
-     */
-    fun cleanup() {
-        stopMonitoring()
-        scope.cancel()
-    }
-
-    private fun logD(message: String) {
-        android.util.Log.d(TAG, message)
-    }
-
-    private fun logW(message: String) {
-        android.util.Log.w(TAG, message)
     }
 }

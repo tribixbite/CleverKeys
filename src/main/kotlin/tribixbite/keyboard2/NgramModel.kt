@@ -11,39 +11,16 @@ import kotlin.math.pow
  * N-gram language model for improving swipe typing predictions.
  * Uses bigram and trigram probabilities to weight word predictions.
  * This should provide 15-25% accuracy improvement.
- *
- * Features:
- * - Bigram (2-char) and trigram (3-char) probabilities
- * - Start and end character probabilities
- * - Word probability calculation with length normalization
- * - Word scoring based on n-gram matches
- * - Validation of n-gram sequences
- * - Optional file loading for custom n-gram data
- *
- * Ported from Java to Kotlin with improvements.
  */
 class NgramModel {
-
-    companion object {
-        private const val TAG = "NgramModel"
-
-        // Smoothing factor for unseen n-grams
-        private const val SMOOTHING_FACTOR = 0.001f
-
-        // Weight factors for different n-grams
-        private const val UNIGRAM_WEIGHT = 0.1f
-        private const val BIGRAM_WEIGHT = 0.3f
-        private const val TRIGRAM_WEIGHT = 0.6f
-    }
-
     // N-gram maps
-    private val unigramProbs = mutableMapOf<String, Float>()
-    private val bigramProbs = mutableMapOf<String, Float>()
-    private val trigramProbs = mutableMapOf<String, Float>()
+    private val unigramProbs: MutableMap<String, Float> = mutableMapOf()
+    private val bigramProbs: MutableMap<String, Float> = mutableMapOf()
+    private val trigramProbs: MutableMap<String, Float> = mutableMapOf()
 
     // Character frequency for start/end probabilities
-    private val startCharProbs = mutableMapOf<Char, Float>()
-    private val endCharProbs = mutableMapOf<Char, Float>()
+    private val startCharProbs: MutableMap<Char, Float> = mutableMapOf()
+    private val endCharProbs: MutableMap<Char, Float> = mutableMapOf()
 
     init {
         initializeDefaultNgrams()
@@ -55,126 +32,130 @@ class NgramModel {
      */
     private fun initializeDefaultNgrams() {
         // Most common bigrams in English
-        bigramProbs["th"] = 0.037f
-        bigramProbs["he"] = 0.030f
-        bigramProbs["in"] = 0.020f
-        bigramProbs["er"] = 0.019f
-        bigramProbs["an"] = 0.018f
-        bigramProbs["re"] = 0.017f
-        bigramProbs["ed"] = 0.016f
-        bigramProbs["on"] = 0.015f
-        bigramProbs["es"] = 0.014f
-        bigramProbs["st"] = 0.013f
-        bigramProbs["en"] = 0.013f
-        bigramProbs["at"] = 0.012f
-        bigramProbs["to"] = 0.012f
-        bigramProbs["nt"] = 0.011f
-        bigramProbs["ha"] = 0.011f
-        bigramProbs["nd"] = 0.010f
-        bigramProbs["ou"] = 0.010f
-        bigramProbs["ea"] = 0.010f
-        bigramProbs["ng"] = 0.010f
-        bigramProbs["as"] = 0.009f
-        bigramProbs["or"] = 0.009f
-        bigramProbs["ti"] = 0.009f
-        bigramProbs["is"] = 0.009f
-        bigramProbs["et"] = 0.008f
-        bigramProbs["it"] = 0.008f
-        bigramProbs["ar"] = 0.008f
-        bigramProbs["te"] = 0.008f
-        bigramProbs["se"] = 0.008f
-        bigramProbs["hi"] = 0.007f
-        bigramProbs["of"] = 0.007f
+        bigramProbs.apply {
+            put("th", 0.037f)
+            put("he", 0.030f)
+            put("in", 0.020f)
+            put("er", 0.019f)
+            put("an", 0.018f)
+            put("re", 0.017f)
+            put("ed", 0.016f)
+            put("on", 0.015f)
+            put("es", 0.014f)
+            put("st", 0.013f)
+            put("en", 0.013f)
+            put("at", 0.012f)
+            put("to", 0.012f)
+            put("nt", 0.011f)
+            put("ha", 0.011f)
+            put("nd", 0.010f)
+            put("ou", 0.010f)
+            put("ea", 0.010f)
+            put("ng", 0.010f)
+            put("as", 0.009f)
+            put("or", 0.009f)
+            put("ti", 0.009f)
+            put("is", 0.009f)
+            put("et", 0.008f)
+            put("it", 0.008f)
+            put("ar", 0.008f)
+            put("te", 0.008f)
+            put("se", 0.008f)
+            put("hi", 0.007f)
+            put("of", 0.007f)
+        }
 
         // Most common trigrams
-        trigramProbs["the"] = 0.030f
-        trigramProbs["and"] = 0.016f
-        trigramProbs["tha"] = 0.012f
-        trigramProbs["ent"] = 0.010f
-        trigramProbs["ion"] = 0.009f
-        trigramProbs["tio"] = 0.008f
-        trigramProbs["for"] = 0.008f
-        trigramProbs["nde"] = 0.007f
-        trigramProbs["has"] = 0.007f
-        trigramProbs["nce"] = 0.006f
-        trigramProbs["edt"] = 0.006f
-        trigramProbs["tis"] = 0.006f
-        trigramProbs["oft"] = 0.006f
-        trigramProbs["sth"] = 0.005f
-        trigramProbs["men"] = 0.005f
-        trigramProbs["ing"] = 0.018f
-        trigramProbs["her"] = 0.007f
-        trigramProbs["hat"] = 0.006f
-        trigramProbs["his"] = 0.005f
-        trigramProbs["ere"] = 0.005f
-        trigramProbs["ter"] = 0.004f
-        trigramProbs["was"] = 0.004f
-        trigramProbs["you"] = 0.004f
-        trigramProbs["ith"] = 0.004f
-        trigramProbs["ver"] = 0.004f
-        trigramProbs["all"] = 0.004f
-        trigramProbs["wit"] = 0.003f
+        trigramProbs.apply {
+            put("the", 0.030f)
+            put("and", 0.016f)
+            put("tha", 0.012f)
+            put("ent", 0.010f)
+            put("ion", 0.009f)
+            put("tio", 0.008f)
+            put("for", 0.008f)
+            put("nde", 0.007f)
+            put("has", 0.007f)
+            put("nce", 0.006f)
+            put("edt", 0.006f)
+            put("tis", 0.006f)
+            put("oft", 0.006f)
+            put("sth", 0.005f)
+            put("men", 0.005f)
+            put("ing", 0.018f)
+            put("her", 0.007f)
+            put("hat", 0.006f)
+            put("his", 0.005f)
+            put("ere", 0.005f)
+            put("ter", 0.004f)
+            put("was", 0.004f)
+            put("you", 0.004f)
+            put("ith", 0.004f)
+            put("ver", 0.004f)
+            put("all", 0.004f)
+            put("wit", 0.003f)
+        }
 
         // Common starting characters
-        startCharProbs['t'] = 0.16f
-        startCharProbs['a'] = 0.11f
-        startCharProbs['s'] = 0.09f
-        startCharProbs['h'] = 0.08f
-        startCharProbs['w'] = 0.08f
-        startCharProbs['i'] = 0.07f
-        startCharProbs['o'] = 0.07f
-        startCharProbs['b'] = 0.06f
-        startCharProbs['m'] = 0.05f
-        startCharProbs['f'] = 0.05f
-        startCharProbs['c'] = 0.05f
-        startCharProbs['l'] = 0.04f
-        startCharProbs['d'] = 0.04f
-        startCharProbs['p'] = 0.03f
-        startCharProbs['n'] = 0.02f
+        startCharProbs.apply {
+            put('t', 0.16f)
+            put('a', 0.11f)
+            put('s', 0.09f)
+            put('h', 0.08f)
+            put('w', 0.08f)
+            put('i', 0.07f)
+            put('o', 0.07f)
+            put('b', 0.06f)
+            put('m', 0.05f)
+            put('f', 0.05f)
+            put('c', 0.05f)
+            put('l', 0.04f)
+            put('d', 0.04f)
+            put('p', 0.03f)
+            put('n', 0.02f)
+        }
 
         // Common ending characters
-        endCharProbs['e'] = 0.19f
-        endCharProbs['s'] = 0.14f
-        endCharProbs['t'] = 0.13f
-        endCharProbs['d'] = 0.10f
-        endCharProbs['n'] = 0.09f
-        endCharProbs['r'] = 0.08f
-        endCharProbs['y'] = 0.07f
-        endCharProbs['f'] = 0.05f
-        endCharProbs['l'] = 0.05f
-        endCharProbs['o'] = 0.04f
-        endCharProbs['w'] = 0.03f
-        endCharProbs['a'] = 0.02f
-        endCharProbs['k'] = 0.01f
+        endCharProbs.apply {
+            put('e', 0.19f)
+            put('s', 0.14f)
+            put('t', 0.13f)
+            put('d', 0.10f)
+            put('n', 0.09f)
+            put('r', 0.08f)
+            put('y', 0.07f)
+            put('f', 0.05f)
+            put('l', 0.05f)
+            put('o', 0.04f)
+            put('w', 0.03f)
+            put('a', 0.02f)
+            put('k', 0.01f)
+        }
     }
 
     /**
      * Load n-gram data from a file (future enhancement)
-     * File format: ngram\tprobability (tab-separated)
      */
     fun loadNgramData(context: Context, filename: String) {
         try {
-            context.assets.open(filename).use { inputStream ->
-                BufferedReader(InputStreamReader(inputStream)).use { reader ->
-                    var line: String?
-                    while (reader.readLine().also { line = it } != null) {
-                        val parts = line!!.split("\t")
-                        if (parts.size >= 2) {
-                            val ngram = parts[0].lowercase()
-                            val prob = parts[1].toFloat()
+            BufferedReader(InputStreamReader(context.assets.open(filename))).use { reader ->
+                reader.forEachLine { line ->
+                    val parts = line.split("\t")
+                    if (parts.size >= 2) {
+                        val ngram = parts[0].lowercase()
+                        val prob = parts[1].toFloat()
 
-                            when (ngram.length) {
-                                1 -> unigramProbs[ngram] = prob
-                                2 -> bigramProbs[ngram] = prob
-                                3 -> trigramProbs[ngram] = prob
-                            }
+                        when (ngram.length) {
+                            1 -> unigramProbs[ngram] = prob
+                            2 -> bigramProbs[ngram] = prob
+                            3 -> trigramProbs[ngram] = prob
                         }
                     }
                 }
             }
 
             Log.d(TAG, "Loaded n-grams: ${unigramProbs.size} unigrams, " +
-                      "${bigramProbs.size} bigrams, ${trigramProbs.size} trigrams")
+                    "${bigramProbs.size} bigrams, ${trigramProbs.size} trigrams")
         } catch (e: IOException) {
             Log.e(TAG, "Failed to load n-gram data: ${e.message}")
         }
@@ -213,16 +194,11 @@ class NgramModel {
     /**
      * Calculate language model probability for a word
      * Combines unigram, bigram, and trigram probabilities
-     *
-     * Formula:
-     * P(word) = P(start) * Π(P(bigram)^w_bi) * Π(P(trigram)^w_tri) * P(end)
-     * Then normalized by word length: P(word)^(1/length)
-     *
-     * @param word Word to calculate probability for
-     * @return Normalized probability [0, 1]
      */
     fun getWordProbability(word: String?): Float {
-        if (word.isNullOrEmpty()) return 0.0f
+        if (word.isNullOrEmpty()) {
+            return 0.0f
+        }
 
         val lowerWord = word.lowercase()
         var probability = 1.0f
@@ -262,15 +238,11 @@ class NgramModel {
     /**
      * Score a word based on how well its n-grams match the language model
      * Higher score = more likely to be a real word
-     *
-     * This is a simpler scoring than getWordProbability() - it just counts
-     * how many known n-grams appear in the word and weights them.
-     *
-     * @param word Word to score
-     * @return Score value (higher = better match to language model)
      */
     fun scoreWord(word: String?): Float {
-        if (word == null || word.length < 2) return 0.0f
+        if (word == null || word.length < 2) {
+            return 0.0f
+        }
 
         val lowerWord = word.lowercase()
         var score = 0.0f
@@ -309,15 +281,11 @@ class NgramModel {
     /**
      * Check if a sequence of characters forms valid n-grams
      * Used for quick filtering of impossible words
-     *
-     * A word is considered valid if at least 30% of its bigrams
-     * are known in the language model.
-     *
-     * @param word Word to validate
-     * @return true if word has enough valid n-grams
      */
     fun hasValidNgrams(word: String?): Boolean {
-        if (word == null || word.length < 2) return false
+        if (word == null || word.length < 2) {
+            return false
+        }
 
         val lowerWord = word.lowercase()
         var validCount = 0
@@ -336,19 +304,15 @@ class NgramModel {
         return validCount >= totalCount * 0.3
     }
 
-    /**
-     * Get statistics about the n-gram model
-     */
-    fun getStats(): String {
-        return buildString {
-            append("NgramModel Statistics:\n")
-            append("- Unigrams: ${unigramProbs.size}\n")
-            append("- Bigrams: ${bigramProbs.size}\n")
-            append("- Trigrams: ${trigramProbs.size}\n")
-            append("- Start characters: ${startCharProbs.size}\n")
-            append("- End characters: ${endCharProbs.size}\n")
-            append("- Smoothing factor: $SMOOTHING_FACTOR\n")
-            append("- Weights: uni=${UNIGRAM_WEIGHT}, bi=${BIGRAM_WEIGHT}, tri=${TRIGRAM_WEIGHT}\n")
-        }
+    companion object {
+        private const val TAG = "NgramModel"
+
+        // Smoothing factor for unseen n-grams
+        private const val SMOOTHING_FACTOR = 0.001f
+
+        // Weight factors for different n-grams
+        private const val UNIGRAM_WEIGHT = 0.1f
+        private const val BIGRAM_WEIGHT = 0.3f
+        private const val TRIGRAM_WEIGHT = 0.6f
     }
 }

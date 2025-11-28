@@ -1,196 +1,153 @@
 package tribixbite.keyboard2
 
 import android.content.Context
-import android.graphics.*
-import android.view.MotionEvent
+import android.content.SharedPreferences
+import android.util.AttributeSet
+import android.view.ContextThemeWrapper
 import android.view.View
-import android.widget.GridLayout
-import kotlinx.coroutines.*
+import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.BaseAdapter
+import android.widget.GridView
+import android.widget.TextView
 
-/**
- * Emoji grid view for emoji selection
- * Kotlin implementation with reactive emoji loading
- */
-class EmojiGridView(context: Context) : GridLayout(context) {
-    
-    companion object {
-        private const val TAG = "EmojiGridView"
-        private const val EMOJI_SIZE_DP = 48
-        private const val EMOJI_COLUMNS = 8
+class EmojiGridView(context: Context, attrs: AttributeSet?) :
+    GridView(context, attrs), AdapterView.OnItemClickListener {
 
-        // Group constants for emoji categories
-        const val GROUP_LAST_USE = -1
-    }
-    
-    private val emoji = Emoji.getInstance(context)
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    private var onEmojiSelected: ((String) -> Unit)? = null
-    
+    private var emojiArray: List<Emoji> = emptyList()
+    private val lastUsed: MutableMap<Emoji, Int> = mutableMapOf()
+
     init {
-        columnCount = EMOJI_COLUMNS
-        setupEmojis()
+        Emoji.init(context.resources)
+        migrateOldPrefs() // TODO: Remove at some point in future
+        onItemClickListener = this
+        loadLastUsed()
+        setEmojiGroup(if (lastUsed.isEmpty()) 0 else GROUP_LAST_USE)
     }
-    
-    /**
-     * Set emoji selection callback
-     */
-    fun setOnEmojiSelectedListener(listener: (String) -> Unit) {
-        onEmojiSelected = listener
-    }
-    
-    /**
-     * Setup emoji grid
-     */
-    private fun setupEmojis() {
-        scope.launch {
-            try {
-                if (emoji.loadEmojis()) {
-                    val recentEmojis = emoji.getRecentEmojis(context)
-                    
-                    withContext(Dispatchers.Main) {
-                        populateEmojiGrid(recentEmojis)
-                    }
-                }
-            } catch (e: Exception) {
-                logE("Failed to load emojis", e)
-            }
-        }
-    }
-    
-    /**
-     * Populate grid with emoji buttons
-     */
-    private fun populateEmojiGrid(emojis: List<Emoji.EmojiData>) {
-        removeAllViews()
-        
-        emojis.forEach { emojiData ->
-            val button = EmojiButton(context, emojiData)
-            button.setOnClickListener {
-                onEmojiSelected?.invoke(emojiData.emoji)
-            }
-            addView(button)
-        }
-    }
-    
-    /**
-     * Show emoji group
-     */
-    fun showGroup(group: String) {
-        scope.launch {
-            val groupEmojis = emoji.getEmojisByGroup(group)
-            withContext(Dispatchers.Main) {
-                populateEmojiGrid(groupEmojis)
-            }
-        }
-    }
-    
-    /**
-     * Search emojis
-     */
-    fun searchEmojis(query: String) {
-        scope.launch {
-            val searchResults = emoji.searchEmojis(query)
-            withContext(Dispatchers.Main) {
-                populateEmojiGrid(searchResults)
-            }
-        }
-    }
-    
-    /**
-     * Individual emoji button
-     */
-    private class EmojiButton(context: Context, private val emojiData: Emoji.EmojiData) : View(context) {
-        
-        private val paint = Paint().apply {
-            isAntiAlias = true
-            textAlign = Paint.Align.CENTER
-            textSize = Utils.dpToPx(32f, resources.displayMetrics)
-        }
-        
-        init {
-            layoutParams = GridLayout.LayoutParams().apply {
-                width = Utils.dpToPx(EMOJI_SIZE_DP.toFloat(), resources.displayMetrics).toInt()
-                height = Utils.dpToPx(EMOJI_SIZE_DP.toFloat(), resources.displayMetrics).toInt()
-                setMargins(4, 4, 4, 4)
-            }
 
-            setBackgroundColor(Color.TRANSPARENT)
-            isClickable = true
+    fun setEmojiGroup(group: Int) {
+        emojiArray = if (group == GROUP_LAST_USE) {
+            getLastEmojis()
+        } else {
+            Emoji.getEmojisByGroup(group)
+        }
+        adapter = EmojiViewAdapter(context, emojiArray)
+    }
 
-            // Accessibility: Set content description for screen readers
-            contentDescription = emojiData.description
+    override fun onItemClick(parent: AdapterView<*>?, v: View, pos: Int, id: Long) {
+        val config = Config.globalConfig()
+        val emoji = emojiArray[pos]
+        val used = lastUsed[emoji]
+        lastUsed[emoji] = (used ?: 0) + 1
+        config.handler?.key_up(emoji.kv(), Pointers.Modifiers.EMPTY)
+        saveLastUsed() // TODO: opti
+    }
+
+    private fun getLastEmojis(): List<Emoji> {
+        val list = lastUsed.keys.toMutableList()
+        list.sortByDescending { lastUsed[it] ?: 0 }
+        return list
+    }
+
+    private fun saveLastUsed() {
+        val edit = try {
+            emojiSharedPreferences().edit()
+        } catch (_: Exception) {
+            return
         }
-        
-        override fun onDraw(canvas: Canvas) {
-            super.onDraw(canvas)
-            
-            val centerX = width / 2f
-            val centerY = height / 2f - (paint.ascent() + paint.descent()) / 2
-            
-            canvas.drawText(emojiData.emoji, centerX, centerY, paint)
+
+        val set = lastUsed.map { (emoji, count) ->
+            "$count-${emoji.kv().getString()}"
+        }.toSet()
+
+        edit.putStringSet(LAST_USE_PREF, set)
+        edit.apply()
+    }
+
+    private fun loadLastUsed() {
+        lastUsed.clear()
+        val prefs = try {
+            emojiSharedPreferences()
+        } catch (_: Exception) {
+            return
         }
-        
-        override fun onTouchEvent(event: MotionEvent): Boolean {
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    setBackgroundColor(0x22FFFFFF)
-                    return true
-                }
-                MotionEvent.ACTION_UP -> {
-                    setBackgroundColor(Color.TRANSPARENT)
-                    performClick()
-                    return true
-                }
-                MotionEvent.ACTION_CANCEL -> {
-                    setBackgroundColor(Color.TRANSPARENT)
-                    return true
+
+        val lastUseSet = prefs.getStringSet(LAST_USE_PREF, null) ?: return
+
+        for (emojiData in lastUseSet) {
+            val data = emojiData.split("-", limit = 2)
+            if (data.size != 2) continue
+
+            val emoji = Emoji.getEmojiByString(data[1]) ?: continue
+            lastUsed[emoji] = data[0].toIntOrNull() ?: continue
+        }
+    }
+
+    private fun emojiSharedPreferences(): SharedPreferences {
+        return context.getSharedPreferences("emoji_last_use", Context.MODE_PRIVATE)
+    }
+
+    private fun migrateOldPrefs() {
+        val prefs = try {
+            emojiSharedPreferences()
+        } catch (e: Exception) {
+            return
+        }
+
+        val lastUsed = prefs.getStringSet(LAST_USE_PREF, null)
+        if (lastUsed != null && !prefs.getBoolean(MIGRATION_CHECK_KEY, false)) {
+            val edit = prefs.edit()
+            edit.clear()
+
+            val lastUsedNew = mutableSetOf<String>()
+            for (entry in lastUsed) {
+                val data = entry.split("-", limit = 2)
+                try {
+                    val count = data[0].toInt()
+                    val newValue = Emoji.mapOldNameToValue(data[1])
+                    lastUsedNew.add("$count-$newValue")
+                } catch (ignored: IllegalArgumentException) {
                 }
             }
-            return super.onTouchEvent(event)
+            edit.putStringSet(LAST_USE_PREF, lastUsedNew)
+            edit.putBoolean(MIGRATION_CHECK_KEY, true)
+            edit.apply()
         }
     }
 
-    /**
-     * Set emoji group (compatible with original EmojiGroupButtonsBar)
-     */
-    fun setEmojiGroup(groupId: Int) {
-        scope.launch {
-            try {
-                val emojis = if (groupId == GROUP_LAST_USE) {
-                    // Show recently used emojis
-                    emoji.getRecentEmojis(context)
-                } else {
-                    // Show emojis from specific group
-                    emoji.getEmojisByGroupIndex(groupId)
-                }
-
-                withContext(Dispatchers.Main) {
-                    populateEmojiGrid(emojis)
-                }
-            } catch (e: Exception) {
-                logE("Failed to set emoji group $groupId", e)
-            }
+    class EmojiView(context: Context) : TextView(context) {
+        fun setEmoji(emoji: Emoji) {
+            text = emoji.kv().getString()
         }
     }
 
-    /**
-     * Cleanup coroutines when view is detached
-     * Bug #135 fix: Automatic cleanup instead of manual cleanup() call
-     */
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        scope.cancel()
+    class EmojiViewAdapter(
+        context: Context,
+        private val emojiArray: List<Emoji>?
+    ) : BaseAdapter() {
+
+        private val buttonContext = ContextThemeWrapper(context, R.style.emojiGridButton)
+
+        override fun getCount(): Int {
+            return emojiArray?.size ?: 0
+        }
+
+        override fun getItem(pos: Int): Any? {
+            return emojiArray?.get(pos)
+        }
+
+        override fun getItemId(pos: Int): Long = pos.toLong()
+
+        override fun getView(pos: Int, convertView: View?, parent: ViewGroup): View {
+            val view = (convertView as? EmojiView) ?: EmojiView(buttonContext)
+            emojiArray?.get(pos)?.let { view.setEmoji(it) }
+            return view
+        }
     }
 
-    /**
-     * Manual cleanup (deprecated - use onDetachedFromWindow)
-     */
-    @Deprecated("Cleanup is now automatic via onDetachedFromWindow()", ReplaceWith(""))
-    fun cleanup() {
-        scope.cancel()
-    }
-
-    private fun logE(message: String, throwable: Throwable? = null) {
-        android.util.Log.e(TAG, message, throwable)
+    companion object {
+        const val GROUP_LAST_USE = -1
+        private const val LAST_USE_PREF = "emoji_last_use"
+        private const val MIGRATION_CHECK_KEY = "MIGRATION_COMPLETE"
     }
 }

@@ -1,67 +1,46 @@
 package tribixbite.keyboard2
 
-import android.util.Log
+import kotlin.math.ceil
+import kotlin.math.min
 
 /**
- * Utility for resampling swipe trajectories to fit neural model input requirements.
- * Provides three resampling strategies for reducing trajectory point counts while
- * preserving gesture shape and critical start/end information.
- *
- * Features:
- * - TRUNCATE: Simple first-N points (fastest, loses end information)
- * - DISCARD: Weighted uniform sampling (preserves start/end, good for most cases)
- * - MERGE: Averaging neighboring points (best shape preservation, slower)
- *
- * Performance:
- * - TRUNCATE: O(N) with minimal overhead
- * - DISCARD: O(N) with weighted selection
- * - MERGE: O(N*F) where F = feature count
- *
- * Use Cases:
- * - TRUNCATE: Fast preview, real-time visualization
- * - DISCARD: Production swipe recognition (recommended)
- * - MERGE: High-accuracy mode, post-processing
- *
- * Ported from Java to Kotlin with improvements.
+ * Utility class for resampling swipe trajectories to fit different model input sizes
+ * Supports three resampling modes:
+ * - TRUNCATE: Keep first N points (current behavior)
+ * - DISCARD: Drop points uniformly with preference for keeping start/end
+ * - MERGE: Average neighboring points to reduce count
  */
 object SwipeResampler {
-
     private const val TAG = "SwipeResampler"
 
-    /**
-     * Resampling strategies for trajectory downsampling
-     */
     enum class ResamplingMode {
-        /** Keep first N points, discard rest - fastest but loses end information */
-        TRUNCATE,
-
-        /** Uniformly drop points with weighted preference for start/end - recommended */
-        DISCARD,
-
-        /** Average neighboring points for smooth reduction - best quality */
-        MERGE
+        TRUNCATE,  // Keep first N points, discard rest
+        DISCARD,   // Uniformly drop points with start/end preference
+        MERGE      // Average neighboring points
     }
 
     /**
-     * Resample trajectory data to target length using specified strategy
+     * Resample trajectory data to target length
      *
-     * @param trajectoryData Original data [N, features] where N > targetLength
-     * @param targetLength Desired output length (must be > 0)
+     * @param trajectoryData Original data [N, features]
+     * @param targetLength Desired output length
      * @param mode Resampling algorithm to use
-     * @return Resampled data [targetLength, features] or original if no resampling needed
+     * @return Resampled data [targetLength, features]
      */
+    @JvmStatic
     fun resample(
-        trajectoryData: Array<FloatArray>,
+        trajectoryData: Array<FloatArray>?,
         targetLength: Int,
-        mode: ResamplingMode = ResamplingMode.DISCARD
-    ): Array<FloatArray> {
-        if (trajectoryData.isEmpty()) {
+        mode: ResamplingMode
+    ): Array<FloatArray>? {
+        if (trajectoryData == null || trajectoryData.isEmpty()) {
             return trajectoryData
         }
 
         val originalLength = trajectoryData.size
+        val numFeatures = trajectoryData[0].size
 
-        // No resampling needed if already at or below target
+        // No resampling needed
         if (originalLength <= targetLength) {
             return trajectoryData
         }
@@ -75,55 +54,29 @@ object SwipeResampler {
 
     /**
      * TRUNCATE mode: Keep first targetLength points
-     *
-     * Fastest resampling method but loses end-of-swipe information.
-     * Only recommended for real-time visualization or when end points
-     * are not critical for recognition.
-     *
-     * Time complexity: O(N*F) where N = targetLength, F = features
-     * Space complexity: O(N*F)
      */
-    private fun resampleTruncate(
-        data: Array<FloatArray>,
-        targetLength: Int
-    ): Array<FloatArray> {
+    private fun resampleTruncate(data: Array<FloatArray>, targetLength: Int): Array<FloatArray> {
         val numFeatures = data[0].size
-        val result = Array(targetLength) { FloatArray(numFeatures) }
-
-        for (i in 0 until targetLength) {
-            data[i].copyInto(result[i])
+        return Array(targetLength) { i ->
+            data[i].copyOf()
         }
-
-        return result
     }
 
     /**
-     * DISCARD mode: Drop points with weighted preference for start and end
-     *
-     * Recommended for production use. Preserves critical start/end information
-     * while uniformly sampling middle trajectory. Uses 35/30/35 weighting for
-     * start/middle/end zones to ensure gesture extremities are well-represented.
+     * DISCARD mode: Drop points semi-uniformly with preference for keeping start and end
      *
      * Strategy:
      * - Always keep first and last points
-     * - Split trajectory into 3 zones: start (30%), middle (40%), end (30%)
-     * - Allocate 35% of output points to start zone
-     * - Allocate 30% of output points to middle zone
-     * - Allocate 35% of output points to end zone
-     *
-     * Time complexity: O(N*F) where N = originalLength, F = features
-     * Space complexity: O(N*F)
+     * - For middle points, use weighted uniform spacing
+     * - Weight more points toward start and end (crucial for word recognition)
      */
-    private fun resampleDiscard(
-        data: Array<FloatArray>,
-        targetLength: Int
-    ): Array<FloatArray> {
+    private fun resampleDiscard(data: Array<FloatArray>, targetLength: Int): Array<FloatArray> {
         val originalLength = data.size
         val numFeatures = data[0].size
         val result = Array(targetLength) { FloatArray(numFeatures) }
 
-        // Edge case: single point
         if (targetLength == 1) {
+            // Edge case: keep first point
             data[0].copyInto(result[0])
             return result
         }
@@ -134,12 +87,12 @@ object SwipeResampler {
         // Always keep last point
         data[originalLength - 1].copyInto(result[targetLength - 1])
 
-        // Edge case: two points only
         if (targetLength == 2) {
             return result
         }
 
-        // Select middle points with weighted preference for start/end
+        // For middle points, use weighted selection
+        // Preserve more points at start and end (first/last 20% of swipe)
         val numMiddle = targetLength - 2
         val selectedIndices = selectMiddleIndices(originalLength, numMiddle)
 
@@ -152,11 +105,7 @@ object SwipeResampler {
     }
 
     /**
-     * Select middle indices with weighted preference for start and end zones
-     *
-     * Ensures that the beginning and end of swipe gestures (which contain
-     * critical letter information) are better represented in the resampled
-     * trajectory than the middle transitional movement.
+     * Select middle indices with weighted preference for start and end
      */
     private fun selectMiddleIndices(originalLength: Int, numMiddle: Int): List<Int> {
         val indices = mutableListOf<Int>()
@@ -164,20 +113,19 @@ object SwipeResampler {
         // Available indices (excluding first and last)
         val availableRange = originalLength - 2
 
-        // Keep all middle points if there aren't too many
         if (availableRange <= numMiddle) {
+            // Keep all middle points
             for (i in 1 until originalLength - 1) {
                 indices.add(i)
             }
             return indices
         }
 
-        // Weighted selection: more points at start/end
-        // Zone boundaries: start (30%), middle (40%), end (30%)
+        // Use weighted selection: more points at start/end
+        // Split into 3 zones: start (30%), middle (40%), end (30%)
         val startZoneEnd = 1 + (availableRange * 0.3).toInt()
         val endZoneStart = originalLength - 1 - (availableRange * 0.3).toInt()
 
-        // Point allocation: start (35%), middle (30%), end (35%)
         val pointsInStart = (numMiddle * 0.35).toInt()
         val pointsInEnd = (numMiddle * 0.35).toInt()
         val pointsInMiddle = numMiddle - pointsInStart - pointsInEnd
@@ -208,22 +156,12 @@ object SwipeResampler {
     /**
      * MERGE mode: Average neighboring points to reduce count
      *
-     * Best quality resampling that preserves trajectory shape by averaging
-     * groups of neighboring points. Slower than other methods but produces
-     * smoothest output with best geometric fidelity to original gesture.
-     *
      * Strategy:
-     * - Calculate merge factor (ratio of original to target length)
-     * - For each output point, average all input points in its window
-     * - Windows overlap to ensure smooth transitions
-     *
-     * Time complexity: O(N*M*F) where N = originalLength, M = mergeFactor, F = features
-     * Space complexity: O(T*F) where T = targetLength
+     * - Calculate merge factor (how many original points per output point)
+     * - For each output point, average the corresponding range of input points
+     * - Preserves overall trajectory shape better than discard
      */
-    private fun resampleMerge(
-        data: Array<FloatArray>,
-        targetLength: Int
-    ): Array<FloatArray> {
+    private fun resampleMerge(data: Array<FloatArray>, targetLength: Int): Array<FloatArray> {
         val originalLength = data.size
         val numFeatures = data[0].size
         val result = Array(targetLength) { FloatArray(numFeatures) }
@@ -237,7 +175,8 @@ object SwipeResampler {
             val endFloat = (targetIdx + 1) * mergeFactor
 
             val startIdx = startFloat.toInt()
-            val endIdx = kotlin.math.ceil(endFloat).toInt().coerceAtMost(originalLength)
+            var endIdx = ceil(endFloat).toInt()
+            endIdx = min(endIdx, originalLength)
 
             // Average all points in this range
             val avgPoint = FloatArray(numFeatures)
@@ -260,77 +199,19 @@ object SwipeResampler {
     }
 
     /**
-     * Parse resampling mode from string (case-insensitive)
-     *
-     * @param modeString String representation: "truncate", "discard", or "merge"
-     * @return Corresponding ResamplingMode, defaults to TRUNCATE for invalid input
+     * Parse resampling mode from string
      */
+    @JvmStatic
     fun parseMode(modeString: String?): ResamplingMode {
-        return when (modeString?.lowercase()) {
+        if (modeString == null) {
+            return ResamplingMode.TRUNCATE
+        }
+
+        return when (modeString.lowercase()) {
             "discard" -> ResamplingMode.DISCARD
             "merge" -> ResamplingMode.MERGE
             "truncate" -> ResamplingMode.TRUNCATE
-            else -> {
-                if (modeString != null) {
-                    Log.w(TAG, "Unknown resampling mode '$modeString', defaulting to TRUNCATE")
-                }
-                ResamplingMode.TRUNCATE
-            }
+            else -> ResamplingMode.TRUNCATE
         }
-    }
-
-    /**
-     * Get statistics about resampling operation
-     *
-     * @param original Original trajectory size
-     * @param resampled Resampled trajectory size
-     * @return Human-readable statistics string
-     */
-    fun getResamplingStats(original: Int, resampled: Int): String {
-        val reductionPercent = ((original - resampled).toFloat() / original * 100).toInt()
-        val compressionRatio = original.toFloat() / resampled
-
-        return buildString {
-            append("SwipeResampler Statistics:\n")
-            append("- Original points: $original\n")
-            append("- Resampled points: $resampled\n")
-            append("- Reduction: $reductionPercent%\n")
-            append("- Compression ratio: ${"%.2f".format(compressionRatio)}:1\n")
-        }
-    }
-
-    /**
-     * Validate trajectory data before resampling
-     *
-     * @param data Trajectory data to validate
-     * @param targetLength Desired target length
-     * @return true if data is valid for resampling
-     */
-    fun isValidTrajectory(data: Array<FloatArray>?, targetLength: Int): Boolean {
-        if (data == null || data.isEmpty()) {
-            Log.w(TAG, "Invalid trajectory: null or empty")
-            return false
-        }
-
-        if (targetLength <= 0) {
-            Log.w(TAG, "Invalid target length: $targetLength")
-            return false
-        }
-
-        val numFeatures = data[0].size
-        if (numFeatures == 0) {
-            Log.w(TAG, "Invalid trajectory: no features")
-            return false
-        }
-
-        // Check all rows have same feature count
-        for (i in data.indices) {
-            if (data[i].size != numFeatures) {
-                Log.w(TAG, "Invalid trajectory: inconsistent feature count at row $i")
-                return false
-            }
-        }
-
-        return true
     }
 }

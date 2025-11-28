@@ -1,458 +1,425 @@
 package tribixbite.keyboard2
 
 import android.content.SharedPreferences
-import android.content.res.Resources
 import android.content.res.Configuration
+import android.content.res.Resources
 import android.util.DisplayMetrics
+import android.util.Log
 import android.util.TypedValue
-import tribixbite.keyboard2.prefs.*
-import tribixbite.keyboard2.R
-import kotlin.math.max
-import kotlin.math.min
+import tribixbite.keyboard2.prefs.CustomExtraKeysPreference
+import tribixbite.keyboard2.prefs.ExtraKeysPreference
+import tribixbite.keyboard2.prefs.LayoutsPreference
 
-/**
- * Global keyboard configuration with complete Kotlin implementation
- * Maintains all functionality from original Config.java with modern Kotlin patterns
- */
 class Config private constructor(
-    private val prefs: SharedPreferences,
-    resources: Resources,
-    val handler: IKeyEventHandler?,
+    private val _prefs: SharedPreferences,
+    res: Resources,
+    @JvmField val handler: IKeyEventHandler?,
     foldableUnfolded: Boolean?
 ) {
+    // From resources
+    @JvmField val marginTop: Float = res.getDimension(R.dimen.margin_top)
+    @JvmField val keyPadding: Float = res.getDimension(R.dimen.key_padding)
+    @JvmField val labelTextSize: Float = 0.33f
+    @JvmField val sublabelTextSize: Float = 0.22f
 
-    companion object {
-        const val WIDE_DEVICE_THRESHOLD = 600
-        private const val CONFIG_VERSION = 3
+    // From preferences
+    @JvmField var layouts: List<KeyboardData> = emptyList()
+    @JvmField var show_numpad = false
+    @JvmField var inverse_numpad = false
+    @JvmField var add_number_row = false
+    @JvmField var number_row_symbols = false
+    @JvmField var swipe_dist_px = 0f
+    @JvmField var slide_step_px = 0f
+    @JvmField var vibrate_custom = false
+    @JvmField var vibrate_duration = 0L
+    @JvmField var longPressTimeout = 0L
+    @JvmField var longPressInterval = 0L
+    @JvmField var keyrepeat_enabled = false
+    @JvmField var margin_bottom = 0f
+    @JvmField var keyboardHeightPercent = 0
+    @JvmField var screenHeightPixels = 0
+    @JvmField var horizontal_margin = 0f
+    @JvmField var key_vertical_margin = 0f
+    @JvmField var key_horizontal_margin = 0f
+    @JvmField var labelBrightness = 0
+    @JvmField var keyboardOpacity = 0
+    @JvmField var customBorderRadius = 0f
+    @JvmField var customBorderLineWidth = 0f
+    @JvmField var keyOpacity = 0
+    @JvmField var keyActivatedOpacity = 0
+    @JvmField var double_tap_lock_shift = false
+    @JvmField var characterSize = 0f
+    @JvmField var theme = 0
+    @JvmField var autocapitalisation = false
+    @JvmField var switch_input_immediate = false
+    @JvmField var selected_number_layout: NumberLayout? = null
+    @JvmField var borderConfig = false
+    @JvmField var circle_sensitivity = 0
+    @JvmField var clipboard_history_enabled = false
+    @JvmField var clipboard_history_limit = 0
+    @JvmField var clipboard_pane_height_percent = 0
+    @JvmField var clipboard_max_item_size_kb = 0
+    @JvmField var clipboard_limit_type: String? = null
+    @JvmField var clipboard_size_limit_mb = 0
+    @JvmField var swipe_typing_enabled = false
+    @JvmField var swipe_show_debug_scores = false
+    @JvmField var word_prediction_enabled = false
+    @JvmField var suggestion_bar_opacity = 0
 
-        private var globalConfig: Config? = null
+    // Word prediction scoring weights
+    @JvmField var prediction_context_boost = 0f
+    @JvmField var prediction_frequency_scale = 0f
+    @JvmField var context_aware_predictions_enabled = false // Phase 7.1: Dynamic N-gram learning
+    @JvmField var personalized_learning_enabled = false // Phase 7.2: Personalized word frequency learning
+    @JvmField var learning_aggression = "BALANCED" // Phase 7.2: Learning aggression level
 
-        /**
-         * Initialize global configuration
-         */
-        fun initGlobalConfig(
-            prefs: SharedPreferences,
-            resources: Resources,
-            handler: IKeyEventHandler?,
-            foldableUnfolded: Boolean?
-        ) {
-            migrate(prefs)
-            val config = Config(prefs, resources, handler, foldableUnfolded)
-            globalConfig = config
-            LayoutModifier.init(config, resources)
-        }
+    // Multi-language support (Phase 8.3 & 8.4)
+    @JvmField var enable_multilang = false // Phase 8.3: Enable multi-language support
+    @JvmField var primary_language = "en" // Phase 8.3: Primary language (default)
+    @JvmField var auto_detect_language = true // Phase 8.3: Auto-detect language from context
+    @JvmField var language_detection_sensitivity = 0.6f // Phase 8.3: Detection sensitivity (0.0-1.0)
 
-        /**
-         * Get global configuration instance
-         */
-        fun globalConfig(): Config {
-            return globalConfig ?: throw IllegalStateException("Config not initialized")
-        }
+    // Auto-correction settings
+    @JvmField var autocorrect_enabled = false
+    @JvmField var autocorrect_min_word_length = 0
+    @JvmField var autocorrect_char_match_threshold = 0f
+    @JvmField var autocorrect_confidence_min_frequency = 0
 
-        /**
-         * Get global preferences
-         */
-        fun globalPrefs(): SharedPreferences {
-            return globalConfig?.prefs ?: throw IllegalStateException("Config not initialized")
-        }
+    // Fuzzy matching configuration
+    @JvmField var autocorrect_max_length_diff = 0
+    @JvmField var autocorrect_prefix_length = 0
+    @JvmField var autocorrect_max_beam_candidates = 0
 
-        /**
-         * Safe integer preference access handling type mismatches
-         */
-        fun safeGetInt(prefs: SharedPreferences, key: String, defaultValue: Int): Int {
-            return try {
-                prefs.getInt(key, defaultValue)
-            } catch (e: ClassCastException) {
-                val stringValue = prefs.getString(key, defaultValue.toString()) ?: defaultValue.toString()
-                try {
-                    stringValue.toInt()
-                } catch (nfe: NumberFormatException) {
-                    android.util.Log.w("Config", "Invalid number format for $key: $stringValue, using default: $defaultValue")
-                    defaultValue
-                }
-            }
-        }
+    // Swipe scoring weights
+    @JvmField var swipe_confidence_weight = 0f
+    @JvmField var swipe_frequency_weight = 0f
+    @JvmField var swipe_common_words_boost = 0f
+    @JvmField var swipe_top5000_boost = 0f
+    @JvmField var swipe_rare_words_penalty = 0f
 
-        /**
-         * Configuration migration logic
-         * Uses sequential checks to emulate Java switch fallthrough behavior
-         */
-        fun migrate(prefs: SharedPreferences) {
-            val savedVersion = prefs.getInt("version", 0)
-            Logs.debug_config_migration(savedVersion, CONFIG_VERSION)
-            if (savedVersion == CONFIG_VERSION) return
+    // Swipe autocorrect configuration
+    @JvmField var swipe_beam_autocorrect_enabled = false
+    @JvmField var swipe_final_autocorrect_enabled = false
+    @JvmField var swipe_fuzzy_match_mode: String? = null
 
-            val editor = prefs.edit()
-            editor.putInt("version", CONFIG_VERSION)
+    // Short gesture configuration
+    @JvmField var short_gestures_enabled = false
+    @JvmField var short_gesture_min_distance = 0
 
-            // Migrations use sequential ifs for fallthrough behavior (matches Java)
-            // Version 0 users get ALL migrations, version 1 users get 1->2 and 2->3, etc.
+    // Gesture timing configuration (exposed hardcoded constants)
+    @JvmField var tap_duration_threshold = 150L // Max duration for a tap gesture (ms)
+    @JvmField var double_space_threshold = 500L // Max time between spaces for period replacement (ms)
+    @JvmField var smart_punctuation = true // Attach punctuation to end of last word (no space before)
+    @JvmField var swipe_min_dwell_time = 10L // Min time to register a key during swipe (ms)
+    @JvmField var swipe_noise_threshold = 2.0f // Min distance to register movement (pixels)
+    @JvmField var swipe_high_velocity_threshold = 1000.0f // Velocity threshold for fast swipes (px/sec)
+    @JvmField var swipe_min_distance = 50.0f // Minimum total distance to recognize a swipe (pixels)
+    @JvmField var swipe_min_key_distance = 40.0f // Minimum distance between keys during swipe (pixels)
 
-            if (savedVersion < 1) {
-                // Version 0->1: Migrate primary, secondary and custom layout options to new Layouts option
-                val layouts = mutableListOf<LayoutsPreference.Layout>()
-                layouts.add(migrateLayout(prefs.getString("layout", "system") ?: "system"))
-
-                val secondLayout = prefs.getString("second_layout", "none")
-                if (!secondLayout.isNullOrEmpty() && secondLayout != "none") {
-                    layouts.add(migrateLayout(secondLayout))
-                }
-
-                val customLayout = prefs.getString("custom_layout", "")
-                if (!customLayout.isNullOrEmpty()) {
-                    layouts.add(LayoutsPreference.CustomLayout.parse(customLayout))
-                }
-
-                LayoutsPreference.saveToPreferences(editor, layouts)
-            }
-
-            if (savedVersion < 2) {
-                // Version 1->2: Migrate number_row boolean to string
-                val addNumberRow = prefs.getBoolean("number_row", false)
-                editor.putString("number_row", if (addNumberRow) "no_symbols" else "no_number_row")
-            }
-
-            if (savedVersion < 3) {
-                // Version 2->3: Migrate pin_entry_enabled to number_entry_layout
-                if (!prefs.contains("number_entry_layout")) {
-                    val usePinLayout = prefs.getBoolean("pin_entry_enabled", true)
-                    editor.putString("number_entry_layout", if (usePinLayout) "pin" else "number")
-                }
-            }
-
-            editor.apply()
-        }
-
-        private fun migrateLayout(layoutName: String): LayoutsPreference.Layout {
-            return when (layoutName) {
-                "system" -> LayoutsPreference.SystemLayout()
-                else -> LayoutsPreference.NamedLayout(layoutName)
-            }
-        }
-    }
-
-    // Resource values: 3dp margin_top, 2dp key_padding converted to pixels
-    val marginTop: Float = 3f * resources.displayMetrics.density
-    val keyPadding: Float = 2f * resources.displayMetrics.density
-    val labelTextSize: Float = 0.33f
-    val sublabelTextSize: Float = 0.22f
-
-    // Core configuration properties (initialized in refresh())
-    var layouts: List<KeyboardData> = emptyList()
-    var show_numpad = false
-    var inverse_numpad = false
-    var add_number_row = false
-    var number_row_symbols = false
-    var swipe_dist_px = 0f
-    var slide_step_px = 0f
-    var vibrate_custom = false
-    var vibrate_duration = 20L
-    var longPressTimeout = 600L
-    var longPressInterval = 65L
-    var keyrepeat_enabled = true
-    var margin_bottom = 0f
-    var keyboardHeightPercent = 35
-    var screenHeightPixels = 0
-    var horizontal_margin = 0f
-    var key_vertical_margin = 0f
-    var key_horizontal_margin = 0f
-    var labelBrightness = 255
-    var keyboardOpacity = 255
-    var customBorderRadius = 0f
-    var customBorderLineWidth = 0f
-    var keyOpacity = 255
-    var keyActivatedOpacity = 255
-    var double_tap_lock_shift = false
-    var characterSize = 1f
-    var theme = R.style.Dark
-    var autocapitalisation = true
-    var switch_input_immediate = false
-    var selected_number_layout = NumberLayout.PIN
-    var borderConfig = false
-    var circle_sensitivity = 2
-    var clipboard_history_enabled = false
-    var clipboard_history_limit = 6
-    var clipboard_history_duration = 5  // Duration in minutes, -1 for never expire
-    var swipe_typing_enabled = false  // Default false to match Java
-
-    // Short gesture settings (key direction swipes for secondary characters)
-    var short_gestures_enabled = true
-    var short_gesture_min_distance = 15f  // Minimum distance in pixels for key direction swipes
-    var swipe_typing_min_distance = 50f   // Minimum distance before swipe typing mode activates
-
-    // Legacy swipe parameters (for compatibility with existing WordPredictor)
-    var swipe_confidence_shape_weight = 0.9f
-    var swipe_confidence_location_weight = 1.3f
-    var swipe_confidence_frequency_weight = 0.8f
-    var swipe_confidence_velocity_weight = 0.6f
-    var swipe_velocity_std = 1.0f  // Velocity standard deviation factor
-    var swipe_turning_point_threshold = 45  // Turning point detection threshold
-    var swipe_first_letter_weight = 1.5f
-    var swipe_last_letter_weight = 1.5f
-    var swipe_endpoint_bonus_weight = 2.0f
-    var swipe_require_endpoints = false
-    var swipe_show_debug_scores = false
-    var word_prediction_enabled = false
-    var suggestion_bar_opacity = 90
+    // Slider speed configuration
+    @JvmField var slider_speed_smoothing = 0.7f // Smoothing factor for slider speed (0.0-1.0)
+    @JvmField var slider_speed_max = 4.0f // Maximum slider speed multiplier
 
     // Neural swipe prediction configuration
-    var neural_prediction_enabled = true
-    var neural_beam_width = 8
-    var neural_max_length = 35
-    var neural_confidence_threshold = 0.1f
-    var termux_mode_enabled = false
+    @JvmField var neural_prediction_enabled = false
+    @JvmField var neural_beam_width = 0
+    @JvmField var neural_max_length = 0
+    @JvmField var neural_confidence_threshold = 0f
+    @JvmField var neural_batch_beams = false
+    @JvmField var neural_greedy_search = false
+    @JvmField var swipe_debug_detailed_logging = false
+    @JvmField var swipe_debug_show_raw_output = false
+    @JvmField var swipe_show_raw_beam_predictions = false
+    @JvmField var termux_mode_enabled = false
 
-    // Auto-commit predictions configuration
-    var auto_commit_predictions = false  // Feature flag for auto-commit
-    var auto_commit_threshold = 0.8f     // Confidence threshold (0.0-1.0) for auto-commit
+    // Beam search tuning
+    @JvmField var neural_beam_alpha = 0f
+    @JvmField var neural_beam_prune_confidence = 0f
+    @JvmField var neural_beam_score_gap = 0f
 
-    // Tap typing prediction configuration (WordPredictor)
-    var prediction_frequency_scale = 1000.0f  // Frequency normalization scale
-    var prediction_context_boost = 2.0f       // Context influence multiplier (higher = more context weight)
+    // Neural model versioning and resampling
+    @JvmField var neural_model_version: String? = null
+    @JvmField var neural_use_quantized = false
+    @JvmField var neural_user_max_seq_length = 0
+    @JvmField var neural_resampling_mode: String? = null
+    @JvmField var neural_custom_encoder_path: String? = null
+    @JvmField var neural_custom_decoder_path: String? = null
 
-    // Auto-correct configuration (WordPredictor)
-    var autocorrect_enabled = true                          // Enable auto-correct
-    var autocorrect_min_word_length = 3                     // Minimum word length for correction
-    var autocorrect_char_match_threshold = 0.67f            // Character match ratio (2/3 = 0.67)
-    var autocorrect_confidence_min_frequency = 500          // Minimum frequency to apply correction
+    // Dynamically set
+    @JvmField var shouldOfferVoiceTyping = false
+    @JvmField var actionLabel: String? = null
+    @JvmField var actionId = 0
+    @JvmField var swapEnterActionKey = false
+    @JvmField var extra_keys_subtype: ExtraKeys? = null
+    @JvmField var extra_keys_param: Map<KeyValue, KeyboardData.PreferredPos> = emptyMap()
+    @JvmField var extra_keys_custom: Map<KeyValue, KeyboardData.PreferredPos> = emptyMap()
 
-    // Dynamically set properties
-    var shouldOfferVoiceTyping = false
-    var actionLabel: String? = null
-    var actionId = 0
-    var swapEnterActionKey = false
-    var extra_keys_subtype: ExtraKeys? = null
-    var extra_keys_param: Map<KeyValue, KeyboardData.PreferredPos> = emptyMap()
-    var extra_keys_custom: Map<KeyValue, KeyboardData.PreferredPos> = emptyMap()
+    @JvmField var orientation_landscape = false
+    @JvmField var foldable_unfolded = false
+    @JvmField var wide_screen = false
+    @JvmField var version = 0
 
-    // Layout and orientation state
-    var orientation_landscape = false
-    var foldable_unfolded = false
-    var wide_screen = false
     private var current_layout_narrow = 0
     private var current_layout_wide = 0
 
     init {
-        refresh(resources, foldableUnfolded)
-
-        // Initialize dynamic properties
-        shouldOfferVoiceTyping = false
-        actionLabel = null
-        actionId = 0
-        swapEnterActionKey = false
-        extra_keys_subtype = null
+        repairCorruptedFloatPreferences(_prefs)
+        refresh(res, foldableUnfolded)
     }
 
-    /**
-     * Key event handler interface
-     */
-    interface IKeyEventHandler {
-        fun key_down(value: KeyValue, is_swipe: Boolean)
-        fun key_up(value: KeyValue, mods: Pointers.Modifiers)
-        fun mods_changed(mods: Pointers.Modifiers)
-        fun started(info: android.view.inputmethod.EditorInfo?)
-    }
-
-    /**
-     * Reload preferences and update configuration
-     */
-    fun refresh(resources: Resources, foldableUnfolded: Boolean?) {
-        val dm = resources.displayMetrics
-        orientation_landscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    fun refresh(res: Resources, foldableUnfolded: Boolean?) {
+        version++
+        val dm = res.displayMetrics
+        orientation_landscape = res.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         this.foldable_unfolded = foldableUnfolded ?: false
 
         var characterSizeScale = 1f
-        val showNumpadString = prefs.getString("show_numpad", "never") ?: "never"
-        show_numpad = "always" == showNumpadString
-
+        val show_numpad_s = _prefs.getString("show_numpad", "never")
+        show_numpad = "always" == show_numpad_s
+        
         if (orientation_landscape) {
-            if ("landscape" == showNumpadString) {
-                show_numpad = true
-            }
-            keyboardHeightPercent = prefs.getInt(
-                if (foldable_unfolded == true) "keyboard_height_landscape_unfolded" else "keyboard_height_landscape",
+            if ("landscape" == show_numpad_s) show_numpad = true
+            keyboardHeightPercent = safeGetInt(
+                _prefs,
+                if (this.foldable_unfolded) "keyboard_height_landscape_unfolded" else "keyboard_height_landscape",
                 50
             )
             characterSizeScale = 1.25f
         } else {
-            keyboardHeightPercent = prefs.getInt(
-                if (foldable_unfolded == true) "keyboard_height_unfolded" else "keyboard_height",
+            keyboardHeightPercent = safeGetInt(
+                _prefs,
+                if (this.foldable_unfolded) "keyboard_height_unfolded" else "keyboard_height",
                 35
             )
         }
 
-        layouts = LayoutsPreference.loadFromPreferences(resources, prefs).filterNotNull()
-        inverse_numpad = (prefs.getString("numpad_layout", "default") ?: "default") == "low_first"
+        layouts = LayoutsPreference.load_from_preferences(res, _prefs).filterNotNull()
+        inverse_numpad = _prefs.getString("numpad_layout", "default") == "low_first"
+        
+        val number_row = _prefs.getString("number_row", "no_number_row")
+        add_number_row = number_row != "no_number_row"
+        number_row_symbols = number_row == "symbols"
 
-        val numberRow = prefs.getString("number_row", "no_number_row") ?: "no_number_row"
-        add_number_row = numberRow != "no_number_row"
-        number_row_symbols = numberRow == "symbols"
+        val dpi_ratio = maxOf(dm.xdpi, dm.ydpi) / minOf(dm.xdpi, dm.ydpi)
+        val swipe_scaling = minOf(dm.widthPixels, dm.heightPixels) / 10f * dpi_ratio
+        val swipe_dist_value = _prefs.getString("swipe_dist", "15")?.toFloat() ?: 15f
+        swipe_dist_px = swipe_dist_value / 25f * swipe_scaling
+        
+        val slider_sensitivity = (_prefs.getString("slider_sensitivity", "30")?.toFloat() ?: 30f) / 100f
+        slide_step_px = slider_sensitivity * swipe_scaling
 
-        // Calculate swipe distance based on screen metrics
-        val dpiRatio = max(dm.xdpi, dm.ydpi) / min(dm.xdpi, dm.ydpi)
-        val swipeScaling = min(dm.widthPixels, dm.heightPixels) / 10f * dpiRatio
-        val swipeDistValue = (prefs.getString("swipe_dist", "15") ?: "15").toFloat()
-        swipe_dist_px = swipeDistValue / 25f * swipeScaling
+        vibrate_custom = _prefs.getBoolean("vibrate_custom", false)
+        vibrate_duration = safeGetInt(_prefs, "vibrate_duration", 20).toLong()
+        longPressTimeout = safeGetInt(_prefs, "longpress_timeout", 600).toLong()
+        longPressInterval = safeGetInt(_prefs, "longpress_interval", 65).toLong()
+        keyrepeat_enabled = _prefs.getBoolean("keyrepeat_enabled", true)
+        margin_bottom = get_dip_pref_oriented(dm, "margin_bottom", 7f, 3f)
+        key_vertical_margin = get_dip_pref(dm, "key_vertical_margin", 1.5f) / 100
+        key_horizontal_margin = get_dip_pref(dm, "key_horizontal_margin", 2f) / 100
 
-        // Short gesture distance (uses same scaling as swipe_dist for consistency)
-        val shortGestureDistValue = safeGetInt(prefs, "short_gesture_min_distance", 15).toFloat()
-        short_gesture_min_distance = shortGestureDistValue / 25f * swipeScaling
+        labelBrightness = safeGetInt(_prefs, "label_brightness", 100) * 255 / 100
+        keyboardOpacity = safeGetInt(_prefs, "keyboard_opacity", 100) * 255 / 100
+        keyOpacity = safeGetInt(_prefs, "key_opacity", 100) * 255 / 100
+        keyActivatedOpacity = safeGetInt(_prefs, "key_activated_opacity", 100) * 255 / 100
 
-        // Swipe typing minimum distance (before activating swipe typing mode)
-        val swipeTypingMinDistValue = safeGetInt(prefs, "swipe_typing_min_distance", 50).toFloat()
-        swipe_typing_min_distance = swipeTypingMinDistValue / 25f * swipeScaling
-
-        val sliderSensitivity = (prefs.getString("slider_sensitivity", "30") ?: "30").toFloat() / 100f
-        slide_step_px = sliderSensitivity * swipeScaling
-
-        vibrate_custom = prefs.getBoolean("vibrate_custom", false)
-        vibrate_duration = prefs.getInt("vibrate_duration", 20).toLong()
-        longPressTimeout = prefs.getInt("longpress_timeout", 600).toLong()
-        longPressInterval = prefs.getInt("longpress_interval", 65).toLong()
-        keyrepeat_enabled = prefs.getBoolean("keyrepeat_enabled", true)
-        margin_bottom = getDipPrefOriented(dm, "margin_bottom", 7f, 3f)
-        key_vertical_margin = getDipPref(dm, "key_vertical_margin", 1.5f) / 100f
-        key_horizontal_margin = getDipPref(dm, "key_horizontal_margin", 2f) / 100f
-
-        // Visual settings
-        labelBrightness = prefs.getInt("label_brightness", 100) * 255 / 100
-        keyboardOpacity = prefs.getInt("keyboard_opacity", 100) * 255 / 100
-        keyOpacity = prefs.getInt("key_opacity", 100) * 255 / 100
-        keyActivatedOpacity = prefs.getInt("key_activated_opacity", 100) * 255 / 100
-
-        borderConfig = prefs.getBoolean("border_config", false)
-        customBorderRadius = prefs.getInt("custom_border_radius", 0) / 100f
-        customBorderLineWidth = getDipPref(dm, "custom_border_line_width", 0f)
+        borderConfig = _prefs.getBoolean("border_config", false)
+        customBorderRadius = _prefs.getInt("custom_border_radius", 0) / 100f
+        customBorderLineWidth = get_dip_pref(dm, "custom_border_line_width", 0f)
         screenHeightPixels = dm.heightPixels
-        horizontal_margin = getDipPrefOriented(dm, "horizontal_margin", 3f, 28f)
-        double_tap_lock_shift = prefs.getBoolean("lock_double_tap", false)
-        characterSize = prefs.getFloat("character_size", 1.15f) * characterSizeScale
-        theme = getThemeId(resources, prefs.getString("theme", "") ?: "")
-        autocapitalisation = prefs.getBoolean("autocapitalisation", true)
-        switch_input_immediate = prefs.getBoolean("switch_input_immediate", false)
-        extra_keys_param = ExtraKeysPreference.getExtraKeys(prefs)
-        extra_keys_custom = CustomExtraKeysPreference.get(prefs)
-        selected_number_layout = NumberLayout.fromString(prefs.getString("number_entry_layout", "pin") ?: "pin")
-        current_layout_narrow = prefs.getInt("current_layout_portrait", 0)
-        current_layout_wide = prefs.getInt("current_layout_landscape", 0)
-        circle_sensitivity = (prefs.getString("circle_sensitivity", "2") ?: "2").toInt()
-        clipboard_history_enabled = prefs.getBoolean("clipboard_history_enabled", false)
+        horizontal_margin = get_dip_pref_oriented(dm, "horizontal_margin", 3f, 28f)
+        double_tap_lock_shift = _prefs.getBoolean("lock_double_tap", false)
+        characterSize = safeGetFloat(_prefs, "character_size", 1.15f) * characterSizeScale
+        theme = getThemeId(res, _prefs.getString("theme", "") ?: "")
+        autocapitalisation = _prefs.getBoolean("autocapitalisation", true)
+        switch_input_immediate = _prefs.getBoolean("switch_input_immediate", false)
+        extra_keys_param = ExtraKeysPreference.get_extra_keys(_prefs) ?: emptyMap()
+        extra_keys_custom = CustomExtraKeysPreference.get(_prefs) ?: emptyMap()
+        selected_number_layout = NumberLayout.of_string(_prefs.getString("number_entry_layout", "pin") ?: "pin")
+        current_layout_narrow = safeGetInt(_prefs, "current_layout_portrait", 0)
+        current_layout_wide = safeGetInt(_prefs, "current_layout_landscape", 0)
+        circle_sensitivity = _prefs.getString("circle_sensitivity", "2")?.toInt() ?: 2
+        clipboard_history_enabled = _prefs.getBoolean("clipboard_history_enabled", false)
 
         clipboard_history_limit = try {
-            prefs.getInt("clipboard_history_limit", 6)
+            _prefs.getInt("clipboard_history_limit", 6)
         } catch (e: ClassCastException) {
-            val stringValue = prefs.getString("clipboard_history_limit", "6") ?: "6"
-            val intValue = stringValue.toInt()
-            android.util.Log.w("Config", "Fixed clipboard_history_limit type mismatch: $stringValue")
-            intValue
+            val stringValue = _prefs.getString("clipboard_history_limit", "6") ?: "6"
+            stringValue.toInt().also {
+                Log.w("Config", "Fixed clipboard_history_limit type mismatch: $stringValue")
+            }
         }
 
-        clipboard_history_duration = (prefs.getString("clipboard_history_duration", "5") ?: "5").toIntOrNull() ?: 5
+        clipboard_pane_height_percent = _prefs.getInt("clipboard_pane_height_percent", 30).coerceIn(10, 50)
+        
+        clipboard_max_item_size_kb = try {
+            _prefs.getString("clipboard_max_item_size_kb", "500")?.toInt() ?: 500
+        } catch (e: NumberFormatException) {
+            500
+        }
 
-        swipe_typing_enabled = prefs.getBoolean("swipe_typing_enabled", false)  // Default false to match Java
+        clipboard_limit_type = _prefs.getString("clipboard_limit_type", "count")
+        
+        clipboard_size_limit_mb = try {
+            _prefs.getString("clipboard_size_limit_mb", "10")?.toInt() ?: 10
+        } catch (e: NumberFormatException) {
+            10
+        }
 
-        // Short gesture enable flag (distance loaded above with other swipe settings)
-        short_gestures_enabled = prefs.getBoolean("short_gestures_enabled", true)
+        swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", false)
+        swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", false)
+        word_prediction_enabled = _prefs.getBoolean("word_prediction_enabled", false)
+        suggestion_bar_opacity = safeGetInt(_prefs, "suggestion_bar_opacity", 90)
 
-        // Legacy swipe parameters (for compatibility)
-        swipe_confidence_shape_weight = safeGetInt(prefs, "swipe_confidence_shape_weight", 90) / 100f
-        swipe_confidence_location_weight = safeGetInt(prefs, "swipe_confidence_location_weight", 130) / 100f
-        swipe_confidence_frequency_weight = safeGetInt(prefs, "swipe_confidence_frequency_weight", 80) / 100f
-        swipe_confidence_velocity_weight = safeGetInt(prefs, "swipe_confidence_velocity_weight", 60) / 100f
-        swipe_velocity_std = safeGetInt(prefs, "swipe_velocity_std", 100) / 100f
-        swipe_turning_point_threshold = safeGetInt(prefs, "swipe_turning_point_threshold", 45)
-        swipe_first_letter_weight = safeGetInt(prefs, "swipe_first_letter_weight", 150) / 100f
-        swipe_last_letter_weight = safeGetInt(prefs, "swipe_last_letter_weight", 150) / 100f
-        swipe_endpoint_bonus_weight = safeGetInt(prefs, "swipe_endpoint_bonus_weight", 200) / 100f
-        swipe_require_endpoints = prefs.getBoolean("swipe_require_endpoints", false)
-        swipe_show_debug_scores = prefs.getBoolean("swipe_show_debug_scores", false)
-        word_prediction_enabled = prefs.getBoolean("word_prediction_enabled", false)
-        suggestion_bar_opacity = safeGetInt(prefs, "suggestion_bar_opacity", 90)
+        prediction_context_boost = safeGetFloat(_prefs, "prediction_context_boost", 2.0f)
+        prediction_frequency_scale = safeGetFloat(_prefs, "prediction_frequency_scale", 1000.0f)
+        context_aware_predictions_enabled = _prefs.getBoolean("context_aware_predictions_enabled", true)
+        personalized_learning_enabled = _prefs.getBoolean("personalized_learning_enabled", true)
+        learning_aggression = _prefs.getString("learning_aggression", "BALANCED") ?: "BALANCED"
 
-        // Neural swipe prediction configuration
-        neural_prediction_enabled = prefs.getBoolean("neural_prediction_enabled", true)
-        neural_beam_width = safeGetInt(prefs, "neural_beam_width", 8)
-        neural_max_length = safeGetInt(prefs, "neural_max_length", 35)
-        neural_confidence_threshold = prefs.getFloat("neural_confidence_threshold", 0.1f)
-        termux_mode_enabled = prefs.getBoolean("termux_mode_enabled", false)
+        // Multi-language settings (Phase 8.3 & 8.4)
+        enable_multilang = _prefs.getBoolean("pref_enable_multilang", false)
+        primary_language = _prefs.getString("pref_primary_language", "en") ?: "en"
+        auto_detect_language = _prefs.getBoolean("pref_auto_detect_language", true)
+        // SlideBarPreference stores as Float (0.4-0.9), not Int
+        language_detection_sensitivity = safeGetFloat(_prefs, "pref_language_detection_sensitivity", 0.6f)
 
-        val screenWidthDp = dm.widthPixels / dm.density
-        wide_screen = screenWidthDp >= WIDE_DEVICE_THRESHOLD
+        autocorrect_enabled = _prefs.getBoolean("autocorrect_enabled", true)
+        autocorrect_min_word_length = safeGetInt(_prefs, "autocorrect_min_word_length", 3)
+        autocorrect_char_match_threshold = safeGetFloat(_prefs, "autocorrect_char_match_threshold", 0.67f)
+        autocorrect_confidence_min_frequency = safeGetInt(_prefs, "autocorrect_confidence_min_frequency", 500)
+
+        autocorrect_max_length_diff = safeGetInt(_prefs, "autocorrect_max_length_diff", 2)
+        autocorrect_prefix_length = safeGetInt(_prefs, "autocorrect_prefix_length", 2)
+        autocorrect_max_beam_candidates = safeGetInt(_prefs, "autocorrect_max_beam_candidates", 3)
+
+        swipe_beam_autocorrect_enabled = _prefs.getBoolean("swipe_beam_autocorrect_enabled", true)
+        swipe_final_autocorrect_enabled = _prefs.getBoolean("swipe_final_autocorrect_enabled", true)
+        swipe_fuzzy_match_mode = _prefs.getString("swipe_fuzzy_match_mode", "edit_distance")
+
+        val predictionSource = safeGetInt(_prefs, "swipe_prediction_source", 60)
+        swipe_confidence_weight = predictionSource / 100.0f
+        swipe_frequency_weight = 1.0f - swipe_confidence_weight
+
+        swipe_common_words_boost = safeGetFloat(_prefs, "swipe_common_words_boost", 1.3f)
+        swipe_top5000_boost = safeGetFloat(_prefs, "swipe_top5000_boost", 1.0f)
+        swipe_rare_words_penalty = safeGetFloat(_prefs, "swipe_rare_words_penalty", 0.75f)
+
+        short_gestures_enabled = _prefs.getBoolean("short_gestures_enabled", true)
+        short_gesture_min_distance = safeGetInt(_prefs, "short_gesture_min_distance", 20)
+
+        // Gesture timing configuration
+        tap_duration_threshold = safeGetInt(_prefs, "tap_duration_threshold", 150).toLong()
+        double_space_threshold = safeGetInt(_prefs, "double_space_threshold", 500).toLong()
+        smart_punctuation = _prefs.getBoolean("smart_punctuation", true)
+        swipe_min_dwell_time = safeGetInt(_prefs, "swipe_min_dwell_time", 10).toLong()
+        swipe_noise_threshold = safeGetFloat(_prefs, "swipe_noise_threshold", 2.0f)
+        swipe_high_velocity_threshold = safeGetFloat(_prefs, "swipe_high_velocity_threshold", 1000.0f)
+        swipe_min_distance = safeGetFloat(_prefs, "swipe_min_distance", 50.0f)
+        swipe_min_key_distance = safeGetFloat(_prefs, "swipe_min_key_distance", 40.0f)
+
+        // Slider speed configuration
+        slider_speed_smoothing = safeGetFloat(_prefs, "slider_speed_smoothing", 0.7f)
+        slider_speed_max = safeGetFloat(_prefs, "slider_speed_max", 4.0f)
+
+        neural_prediction_enabled = _prefs.getBoolean("neural_prediction_enabled", true)
+        neural_beam_width = safeGetInt(_prefs, "neural_beam_width", 4)
+        neural_max_length = safeGetInt(_prefs, "neural_max_length", 35)
+        neural_confidence_threshold = safeGetFloat(_prefs, "neural_confidence_threshold", 0.1f)
+        neural_batch_beams = _prefs.getBoolean("neural_batch_beams", false)
+        neural_greedy_search = _prefs.getBoolean("neural_greedy_search", false)
+        termux_mode_enabled = _prefs.getBoolean("termux_mode_enabled", false)
+        swipe_debug_detailed_logging = _prefs.getBoolean("swipe_debug_detailed_logging", false)
+        swipe_debug_show_raw_output = _prefs.getBoolean("swipe_debug_show_raw_output", true)
+        swipe_show_raw_beam_predictions = _prefs.getBoolean("swipe_show_raw_beam_predictions", false)
+
+        neural_beam_alpha = safeGetFloat(_prefs, "neural_beam_alpha", 1.2f)
+        neural_beam_prune_confidence = safeGetFloat(_prefs, "neural_beam_prune_confidence", 0.8f)
+        neural_beam_score_gap = safeGetFloat(_prefs, "neural_beam_score_gap", 5.0f)
+
+        neural_model_version = _prefs.getString("neural_model_version", "v2")
+        neural_use_quantized = _prefs.getBoolean("neural_use_quantized", false)
+        neural_user_max_seq_length = safeGetInt(_prefs, "neural_user_max_seq_length", 0)
+        neural_resampling_mode = _prefs.getString("neural_resampling_mode", "discard")
+
+        neural_custom_encoder_path = _prefs.getString("neural_custom_encoder_uri", null)
+            ?: _prefs.getString("neural_custom_encoder_path", null)
+
+        neural_custom_decoder_path = _prefs.getString("neural_custom_decoder_uri", null)
+            ?: _prefs.getString("neural_custom_decoder_path", null)
+
+        val screen_width_dp = dm.widthPixels / dm.density
+        wide_screen = screen_width_dp >= WIDE_DEVICE_THRESHOLD
     }
 
-    /**
-     * Get current layout index
-     */
     fun get_current_layout(): Int {
         return if (wide_screen) current_layout_wide else current_layout_narrow
     }
 
-    /**
-     * Set current layout and persist to preferences
-     */
-    fun set_current_layout(layout: Int) {
+    fun set_current_layout(l: Int) {
         if (wide_screen) {
-            current_layout_wide = layout
+            current_layout_wide = l
         } else {
-            current_layout_narrow = layout
+            current_layout_narrow = l
         }
-
-        val editor = prefs.edit()
-        editor.putInt("current_layout_portrait", current_layout_narrow)
-        editor.putInt("current_layout_landscape", current_layout_wide)
-        editor.apply()
+        _prefs.edit().apply {
+            putInt("current_layout_portrait", current_layout_narrow)
+            putInt("current_layout_landscape", current_layout_wide)
+            apply()
+        }
     }
 
-    /**
-     * Set clipboard history enabled state
-     */
-    fun set_clipboard_history_enabled(enabled: Boolean) {
-        clipboard_history_enabled = enabled
-        prefs.edit().putBoolean("clipboard_history_enabled", enabled).commit()
+    fun set_clipboard_history_enabled(e: Boolean) {
+        clipboard_history_enabled = e
+        _prefs.edit().putBoolean("clipboard_history_enabled", e).commit()
     }
 
-    /**
-     * Set clipboard history limit
-     */
     fun set_clipboard_history_limit(limit: Int) {
         clipboard_history_limit = limit
-        prefs.edit().putInt("clipboard_history_limit", limit).commit()
+        _prefs.edit().putInt("clipboard_history_limit", limit).commit()
     }
 
-    /**
-     * Get DIP-based preference value
-     */
-    private fun getDipPref(dm: DisplayMetrics, prefName: String, defaultValue: Float): Float {
-        val value = try {
-            prefs.getInt(prefName, -1).toFloat()
+    fun set_clipboard_pane_height_percent(percent: Int) {
+        clipboard_pane_height_percent = percent.coerceIn(10, 50)
+        _prefs.edit().putInt("clipboard_pane_height_percent", clipboard_pane_height_percent).commit()
+    }
+
+    private fun get_dip_pref(dm: DisplayMetrics, pref_name: String, def: Float): Float {
+        var value = try {
+            _prefs.getInt(pref_name, -1).toFloat()
         } catch (e: Exception) {
-            prefs.getFloat(prefName, -1f)
+            try {
+                _prefs.getFloat(pref_name, -1f)
+            } catch (e2: Exception) {
+                try {
+                    _prefs.getString(pref_name, def.toString())?.toFloat() ?: -1f
+                } catch (e3: Exception) {
+                    -1f
+                }
+            }
         }
-
-        val finalValue = if (value < 0f) defaultValue else value
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, finalValue, dm)
+        if (value < 0f) value = def
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, dm)
     }
 
-    /**
-     * Get orientation-dependent DIP preference
-     */
-    private fun getDipPrefOriented(dm: DisplayMetrics, prefBaseName: String, defaultPort: Float, defaultLand: Float): Float {
+    private fun get_dip_pref_oriented(
+        dm: DisplayMetrics,
+        pref_base_name: String,
+        def_port: Float,
+        def_land: Float
+    ): Float {
         val suffix = when {
-            foldable_unfolded -> if (orientation_landscape) "_landscape_unfolded" else "_portrait_unfolded"
-            else -> if (orientation_landscape) "_landscape" else "_portrait"
+            foldable_unfolded && orientation_landscape -> "_landscape_unfolded"
+            foldable_unfolded -> "_portrait_unfolded"
+            orientation_landscape -> "_landscape"
+            else -> "_portrait"
         }
-
-        val defaultValue = if (orientation_landscape) defaultLand else defaultPort
-        return getDipPref(dm, prefBaseName + suffix, defaultValue)
+        val def = if (orientation_landscape) def_land else def_port
+        return get_dip_pref(dm, pref_base_name + suffix, def)
     }
 
-    /**
-     * Get theme resource ID from theme name
-     */
-    private fun getThemeId(resources: Resources, themeName: String): Int {
-        val nightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-
-        return when (themeName) {
+    private fun getThemeId(res: Resources, theme_name: String): Int {
+        val night_mode = res.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        return when (theme_name) {
             "light" -> R.style.Light
             "black" -> R.style.Black
             "altblack" -> R.style.AltBlack
@@ -464,25 +431,209 @@ class Config private constructor(
             "monetlight" -> R.style.MonetLight
             "monetdark" -> R.style.MonetDark
             "monet" -> {
-                if ((nightMode and Configuration.UI_MODE_NIGHT_NO) != 0) {
+                if (night_mode and Configuration.UI_MODE_NIGHT_NO != 0)
                     R.style.MonetLight
-                } else {
+                else
                     R.style.MonetDark
-                }
             }
             "rosepine" -> R.style.RosePine
-            "everforestlight" -> R.style.EverforestLight
-            "cobalt" -> R.style.Cobalt
-            "pine" -> R.style.Pine
-            "epaperblack" -> R.style.ePaperBlack
-            "system", "" -> {
-                if ((nightMode and Configuration.UI_MODE_NIGHT_NO) != 0) {
+            else -> {
+                if (night_mode and Configuration.UI_MODE_NIGHT_NO != 0)
                     R.style.Light
-                } else {
+                else
                     R.style.Dark
+            }
+        }
+    }
+
+    interface IKeyEventHandler {
+        fun key_down(key: KeyValue?, isSwipe: Boolean)
+        fun key_up(key: KeyValue?, mods: Pointers.Modifiers)
+        fun mods_changed(mods: Pointers.Modifiers)
+    }
+
+    companion object {
+        const val WIDE_DEVICE_THRESHOLD = 600
+        private const val CONFIG_VERSION = 3
+
+        @Volatile
+        private var _globalConfig: Config? = null
+
+        @JvmStatic
+        fun initGlobalConfig(
+            prefs: SharedPreferences,
+            res: Resources,
+            handler: IKeyEventHandler?,
+            foldableUnfolded: Boolean?
+        ) {
+            migrate(prefs)
+            val config = Config(prefs, res, handler, foldableUnfolded)
+            _globalConfig = config
+            LayoutModifier.init(config, res)
+        }
+
+        @JvmStatic
+        fun globalConfig(): Config = _globalConfig!!
+
+        @JvmStatic
+        fun globalPrefs(): SharedPreferences = _globalConfig!!._prefs
+
+        @JvmStatic
+        fun safeGetInt(prefs: SharedPreferences, key: String, defaultValue: Int): Int {
+            return try {
+                prefs.getInt(key, defaultValue)
+            } catch (e: ClassCastException) {
+                val stringValue = prefs.getString(key, defaultValue.toString()) ?: defaultValue.toString()
+                try {
+                    stringValue.toInt()
+                } catch (nfe: NumberFormatException) {
+                    Log.w("Config", "Invalid number format for $key: $stringValue, using default: $defaultValue")
+                    defaultValue
                 }
             }
-            else -> R.style.Dark
+        }
+
+        @JvmStatic
+        fun repairCorruptedFloatPreferences(prefs: SharedPreferences) {
+            val floatPrefs = arrayOf(
+                arrayOf("character_size", "1.15"),
+                arrayOf("key_vertical_margin", "1.5"),
+                arrayOf("key_horizontal_margin", "2.0"),
+                arrayOf("custom_border_line_width", "0.0"),
+                arrayOf("prediction_context_boost", "2.0"),
+                arrayOf("prediction_frequency_scale", "1000.0"),
+                arrayOf("autocorrect_char_match_threshold", "0.67"),
+                arrayOf("neural_confidence_threshold", "0.1"),
+                arrayOf("neural_beam_alpha", "1.2"),
+                arrayOf("neural_beam_prune_confidence", "0.8"),
+                arrayOf("neural_beam_score_gap", "5.0"),
+                arrayOf("swipe_rare_words_penalty", "0.75"),
+                arrayOf("swipe_common_words_boost", "1.3"),
+                arrayOf("swipe_top5000_boost", "1.0"),
+                arrayOf("gaussian_sigma_x", "0.4"),
+                arrayOf("gaussian_sigma_y", "0.35"),
+                arrayOf("gaussian_min_prob", "0.01"),
+                arrayOf("sakoe_chiba_width", "0.2"),
+                arrayOf("calibration_weight", "0.7"),
+                arrayOf("calibration_boost", "0.8"),
+                arrayOf("min_path_length_ratio", "0.3"),
+                arrayOf("max_path_length_ratio", "3.0"),
+                arrayOf("loop_threshold", "0.15"),
+                arrayOf("turning_point_threshold", "30.0"),
+                arrayOf("ngram_smoothing", "0.1")
+            )
+
+            val editor = prefs.edit()
+            var needsCommit = false
+
+            for (pref in floatPrefs) {
+                val key = pref[0]
+                val defaultValue = pref[1].toFloat()
+
+                try {
+                    prefs.getFloat(key, defaultValue)
+                } catch (e: ClassCastException) {
+                    try {
+                        val intValue = prefs.getInt(key, defaultValue.toInt())
+                        val floatValue = intValue.toFloat()
+                        editor.putFloat(key, floatValue)
+                        needsCommit = true
+                        Log.w("Config", "Repaired corrupted preference $key: int $intValue → float $floatValue")
+                    } catch (e2: ClassCastException) {
+                        try {
+                            val stringValue = prefs.getString(key, defaultValue.toString()) ?: defaultValue.toString()
+                            val floatValue = stringValue.toFloat()
+                            editor.putFloat(key, floatValue)
+                            needsCommit = true
+                            Log.w("Config", "Repaired corrupted preference $key: string \"$stringValue\" → float $floatValue")
+                        } catch (e3: Exception) {
+                            editor.putFloat(key, defaultValue)
+                            needsCommit = true
+                            Log.w("Config", "Reset corrupted preference $key to default: $defaultValue")
+                        }
+                    }
+                }
+            }
+
+            if (needsCommit) {
+                editor.apply()
+                Log.i("Config", "Applied preference repairs")
+            }
+        }
+
+        @JvmStatic
+        fun safeGetFloat(prefs: SharedPreferences, key: String, defaultValue: Float): Float {
+            return try {
+                prefs.getFloat(key, defaultValue)
+            } catch (e: ClassCastException) {
+                try {
+                    val intValue = prefs.getInt(key, defaultValue.toInt())
+                    Log.w("Config", "Float preference $key was stored as int: $intValue")
+                    intValue.toFloat()
+                } catch (e2: ClassCastException) {
+                    try {
+                        val stringValue = prefs.getString(key, defaultValue.toString()) ?: defaultValue.toString()
+                        val parsed = stringValue.toFloat()
+                        Log.w("Config", "Float preference $key was stored as string: $stringValue")
+                        parsed
+                    } catch (e3: Exception) {
+                        Log.w("Config", "Corrupted float preference $key, using default: $defaultValue")
+                        defaultValue
+                    }
+                }
+            }
+        }
+
+        @JvmStatic
+        fun migrate(prefs: SharedPreferences) {
+            val saved_version = prefs.getInt("version", 0)
+            Logs.debug_config_migration(saved_version, CONFIG_VERSION)
+            if (saved_version == CONFIG_VERSION) return
+
+            val e = prefs.edit()
+            e.putInt("version", CONFIG_VERSION)
+
+            when (saved_version) {
+                0 -> {
+                    val l = mutableListOf<LayoutsPreference.Layout>()
+                    l.add(migrate_layout(prefs.getString("layout", "system")))
+                    val snd_layout = prefs.getString("second_layout", "none")
+                    if (snd_layout != null && snd_layout != "none")
+                        l.add(migrate_layout(snd_layout))
+                    val custom_layout = prefs.getString("custom_layout", "")
+                    if (custom_layout != null && custom_layout.isNotEmpty())
+                        l.add(LayoutsPreference.CustomLayout.parse(custom_layout))
+                    LayoutsPreference.save_to_preferences(e, l)
+                    // Fallthrough to case 1
+                    val add_number_row = prefs.getBoolean("number_row", false)
+                    e.putString("number_row", if (add_number_row) "no_symbols" else "no_number_row")
+                    // Fallthrough to case 2
+                    if (!prefs.contains("number_entry_layout")) {
+                        e.putString("number_entry_layout", if (prefs.getBoolean("pin_entry_enabled", true)) "pin" else "number")
+                    }
+                }
+                1 -> {
+                    val add_number_row = prefs.getBoolean("number_row", false)
+                    e.putString("number_row", if (add_number_row) "no_symbols" else "no_number_row")
+                    // Fallthrough to case 2
+                    if (!prefs.contains("number_entry_layout")) {
+                        e.putString("number_entry_layout", if (prefs.getBoolean("pin_entry_enabled", true)) "pin" else "number")
+                    }
+                }
+                2 -> {
+                    if (!prefs.contains("number_entry_layout")) {
+                        e.putString("number_entry_layout", if (prefs.getBoolean("pin_entry_enabled", true)) "pin" else "number")
+                    }
+                }
+            }
+            e.apply()
+        }
+
+        private fun migrate_layout(name: String?): LayoutsPreference.Layout {
+            return if (name == null || name == "system")
+                LayoutsPreference.SystemLayout()
+            else
+                LayoutsPreference.NamedLayout(name)
         }
     }
 }

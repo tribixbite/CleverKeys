@@ -1,48 +1,23 @@
 package tribixbite.keyboard2
 
-/**
- * Modmap for custom key remapping matching Java KeyModifier.Modmap
- * Provides shift, fn, and ctrl key mappings
- */
-class Modmap(
-    val shift: Map<KeyValue, KeyValue>? = null,
-    val fn: Map<KeyValue, KeyValue>? = null,
-    val ctrl: Map<KeyValue, KeyValue>? = null
-) {
-    /**
-     * Builder for constructing Modmap with fluent API
-     */
-    class Builder {
-        private val shiftMap = mutableMapOf<KeyValue, KeyValue>()
-        private val fnMap = mutableMapOf<KeyValue, KeyValue>()
-        private val ctrlMap = mutableMapOf<KeyValue, KeyValue>()
+import java.util.TreeMap
 
-        fun addShift(from: KeyValue, to: KeyValue): Builder {
-            shiftMap[from] = to
-            return this
-        }
+/** Stores key combinations that are applied by [KeyModifier]. */
+class Modmap {
+    enum class M { Shift, Fn, Ctrl }
 
-        fun addFn(from: KeyValue, to: KeyValue): Builder {
-            fnMap[from] = to
-            return this
-        }
+    private val map: Array<MutableMap<KeyValue, KeyValue>?> = arrayOfNulls(M.values().size)
 
-        fun addCtrl(from: KeyValue, to: KeyValue): Builder {
-            ctrlMap[from] = to
-            return this
+    fun add(m: M, a: KeyValue, b: KeyValue) {
+        val i = m.ordinal
+        if (map[i] == null) {
+            map[i] = TreeMap()
         }
-
-        fun build(): Modmap {
-            return Modmap(
-                shift = shiftMap.ifEmpty { null },
-                fn = fnMap.ifEmpty { null },
-                ctrl = ctrlMap.ifEmpty { null }
-            )
-        }
+        map[i]?.put(a, b)
     }
 
-    companion object {
-        fun builder(): Builder = Builder()
-        fun empty(): Modmap = Modmap()
+    fun get(m: M, a: KeyValue): KeyValue? {
+        val mm = map[m.ordinal]
+        return mm?.get(a)
     }
 }

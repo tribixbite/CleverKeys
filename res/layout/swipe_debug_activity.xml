@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#1e1e1e">
+
+    <!-- Top bar with title and copy button -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:background="#2d2d2d">
+
+        <TextView
+            android:id="@+id/title_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Swipe Debug Log"
+            android:textColor="#ffffff"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_centerVertical="true" />
+
+        <Button
+            android:id="@+id/copy_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Copy"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:textColor="#ffffff"
+            android:background="#4a4a4a"
+            android:padding="8dp"
+            android:minWidth="64dp" />
+
+        <Button
+            android:id="@+id/clear_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Clear"
+            android:layout_toStartOf="@id/copy_button"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="8dp"
+            android:textColor="#ffffff"
+            android:background="#4a4a4a"
+            android:padding="8dp"
+            android:minWidth="64dp" />
+    </RelativeLayout>
+
+    <!-- Text input field -->
+    <EditText
+        android:id="@+id/input_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Type or swipe here..."
+        android:textColor="#ffffff"
+        android:textColorHint="#808080"
+        android:background="#2d2d2d"
+        android:padding="12dp"
+        android:inputType="text"
+        android:textSize="16sp" />
+
+    <!-- Scrollable log output -->
+    <ScrollView
+        android:id="@+id/log_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/log_output"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Waiting for swipe input...\n"
+            android:textColor="#00ff00"
+            android:textSize="12sp"
+            android:fontFamily="monospace"
+            android:textIsSelectable="true" />
+    </ScrollView>
+</LinearLayout>

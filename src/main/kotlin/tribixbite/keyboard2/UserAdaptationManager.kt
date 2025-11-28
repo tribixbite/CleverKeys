@@ -3,70 +3,33 @@ package tribixbite.keyboard2
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import kotlinx.coroutines.*
-import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.min
 
 /**
  * Manages user adaptation by tracking word selection history and adjusting
  * word frequencies based on user preferences.
- *
- * Features:
- * - Persistent storage via SharedPreferences
- * - Adaptive frequency boosting (up to 2x for frequently selected words)
- * - Automatic pruning to prevent unbounded growth
- * - Periodic reset (30 days) to prevent stale data
- * - Thread-safe concurrent access
- *
- * Fix for Bug #312: FrequencyModel missing (CATASTROPHIC)
  */
 class UserAdaptationManager private constructor(context: Context) {
-
-    companion object {
-        private const val TAG = "UserAdaptationManager"
-        private const val PREFS_NAME = "user_adaptation"
-        private const val KEY_WORD_SELECTIONS = "word_selections_"
-        private const val KEY_TOTAL_SELECTIONS = "total_selections"
-        private const val KEY_LAST_RESET = "last_reset"
-
-        // Configuration constants
-        private const val MIN_SELECTIONS_FOR_ADAPTATION = 5
-        private const val MAX_TRACKED_WORDS = 1000
-        private const val ADAPTATION_STRENGTH = 0.3f  // How much to boost frequently selected words
-        private const val RESET_PERIOD_MS = 30L * 24L * 60L * 60L * 1000L  // 30 days
-
-        @Volatile
-        private var instance: UserAdaptationManager? = null
-
-        fun getInstance(context: Context): UserAdaptationManager {
-            return instance ?: synchronized(this) {
-                instance ?: UserAdaptationManager(context.applicationContext).also { instance = it }
-            }
-        }
-    }
-
-    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    private val selectionCounts = ConcurrentHashMap<String, Int>()
-    private var totalSelections = 0
-    private var isEnabled = true
-
-    // Coroutine scope for async operations
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val prefs: SharedPreferences
+    private val selectionCounts: MutableMap<String, Int> = mutableMapOf()
+    private var totalSelections: Int = 0
+    private var isEnabled: Boolean = true
 
     init {
+        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         loadSelectionHistory()
         checkForPeriodicReset()
     }
 
     /**
      * Record that a word was selected by the user
-     * Thread-safe and asynchronous
      */
-    fun recordSelection(word: String) {
-        if (!isEnabled || word.isBlank()) return
+    fun recordSelection(word: String?) {
+        if (!isEnabled || word.isNullOrBlank()) return
 
         val normalizedWord = word.lowercase().trim()
 
-        // Increment selection count (thread-safe with ConcurrentHashMap)
+        // Increment selection count
         val currentCount = selectionCounts.getOrDefault(normalizedWord, 0)
         selectionCounts[normalizedWord] = currentCount + 1
         totalSelections++
@@ -78,9 +41,7 @@ class UserAdaptationManager private constructor(context: Context) {
 
         // Save to persistent storage periodically (every 10 selections)
         if (totalSelections % 10 == 0) {
-            scope.launch {
-                saveSelectionHistory()
-            }
+            saveSelectionHistory()
         }
 
         Log.d(TAG, "Recorded selection: '$normalizedWord' (count: ${currentCount + 1}, total: $totalSelections)")
@@ -90,8 +51,8 @@ class UserAdaptationManager private constructor(context: Context) {
      * Get the adaptation multiplier for a word based on selection history
      * Returns 1.0 for no adaptation, >1.0 for frequently selected words
      */
-    fun getAdaptationMultiplier(word: String): Float {
-        if (!isEnabled || totalSelections < MIN_SELECTIONS_FOR_ADAPTATION) {
+    fun getAdaptationMultiplier(word: String?): Float {
+        if (!isEnabled || word == null || totalSelections < MIN_SELECTIONS_FOR_ADAPTATION) {
             return 1.0f
         }
 
@@ -110,7 +71,7 @@ class UserAdaptationManager private constructor(context: Context) {
         var multiplier = 1.0f + (relativeFrequency * ADAPTATION_STRENGTH * 10.0f)
 
         // Cap the maximum boost to prevent any single word from dominating
-        multiplier = multiplier.coerceAtMost(2.0f)
+        multiplier = min(multiplier, 2.0f)
 
         return multiplier
     }
@@ -118,7 +79,8 @@ class UserAdaptationManager private constructor(context: Context) {
     /**
      * Get selection count for a specific word
      */
-    fun getSelectionCount(word: String): Int {
+    fun getSelectionCount(word: String?): Int {
+        if (word == null) return 0
         return selectionCounts.getOrDefault(word.lowercase().trim(), 0)
     }
 
@@ -183,7 +145,7 @@ class UserAdaptationManager private constructor(context: Context) {
                 .take(10)
                 .forEach { (word, count) ->
                     val multiplier = getAdaptationMultiplier(word)
-                    stats.append("- $word: $count selections (${String.format("%.2fx", multiplier)} boost)\n")
+                    stats.append("- $word: $count selections (${"%.2f".format(multiplier)}x boost)\n")
                 }
         }
 
@@ -199,9 +161,11 @@ class UserAdaptationManager private constructor(context: Context) {
         // Load individual word counts
         val allPrefs = prefs.all
         for ((key, value) in allPrefs) {
-            if (key.startsWith(KEY_WORD_SELECTIONS) && value is Int) {
+            if (key.startsWith(KEY_WORD_SELECTIONS)) {
                 val word = key.substring(KEY_WORD_SELECTIONS.length)
-                selectionCounts[word] = value
+                if (value is Int) {
+                    selectionCounts[word] = value
+                }
             }
         }
 
@@ -210,47 +174,42 @@ class UserAdaptationManager private constructor(context: Context) {
 
     /**
      * Save selection history to persistent storage
-     * Async operation to avoid blocking UI
      */
-    private suspend fun saveSelectionHistory() = withContext(Dispatchers.IO) {
-        val editor = prefs.edit()
-        editor.putInt(KEY_TOTAL_SELECTIONS, totalSelections)
+    private fun saveSelectionHistory() {
+        prefs.edit().apply {
+            putInt(KEY_TOTAL_SELECTIONS, totalSelections)
 
-        // Save individual word counts
-        for ((word, count) in selectionCounts) {
-            editor.putInt(KEY_WORD_SELECTIONS + word, count)
+            // Save individual word counts
+            for ((word, count) in selectionCounts) {
+                putInt(KEY_WORD_SELECTIONS + word, count)
+            }
+
+            apply()
         }
 
-        editor.apply()
         Log.d(TAG, "Saved adaptation data to persistent storage")
     }
 
     /**
      * Remove least frequently selected words to prevent unbounded growth
-     * Removes bottom 20% when max capacity is reached
      */
     private fun pruneOldSelections() {
+        // Find the minimum selection count threshold (remove bottom 20%)
         val targetSize = (MAX_TRACKED_WORDS * 0.8).toInt()
         val originalSize = selectionCounts.size
 
-        // Get words sorted by selection count (ascending)
         val wordsToRemove = selectionCounts.entries
             .sortedBy { it.value }
             .take(selectionCounts.size - targetSize)
             .map { it.key }
 
-        // Remove the least frequently selected words
-        wordsToRemove.forEach { word ->
-            selectionCounts.remove(word)
-            prefs.edit().remove(KEY_WORD_SELECTIONS + word).apply()
-        }
+        wordsToRemove.forEach { selectionCounts.remove(it) }
 
         Log.d(TAG, "Pruned selection data from $originalSize to ${selectionCounts.size} words")
     }
 
     /**
      * Check if it's time for a periodic reset to prevent stale data
-     * Resets every 30 days automatically
      */
     private fun checkForPeriodicReset() {
         val lastReset = prefs.getLong(KEY_LAST_RESET, System.currentTimeMillis())
@@ -264,38 +223,32 @@ class UserAdaptationManager private constructor(context: Context) {
 
     /**
      * Cleanup method to be called when the system is destroyed
-     * Ensures all data is persisted before shutdown
      */
     fun cleanup() {
-        runBlocking {
-            saveSelectionHistory()
+        saveSelectionHistory()
+    }
+
+    companion object {
+        private const val TAG = "UserAdaptationManager"
+        private const val PREFS_NAME = "user_adaptation"
+        private const val KEY_WORD_SELECTIONS = "word_selections_"
+        private const val KEY_TOTAL_SELECTIONS = "total_selections"
+        private const val KEY_LAST_RESET = "last_reset"
+
+        // Configuration constants
+        private const val MIN_SELECTIONS_FOR_ADAPTATION = 5
+        private const val MAX_TRACKED_WORDS = 1000
+        private const val ADAPTATION_STRENGTH = 0.3f // How much to boost frequently selected words
+        private const val RESET_PERIOD_MS = 30L * 24L * 60L * 60L * 1000L // 30 days
+
+        @Volatile
+        private var instance: UserAdaptationManager? = null
+
+        @JvmStatic
+        fun getInstance(context: Context): UserAdaptationManager {
+            return instance ?: synchronized(this) {
+                instance ?: UserAdaptationManager(context.applicationContext).also { instance = it }
+            }
         }
-        scope.cancel()
-    }
-
-    /**
-     * Get top N most selected words for debugging/analytics
-     */
-    fun getTopSelectedWords(limit: Int = 10): List<Pair<String, Int>> {
-        return selectionCounts.entries
-            .sortedByDescending { it.value }
-            .take(limit)
-            .map { it.key to it.value }
-    }
-
-    /**
-     * Check if a word has been selected by the user
-     */
-    fun hasUserSelected(word: String): Boolean {
-        return selectionCounts.containsKey(word.lowercase().trim())
-    }
-
-    /**
-     * Get relative frequency of a word (0.0 to 1.0)
-     */
-    fun getRelativeFrequency(word: String): Float {
-        if (totalSelections == 0) return 0f
-        val count = getSelectionCount(word)
-        return count.toFloat() / totalSelections
     }
 }

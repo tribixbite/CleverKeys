@@ -1,22 +1,14 @@
 package tribixbite.keyboard2
 
 import android.util.Log
+import kotlin.math.abs
+import kotlin.math.max
 
 /**
- * Simple language detection based on word patterns and character frequency analysis.
- * Used for automatic language switching in contextual predictions.
- *
- * Features:
- * - Character frequency analysis for 4 languages (en, es, fr, de)
- * - Common word detection
- * - Weighted scoring (60% char frequency, 40% common words)
- * - Minimum confidence threshold (0.6)
- * - Support for both text samples and word lists
- *
- * Fix for Bug #257: LanguageDetector system missing (CATASTROPHIC)
+ * Simple language detection based on word patterns and character frequency analysis
+ * Used for automatic language switching in contextual predictions
  */
 class LanguageDetector {
-
     companion object {
         private const val TAG = "LanguageDetector"
 
@@ -26,10 +18,10 @@ class LanguageDetector {
     }
 
     // Language-specific character patterns
-    private val languageCharFreqs = mutableMapOf<String, Map<Char, Float>>()
+    private val languageCharFreqs: MutableMap<String, Map<Char, Float>> = mutableMapOf()
 
     // Language-specific common words
-    private val languageCommonWords = mutableMapOf<String, Array<String>>()
+    private val languageCommonWords: MutableMap<String, Array<String>> = mutableMapOf()
 
     init {
         initializeLanguagePatterns()
@@ -42,6 +34,7 @@ class LanguageDetector {
         initializeEnglishPatterns()
         initializeSpanishPatterns()
         initializeFrenchPatterns()
+        initializePortuguesePatterns()
         initializeGermanPatterns()
     }
 
@@ -120,6 +113,31 @@ class LanguageDetector {
     }
 
     /**
+     * Initialize Portuguese language patterns
+     */
+    private fun initializePortuguesePatterns() {
+        val ptChars = mapOf(
+            'a' to 14.6f,
+            'e' to 12.6f,
+            'o' to 10.7f,
+            's' to 7.8f,
+            'r' to 6.5f,
+            'i' to 6.2f,
+            'm' to 4.7f,
+            't' to 4.7f,
+            'd' to 5.0f,
+            'n' to 5.0f
+        )
+        languageCharFreqs["pt"] = ptChars
+
+        val ptWords = arrayOf(
+            "de", "a", "o", "que", "e", "do", "da", "em", "um", "para",
+            "é", "com", "não", "uma", "os", "no", "se", "na", "por", "mais"
+        )
+        languageCommonWords["pt"] = ptWords
+    }
+
+    /**
      * Initialize German language patterns
      */
     private fun initializeGermanPatterns() {
@@ -154,26 +172,19 @@ class LanguageDetector {
             return null // Not enough text for reliable detection
         }
 
-        val lowerText = text.lowercase().trim()
+        val normalizedText = text.lowercase().trim()
 
         // Calculate scores for each language
         val languageScores = mutableMapOf<String, Float>()
         for (language in languageCharFreqs.keys) {
-            val score = calculateLanguageScore(lowerText, language)
+            val score = calculateLanguageScore(normalizedText, language)
             languageScores[language] = score
             Log.d(TAG, "Language $language score: $score")
         }
 
         // Find the best match
-        var bestLanguage: String? = null
-        var bestScore = 0.0f
-
-        for ((language, score) in languageScores) {
-            if (score > bestScore) {
-                bestScore = score
-                bestLanguage = language
-            }
-        }
+        val (bestLanguage, bestScore) = languageScores.maxByOrNull { it.value }
+            ?: return null
 
         // Check if confidence is high enough
         if (bestScore >= MIN_CONFIDENCE_THRESHOLD) {
@@ -235,13 +246,13 @@ class LanguageDetector {
         var score = 0.0f
         var matchedChars = 0
 
-        for ((char, expectedFreq) in expectedFreqs) {
-            val actualCount = actualCounts.getOrDefault(char, 0)
+        for ((c, expectedFreq) in expectedFreqs) {
+            val actualCount = actualCounts.getOrDefault(c, 0)
             val actualFreq = (actualCount * 100.0f) / totalChars
 
             // Use inverse of frequency difference as score contribution
-            val freqDiff = kotlin.math.abs(expectedFreq - actualFreq)
-            val contribution = kotlin.math.max(0f, 1.0f - (freqDiff / expectedFreq))
+            val freqDiff = abs(expectedFreq - actualFreq)
+            val contribution = max(0f, 1.0f - (freqDiff / expectedFreq))
             score += contribution
             matchedChars++
         }
@@ -289,47 +300,10 @@ class LanguageDetector {
     }
 
     /**
-     * Get language name from code
+     * Set the minimum confidence threshold for detection
      */
-    fun getLanguageName(code: String): String {
-        return when (code) {
-            "en" -> "English"
-            "es" -> "Spanish"
-            "fr" -> "French"
-            "de" -> "German"
-            else -> code
-        }
-    }
-
-    /**
-     * Get detection statistics for debugging
-     */
-    fun getDetectionStats(text: String): String {
-        if (text.length < MIN_TEXT_LENGTH) {
-            return "Text too short for detection (${text.length} < $MIN_TEXT_LENGTH chars)"
-        }
-
-        val stats = StringBuilder()
-        stats.append("Language Detection Stats:\n")
-        stats.append("- Text length: ${text.length} characters\n\n")
-
-        val lowerText = text.lowercase().trim()
-
-        for (language in languageCharFreqs.keys) {
-            val charScore = calculateCharacterFrequencyScore(lowerText, language)
-            val wordScore = calculateCommonWordScore(lowerText, language)
-            val totalScore = (charScore * 0.6f) + (wordScore * 0.4f)
-
-            stats.append("${getLanguageName(language)} ($language):\n")
-            stats.append("  - Character frequency score: ${String.format("%.2f", charScore)}\n")
-            stats.append("  - Common word score: ${String.format("%.2f", wordScore)}\n")
-            stats.append("  - Total score: ${String.format("%.2f", totalScore)}\n")
-            stats.append("  - Pass threshold: ${if (totalScore >= MIN_CONFIDENCE_THRESHOLD) "YES" else "NO"}\n\n")
-        }
-
-        val detected = detectLanguage(text)
-        stats.append("Detected language: ${if (detected != null) getLanguageName(detected) else "None (low confidence)"}\n")
-
-        return stats.toString()
+    fun setConfidenceThreshold(threshold: Float) {
+        // Note: This would require making MIN_CONFIDENCE_THRESHOLD non-final
+        // For now, keeping it as a constant for reliability
     }
 }

@@ -9,55 +9,19 @@ import java.io.InputStreamReader
 import kotlin.math.sqrt
 
 /**
- * LEGACY: Word Gesture Template Generator
- *
- * ⚠️ DEPRECATED: This class generates templates for the OLD CGR (Continuous Gesture Recognizer)
- * library which has been replaced with pure ONNX neural prediction. It is kept for reference
- * only and is NOT used in the active codebase.
- *
- * Use instead:
- * - neural/OnnxSwipePredictorImpl.kt for predictions
- * - SwipeDetector.kt for gesture detection
- *
- * Generates gesture templates for words based on ACTUAL keyboard layout.
- * Uses real keyboard dimensions and layout calculations for accurate templates.
- *
- * Features:
- * - Dynamic QWERTY coordinate mapping based on keyboard dimensions
- * - Dictionary loading from assets (en.txt)
- * - Template caching for performance
- * - Real key position override for 100% accuracy
- * - Gesture complexity filtering
- * - Word length range filtering
- *
- * Ported from Java to Kotlin with improvements.
+ * Generates gesture templates for words based on ACTUAL keyboard layout
+ * Uses real keyboard dimensions and layout calculations for accurate templates
  */
-@Deprecated(
-    message = "CGR library replaced with ONNX neural prediction. Use neural/OnnxSwipePredictorImpl.kt instead.",
-    level = DeprecationLevel.WARNING
-)
 class WordGestureTemplateGenerator {
-
-    companion object {
-        private const val TAG = "WordGestureTemplateGenerator"
-
-        // QWERTY layout for coordinate calculations
-        private val KEYBOARD_LAYOUT = arrayOf(
-            arrayOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p"),
-            arrayOf("a", "s", "d", "f", "g", "h", "j", "k", "l"),
-            arrayOf("z", "x", "c", "v", "b", "n", "m")
-        )
-    }
-
     // Dynamic QWERTY coordinates based on actual keyboard rendering
-    private val keyboardCoords = mutableMapOf<Char, ContinuousGestureRecognizer.Point>()
+    private var keyboardCoords: MutableMap<Char, ContinuousGestureRecognizer.Point> = mutableMapOf()
 
-    private val dictionary = mutableListOf<String>()
-    private val wordFrequencies = mutableMapOf<String, Int>()
+    private val dictionary: MutableList<String> = mutableListOf()
+    private val wordFrequencies: MutableMap<String, Int> = mutableMapOf()
 
     // PERFORMANCE: Template cache to avoid regenerating on every swipe
-    private val templateCache = mutableMapOf<String, ContinuousGestureRecognizer.Template>()
-    private var cachedDimensions = ""
+    private val templateCache: MutableMap<String, ContinuousGestureRecognizer.Template> = mutableMapOf()
+    private var cachedDimensions = "" // Track when cache is valid
 
     init {
         // Initialize with default coordinates to prevent crashes
@@ -73,7 +37,7 @@ class WordGestureTemplateGenerator {
         var height = keyboardHeight
 
         if (width <= 0 || height <= 0) {
-            Log.w(TAG, "Invalid keyboard dimensions: ${width}x${height}, using defaults")
+            Log.w(TAG, "Invalid keyboard dimensions: ${width}x$height, using defaults")
             width = 1080f
             height = 400f
         }
@@ -87,8 +51,14 @@ class WordGestureTemplateGenerator {
         val horizontalMargin = 0.05f * keyWidth // Match keyboard rendering
 
         // QWERTY layout using IDENTICAL calculations as keyboard rendering
-        for (row in 0 until 3) { // Only letter rows
-            val rowKeys = KEYBOARD_LAYOUT[row]
+        val keyboardLayout = arrayOf(
+            arrayOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p"),
+            arrayOf("a", "s", "d", "f", "g", "h", "j", "k", "l"),
+            arrayOf("z", "x", "c", "v", "b", "n", "m")
+        )
+
+        for (row in 0..2) { // Only letter rows
+            val rowKeys = keyboardLayout[row]
 
             when (row) {
                 0 -> { // Top row (q-p)
@@ -101,10 +71,7 @@ class WordGestureTemplateGenerator {
                         val centerX = x + (keyWidth - horizontalMargin) / 2
                         val centerY = y + (rowHeight - verticalMargin) / 2
 
-                        keyboardCoords[key[0]] = ContinuousGestureRecognizer.Point(
-                            centerX.toDouble(),
-                            centerY.toDouble()
-                        )
+                        keyboardCoords[key[0]] = ContinuousGestureRecognizer.Point(centerX.toDouble(), centerY.toDouble())
                     }
                 }
                 1 -> { // Middle row (a-l) - with half-key offset
@@ -117,10 +84,7 @@ class WordGestureTemplateGenerator {
                         val centerX = x + (keyWidth - horizontalMargin) / 2
                         val centerY = y + (rowHeight - verticalMargin) / 2
 
-                        keyboardCoords[key[0]] = ContinuousGestureRecognizer.Point(
-                            centerX.toDouble(),
-                            centerY.toDouble()
-                        )
+                        keyboardCoords[key[0]] = ContinuousGestureRecognizer.Point(centerX.toDouble(), centerY.toDouble())
                     }
                 }
                 2 -> { // Bottom row (z-m)
@@ -136,16 +100,13 @@ class WordGestureTemplateGenerator {
                         val centerX = x + (keyWidth - horizontalMargin) / 2
                         val centerY = y + (rowHeight - verticalMargin) / 2
 
-                        keyboardCoords[key[0]] = ContinuousGestureRecognizer.Point(
-                            centerX.toDouble(),
-                            centerY.toDouble()
-                        )
+                        keyboardCoords[key[0]] = ContinuousGestureRecognizer.Point(centerX.toDouble(), centerY.toDouble())
                     }
                 }
             }
         }
 
-        Log.d(TAG, "Generated dynamic keyboard coordinates for ${width.toInt()}x${height.toInt()} keyboard")
+        Log.d(TAG, "Generated dynamic keyboard coordinates for %.0fx%.0f keyboard".format(width, height))
     }
 
     /**
@@ -157,19 +118,15 @@ class WordGestureTemplateGenerator {
 
         try {
             BufferedReader(InputStreamReader(context.assets.open("dictionaries/en.txt"))).use { reader ->
-                var line: String?
                 var wordCount = 0
 
-                // Expanded to ~10,000 words for better recognition coverage
-                while (reader.readLine().also { line = it } != null && wordCount < 10000) {
-                    val currentLine = line ?: continue
+                reader.forEachLine { line ->
+                    if (wordCount >= 10000) return@forEachLine
 
                     // Skip comments and empty lines
-                    if (currentLine.startsWith("#") || currentLine.trim().isEmpty()) {
-                        continue
-                    }
+                    if (line.startsWith("#") || line.trim().isEmpty()) return@forEachLine
 
-                    val word = currentLine.trim().lowercase()
+                    val word = line.trim().lowercase()
 
                     // Only include words with letters (3-12 characters for comprehensive gesture typing)
                     if (word.matches(Regex("[a-z]+")) && word.length in 3..12) {
@@ -202,7 +159,7 @@ class WordGestureTemplateGenerator {
 
         val points = mutableListOf<ContinuousGestureRecognizer.Point>()
 
-        for (c in lowerWord.toCharArray()) {
+        for (c in lowerWord) {
             val coord = keyboardCoords[c]
             if (coord != null) {
                 points.add(ContinuousGestureRecognizer.Point(coord.x, coord.y))
@@ -232,8 +189,8 @@ class WordGestureTemplateGenerator {
         var successCount = 0
 
         for (word in dictionary) {
-            generateWordTemplate(word)?.let { template ->
-                templates.add(template)
+            generateWordTemplate(word)?.let {
+                templates.add(it)
                 successCount++
             }
         }
@@ -253,8 +210,8 @@ class WordGestureTemplateGenerator {
         for (word in dictionary) {
             if (count >= maxWords) break
 
-            generateWordTemplate(word)?.let { template ->
-                templates.add(template)
+            generateWordTemplate(word)?.let {
+                templates.add(it)
                 count++
             }
         }
@@ -291,10 +248,7 @@ class WordGestureTemplateGenerator {
         // Replace calculated coordinates with real positions
         keyboardCoords.clear()
         for ((keyChar, realPos) in realPositions) {
-            keyboardCoords[keyChar] = ContinuousGestureRecognizer.Point(
-                realPos.x.toDouble(),
-                realPos.y.toDouble()
-            )
+            keyboardCoords[keyChar] = ContinuousGestureRecognizer.Point(realPos.x.toDouble(), realPos.y.toDouble())
             Log.d(TAG, "Real coord: '$keyChar' = (${realPos.x},${realPos.y})")
         }
 
@@ -304,16 +258,12 @@ class WordGestureTemplateGenerator {
     /**
      * Get dictionary size
      */
-    fun getDictionarySize(): Int {
-        return dictionary.size
-    }
+    fun getDictionarySize(): Int = dictionary.size
 
     /**
      * Get direct access to dictionary words (for efficient candidate generation)
      */
-    fun getDictionary(): List<String> {
-        return ArrayList(dictionary)
-    }
+    fun getDictionary(): List<String> = dictionary.toList()
 
     /**
      * Get coordinate for a character (requires keyboard dimensions to be set)
@@ -331,7 +281,7 @@ class WordGestureTemplateGenerator {
         var totalLength = 0.0
         var prevPoint: ContinuousGestureRecognizer.Point? = null
 
-        for (c in lowerWord.toCharArray()) {
+        for (c in lowerWord) {
             val point = keyboardCoords[c]
             if (point != null) {
                 prevPoint?.let { prev ->
@@ -350,9 +300,7 @@ class WordGestureTemplateGenerator {
      * Get words by length range
      */
     fun getWordsByLength(minLength: Int, maxLength: Int): List<String> {
-        return dictionary.filter { word ->
-            word.length in minLength..maxLength
-        }
+        return dictionary.filter { it.length in minLength..maxLength }
     }
 
     /**
@@ -369,8 +317,8 @@ class WordGestureTemplateGenerator {
             // Filter by gesture complexity - MUCH MORE SELECTIVE FOR LENGTH MATCHING
             val pathLength = calculateGesturePathLength(word)
             if (pathLength > 200 && pathLength < 2500) { // Stricter complexity filtering for better length matching
-                generateWordTemplate(word)?.let { template ->
-                    templates.add(template)
+                generateWordTemplate(word)?.let {
+                    templates.add(it)
                     count++
                 }
             }
@@ -379,5 +327,9 @@ class WordGestureTemplateGenerator {
         Log.d(TAG, "Generated $count balanced word templates")
 
         return templates
+    }
+
+    companion object {
+        private const val TAG = "WordGestureTemplateGenerator"
     }
 }

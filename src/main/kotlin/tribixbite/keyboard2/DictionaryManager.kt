@@ -6,35 +6,16 @@ import android.util.Log
 import java.util.Locale
 
 /**
- * Manages word dictionaries for different languages and user custom words.
- *
- * Features:
- * - Multi-language dictionary support with lazy loading
- * - User dictionary (add/remove custom words)
- * - Language switching with predictor caching
- * - Dictionary preloading for performance
- * - SharedPreferences persistence for user words
- * - Automatic default language detection
- *
- * Related to Bug #345: DictionaryLoader system missing (CATASTROPHIC)
+ * Manages word dictionaries for different languages and user custom words
  */
 class DictionaryManager(private val context: Context) {
 
-    companion object {
-        private const val TAG = "DictionaryManager"
-        private const val USER_DICT_PREFS = "user_dictionary"
-        private const val USER_WORDS_KEY = "user_words"
-        private const val MAX_PREDICTIONS = 5
-    }
-
     private val userDictPrefs: SharedPreferences =
         context.getSharedPreferences(USER_DICT_PREFS, Context.MODE_PRIVATE)
-
-    private val predictors = mutableMapOf<String, TypingPredictionEngine>()
+    private val predictors = mutableMapOf<String, WordPredictor>()
     private val userWords = mutableSetOf<String>()
-
-    private var currentLanguage: String = "en"
-    private var currentPredictor: TypingPredictionEngine? = null
+    private var currentLanguage: String? = null
+    private var currentPredictor: WordPredictor? = null
 
     init {
         loadUserWords()
@@ -42,7 +23,9 @@ class DictionaryManager(private val context: Context) {
     }
 
     /**
-     * Set the active language for prediction
+     * Set the active language for prediction.
+     *
+     * OPTIMIZATION v3 (perftodos3.md Todo 1): Uses async loading to prevent UI freezes.
      */
     fun setLanguage(languageCode: String?) {
         val code = languageCode ?: "en"
@@ -50,54 +33,57 @@ class DictionaryManager(private val context: Context) {
 
         // Get or create predictor for this language
         currentPredictor = predictors.getOrPut(code) {
-            Log.d(TAG, "Loading dictionary for language: $code")
-            TypingPredictionEngine(context)
-            // Note: TypingPredictionEngine initializes asynchronously
-            // TODO: Add language-specific initialization if needed
-        }
+            WordPredictor().apply {
+                setContext(context) // Enable disabled words filtering
 
-        Log.d(TAG, "Language set to: $code")
+                // CRITICAL: Use async loading to prevent UI freeze during language switching
+                loadDictionaryAsync(context, code) {
+                    // This runs on the main thread when loading is complete
+                    // CRITICAL: Activate the UserDictionaryObserver now that dictionary is loaded
+                    startObservingDictionaryChanges()
+                    Log.i(TAG, "Dictionary loaded and observer activated for: $code")
+                }
+            }
+        }
     }
 
     /**
-     * Get word predictions for the given key sequence
-     * Filters out disabled (blacklisted) words
+     * Get word predictions for the given key sequence.
+     *
+     * Returns empty list if dictionary is still loading.
      */
     fun getPredictions(keySequence: String): List<String> {
         val predictor = currentPredictor ?: return emptyList()
 
-        val predictionResults = predictor.autocompleteWord(keySequence, MAX_PREDICTIONS)
-        val predictions = predictionResults.map { it.word }.toMutableList()
+        // OPTIMIZATION v3: Return empty list while dictionary is loading asynchronously
+        if (predictor.isLoading()) {
+            return emptyList()
+        }
+
+        val predictions = predictor.predictWords(keySequence).toMutableList()
 
         // Add user words that match
         val lowerSequence = keySequence.lowercase()
         for (userWord in userWords) {
             if (userWord.lowercase().startsWith(lowerSequence) && userWord !in predictions) {
                 predictions.add(0, userWord) // Add at beginning
-                if (predictions.size > MAX_PREDICTIONS) {
+                if (predictions.size > 5) {
                     predictions.removeAt(predictions.size - 1)
                 }
             }
         }
 
-        // Filter out disabled (blacklisted) words
-        val disabledWordsManager = DisabledWordsManager.getInstance(context)
-        return predictions.filter { word ->
-            !disabledWordsManager.isWordDisabled(word)
-        }
+        return predictions
     }
 
     /**
      * Add a word to the user dictionary
      */
     fun addUserWord(word: String?) {
-        if (word.isNullOrEmpty()) {
-            return
-        }
+        if (word.isNullOrEmpty()) return
 
         userWords.add(word)
         saveUserWords()
-        Log.d(TAG, "Added user word: $word")
     }
 
     /**
@@ -106,22 +92,12 @@ class DictionaryManager(private val context: Context) {
     fun removeUserWord(word: String) {
         userWords.remove(word)
         saveUserWords()
-        Log.d(TAG, "Removed user word: $word")
     }
 
     /**
      * Check if a word is in the user dictionary
      */
-    fun isUserWord(word: String): Boolean {
-        return userWords.contains(word)
-    }
-
-    /**
-     * Get all user words
-     */
-    fun getUserWords(): Set<String> {
-        return userWords.toSet()
-    }
+    fun isUserWord(word: String): Boolean = word in userWords
 
     /**
      * Clear the user dictionary
@@ -129,7 +105,6 @@ class DictionaryManager(private val context: Context) {
     fun clearUserDictionary() {
         userWords.clear()
         saveUserWords()
-        Log.d(TAG, "User dictionary cleared")
     }
 
     /**
@@ -139,7 +114,6 @@ class DictionaryManager(private val context: Context) {
         val words = userDictPrefs.getStringSet(USER_WORDS_KEY, emptySet()) ?: emptySet()
         userWords.clear()
         userWords.addAll(words)
-        Log.d(TAG, "Loaded ${userWords.size} user words")
     }
 
     /**
@@ -154,78 +128,41 @@ class DictionaryManager(private val context: Context) {
     /**
      * Get the current language code
      */
-    fun getCurrentLanguage(): String = currentLanguage
+    fun getCurrentLanguage(): String? = currentLanguage
 
     /**
-     * Get list of loaded languages
+     * Check if the current predictor is loading.
+     *
+     * @return true if dictionary is loading asynchronously, false otherwise
      */
-    fun getLoadedLanguages(): List<String> {
-        return predictors.keys.toList()
-    }
+    fun isLoading(): Boolean = currentPredictor?.isLoading() == true
 
     /**
-     * Check if a language is loaded
-     */
-    fun isLanguageLoaded(languageCode: String): Boolean {
-        return predictors.containsKey(languageCode)
-    }
-
-    /**
-     * Preload dictionaries for given languages
-     * Useful for warming up cache before language switches
+     * Preload dictionaries for given languages.
+     *
+     * OPTIMIZATION v3 (perftodos3.md Todo 1): Uses async loading for all languages.
      */
     fun preloadLanguages(languageCodes: Array<String>) {
         for (code in languageCodes) {
-            if (!predictors.containsKey(code)) {
-                Log.d(TAG, "Preloading dictionary for language: $code")
-                val predictor = TypingPredictionEngine(context)
-                // Note: TypingPredictionEngine initializes asynchronously
-                // TODO: Add language-specific initialization if needed
-                predictors[code] = predictor
+            predictors.getOrPut(code) {
+                WordPredictor().apply {
+                    setContext(context) // Enable disabled words filtering
+
+                    // CRITICAL: Use async loading to prevent UI freeze during preloading
+                    loadDictionaryAsync(context, code) {
+                        // This runs on the main thread when loading is complete
+                        // CRITICAL: Activate the UserDictionaryObserver for preloaded language
+                        startObservingDictionaryChanges()
+                        Log.i(TAG, "Preloaded dictionary and activated observer for: $code")
+                    }
+                }
             }
         }
-        Log.d(TAG, "Preloaded ${languageCodes.size} languages")
     }
 
-    /**
-     * Unload a language dictionary to free memory
-     */
-    fun unloadLanguage(languageCode: String) {
-        if (languageCode == currentLanguage) {
-            Log.w(TAG, "Cannot unload current language: $languageCode")
-            return
-        }
-
-        predictors.remove(languageCode)
-        Log.d(TAG, "Unloaded language: $languageCode")
-    }
-
-    /**
-     * Get dictionary statistics for debugging
-     */
-    fun getStats(): String {
-        val stats = StringBuilder()
-        stats.append("DictionaryManager Statistics:\n")
-        stats.append("- Current Language: $currentLanguage\n")
-        stats.append("- Loaded Languages: ${predictors.keys.joinToString(", ")}\n")
-        stats.append("- User Words: ${userWords.size}\n")
-
-        currentPredictor?.let {
-            stats.append("- Current Dictionary: TypingPredictionEngine loaded\n")
-            stats.append("- User Adaptation Stats: ${it.getUserAdaptationStats()}\n")
-        }
-
-        return stats.toString()
-    }
-
-    /**
-     * Cleanup resources
-     */
-    fun cleanup() {
-        // Cleanup all prediction engines
-        predictors.values.forEach { it.cleanup() }
-        predictors.clear()
-        currentPredictor = null
-        Log.d(TAG, "DictionaryManager cleaned up")
+    companion object {
+        private const val TAG = "DictionaryManager"
+        private const val USER_DICT_PREFS = "user_dictionary"
+        private const val USER_WORDS_KEY = "user_words"
     }
 }

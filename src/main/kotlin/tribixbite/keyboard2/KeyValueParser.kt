@@ -4,440 +4,292 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 /**
- * Parser for keyboard key definitions with support for both modern and legacy syntax.
- *
- * Modern Syntax:
- * - [(symbol):(key_action)]
- * - Symbol before colon, action after
- * - Example: "a:'A'" → String key "A" with symbol "a"
- * - Example: "enter:keyevent:66" → Keyevent with code 66
- * - Example: "macro:a,b,c" → Macro of multiple keys
- *
- * Legacy Syntax (backwards compatibility):
- * - [:kind attributes:payload]
- * - Starts with colon
- * - Example: ":str flags=dim,small symbol='MyKey':'My string'"
- * - Example: ":char:'a'"
- * - Example: ":keyevent:66"
- *
- * Key Actions:
- * - 'Arbitrary string' → String key
- * - (key_name) → Special key by name (shift, ctrl, etc.)
- * - keyevent:(code) → Android key event
- * - (action),(action),... → Macro sequence
- *
- * Attributes (legacy):
- * - flags: dim, small
- * - symbol: Custom symbol override
- *
- * For detailed documentation, see doc/Possible-key-values.md
- *
- * Ported from Java to Kotlin with improvements.
- */
+Parse a key definition. The syntax for a key definition is:
+- [(symbol):(key_action)]
+- [:(kind) (attributes):(payload)].
+- If [str] doesn't start with a [:] character, it is interpreted as an
+  arbitrary string key.
+
+[key_action] is:
+- ['Arbitrary string']
+- [(key_action),(key_action),...]
+- [keyevent:(code)]
+- [(key_name)]
+
+For the different kinds and attributes, see doc/Possible-key-values.md.
+
+Examples:
+- [:str flags=dim,small symbol='MyKey':'My arbitrary string'].
+- [:str:'My arbitrary string'].
+
+*/
 object KeyValueParser {
+    private lateinit var KEYDEF_TOKEN: Pattern
+    private lateinit var QUOTED_PAT: Pattern
+    private lateinit var WORD_PAT: Pattern
 
-    /**
-     * Exception thrown when key definition parsing fails
-     */
-    class ParseError(message: String) : Exception(message)
-
-    /**
-     * Convert Int flags bitmask to Flag varargs
-     */
-    private fun intToFlags(flagsInt: Int): Array<KeyValue.Flag> {
-        val flags = mutableListOf<KeyValue.Flag>()
-
-        if (flagsInt and (1 shl 6) != 0) flags.add(KeyValue.Flag.SECONDARY)
-        if (flagsInt and (1 shl 5) != 0) flags.add(KeyValue.Flag.SMALLER_FONT)
-        if (flagsInt and (1 shl 0) != 0) flags.add(KeyValue.Flag.LATCH)
-        if (flagsInt and (1 shl 1) != 0) flags.add(KeyValue.Flag.DOUBLE_TAP_LOCK)
-        if (flagsInt and (1 shl 2) != 0) flags.add(KeyValue.Flag.SPECIAL)
-        if (flagsInt and (1 shl 3) != 0) flags.add(KeyValue.Flag.GREYED)
-        if (flagsInt and (1 shl 4) != 0) flags.add(KeyValue.Flag.KEY_FONT)
-
-        return flags.toTypedArray()
-    }
-
-    // Lazy initialization of regex patterns
-    private val KEYDEF_TOKEN by lazy {
-        Pattern.compile("'|,|keyevent:|(?:[^\\\\',]+|\\\\.)+")
-    }
-
-    private val QUOTED_PAT by lazy {
-        Pattern.compile("((?:[^'\\\\]+|\\\\')*)'")
-    }
-
-    private val WORD_PAT by lazy {
-        Pattern.compile("[a-zA-Z0-9_]+|.")
-    }
-
-    /**
-     * Parse a key definition string into a KeyValue object
-     *
-     * @param input Key definition string
-     * @return Parsed KeyValue object
-     * @throws ParseError If syntax is invalid
-     */
+    @JvmStatic
     @Throws(ParseError::class)
     fun parse(input: String): KeyValue {
-        // Find first colon to determine syntax variant
-        val symbolEnds = input.indexOf(':')
-
-        when {
-            // Legacy syntax: starts with ':'
-            symbolEnds == 0 -> {
-                return StartingWithColon.parse(input)
-            }
-
-            // No colon: simple string key
-            symbolEnds < 0 -> {
-                return KeyValue.makeStringKey(input)
-            }
-
-            // Modern syntax: symbol before colon
-            else -> {
-                val symbol = input.substring(0, symbolEnds)
-                val matcher = KEYDEF_TOKEN.matcher(input)
-                matcher.region(symbolEnds + 1, input.length)
-
-                // Parse first key definition
-                val firstKey = parseKeyDef(matcher)
-
-                // Check if this is a macro (has comma-separated actions)
-                if (!parseComma(matcher)) {
-                    // Single key with symbol
-                    return firstKey.withSymbol(symbol)
-                }
-
-                // Macro: collect all key definitions
-                val keyDefs = mutableListOf(firstKey)
-                do {
-                    keyDefs.add(parseKeyDef(matcher))
-                } while (parseComma(matcher))
-
-                return KeyValue.makeMacro(symbol, keyDefs.toTypedArray())
-            }
+        val input_len = input.length
+        var symbol_ends = 0
+        while (symbol_ends < input_len && input[symbol_ends] != ':') {
+            symbol_ends++
         }
+
+        if (symbol_ends == 0) { // Old syntax
+            return StartingWithColon.parse(input)
+        }
+        if (symbol_ends == input_len) { // String key
+            return KeyValue.makeStringKey(input)
+        }
+
+        val symbol = input.substring(0, symbol_ends)
+        init()
+        val m = KEYDEF_TOKEN.matcher(input)
+        m.region(symbol_ends + 1, input_len)
+        val first_key = parseKeyDef(m)
+
+        if (!parseComma(m)) { // Input is a single key def with a specified symbol
+            return first_key.withSymbol(symbol)
+        }
+
+        // Input is a macro
+        val keydefs = mutableListOf(first_key)
+        do {
+            keydefs.add(parseKeyDef(m))
+        } while (parseComma(m))
+
+        return KeyValue.makeMacro(symbol, keydefs.toTypedArray(), 0)
     }
 
-    /**
-     * Get key by name or create string key
-     */
+    private fun init() {
+        if (::KEYDEF_TOKEN.isInitialized) return
+
+        KEYDEF_TOKEN = Pattern.compile("'|,|keyevent:|(?:[^\\\\',]+|\\\\.)+")
+        QUOTED_PAT = Pattern.compile("((?:[^'\\\\]+|\\\\')*)'")
+        WORD_PAT = Pattern.compile("[a-zA-Z0-9_]+|.")
+    }
+
     private fun keyByNameOrStr(str: String): KeyValue {
         return KeyValue.getSpecialKeyByName(str) ?: KeyValue.makeStringKey(str)
     }
 
-    /**
-     * Parse a single key definition token
-     */
-    @Throws(ParseError::class)
-    private fun parseKeyDef(matcher: Matcher): KeyValue {
-        if (!match(matcher, KEYDEF_TOKEN)) {
-            parseError("Expected key definition", matcher)
+    private fun parseKeyDef(m: Matcher): KeyValue {
+        if (!match(m, KEYDEF_TOKEN)) {
+            parseError("Expected key definition", m)
         }
-
-        val token = matcher.group(0)
-
+        val token = m.group(0)
         return when (token) {
-            "'" -> parseStringKeyDef(matcher)
+            "'" -> parseStringKeydef(m)
             "," -> {
-                parseError("Unexpected comma", matcher)
-                throw IllegalStateException("Unreachable")
+                parseError("Unexpected comma", m)
+                KeyValue.makeStringKey("") // Unreachable
             }
-            "keyevent:" -> parseKeyEventKeyDef(matcher)
+            "keyevent:" -> parseKeyeventKeydef(m)
             else -> keyByNameOrStr(removeEscaping(token))
         }
     }
 
-    /**
-     * Parse quoted string key definition
-     */
-    @Throws(ParseError::class)
-    private fun parseStringKeyDef(matcher: Matcher): KeyValue {
-        if (!match(matcher, QUOTED_PAT)) {
-            parseError("Unterminated quoted string", matcher)
+    private fun parseStringKeydef(m: Matcher): KeyValue {
+        if (!match(m, QUOTED_PAT)) {
+            parseError("Unterminated quoted string", m)
         }
-        return KeyValue.makeStringKey(removeEscaping(matcher.group(1)))
+        return KeyValue.makeStringKey(removeEscaping(m.group(1)))
     }
 
-    /**
-     * Parse keyevent key definition
-     */
-    @Throws(ParseError::class)
-    private fun parseKeyEventKeyDef(matcher: Matcher): KeyValue {
-        if (!match(matcher, WORD_PAT)) {
-            parseError("Expected keyevent code", matcher)
+    private fun parseKeyeventKeydef(m: Matcher): KeyValue {
+        if (!match(m, WORD_PAT)) {
+            parseError("Expected keyevent code", m)
         }
-
-        val eventCode = try {
-            matcher.group(0).toInt()
-        } catch (e: NumberFormatException) {
-            parseError("Expected an integer payload", matcher)
+        val eventcode = try {
+            m.group(0).toInt()
+        } catch (e: Exception) {
+            parseError("Expected an integer payload", m)
             0 // Unreachable
         }
-
-        return KeyValue.makeKeyEventKey("", eventCode)
+        return KeyValue.keyeventKey("", eventcode, 0)
     }
 
-    /**
-     * Parse comma separator
-     *
-     * @return true if comma found, false if at end of input
-     * @throws ParseError if unexpected token found
-     */
-    @Throws(ParseError::class)
-    private fun parseComma(matcher: Matcher): Boolean {
-        if (!match(matcher, KEYDEF_TOKEN)) {
+    /** Returns [true] if the next token is a comma, [false] if it is the end of the input. Throws an error otherwise. */
+    private fun parseComma(m: Matcher): Boolean {
+        if (!match(m, KEYDEF_TOKEN)) {
             return false
         }
-
-        val token = matcher.group(0)
+        val token = m.group(0)
         if (token != ",") {
-            parseError("Expected comma instead of '$token'", matcher)
+            parseError("Expected comma instead of '$token'", m)
         }
-
         return true
     }
 
-    /**
-     * Remove escape sequences from string
-     */
     private fun removeEscaping(s: String): String {
-        if (!s.contains('\\')) {
+        if (!s.contains("\\")) {
             return s
         }
-
         val out = StringBuilder(s.length)
+        val len = s.length
         var prev = 0
-
-        for (i in s.indices) {
+        var i = 0
+        while (i < len) {
             if (s[i] == '\\') {
                 out.append(s, prev, i)
                 prev = i + 1
             }
+            i++
         }
-
-        out.append(s, prev, s.length)
+        out.append(s, prev, i)
         return out.toString()
     }
 
     /**
-     * Match pattern at current position
-     */
-    private fun match(matcher: Matcher, pattern: Pattern): Boolean {
-        try {
-            matcher.region(matcher.end(), matcher.regionEnd())
-        } catch (e: Exception) {
-            // Region is exhausted
-        }
-        matcher.usePattern(pattern)
-        return matcher.lookingAt()
-    }
+      Parse a key definition starting with a [:]. This is the old syntax and is
+      kept for compatibility.
+      */
+    object StartingWithColon {
+        private lateinit var START_PAT: Pattern
+        private lateinit var ATTR_PAT: Pattern
+        private lateinit var QUOTED_PAT: Pattern
+        private lateinit var PAYLOAD_START_PAT: Pattern
+        private lateinit var WORD_PAT: Pattern
 
-    /**
-     * Throw parse error with context
-     */
-    @Throws(ParseError::class)
-    private fun parseError(msg: String, matcher: Matcher, position: Int = matcher.regionStart()): Nothing {
-        val errorMsg = buildString {
-            append("Syntax error")
-
-            // Try to include current token
-            try {
-                append(" at token '")
-                append(matcher.group(0))
-                append("'")
-            } catch (e: IllegalStateException) {
-                // No match available
-            }
-
-            append(" at position ")
-            append(position)
-            append(": ")
-            append(msg)
-        }
-
-        throw ParseError(errorMsg)
-    }
-
-    /**
-     * Parser for legacy syntax starting with ':'
-     *
-     * Kept for backwards compatibility with older key definitions.
-     * Format: [:kind attributes:payload]
-     */
-    private object StartingWithColon {
-
-        // Lazy initialization of regex patterns
-        private val START_PAT by lazy {
-            Pattern.compile(":(\\w+)")
-        }
-
-        private val ATTR_PAT by lazy {
-            Pattern.compile("\\s*(\\w+)\\s*=")
-        }
-
-        private val QUOTED_PAT by lazy {
-            Pattern.compile("'(([^'\\\\]+|\\\\')*)'")
-        }
-
-        private val PAYLOAD_START_PAT by lazy {
-            Pattern.compile("\\s*:")
-        }
-
-        private val WORD_PAT by lazy {
-            Pattern.compile("[a-zA-Z0-9_]*")
-        }
-
-        /**
-         * Parse legacy syntax key definition
-         */
-        @Throws(ParseError::class)
+        @JvmStatic
         fun parse(str: String): KeyValue {
             var symbol: String? = null
             var flags = 0
+            init()
 
-            // Parse kind
-            val matcher = START_PAT.matcher(str)
-            if (!matcher.lookingAt()) {
-                parseError("Expected kind, for example \":str ...\".", matcher)
+            // Kind
+            val m = START_PAT.matcher(str)
+            if (!m.lookingAt()) {
+                parseError("Expected kind, for example \":str ...\".", m)
             }
-            val kind = matcher.group(1)
+            val kind = m.group(1)
 
-            // Parse attributes
+            // Attributes
             while (true) {
-                if (!match(matcher, ATTR_PAT)) {
-                    break
-                }
+                if (!match(m, ATTR_PAT)) break
 
-                val attrName = matcher.group(1)
-                val attrValue = parseSingleQuotedString(matcher)
+                val attr_name = m.group(1)
+                val attr_value = parseSingleQuotedString(m)
 
-                when (attrName) {
-                    "flags" -> flags = parseFlags(attrValue, matcher)
-                    "symbol" -> symbol = attrValue
-                    else -> parseError("Unknown attribute $attrName", matcher)
+                when (attr_name) {
+                    "flags" -> flags = parseFlags(attr_value, m)
+                    "symbol" -> symbol = attr_value
+                    else -> parseError("Unknown attribute $attr_name", m)
                 }
             }
 
-            // Parse payload
-            if (!match(matcher, PAYLOAD_START_PAT)) {
-                parseError("Unexpected character", matcher)
+            // Payload
+            if (!match(m, PAYLOAD_START_PAT)) {
+                parseError("Unexpected character", m)
             }
 
-            return when (kind) {
+            val payload: String
+            when (kind) {
                 "str" -> {
-                    val payload = parseSingleQuotedString(matcher)
-                    val flagsArray = intToFlags(flags)
-                    val key = KeyValue.makeStringKey(payload, *flagsArray)
-                    symbol?.let { key.withSymbol(it) } ?: key
+                    payload = parseSingleQuotedString(m)
+                    return if (symbol == null) {
+                        KeyValue.makeStringKey(payload, flags)
+                    } else {
+                        KeyValue.makeStringKey(payload, flags).withSymbol(symbol)
+                    }
                 }
 
                 "char" -> {
-                    val payload = parsePayloadWord(matcher)
+                    payload = parsePayloadWord(m)
                     if (payload.length != 1) {
-                        parseError("Expected a single character payload", matcher)
+                        parseError("Expected a single character payload", m)
                     }
-                    val flagsArray = intToFlags(flags)
-                    KeyValue.makeCharKey(payload[0], symbol, *flagsArray)
+                    return KeyValue.makeCharKey(payload[0], symbol, flags)
                 }
 
                 "keyevent" -> {
-                    val payload = parsePayloadWord(matcher)
-                    val eventCode = try {
+                    payload = parsePayloadWord(m)
+                    val eventcode = try {
                         payload.toInt()
-                    } catch (e: NumberFormatException) {
-                        parseError("Expected an integer payload", matcher)
+                    } catch (e: Exception) {
+                        parseError("Expected an integer payload", m)
                         0 // Unreachable
                     }
-                    val flagsArray = intToFlags(flags)
-                    KeyValue.makeKeyEventKey(symbol ?: eventCode.toString(), eventCode, *flagsArray)
+                    val finalSymbol = symbol ?: eventcode.toString()
+                    return KeyValue.keyeventKey(finalSymbol, eventcode, flags)
                 }
 
-                else -> parseError("Unknown kind '$kind'", matcher, 1)
+                else -> {
+                    parseError("Unknown kind '$kind'", m, 1)
+                    return KeyValue.makeStringKey("") // Unreachable
+                }
             }
         }
 
-        /**
-         * Parse single-quoted string
-         */
-        @Throws(ParseError::class)
-        private fun parseSingleQuotedString(matcher: Matcher): String {
-            if (!match(matcher, QUOTED_PAT)) {
-                parseError("Expected quoted string", matcher)
+        private fun parseSingleQuotedString(m: Matcher): String {
+            if (!match(m, QUOTED_PAT)) {
+                parseError("Expected quoted string", m)
             }
-            return matcher.group(1).replace("\\'", "'")
+            return m.group(1).replace("\\'", "'")
         }
 
-        /**
-         * Parse word payload
-         */
-        @Throws(ParseError::class)
-        private fun parsePayloadWord(matcher: Matcher): String {
-            if (!match(matcher, WORD_PAT)) {
-                parseError("Expected a word after ':' made of [a-zA-Z0-9_]", matcher)
+        private fun parsePayloadWord(m: Matcher): String {
+            if (!match(m, WORD_PAT)) {
+                parseError("Expected a word after ':' made of [a-zA-Z0-9_]", m)
             }
-            return matcher.group(0)
+            return m.group(0)
         }
 
-        /**
-         * Parse flags attribute
-         */
-        @Throws(ParseError::class)
-        private fun parseFlags(s: String, matcher: Matcher): Int {
+        private fun parseFlags(s: String, m: Matcher): Int {
             var flags = 0
-
-            for (flag in s.split(",")) {
-                flags = flags or when (flag) {
-                    "dim" -> (1 shl 6)  // SECONDARY
-                    "small" -> (1 shl 5)  // SMALLER_FONT
-                    else -> parseError("Unknown flag $flag", matcher)
+            for (f in s.split(",")) {
+                when (f) {
+                    "dim" -> flags = flags or KeyValue.FLAG_SECONDARY
+                    "small" -> flags = flags or KeyValue.FLAG_SMALLER_FONT
+                    else -> parseError("Unknown flag $f", m)
                 }
             }
-
             return flags
         }
 
-        /**
-         * Match pattern at current position
-         */
-        private fun match(matcher: Matcher, pattern: Pattern): Boolean {
+        private fun match(m: Matcher, pat: Pattern): Boolean {
             try {
-                matcher.region(matcher.end(), matcher.regionEnd())
+                m.region(m.end(), m.regionEnd())
             } catch (e: Exception) {
-                // Region is exhausted
             }
-            matcher.usePattern(pattern)
-            return matcher.lookingAt()
+            m.usePattern(pat)
+            return m.lookingAt()
         }
 
-        /**
-         * Throw parse error with context
-         */
-        @Throws(ParseError::class)
-        private fun parseError(
-            msg: String,
-            matcher: Matcher,
-            position: Int = matcher.regionStart()
-        ): Nothing {
-            val errorMsg = buildString {
-                append("Syntax error")
+        private fun init() {
+            if (::START_PAT.isInitialized) return
 
-                try {
-                    append(" at token '")
-                    append(matcher.group(0))
-                    append("'")
-                } catch (e: IllegalStateException) {
-                    // No match available
-                }
-
-                append(" at position ")
-                append(position)
-                append(": ")
-                append(msg)
-            }
-
-            throw ParseError(errorMsg)
+            START_PAT = Pattern.compile(":(\\w+)")
+            ATTR_PAT = Pattern.compile("\\s*(\\w+)\\s*=")
+            QUOTED_PAT = Pattern.compile("'(([^'\\\\]+|\\\\')*)'")
+            PAYLOAD_START_PAT = Pattern.compile("\\s*:")
+            WORD_PAT = Pattern.compile("[a-zA-Z0-9_]*")
         }
     }
+
+    private fun match(m: Matcher, pat: Pattern): Boolean {
+        try {
+            m.region(m.end(), m.regionEnd())
+        } catch (e: Exception) {
+        }
+        m.usePattern(pat)
+        return m.lookingAt()
+    }
+
+    private fun parseError(msg: String, m: Matcher, i: Int = m.regionStart()): Nothing {
+        val msg_ = StringBuilder("Syntax error")
+        try {
+            msg_.append(" at token '").append(m.group(0)).append("'")
+        } catch (e: IllegalStateException) {
+        }
+        msg_.append(" at position ")
+        msg_.append(i)
+        msg_.append(": ")
+        msg_.append(msg)
+        throw ParseError(msg_.toString())
+    }
+
+    class ParseError(msg: String) : Exception(msg)
 }

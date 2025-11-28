@@ -2,222 +2,141 @@ package tribixbite.keyboard2
 
 import android.content.Context
 import android.content.ContextWrapper
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Insets
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.PointF
+import android.graphics.Rect
+import android.graphics.RectF
 import android.inputmethodservice.InputMethodService
-import android.os.Build
+import android.os.Build.VERSION
 import android.util.AttributeSet
 import android.util.DisplayMetrics
+import android.util.Log
+import android.util.LruCache
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import android.view.WindowInsets
-import android.view.WindowManager
-import android.view.WindowMetrics
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.*
-import androidx.compose.ui.graphics.toArgb
-import tribixbite.keyboard2.animation.AnimationManager
-import tribixbite.keyboard2.theme.MaterialThemeManager
-import tribixbite.keyboard2.theme.KeyboardColorScheme
-import tribixbite.keyboard2.theme.keyboardColors
-import android.content.res.Configuration
+import java.util.ArrayList
 
 /**
- * Main keyboard view for CleverKeys with neural swipe prediction
+ * Custom View that renders and manages the keyboard interface.
  *
- * Replaces CGR-based swipe recognition with ONNX neural prediction:
- * - Modern touch handling with coroutines
- * - Neural swipe trajectory processing
- * - Real-time prediction display
- * - Enhanced rendering with GPU acceleration
+ * This view is responsible for:
+ * - **Rendering**: Draws keyboard keys, labels, modifiers, and visual feedback
+ * - **Touch Handling**: Processes multi-touch input via [Pointers] system
+ * - **Swipe Gestures**: Recognizes swipe typing gestures through [EnhancedSwipeGestureRecognizer]
+ * - **Visual Feedback**: Shows swipe trails, key press animations, and modifier states
+ * - **Layout Management**: Positions keys based on screen size and [KeyboardData] layout
+ * - **Theme Support**: Applies colors and styles from [Theme] configuration
+ * - **Modifier States**: Displays and manages Shift, Fn, Ctrl, Alt, and Meta key states
+ *
+ * ## Touch Processing Flow
+ * 1. [onTouch] receives raw MotionEvent
+ * 2. [Pointers] tracks individual finger positions and gestures
+ * 3. [EnhancedSwipeGestureRecognizer] detects swipe typing patterns
+ * 4. [IPointerEventHandler] callbacks notify parent ([CleverKeysService]) of key events
+ *
+ * ## Swipe Typing
+ * When swipe typing is enabled, the view:
+ * - Captures touch trajectory as [List]<[PointF]> coordinates
+ * - Visualizes swipe trail in real-time during gesture
+ * - Sends completed gesture to [WordPredictor] for neural network prediction
+ * - Clears trail and resets state after prediction
+ *
+ * ## Performance Optimizations
+ * - Reuses [Path] objects for swipe trail rendering (zero allocation during draw)
+ * - Caches [Theme.Computed] instances in [LruCache] for fast theme lookups
+ * - Batches canvas draw calls for efficient rendering
+ * - Handles system insets (notches, nav bars) for proper key positioning
+ *
+ * @param context Android context for accessing resources and system services
+ * @param attrs XML attributes for view inflation (nullable for programmatic creation)
+ * @since v1.0 (migrated to Kotlin in v1.32.874)
  */
 class Keyboard2View @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : View(context, attrs), View.OnTouchListener, Pointers.IPointerEventHandler {
 
-    private var keyboard: KeyboardData? = null
+    private var _keyboard: KeyboardData? = null
 
-    // Key references for state management
-    private var shiftKeyValue: KeyValue? = null
-    private var shiftKey: KeyboardData.Key? = null
-    private var composeKeyValue: KeyValue? = null
-    private var composeKey: KeyboardData.Key? = null
+    /** The key holding the shift key is used to set shift state from autocapitalisation. */
+    private var _shift_kv: KeyValue? = null
+    private var _shift_key: KeyboardData.Key? = null
 
-    private lateinit var pointers: Pointers
-    private var modifiers = Pointers.Modifiers.EMPTY
+    /** Used to add fake pointers. */
+    private var _compose_kv: KeyValue? = null
+    private var _compose_key: KeyboardData.Key? = null
 
-    // Config will be set by CleverKeysService via setViewConfig()
-    private var config: Config? = null
+    private lateinit var _pointers: Pointers
 
-    // Material 3 theme management
-    private var materialThemeManager: MaterialThemeManager? = null
-    private var keyboardColors: KeyboardColorScheme? = null
-    private var isDarkMode = false
+    private var _mods: Pointers.Modifiers = Pointers.Modifiers.EMPTY
 
-    // Legacy theme support (deprecated, to be removed)
-    @Deprecated("Use materialThemeManager and keyboardColors instead")
-    private var themeComputed: Theme.Computed? = null
+    private lateinit var _config: Config
 
-    // Neural swipe state
-    private var currentSwipeGesture: SwipeInput? = null
-    private var swipeTrajectory = mutableListOf<PointF>()
-    private var swipeTimestamps = mutableListOf<Long>()
-    private var isSwipeActive = false
-    private var swipePointerId = -1  // Track which pointer is doing the swipe
+    private var _swipeRecognizer: EnhancedSwipeGestureRecognizer? = null
+    private var _swipeTrailPaint: Paint? = null
+    // Reusable Path object for swipe trail rendering (to avoid allocation every frame)
+    private val _swipeTrailPath = Path()
 
-    // Rendering dimensions
-    private var keyWidth = 0f
-    private var mainLabelSize = 0f
-    private var subLabelSize = 0f
-    private var marginRight = 0f
-    private var marginLeft = 0f
-    private var marginBottom = 0f
-    private var insetsLeft = 0
-    private var insetsRight = 0
-    private var insetsBottom = 0
+    // Swipe typing integration
+    private var _wordPredictor: WordPredictor? = null
 
-    // Keyboard height control
-    private var keyboardHeightPercent = 35 // Default 35%
-    private var calculatedHeight = 0
+    // CGR prediction storage
+    private val _cgrPredictions = ArrayList<String>()
+    private var _cgrFinalPredictions = false
+    private var _keyboard2: CleverKeysService? = null
 
-    // Paint objects for rendering (Phase 2.2: Use theme color instead of hardcoded)
-    private val swipeTrailPaint = Paint().apply {
-        strokeWidth = 3.0f
-        style = Paint.Style.STROKE
-        isAntiAlias = true
-        strokeCap = Paint.Cap.ROUND
-        strokeJoin = Paint.Join.ROUND
-        alpha = 180
-        // Color will be set from theme in updateSwipeTrailColor()
+    private var _keyWidth = 0f
+    private var _mainLabelSize = 0f
+    private var _subLabelSize = 0f
+    private var _marginRight = 0f
+    private var _marginLeft = 0f
+    private var _marginBottom = 0f
+    private var _insets_left = 0
+    private var _insets_right = 0
+    private var _insets_bottom = 0
+
+    private lateinit var _theme: Theme
+    private var _tc: Theme.Computed? = null
+    private lateinit var _themeCache: LruCache<String, Theme.Computed>
+
+    enum class Vertical {
+        TOP, CENTER, BOTTOM
     }
-
-    // Shared rect for key frame drawing (matches Java _tmpRect for proper border clipping)
-    private val tmpRect = RectF()
-
-    // Branding paint for spacebar (jewel tone purple, small font, silver background)
-    private val brandingPaint = Paint().apply {
-        textSize = 20f  // Small font
-        color = 0xFF9B59B6.toInt()  // Jewel tone purple (amethyst)
-        isAntiAlias = true
-        textAlign = Paint.Align.RIGHT
-        typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-    }
-
-    private val brandingBgPaint = Paint().apply {
-        color = 0xFFC0C0C0.toInt()  // Silver background
-        style = Paint.Style.FILL
-    }
-
-    /**
-     * Update swipe trail color from Material 3 theme.
-     * Called when theme is available.
-     */
-    private fun updateSwipeTrailColor() {
-        // Use Material 3 swipe trail color
-        swipeTrailPaint.color = keyboardColors?.swipeTrail?.toArgb() ?: android.graphics.Color.CYAN
-    }
-
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
-    // Parent service reference
-    private var keyboardService: CleverKeysService? = null
-
-    // Animation manager for Material Motion (Phase 2.2)
-    private var animationManager: AnimationManager? = null
 
     init {
-        initialize(attrs)
-    }
+        _theme = Theme(getContext(), attrs)
+        _config = Config.globalConfig()
+        _pointers = Pointers(this, _config, getContext())
+        _swipeRecognizer = _pointers._swipeRecognizer // Share the recognizer
+        _themeCache = LruCache(5)
 
-    private fun initialize(attrs: AttributeSet?) {
-        // Initialize Material 3 theme manager
-        materialThemeManager = MaterialThemeManager(context)
-
-        // Detect dark mode from system configuration
-        isDarkMode = (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-
-        // Get keyboard color scheme from Material 3 theme
-        keyboardColors = materialThemeManager?.getKeyboardColorScheme(isDarkMode)
-
-        // Update swipe trail color from theme (Phase 2.2)
-        updateSwipeTrailColor()
-
-        // Pointers will be initialized when config is set via setViewConfig()
-
-        setupNavigationBar()
+        initSwipeTrailPaint()
+        refresh_navigation_bar(context)
         setOnTouchListener(this)
-
-        // Load keyboard layout
-        val layoutId = attrs?.getAttributeResourceValue(null, "layout", 0) ?: 0
-        if (layoutId == 0) {
-            reset()
+        val layout_id = attrs?.getAttributeResourceValue(null, "layout", 0) ?: 0
+        if (layout_id != 0) {
+            val kw = KeyboardData.load(resources, layout_id)
+            if (kw != null)
+                setKeyboard(kw)
         } else {
-            val keyboardData = KeyboardData.load(resources, layoutId)
-            if (keyboardData != null) {
-                setKeyboard(keyboardData)
-            } else {
-                reset()
-            }
+            reset()
         }
     }
 
-    fun setKeyboardService(service: CleverKeysService) {
-        keyboardService = service
-    }
-
-    /**
-     * Set keyboard height percentage (0-100)
-     */
-    fun setKeyboardHeightPercent(percent: Int) {
-        keyboardHeightPercent = percent.coerceIn(10, 100)
-        requestLayout() // Trigger remeasure
-        android.util.Log.d("Keyboard2View", "Keyboard height set to $keyboardHeightPercent%")
-    }
-
-    /**
-     * Set configuration for the view - must be called before view becomes active
-     */
-    fun setViewConfig(cfg: Config) {
-        config = cfg
-        // Initialize pointers now that config is available
-        if (!::pointers.isInitialized) {
-            try {
-                pointers = Pointers(this, cfg)
-                android.util.Log.d("Keyboard2View", "Pointers initialized with config")
-            } catch (e: Exception) {
-                android.util.Log.e("Keyboard2View", "Failed to initialize pointers", e)
-            }
-        }
-
-        // Initialize AnimationManager for Material Motion (Phase 2.2)
-        if (animationManager == null) {
-            animationManager = AnimationManager(context)
-            android.util.Log.d("Keyboard2View", "AnimationManager initialized for key animations")
-        }
-    }
-
-    private fun setupNavigationBar() {
-        if (Build.VERSION.SDK_INT < 21) return
-
-        val window = getParentWindow(context)
-
-        // Use Material 3 surface color for navigation bar
-        val navBarColor = materialThemeManager?.getColorScheme(isDarkMode)?.surface?.toArgb()
-            ?: if (isDarkMode) android.graphics.Color.BLACK else android.graphics.Color.WHITE
-
-        window?.navigationBarColor = navBarColor
-
-        if (Build.VERSION.SDK_INT >= 26) {
-            var uiFlags = systemUiVisibility
-            // Light navigation bar for light theme
-            if (!isDarkMode) {
-                uiFlags = uiFlags or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-            } else {
-                uiFlags = uiFlags and View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
-            }
-            systemUiVisibility = uiFlags
+    private fun initSwipeTrailPaint() {
+        _swipeTrailPaint = Paint().apply {
+            color = -0xfe68932 // 0xFF1976D2 - Default blue color
+            strokeWidth = 3.0f * resources.displayMetrics.density
+            style = Paint.Style.STROKE
+            isAntiAlias = true
+            strokeCap = Paint.Cap.ROUND
+            strokeJoin = Paint.Join.ROUND
+            alpha = 180 // Semi-transparent
         }
     }
 
@@ -229,586 +148,785 @@ class Keyboard2View @JvmOverloads constructor(
         }
     }
 
-    fun setKeyboard(keyboardData: KeyboardData) {
-        android.util.Log.d("Keyboard2View", "setKeyboard called: layout=${keyboardData.name}")
-        keyboard = keyboardData
-        shiftKeyValue = KeyValue.getKeyByName("shift")
-        shiftKey = shiftKeyValue?.let { keyboardData.findKeyWithValue(it) }
-        composeKeyValue = KeyValue.getKeyByName("compose")
-        composeKey = composeKeyValue?.let { keyboardData.findKeyWithValue(it) }
+    fun refresh_navigation_bar(context: Context) {
+        if (VERSION.SDK_INT < 21)
+            return
+        // The intermediate Window is a [Dialog].
+        val w = getParentWindow(context)
+        w?.navigationBarColor = _theme.colorNavBar
+        if (VERSION.SDK_INT < 26)
+            return
+        var uiFlags = systemUiVisibility
+        uiFlags = if (_theme.isLightNavBar)
+            uiFlags or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        else
+            uiFlags and View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
+        systemUiVisibility = uiFlags
+    }
 
-        KeyModifier.set_modmap(keyboardData.modmap)
+    fun setKeyboard(kw: KeyboardData) {
+        _keyboard = kw
+        val shiftKv = KeyValue.getKeyByName("shift")
+        _shift_kv = shiftKv
+        _shift_key = kw.findKeyWithValue(shiftKv)
+        val composeKv = KeyValue.getKeyByName("compose")
+        _compose_kv = composeKv
+        _compose_key = kw.findKeyWithValue(composeKv)
+        kw.modmap?.let { KeyModifier.set_modmap(it) }
+
+        // CRITICAL FIX: Pre-calculate key width based on screen width
+        // This ensures getKeyAtPosition works immediately for swipes before onMeasure() runs
+        // Always recalculate because layout or screen dims might have changed (view reuse)
+        run {
+            val dm = resources.displayMetrics
+            val screenWidth = dm.widthPixels
+            val marginLeft = maxOf(_config.horizontal_margin.toFloat(), _insets_left.toFloat())
+            val marginRight = maxOf(_config.horizontal_margin.toFloat(), _insets_right.toFloat())
+            _keyWidth = (screenWidth - marginLeft - marginRight) / kw.keysWidth
+
+            // Ensure theme cache is initialized for key detection
+            val cacheKey = "${kw.name ?: ""}_$_keyWidth"
+            _tc = _themeCache.get(cacheKey) ?: run {
+                val computed = Theme.Computed(_theme, _config, _keyWidth, kw)
+                _themeCache.put(cacheKey, computed)
+                computed
+            }
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                android.util.Log.d("Keyboard2View", "Pre-calculated keyWidth=$_keyWidth for immediate touch handling")
+            }
+        }
+
+        // Initialize swipe recognizer if not already created
+        if (_swipeRecognizer == null) {
+            _swipeRecognizer = EnhancedSwipeGestureRecognizer()
+        }
+
+        // ENABLE PROBABILISTIC DETECTION:
+        // Pass the keyboard layout to the recognizer so it can find "nearest keys"
+        // instead of failing on gaps/misalignment (crucial for startup race condition)
+        _swipeRecognizer?.let { recognizer ->
+            val estimatedWidth = _keyWidth * kw.keysWidth + _marginLeft + _marginRight
+            val estimatedHeight = _tc?.row_height?.times(kw.keysHeight) ?: 0f
+            recognizer.setKeyboard(kw, estimatedWidth, estimatedHeight)
+        }
+
         reset()
-        android.util.Log.d("Keyboard2View", "setKeyboard complete, calling requestLayout")
     }
 
     fun reset() {
-        modifiers = Pointers.Modifiers.EMPTY
-        // Check if pointers is initialized before clearing (prevents crash during initialization)
-        if (::pointers.isInitialized) {
-            pointers.clear()
-        }
-        clearSwipeState()
+        _mods = Pointers.Modifiers.EMPTY
+        _pointers.clear()
         requestLayout()
         invalidate()
     }
 
+    /**
+     * Clear swipe typing state after suggestion selection
+     */
     fun clearSwipeState() {
-        isSwipeActive = false
-        swipePointerId = -1
-        swipeTrajectory.clear()
-        swipeTimestamps.clear()
-        currentSwipeGesture = null
+        // Clear any ongoing swipe gestures
+        _pointers.clear()
         invalidate()
     }
 
-    // Fake pointer state management
-    fun setFakePointerLatched(key: KeyboardData.Key?, keyValue: KeyValue?, latched: Boolean, lock: Boolean) {
-        if (keyboard == null || key == null || keyValue == null) return
-        pointers.setFakePointerState(key, keyValue, latched, lock)
+    fun set_fake_ptr_latched(key: KeyboardData.Key?, kv: KeyValue?, latched: Boolean, lock: Boolean) {
+        if (_keyboard == null || key == null || kv == null)
+            return
+        _pointers.set_fake_pointer_state(key, kv, latched, lock)
     }
 
-    fun setShiftState(latched: Boolean, lock: Boolean) {
-        setFakePointerLatched(shiftKey, shiftKeyValue, latched, lock)
+    /** Called by auto-capitalisation. */
+    fun set_shift_state(latched: Boolean, lock: Boolean) {
+        val shiftKv = _shift_kv
+        set_fake_ptr_latched(_shift_key, shiftKv, latched, lock)
     }
 
-    fun setComposePending(pending: Boolean) {
-        setFakePointerLatched(composeKey, composeKeyValue, pending, false)
+    /** Called from [KeyEventHandler]. */
+    fun set_compose_pending(pending: Boolean) {
+        val composeKv = _compose_kv
+        set_fake_ptr_latched(_compose_key, composeKv, pending, false)
     }
 
-    fun setSelectionState(selectionState: Boolean) {
-        setFakePointerLatched(
+    /** Called from [CleverKeysService.onUpdateSelection]. */
+    fun set_selection_state(selection_state: Boolean) {
+        val selectionModeKv = KeyValue.getKeyByName("selection_mode")
+        set_fake_ptr_latched(
             KeyboardData.Key.EMPTY,
-            KeyValue.getKeyByName("selection_mode"),
-            selectionState,
+            selectionModeKv,
+            selection_state,
             true
         )
     }
 
-    private fun modifyKeyInternal(keyValue: KeyValue, mods: Pointers.Modifiers): KeyValue {
-        return KeyModifier.modify(keyValue, mods) ?: keyValue
+    override fun modifyKey(k: KeyValue?, mods: Pointers.Modifiers): KeyValue? {
+        return KeyModifier.modify(k, mods)
     }
 
-    // Pointer event handlers
-    override fun onPointerDown(keyValue: KeyValue, isSwipe: Boolean) {
+    override fun onPointerDown(k: KeyValue?, isSwipe: Boolean) {
         updateFlags()
-        config?.handler?.key_down(keyValue, isSwipe)
+        _config.handler?.key_down(k, isSwipe)
         invalidate()
         vibrate()
     }
 
-    override fun onPointerUp(keyValue: KeyValue, mods: Pointers.Modifiers) {
-        config?.handler?.key_up(keyValue, mods)
+    override fun onPointerUp(k: KeyValue?, mods: Pointers.Modifiers) {
+        // [key_up] must be called before [updateFlags]. The latter might disable flags.
+        _config.handler?.key_up(k, mods)
         updateFlags()
         invalidate()
     }
 
-    override fun onPointerHold(keyValue: KeyValue, mods: Pointers.Modifiers) {
-        config?.handler?.key_up(keyValue, mods)
+    override fun onPointerHold(k: KeyValue, mods: Pointers.Modifiers) {
+        _config.handler?.key_up(k, mods)
         updateFlags()
     }
 
     override fun onPointerFlagsChanged(shouldVibrate: Boolean) {
         updateFlags()
         invalidate()
-        if (shouldVibrate) vibrate()
-    }
-
-    override fun onSwipeMove(x: Float, y: Float, recognizer: EnhancedSwipeGestureRecognizer) {
-        // Handle swipe trajectory updates for neural prediction
-        recognizer.addPoint(x, y)
-        invalidate()
-    }
-
-    override fun onSwipeEnd(recognizer: EnhancedSwipeGestureRecognizer) {
-        // Process complete swipe gesture - handled by handleSwipeEnd() instead
-        invalidate()
+        if (shouldVibrate)
+            vibrate()
     }
 
     private fun updateFlags() {
-        modifiers = pointers.getModifiers()
-        config?.handler?.mods_changed(modifiers)
+        _mods = _pointers.getModifiers()
+        _config.handler?.mods_changed(_mods)
     }
 
-    // Touch event handling
-    override fun onTouch(view: View, event: MotionEvent): Boolean {
-        when (event.actionMasked) {
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
-                val pointerId = event.getPointerId(event.actionIndex)
-                pointers.onTouchUp(pointerId)
-                handleSwipeEnd()
-            }
-
-            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
-                val pointerIndex = event.actionIndex
-                val x = event.getX(pointerIndex)
-                val y = event.getY(pointerIndex)
-                val pointerId = event.getPointerId(pointerIndex)
-                val key = getKeyAtPosition(x, y)
-
-                if (key != null) {
-                    pointers.onTouchDown(x, y, pointerId, key)
-                }
-
-                // Only start swipe if not already active (first finger down wins)
-                if (!isSwipeActive) {
-                    handleSwipeStart(x, y, pointerId)
-                }
-            }
-
-            MotionEvent.ACTION_MOVE -> {
-                for (p in 0 until event.pointerCount) {
-                    val x = event.getX(p)
-                    val y = event.getY(p)
-                    val pointerId = event.getPointerId(p)
-
-                    pointers.onTouchMove(x, y, pointerId)
-
-                    // Only record coordinates from the pointer that started the swipe
-                    if (isSwipeActive && pointerId == swipePointerId) {
-                        handleSwipeMove(x, y)
-                    }
-                }
-            }
-
-            MotionEvent.ACTION_CANCEL -> {
-                pointers.onTouchCancel()
-                handleSwipeCancel()
-            }
-        }
-        return true
-    }
-
-    // Neural swipe handling
-    private fun handleSwipeStart(x: Float, y: Float, pointerId: Int) {
-        if (config?.swipe_typing_enabled != true) return
-
-        isSwipeActive = true
-        swipePointerId = pointerId  // Remember which pointer is swiping
-        swipeTrajectory.clear()
-        swipeTimestamps.clear()
-
-        swipeTrajectory.add(PointF(x, y))
-        swipeTimestamps.add(System.currentTimeMillis())
-
-        android.util.Log.d("Keyboard2View", "Neural swipe started at ($x, $y) with pointer $pointerId")
-    }
-
-    private fun handleSwipeMove(x: Float, y: Float) {
-        if (!isSwipeActive || config?.swipe_typing_enabled != true) return
-
-        swipeTrajectory.add(PointF(x, y))
-        swipeTimestamps.add(System.currentTimeMillis())
-
-        // Trigger redraw to show swipe trail
+    override fun onSwipeMove(x: Float, y: Float, recognizer: ImprovedSwipeGestureRecognizer) {
+        val key = getKeyAtPosition(x, y)
+        recognizer.addPoint(x, y, key)
+        // Always invalidate to show visual trail, even before swipe typing confirmed
         invalidate()
     }
 
-    private fun handleSwipeEnd() {
-        if (!isSwipeActive || config?.swipe_typing_enabled != true) {
-            clearSwipeState()
-            return
+    override fun onSwipeEnd(recognizer: ImprovedSwipeGestureRecognizer) {
+        if (recognizer.isSwipeTyping()) {
+            val result = recognizer.endSwipe()
+            if (_keyboard2 != null && result.keys != null && result.keys.isNotEmpty() &&
+                result.path != null && result.timestamps != null) {
+                // v1.32.926: Check if shift is active for ALL CAPS swipe typing
+                val wasShiftActive = _mods.has(KeyValue.Modifier.SHIFT)
+
+                // Pass full swipe data for ML collection
+                _keyboard2!!.handleSwipeTyping(result.keys, result.path, result.timestamps, wasShiftActive)
+            }
+        } else {
+            recognizer.endSwipe() // Clean up even if not swipe typing
+        }
+        recognizer.reset()
+        invalidate() // Clear the trail
+    }
+
+    override fun isPointWithinKey(x: Float, y: Float, key: KeyboardData.Key): Boolean {
+        return isPointWithinKeyWithTolerance(x, y, key, 0.0f)
+    }
+
+    override fun isPointWithinKeyWithTolerance(x: Float, y: Float, key: KeyboardData.Key, tolerance: Float): Boolean {
+        if (_keyboard == null) {
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                android.util.Log.d("Keyboard2View", "isPointWithinKeyWithTolerance: key or keyboard is null")
+            }
+            return false
         }
 
-        if (swipeTrajectory.size >= 2) {
-            // Calculate path length to distinguish taps from swipes
-            var pathLength = 0f
-            for (i in 1 until swipeTrajectory.size) {
-                val prev = swipeTrajectory[i - 1]
-                val curr = swipeTrajectory[i]
-                val dx = curr.x - prev.x
-                val dy = curr.y - prev.y
-                pathLength += kotlin.math.sqrt(dx * dx + dy * dy)
-            }
-
-            // Only process as swipe if path is long enough (minimum 10 pixels)
-            // Short paths are taps, not swipes
-            if (pathLength >= 10f) {
-                // Create swipe input for neural prediction
-                val duration = if (swipeTimestamps.isNotEmpty()) {
-                    swipeTimestamps.last() - swipeTimestamps.first()
-                } else 0L
-
-                currentSwipeGesture = SwipeInput(
-                    coordinates = ArrayList(swipeTrajectory),
-                    timestamps = ArrayList(swipeTimestamps),
-                    touchedKeys = emptyList()
-                )
-
-                // Process neural prediction asynchronously via service
-                currentSwipeGesture?.let { gesture ->
-                    android.util.Log.d("Keyboard2View", "Swipe gesture completed: ${gesture.coordinates.size} points, length: $pathLength px")
-                    // Pass gesture data to service for neural prediction
-                    val gestureData = CleverKeysService.SwipeGestureData(
-                        path = gesture.coordinates,
-                        timestamps = gesture.timestamps
-                    )
-                    keyboardService?.handleSwipeGesture(gestureData)
+        // Find the row containing this key
+        var targetRow: KeyboardData.Row? = null
+        for (row in _keyboard!!.rows) {
+            for (k in row.keys) {
+                if (k == key) {
+                    targetRow = row
+                    break
                 }
-            } else {
-                android.util.Log.d("Keyboard2View", "Gesture too short ($pathLength px), treating as tap")
             }
+            if (targetRow != null) break
         }
 
-        clearSwipeState()
-    }
-
-    private fun handleSwipeCancel() {
-        if (isSwipeActive) {
-            android.util.Log.d("Keyboard2View", "Neural swipe cancelled")
-            clearSwipeState()
+        if (targetRow == null) {
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                android.util.Log.d("Keyboard2View", "isPointWithinKeyWithTolerance: targetRow not found")
+            }
+            return false
         }
-    }
 
-    // Key position calculation
-    fun getKeyAtPosition(x: Float, y: Float): KeyboardData.Key? {
-        val kbd = keyboard ?: return null
-        val tc = themeComputed ?: return null
+        // Calculate key bounds
+        var keyX = _marginLeft
+        for (k in targetRow.keys) {
+            if (k == key) {
+                val xLeft = keyX + key.shift * _keyWidth
+                val xRight = xLeft + key.width * _keyWidth
 
-        var yPos = config?.marginTop ?: 0f
-
-        for (row in kbd.rows) {
-            val rowTop = yPos + row.shift * tc.rowHeight
-            val rowBottom = rowTop + row.height * tc.rowHeight
-
-            if (y >= rowTop && y < rowBottom) {
-                var xPos = marginLeft
-
-                for (key in row.keys) {
-                    xPos += key.shift * keyWidth
-                    val keyWidth = this.keyWidth * key.width - tc.horizontalMargin
-
-                    if (x >= xPos && x < xPos + keyWidth) {
-                        return key
+                // Calculate row bounds - MUST use _tc.row_height to scale like rendering does
+                val tc = _tc
+                if (tc == null) {
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                        android.util.Log.d("Keyboard2View", "isPointWithinKeyWithTolerance: _tc is null")
                     }
-                    xPos += this.keyWidth * key.width
+                    return false
                 }
-                break
+
+                var rowTop = _config.marginTop.toFloat()
+                for (row in _keyboard!!.rows) {
+                    if (row == targetRow) break
+                    rowTop += (row.height + row.shift) * tc.row_height
+                }
+                val rowBottom = rowTop + targetRow.height * tc.row_height
+
+                // FIXED: Use radial (circular) tolerance instead of rectangular
+                val keyWidth = key.width * _keyWidth
+                val keyHeight = targetRow.height * tc.row_height
+
+                // Calculate key center
+                val keyCenterX = (xLeft + xRight) / 2
+                val keyCenterY = (rowTop + rowBottom) / 2
+
+                // Calculate distance from touch point to key center
+                val dx = x - keyCenterX
+                val dy = y - keyCenterY
+                val distanceFromCenter = kotlin.math.sqrt(dx * dx + dy * dy)
+
+                // Calculate max allowed distance
+                val maxHorizontal = keyWidth * (0.5f + tolerance)
+                val maxVertical = keyHeight * (0.5f + tolerance)
+                val maxDistance = kotlin.math.sqrt(maxHorizontal * maxHorizontal + maxVertical * maxVertical)
+
+                return distanceFromCenter <= maxDistance
             }
-            yPos += row.height * tc.rowHeight
+            keyX += k.width * _keyWidth
         }
-        return null
+
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            android.util.Log.d("Keyboard2View", "isPointWithinKeyWithTolerance: key not found in targetRow")
+        }
+        return false
     }
 
+    override fun getKeyHypotenuse(key: KeyboardData.Key): Float {
+        val keyboard = _keyboard ?: return 0f
+
+        // Find the row containing this key to get height
+        var keyHeight = 0f
+        for (row in keyboard.rows) {
+            for (k in row.keys) {
+                if (k == key) {
+                    keyHeight = row.height
+                    break
+                }
+            }
+            if (keyHeight > 0) break
+        }
+
+        if (keyHeight == 0f) return 0f
+
+        // Calculate hypotenuse: sqrt(width^2 + height^2)
+        val keyWidth = key.width * _keyWidth
+        return kotlin.math.sqrt(keyWidth * keyWidth + keyHeight * keyHeight)
+    }
+
+    override fun getKeyWidth(key: KeyboardData.Key): Float {
+        return key.width * _keyWidth
+    }
+
+    fun setSwipeTypingComponents(predictor: WordPredictor?, keyboard2: CleverKeysService?) {
+        _wordPredictor = predictor
+        _keyboard2 = keyboard2
+    }
+
+    /**
+     * Extract real key positions for accurate coordinate mapping
+     * Returns map of character to actual center coordinates
+     */
     fun getRealKeyPositions(): Map<Char, PointF> {
         val keyPositions = mutableMapOf<Char, PointF>()
-        val kbd = keyboard ?: return keyPositions
-        val tc = themeComputed ?: return keyPositions
 
-        var y = config?.marginTop ?: 0f
+        val keyboard = _keyboard
+        val tc = _tc
+        if (keyboard == null || tc == null) {
+            android.util.Log.w("Keyboard2View", "Cannot extract key positions - layout not ready")
+            return keyPositions
+        }
 
-        for (row in kbd.rows) {
-            var x = marginLeft
+        var y = _config.marginTop.toFloat()
+
+        for (row in keyboard.rows) {
+            var x = _marginLeft
 
             for (key in row.keys) {
-                val xLeft = x + key.shift * keyWidth
-                val xRight = xLeft + key.width * keyWidth
-                val yTop = y + row.shift * tc.rowHeight
-                val yBottom = yTop + row.height * tc.rowHeight
+                val xLeft = x + key.shift * _keyWidth
+                val xRight = xLeft + key.width * _keyWidth
+                val yTop = y + row.shift * tc.row_height
+                val yBottom = yTop + row.height * tc.row_height
 
+                // Calculate center coordinates
                 val centerX = (xLeft + xRight) / 2f
                 val centerY = (yTop + yBottom) / 2f
 
-                // Extract character from key
-                val keyValue = key.keys[0]
-                if (keyValue != null) {
-                    // Type-safe character extraction from CharKey
-                    val char = (keyValue as? KeyValue.CharKey)?.char
-                    if (char != null && char.isLetter()) {
-                        keyPositions[char.lowercaseChar()] = PointF(centerX, centerY)
+                // Extract character from key (if alphabetic)
+                try {
+                    val keyString = key.toString()
+                    if (keyString.length == 1 && Character.isLetter(keyString[0])) {
+                        val keyChar = keyString.toLowerCase()[0]
+                        keyPositions[keyChar] = PointF(centerX, centerY)
                     }
+                } catch (e: Exception) {
+                    // Skip keys that can't be extracted
                 }
 
-                x += keyWidth * key.width
+                x = xRight
             }
-            y += row.height * tc.rowHeight
+
+            y += (row.shift + row.height) * tc.row_height
         }
 
         return keyPositions
     }
 
-    // Layout and drawing
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        android.util.Log.d("Keyboard2View", "onMeasure called, keyboard=${keyboard != null}")
-        val kbd = keyboard
-        if (kbd == null) {
-            android.util.Log.e("Keyboard2View", "onMeasure: keyboard is NULL! Setting dimensions to 0x0")
-            setMeasuredDimension(0, 0)
-            return
+    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+        if (event == null) return false
+
+        val action = event.actionMasked
+
+        when (action) {
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
+                _pointers.onTouchUp(event.getPointerId(event.actionIndex))
+            }
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                val p = event.actionIndex
+                val tx = event.getX(p)
+                val ty = event.getY(p)
+                val key = getKeyAtPosition(tx, ty)
+                if (key != null)
+                    _pointers.onTouchDown(tx, ty, event.getPointerId(p), key)
+            }
+            MotionEvent.ACTION_MOVE -> {
+                for (p in 0 until event.pointerCount)
+                    _pointers.onTouchMove(event.getX(p), event.getY(p), event.getPointerId(p))
+            }
+            MotionEvent.ACTION_CANCEL -> {
+                _pointers.onTouchCancel()
+            }
+            else -> return false
         }
-
-        val dm = resources.displayMetrics
-        var windowWidth = getWindowWidth(dm)
-
-        // Calculate margins and insets
-        calculateInsets()
-        calculateMargins(windowWidth)
-
-        // Fix insets being excluded from computed width (#1127)
-        windowWidth += insetsLeft + insetsRight
-
-        // Calculate keyboard dimensions
-        val keyboardWidth = windowWidth - marginLeft - marginRight - insetsLeft - insetsRight
-        keyWidth = keyboardWidth / kbd.keysWidth
-
-        // Create theme computed values
-        // TODO: Refactor Theme.Computed to use Material 3 colors directly
-        val legacyTheme = Theme(context, null)
-        val tc = config?.let { Theme.Computed(legacyTheme, it, keyWidth, kbd) } ?: return
-        themeComputed = tc
-
-        // Fix #53: Dynamic text size calculation matching Java implementation
-        // labelBaseSize = min(row_height - vertical_margin, (width/10 - horizontal_margin) * 3/2) * characterSize
-        val cfg = config ?: return
-        val labelBaseSize = minOf(
-            tc.rowHeight - tc.verticalMargin,
-            (keyWidth - tc.horizontalMargin) * 1.5f
-        ) * cfg.characterSize
-
-        mainLabelSize = labelBaseSize * cfg.labelTextSize
-        subLabelSize = labelBaseSize * cfg.sublabelTextSize
-
-        // Calculate total height
-        val naturalHeight = kbd.keysHeight * tc.rowHeight + (config?.marginTop ?: 0f) + marginBottom
-
-        // Apply user-configured height percentage
-        val screenHeight = dm.heightPixels
-        calculatedHeight = (screenHeight * keyboardHeightPercent / 100f).toInt()
-
-        // Use user preference if set, otherwise use natural keyboard height
-        val finalHeight = if (keyboardHeightPercent != 35) { // 35 is default
-            calculatedHeight
-        } else {
-            naturalHeight.toInt() + insetsBottom
-        }
-
-        android.util.Log.d("Keyboard2View", "onMeasure: natural=${naturalHeight.toInt()}, calculated=$calculatedHeight (${keyboardHeightPercent}%), using=$finalHeight")
-
-        // Notify service of keyboard dimensions for neural prediction
-        keyboardService?.updateKeyboardDimensions(windowWidth, finalHeight)
-
-        setMeasuredDimension(
-            windowWidth,
-            finalHeight
-        )
+        return true
     }
 
-    private fun getWindowWidth(dm: DisplayMetrics): Int {
-        return if (Build.VERSION.SDK_INT >= 30) {
-            val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-            val windowMetrics = windowManager.currentWindowMetrics
-            val insets = windowMetrics.windowInsets.getInsetsIgnoringVisibility(
-                WindowInsets.Type.systemBars()
-            )
-            windowMetrics.bounds.width() - insets.left - insets.right
-        } else {
-            dm.widthPixels
+    private fun getRowAtPosition(ty: Float): KeyboardData.Row? {
+        val keyboard = _keyboard ?: return null
+        val tc = _tc ?: return null
+
+        var y = _config.marginTop.toFloat()
+
+        if (ty < y) {
+            return null
         }
+
+        for (row in keyboard.rows) {
+            val rowBottom = y + (row.shift + row.height) * tc.row_height
+
+            if (ty < rowBottom) {
+                return row
+            }
+            y = rowBottom
+        }
+
+        return null
     }
 
-    private fun calculateInsets() {
-        if (Build.VERSION.SDK_INT >= 23) {
-            val insets = rootWindowInsets
-            if (insets != null) {
-                insetsLeft = insets.systemWindowInsetLeft
-                insetsRight = insets.systemWindowInsetRight
-                insetsBottom = insets.systemWindowInsetBottom
+    private fun getKeyAtPosition(tx: Float, ty: Float): KeyboardData.Key? {
+        val row = getRowAtPosition(ty)
+        // CRITICAL FIX: Calculate margin dynamically to avoid stale _marginLeft from delayed onMeasure
+        val currentMarginLeft = maxOf(_config.horizontal_margin.toFloat(), _insets_left.toFloat())
+        var x = currentMarginLeft
+
+        if (row == null) {
+            android.util.Log.e("SWIPE_LAG_DEBUG", "❌ No row found for y=$ty (marginTop=${_config.marginTop})")
+            return null
+        }
+
+        // Check if this row contains 'a' and 'l' keys (middle letter row in QWERTY)
+        val hasAAndLKeys = rowContainsAAndL(row)
+        var aKey: KeyboardData.Key? = null
+        var lKey: KeyboardData.Key? = null
+
+        if (hasAAndLKeys) {
+            // Find the 'a' and 'l' keys in this row
+            for (key in row.keys) {
+                if (isCharacterKey(key, 'a')) aKey = key
+                if (isCharacterKey(key, 'l')) lKey = key
             }
         }
+
+        // Check if touch is before the first key and we have 'a' key - extend its touch zone
+        if (tx < x && aKey != null) {
+            return aKey
+        }
+
+        if (tx < x) {
+            return null
+        }
+
+        for (key in row.keys) {
+            val xLeft = x + key.shift * _keyWidth
+            val xRight = xLeft + key.width * _keyWidth
+
+            // GAP FIX: If touch is in the gap before this key (xLeft),
+            // consider it part of this key for swiping purposes.
+            if (tx < xRight) {
+                return key
+            }
+            x = xRight
+        }
+
+        // GAP FIX: If we reached here, tx > last key's right edge.
+        // Return the last key in the row to handle right-margin slop.
+        if (row.keys.isNotEmpty()) {
+            return row.keys[row.keys.size - 1]
+        }
+
+        return null
     }
 
-    private fun calculateMargins(windowWidth: Int) {
-        marginLeft = 8f // Default horizontal margin
-        marginRight = 8f // Default horizontal margin
-        marginBottom = config?.margin_bottom ?: 0f
+    /**
+     * Check if this row contains both 'a' and 'l' keys (the middle QWERTY row)
+     */
+    private fun rowContainsAAndL(row: KeyboardData.Row): Boolean {
+        var hasA = false
+        var hasL = false
+        for (key in row.keys) {
+            if (isCharacterKey(key, 'a')) hasA = true
+            if (isCharacterKey(key, 'l')) hasL = true
+            if (hasA && hasL) return true
+        }
+        return false
+    }
 
-        // Ensure minimum margins
-        val minMargin = 8f * resources.displayMetrics.density
-        if (marginLeft < minMargin) marginLeft = minMargin
-        if (marginRight < minMargin) marginRight = minMargin
+    /**
+     * Check if a key represents the specified character
+     */
+    private fun isCharacterKey(key: KeyboardData.Key, character: Char): Boolean {
+        val kv = key.keys[0] ?: return false
+        return kv.getKind() == KeyValue.Kind.Char && kv.getChar() == character
+    }
+
+    private fun vibrate() {
+        VibratorCompat.vibrate(this, _config)
+    }
+
+    override fun onMeasure(wSpec: Int, hSpec: Int) {
+        val keyboard = _keyboard ?: return
+
+        var width = MeasureSpec.getSize(wSpec)
+
+        // CRITICAL FIX: If measure returns 0, preserve existing valid keyWidth
+        if (width == 0 && _keyWidth > 0) {
+            // Reconstruct width from existing keyWidth
+            width = (_keyWidth * keyboard.keysWidth + _marginLeft + _marginRight).toInt()
+        }
+
+        _marginLeft = maxOf(_config.horizontal_margin.toFloat(), _insets_left.toFloat())
+        _marginRight = maxOf(_config.horizontal_margin.toFloat(), _insets_right.toFloat())
+        _marginBottom = _config.margin_bottom + _insets_bottom.toFloat()
+
+        // Only recalculate keyWidth if we have a valid new width
+        if (width > 0) {
+            _keyWidth = (width - _marginLeft - _marginRight) / keyboard.keysWidth
+        }
+
+        val cacheKey = "${keyboard.name ?: ""}_$_keyWidth"
+        _tc = _themeCache.get(cacheKey) ?: run {
+            val computed = Theme.Computed(_theme, _config, _keyWidth, keyboard)
+            _themeCache.put(cacheKey, computed)
+            computed
+        }
+
+        val tc = _tc!!
+
+        // Compute the size of labels
+        val labelBaseSize = minOf(
+            tc.row_height - tc.vertical_margin,
+            (width / 10 - tc.horizontal_margin) * 3 / 2
+        ) * _config.characterSize
+        _mainLabelSize = labelBaseSize * _config.labelTextSize
+        _subLabelSize = labelBaseSize * _config.sublabelTextSize
+
+        val height = (tc.row_height * keyboard.keysHeight + _config.marginTop + _marginBottom).toInt()
+        setMeasuredDimension(width, height)
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        if (!changed)
+            return
+        if (VERSION.SDK_INT >= 29) {
+            // Disable the back-gesture on the keyboard area
+            val keyboard_area = Rect(
+                left + _marginLeft.toInt(),
+                top + _config.marginTop.toInt(),
+                right - _marginRight.toInt(),
+                bottom - _marginBottom.toInt()
+            )
+            systemGestureExclusionRects = listOf(keyboard_area)
+        }
+    }
+
+    override fun onApplyWindowInsets(wi: WindowInsets?): WindowInsets? {
+        if (wi == null || VERSION.SDK_INT < 35)
+            return wi
+        val insets_types = WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
+        val insets = wi.getInsets(insets_types)
+        _insets_left = insets.left
+        _insets_right = insets.right
+        _insets_bottom = insets.bottom
+        return WindowInsets.CONSUMED
     }
 
     override fun onDraw(canvas: Canvas) {
-        val kbd = keyboard ?: return
-        val tc = themeComputed ?: return
+        val keyboard = _keyboard ?: return
+        val tc = _tc ?: return
 
         // Set keyboard background opacity
-        background?.alpha = config?.keyboardOpacity ?: 255
+        background?.alpha = _config.keyboardOpacity
+        var y = tc.margin_top
 
-        var y = tc.marginTop
+        for (row in keyboard.rows) {
+            y += row.shift * tc.row_height
+            var x = _marginLeft + tc.margin_left
+            val keyH = row.height * tc.row_height - tc.vertical_margin
 
-        for (row in kbd.rows) {
-            y += row.shift * tc.rowHeight
-            var x = marginLeft + tc.marginLeft
-            val keyHeight = row.height * tc.rowHeight - tc.verticalMargin
+            for (k in row.keys) {
+                x += k.shift * _keyWidth
+                val keyW = _keyWidth * k.width - tc.horizontal_margin
+                val isKeyDown = _pointers.isKeyDown(k)
+                val tc_key = if (isKeyDown) tc.key_activated else tc.key
 
-            for (key in row.keys) {
-                x += key.shift * keyWidth
-                val keyWidth = this.keyWidth * key.width - tc.horizontalMargin
-                val isKeyDown = pointers.isKeyDown(key)
-                val tcKey = if (isKeyDown) tc.keyActivated else tc.key
-
-                drawKeyFrame(canvas, x, y, keyWidth, keyHeight, tcKey)
-
-                // Draw main label
-                key.keys[0]?.let { keyValue ->
-                    drawLabel(canvas, keyValue, keyWidth / 2f + x, y, keyHeight, isKeyDown, tcKey)
+                drawKeyFrame(canvas, x, y, keyW, keyH, tc_key)
+                if (k.keys[0] != null)
+                    drawLabel(canvas, k.keys[0]!!, keyW / 2f + x, y, keyH, isKeyDown, tc_key)
+                for (i in 1..8) {
+                    if (k.keys[i] != null)
+                        drawSubLabel(canvas, k.keys[i]!!, x, y, keyW, keyH, i, isKeyDown, tc_key)
                 }
-
-                // Draw sub-labels
-                for (i in 1 until 9) {
-                    key.keys[i]?.let { keyValue ->
-                        drawSubLabel(canvas, keyValue, x, y, keyWidth, keyHeight, i, isKeyDown, tcKey)
-                    }
-                }
-
-                drawIndication(canvas, key, x, y, keyWidth, keyHeight, tc)
-
-                // Draw CleverKeys branding on spacebar (bottom right)
-                key.keys[0]?.let { keyValue ->
-                    if (keyValue is KeyValue.CharKey && keyValue.char == ' ') {
-                        drawSpacebarBranding(canvas, x, y, keyWidth, keyHeight)
-                    }
-                }
-
-                x += this.keyWidth * key.width
+                drawIndication(canvas, k, x, y, keyW, keyH, tc)
+                x += _keyWidth * k.width
             }
-            y += row.height * tc.rowHeight
+            y += row.height * tc.row_height
         }
 
-        // Draw neural swipe trail
-        if (config?.swipe_typing_enabled == true && isSwipeActive) {
+        // Draw swipe trail if swipe typing is enabled and active
+        if (_config.swipe_typing_enabled && _swipeRecognizer != null && _swipeRecognizer!!.isSwipeTyping()) {
             drawSwipeTrail(canvas)
         }
     }
 
     /**
-     * Draw CleverKeys branding on spacebar
-     * Shows "CleverKeys#XXXX" where XXXX is the build number
-     * Jewel tone purple text on silver background (1px padding)
+     * Draw swipe trail without allocations.
+     * Reuses _swipeTrailPath and directly accesses swipe path to avoid copying.
      */
-    private fun drawSpacebarBranding(canvas: Canvas, x: Float, y: Float, keyWidth: Float, keyHeight: Float) {
-        try {
-            // Get build number from version_info resource
-            val versionText = context.resources.openRawResource(
-                context.resources.getIdentifier("version_info", "raw", context.packageName)
-            ).bufferedReader().use { reader ->
-                val lines = reader.readLines()
-                val buildNumber = lines.find { it.startsWith("build_number=") }
-                    ?.substringAfter("=")
-                    ?.takeLast(4) // Last 4 digits
-                    ?: "0001"
-                "CleverKeys#$buildNumber"
-            }
-
-            // Measure text
-            val textBounds = Rect()
-            brandingPaint.getTextBounds(versionText, 0, versionText.length, textBounds)
-
-            // Position in bottom right corner with 1px padding
-            val padding = 1f * resources.displayMetrics.density
-            val bgX = x + keyWidth - textBounds.width() - padding * 3
-            val bgY = y + keyHeight - textBounds.height() - padding * 3
-            val bgWidth = textBounds.width() + padding * 2
-            val bgHeight = textBounds.height() + padding * 2
-
-            // Draw silver background
-            canvas.drawRect(bgX, bgY, bgX + bgWidth, bgY + bgHeight, brandingBgPaint)
-
-            // Draw text
-            val textX = x + keyWidth - padding * 2
-            val textY = y + keyHeight - padding * 2
-            canvas.drawText(versionText, textX, textY, brandingPaint)
-        } catch (e: Exception) {
-            // Silently fail if version_info doesn't exist yet
-        }
-    }
-
     private fun drawSwipeTrail(canvas: Canvas) {
-        if (swipeTrajectory.size < 2) return
+        val recognizer = _swipeRecognizer ?: return
+        val swipePath = recognizer.getSwipePath()
+        if (swipePath.size < 2)
+            return
 
-        val path = Path()
-        val firstPoint = swipeTrajectory[0]
-        path.moveTo(firstPoint.x, firstPoint.y)
+        // Reuse the path object - reset it instead of allocating new one
+        _swipeTrailPath.rewind()
 
-        for (i in 1 until swipeTrajectory.size) {
-            val point = swipeTrajectory[i]
-            path.lineTo(point.x, point.y)
+        val firstPoint = swipePath[0]
+        _swipeTrailPath.moveTo(firstPoint.x, firstPoint.y)
+
+        for (i in 1 until swipePath.size) {
+            val point = swipePath[i]
+            _swipeTrailPath.lineTo(point.x, point.y)
         }
 
-        canvas.drawPath(path, swipeTrailPaint)
+        _swipeTrailPaint?.let { canvas.drawPath(_swipeTrailPath, it) }
     }
 
-    private fun drawKeyFrame(
-        canvas: Canvas,
-        x: Float,
-        y: Float,
-        keyWidth: Float,
-        keyHeight: Float,
-        tc: Theme.Computed.Key
-    ) {
-        val r = tc.borderRadius
-        val w = tc.borderWidth
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+    }
+
+    /** Draw borders and background of the key. */
+    private fun drawKeyFrame(canvas: Canvas, x: Float, y: Float, keyW: Float, keyH: Float, tc: Theme.Computed.Key) {
+        val r = tc.border_radius
+        val w = tc.border_width
         val padding = w / 2f
-
-        // Set shared rect for background and border drawing (matches Java _tmpRect)
-        tmpRect.set(x + padding, y + padding, x + keyWidth - padding, y + keyHeight - padding)
-        canvas.drawRoundRect(tmpRect, r, r, tc.bgPaint)
-
+        _tmpRect.set(x + padding, y + padding, x + keyW - padding, y + keyH - padding)
+        canvas.drawRoundRect(_tmpRect, r, r, tc.bg_paint)
         if (w > 0f) {
-            val overlap = r - r * 0.85f + w // sin(45°)
-            drawBorder(canvas, x, y, x + overlap, y + keyHeight, tc.borderLeftPaint, tc)
-            drawBorder(canvas, x + keyWidth - overlap, y, x + keyWidth, y + keyHeight, tc.borderRightPaint, tc)
-            drawBorder(canvas, x, y, x + keyWidth, y + overlap, tc.borderTopPaint, tc)
-            drawBorder(canvas, x, y + keyHeight - overlap, x + keyWidth, y + keyHeight, tc.borderBottomPaint, tc)
+            canvas.drawRoundRect(_tmpRect, r, r, tc.border_paint)
+        }
+    }
+
+    private fun labelColor(k: KeyValue, isKeyDown: Boolean, sublabel: Boolean): Int {
+        if (isKeyDown) {
+            val flags = _pointers.getKeyFlags(k)
+            if (flags != -1) {
+                if ((flags and Pointers.FLAG_P_LOCKED) != 0)
+                    return _theme.lockedColor
+                return _theme.activatedColor
+            }
+        }
+        if (k.hasFlagsAny(KeyValue.FLAG_SECONDARY or KeyValue.FLAG_GREYED)) {
+            if (k.hasFlagsAny(KeyValue.FLAG_GREYED))
+                return _theme.greyedLabelColor
+            return _theme.secondaryLabelColor
+        }
+        return if (sublabel) _theme.subLabelColor else _theme.labelColor
+    }
+
+    private fun drawLabel(canvas: Canvas, kv: KeyValue, x: Float, y: Float, keyH: Float, isKeyDown: Boolean, tc: Theme.Computed.Key) {
+        val modifiedKv = modifyKey(kv, _mods) ?: return
+        val textSize = scaleTextSize(modifiedKv, true)
+        val p = tc.label_paint(modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT), labelColor(modifiedKv, isKeyDown, false), textSize)
+        canvas.drawText(modifiedKv.getString(), x, (keyH - p.ascent() - p.descent()) / 2f + y, p)
+    }
+
+    private fun drawSubLabel(canvas: Canvas, kv: KeyValue, x: Float, y: Float, keyW: Float, keyH: Float, sub_index: Int, isKeyDown: Boolean, tc: Theme.Computed.Key) {
+        val a = LABEL_POSITION_H[sub_index]
+        val v = LABEL_POSITION_V[sub_index]
+        val modifiedKv = modifyKey(kv, _mods) ?: return
+        val textSize = scaleTextSize(modifiedKv, false)
+        val p = tc.sublabel_paint(modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT), labelColor(modifiedKv, isKeyDown, true), textSize, a)
+        val subPadding = _config.keyPadding
+        var yPos = y
+        var xPos = x
+
+        yPos += when (v) {
+            Vertical.CENTER -> (keyH - p.ascent() - p.descent()) / 2f
+            Vertical.TOP -> subPadding - p.ascent()
+            Vertical.BOTTOM -> keyH - subPadding - p.descent()
+        }
+
+        xPos += when (a) {
+            Paint.Align.CENTER -> keyW / 2f
+            Paint.Align.LEFT -> subPadding
+            Paint.Align.RIGHT -> keyW - subPadding
+        }
+
+        val label = modifiedKv.getString()
+        var label_len = label.length
+        // Limit the label of string keys to 3 characters
+        if (label_len > 3 && modifiedKv.getKind() == KeyValue.Kind.String)
+            label_len = 3
+        canvas.drawText(label, 0, label_len, xPos, yPos, p)
+    }
+
+    private fun drawIndication(canvas: Canvas, k: KeyboardData.Key, x: Float, y: Float, keyW: Float, keyH: Float, tc: Theme.Computed) {
+        if (k.indication.isNullOrEmpty())
+            return
+        val p = tc.indication_paint
+        p.textSize = _subLabelSize
+        canvas.drawText(k.indication, 0, k.indication.length,
+            x + keyW / 2f, (keyH - p.ascent() - p.descent()) * 4 / 5 + y, p)
+    }
+
+    private fun scaleTextSize(k: KeyValue, main_label: Boolean): Float {
+        val smaller_font = if (k.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT)) 0.75f else 1f
+        val label_size = if (main_label) _mainLabelSize else _subLabelSize
+        return label_size * smaller_font
+    }
+
+    fun getTheme(): Theme {
+        return _theme
+    }
+
+    /**
+     * Find the key at the given coordinates
+     */
+    private fun getKeyAt(x: Float, y: Float): KeyboardData.Key? {
+        val keyboard = _keyboard ?: return null
+        val tc = _tc ?: return null
+
+        var yPos = tc.margin_top
+        for (row in keyboard.rows) {
+            yPos += row.shift * tc.row_height
+            val keyH = row.height * tc.row_height - tc.vertical_margin
+
+            // Check if y coordinate is within this row
+            if (y >= yPos && y < yPos + keyH) {
+                var xPos = _marginLeft + tc.margin_left
+                for (key in row.keys) {
+                    xPos += key.shift * _keyWidth
+                    val keyW = _keyWidth * key.width - tc.horizontal_margin
+
+                    // Check if x coordinate is within this key
+                    if (x >= xPos && x < xPos + keyW) {
+                        return key
+                    }
+                    xPos += _keyWidth * key.width
+                }
+                break // Y is in this row but X didn't match any key
+            }
+            yPos += row.height * tc.row_height
+        }
+        return null
+    }
+
+    /**
+     * CGR Prediction Support Methods
+     */
+
+    /**
+     * Store CGR predictions and immediately display them
+     */
+    private fun storeCGRPredictions(predictions: List<String>?, isFinal: Boolean) {
+        _cgrPredictions.clear()
+        if (predictions != null) {
+            _cgrPredictions.addAll(predictions)
+        }
+        _cgrFinalPredictions = isFinal
+
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            android.util.Log.d("Keyboard2View", "Stored ${_cgrPredictions.size} CGR predictions (final: $isFinal): $_cgrPredictions")
+        }
+
+        // Immediately trigger display update
+        post {
+            try {
+                // Find the parent CleverKeysService service and update predictions
+                var context: Context = getContext()
+                while (context is ContextWrapper && context !is CleverKeysService) {
+                    context = context.baseContext
+                }
+                if (context is CleverKeysService) {
+                    context.checkCGRPredictions()
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("Keyboard2View", "Failed to update CGR predictions: ${e.message}")
+            }
         }
     }
 
     /**
-     * Clip canvas and draw border segment. This allows calling drawRoundRect
-     * several times with the same rect but different paint colors (matches Java).
+     * Clear CGR predictions
      */
-    private fun drawBorder(
-        canvas: Canvas,
-        clipLeft: Float,
-        clipTop: Float,
-        clipRight: Float,
-        clipBottom: Float,
-        paint: Paint,
-        tc: Theme.Computed.Key
-    ) {
-        val r = tc.borderRadius
-        canvas.save()
-        canvas.clipRect(clipLeft, clipTop, clipRight, clipBottom)
-        canvas.drawRoundRect(tmpRect, r, r, paint)
-        canvas.restore()
+    private fun clearCGRPredictions() {
+        _cgrPredictions.clear()
+        _cgrFinalPredictions = false
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            android.util.Log.d("Keyboard2View", "Cleared CGR predictions")
+        }
     }
 
-    private fun drawLabel(
-        canvas: Canvas,
-        keyValue: KeyValue,
-        x: Float,
-        y: Float,
-        keyHeight: Float,
-        isPressed: Boolean,
-        tc: Theme.Computed.Key
-    ) {
-        // Apply modifiers like shift/compose
-        val modifiedKey = modifyKey(keyValue, pointers.getModifiers()) ?: return
-
-        val textSize = scaleTextSize(modifiedKey, true)
-        val color = labelColor(modifiedKey, isPressed, false)
-        val paint = tc.labelPaint(modifiedKey.hasFlag(KeyValue.Flag.KEY_FONT), color, textSize)
-
-        // Proper vertical centering using paint metrics
-        val textY = (keyHeight - paint.ascent() - paint.descent()) / 2f + y
-
-        canvas.drawText(modifiedKey.displayString, x, textY, paint)
+    /**
+     * Get current CGR predictions (for access by keyboard service)
+     */
+    fun getCGRPredictions(): List<String> {
+        return ArrayList(_cgrPredictions)
     }
 
-    enum class Vertical { TOP, CENTER, BOTTOM }
+    /**
+     * Check if CGR predictions are final (persisting)
+     */
+    fun areCGRPredictionsFinal(): Boolean {
+        return _cgrFinalPredictions
+    }
 
     companion object {
+        private var _currentWhat = 0
+        private val _tmpRect = RectF()
+
+        /** Horizontal and vertical position of the 9 indexes. */
         val LABEL_POSITION_H = arrayOf(
             Paint.Align.CENTER, Paint.Align.LEFT, Paint.Align.RIGHT, Paint.Align.LEFT,
             Paint.Align.RIGHT, Paint.Align.LEFT, Paint.Align.RIGHT,
@@ -820,142 +938,5 @@ class Keyboard2View @JvmOverloads constructor(
             Vertical.BOTTOM, Vertical.CENTER, Vertical.CENTER, Vertical.TOP,
             Vertical.BOTTOM
         )
-    }
-
-    private fun drawSubLabel(
-        canvas: Canvas,
-        keyValue: KeyValue,
-        x: Float,
-        y: Float,
-        keyWidth: Float,
-        keyHeight: Float,
-        subIndex: Int,
-        isPressed: Boolean,
-        tc: Theme.Computed.Key
-    ) {
-        val align = LABEL_POSITION_H[subIndex]
-        val vertical = LABEL_POSITION_V[subIndex]
-
-        // Apply modifiers
-        val modifiedKey = modifyKey(keyValue, pointers.getModifiers()) ?: return
-
-        val textSize = scaleTextSize(modifiedKey, false)
-        val color = labelColor(modifiedKey, isPressed, true)
-        val paint = tc.subLabelPaint(
-            modifiedKey.hasFlag(KeyValue.Flag.KEY_FONT),
-            color,
-            textSize,
-            align
-        )
-
-        val subPadding = config?.keyPadding ?: 5f
-
-        // Calculate vertical position
-        var textY = y
-        textY += when (vertical) {
-            Vertical.CENTER -> (keyHeight - paint.ascent() - paint.descent()) / 2f
-            Vertical.TOP -> subPadding - paint.ascent()
-            Vertical.BOTTOM -> keyHeight - subPadding - paint.descent()
-        }
-
-        // Calculate horizontal position
-        var textX = x
-        textX += when (align) {
-            Paint.Align.CENTER -> keyWidth / 2f
-            Paint.Align.LEFT -> subPadding
-            Paint.Align.RIGHT -> keyWidth - subPadding
-            else -> keyWidth / 2f
-        }
-
-        // Limit string keys to 3 characters
-        val label = modifiedKey.displayString
-        val labelLen = if (label.length > 3 && modifiedKey is KeyValue.StringKey) 3 else label.length
-
-        canvas.drawText(label, 0, labelLen, textX, textY, paint)
-    }
-
-    /**
-     * Draw key indication text (matches Java behavior).
-     * This draws the indication string at 4/5 of key height, used for hints.
-     */
-    private fun drawIndication(
-        canvas: Canvas,
-        key: KeyboardData.Key,
-        x: Float,
-        y: Float,
-        keyWidth: Float,
-        keyHeight: Float,
-        tc: Theme.Computed
-    ) {
-        // Draw indication text if present (matches Java)
-        val indication = key.indication
-        if (indication.isNullOrEmpty()) return
-
-        val paint = tc.indicationPaint
-        paint.textSize = subLabelSize
-        canvas.drawText(
-            indication,
-            0,
-            indication.length,
-            x + keyWidth / 2f,
-            (keyHeight - paint.ascent() - paint.descent()) * 4f / 5f + y,
-            paint
-        )
-    }
-
-    private fun vibrate() {
-        val cfg = config ?: return
-        // Use VibratorCompat for proper vibration handling (matches Java)
-        VibratorCompat.vibrate(this, cfg)
-    }
-
-    private fun scaleTextSize(keyValue: KeyValue, isMainLabel: Boolean): Float {
-        val smallerFont = if (keyValue.hasFlag(KeyValue.Flag.SMALLER_FONT)) 0.75f else 1f
-        val labelSize = if (isMainLabel) mainLabelSize else subLabelSize
-        return labelSize * smallerFont
-    }
-
-    private fun labelColor(keyValue: KeyValue, isKeyDown: Boolean, isSubLabel: Boolean): Int {
-        if (isKeyDown) {
-            val flags = pointers.getKeyFlags(keyValue)
-            if (flags != -1) {
-                if ((flags and Pointers.FLAG_P_LOCKED) != 0) {
-                    return keyboardColors?.keyLocked?.toArgb() ?: android.graphics.Color.YELLOW
-                }
-                return keyboardColors?.keyActivated?.toArgb() ?: android.graphics.Color.rgb(255, 165, 0)
-            }
-        }
-
-        if (keyValue.hasFlag(KeyValue.Flag.SECONDARY) || keyValue.hasFlag(KeyValue.Flag.GREYED)) {
-            if (keyValue.hasFlag(KeyValue.Flag.GREYED)) {
-                // Use secondary label with lower alpha for greyed keys
-                return keyboardColors?.keySecondaryLabel?.copy(alpha = 0.5f)?.toArgb()
-                    ?: android.graphics.Color.GRAY
-            }
-            return keyboardColors?.keySecondaryLabel?.toArgb() ?: android.graphics.Color.GRAY
-        }
-
-        return if (isSubLabel) {
-            keyboardColors?.keySubLabel?.toArgb() ?: android.graphics.Color.LTGRAY
-        } else {
-            keyboardColors?.keyLabel?.toArgb() ?: android.graphics.Color.WHITE
-        }
-    }
-
-    override fun modifyKey(keyValue: KeyValue?, modifiers: Pointers.Modifiers): KeyValue {
-        return if (keyValue != null) {
-            modifyKeyInternal(keyValue, modifiers)
-        } else {
-            KeyValue.CharKey(' ')
-        }
-    }
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        scope.cancel()
-
-        // Cleanup AnimationManager (Phase 2.2)
-        animationManager?.release()
-        animationManager = null
     }
 }
