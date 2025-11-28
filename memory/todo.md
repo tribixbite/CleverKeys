@@ -1,9 +1,37 @@
 # CleverKeys Development Status & Next Steps
 
-**⚠️ THIS FILE REPLACED - See Current Status Below**
+**Last Updated**: 2025-11-28
+**Status**: ✅ **KEYBOARD WORKING** (Migrated from Unexpected-Keyboard v1.32.962)
 
-**Last Updated**: 2025-11-21
-**Status**: ✅ **KEYBOARD WORKING** (All critical bugs fixed, APK rebuilt)
+---
+
+## 🎉 MAJOR MILESTONE: UK Source Migration Complete
+
+**Date**: November 28, 2025
+
+### What Changed
+The CleverKeys Kotlin source was replaced with a clean port from Unexpected-Keyboard:
+- All source files migrated from `juloo.keyboard2` → `tribixbite.keyboard2`
+- Main service renamed: `Keyboard2` → `CleverKeysService`
+- 135+ Kotlin files copied with namespace fixes
+- Fixed duplicate onnx file declarations
+- Added missing dependencies (material, viewpager2, recyclerview)
+- Archived incompatible CleverKeys-specific files to `archive/cleverkeys-kt/`
+
+### Current Status
+- ✅ **Build**: Successful
+- ✅ **Installation**: APK installed successfully
+- ✅ **IME Selection**: CleverKeysService is active default keyboard
+- ✅ **Keyboard Display**: `mInputShown=true` confirmed via dumpsys
+- ⏳ **Visual Test**: Pending (ADB screenshots blocked by Samsung security)
+
+### Next Steps
+1. Manually verify keyboard displays correctly
+2. Test basic typing functionality
+3. Test swipe typing functionality
+4. Review archived CleverKeys features for potential reintegration
+
+---
 
 ---
 
