@@ -295,9 +295,9 @@
     <item name="clipboard_divider_color">?colorLabel</item>
     <item name="clipboard_divider_height">2dp</item>
   </style>
-  <!-- CleverKeys signature theme: Jewel Purple on Silver -->
+  <!-- CleverKeys Light theme: Silver keys with purple accents -->
   <style name="Jewel" parent="BaseTheme">
-    <item name="android:isLightTheme">false</item>
+    <item name="android:isLightTheme">true</item>
     <item name="colorKeyboard">#C0C0C0</item>
     <item name="colorKey">#D8D8D8</item>
     <item name="colorKeyActivated">#9B59B6</item>
@@ -315,6 +315,30 @@
     <item name="emoji_button_bg">#9B59B6</item>
     <item name="emoji_color">#FFFFFF</item>
     <item name="clipboard_divider_color">#9B59B6</item>
+  </style>
+  <!-- Alias for CleverKeys Light -->
+  <style name="CleverKeysLight" parent="Jewel"/>
+
+  <!-- CleverKeys Dark theme: Deep jewel purple with silver text (DEFAULT) -->
+  <style name="CleverKeysDark" parent="BaseTheme">
+    <item name="android:isLightTheme">false</item>
+    <item name="colorKeyboard">#1E1030</item>
+    <item name="colorKey">#2A1845</item>
+    <item name="colorKeyActivated">#4A2070</item>
+    <item name="keyBorderWidth">0dp</item>
+    <item name="keyBorderWidthActivated">1dp</item>
+    <item name="keyBorderColorLeft">#3D2060</item>
+    <item name="keyBorderColorTop">#3D2060</item>
+    <item name="keyBorderColorRight">#3D2060</item>
+    <item name="keyBorderColorBottom">#3D2060</item>
+    <item name="colorLabel">#C0C0C0</item>
+    <item name="colorLabelActivated">#E8E8E8</item>
+    <item name="colorLabelLocked">#9B59B6</item>
+    <item name="colorSubLabel">#8A8A8A</item>
+    <item name="keyBorderRadius">4dp</item>
+    <item name="emoji_button_bg">#2A1845</item>
+    <item name="emoji_color">#C0C0C0</item>
+    <item name="clipboard_divider_color">#4A2070</item>
   </style>
 
   <!-- Emoji group button style -->

@@ -128,6 +128,13 @@ class Config private constructor(
     @JvmField var slider_speed_smoothing = 0.7f // Smoothing factor for slider speed (0.0-1.0)
     @JvmField var slider_speed_max = 4.0f // Maximum slider speed multiplier
 
+    // Swipe trail appearance
+    @JvmField var swipe_trail_enabled = true // Show swipe trail during gesture
+    @JvmField var swipe_trail_effect = "glow" // Trail effect: none, solid, glow, rainbow, fade
+    @JvmField var swipe_trail_color = 0xFF9B59B6.toInt() // Trail color (default: jewel purple)
+    @JvmField var swipe_trail_width = 8.0f // Trail stroke width in dp
+    @JvmField var swipe_trail_glow_radius = 12.0f // Glow effect radius in dp
+
     // Neural swipe prediction configuration
     @JvmField var neural_prediction_enabled = false
     @JvmField var neural_beam_width = 0
@@ -235,7 +242,7 @@ class Config private constructor(
         customBorderLineWidth = get_dip_pref(dm, "custom_border_line_width", 0f)
         screenHeightPixels = dm.heightPixels
         horizontal_margin = get_dip_pref_oriented(dm, "horizontal_margin", 3f, 28f)
-        double_tap_lock_shift = _prefs.getBoolean("lock_double_tap", false)
+        double_tap_lock_shift = _prefs.getBoolean("lock_double_tap", true)
         characterSize = safeGetFloat(_prefs, "character_size", 1.18f) * characterSizeScale
         theme = getThemeId(res, _prefs.getString("theme", "") ?: "")
         autocapitalisation = _prefs.getBoolean("autocapitalisation", true)
@@ -336,6 +343,13 @@ class Config private constructor(
         // Slider speed configuration
         slider_speed_smoothing = safeGetFloat(_prefs, "slider_speed_smoothing", 0.54f)
         slider_speed_max = safeGetFloat(_prefs, "slider_speed_max", 4.0f)
+
+        // Swipe trail appearance
+        swipe_trail_enabled = _prefs.getBoolean("swipe_trail_enabled", true)
+        swipe_trail_effect = _prefs.getString("swipe_trail_effect", "glow") ?: "glow"
+        swipe_trail_color = _prefs.getInt("swipe_trail_color", 0xFF9B59B6.toInt())
+        swipe_trail_width = safeGetFloat(_prefs, "swipe_trail_width", 8.0f)
+        swipe_trail_glow_radius = safeGetFloat(_prefs, "swipe_trail_glow_radius", 12.0f)
 
         neural_prediction_enabled = _prefs.getBoolean("neural_prediction_enabled", true)
         neural_beam_width = safeGetInt(_prefs, "neural_beam_width", 3)
@@ -458,10 +472,12 @@ class Config private constructor(
             "pine" -> R.style.Pine
             "epaperblack" -> R.style.ePaperBlack
             "jewel" -> R.style.Jewel
+            "cleverkeysdark" -> R.style.CleverKeysDark
+            "cleverkeyslight" -> R.style.CleverKeysLight
             else -> {
-                // Default to Jewel theme for CleverKeys
+                // Default to CleverKeys Dark theme
                 if (theme_name.isEmpty()) {
-                    R.style.Jewel
+                    R.style.CleverKeysDark
                 } else if (night_mode and Configuration.UI_MODE_NIGHT_NO != 0)
                     R.style.Light
                 else

@@ -142,9 +142,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var swipeTop5000Boost by mutableStateOf(1.0f)
     private var swipeRareWordsPenalty by mutableStateOf(0.75f)
 
+    // Swipe trail appearance settings
+    private var swipeTrailEnabled by mutableStateOf(true)
+    private var swipeTrailEffect by mutableStateOf("glow")
+    private var swipeTrailColor by mutableStateOf(0xFF9B59B6.toInt()) // Jewel purple
+    private var swipeTrailWidth by mutableStateOf(8.0f)
+    private var swipeTrailGlowRadius by mutableStateOf(12.0f)
+
     // Section expanded states
     private var neuralSectionExpanded by mutableStateOf(true)
     private var appearanceSectionExpanded by mutableStateOf(false)
+    private var swipeTrailSectionExpanded by mutableStateOf(false)
     private var inputSectionExpanded by mutableStateOf(false)
     private var swipeCorrectionsSectionExpanded by mutableStateOf(false)
     private var accessibilitySectionExpanded by mutableStateOf(false)
@@ -527,29 +535,30 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 expanded = appearanceSectionExpanded,
                 onExpandChange = { appearanceSectionExpanded = it }
             ) {
-                // Full theme dropdown with all 18 themes
+                // Full theme dropdown with all themes including CleverKeys branded
                 SettingsDropdown(
                     title = stringResource(R.string.settings_theme_title),
                     description = stringResource(R.string.settings_theme_desc),
                     options = listOf(
-                        stringResource(R.string.pref_theme_e_jewel),       // 0 - default
-                        stringResource(R.string.pref_theme_e_system),      // 1
-                        stringResource(R.string.pref_theme_e_dark),        // 2
-                        stringResource(R.string.pref_theme_e_light),       // 3
-                        stringResource(R.string.pref_theme_e_black),       // 4
-                        stringResource(R.string.pref_theme_e_altblack),    // 5
-                        stringResource(R.string.pref_theme_e_white),       // 6
-                        stringResource(R.string.pref_theme_e_epaper),      // 7
-                        stringResource(R.string.pref_theme_e_epaperblack), // 8
-                        stringResource(R.string.pref_theme_e_desert),      // 9
-                        stringResource(R.string.pref_theme_e_jungle),      // 10
-                        stringResource(R.string.pref_theme_e_monet),       // 11
-                        stringResource(R.string.pref_theme_e_monetlight),  // 12
-                        stringResource(R.string.pref_theme_e_monetdark),   // 13
-                        stringResource(R.string.pref_theme_e_rosepine),    // 14
-                        stringResource(R.string.pref_theme_e_everforestlight), // 15
-                        stringResource(R.string.pref_theme_e_cobalt),      // 16
-                        stringResource(R.string.pref_theme_e_pine)         // 17
+                        "CleverKeys Dark",      // 0 - NEW default
+                        "CleverKeys Light",     // 1 - renamed from Jewel
+                        stringResource(R.string.pref_theme_e_system),      // 2
+                        stringResource(R.string.pref_theme_e_dark),        // 3
+                        stringResource(R.string.pref_theme_e_light),       // 4
+                        stringResource(R.string.pref_theme_e_black),       // 5
+                        stringResource(R.string.pref_theme_e_altblack),    // 6
+                        stringResource(R.string.pref_theme_e_white),       // 7
+                        stringResource(R.string.pref_theme_e_epaper),      // 8
+                        stringResource(R.string.pref_theme_e_epaperblack), // 9
+                        stringResource(R.string.pref_theme_e_desert),      // 10
+                        stringResource(R.string.pref_theme_e_jungle),      // 11
+                        stringResource(R.string.pref_theme_e_monet),       // 12
+                        stringResource(R.string.pref_theme_e_monetlight),  // 13
+                        stringResource(R.string.pref_theme_e_monetdark),   // 14
+                        stringResource(R.string.pref_theme_e_rosepine),    // 15
+                        stringResource(R.string.pref_theme_e_everforestlight), // 16
+                        stringResource(R.string.pref_theme_e_cobalt),      // 17
+                        stringResource(R.string.pref_theme_e_pine)         // 18
                     ),
                     selectedIndex = getThemeIndexFromName(currentThemeName),
                     onSelectionChange = { index ->
@@ -763,6 +772,119 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             saveSetting("custom_border_line_width", customBorderLineWidth)
                         },
                         displayValue = "${customBorderLineWidth}dp"
+                    )
+                }
+            }
+
+            // Swipe Trail Section (Collapsible)
+            CollapsibleSettingsSection(
+                title = "Swipe Trail",
+                expanded = swipeTrailSectionExpanded,
+                onExpandChange = { swipeTrailSectionExpanded = it }
+            ) {
+                SettingsSwitch(
+                    title = "Enable Swipe Trail",
+                    description = "Show visual trail while swiping across keys",
+                    checked = swipeTrailEnabled,
+                    onCheckedChange = {
+                        swipeTrailEnabled = it
+                        saveSetting("swipe_trail_enabled", it)
+                    }
+                )
+
+                if (swipeTrailEnabled) {
+                    // Trail effect dropdown
+                    SettingsDropdown(
+                        title = "Trail Effect",
+                        description = "Visual style of the swipe trail",
+                        options = listOf("Glow", "Solid", "Fade", "Rainbow", "None"),
+                        selectedIndex = when (swipeTrailEffect) {
+                            "glow" -> 0
+                            "solid" -> 1
+                            "fade" -> 2
+                            "rainbow" -> 3
+                            "none" -> 4
+                            else -> 0
+                        },
+                        onSelectionChange = { index ->
+                            swipeTrailEffect = when (index) {
+                                0 -> "glow"
+                                1 -> "solid"
+                                2 -> "fade"
+                                3 -> "rainbow"
+                                4 -> "none"
+                                else -> "glow"
+                            }
+                            saveSetting("swipe_trail_effect", swipeTrailEffect)
+                        }
+                    )
+
+                    // Trail width
+                    SettingsSlider(
+                        title = "Trail Width",
+                        description = "Thickness of the swipe trail",
+                        value = swipeTrailWidth,
+                        valueRange = 2f..20f,
+                        steps = 18,
+                        onValueChange = {
+                            swipeTrailWidth = it
+                            saveSetting("swipe_trail_width", swipeTrailWidth)
+                        },
+                        displayValue = "%.0fdp".format(swipeTrailWidth)
+                    )
+
+                    // Glow radius (only for glow effect)
+                    if (swipeTrailEffect == "glow") {
+                        SettingsSlider(
+                            title = "Glow Radius",
+                            description = "Size of the glow effect around trail",
+                            value = swipeTrailGlowRadius,
+                            valueRange = 4f..30f,
+                            steps = 26,
+                            onValueChange = {
+                                swipeTrailGlowRadius = it
+                                saveSetting("swipe_trail_glow_radius", swipeTrailGlowRadius)
+                            },
+                            displayValue = "%.0fdp".format(swipeTrailGlowRadius)
+                        )
+                    }
+
+                    // Color picker (simple preset colors)
+                    SettingsDropdown(
+                        title = "Trail Color",
+                        description = "Color of the swipe trail",
+                        options = listOf(
+                            "Jewel Purple",
+                            "Electric Blue",
+                            "Emerald Green",
+                            "Sunset Orange",
+                            "Ruby Red",
+                            "Silver",
+                            "Gold"
+                        ),
+                        selectedIndex = when (swipeTrailColor) {
+                            0xFF9B59B6.toInt() -> 0  // Jewel Purple
+                            0xFF3498DB.toInt() -> 1  // Electric Blue
+                            0xFF2ECC71.toInt() -> 2  // Emerald Green
+                            0xFFF39C12.toInt() -> 3  // Sunset Orange
+                            0xFFE74C3C.toInt() -> 4  // Ruby Red
+                            0xFFC0C0C0.toInt() -> 5  // Silver
+                            0xFFFFD700.toInt() -> 6  // Gold
+                            else -> 0
+                        },
+                        onSelectionChange = { index ->
+                            swipeTrailColor = when (index) {
+                                0 -> 0xFF9B59B6.toInt()  // Jewel Purple
+                                1 -> 0xFF3498DB.toInt()  // Electric Blue
+                                2 -> 0xFF2ECC71.toInt()  // Emerald Green
+                                3 -> 0xFFF39C12.toInt()  // Sunset Orange
+                                4 -> 0xFFE74C3C.toInt()  // Ruby Red
+                                5 -> 0xFFC0C0C0.toInt()  // Silver
+                                6 -> 0xFFFFD700.toInt()  // Gold
+                                else -> 0xFF9B59B6.toInt()
+                            }
+                            saveSetting("swipe_trail_color", swipeTrailColor)
+                        }
                     )
                 }
             }
@@ -1645,50 +1767,52 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     /** Convert theme name to dropdown index (matches pref_theme_values order) */
     private fun getThemeIndexFromName(themeName: String): Int {
         return when (themeName) {
-            "jewel" -> 0
-            "system" -> 1
-            "dark" -> 2
-            "light" -> 3
-            "black" -> 4
-            "altblack" -> 5
-            "white" -> 6
-            "epaper" -> 7
-            "epaperblack" -> 8
-            "desert" -> 9
-            "jungle" -> 10
-            "monet" -> 11
-            "monetlight" -> 12
-            "monetdark" -> 13
-            "rosepine" -> 14
-            "everforestlight" -> 15
-            "cobalt" -> 16
-            "pine" -> 17
-            else -> 0  // Default to jewel
+            "cleverkeysdark", "" -> 0  // CleverKeys Dark is default
+            "cleverkeyslight", "jewel" -> 1  // CleverKeys Light (formerly Jewel)
+            "system" -> 2
+            "dark" -> 3
+            "light" -> 4
+            "black" -> 5
+            "altblack" -> 6
+            "white" -> 7
+            "epaper" -> 8
+            "epaperblack" -> 9
+            "desert" -> 10
+            "jungle" -> 11
+            "monet" -> 12
+            "monetlight" -> 13
+            "monetdark" -> 14
+            "rosepine" -> 15
+            "everforestlight" -> 16
+            "cobalt" -> 17
+            "pine" -> 18
+            else -> 0  // Default to CleverKeys Dark
         }
     }
 
     /** Convert dropdown index back to theme name string */
     private fun getThemeNameFromIndex(index: Int): String {
         return when (index) {
-            0 -> "jewel"
-            1 -> "system"
-            2 -> "dark"
-            3 -> "light"
-            4 -> "black"
-            5 -> "altblack"
-            6 -> "white"
-            7 -> "epaper"
-            8 -> "epaperblack"
-            9 -> "desert"
-            10 -> "jungle"
-            11 -> "monet"
-            12 -> "monetlight"
-            13 -> "monetdark"
-            14 -> "rosepine"
-            15 -> "everforestlight"
-            16 -> "cobalt"
-            17 -> "pine"
-            else -> "jewel"
+            0 -> "cleverkeysdark"
+            1 -> "cleverkeyslight"
+            2 -> "system"
+            3 -> "dark"
+            4 -> "light"
+            5 -> "black"
+            6 -> "altblack"
+            7 -> "white"
+            8 -> "epaper"
+            9 -> "epaperblack"
+            10 -> "desert"
+            11 -> "jungle"
+            12 -> "monet"
+            13 -> "monetlight"
+            14 -> "monetdark"
+            15 -> "rosepine"
+            16 -> "everforestlight"
+            17 -> "cobalt"
+            18 -> "pine"
+            else -> "cleverkeysdark"
         }
     }
 
@@ -1772,7 +1896,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         keyRepeatEnabled = prefs.getBoolean("keyrepeat_enabled", true)
 
         // Behavior settings
-        doubleTapLockShift = prefs.getBoolean("lock_double_tap", false)
+        doubleTapLockShift = prefs.getBoolean("lock_double_tap", true)
         switchInputImmediate = prefs.getBoolean("switch_input_immediate", false)
 
         // Number row and numpad settings
@@ -1809,6 +1933,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         swipeCommonWordsBoost = Config.safeGetFloat(prefs, "swipe_common_words_boost", 1.3f)
         swipeTop5000Boost = Config.safeGetFloat(prefs, "swipe_top5000_boost", 1.0f)
         swipeRareWordsPenalty = Config.safeGetFloat(prefs, "swipe_rare_words_penalty", 0.75f)
+
+        // Swipe trail appearance settings
+        swipeTrailEnabled = prefs.getBoolean("swipe_trail_enabled", true)
+        swipeTrailEffect = prefs.getString("swipe_trail_effect", "glow") ?: "glow"
+        swipeTrailColor = prefs.getSafeInt("swipe_trail_color", 0xFF9B59B6.toInt())
+        swipeTrailWidth = prefs.getSafeFloat("swipe_trail_width", 8.0f)
+        swipeTrailGlowRadius = prefs.getSafeFloat("swipe_trail_glow_radius", 12.0f)
     }
 
     private fun saveSetting(key: String, value: Any) {

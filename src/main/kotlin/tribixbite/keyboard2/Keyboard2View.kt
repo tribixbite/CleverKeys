@@ -129,14 +129,49 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     private fun initSwipeTrailPaint() {
+        val config = _config
+        val density = resources.displayMetrics.density
+
         _swipeTrailPaint = Paint().apply {
-            color = -0xfe68932 // 0xFF1976D2 - Default blue color
-            strokeWidth = 3.0f * resources.displayMetrics.density
+            color = config?.swipe_trail_color ?: 0xFF9B59B6.toInt()
+            strokeWidth = (config?.swipe_trail_width ?: 8.0f) * density
             style = Paint.Style.STROKE
             isAntiAlias = true
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
-            alpha = 180 // Semi-transparent
+
+            // Apply effect based on setting
+            when (config?.swipe_trail_effect ?: "glow") {
+                "glow" -> {
+                    // GPU-efficient glow using blur mask filter
+                    val glowRadius = (config?.swipe_trail_glow_radius ?: 12.0f) * density
+                    maskFilter = android.graphics.BlurMaskFilter(
+                        glowRadius,
+                        android.graphics.BlurMaskFilter.Blur.NORMAL
+                    )
+                    alpha = 220 // Slightly more opaque for glow
+                }
+                "solid" -> {
+                    maskFilter = null
+                    alpha = 255 // Fully opaque
+                }
+                "fade" -> {
+                    maskFilter = null
+                    alpha = 140 // More transparent
+                }
+                "rainbow" -> {
+                    // Rainbow uses shader - will cycle colors during draw
+                    maskFilter = null
+                    alpha = 200
+                }
+                "none" -> {
+                    alpha = 0 // Invisible
+                }
+                else -> {
+                    maskFilter = null
+                    alpha = 180
+                }
+            }
         }
     }
 
@@ -720,8 +755,12 @@ class Keyboard2View @JvmOverloads constructor(
     /**
      * Draw swipe trail without allocations.
      * Reuses _swipeTrailPath and directly accesses swipe path to avoid copying.
+     * Supports glow, solid, fade, rainbow, and none effects.
      */
     private fun drawSwipeTrail(canvas: Canvas) {
+        // Check if trail is enabled
+        if (_config?.swipe_trail_enabled == false) return
+
         val recognizer = _swipeRecognizer ?: return
         val swipePath = recognizer.getSwipePath()
         if (swipePath.size < 2)
@@ -738,7 +777,15 @@ class Keyboard2View @JvmOverloads constructor(
             _swipeTrailPath.lineTo(point.x, point.y)
         }
 
-        _swipeTrailPaint?.let { canvas.drawPath(_swipeTrailPath, it) }
+        val paint = _swipeTrailPaint ?: return
+
+        // Handle rainbow effect with cycling colors
+        if (_config?.swipe_trail_effect == "rainbow") {
+            val hue = (System.currentTimeMillis() % 3600) / 10f // 0-360 cycling
+            paint.color = android.graphics.Color.HSVToColor(200, floatArrayOf(hue, 0.8f, 1.0f))
+        }
+
+        canvas.drawPath(_swipeTrailPath, paint)
     }
 
     override fun onDetachedFromWindow() {
