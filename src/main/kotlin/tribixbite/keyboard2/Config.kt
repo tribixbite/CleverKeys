@@ -61,7 +61,7 @@ class Config private constructor(
     @JvmField var clipboard_max_item_size_kb = 0
     @JvmField var clipboard_limit_type: String? = null
     @JvmField var clipboard_size_limit_mb = 0
-    @JvmField var swipe_typing_enabled = false
+    @JvmField var swipe_typing_enabled = true  // Default to enabled for CleverKeys
     @JvmField var swipe_show_debug_scores = false
     @JvmField var word_prediction_enabled = false
     @JvmField var suggestion_bar_opacity = 0
@@ -265,7 +265,7 @@ class Config private constructor(
             10
         }
 
-        swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", false)
+        swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", true)
         swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", false)
         word_prediction_enabled = _prefs.getBoolean("word_prediction_enabled", false)
         suggestion_bar_opacity = safeGetInt(_prefs, "suggestion_bar_opacity", 90)

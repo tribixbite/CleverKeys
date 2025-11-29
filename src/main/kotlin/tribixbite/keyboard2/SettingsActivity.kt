@@ -9,6 +9,7 @@ import android.widget.*
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -67,6 +68,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var autoCapitalizationEnabled by mutableStateOf(true)
 
     // Phase 1: Expose existing Config.kt settings
+    private var swipeTypingEnabled by mutableStateOf(true)  // Master switch for swipe typing (default ON for CleverKeys)
     private var wordPredictionEnabled by mutableStateOf(false)
     private var suggestionBarOpacity by mutableStateOf(90)
     private var autoCorrectEnabled by mutableStateOf(true)
@@ -183,6 +185,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         // Handle preference changes for reactive updates
         when (key) {
+            "swipe_typing_enabled" -> {
+                swipeTypingEnabled = prefs.getBoolean(key, false)
+            }
             "neural_prediction_enabled" -> {
                 neuralPredictionEnabled = prefs.getBoolean(key, true)
             }
@@ -365,17 +370,30 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Neural Prediction Section
             SettingsSection(stringResource(R.string.settings_section_neural)) {
+                // Master switch for swipe typing
                 SettingsSwitch(
-                    title = stringResource(R.string.settings_neural_enable_title),
-                    description = stringResource(R.string.settings_neural_enable_desc),
-                    checked = neuralPredictionEnabled,
+                    title = "Enable Swipe Typing",
+                    description = "Swipe across keys to type words. Required for neural prediction.",
+                    checked = swipeTypingEnabled,
                     onCheckedChange = {
-                        neuralPredictionEnabled = it
-                        saveSetting("neural_prediction_enabled", it)
+                        swipeTypingEnabled = it
+                        saveSetting("swipe_typing_enabled", it)
                     }
                 )
 
-                if (neuralPredictionEnabled) {
+                if (swipeTypingEnabled) {
+                    SettingsSwitch(
+                        title = stringResource(R.string.settings_neural_enable_title),
+                        description = stringResource(R.string.settings_neural_enable_desc),
+                        checked = neuralPredictionEnabled,
+                        onCheckedChange = {
+                            neuralPredictionEnabled = it
+                            saveSetting("neural_prediction_enabled", it)
+                        }
+                    )
+                }
+
+                if (swipeTypingEnabled && neuralPredictionEnabled) {
                     SettingsSlider(
                         title = stringResource(R.string.settings_neural_beam_width_title),
                         description = stringResource(R.string.settings_neural_beam_width_desc),
@@ -1129,7 +1147,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         onCheckedChange: (Boolean) -> Unit
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onCheckedChange(!checked) }
+                .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1323,6 +1344,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     private fun loadCurrentSettings() {
+        // Swipe typing master switch
+        swipeTypingEnabled = prefs.getBoolean("swipe_typing_enabled", true)
+
         // Neural prediction settings
         neuralPredictionEnabled = prefs.getBoolean("neural_prediction_enabled", true)
         beamWidth = prefs.getSafeInt("neural_beam_width", 8)
