@@ -71,7 +71,7 @@ class ComposeKeyTest {
         assertEquals(apply(" ", state), KeyValue.getKeyByName("nbsp"))
 
         // Named 1-char key with SMALLER_FONT flag
-        assertEquals(apply("ய", state), KeyValue.makeStringKey("௰", KeyValue.Flag.SMALLER_FONT))
+        assertEquals(apply("ய", state), KeyValue.makeStringKey("௰", KeyValue.FLAG_SMALLER_FONT))
     }
 
     /**

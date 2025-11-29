@@ -64,30 +64,30 @@ object KeyModifier {
             KeyValue.Modifier.FN -> applyFn(k)
             KeyValue.Modifier.GESTURE -> applyGesture(k)
             KeyValue.Modifier.SHIFT -> applyShift(k)
-            KeyValue.Modifier.GRAVE -> applyComposeOrDeadChar(k, ComposeKeyData.accent_grave, '\u02CB')
-            KeyValue.Modifier.AIGU -> applyComposeOrDeadChar(k, ComposeKeyData.accent_aigu, '\u00B4')
-            KeyValue.Modifier.CIRCONFLEXE -> applyComposeOrDeadChar(k, ComposeKeyData.accent_circonflexe, '\u02C6')
-            KeyValue.Modifier.TILDE -> applyComposeOrDeadChar(k, ComposeKeyData.accent_tilde, '\u02DC')
-            KeyValue.Modifier.CEDILLE -> applyComposeOrDeadChar(k, ComposeKeyData.accent_cedille, '\u00B8')
-            KeyValue.Modifier.TREMA -> applyComposeOrDeadChar(k, ComposeKeyData.accent_trema, '\u00A8')
-            KeyValue.Modifier.CARON -> applyComposeOrDeadChar(k, ComposeKeyData.accent_caron, '\u02C7')
-            KeyValue.Modifier.RING -> applyComposeOrDeadChar(k, ComposeKeyData.accent_ring, '\u02DA')
-            KeyValue.Modifier.MACRON -> applyComposeOrDeadChar(k, ComposeKeyData.accent_macron, '\u00AF')
-            KeyValue.Modifier.OGONEK -> applyComposeOrDeadChar(k, ComposeKeyData.accent_ogonek, '\u02DB')
-            KeyValue.Modifier.DOT_ABOVE -> applyComposeOrDeadChar(k, ComposeKeyData.accent_dot_above, '\u02D9')
+            KeyValue.Modifier.GRAVE -> applyComposeOrDeadChar(k, ComposeKeyData.ACCENT_GRAVE, '\u02CB')
+            KeyValue.Modifier.AIGU -> applyComposeOrDeadChar(k, ComposeKeyData.ACCENT_AIGU, '\u00B4')
+            KeyValue.Modifier.CIRCONFLEXE -> applyComposeOrDeadChar(k, ComposeKeyData.ACCENT_CIRCONFLEXE, '\u02C6')
+            KeyValue.Modifier.TILDE -> applyComposeOrDeadChar(k, ComposeKeyData.ACCENT_TILDE, '\u02DC')
+            KeyValue.Modifier.CEDILLE -> applyComposeOrDeadChar(k, ComposeKeyData.ACCENT_CEDILLE, '\u00B8')
+            KeyValue.Modifier.TREMA -> applyComposeOrDeadChar(k, ComposeKeyData.ACCENT_TREMA, '\u00A8')
+            KeyValue.Modifier.CARON -> applyComposeOrDeadChar(k, ComposeKeyData.ACCENT_CARON, '\u02C7')
+            KeyValue.Modifier.RING -> applyComposeOrDeadChar(k, ComposeKeyData.ACCENT_RING, '\u02DA')
+            KeyValue.Modifier.MACRON -> applyComposeOrDeadChar(k, ComposeKeyData.ACCENT_MACRON, '\u00AF')
+            KeyValue.Modifier.OGONEK -> applyComposeOrDeadChar(k, ComposeKeyData.ACCENT_OGONEK, '\u02DB')
+            KeyValue.Modifier.DOT_ABOVE -> applyComposeOrDeadChar(k, ComposeKeyData.ACCENT_DOT_ABOVE, '\u02D9')
             KeyValue.Modifier.BREVE -> applyDeadChar(k, '\u02D8')
-            KeyValue.Modifier.DOUBLE_AIGU -> applyCompose(k, ComposeKeyData.accent_double_aigu)
-            KeyValue.Modifier.ORDINAL -> applyCompose(k, ComposeKeyData.accent_ordinal)
-            KeyValue.Modifier.SUPERSCRIPT -> applyCompose(k, ComposeKeyData.accent_superscript)
-            KeyValue.Modifier.SUBSCRIPT -> applyCompose(k, ComposeKeyData.accent_subscript)
-            KeyValue.Modifier.ARROWS -> applyCompose(k, ComposeKeyData.accent_arrows)
-            KeyValue.Modifier.BOX -> applyCompose(k, ComposeKeyData.accent_box)
-            KeyValue.Modifier.SLASH -> applyCompose(k, ComposeKeyData.accent_slash)
-            KeyValue.Modifier.BAR -> applyCompose(k, ComposeKeyData.accent_bar)
-            KeyValue.Modifier.DOT_BELOW -> applyCompose(k, ComposeKeyData.accent_dot_below)
-            KeyValue.Modifier.HORN -> applyCompose(k, ComposeKeyData.accent_horn)
-            KeyValue.Modifier.HOOK_ABOVE -> applyCompose(k, ComposeKeyData.accent_hook_above)
-            KeyValue.Modifier.DOUBLE_GRAVE -> applyCompose(k, ComposeKeyData.accent_double_grave)
+            KeyValue.Modifier.DOUBLE_AIGU -> applyCompose(k, ComposeKeyData.ACCENT_DOUBLE_AIGU)
+            KeyValue.Modifier.ORDINAL -> applyCompose(k, ComposeKeyData.ACCENT_ORDINAL)
+            KeyValue.Modifier.SUPERSCRIPT -> applyCompose(k, ComposeKeyData.ACCENT_SUPERSCRIPT)
+            KeyValue.Modifier.SUBSCRIPT -> applyCompose(k, ComposeKeyData.ACCENT_SUBSCRIPT)
+            KeyValue.Modifier.ARROWS -> applyCompose(k, ComposeKeyData.ACCENT_ARROWS)
+            KeyValue.Modifier.BOX -> applyCompose(k, ComposeKeyData.ACCENT_BOX)
+            KeyValue.Modifier.SLASH -> applyCompose(k, ComposeKeyData.ACCENT_SLASH)
+            KeyValue.Modifier.BAR -> applyCompose(k, ComposeKeyData.ACCENT_BAR)
+            KeyValue.Modifier.DOT_BELOW -> applyCompose(k, ComposeKeyData.ACCENT_DOT_BELOW)
+            KeyValue.Modifier.HORN -> applyCompose(k, ComposeKeyData.ACCENT_HORN)
+            KeyValue.Modifier.HOOK_ABOVE -> applyCompose(k, ComposeKeyData.ACCENT_HOOK_ABOVE)
+            KeyValue.Modifier.DOUBLE_GRAVE -> applyCompose(k, ComposeKeyData.ACCENT_DOUBLE_GRAVE)
             KeyValue.Modifier.ARROW_RIGHT -> applyCombiningChar(k, "\u20D7")
             KeyValue.Modifier.SELECTION_MODE -> applySelectionMode(k)
             else -> k
@@ -118,13 +118,13 @@ object KeyModifier {
     fun modify_numpad_script(numpadScript: String?): Int {
         if (numpadScript == null) return -1
         return when (numpadScript) {
-            "hindu-arabic" -> ComposeKeyData.numpad_hindu
-            "bengali" -> ComposeKeyData.numpad_bengali
-            "devanagari" -> ComposeKeyData.numpad_devanagari
-            "persian" -> ComposeKeyData.numpad_persian
-            "gujarati" -> ComposeKeyData.numpad_gujarati
-            "kannada" -> ComposeKeyData.numpad_kannada
-            "tamil" -> ComposeKeyData.numpad_tamil
+            "hindu-arabic" -> ComposeKeyData.NUMPAD_HINDU
+            "bengali" -> ComposeKeyData.NUMPAD_BENGALI
+            "devanagari" -> ComposeKeyData.NUMPAD_DEVANAGARI
+            "persian" -> ComposeKeyData.NUMPAD_PERSIAN
+            "gujarati" -> ComposeKeyData.NUMPAD_GUJARATI
+            "kannada" -> ComposeKeyData.NUMPAD_KANNADA
+            "tamil" -> ComposeKeyData.NUMPAD_TAMIL
             else -> -1
         }
     }

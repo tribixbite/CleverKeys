@@ -18,7 +18,7 @@ os.chdir(compose_dir)
 import io
 code = open("compile.py").read()
 code_lines = code.split('\n')
-code_no_main = '\n'.join(code_lines[:323])  # Stop before line 323 (main execution)
+code_no_main = '\n'.join(code_lines[:327])  # Stop before line 327 (main execution)
 
 # Execute function definitions with stdout redirected to stderr
 old_stdout = sys.stdout
