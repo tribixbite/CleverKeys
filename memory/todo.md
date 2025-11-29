@@ -5,23 +5,40 @@
 
 ---
 
-## Current Session: Full Settings UI & Theme Updates (Nov 29, 2025)
+## Current Session: Settings Consolidation & Swipe Corrections (Nov 29, 2025)
 
 ### Completed This Session
+- ✅ Removed 'All Settings (Full)' button and legacy XML preference page
+- ✅ Consolidated all settings into main Compose UI with proper Material 3 styling
+- ✅ Added all 18 themes to main dropdown:
+  - jewel, system, dark, light, black, altblack, white
+  - epaper, epaperblack, desert, jungle
+  - monet, monetlight, monetdark, rosepine
+  - everforestlight, cobalt, pine
+- ✅ Implemented collapsible/expandable sections with AnimatedVisibility
+  - Sections: Neural Prediction, Appearance, Input Behavior, Swipe Corrections,
+    Accessibility, Dictionary, Clipboard, Advanced, Information & Actions
+- ✅ Added new 'Swipe Corrections' section with comprehensive settings:
+  - Beam Autocorrect toggle (during beam search decoding)
+  - Final Autocorrect toggle (dictionary-based post-processing)
+  - Correction Style preset (Strict/Balanced/Lenient)
+  - Fuzzy Match Algorithm (Edit Distance/Positional)
+  - Typo Forgiveness slider (0-5 chars)
+  - Starting Letter Accuracy slider (0-4 letters)
+  - Correction Search Depth slider (1-10 candidates)
+  - Prediction Source Balance slider (0-100%)
+  - Common Words Boost slider (0.5-2.0x)
+  - Frequent Words Boost slider (0.5-2.0x)
+  - Rare Words Penalty slider (0.25-1.0x)
+- ✅ All swipe correction settings are saved to SharedPreferences and loaded on startup
+- ✅ Config object is updated with swipe correction values on change
+
+### Previous Session
 - ✅ Added Jewel theme (purple #9B59B6 on silver #C0C0C0) - CleverKeys signature theme
 - ✅ Updated Config.kt defaults to match uk-config.json values (25+ settings)
-- ✅ Added PreferenceFragment for traditional Android settings UI
-  - New `SettingsPreferenceActivity` hosts `SettingsPreferenceFragment`
-  - Loads all preferences from `res/xml/settings.xml`
-  - Wired up update buttons (Check for Updates, Install Update)
-  - Wired up backup/restore buttons (opens BackupRestoreActivity)
-  - Wired up dictionary/swipe/neural settings navigation
-- ✅ Added "All Settings (Full)" button in Compose settings to access XML preferences
+- ✅ Added PreferenceFragment for traditional Android settings UI (now consolidated)
 - ✅ Updated custom preference classes to use AndroidX preference library
 - ✅ Added preference dependency: `androidx.preference:preference-ktx:1.2.1`
-- ✅ Fixed crash: created `settings_compat.xml` with AndroidX-compatible preferences
-  - Original settings.xml uses deprecated android.preference.* classes
-  - settings_compat.xml uses SwitchPreferenceCompat, SeekBarPreference, etc.
 
 ### Previous Session: UK Config Feature Parity Verification
 - ✅ Full UK config feature parity verification (672/672 todos = 100%)
