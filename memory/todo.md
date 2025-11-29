@@ -50,6 +50,9 @@
   - ✅ swipe_last_letter_weight - wired to EnhancedWordPredictor
   - ✅ swipe_common_words_boost - already wired in OptimizedVocabulary
   - ✅ swipe_top5000_boost - already wired in OptimizedVocabulary
+- [x] Add Jewel theme (purple #9B59B6 on silver #C0C0C0) - CleverKeys signature theme
+- [x] Update Config.kt defaults to match uk-config.json values
+- [x] Add missing themes: Everforest Light, Cobalt, Pine, ePaper Black
 - [ ] Implement privacy settings (currently UI-only placeholders)
 - [ ] Implement rollback setting (currently UI-only placeholder)
 

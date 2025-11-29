@@ -295,6 +295,27 @@
     <item name="clipboard_divider_color">?colorLabel</item>
     <item name="clipboard_divider_height">2dp</item>
   </style>
+  <!-- CleverKeys signature theme: Jewel Purple on Silver -->
+  <style name="Jewel" parent="BaseTheme">
+    <item name="android:isLightTheme">false</item>
+    <item name="colorKeyboard">#C0C0C0</item>
+    <item name="colorKey">#D8D8D8</item>
+    <item name="colorKeyActivated">#9B59B6</item>
+    <item name="keyBorderWidth">1dp</item>
+    <item name="keyBorderWidthActivated">2dp</item>
+    <item name="keyBorderColorLeft">#A0A0A0</item>
+    <item name="keyBorderColorTop">#E8E8E8</item>
+    <item name="keyBorderColorRight">#A0A0A0</item>
+    <item name="keyBorderColorBottom">#909090</item>
+    <item name="colorLabel">#2C3E50</item>
+    <item name="colorLabelActivated">#FFFFFF</item>
+    <item name="colorLabelLocked">#8E44AD</item>
+    <item name="colorSubLabel">#7F8C8D</item>
+    <item name="keyBorderRadius">6dp</item>
+    <item name="emoji_button_bg">#9B59B6</item>
+    <item name="emoji_color">#FFFFFF</item>
+    <item name="clipboard_divider_color">#9B59B6</item>
+  </style>
 
   <!-- Emoji group button style -->
   <style name="emojiTypeButton" parent="@android:style/Widget.Button">

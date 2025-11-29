@@ -29,6 +29,7 @@
     <item>@string/pref_numpad_layout_e_low_first</item>
   </string-array>
   <string-array name="pref_theme_entries">
+    <item>@string/pref_theme_e_jewel</item>
     <item>@string/pref_theme_e_system</item>
     <item>@string/pref_theme_e_dark</item>
     <item>@string/pref_theme_e_light</item>
@@ -36,14 +37,19 @@
     <item>@string/pref_theme_e_altblack</item>
     <item>@string/pref_theme_e_white</item>
     <item>@string/pref_theme_e_epaper</item>
+    <item>@string/pref_theme_e_epaperblack</item>
     <item>@string/pref_theme_e_desert</item>
     <item>@string/pref_theme_e_jungle</item>
     <item>@string/pref_theme_e_monet</item>
     <item>@string/pref_theme_e_monetlight</item>
     <item>@string/pref_theme_e_monetdark</item>
     <item>@string/pref_theme_e_rosepine</item>
+    <item>@string/pref_theme_e_everforestlight</item>
+    <item>@string/pref_theme_e_cobalt</item>
+    <item>@string/pref_theme_e_pine</item>
   </string-array>
   <string-array name="pref_theme_values">
+    <item>jewel</item>
     <item>system</item>
     <item>dark</item>
     <item>light</item>
@@ -51,12 +57,16 @@
     <item>altblack</item>
     <item>white</item>
     <item>epaper</item>
+    <item>epaperblack</item>
     <item>desert</item>
     <item>jungle</item>
     <item>monet</item>
     <item>monetlight</item>
     <item>monetdark</item>
     <item>rosepine</item>
+    <item>everforestlight</item>
+    <item>cobalt</item>
+    <item>pine</item>
   </string-array>
   <string-array name="pref_swipe_dist_entries">
     <item>@string/pref_swipe_dist_e_very_short</item>
