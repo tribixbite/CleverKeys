@@ -46,7 +46,7 @@ Useful links.
     <key c="t" ne="5" sw="%" se="to"/>
     <key c="y" ne="6" sw="^" se="loc f1_return"/>
     <key c="u" nw="loc f1_up" ne="7" sw="&amp;"/>
-    <key c="i" nw="it" ne="8" sw="loc apostrophe_I_d" se="loc apostrophe_I_m"/>
+    <key c="i" nw="it" ne="8" sw="(" se=")"/>
     <key c="o" nw="of" ne="9" sw="or" se="on"/>
     <key c="p" ne="0"/>
   </row>

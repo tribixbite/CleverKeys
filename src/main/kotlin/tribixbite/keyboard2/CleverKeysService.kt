@@ -199,6 +199,10 @@ class CleverKeysService : InputMethodService(),
 
     override fun onCreate() {
         super.onCreate()
+
+        // Initialize ComposeKeyData early (required for shift key modifier operations)
+        ComposeKeyData.initialize(this)
+
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
         _handler = Handler(mainLooper)
 
