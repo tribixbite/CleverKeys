@@ -21,6 +21,8 @@ class NeuralSwipeTypingEngine(
 
     companion object {
         private const val TAG = "NeuralSwipeTypingEngine"
+        // Build-time flag for verbose logging - set to false for production
+        private const val VERBOSE_LOGGING = false
     }
 
     private val neuralPredictor: SwipePredictorOrchestrator
@@ -30,6 +32,9 @@ class NeuralSwipeTypingEngine(
 
     // Debug logging callback
     private var debugLogger: DebugLogger? = null
+
+    // Runtime debug logging control (from settings)
+    private var verboseLoggingEnabled = false
 
     init {
         // OPTIMIZATION: Use singleton predictor with session persistence
@@ -81,13 +86,19 @@ class NeuralSwipeTypingEngine(
 
     /**
      * Main prediction method - maintains compatibility with legacy interface
+     *
+     * PERFORMANCE: Debug logging is gated behind verboseLoggingEnabled to avoid
+     * latency impact in production. Stack trace logging only runs when VERBOSE_LOGGING
+     * build flag is true (disabled by default).
      */
     fun predict(input: SwipeInput): PredictionResult {
-        // Add stack trace to see who's calling this
-        Log.d(TAG, "🔥🔥🔥 NEURAL PREDICTION CALLED FROM:")
-        for (element in Thread.currentThread().stackTrace) {
-            if (element.className.contains("tribixbite.keyboard2")) {
-                Log.d(TAG, "🔥   ${element.className}.${element.methodName}:${element.lineNumber}")
+        // Stack trace logging for debugging - disabled in production builds
+        if (VERBOSE_LOGGING && verboseLoggingEnabled) {
+            Log.d(TAG, "🔥🔥🔥 NEURAL PREDICTION CALLED FROM:")
+            for (element in Thread.currentThread().stackTrace) {
+                if (element.className.contains("tribixbite.keyboard2")) {
+                    Log.d(TAG, "🔥   ${element.className}.${element.methodName}:${element.lineNumber}")
+                }
             }
         }
 
@@ -95,11 +106,13 @@ class NeuralSwipeTypingEngine(
             initialize()
         }
 
-        Log.d(TAG, "=== PURE NEURAL PREDICTION START ===")
-        Log.d(TAG, "Input: keySeq=${input.keySequence}, pathLen=${"%.1f".format(input.pathLength)}, " +
-            "duration=${"%.2f".format(input.duration)}s")
-
-        Log.d(TAG, "Using PURE NEURAL prediction - no classification needed")
+        // Verbose logging only when debug mode is enabled in settings
+        if (verboseLoggingEnabled) {
+            Log.d(TAG, "=== PURE NEURAL PREDICTION START ===")
+            Log.d(TAG, "Input: keySeq=${input.keySequence}, pathLen=${"%.1f".format(input.pathLength)}, " +
+                "duration=${"%.2f".format(input.duration)}s")
+            Log.d(TAG, "Using PURE NEURAL prediction - no classification needed")
+        }
 
         return try {
             val result = neuralPredictor.predict(input)
@@ -108,12 +121,15 @@ class NeuralSwipeTypingEngine(
                 val words = result.words
                 val scores = result.scores
 
-                Log.d(TAG, "Neural prediction successful: ${words.size} candidates")
+                if (verboseLoggingEnabled) {
+                    Log.d(TAG, "Neural prediction successful: ${words.size} candidates")
+                }
                 PredictionResult(words, scores)
             } else {
                 throw RuntimeException("Neural prediction returned null result")
             }
         } catch (e: Exception) {
+            // Error logging is always enabled - errors should always be visible
             Log.e(TAG, "Neural prediction failed", e)
             throw RuntimeException("Neural prediction failed: ${e.message}")
         }
@@ -166,10 +182,15 @@ class NeuralSwipeTypingEngine(
     fun setConfig(config: Config) {
         this.config = config
 
+        // Update verbose logging from settings
+        verboseLoggingEnabled = config.swipe_debug_detailed_logging
+
         // Update neural predictor configuration
         neuralPredictor.setConfig(config)
 
-        Log.d(TAG, "Neural config updated")
+        if (verboseLoggingEnabled) {
+            Log.d(TAG, "Neural config updated (verbose logging: enabled)")
+        }
     }
 
     /**
