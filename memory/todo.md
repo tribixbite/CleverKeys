@@ -41,11 +41,16 @@
 - ✅ O key shows '(' on SW corner and ')' on SE corner (confirmed in screenshot)
 
 ### Pending Tasks (Future Work)
-- [ ] Wire up 8 CK-specific swipe scoring weights (currently exported but unused)
-  - swipe_confidence_shape_weight, swipe_confidence_location_weight
-  - swipe_confidence_velocity_weight, swipe_endpoint_bonus_weight
-  - swipe_first_letter_weight, swipe_last_letter_weight
-  - swipe_common_words_boost, swipe_top5000_boost
+- [x] Wire up core swipe scoring weights (completed Nov 29)
+  - ✅ swipe_confidence_shape_weight - wired to EnhancedWordPredictor
+  - ✅ swipe_confidence_location_weight - wired to EnhancedWordPredictor
+  - ✅ swipe_confidence_velocity_weight - wired to EnhancedWordPredictor & SwipeDetector
+  - [ ] swipe_endpoint_bonus_weight - needs wiring to scoring
+  - [ ] swipe_first_letter_weight - needs wiring to scoring
+  - [ ] swipe_last_letter_weight - needs wiring to scoring
+  - ✅ swipe_common_words_boost - already wired in OptimizedVocabulary
+  - ✅ swipe_top5000_boost - already wired in OptimizedVocabulary
+- [ ] Wire up endpoint/letter weights (3 remaining)
 - [ ] Implement privacy settings (currently UI-only placeholders)
 - [ ] Implement rollback setting (currently UI-only placeholder)
 

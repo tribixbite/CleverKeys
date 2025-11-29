@@ -23,6 +23,31 @@ class EnhancedWordPredictor {
     private val adjacentKeys: Map<Char, List<Char>> = buildAdjacentKeysMap()
     private val keyPositions: Map<Char, PointF> = buildKeyPositionsMap()
 
+    // Configurable scoring weights (normalized from 0-255 scale to 0-1)
+    private var shapeWeight = DEFAULT_SHAPE_WEIGHT
+    private var locationWeight = DEFAULT_LOCATION_WEIGHT
+    private var frequencyWeight = DEFAULT_FREQUENCY_WEIGHT
+
+    /**
+     * Update scoring weights from Config.
+     * Config stores weights as 0-255 integers, we normalize to weights that sum to ~1.0
+     */
+    fun updateConfig(config: Config?) {
+        if (config == null) return
+
+        // Normalize weights from 0-255 scale to proportional weights
+        val totalWeight = (config.swipe_confidence_shape_weight +
+                          config.swipe_confidence_location_weight +
+                          config.swipe_confidence_velocity_weight).toFloat()
+
+        if (totalWeight > 0) {
+            shapeWeight = config.swipe_confidence_shape_weight / totalWeight
+            locationWeight = config.swipe_confidence_location_weight / totalWeight
+            // Use velocity weight as frequency weight since we don't have velocity scoring here
+            frequencyWeight = config.swipe_confidence_velocity_weight / totalWeight
+        }
+    }
+
     /**
      * Load enhanced dictionary with frequency data
      */
@@ -288,10 +313,10 @@ class EnhancedWordPredictor {
         val lengthDiff = abs(word.length - keySequence.length).toFloat()
         val lengthScore = 1.0f / (1.0f + lengthDiff * LENGTH_PENALTY)
 
-        // Combine scores
-        return (shapeScore * SHAPE_WEIGHT +
-            locationScore * LOCATION_WEIGHT +
-            frequencyScore * FREQUENCY_WEIGHT) * lengthScore
+        // Combine scores using configurable weights
+        return (shapeScore * shapeWeight +
+            locationScore * locationWeight +
+            frequencyScore * frequencyWeight) * lengthScore
     }
 
     /**
@@ -484,10 +509,13 @@ class EnhancedWordPredictor {
         // Algorithm parameters from FlorisBoard research
         private const val MAX_PREDICTIONS = 10
         private const val SAMPLING_POINTS = 50 // Number of points to resample gesture to
-        private const val SHAPE_WEIGHT = 0.4f
-        private const val LOCATION_WEIGHT = 0.3f
-        private const val FREQUENCY_WEIGHT = 0.3f
         private const val LENGTH_PENALTY = 0.1f
+
+        // Default scoring weights (used if config not set)
+        // Based on UK config: shape=168, location=130, velocity=60 -> normalized
+        private const val DEFAULT_SHAPE_WEIGHT = 0.47f  // 168/(168+130+60)
+        private const val DEFAULT_LOCATION_WEIGHT = 0.36f  // 130/(168+130+60)
+        private const val DEFAULT_FREQUENCY_WEIGHT = 0.17f  // 60/(168+130+60)
 
         // Path smoothing parameters
         private const val SMOOTHING_WINDOW = 3

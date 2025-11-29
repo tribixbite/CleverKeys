@@ -8,7 +8,29 @@ import kotlin.math.sqrt
  * Sophisticated swipe detection using multiple factors
  */
 class SwipeDetector {
+    // Configurable weights (normalized from 0-255 scale to 0-1)
+    private var velocityWeight = DEFAULT_VELOCITY_WEIGHT
+
+    /**
+     * Update weights from Config.
+     * Rebalances weights so they sum to 1.0 while respecting relative proportions.
+     */
+    fun updateConfig(config: Config?) {
+        if (config == null) return
+
+        // Config stores velocity weight as 0-255, we need to normalize it
+        // relative to other weights (path=30%, duration=20%, direction=20%, coverage=15%)
+        // Default velocity is 15% of total (0.15f)
+        // Scale the velocity weight from 0-255 to a proportion
+        val velocityProportion = config.swipe_confidence_velocity_weight / 255f
+
+        // Velocity weight ranges from 0.05 to 0.25 based on config
+        velocityWeight = 0.05f + (velocityProportion * 0.20f)
+    }
+
     companion object {
+        // Default velocity weight (15%)
+        private const val DEFAULT_VELOCITY_WEIGHT = 0.15f
         private const val TAG = "SwipeDetector"
 
         // Thresholds for swipe detection
@@ -89,9 +111,9 @@ class SwipeDetector {
             reasoning.append("Multiple directions; ")
         }
 
-        // Factor 4: Velocity consistency (15% weight)
+        // Factor 4: Velocity consistency (configurable weight, default 15%)
         val velocityScore = calculateVelocityScore(input.velocityProfile, input.averageVelocity)
-        confidence += velocityScore * 0.15f
+        confidence += velocityScore * velocityWeight
         if (velocityScore > 0.5f) {
             reasoning.append("Consistent velocity; ")
         }
