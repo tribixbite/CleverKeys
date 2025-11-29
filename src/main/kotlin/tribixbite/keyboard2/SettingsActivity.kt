@@ -8,12 +8,18 @@ import android.os.Bundle
 import android.widget.*
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -59,7 +65,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var beamWidth by mutableStateOf(8)
     private var maxLength by mutableStateOf(35)
     private var confidenceThreshold by mutableStateOf(0.1f)
-    private var currentTheme by mutableStateOf(R.style.Dark)
+    private var currentThemeName by mutableStateOf("jewel")  // Store theme name string for full theme support
     private var keyboardHeight by mutableStateOf(35)
     private var keyboardHeightLandscape by mutableStateOf(50)
     private var vibrationEnabled by mutableStateOf(false)
@@ -122,6 +128,30 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var stickyKeysEnabled by mutableStateOf(false)
     private var stickyKeysTimeout by mutableStateOf(5000) // milliseconds
     private var voiceGuidanceEnabled by mutableStateOf(false)
+
+    // Swipe Corrections settings (migrated from XML)
+    private var swipeBeamAutocorrectEnabled by mutableStateOf(true)
+    private var swipeFinalAutocorrectEnabled by mutableStateOf(true)
+    private var swipeCorrectionPreset by mutableStateOf("balanced")
+    private var swipeFuzzyMatchMode by mutableStateOf("edit_distance")
+    private var autocorrectMaxLengthDiff by mutableStateOf(2)
+    private var autocorrectPrefixLength by mutableStateOf(2)
+    private var autocorrectMaxBeamCandidates by mutableStateOf(3)
+    private var swipePredictionSource by mutableStateOf(60)
+    private var swipeCommonWordsBoost by mutableStateOf(1.3f)
+    private var swipeTop5000Boost by mutableStateOf(1.0f)
+    private var swipeRareWordsPenalty by mutableStateOf(0.75f)
+
+    // Section expanded states
+    private var neuralSectionExpanded by mutableStateOf(true)
+    private var appearanceSectionExpanded by mutableStateOf(false)
+    private var inputSectionExpanded by mutableStateOf(false)
+    private var swipeCorrectionsSectionExpanded by mutableStateOf(false)
+    private var accessibilitySectionExpanded by mutableStateOf(false)
+    private var dictionarySectionExpanded by mutableStateOf(false)
+    private var clipboardSectionExpanded by mutableStateOf(false)
+    private var advancedSectionExpanded by mutableStateOf(false)
+    private var infoSectionExpanded by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -201,7 +231,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 confidenceThreshold = prefs.getFloat(key, 0.1f)
             }
             "theme" -> {
-                currentTheme = prefs.getInt(key, R.style.Dark)
+                currentThemeName = prefs.getString(key, "jewel") ?: "jewel"
             }
             "keyboard_height_percent" -> {
                 keyboardHeight = prefs.getInt(key, 35)
@@ -337,6 +367,40 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             "slider_sensitivity" -> {
                 sliderSensitivity = (prefs.getString(key, "30") ?: "30").toIntOrNull() ?: 30
             }
+            // Swipe Corrections settings
+            "swipe_beam_autocorrect_enabled" -> {
+                swipeBeamAutocorrectEnabled = prefs.getBoolean(key, true)
+            }
+            "swipe_final_autocorrect_enabled" -> {
+                swipeFinalAutocorrectEnabled = prefs.getBoolean(key, true)
+            }
+            "swipe_correction_preset" -> {
+                swipeCorrectionPreset = prefs.getString(key, "balanced") ?: "balanced"
+            }
+            "swipe_fuzzy_match_mode" -> {
+                swipeFuzzyMatchMode = prefs.getString(key, "edit_distance") ?: "edit_distance"
+            }
+            "autocorrect_max_length_diff" -> {
+                autocorrectMaxLengthDiff = Config.safeGetInt(prefs, key, 2)
+            }
+            "autocorrect_prefix_length" -> {
+                autocorrectPrefixLength = Config.safeGetInt(prefs, key, 2)
+            }
+            "autocorrect_max_beam_candidates" -> {
+                autocorrectMaxBeamCandidates = Config.safeGetInt(prefs, key, 3)
+            }
+            "swipe_prediction_source" -> {
+                swipePredictionSource = Config.safeGetInt(prefs, key, 60)
+            }
+            "swipe_common_words_boost" -> {
+                swipeCommonWordsBoost = Config.safeGetFloat(prefs, key, 1.3f)
+            }
+            "swipe_top5000_boost" -> {
+                swipeTop5000Boost = Config.safeGetFloat(prefs, key, 1.0f)
+            }
+            "swipe_rare_words_penalty" -> {
+                swipeRareWordsPenalty = Config.safeGetFloat(prefs, key, 0.75f)
+            }
         }
     }
 
@@ -368,8 +432,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 lineHeight = 20.sp
             )
 
-            // Neural Prediction Section
-            SettingsSection(stringResource(R.string.settings_section_neural)) {
+            // Neural Prediction Section (Collapsible, default expanded)
+            CollapsibleSettingsSection(
+                title = stringResource(R.string.settings_section_neural),
+                expanded = neuralSectionExpanded,
+                onExpandChange = { neuralSectionExpanded = it }
+            ) {
                 // Master switch for swipe typing
                 SettingsSwitch(
                     title = "Enable Swipe Typing",
@@ -453,22 +521,41 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 }
             }
 
-            // Appearance Section
-            SettingsSection(stringResource(R.string.settings_section_appearance)) {
+            // Appearance Section (Collapsible)
+            CollapsibleSettingsSection(
+                title = stringResource(R.string.settings_section_appearance),
+                expanded = appearanceSectionExpanded,
+                onExpandChange = { appearanceSectionExpanded = it }
+            ) {
+                // Full theme dropdown with all 18 themes
                 SettingsDropdown(
                     title = stringResource(R.string.settings_theme_title),
                     description = stringResource(R.string.settings_theme_desc),
                     options = listOf(
-                        stringResource(R.string.settings_theme_system),
-                        stringResource(R.string.settings_theme_light),
-                        stringResource(R.string.settings_theme_dark),
-                        stringResource(R.string.settings_theme_black)
+                        stringResource(R.string.pref_theme_e_jewel),       // 0 - default
+                        stringResource(R.string.pref_theme_e_system),      // 1
+                        stringResource(R.string.pref_theme_e_dark),        // 2
+                        stringResource(R.string.pref_theme_e_light),       // 3
+                        stringResource(R.string.pref_theme_e_black),       // 4
+                        stringResource(R.string.pref_theme_e_altblack),    // 5
+                        stringResource(R.string.pref_theme_e_white),       // 6
+                        stringResource(R.string.pref_theme_e_epaper),      // 7
+                        stringResource(R.string.pref_theme_e_epaperblack), // 8
+                        stringResource(R.string.pref_theme_e_desert),      // 9
+                        stringResource(R.string.pref_theme_e_jungle),      // 10
+                        stringResource(R.string.pref_theme_e_monet),       // 11
+                        stringResource(R.string.pref_theme_e_monetlight),  // 12
+                        stringResource(R.string.pref_theme_e_monetdark),   // 13
+                        stringResource(R.string.pref_theme_e_rosepine),    // 14
+                        stringResource(R.string.pref_theme_e_everforestlight), // 15
+                        stringResource(R.string.pref_theme_e_cobalt),      // 16
+                        stringResource(R.string.pref_theme_e_pine)         // 17
                     ),
-                    selectedIndex = getThemeIndex(currentTheme),
+                    selectedIndex = getThemeIndexFromName(currentThemeName),
                     onSelectionChange = { index ->
-                        val newTheme = getThemeFromIndex(index)
-                        currentTheme = newTheme
-                        saveSetting("theme", newTheme)
+                        val themeName = getThemeNameFromIndex(index)
+                        currentThemeName = themeName
+                        saveSetting("theme", themeName)
                     }
                 )
 
@@ -680,8 +767,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 }
             }
 
-            // Input Behavior Section
-            SettingsSection(stringResource(R.string.settings_section_input)) {
+            // Input Behavior Section (Collapsible)
+            CollapsibleSettingsSection(
+                title = stringResource(R.string.settings_section_input),
+                expanded = inputSectionExpanded,
+                onExpandChange = { inputSectionExpanded = it }
+            ) {
                 // Keyboard Layouts Manager button
                 Button(
                     onClick = { openLayoutManager() },
@@ -948,8 +1039,173 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }
 
-            // Accessibility Section (Fix for Bug #373, #368, #377)
-            SettingsSection(stringResource(R.string.settings_section_accessibility)) {
+            // Swipe Corrections Section (NEW - migrated from XML Full settings)
+            CollapsibleSettingsSection(
+                title = "Swipe Corrections",
+                expanded = swipeCorrectionsSectionExpanded,
+                onExpandChange = { swipeCorrectionsSectionExpanded = it }
+            ) {
+                // Beam search autocorrect
+                SettingsSwitch(
+                    title = "Beam Autocorrect",
+                    description = "Apply fuzzy corrections during beam search decoding",
+                    checked = swipeBeamAutocorrectEnabled,
+                    onCheckedChange = {
+                        swipeBeamAutocorrectEnabled = it
+                        saveSetting("swipe_beam_autocorrect_enabled", it)
+                    }
+                )
+
+                // Final output autocorrect
+                SettingsSwitch(
+                    title = "Final Autocorrect",
+                    description = "Apply dictionary-based corrections to final output",
+                    checked = swipeFinalAutocorrectEnabled,
+                    onCheckedChange = {
+                        swipeFinalAutocorrectEnabled = it
+                        saveSetting("swipe_final_autocorrect_enabled", it)
+                    }
+                )
+
+                // Correction preset
+                SettingsDropdown(
+                    title = "Correction Style",
+                    description = "Overall correction aggressiveness preset",
+                    options = listOf("Strict (High Accuracy)", "Balanced (Default)", "Lenient (Flexible)"),
+                    selectedIndex = when (swipeCorrectionPreset) {
+                        "strict" -> 0
+                        "balanced" -> 1
+                        "lenient" -> 2
+                        else -> 1
+                    },
+                    onSelectionChange = { index ->
+                        swipeCorrectionPreset = when (index) {
+                            0 -> "strict"
+                            1 -> "balanced"
+                            2 -> "lenient"
+                            else -> "balanced"
+                        }
+                        saveSetting("swipe_correction_preset", swipeCorrectionPreset)
+                    }
+                )
+
+                // Fuzzy match mode
+                SettingsDropdown(
+                    title = "Fuzzy Match Algorithm",
+                    description = "Method for matching swipe patterns to words",
+                    options = listOf("Edit Distance (Recommended)", "Positional Matching (Legacy)"),
+                    selectedIndex = if (swipeFuzzyMatchMode == "edit_distance") 0 else 1,
+                    onSelectionChange = { index ->
+                        swipeFuzzyMatchMode = if (index == 0) "edit_distance" else "positional"
+                        saveSetting("swipe_fuzzy_match_mode", swipeFuzzyMatchMode)
+                    }
+                )
+
+                // Typo forgiveness (max length diff)
+                SettingsSlider(
+                    title = "Typo Forgiveness",
+                    description = "Max character difference allowed (0-5)",
+                    value = autocorrectMaxLengthDiff.toFloat(),
+                    valueRange = 0f..5f,
+                    steps = 5,
+                    onValueChange = {
+                        autocorrectMaxLengthDiff = it.toInt()
+                        saveSetting("autocorrect_max_length_diff", autocorrectMaxLengthDiff)
+                    },
+                    displayValue = "$autocorrectMaxLengthDiff chars"
+                )
+
+                // Starting letter accuracy
+                SettingsSlider(
+                    title = "Starting Letter Accuracy",
+                    description = "Required matching prefix length (0-4)",
+                    value = autocorrectPrefixLength.toFloat(),
+                    valueRange = 0f..4f,
+                    steps = 4,
+                    onValueChange = {
+                        autocorrectPrefixLength = it.toInt()
+                        saveSetting("autocorrect_prefix_length", autocorrectPrefixLength)
+                    },
+                    displayValue = "$autocorrectPrefixLength letters"
+                )
+
+                // Correction search depth
+                SettingsSlider(
+                    title = "Correction Search Depth",
+                    description = "Number of beam candidates to consider (1-10)",
+                    value = autocorrectMaxBeamCandidates.toFloat(),
+                    valueRange = 1f..10f,
+                    steps = 9,
+                    onValueChange = {
+                        autocorrectMaxBeamCandidates = it.toInt()
+                        saveSetting("autocorrect_max_beam_candidates", autocorrectMaxBeamCandidates)
+                    },
+                    displayValue = "$autocorrectMaxBeamCandidates"
+                )
+
+                // Prediction source balance
+                SettingsSlider(
+                    title = "Prediction Source Balance",
+                    description = "Neural confidence vs dictionary frequency (0=dict, 100=neural)",
+                    value = swipePredictionSource.toFloat(),
+                    valueRange = 0f..100f,
+                    steps = 20,
+                    onValueChange = {
+                        swipePredictionSource = it.toInt()
+                        saveSetting("swipe_prediction_source", swipePredictionSource)
+                    },
+                    displayValue = "$swipePredictionSource%"
+                )
+
+                // Common words boost
+                SettingsSlider(
+                    title = "Common Words Boost",
+                    description = "Bonus multiplier for common words (0.5-2.0)",
+                    value = swipeCommonWordsBoost,
+                    valueRange = 0.5f..2.0f,
+                    steps = 15,
+                    onValueChange = {
+                        swipeCommonWordsBoost = it
+                        saveSetting("swipe_common_words_boost", swipeCommonWordsBoost)
+                    },
+                    displayValue = "%.2fx".format(swipeCommonWordsBoost)
+                )
+
+                // Top 5000 boost
+                SettingsSlider(
+                    title = "Frequent Words Boost",
+                    description = "Bonus for top 5000 words (0.5-2.0)",
+                    value = swipeTop5000Boost,
+                    valueRange = 0.5f..2.0f,
+                    steps = 15,
+                    onValueChange = {
+                        swipeTop5000Boost = it
+                        saveSetting("swipe_top5000_boost", swipeTop5000Boost)
+                    },
+                    displayValue = "%.2fx".format(swipeTop5000Boost)
+                )
+
+                // Rare words penalty
+                SettingsSlider(
+                    title = "Rare Words Penalty",
+                    description = "Multiplier for uncommon words (0.25-1.0)",
+                    value = swipeRareWordsPenalty,
+                    valueRange = 0.25f..1.0f,
+                    steps = 15,
+                    onValueChange = {
+                        swipeRareWordsPenalty = it
+                        saveSetting("swipe_rare_words_penalty", swipeRareWordsPenalty)
+                    },
+                    displayValue = "%.2fx".format(swipeRareWordsPenalty)
+                )
+            }
+
+            // Accessibility Section (Collapsible)
+            CollapsibleSettingsSection(
+                title = stringResource(R.string.settings_section_accessibility),
+                expanded = accessibilitySectionExpanded,
+                onExpandChange = { accessibilitySectionExpanded = it }
+            ) {
                 SettingsSwitch(
                     title = stringResource(R.string.settings_sticky_keys_title),
                     description = stringResource(R.string.settings_sticky_keys_desc),
@@ -1000,8 +1256,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }
 
-            // Dictionary Section (Bug #472 fix)
-            SettingsSection(stringResource(R.string.settings_section_dictionary)) {
+            // Dictionary Section (Collapsible)
+            CollapsibleSettingsSection(
+                title = stringResource(R.string.settings_section_dictionary),
+                expanded = dictionarySectionExpanded,
+                onExpandChange = { dictionarySectionExpanded = it }
+            ) {
                 Button(
                     onClick = { openDictionaryManager() },
                     modifier = Modifier.fillMaxWidth()
@@ -1017,8 +1277,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }
 
-            // Clipboard Section
-            SettingsSection("Clipboard") {
+            // Clipboard Section (Collapsible)
+            CollapsibleSettingsSection(
+                title = "Clipboard",
+                expanded = clipboardSectionExpanded,
+                onExpandChange = { clipboardSectionExpanded = it }
+            ) {
                 Button(
                     onClick = { openClipboardSettings() },
                     modifier = Modifier.fillMaxWidth()
@@ -1034,7 +1298,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }
 
-            // Backup & Restore Section (Phase 7)
+            // Backup & Restore Section (Phase 7) - Non-collapsible, simple
             SettingsSection("Backup & Restore") {
                 Button(
                     onClick = { openBackupRestore() },
@@ -1051,8 +1315,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }
 
-            // Advanced Section
-            SettingsSection(stringResource(R.string.settings_section_advanced)) {
+            // Advanced Section (Collapsible)
+            CollapsibleSettingsSection(
+                title = stringResource(R.string.settings_section_advanced),
+                expanded = advancedSectionExpanded,
+                onExpandChange = { advancedSectionExpanded = it }
+            ) {
                 SettingsSwitch(
                     title = stringResource(R.string.settings_debug_title),
                     description = stringResource(R.string.settings_debug_desc),
@@ -1082,8 +1350,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 }
             }
 
-            // Version and Actions Section
-            SettingsSection(stringResource(R.string.settings_section_info)) {
+            // Version and Actions Section (Collapsible)
+            CollapsibleSettingsSection(
+                title = stringResource(R.string.settings_section_info),
+                expanded = infoSectionExpanded,
+                onExpandChange = { infoSectionExpanded = it }
+            ) {
                 VersionInfoCard()
 
                 Row(
@@ -1108,25 +1380,64 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     }
                 }
 
-                // Open full settings (XML PreferenceScreen)
-                Button(
-                    onClick = { openFullSettings() },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("All Settings (Full)")
-                }
-
-                Text(
-                    text = "Access all keyboard settings including advanced neural, swipe corrections, and backup options",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
             }
         }
     }
 
     // Composable helper components
+    @Composable
+    private fun CollapsibleSettingsSection(
+        title: String,
+        expanded: Boolean,
+        onExpandChange: (Boolean) -> Unit,
+        content: @Composable ColumnScope.() -> Unit
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onExpandChange(!expanded) },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = title,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = if (expanded) "Collapse" else "Expand",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                AnimatedVisibility(
+                    visible = expanded,
+                    enter = expandVertically(),
+                    exit = shrinkVertically()
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        content()
+                    }
+                }
+            }
+        }
+    }
+
+    // Non-collapsible version for simple sections
     @Composable
     private fun SettingsSection(
         title: String,
@@ -1331,6 +1642,56 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Helper functions
 
+    /** Convert theme name to dropdown index (matches pref_theme_values order) */
+    private fun getThemeIndexFromName(themeName: String): Int {
+        return when (themeName) {
+            "jewel" -> 0
+            "system" -> 1
+            "dark" -> 2
+            "light" -> 3
+            "black" -> 4
+            "altblack" -> 5
+            "white" -> 6
+            "epaper" -> 7
+            "epaperblack" -> 8
+            "desert" -> 9
+            "jungle" -> 10
+            "monet" -> 11
+            "monetlight" -> 12
+            "monetdark" -> 13
+            "rosepine" -> 14
+            "everforestlight" -> 15
+            "cobalt" -> 16
+            "pine" -> 17
+            else -> 0  // Default to jewel
+        }
+    }
+
+    /** Convert dropdown index back to theme name string */
+    private fun getThemeNameFromIndex(index: Int): String {
+        return when (index) {
+            0 -> "jewel"
+            1 -> "system"
+            2 -> "dark"
+            3 -> "light"
+            4 -> "black"
+            5 -> "altblack"
+            6 -> "white"
+            7 -> "epaper"
+            8 -> "epaperblack"
+            9 -> "desert"
+            10 -> "jungle"
+            11 -> "monet"
+            12 -> "monetlight"
+            13 -> "monetdark"
+            14 -> "rosepine"
+            15 -> "everforestlight"
+            16 -> "cobalt"
+            17 -> "pine"
+            else -> "jewel"
+        }
+    }
+
     /** Safely get an Int preference, handling cases where the value is stored as a different type */
     private fun SharedPreferences.getSafeInt(key: String, default: Int): Int {
         return try {
@@ -1369,7 +1730,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         confidenceThreshold = prefs.getSafeFloat("neural_confidence_threshold", 0.1f)
 
         // Appearance settings
-        currentTheme = prefs.getSafeInt("theme", R.style.Dark)
+        currentThemeName = prefs.getString("theme", "jewel") ?: "jewel"
         keyboardHeight = prefs.getSafeInt("keyboard_height_percent", 35)
         keyboardHeightLandscape = prefs.getSafeInt("keyboard_height_landscape", 50)
 
@@ -1435,6 +1796,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         termuxModeEnabled = prefs.getBoolean("termux_mode_enabled", false)
         vibrationDuration = prefs.getSafeInt("vibrate_duration", 20)
         swipeDebugEnabled = prefs.getBoolean("swipe_show_debug_scores", false)
+
+        // Swipe Corrections settings
+        swipeBeamAutocorrectEnabled = prefs.getBoolean("swipe_beam_autocorrect_enabled", true)
+        swipeFinalAutocorrectEnabled = prefs.getBoolean("swipe_final_autocorrect_enabled", true)
+        swipeCorrectionPreset = prefs.getString("swipe_correction_preset", "balanced") ?: "balanced"
+        swipeFuzzyMatchMode = prefs.getString("swipe_fuzzy_match_mode", "edit_distance") ?: "edit_distance"
+        autocorrectMaxLengthDiff = Config.safeGetInt(prefs, "autocorrect_max_length_diff", 2)
+        autocorrectPrefixLength = Config.safeGetInt(prefs, "autocorrect_prefix_length", 2)
+        autocorrectMaxBeamCandidates = Config.safeGetInt(prefs, "autocorrect_max_beam_candidates", 3)
+        swipePredictionSource = Config.safeGetInt(prefs, "swipe_prediction_source", 60)
+        swipeCommonWordsBoost = Config.safeGetFloat(prefs, "swipe_common_words_boost", 1.3f)
+        swipeTop5000Boost = Config.safeGetFloat(prefs, "swipe_top5000_boost", 1.0f)
+        swipeRareWordsPenalty = Config.safeGetFloat(prefs, "swipe_rare_words_penalty", 0.75f)
     }
 
     private fun saveSetting(key: String, value: Any) {
@@ -1466,31 +1840,23 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     private fun updateConfigFromSettings() {
         // Update global config from current settings
+        // Note: Config.theme uses R.style.* resource IDs, converted from theme name
         config.apply {
-            theme = currentTheme
             keyboardHeightPercent = keyboardHeight
             vibrate_custom = vibrationEnabled
             neural_beam_width = beamWidth
             neural_max_length = maxLength
             neural_confidence_threshold = confidenceThreshold
-        }
-    }
-
-    private fun getThemeIndex(theme: Int): Int {
-        return when (theme) {
-            R.style.Light -> 1
-            R.style.Dark -> 2
-            R.style.Black -> 3
-            else -> 2 // Default to Dark
-        }
-    }
-
-    private fun getThemeFromIndex(index: Int): Int {
-        return when (index) {
-            1 -> R.style.Light
-            2 -> R.style.Dark
-            3 -> R.style.Black
-            else -> R.style.Dark
+            // Swipe corrections settings (these update the Config object)
+            swipe_beam_autocorrect_enabled = swipeBeamAutocorrectEnabled
+            swipe_final_autocorrect_enabled = swipeFinalAutocorrectEnabled
+            swipe_fuzzy_match_mode = swipeFuzzyMatchMode
+            autocorrect_max_length_diff = autocorrectMaxLengthDiff
+            autocorrect_prefix_length = autocorrectPrefixLength
+            autocorrect_max_beam_candidates = autocorrectMaxBeamCandidates
+            swipe_common_words_boost = swipeCommonWordsBoost
+            swipe_top5000_boost = swipeTop5000Boost
+            swipe_rare_words_penalty = swipeRareWordsPenalty
         }
     }
 
@@ -1555,7 +1921,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     editor.putInt("neural_beam_width", 8)
                     editor.putInt("neural_max_length", 35)
                     editor.putFloat("neural_confidence_threshold", 0.1f)
-                    editor.putInt("theme", R.style.Dark)
+                    editor.putString("theme", "jewel")  // Default theme
                     editor.putInt("keyboard_height_percent", 35)
                     editor.putBoolean("vibration_enabled", false)
                     editor.putBoolean("debug_enabled", false)
@@ -1564,6 +1930,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     editor.putBoolean("sticky_keys_enabled", false)
                     editor.putInt("sticky_keys_timeout_ms", 5000)
                     editor.putBoolean("voice_guidance_enabled", false)
+                    // Swipe corrections defaults
+                    editor.putBoolean("swipe_beam_autocorrect_enabled", true)
+                    editor.putBoolean("swipe_final_autocorrect_enabled", true)
+                    editor.putString("swipe_correction_preset", "balanced")
+                    editor.putString("swipe_fuzzy_match_mode", "edit_distance")
 
                     editor.apply()
 
