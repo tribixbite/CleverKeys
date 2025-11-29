@@ -124,4 +124,142 @@
     <item>50</item>
     <item>100</item>
   </string-array>
+  <string-array name="pref_clipboard_pinned_rows_entries">
+    <item>1-2 rows (compact)</item>
+    <item>2-3 rows (default)</item>
+    <item>3-4 rows (comfortable)</item>
+    <item>4-5 rows (expanded)</item>
+  </string-array>
+  <string-array name="pref_clipboard_pinned_rows_values">
+    <item>70</item>
+    <item>100</item>
+    <item>140</item>
+    <item>200</item>
+  </string-array>
+  <string-array name="pref_clipboard_max_item_size_entries">
+    <item>100 KB</item>
+    <item>250 KB</item>
+    <item>500 KB (recommended)</item>
+    <item>1 MB</item>
+    <item>5 MB</item>
+    <item>Unlimited</item>
+  </string-array>
+  <string-array name="pref_clipboard_max_item_size_values">
+    <item>100</item>
+    <item>250</item>
+    <item>500</item>
+    <item>1024</item>
+    <item>5120</item>
+    <item>0</item>
+  </string-array>
+  <string-array name="pref_clipboard_limit_type_entries">
+    <item>Item count (default)</item>
+    <item>Total storage size</item>
+  </string-array>
+  <string-array name="pref_clipboard_limit_type_values">
+    <item>count</item>
+    <item>size</item>
+  </string-array>
+  <string-array name="pref_clipboard_size_limit_mb_entries">
+    <item>1 MB</item>
+    <item>5 MB</item>
+    <item>10 MB (recommended)</item>
+    <item>25 MB</item>
+    <item>50 MB</item>
+    <item>100 MB</item>
+    <item>Unlimited</item>
+  </string-array>
+  <string-array name="pref_clipboard_size_limit_mb_values">
+    <item>1</item>
+    <item>5</item>
+    <item>10</item>
+    <item>25</item>
+    <item>50</item>
+    <item>100</item>
+    <item>0</item>
+  </string-array>
+  <string-array name="swipe_correction_preset_entries">
+    <item>Strict (High Accuracy)</item>
+    <item>Balanced (Default)</item>
+    <item>Lenient (Flexible)</item>
+  </string-array>
+  <string-array name="swipe_correction_preset_values">
+    <item>strict</item>
+    <item>balanced</item>
+    <item>lenient</item>
+  </string-array>
+  <string-array name="swipe_fuzzy_match_mode_entries">
+    <item>Edit Distance (Recommended)</item>
+    <item>Positional Matching (Legacy)</item>
+  </string-array>
+  <string-array name="swipe_fuzzy_match_mode_values">
+    <item>edit_distance</item>
+    <item>positional</item>
+  </string-array>
+
+  <!-- Neural Model Version -->
+  <string-array name="pref_neural_model_version_entries">
+    <item>@string/pref_neural_model_v2</item>
+    <item>@string/pref_neural_model_custom</item>
+  </string-array>
+  <string-array name="pref_neural_model_version_values">
+    <item>v2</item>
+    <item>custom</item>
+  </string-array>
+
+  <!-- Neural Resampling Mode -->
+  <string-array name="pref_neural_resampling_mode_entries">
+    <item>@string/pref_neural_resampling_truncate</item>
+    <item>@string/pref_neural_resampling_discard</item>
+    <item>@string/pref_neural_resampling_merge</item>
+  </string-array>
+  <string-array name="pref_neural_resampling_mode_values">
+    <item>truncate</item>
+    <item>discard</item>
+    <item>merge</item>
+  </string-array>
+
+  <!-- Privacy Data Retention -->
+  <string-array name="privacy_retention_entries">
+    <item>7 days</item>
+    <item>30 days</item>
+    <item>90 days (default)</item>
+    <item>180 days</item>
+    <item>365 days</item>
+    <item>Never delete</item>
+  </string-array>
+  <string-array name="privacy_retention_values">
+    <item>7</item>
+    <item>30</item>
+    <item>90</item>
+    <item>180</item>
+    <item>365</item>
+    <item>999999</item>
+  </string-array>
+  <string-array name="pref_learning_aggression_values">
+    <item>CONSERVATIVE</item>
+    <item>BALANCED</item>
+    <item>AGGRESSIVE</item>
+  </string-array>
+  <string-array name="pref_learning_aggression_entries">
+    <item>Conservative (0.5x - subtle personalization)</item>
+    <item>Balanced (1.0x - recommended)</item>
+    <item>Aggressive (1.5x - strong personalization)</item>
+  </string-array>
+
+  <!-- Multi-Language Support -->
+  <string-array name="pref_language_values">
+    <item>en</item>
+    <item>es</item>
+    <item>fr</item>
+    <item>pt</item>
+    <item>de</item>
+  </string-array>
+  <string-array name="pref_language_entries">
+    <item>English</item>
+    <item>Español (Spanish)</item>
+    <item>Français (French)</item>
+    <item>Português (Portuguese)</item>
+    <item>Deutsch (German)</item>
+  </string-array>
 </resources>

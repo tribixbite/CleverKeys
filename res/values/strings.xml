@@ -35,6 +35,10 @@
     <string name="pref_extra_keys_custom">Add custom keys</string>
     <string name="pref_extra_keys_internal">Select keys to add to the keyboard</string>
     <string name="pref_category_typing">Typing</string>
+    <string name="pref_short_gestures_enabled_title">Enable short gestures</string>
+    <string name="pref_short_gestures_enabled_summary">Enable directional swipes within a key (e.g., swipe-up on key for symbol)</string>
+    <string name="pref_short_gesture_distance_title">Short gesture sensitivity</string>
+    <string name="pref_short_gesture_distance_summary">Minimum swipe distance as %% of key diagonal (%s%%)</string>
     <string name="pref_swipe_dist_title">Swiping distance</string>
     <string name="pref_swipe_dist_summary">Distance of characters in the corners of the keys (%s)</string>
     <string name="pref_long_timeout_title">Long press timeout</string>
@@ -163,6 +167,31 @@
     <string name="pref_clipboard_history_enabled_summary">Remember recently copied text</string>
     <string name="pref_clipboard_history_limit_title">History limit</string>
     <string name="pref_clipboard_history_limit_summary">Maximum number of clipboard entries to keep (%s)</string>
+
+    <!-- Neural Model Settings -->
+    <string name="pref_neural_model_version_title">Neural Model Version</string>
+    <string name="pref_neural_model_version_summary">Select which ONNX model to use (%s)</string>
+    <string name="pref_neural_model_v1">v1 (External, 150-len, ~65%%)</string>
+    <string name="pref_neural_model_v2">v2 (Builtin, 250-len, 80.6%% ⭐)</string>
+    <string name="pref_neural_model_v3">v3 (External, 250-len, 72.1%%)</string>
+    <string name="pref_neural_model_custom">Custom (External files)</string>
+    <string name="pref_neural_model_info_title">Current Model Status</string>
+    <string name="pref_neural_model_info_summary">Loading model info...</string>
+    <string name="pref_neural_user_max_seq_length_title">Custom Max Sequence Length</string>
+    <string name="pref_neural_user_max_seq_length_summary">Override model default (0=auto, current: %s)</string>
+    <string name="pref_neural_resampling_mode_title">Trajectory Resampling</string>
+    <string name="pref_neural_resampling_mode_summary">How to handle swipes exceeding max length (%s)</string>
+    <string name="pref_neural_resampling_truncate">Truncate - Keep first N points</string>
+    <string name="pref_neural_resampling_discard">Discard - Drop uniformly (Recommended)</string>
+    <string name="pref_neural_resampling_merge">Merge - Average neighboring points</string>
+    <string name="pref_neural_resampling_info_title">About Resampling</string>
+    <string name="pref_neural_resampling_info_summary">When swipes exceed max length:\n\n• Truncate: Keeps first N points (fastest, may lose end)\n• Discard: Drops points evenly, preserves start/end (Recommended)\n• Merge: Averages neighbors, preserves shape\n\nDefault: Discard for best accuracy</string>
+    <string name="pref_neural_load_encoder_title">Load Encoder Model</string>
+    <string name="pref_neural_load_encoder_summary">Select swipe_encoder_android.onnx file</string>
+    <string name="pref_neural_load_decoder_title">Load Decoder Model</string>
+    <string name="pref_neural_load_decoder_summary">Select swipe_decoder_android.onnx file</string>
+    <string name="pref_neural_external_models_info_title">About External Models</string>
+    <string name="pref_neural_external_models_info_summary">v1 and v3 models not included in APK to save space.\n\nTo use them:\n1. Download model files\n2. Use file picker buttons above\n3. Select encoder and decoder files\n4. Switch to desired version\n\nBuiltin v2 recommended for best accuracy!</string>
 
     <!-- Custom Layout Editor Dialog (Material 3) -->
     <string name="custom_layout_editor_title">Custom Layout Editor</string>

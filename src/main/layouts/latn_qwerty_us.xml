@@ -65,11 +65,11 @@ Useful links.
     <key width="1.5" c="shift" ne="loc capslock"/>
     <key c="z" se="loc f1_undo"/>
     <key c="x" se="loc f1_cut"/>
-    <key c="c" se="loc f1_copy"/>
-    <key c="v" se="loc f1_paste" ne="&gt;" sw=","/>
-    <key c="b" nw="be" ne="by" sw="/"/>
-    <key c="n" nw="no" ne=":" sw=";"/>
-    <key c="m" nw="me" ne="&quot;" sw="'"/>
-    <key width="1.5" c="backspace" nw="loc f1_word" ne="delete"/>
+    <key c="c" ne="&lt;" sw="."/>
+    <key c="v" ne="&gt;" sw=","/>
+    <key c="b" nw="be " ne="\?" sw="/" n="by "/>
+    <key c="n" ne=":" sw=";" n="no "/>
+    <key c="m" nw="me " ne="&quot;" sw="'"/>
+    <key width="1.5" c="backspace" ne="delete" nw="delete_last_word"/>
   </row>
 </keyboard>
