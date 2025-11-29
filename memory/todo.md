@@ -35,6 +35,11 @@
 - ✅ Added missing string/array resources
 - ✅ Enabled swipe_typing by default
 
+### Visual Verification (from keyboard_input.png)
+- ✅ Navigation keys visible: ESC, HOME, END, PGUP, PGDN in Termux extra row
+- ✅ Arrow keys visible: ↑ ↓ ← → in extra row
+- ✅ O key shows '(' on SW corner and ')' on SE corner (confirmed in screenshot)
+
 ### Pending Tasks (Future Work)
 - [ ] Wire up 8 CK-specific swipe scoring weights (currently exported but unused)
   - swipe_confidence_shape_weight, swipe_confidence_location_weight
