@@ -524,6 +524,191 @@ class BackupRestoreManager(private val context: Context) {
         }
     }
 
+    /**
+     * Export user dictionaries to JSON file
+     * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
+     */
+    fun exportDictionaries(uri: Uri) {
+        try {
+            val root = JsonObject()
+            val metadata = JsonObject()
+
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            metadata.addProperty("app_version", packageInfo.versionName)
+            metadata.addProperty("export_date",
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date()))
+            metadata.addProperty("type", "dictionaries")
+            root.add("metadata", metadata)
+
+            // Export user dictionary words from SharedPreferences
+            val prefs = context.getSharedPreferences("cleverkeys_prefs", android.content.Context.MODE_PRIVATE)
+            val userWords = JsonArray()
+            val disabledWords = JsonArray()
+
+            // Note: Dictionary data is typically stored in the system user dictionary
+            // For now, we export any custom word preferences if they exist
+            prefs.all.filter { it.key.startsWith("user_word_") }.forEach { (key, value) ->
+                userWords.add(value.toString())
+            }
+            prefs.all.filter { it.key.startsWith("disabled_word_") }.forEach { (key, value) ->
+                disabledWords.add(value.toString())
+            }
+
+            root.add("user_words", userWords)
+            root.add("disabled_words", disabledWords)
+
+            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                outputStream.writer().use { writer ->
+                    gson.toJson(root, writer)
+                    writer.flush()
+                }
+            }
+
+            Log.i(TAG, "Exported dictionaries: ${userWords.size()} user words, ${disabledWords.size()} disabled words")
+        } catch (e: Exception) {
+            Log.e(TAG, "Dictionary export failed", e)
+            throw Exception("Dictionary export failed: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Import user dictionaries from JSON file
+     * @param uri URI from Storage Access Framework (ACTION_OPEN_DOCUMENT)
+     * @return DictionaryImportResult with statistics
+     */
+    fun importDictionaries(uri: Uri): DictionaryImportResult {
+        return try {
+            val jsonBuilder = StringBuilder()
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                    reader.forEachLine { line ->
+                        jsonBuilder.append(line)
+                    }
+                }
+            }
+
+            val root = JsonParser.parseString(jsonBuilder.toString()).asJsonObject
+            val result = DictionaryImportResult()
+
+            if (root.has("metadata")) {
+                val metadata = root.getAsJsonObject("metadata")
+                result.sourceVersion = metadata.get("app_version")?.asString ?: "unknown"
+            }
+
+            val prefs = context.getSharedPreferences("cleverkeys_prefs", android.content.Context.MODE_PRIVATE)
+            val editor = prefs.edit()
+
+            if (root.has("user_words")) {
+                val userWords = root.getAsJsonArray("user_words")
+                for (word in userWords) {
+                    val wordStr = word.asString
+                    val key = "user_word_${wordStr.hashCode()}"
+                    if (!prefs.contains(key)) {
+                        editor.putString(key, wordStr)
+                        result.userWordsImported++
+                    }
+                }
+            }
+
+            if (root.has("disabled_words")) {
+                val disabledWords = root.getAsJsonArray("disabled_words")
+                for (word in disabledWords) {
+                    val wordStr = word.asString
+                    val key = "disabled_word_${wordStr.hashCode()}"
+                    if (!prefs.contains(key)) {
+                        editor.putString(key, wordStr)
+                        result.disabledWordsImported++
+                    }
+                }
+            }
+
+            editor.apply()
+            Log.i(TAG, "Imported dictionaries: ${result.userWordsImported} user words, ${result.disabledWordsImported} disabled words")
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Dictionary import failed", e)
+            throw Exception("Dictionary import failed: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Export clipboard history to JSON file
+     * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
+     */
+    fun exportClipboardHistory(uri: Uri) {
+        try {
+            val clipboardDb = ClipboardDatabase.getInstance(context)
+            val exportData = clipboardDb.exportToJSON()
+                ?: throw Exception("Failed to export clipboard data")
+
+            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                outputStream.writer().use { writer ->
+                    writer.write(exportData.toString(2))
+                    writer.flush()
+                }
+            }
+
+            Log.i(TAG, "Exported clipboard history")
+        } catch (e: Exception) {
+            Log.e(TAG, "Clipboard export failed", e)
+            throw Exception("Clipboard export failed: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Import clipboard history from JSON file
+     * @param uri URI from Storage Access Framework (ACTION_OPEN_DOCUMENT)
+     * @return ClipboardImportResult with statistics
+     */
+    fun importClipboardHistory(uri: Uri): ClipboardImportResult {
+        return try {
+            val jsonBuilder = StringBuilder()
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                    reader.forEachLine { line ->
+                        jsonBuilder.append(line)
+                    }
+                }
+            }
+
+            val importData = org.json.JSONObject(jsonBuilder.toString())
+            val clipboardDb = ClipboardDatabase.getInstance(context)
+            val importResult = clipboardDb.importFromJSON(importData)
+
+            val result = ClipboardImportResult()
+            result.importedCount = importResult[0] + importResult[1]
+            result.skippedCount = importResult[2]
+
+            if (importData.has("export_date")) {
+                result.sourceVersion = importData.getString("export_date")
+            }
+
+            Log.i(TAG, "Imported clipboard history: ${result.importedCount} imported, ${result.skippedCount} skipped")
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Clipboard import failed", e)
+            throw Exception("Clipboard import failed: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Result of dictionary import operation
+     */
+    data class DictionaryImportResult(
+        @JvmField var userWordsImported: Int = 0,
+        @JvmField var disabledWordsImported: Int = 0,
+        @JvmField var sourceVersion: String = "unknown"
+    )
+
+    /**
+     * Result of clipboard import operation
+     */
+    data class ClipboardImportResult(
+        @JvmField var importedCount: Int = 0,
+        @JvmField var skippedCount: Int = 0,
+        @JvmField var sourceVersion: String = "unknown"
+    )
+
     companion object {
         private const val TAG = "BackupRestoreManager"
     }

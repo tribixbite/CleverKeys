@@ -129,13 +129,15 @@ class ClipboardDatabase private constructor(context: Context) :
         }
     }
 
-    fun clearAllEntries() {
-        try {
+    fun clearAllEntries(): Result<Int> {
+        return try {
             val db = writableDatabase
             val deletedRows = db.delete(TABLE_CLIPBOARD, "$COLUMN_IS_PINNED = 0", null)
             Log.d(TAG, "Cleared $deletedRows clipboard entries (kept pinned entries)")
+            Result.success(deletedRows)
         } catch (e: Exception) {
             Log.e(TAG, "Error clearing clipboard entries: ${e.message}")
+            Result.failure(e)
         }
     }
 
@@ -187,6 +189,25 @@ class ClipboardDatabase private constructor(context: Context) :
         val totalEntries: Int, val activeEntries: Int, val pinnedEntries: Int,
         val totalSizeBytes: Long, val activeSizeBytes: Long, val pinnedSizeBytes: Long
     )
+
+    /**
+     * Get database statistics as a Map (for ClipboardSettingsActivity compatibility)
+     * @return Result containing stats map
+     */
+    fun getDatabaseStats(): Result<Map<String, Any>> {
+        return try {
+            val stats = getStorageStats()
+            Result.success(mapOf(
+                "total_entries" to stats.totalEntries,
+                "active_entries" to stats.activeEntries,
+                "pinned_entries" to stats.pinnedEntries,
+                "expired_entries" to (stats.totalEntries - stats.activeEntries)
+            ))
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting database stats", e)
+            Result.failure(e)
+        }
+    }
 
     fun getStorageStats(): StorageStats {
         val currentTime = System.currentTimeMillis()

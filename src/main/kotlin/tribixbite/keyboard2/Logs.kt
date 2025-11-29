@@ -14,6 +14,12 @@ object Logs {
         debugLogs = if (d) LogPrinter(Log.DEBUG, TAG) else null
     }
 
+    /** Alias for set_debug_logs for SettingsActivity compatibility */
+    @JvmStatic
+    fun setDebugEnabled(enabled: Boolean) {
+        set_debug_logs(enabled)
+    }
+
     @JvmStatic
     fun debug_startup_input_view(info: EditorInfo, conf: Config) {
         debugLogs?.let { logs ->

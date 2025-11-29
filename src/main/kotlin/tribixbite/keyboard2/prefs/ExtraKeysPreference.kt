@@ -163,6 +163,10 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "combining_palatalization"
         )
 
+        /** Alias for EXTRA_KEYS for compatibility with ExtraKeysConfigActivity */
+        @JvmField
+        val extraKeys: List<String> = EXTRA_KEYS.toList()
+
         /** Whether an extra key is enabled by default. */
         @JvmStatic
         fun defaultChecked(name: String): Boolean {
