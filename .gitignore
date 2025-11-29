@@ -70,3 +70,7 @@ tmp/
 temp/
 *.tmp
 emoji-test.txt
+
+# Exported configs (contain device-specific data)
+uk-config.json
+*-config.json
