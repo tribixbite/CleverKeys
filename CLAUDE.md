@@ -241,3 +241,46 @@ src/main/kotlin/tribixbite/keyboard2/
 # Tail logs for debugging
 logcat -s "CleverKeys" "System.err" "AndroidRuntime"
 ```
+
+---
+
+## 📋 **UK CONFIG FEATURE PARITY VERIFICATION**
+
+**Working Memory File:** `uk-config-todos.md`
+
+This file tracks 600+ verification tasks for ensuring complete feature parity between Unexpected-Keyboard and CleverKeys. Use this file as working memory during parity verification sessions.
+
+### Workflow:
+1. **Select a setting** from `uk-config-todos.md`
+2. **Verify in UK source** (`../Unexpected-Keyboard`) that the setting is actually used
+3. **Verify in CleverKeys** that we have matching functionality in both settings UI and keyboard operation
+4. **Verify import/export** handles the setting correctly
+5. **Mark with status prefix:**
+   - `✓` = Complete/Verified (setting works correctly in both apps)
+   - `!` = Needs clarification (requires user input to resolve)
+   - `✗` = Not properly implemented in UK (include explanation)
+
+### Example:
+```markdown
+### swipe_min_distance: 46.4
+✓ 1. UK: Verified in SwipeDetector.java line 145 - controls minimum swipe travel
+✓ 2. CK: CleverKeys uses in SwipeDetector.kt line 89 - same threshold logic
+✓ 3. CK: Import/export tested - value correctly saved/loaded in ConfigManager.kt
+```
+
+### Progress Tracking:
+- After completing all 600+ TODOs, test importing original UK config
+- Extract only verified (✓) lines to create default values JSON
+- Set these as CleverKeys app defaults
+
+### Commands:
+```bash
+# Count completed todos
+grep -c "^✓" uk-config-todos.md
+
+# Count todos needing clarification
+grep -c "^!" uk-config-todos.md
+
+# Count UK implementation issues
+grep -c "^✗" uk-config-todos.md
+```
