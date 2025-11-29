@@ -32,7 +32,11 @@
 - ✅ Enabled swipe_typing by default
 
 ### Pending Tasks
-- [ ] Manual device testing of new features
+- [x] Manual device testing of new features ✅
+  - Keyboard displays correctly in Messages app
+  - All keys visible and properly positioned
+  - Bottom row shows Ctrl, Fn, space, arrow area, Enter
+  - Settings icon accessible via bottom-left menu
 
 ### Verified This Session
 - Settings.xml: 100+ preferences covering all UK features plus CleverKeys extras
