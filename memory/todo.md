@@ -19,6 +19,9 @@
 - ✅ Added "All Settings (Full)" button in Compose settings to access XML preferences
 - ✅ Updated custom preference classes to use AndroidX preference library
 - ✅ Added preference dependency: `androidx.preference:preference-ktx:1.2.1`
+- ✅ Fixed crash: created `settings_compat.xml` with AndroidX-compatible preferences
+  - Original settings.xml uses deprecated android.preference.* classes
+  - settings_compat.xml uses SwitchPreferenceCompat, SeekBarPreference, etc.
 
 ### Previous Session: UK Config Feature Parity Verification
 - ✅ Full UK config feature parity verification (672/672 todos = 100%)
