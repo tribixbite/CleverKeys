@@ -1,36 +1,32 @@
 # CleverKeys Development Status
 
-**Last Updated**: 2025-11-28
+**Last Updated**: 2025-11-29
 **Status**: ✅ Production Ready
 
 ---
 
-## Current Session: Settings Feature Parity (Nov 28, 2025)
+## Current Session: Performance & Debug Logging (Nov 29, 2025)
 
 ### Completed This Session
+- ✅ Fixed debug logging latency impact in NeuralSwipeTypingEngine
+  - Removed unconditional Log.d calls from hot prediction path
+  - Gated stack trace logging behind VERBOSE_LOGGING build flag (disabled)
+  - Gated runtime logging behind swipe_debug_detailed_logging setting
+  - Error logging remains unconditional for debugging
+- ✅ Verified debug logging architecture properly gated:
+  - DebugLoggingManager.sendDebugLog() has early-exit guard
+  - NeuralLayoutHelper has _debugMode flag check
+  - SwipePredictorOrchestrator uses enableVerboseLogging from config
+
+### Previous Session (Nov 28)
 - ✅ Synced comprehensive settings from Unexpected-Keyboard
-  - Advanced word prediction (context-aware, personalized learning)
-  - Auto-correction with configurable thresholds
-  - Dictionary manager preference
-  - Swipe corrections with fuzzy matching
-  - Swipe debug logging
-  - Multi-language support
-  - Advanced gesture tuning
-  - Privacy and data collection settings
-  - A/B testing and rollback
-  - Backup/restore preferences
-  - Clipboard history enhancements
 - ✅ Fixed `delete_last_word` on backspace (northwest corner)
 - ✅ Fixed period on C key (southwest corner)
 - ✅ Synced bottom_row.xml with UK version
-- ✅ Added missing string resources
-- ✅ Added missing array resources for ListPreferences
+- ✅ Added missing string/array resources
 - ✅ Enabled swipe_typing by default
 
 ### Pending Tasks
-- [x] Review UK files for feature parity (179 CK vs 163 UK files - CK has MORE)
-- [x] Verify all new settings are wired to backend code (Config.kt has all ~60 settings)
-- [ ] Test swipe debug logging doesn't impact latency
 - [ ] Update app icon to minimized raccoon matching splash
 - [ ] Manual device testing of new features
 
