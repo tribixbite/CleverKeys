@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">CleverKeys</string>
     <string name="app_name_release">CleverKeys</string>
     <string name="app_name_debug">CleverKeys (Debug)</string>
     <string name="short_description">AI-powered swipe typing keyboard with neural predictions running entirely on-device.</string>
