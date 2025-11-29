@@ -42,7 +42,11 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat(),
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        setPreferencesFromResource(R.xml.settings, rootKey)
+        // Use settings_compat.xml which is AndroidX compatible
+        // The full settings.xml uses custom preference classes that extend
+        // deprecated android.preference.* classes which are incompatible with
+        // PreferenceFragmentCompat (AndroidX)
+        setPreferencesFromResource(R.xml.settings_compat, rootKey)
 
         // Set up click handlers for action preferences
         setupClickHandlers()
@@ -74,6 +78,18 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat(),
     }
 
     private fun setupClickHandlers() {
+        // Layout manager
+        findPreference<Preference>("layout_manager")?.setOnPreferenceClickListener {
+            startActivity(Intent(requireContext(), LayoutManagerActivity::class.java))
+            true
+        }
+
+        // Extra keys configuration
+        findPreference<Preference>("extra_keys_config")?.setOnPreferenceClickListener {
+            startActivity(Intent(requireContext(), ExtraKeysConfigActivity::class.java))
+            true
+        }
+
         // Check for Updates button
         findPreference<Preference>("check_updates")?.setOnPreferenceClickListener {
             checkForUpdates()
