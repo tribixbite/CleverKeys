@@ -9,13 +9,12 @@
 4.  **CHECK `memory/todo.md`** - Current tasks (all development complete)
 5.  **CHECK `docs/specs/`** - Feature specifications (10 system specs)
 
-**CURRENT STATUS (2025-11-16):**
+**CURRENT STATUS (2025-11-28):**
 - ✅ Development 100% complete (183 Kotlin files, zero compilation errors)
-- ✅ All P0/P1 bugs resolved (Bug #471 clipboard search, Bug #472 dictionary UI)
+- ✅ Full settings parity with Unexpected-Keyboard (Nov 28)
 - ✅ Production ready (Score: 86/100, Grade A)
 - ✅ APK builds successfully (52MB)
-- ✅ Automated testing complete (18/18 checks pass)
-- ⏳ Manual device testing only (3 minutes, requires user)
+- ⏳ Manual device testing for new settings features
 
 **SPEC-DRIVEN DEVELOPMENT WORKFLOW:**
 1. **Check Spec**: Is there a spec in `docs/specs/` for this feature?
@@ -105,6 +104,93 @@ This table maps the core features and file locations from the original Java-base
 | **Suggestion Display** | `CandidateView.java` | `src/main/kotlin/tribixbite/keyboard2/SuggestionBar.kt` | **COMPLETE**. Re-implemented as `SuggestionBar`. |
 | **Utilities** | `Utils.java` | `utils/Utils.kt`, `utils/Extensions.kt` | **ENHANCED**. Significantly expanded with new gesture and data utilities. |
 | **JNI/Native Code** | `jni/*` | `assets/libjni_latinimegoogle.so` | **LEGACY**. The old native library is present but unused by the new ONNX engine. |
+
+---
+
+## 🔍 **UK Feature Parity Audit (Nov 28, 2025)**
+
+### Settings Synced from Unexpected-Keyboard
+
+The following settings were added to achieve full feature parity:
+
+**Word Prediction (Advanced)**:
+- Context-aware predictions with N-gram learning
+- Personalized learning with frequency tracking
+- Learning aggression levels (Conservative/Balanced/Aggressive)
+- Context boost multiplier (0.5-5.0)
+- Frequency scaling factor (100-5000)
+
+**Auto-Correction**:
+- Enable/disable toggle
+- Minimum word length (2-5)
+- Character match threshold (0.5-0.9)
+- Minimum frequency threshold (100-5000)
+
+**Swipe Corrections**:
+- Beam search corrections toggle
+- Final output corrections toggle
+- Correction style presets (Strict/Balanced/Lenient)
+- Fuzzy matching algorithm (Edit Distance/Positional)
+- Typo forgiveness (0-5 chars)
+- Starting letter accuracy (0-4 letters)
+- Correction search depth (1-10 candidates)
+- Prediction source balance (0-100%)
+- Common/frequent word boosts
+- Rare words penalty
+
+**Neural Prediction (Advanced)**:
+- Batch processing toggle
+- Greedy search toggle
+- Length normalization alpha (0.0-5.0)
+- Pruning confidence (0.0-1.0)
+- Early stop gap (0.0-20.0)
+- Model version selection
+- Quantized models toggle
+- Trajectory resampling mode
+- A/B testing controls
+- Rollback and recovery
+- Privacy and data collection controls
+
+**Advanced Gesture Tuning**:
+- Tap duration threshold (50-500ms)
+- Double-space-to-period threshold (0-1000ms)
+- Minimum swipe distance (20-100px)
+- Minimum key distance (15-80px)
+- Minimum key dwell time (0-50ms)
+- Movement noise filter (0.5-10px)
+- High velocity threshold (200-2000px/sec)
+- Slider speed smoothing (0.1-0.95)
+- Maximum speed multiplier (1.0-10.0)
+
+**Multi-Language Support**:
+- Enable/disable toggle
+- Primary language selection
+- Auto-detect language toggle
+- Detection sensitivity (0.4-0.9)
+
+**Clipboard History (Enhanced)**:
+- Limit type (count/size)
+- Size limits (1-100MB)
+- Pane height percent (10-50%)
+- Pinned section rows
+- Maximum item size (100KB-5MB)
+
+**Backup and Restore**:
+- Export/import configuration
+- Export/import custom dictionary
+- Export/import clipboard history
+
+### Layout Fixes Applied
+- `delete_last_word` on backspace NW corner (was `loc f1_word`)
+- Period on C key SW corner (was missing)
+- Bottom row synced with UK (`switch_back_clipboard`, `action` key)
+
+### Files Modified (Nov 28, 2025)
+- `res/xml/settings.xml` - Added 100+ preferences
+- `res/values/strings.xml` - Added 25+ new strings
+- `res/values/arrays.xml` - Added 15+ array resources
+- `res/xml/bottom_row.xml` - Synced with UK
+- `src/main/layouts/latn_qwerty_us.xml` - Fixed keys
 
 ---
 
