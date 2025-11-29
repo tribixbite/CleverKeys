@@ -17,6 +17,11 @@
   - DebugLoggingManager.sendDebugLog() has early-exit guard
   - NeuralLayoutHelper has _debugMode flag check
   - SwipePredictorOrchestrator uses enableVerboseLogging from config
+- ✅ Updated app icon to raccoon mascot
+  - Generated all mipmap sizes (48/72/96/144/192px) from raccoon_logo.webp
+  - Created adaptive icon foreground/background PNGs for Android 8.0+
+  - Removed old vector keyboard icon
+  - Added missing app_name string resource
 
 ### Previous Session (Nov 28)
 - ✅ Synced comprehensive settings from Unexpected-Keyboard
@@ -27,7 +32,6 @@
 - ✅ Enabled swipe_typing by default
 
 ### Pending Tasks
-- [ ] Update app icon to minimized raccoon matching splash
 - [ ] Manual device testing of new features
 
 ### Verified This Session
