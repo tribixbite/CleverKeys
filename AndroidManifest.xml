@@ -35,6 +35,13 @@
       </intent-filter>
     </activity>
 
+    <activity android:name="tribixbite.keyboard2.SettingsPreferenceActivity" android:label="@string/settings_title" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+      </intent-filter>
+    </activity>
+
     <activity android:name="tribixbite.keyboard2.LauncherActivity" android:icon="@mipmap/ic_launcher" android:theme="@style/appTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>

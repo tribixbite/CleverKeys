@@ -2,58 +2,50 @@ package tribixbite.keyboard2.prefs
 
 import android.content.Context
 import android.content.res.TypedArray
-import android.preference.DialogPreference
 import android.util.AttributeSet
 import android.view.View
-import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.preference.DialogPreference
 
 /**
  * IntSlideBarPreference
  * -
- * Open a dialog showing a seekbar
+ * Open a dialog showing a seekbar for integer values
  * -
  * xml attrs:
  *   android:defaultValue  Default value (int)
  *   min                   min value (int)
  *   max                   max value (int)
  * -
- * Summary field allow to show the current value using %s flag
+ * Summary field allows showing the current value using %s flag
  */
 class IntSlideBarPreference(
     context: Context,
     attrs: AttributeSet?
 ) : DialogPreference(context, attrs), SeekBar.OnSeekBarChangeListener {
 
-    private val layout: LinearLayout
-    private val textView: TextView
-    private val seekBar: SeekBar
     private val min: Int
-    private val initialSummary: String
+    private val max: Int
+    private var value: Int
+    private val initialSummary: CharSequence?
+
+    // Dialog views
+    private var seekBar: SeekBar? = null
+    private var textView: TextView? = null
 
     init {
-        initialSummary = summary.toString()
-        textView = TextView(context).apply {
-            setPadding(48, 40, 48, 40)
-        }
+        initialSummary = summary
         min = attrs?.getAttributeIntValue(null, "min", 0) ?: 0
-        val max = attrs?.getAttributeIntValue(null, "max", 0) ?: 0
+        max = attrs?.getAttributeIntValue(null, "max", 100) ?: 100
+        value = min
 
-        seekBar = SeekBar(context).apply {
-            setMax(max - min)
-            setOnSeekBarChangeListener(this@IntSlideBarPreference)
-        }
-
-        layout = LinearLayout(getContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            addView(textView)
-            addView(seekBar)
-        }
+        // Set up dialog layout resource (shared with SlideBarPreference)
+        dialogLayoutResource = tribixbite.keyboard2.R.layout.preference_slider_dialog
     }
 
     override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+        value = progress + min
         updateText()
     }
 
@@ -61,13 +53,9 @@ class IntSlideBarPreference(
 
     override fun onStopTrackingTouch(seekBar: SeekBar) {}
 
-    override fun onSetInitialValue(restorePersistedValue: Boolean, defaultValue: Any?) {
-        val value = if (restorePersistedValue) {
-            getPersistedInt(min)
-        } else {
-            (defaultValue as Int).also { persistInt(it) }
-        }
-        seekBar.progress = value - min
+    override fun onSetInitialValue(defaultValue: Any?) {
+        val defVal = (defaultValue as? Int) ?: min
+        value = getPersistedInt(defVal)
         updateText()
     }
 
@@ -75,24 +63,40 @@ class IntSlideBarPreference(
         return a.getInt(index, min)
     }
 
-    override fun onDialogClosed(positiveResult: Boolean) {
+    fun onDialogClosed(positiveResult: Boolean) {
         if (positiveResult) {
-            persistInt(seekBar.progress + min)
+            persistInt(value)
         } else {
-            seekBar.progress = getPersistedInt(min) - min
+            value = getPersistedInt(min)
         }
         updateText()
     }
 
-    override fun onCreateDialogView(): View {
-        val parent = layout.parent as? ViewGroup
-        parent?.removeView(layout)
-        return layout
+    fun onBindDialogView(view: View) {
+        textView = view.findViewById(tribixbite.keyboard2.R.id.slider_value)
+        seekBar = view.findViewById<SeekBar>(tribixbite.keyboard2.R.id.slider_seekbar)?.apply {
+            max = this@IntSlideBarPreference.max - min
+            progress = value - min
+            setOnSeekBarChangeListener(this@IntSlideBarPreference)
+        }
+        updateText()
     }
 
     private fun updateText() {
-        val f = String.format(initialSummary, seekBar.progress + min)
-        textView.text = f
-        summary = f
+        val formattedValue = try {
+            String.format(initialSummary?.toString() ?: "%s", value)
+        } catch (e: Exception) {
+            value.toString()
+        }
+        textView?.text = formattedValue
+        summary = formattedValue
+    }
+
+    fun getValue(): Int = value
+
+    fun setValue(newValue: Int) {
+        value = newValue
+        seekBar?.progress = value - min
+        updateText()
     }
 }

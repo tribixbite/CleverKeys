@@ -5,9 +5,22 @@
 
 ---
 
-## Current Session: UK Config Feature Parity Verification (Nov 29, 2025)
+## Current Session: Full Settings UI & Theme Updates (Nov 29, 2025)
 
 ### Completed This Session
+- ✅ Added Jewel theme (purple #9B59B6 on silver #C0C0C0) - CleverKeys signature theme
+- ✅ Updated Config.kt defaults to match uk-config.json values (25+ settings)
+- ✅ Added PreferenceFragment for traditional Android settings UI
+  - New `SettingsPreferenceActivity` hosts `SettingsPreferenceFragment`
+  - Loads all preferences from `res/xml/settings.xml`
+  - Wired up update buttons (Check for Updates, Install Update)
+  - Wired up backup/restore buttons (opens BackupRestoreActivity)
+  - Wired up dictionary/swipe/neural settings navigation
+- ✅ Added "All Settings (Full)" button in Compose settings to access XML preferences
+- ✅ Updated custom preference classes to use AndroidX preference library
+- ✅ Added preference dependency: `androidx.preference:preference-ktx:1.2.1`
+
+### Previous Session: UK Config Feature Parity Verification
 - ✅ Full UK config feature parity verification (672/672 todos = 100%)
   - Created `uk-config-todos.md` with 3 todos per setting (224 settings × 3)
   - Verified all settings against UK source code
@@ -53,6 +66,7 @@
 - [x] Add Jewel theme (purple #9B59B6 on silver #C0C0C0) - CleverKeys signature theme
 - [x] Update Config.kt defaults to match uk-config.json values
 - [x] Add missing themes: Everforest Light, Cobalt, Pine, ePaper Black
+- [x] Add PreferenceFragment for traditional Android settings (UK feature parity)
 - [ ] Implement privacy settings (currently UI-only placeholders)
 - [ ] Implement rollback setting (currently UI-only placeholder)
 

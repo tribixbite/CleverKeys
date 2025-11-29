@@ -2,18 +2,17 @@ package tribixbite.keyboard2.prefs
 
 import android.content.Context
 import android.content.res.TypedArray
-import android.preference.DialogPreference
 import android.util.AttributeSet
 import android.view.View
-import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.preference.DialogPreference
 import kotlin.math.max
 import kotlin.math.round
 
 /**
- * SideBarPreference
+ * SlideBarPreference
  * -
  * Open a dialog showing a seekbar
  * -
@@ -22,42 +21,31 @@ import kotlin.math.round
  *   min                   min value (float)
  *   max                   max value (float)
  * -
- * Summary field allow to show the current value using %f or %s flag
+ * Summary field allows showing the current value using %f or %s flag
  */
 class SlideBarPreference(
     context: Context,
     attrs: AttributeSet?
 ) : DialogPreference(context, attrs), SeekBar.OnSeekBarChangeListener {
 
-    private val layout: LinearLayout
-    private val textView: TextView
-    private val seekBar: SeekBar
     private val min: Float
     private val max: Float
     private var value: Float
-    private val initialSummary: String
+    private val initialSummary: CharSequence?
 
     init {
-        initialSummary = summary.toString()
-        textView = TextView(context).apply {
-            setPadding(48, 40, 48, 40)
-        }
-
+        initialSummary = summary
         min = floatOfString(attrs?.getAttributeValue(null, "min"))
         value = min
         max = max(1f, floatOfString(attrs?.getAttributeValue(null, "max")))
 
-        seekBar = SeekBar(context).apply {
-            setMax(STEPS)
-            setOnSeekBarChangeListener(this@SlideBarPreference)
-        }
-
-        layout = LinearLayout(getContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            addView(textView)
-            addView(seekBar)
-        }
+        // Set up dialog layout resource
+        dialogLayoutResource = tribixbite.keyboard2.R.layout.preference_slider_dialog
     }
+
+    // SeekBar for dialog
+    private var seekBar: SeekBar? = null
+    private var textView: TextView? = null
 
     override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
         value = round(progress * (max - min)) / STEPS.toFloat() + min
@@ -86,7 +74,7 @@ class SlideBarPreference(
                 // Try String
                 try {
                     val strValue = getPersistedString(defaultValue.toString())
-                    val floatValue = strValue.toFloat()
+                    val floatValue = strValue?.toFloat() ?: defaultValue
                     persistFloat(floatValue)
                     floatValue
                 } catch (e3: Exception) {
@@ -98,13 +86,9 @@ class SlideBarPreference(
         }
     }
 
-    override fun onSetInitialValue(restorePersistedValue: Boolean, defaultValue: Any?) {
-        value = if (restorePersistedValue) {
-            getSafePersistedFloat(min)
-        } else {
-            (defaultValue as Float).also { persistFloat(it) }
-        }
-        seekBar.progress = ((value - min) * STEPS / (max - min)).toInt()
+    override fun onSetInitialValue(defaultValue: Any?) {
+        val defVal = (defaultValue as? Float) ?: min
+        value = getSafePersistedFloat(defVal)
         updateText()
     }
 
@@ -112,25 +96,41 @@ class SlideBarPreference(
         return a.getFloat(index, min)
     }
 
-    override fun onDialogClosed(positiveResult: Boolean) {
+    fun onDialogClosed(positiveResult: Boolean) {
         if (positiveResult) {
             persistFloat(value)
         } else {
-            seekBar.progress = ((getSafePersistedFloat(min) - min) * STEPS / (max - min)).toInt()
+            value = getSafePersistedFloat(min)
         }
         updateText()
     }
 
-    override fun onCreateDialogView(): View {
-        val parent = layout.parent as? ViewGroup
-        parent?.removeView(layout)
-        return layout
+    fun onBindDialogView(view: View) {
+        textView = view.findViewById(tribixbite.keyboard2.R.id.slider_value)
+        seekBar = view.findViewById<SeekBar>(tribixbite.keyboard2.R.id.slider_seekbar)?.apply {
+            max = STEPS
+            progress = ((value - min) * STEPS / (this@SlideBarPreference.max - min)).toInt()
+            setOnSeekBarChangeListener(this@SlideBarPreference)
+        }
+        updateText()
     }
 
     private fun updateText() {
-        val f = String.format(initialSummary, value)
-        textView.text = f
-        summary = f
+        val formattedValue = try {
+            String.format(initialSummary?.toString() ?: "%s", value)
+        } catch (e: Exception) {
+            value.toString()
+        }
+        textView?.text = formattedValue
+        summary = formattedValue
+    }
+
+    fun getValue(): Float = value
+
+    fun setValue(newValue: Float) {
+        value = newValue
+        seekBar?.progress = ((value - min) * STEPS / (max - min)).toInt()
+        updateText()
     }
 
     companion object {

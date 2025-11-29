@@ -1107,6 +1107,21 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         Text(stringResource(R.string.settings_updates_button))
                     }
                 }
+
+                // Open full settings (XML PreferenceScreen)
+                Button(
+                    onClick = { openFullSettings() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("All Settings (Full)")
+                }
+
+                Text(
+                    text = "Access all keyboard settings including advanced neural, swipe corrections, and backup options",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
             }
         }
     }
@@ -1797,5 +1812,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     private fun openBackupRestore() {
         startActivity(Intent(this, BackupRestoreActivity::class.java))
+    }
+
+    private fun openFullSettings() {
+        startActivity(Intent(this, SettingsPreferenceActivity::class.java))
     }
 }
