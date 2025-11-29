@@ -41,16 +41,15 @@
 - ✅ O key shows '(' on SW corner and ')' on SE corner (confirmed in screenshot)
 
 ### Pending Tasks (Future Work)
-- [x] Wire up core swipe scoring weights (completed Nov 29)
+- [x] Wire up all swipe scoring weights (completed Nov 29)
   - ✅ swipe_confidence_shape_weight - wired to EnhancedWordPredictor
   - ✅ swipe_confidence_location_weight - wired to EnhancedWordPredictor
   - ✅ swipe_confidence_velocity_weight - wired to EnhancedWordPredictor & SwipeDetector
-  - [ ] swipe_endpoint_bonus_weight - needs wiring to scoring
-  - [ ] swipe_first_letter_weight - needs wiring to scoring
-  - [ ] swipe_last_letter_weight - needs wiring to scoring
+  - ✅ swipe_endpoint_bonus_weight - wired to EnhancedWordPredictor
+  - ✅ swipe_first_letter_weight - wired to EnhancedWordPredictor
+  - ✅ swipe_last_letter_weight - wired to EnhancedWordPredictor
   - ✅ swipe_common_words_boost - already wired in OptimizedVocabulary
   - ✅ swipe_top5000_boost - already wired in OptimizedVocabulary
-- [ ] Wire up endpoint/letter weights (3 remaining)
 - [ ] Implement privacy settings (currently UI-only placeholders)
 - [ ] Implement rollback setting (currently UI-only placeholder)
 

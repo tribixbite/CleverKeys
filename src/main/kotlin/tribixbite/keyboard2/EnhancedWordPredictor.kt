@@ -28,6 +28,11 @@ class EnhancedWordPredictor {
     private var locationWeight = DEFAULT_LOCATION_WEIGHT
     private var frequencyWeight = DEFAULT_FREQUENCY_WEIGHT
 
+    // Endpoint and letter accuracy weights (0-1 scale)
+    private var endpointBonusWeight = DEFAULT_ENDPOINT_BONUS_WEIGHT
+    private var firstLetterWeight = DEFAULT_FIRST_LETTER_WEIGHT
+    private var lastLetterWeight = DEFAULT_LAST_LETTER_WEIGHT
+
     /**
      * Update scoring weights from Config.
      * Config stores weights as 0-255 integers, we normalize to weights that sum to ~1.0
@@ -46,6 +51,12 @@ class EnhancedWordPredictor {
             // Use velocity weight as frequency weight since we don't have velocity scoring here
             frequencyWeight = config.swipe_confidence_velocity_weight / totalWeight
         }
+
+        // Endpoint and letter weights are normalized from 0-255 to 0-1
+        // These act as bonus multipliers, not as part of the main weight sum
+        endpointBonusWeight = config.swipe_endpoint_bonus_weight / 255f
+        firstLetterWeight = config.swipe_first_letter_weight / 255f
+        lastLetterWeight = config.swipe_last_letter_weight / 255f
     }
 
     /**
@@ -313,10 +324,78 @@ class EnhancedWordPredictor {
         val lengthDiff = abs(word.length - keySequence.length).toFloat()
         val lengthScore = 1.0f / (1.0f + lengthDiff * LENGTH_PENALTY)
 
-        // Combine scores using configurable weights
-        return (shapeScore * shapeWeight +
+        // Base score using configurable weights
+        var baseScore = (shapeScore * shapeWeight +
             locationScore * locationWeight +
             frequencyScore * frequencyWeight) * lengthScore
+
+        // Endpoint accuracy bonus - how well do gesture start/end match first/last keys?
+        val endpointBonus = calculateEndpointBonus(word, resampledPath)
+        baseScore += endpointBonus * endpointBonusWeight * 0.2f  // Scale bonus contribution
+
+        // First letter accuracy bonus
+        val firstLetterBonus = calculateFirstLetterAccuracy(word, resampledPath)
+        baseScore += firstLetterBonus * firstLetterWeight * 0.15f
+
+        // Last letter accuracy bonus
+        val lastLetterBonus = calculateLastLetterAccuracy(word, resampledPath)
+        baseScore += lastLetterBonus * lastLetterWeight * 0.15f
+
+        return baseScore
+    }
+
+    /**
+     * Calculate endpoint accuracy bonus - how well gesture endpoints match word endpoints
+     */
+    private fun calculateEndpointBonus(word: String, resampledPath: List<PointF>): Float {
+        if (word.isEmpty() || resampledPath.size < 2) return 0f
+
+        val firstChar = word.first().lowercaseChar()
+        val lastChar = word.last().lowercaseChar()
+
+        val firstKeyPos = keyPositions[firstChar] ?: return 0f
+        val lastKeyPos = keyPositions[lastChar] ?: return 0f
+
+        val gestureStart = resampledPath.first()
+        val gestureEnd = resampledPath.last()
+
+        // Calculate distances (normalized by typical key width ~0.1 in normalized coords)
+        val startDistance = distance(gestureStart, firstKeyPos)
+        val endDistance = distance(gestureEnd, lastKeyPos)
+
+        // Convert to scores (closer = higher score)
+        val startScore = 1.0f / (1.0f + startDistance * 10f)
+        val endScore = 1.0f / (1.0f + endDistance * 10f)
+
+        return (startScore + endScore) / 2f
+    }
+
+    /**
+     * Calculate first letter accuracy - how close is gesture start to expected first key
+     */
+    private fun calculateFirstLetterAccuracy(word: String, resampledPath: List<PointF>): Float {
+        if (word.isEmpty() || resampledPath.isEmpty()) return 0f
+
+        val firstChar = word.first().lowercaseChar()
+        val expectedPos = keyPositions[firstChar] ?: return 0f
+        val gestureStart = resampledPath.first()
+
+        val dist = distance(gestureStart, expectedPos)
+        return 1.0f / (1.0f + dist * 10f)
+    }
+
+    /**
+     * Calculate last letter accuracy - how close is gesture end to expected last key
+     */
+    private fun calculateLastLetterAccuracy(word: String, resampledPath: List<PointF>): Float {
+        if (word.isEmpty() || resampledPath.isEmpty()) return 0f
+
+        val lastChar = word.last().lowercaseChar()
+        val expectedPos = keyPositions[lastChar] ?: return 0f
+        val gestureEnd = resampledPath.last()
+
+        val dist = distance(gestureEnd, expectedPos)
+        return 1.0f / (1.0f + dist * 10f)
     }
 
     /**
@@ -516,6 +595,12 @@ class EnhancedWordPredictor {
         private const val DEFAULT_SHAPE_WEIGHT = 0.47f  // 168/(168+130+60)
         private const val DEFAULT_LOCATION_WEIGHT = 0.36f  // 130/(168+130+60)
         private const val DEFAULT_FREQUENCY_WEIGHT = 0.17f  // 60/(168+130+60)
+
+        // Default endpoint and letter accuracy weights (0-1 scale from 0-255)
+        // Based on UK config: endpoint=200, first_letter=150, last_letter=150
+        private const val DEFAULT_ENDPOINT_BONUS_WEIGHT = 0.78f  // 200/255
+        private const val DEFAULT_FIRST_LETTER_WEIGHT = 0.59f   // 150/255
+        private const val DEFAULT_LAST_LETTER_WEIGHT = 0.59f    // 150/255
 
         // Path smoothing parameters
         private const val SMOOTHING_WINDOW = 3
