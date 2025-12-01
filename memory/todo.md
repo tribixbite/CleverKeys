@@ -29,6 +29,17 @@
   - Expected: Single tap shifts one char, double tap toggles caps lock
   - Root cause under investigation - clearLatched() should be called on key up
 
+  **Investigation notes (Dec 1):**
+  - Code flow analysis shows clearLatched() IS being called for regular char keys
+  - UK's Pointers.java has simpler onTouchUp (no gesture classification block)
+  - Our gesture classification block (lines 147-313) adds complexity but falls through correctly
+  - Added debug logging at key decision points in onTouchUp
+  - Possible causes to test:
+    1. Autocapitalisation.kt re-enabling shift after clearLatched()
+    2. Double-tap timing too aggressive (single tap being interpreted as double)
+    3. Something in keyboard view not updating properly after clearLatched()
+  - Need to test with logcat to see actual execution path
+
 ### Previous Session: Settings Consolidation & Swipe Corrections (Nov 29, 2025)
 
 ### Completed
