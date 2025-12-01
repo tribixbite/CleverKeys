@@ -128,8 +128,11 @@ class Pointers(
     fun onTouchUp(pointerId: Int) {
         val ptr = getPtr(pointerId) ?: return
 
+        Log.d("Pointers", "=== onTouchUp START: ptr_value=${ptr.value}, flags=0x${ptr.flags.toString(16)}, pointerId=$pointerId ===")
+
         // Handle swipe typing completion
         if (_config.swipe_typing_enabled && ptr.hasFlagsAny(FLAG_P_SWIPE_TYPING)) {
+            Log.d("Pointers", "Path: SWIPE_TYPING completion")
             _handler.onSwipeEnd(_swipeRecognizer)
             _swipeRecognizer.reset()
             removePtr(ptr)
@@ -137,6 +140,7 @@ class Pointers(
         }
 
         if (ptr.hasFlagsAny(FLAG_P_SLIDING)) {
+            Log.d("Pointers", "Path: SLIDING")
             clearLatched()
             ptr.sliding?.onTouchUp(ptr)
             return
@@ -151,10 +155,14 @@ class Pointers(
         val canSwipeType = _config.swipe_typing_enabled && isCharKey
         val canShortGesture = _config.short_gestures_enabled && ptr_value != null
 
+        Log.d("Pointers", "Gesture check: isCharKey=$isCharKey, canSwipeType=$canSwipeType, canShortGesture=$canShortGesture, " +
+            "gesture=${ptr.gesture}, hasExcludedFlags=${ptr.hasFlagsAny(FLAG_P_SLIDING or FLAG_P_SWIPE_TYPING or FLAG_P_LATCHED)}, hasKey=${ptr.key != null}")
+
         if ((canSwipeType || canShortGesture) && ptr.gesture == null &&
             !ptr.hasFlagsAny(FLAG_P_SLIDING or FLAG_P_SWIPE_TYPING or FLAG_P_LATCHED) &&
             ptr.key != null
         ) {
+            Log.d("Pointers", "ENTERING gesture classification block")
             // Collect gesture data for classification
             val swipePath = _swipeRecognizer.getSwipePath()
             var totalDistance = 0.0f
@@ -305,12 +313,17 @@ class Pointers(
                 }
 
                 // Regular TAP - output the key character only if it was deferred
+                Log.d("Pointers", "TAP path: deferred=${ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)}")
                 if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)) {
                     _handler.onPointerDown(ptr_value, false)
                 }
                 _swipeRecognizer.reset()
             }
         }
+        Log.d("Pointers", "After gesture block, proceeding to latched logic")
+        // Log all current pointers to understand state
+        val latchedPtrs = _ptrs.filter { it.hasFlagsAny(FLAG_P_LATCHED) }
+        Log.d("Pointers", "Current latched pointers: ${latchedPtrs.map { "${it.value}(flags=0x${it.flags.toString(16)})" }}")
         // REMOVED: Legacy gesture.pointer_up() call - curved gestures obsolete
         val latched = getLatched(ptr)
         Log.d("Pointers", "onTouchUp path: latched=$latched, ptr.flags=0x${ptr.flags.toString(16)}, isLatchable=${(ptr.flags and FLAG_P_LATCHABLE) != 0}")
