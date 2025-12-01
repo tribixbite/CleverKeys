@@ -313,16 +313,21 @@ class Pointers(
         }
         // REMOVED: Legacy gesture.pointer_up() call - curved gestures obsolete
         val latched = getLatched(ptr)
+        Log.d("Pointers", "onTouchUp path: latched=$latched, ptr.flags=0x${ptr.flags.toString(16)}, isLatchable=${(ptr.flags and FLAG_P_LATCHABLE) != 0}")
         if (latched != null) { // Already latched
+            Log.d("Pointers", "Path: Already latched, latched.flags=0x${latched.flags.toString(16)}")
             removePtr(ptr) // Remove duplicate
             // Toggle lockable key, except if it's a fake pointer
             if ((latched.flags and (FLAG_P_FAKE or FLAG_P_DOUBLE_TAP_LOCK)) == FLAG_P_DOUBLE_TAP_LOCK) {
+                Log.d("Pointers", "Path: Locking pointer (double-tap)")
                 lockPointer(latched, false)
             } else { // Otherwise, unlatch
+                Log.d("Pointers", "Path: Unlatching")
                 removePtr(latched)
                 _handler.onPointerUp(ptr_value, ptr.modifiers)
             }
         } else if ((ptr.flags and FLAG_P_LATCHABLE) != 0) {
+            Log.d("Pointers", "Path: Latchable key - will latch")
             // Latchable but non-special keys must clear latched.
             if ((ptr.flags and FLAG_P_CLEAR_LATCHED) != 0) {
                 clearLatched()
@@ -331,8 +336,9 @@ class Pointers(
             ptr.pointerId = -1
             _handler.onPointerFlagsChanged(false)
         } else {
-            Log.d("Pointers", "Regular key up: clearing latched, value=$ptr_value")
+            Log.d("Pointers", "Regular key up: clearing latched, value=$ptr_value, ptrs_before=${_ptrs.size}")
             clearLatched()
+            Log.d("Pointers", "After clearLatched: ptrs_after=${_ptrs.size}")
             removePtr(ptr)
             _handler.onPointerUp(ptr_value, ptr.modifiers)
         }
