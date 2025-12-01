@@ -29,16 +29,26 @@
   - Expected: Single tap shifts one char, double tap toggles caps lock
   - Root cause under investigation - clearLatched() should be called on key up
 
-  **Investigation notes (Dec 1):**
-  - Code flow analysis shows clearLatched() IS being called for regular char keys
-  - UK's Pointers.java has simpler onTouchUp (no gesture classification block)
-  - Our gesture classification block (lines 147-313) adds complexity but falls through correctly
-  - Added debug logging at key decision points in onTouchUp
-  - Possible causes to test:
-    1. Autocapitalisation.kt re-enabling shift after clearLatched()
-    2. Double-tap timing too aggressive (single tap being interpreted as double)
-    3. Something in keyboard view not updating properly after clearLatched()
-  - Need to test with logcat to see actual execution path
+  **Investigation notes (Dec 1, continued):**
+  - Added comprehensive debug logging throughout onTouchUp:
+    - Entry point with pointer value/flags
+    - Gesture classification conditions
+    - TAP path execution
+    - All currently latched pointers before processing
+    - Which path is taken (latched/latchable/regular)
+    - Before/after clearLatched() call
+
+  **Code analysis conclusions:**
+  - clearLatched() SHOULD be called in the `else` block (line 351) for regular char keys
+  - Traced full flow: shift tap → latch → char tap → gesture block → TAP path → falls through → clearLatched()
+  - Autocapitalisation.typed() sets shouldEnableShift=false but doesn't call set_shift_state(false)
+  - UK's Pointers.java has much simpler onTouchUp (only 4 lines for gesture handling)
+  - Our gesture block has early returns for SWIPE/SHORT_SWIPE but TAP falls through correctly
+
+  **Next step:** Test on device with logcat to see actual execution path:
+  ```bash
+  adb logcat -s Pointers | grep -E "onTouchUp|Gesture|TAP|latched|clearLatched"
+  ```
 
 ### Previous Session: Settings Consolidation & Swipe Corrections (Nov 29, 2025)
 
