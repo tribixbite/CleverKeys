@@ -144,12 +144,13 @@ class Keyboard2View @JvmOverloads constructor(
             when (config?.swipe_trail_effect ?: "glow") {
                 "glow" -> {
                     // GPU-efficient glow using blur mask filter
-                    val glowRadius = (config?.swipe_trail_glow_radius ?: 12.0f) * density
+                    // Use SOLID blur type for crisp center with soft edges
+                    val glowRadius = (config?.swipe_trail_glow_radius ?: 8.0f) * density * 0.5f
                     maskFilter = android.graphics.BlurMaskFilter(
-                        glowRadius,
-                        android.graphics.BlurMaskFilter.Blur.NORMAL
+                        glowRadius.coerceAtLeast(1f),
+                        android.graphics.BlurMaskFilter.Blur.SOLID // SOLID gives crisp center
                     )
-                    alpha = 220 // Slightly more opaque for glow
+                    alpha = 240 // More opaque for better visibility
                 }
                 "solid" -> {
                     maskFilter = null

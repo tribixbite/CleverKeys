@@ -1480,6 +1480,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             ) {
                 VersionInfoCard()
 
+                // GitHub release info
+                GitHubInfoCard()
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1499,6 +1502,32 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(stringResource(R.string.settings_updates_button))
+                    }
+                }
+
+                // Second row: Install Update with file picker
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { installUpdateFromDefault() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        Text("Install Update")
+                    }
+
+                    Button(
+                        onClick = { showUpdateFilePicker() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary
+                        )
+                    ) {
+                        Text("Browse APK...")
                     }
                 }
 
@@ -1757,6 +1786,41 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     lineHeight = 16.sp
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun GitHubInfoCard() {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { openGitHubReleases() },
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "GitHub Repository",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontSize = 14.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "tribixbite/cleverkeys",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 12.sp
+                )
+                Text(
+                    text = "Tap to view releases and download updates",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 11.sp,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
             }
         }
@@ -2123,6 +2187,42 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
+    /**
+     * Install update from default location without prompting.
+     * Checks /sdcard/unexpected/debug-kb.apk first (like Unexpected-Keyboard),
+     * then falls back to other common locations.
+     */
+    private fun installUpdateFromDefault() {
+        val defaultPath = File("/sdcard/unexpected/debug-kb.apk")
+        if (defaultPath.exists() && defaultPath.canRead()) {
+            installUpdate(defaultPath)
+            return
+        }
+
+        // Fallback to other locations
+        val possibleLocations = arrayOf(
+            "/storage/emulated/0/unexpected/debug-kb.apk",
+            "/sdcard/Download/cleverkeys-debug.apk",
+            "/storage/emulated/0/Download/cleverkeys-debug.apk",
+            "/sdcard/Download/tribixbite.keyboard2.debug.apk"
+        )
+
+        for (location in possibleLocations) {
+            val file = File(location)
+            if (file.exists() && file.canRead()) {
+                installUpdate(file)
+                return
+            }
+        }
+
+        // No update found
+        Toast.makeText(
+            this,
+            "No update APK found at /sdcard/unexpected/debug-kb.apk",
+            Toast.LENGTH_LONG
+        ).show()
+    }
+
     private fun showUpdateDialog(apkFile: File) {
         android.app.AlertDialog.Builder(this)
             .setTitle(getString(R.string.settings_update_dialog_title))
@@ -2318,5 +2418,101 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     private fun openFullSettings() {
         startActivity(Intent(this, SettingsPreferenceActivity::class.java))
+    }
+
+    private fun openGitHubReleases() {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = android.net.Uri.parse("https://github.com/tribixbite/cleverkeys/releases")
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open browser", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Show file picker dialog to select APK from common locations.
+     * Matches UK's functionality for finding and selecting update APKs.
+     */
+    private fun showUpdateFilePicker() {
+        // Search for APK files in common locations
+        val searchDirs = arrayOf(
+            File("/sdcard/unexpected/"),
+            File("/storage/emulated/0/unexpected/"),
+            File("/sdcard/Download/"),
+            File("/storage/emulated/0/Download/"),
+            File(android.os.Environment.getExternalStoragePublicDirectory(
+                android.os.Environment.DIRECTORY_DOWNLOADS), ""),
+            File("/sdcard/Android/data/tribixbite.keyboard2.debug/files/"),
+            File("/data/data/com.termux/files/home/git/swype/cleverkeys/build/outputs/apk/debug/")
+        )
+
+        val apkFiles = mutableListOf<File>()
+
+        for (dir in searchDirs) {
+            if (dir.exists() && dir.isDirectory) {
+                dir.listFiles { file ->
+                    file.extension.equals("apk", ignoreCase = true)
+                }?.forEach { apkFiles.add(it) }
+            }
+        }
+
+        if (apkFiles.isEmpty()) {
+            android.app.AlertDialog.Builder(this)
+                .setTitle("No APK Files Found")
+                .setMessage(
+                    "No APK files found in common locations:\n\n" +
+                    "• /sdcard/unexpected/debug-kb.apk\n" +
+                    "• /sdcard/Download/*.apk\n\n" +
+                    "Download from GitHub releases or build locally."
+                )
+                .setPositiveButton("Open GitHub") { _, _ -> openGitHubReleases() }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+            return
+        }
+
+        // Sort by modification date (newest first)
+        apkFiles.sortByDescending { it.lastModified() }
+
+        // Create list of display names
+        val displayNames = apkFiles.map { file ->
+            val sizeKb = file.length() / 1024
+            val modDate = java.text.SimpleDateFormat("MMM dd, HH:mm", java.util.Locale.US)
+                .format(java.util.Date(file.lastModified()))
+            "${file.name}\n${sizeKb}KB • $modDate"
+        }.toTypedArray()
+
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Select APK to Install")
+            .setItems(displayNames) { _, which ->
+                val selectedFile = apkFiles[which]
+                showInstallConfirmation(selectedFile)
+            }
+            .setNeutralButton("Open GitHub") { _, _ -> openGitHubReleases() }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun showInstallConfirmation(apkFile: File) {
+        val sizeKb = apkFile.length() / 1024
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Install Update")
+            .setMessage(
+                "File: ${apkFile.name}\n" +
+                "Size: ${sizeKb}KB\n" +
+                "Path: ${apkFile.parent}\n\n" +
+                "Install this APK?"
+            )
+            .setPositiveButton("Install") { _, _ -> installUpdate(apkFile) }
+            .setNeutralButton("Copy Path") { _, _ ->
+                val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                val clip = android.content.ClipData.newPlainText("APK Path", apkFile.absolutePath)
+                clipboard.setPrimaryClip(clip)
+                Toast.makeText(this, "Path copied to clipboard", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 }

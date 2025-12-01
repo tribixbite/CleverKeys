@@ -202,6 +202,7 @@ class Pointers(
                 // This is a swipe gesture - send to neural predictor
                 Log.d("Pointers", "Sending to neural predictor")
                 _handler.onSwipeEnd(_swipeRecognizer)
+                clearLatched() // Clear shift after swipe word completes
                 _swipeRecognizer.reset()
                 removePtr(ptr)
                 return
@@ -295,6 +296,7 @@ class Pointers(
                         if (gestureValue != null) {
                             _handler.onPointerDown(gestureValue, false)
                             _handler.onPointerUp(gestureValue, ptr.modifiers)
+                            clearLatched() // Clear shift after gesture completes
                             _swipeRecognizer.reset()
                             removePtr(ptr)
                             return
@@ -329,6 +331,7 @@ class Pointers(
             ptr.pointerId = -1
             _handler.onPointerFlagsChanged(false)
         } else {
+            Log.d("Pointers", "Regular key up: clearing latched, value=$ptr_value")
             clearLatched()
             removePtr(ptr)
             _handler.onPointerUp(ptr_value, ptr.modifiers)
@@ -581,16 +584,20 @@ class Pointers(
     }
 
     private fun clearLatched() {
+        var clearedCount = 0
         for (i in _ptrs.size - 1 downTo 0) {
             val ptr = _ptrs[i]
             // Latched and not locked, remove
             if (ptr.hasFlagsAny(FLAG_P_LATCHED) && (ptr.flags and FLAG_P_LOCKED) == 0) {
+                Log.d("Pointers", "clearLatched: removing latched key ${ptr.value} (flags=0x${ptr.flags.toString(16)})")
                 _ptrs.removeAt(i)
+                clearedCount++
             } else if ((ptr.flags and FLAG_P_LATCHABLE) != 0) {
                 // Not latched but pressed, don't latch once released and stop long press.
                 ptr.flags = ptr.flags and FLAG_P_LATCHABLE.inv()
             }
         }
+        Log.d("Pointers", "clearLatched: cleared $clearedCount pointers, remaining=${_ptrs.size}")
     }
 
     /** Make a pointer into the locked state. */

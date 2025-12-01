@@ -1,13 +1,37 @@
 # CleverKeys Development Status
 
-**Last Updated**: 2025-11-29
+**Last Updated**: 2025-12-01
 **Status**: ✅ Production Ready
 
 ---
 
-## Current Session: Settings Consolidation & Swipe Corrections (Nov 29, 2025)
+## Current Session: Settings UI Enhancements & CI/CD (Dec 1, 2025)
 
 ### Completed This Session
+- ✅ Enhanced Update section in Settings:
+  - Added GitHubInfoCard showing repository info (tribixbite/cleverkeys)
+  - Added "Browse APK..." button with file picker for selecting update APKs
+  - File picker shows APK files from common locations with size and date info
+  - Added showInstallConfirmation() for safe update installation
+- ✅ Updated GitHub CI/CD workflow to match UK structure:
+  - Fixed artifact naming to match UK convention
+  - Proper debug keystore restoration from secrets
+  - Removed branch restrictions for workflow_dispatch/push triggers
+- ✅ Added themes:
+  - CleverKeys Dark (jewel purple bg #1E1030, silver text #C0C0C0) - NEW DEFAULT
+  - Renamed existing Jewel to CleverKeys Light
+- ✅ Enhanced swipe trail with crisp glow effect (BlurMaskFilter.Blur.SOLID)
+- ✅ Fixed h key swipes: e="hi", ne="=", sw="+"
+
+### Known Issue (In Progress)
+- [ ] Shift key not auto-deactivating after first character
+  - Shift behaves like caps lock (stays on for all characters)
+  - Expected: Single tap shifts one char, double tap toggles caps lock
+  - Root cause under investigation - clearLatched() should be called on key up
+
+### Previous Session: Settings Consolidation & Swipe Corrections (Nov 29, 2025)
+
+### Completed
 - ✅ Removed 'All Settings (Full)' button and legacy XML preference page
 - ✅ Consolidated all settings into main Compose UI with proper Material 3 styling
 - ✅ Added all 18 themes to main dropdown:

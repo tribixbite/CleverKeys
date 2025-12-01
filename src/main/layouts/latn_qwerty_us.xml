@@ -56,7 +56,7 @@ Useful links.
     <key c="d" nw="do"/>
     <key c="f"/>
     <key c="g" ne="go" sw="-" se="_"/>
-    <key c="h" ne="hi"/>
+    <key c="h" e="hi" ne="=" sw="+"/>
     <key c="j" se="}" sw="{"/>
     <key c="k" sw="[" se="]"/>
     <key c="l" ne="|" sw="\\"/>

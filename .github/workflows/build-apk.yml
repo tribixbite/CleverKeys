@@ -3,9 +3,7 @@ name: Build CleverKeys APK
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
   pull_request:
-    branches: [ main ]
 
 jobs:
   Build-APK:
@@ -25,12 +23,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Setup Kotlin compilation
+    - name: Restore debug keystore from GitHub Secrets
       run: |
-        echo "Setting up Kotlin compilation environment"
-
-    - name: Restore debug keystore
-      run: |
+        # Check if exist and use the secret named DEBUG_KEYSTORE
+        # The contents of the secret can be obtained from the debug.keystore.asc
+        # (refer to CONTRIBUTING.md for Using the local debug.keystore on the Github CI actions)
         if [[ ! "${{ secrets.DEBUG_KEYSTORE }}" = "" ]]; then
             echo "${{ secrets.DEBUG_KEYSTORE }}" > "debug.keystore.asc"
             if [[ -s "debug.keystore.asc" ]]; then
@@ -71,7 +68,7 @@ jobs:
           echo "Copied generated ComposeKeyData.java"
         fi
 
-    - name: Build CleverKeys APK
+    - name: Build debug APK
       uses: gradle/gradle-build-action@v3
       env:
         DEBUG_KEYSTORE: "debug.keystore"
@@ -81,16 +78,16 @@ jobs:
       with:
         arguments: assembleDebug
 
-    - name: Setup artifact naming
+    - name: Artifact naming
       run: |
-        artifact="CleverKeys-${{github.ref_name}}"
+        artifact="${{github.repository_owner}} ${{github.ref_name}}"
         artifact="${artifact//\//-}"
         echo "artifact=${artifact}" >> $GITHUB_ENV
 
-    - name: Upload CleverKeys APK
+    - name: Upload debug APK
       uses: actions/upload-artifact@v4
       with:
-        name: "${{env.artifact}}-debug"
+        name: "${{env.artifact}} debug_apk"
         path: build/outputs/apk/debug/*.apk
 
     - name: Upload to releases (on tag)
@@ -112,4 +109,4 @@ jobs:
           2. Enable "Unknown sources" in Android settings
           3. Install and activate in Language & Input settings
 
-          Built on [Unexpected Keyboard](https://github.com/Julow/Unexpected) foundation.
+          Built on [Unexpected Keyboard](https://github.com/Julow/Unexpected-Keyboard) foundation.

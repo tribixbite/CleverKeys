@@ -133,7 +133,7 @@ class Config private constructor(
     @JvmField var swipe_trail_effect = "glow" // Trail effect: none, solid, glow, rainbow, fade
     @JvmField var swipe_trail_color = 0xFF9B59B6.toInt() // Trail color (default: jewel purple)
     @JvmField var swipe_trail_width = 8.0f // Trail stroke width in dp
-    @JvmField var swipe_trail_glow_radius = 12.0f // Glow effect radius in dp
+    @JvmField var swipe_trail_glow_radius = 6.0f // Glow effect radius in dp (smaller = crisper)
 
     // Neural swipe prediction configuration
     @JvmField var neural_prediction_enabled = false
@@ -349,7 +349,7 @@ class Config private constructor(
         swipe_trail_effect = _prefs.getString("swipe_trail_effect", "glow") ?: "glow"
         swipe_trail_color = _prefs.getInt("swipe_trail_color", 0xFF9B59B6.toInt())
         swipe_trail_width = safeGetFloat(_prefs, "swipe_trail_width", 8.0f)
-        swipe_trail_glow_radius = safeGetFloat(_prefs, "swipe_trail_glow_radius", 12.0f)
+        swipe_trail_glow_radius = safeGetFloat(_prefs, "swipe_trail_glow_radius", 6.0f)
 
         neural_prediction_enabled = _prefs.getBoolean("neural_prediction_enabled", true)
         neural_beam_width = safeGetInt(_prefs, "neural_beam_width", 3)
