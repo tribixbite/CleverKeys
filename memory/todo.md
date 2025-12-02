@@ -45,10 +45,18 @@
   - UK's Pointers.java has much simpler onTouchUp (only 4 lines for gesture handling)
   - Our gesture block has early returns for SWIPE/SHORT_SWIPE but TAP falls through correctly
 
-  **Next step:** Test on device with logcat to see actual execution path:
+  **Next step:** Manual device testing required
+  - ADB input tap cannot reach IME keyboard views (Android limitation)
+  - Need to physically tap on device while monitoring logcat:
   ```bash
   adb logcat -s Pointers | grep -E "onTouchUp|Gesture|TAP|latched|clearLatched"
   ```
+
+  **Settings UI Verified (Dec 2):**
+  - GitHubInfoCard showing "tribixbite/cleverkeys" - WORKING
+  - "Browse APK..." button visible - WORKING
+  - Version Information card with build info - WORKING
+  - Check Updates and Install Update buttons - WORKING
 
 ### Previous Session: Settings Consolidation & Swipe Corrections (Nov 29, 2025)
 
