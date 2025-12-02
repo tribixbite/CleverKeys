@@ -441,6 +441,20 @@ class InputCoordinator(
                 // This ensures shift is enabled after sentence-ending punctuation (. ! ?)
                 keyeventhandler.notifyTextTyped(textToInsert)
 
+                // CRITICAL FIX: Clear shift state AFTER swipe word is committed
+                // If shift was active when swipe started, we've already uppercased the word,
+                // now we need to turn off the shift indicator for the NEXT word
+                if (wasShiftActiveAtSwipeStart && isSwipeAutoInsert) {
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                        android.util.Log.d("CleverKeysService", "SHIFT+SWIPE: Clearing shift after word commit")
+                    }
+                    // Post to UI thread to ensure keyboard view update happens correctly
+                    keyboardView.post {
+                        keyboardView.clearLatchedModifiers()
+                    }
+                    wasShiftActiveAtSwipeStart = false // Reset for next swipe
+                }
+
                 // Track that this commit was from candidate selection (manual tap)
                 // Note: Auto-insertions set this separately to NEURAL_SWIPE
                 if (contextTracker.getLastCommitSource() != PredictionSource.NEURAL_SWIPE) {

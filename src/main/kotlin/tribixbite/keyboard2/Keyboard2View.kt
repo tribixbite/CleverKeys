@@ -277,6 +277,17 @@ class Keyboard2View @JvmOverloads constructor(
         set_fake_ptr_latched(_shift_key, shiftKv, latched, lock)
     }
 
+    /**
+     * Clears latched modifier state (e.g., shift) after swipe word insertion.
+     * Called from InputCoordinator when a swipe word is committed.
+     */
+    fun clearLatchedModifiers() {
+        _pointers.clearLatched()
+        _mods = _pointers.getModifiers()
+        _config.handler?.mods_changed(_mods)
+        invalidate()
+    }
+
     /** Called from [KeyEventHandler]. */
     fun set_compose_pending(pending: Boolean) {
         val composeKv = _compose_kv

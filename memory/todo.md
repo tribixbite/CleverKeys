@@ -1,13 +1,56 @@
 # CleverKeys Development Status
 
-**Last Updated**: 2025-12-01
+**Last Updated**: 2025-12-02
 **Status**: ✅ Production Ready
 
 ---
 
-## Current Session: Settings UI Enhancements & CI/CD (Dec 1, 2025)
+## Current Session: Shift-Swipe Fix & Browse APK (Dec 2, 2025)
 
 ### Completed This Session
+- ✅ Fixed Browse APK button to use Android SAF file picker:
+  - Added `ActivityResultContracts.GetContent()` for proper file selection
+  - Added `handleSelectedApk()` to show file info and confirmation
+  - Added `installUpdateFromUri()` for content URI installation
+  - Fallback dialog with GitHub link if picker unavailable
+- ✅ Fixed shift not clearing after swipe typing word:
+  - Root cause: clearLatched() called in Pointers.onTouchUp BEFORE async prediction
+  - Shift was already cleared before word insertion, so couldn't be cleared again
+  - Solution: Added clearLatchedModifiers() to Keyboard2View
+  - InputCoordinator now clears shift AFTER word commit (line 447-456)
+  - Only clears when `wasShiftActiveAtSwipeStart && isSwipeAutoInsert`
+
+### Code Changes
+**Pointers.kt:**
+- Changed `clearLatched()` from `private` to `internal` (line 610)
+
+**Keyboard2View.kt:**
+- Added `clearLatchedModifiers()` method (lines 280-289)
+- Calls `_pointers.clearLatched()`, updates mods, invalidates view
+
+**InputCoordinator.kt:**
+- Added shift clear after word commit (lines 444-456)
+- Posts to UI thread for correct keyboard view update
+- Resets `wasShiftActiveAtSwipeStart` after clearing
+
+**SettingsActivity.kt:**
+- Added SAF file picker launcher with `ActivityResultContracts.GetContent()`
+- Rewrote `showUpdateFilePicker()` to use system picker
+- Added `handleSelectedApk()` and `installUpdateFromUri()`
+
+### APK Location
+`~/storage/shared/Download/cleverkeys-debug-20251202-1109.apk`
+
+### Testing Required
+- [ ] Test shift+swipe: Should produce ONE uppercase word, then shift off
+- [ ] Test Browse APK button: Should open system file picker
+- [ ] Test shift for regular typing (non-swipe) - should still work
+
+---
+
+## Previous Session: Settings UI Enhancements & CI/CD (Dec 1, 2025)
+
+### Completed
 - ✅ Enhanced Update section in Settings:
   - Added GitHubInfoCard showing repository info (tribixbite/cleverkeys)
   - Added "Browse APK..." button with file picker for selecting update APKs
@@ -22,41 +65,6 @@
   - Renamed existing Jewel to CleverKeys Light
 - ✅ Enhanced swipe trail with crisp glow effect (BlurMaskFilter.Blur.SOLID)
 - ✅ Fixed h key swipes: e="hi", ne="=", sw="+"
-
-### Known Issue (In Progress)
-- [ ] Shift key not auto-deactivating after first character
-  - Shift behaves like caps lock (stays on for all characters)
-  - Expected: Single tap shifts one char, double tap toggles caps lock
-  - Root cause under investigation - clearLatched() should be called on key up
-
-  **Investigation notes (Dec 1, continued):**
-  - Added comprehensive debug logging throughout onTouchUp:
-    - Entry point with pointer value/flags
-    - Gesture classification conditions
-    - TAP path execution
-    - All currently latched pointers before processing
-    - Which path is taken (latched/latchable/regular)
-    - Before/after clearLatched() call
-
-  **Code analysis conclusions:**
-  - clearLatched() SHOULD be called in the `else` block (line 351) for regular char keys
-  - Traced full flow: shift tap → latch → char tap → gesture block → TAP path → falls through → clearLatched()
-  - Autocapitalisation.typed() sets shouldEnableShift=false but doesn't call set_shift_state(false)
-  - UK's Pointers.java has much simpler onTouchUp (only 4 lines for gesture handling)
-  - Our gesture block has early returns for SWIPE/SHORT_SWIPE but TAP falls through correctly
-
-  **Next step:** Manual device testing required
-  - ADB input tap cannot reach IME keyboard views (Android limitation)
-  - Need to physically tap on device while monitoring logcat:
-  ```bash
-  adb logcat -s Pointers | grep -E "onTouchUp|Gesture|TAP|latched|clearLatched"
-  ```
-
-  **Settings UI Verified (Dec 2):**
-  - GitHubInfoCard showing "tribixbite/cleverkeys" - WORKING
-  - "Browse APK..." button visible - WORKING
-  - Version Information card with build info - WORKING
-  - Check Updates and Install Update buttons - WORKING
 
 ### Previous Session: Settings Consolidation & Swipe Corrections (Nov 29, 2025)
 

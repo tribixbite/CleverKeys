@@ -602,7 +602,12 @@ class Pointers(
         return null
     }
 
-    private fun clearLatched() {
+    /**
+     * Clears all latched (but not locked) modifier pointers.
+     * Called after swipe word insertion to clear shift state.
+     * Internal visibility allows Keyboard2View to expose it.
+     */
+    internal fun clearLatched() {
         var clearedCount = 0
         for (i in _ptrs.size - 1 downTo 0) {
             val ptr = _ptrs[i]

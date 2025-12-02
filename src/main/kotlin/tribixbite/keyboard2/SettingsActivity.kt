@@ -3,11 +3,13 @@ package tribixbite.keyboard2
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.widget.*
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -59,6 +61,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Configuration state
     private lateinit var config: Config
     private lateinit var prefs: SharedPreferences
+
+    // APK file picker launcher
+    private val apkPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { handleSelectedApk(it) }
+    }
 
     // Settings state for reactive UI
     private var neuralPredictionEnabled by mutableStateOf(true)
@@ -2432,67 +2441,76 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     /**
-     * Show file picker dialog to select APK from common locations.
-     * Matches UK's functionality for finding and selecting update APKs.
+     * Show Android system file picker to select APK files.
+     * Uses Storage Access Framework (SAF) for proper file browsing.
      */
     private fun showUpdateFilePicker() {
-        // Search for APK files in common locations
-        val searchDirs = arrayOf(
-            File("/sdcard/unexpected/"),
-            File("/storage/emulated/0/unexpected/"),
-            File("/sdcard/Download/"),
-            File("/storage/emulated/0/Download/"),
-            File(android.os.Environment.getExternalStoragePublicDirectory(
-                android.os.Environment.DIRECTORY_DOWNLOADS), ""),
-            File("/sdcard/Android/data/tribixbite.keyboard2.debug/files/"),
-            File("/data/data/com.termux/files/home/git/swype/cleverkeys/build/outputs/apk/debug/")
-        )
-
-        val apkFiles = mutableListOf<File>()
-
-        for (dir in searchDirs) {
-            if (dir.exists() && dir.isDirectory) {
-                dir.listFiles { file ->
-                    file.extension.equals("apk", ignoreCase = true)
-                }?.forEach { apkFiles.add(it) }
-            }
-        }
-
-        if (apkFiles.isEmpty()) {
+        try {
+            // Launch system file picker for APK files
+            apkPickerLauncher.launch("application/vnd.android.package-archive")
+        } catch (e: Exception) {
+            // Fallback: show message if file picker not available
             android.app.AlertDialog.Builder(this)
-                .setTitle("No APK Files Found")
-                .setMessage(
-                    "No APK files found in common locations:\n\n" +
-                    "• /sdcard/unexpected/debug-kb.apk\n" +
-                    "• /sdcard/Download/*.apk\n\n" +
-                    "Download from GitHub releases or build locally."
-                )
+                .setTitle("File Picker Unavailable")
+                .setMessage("Could not open file picker. You can:\n\n" +
+                    "1. Download APK from GitHub releases\n" +
+                    "2. Use a file manager to install manually")
                 .setPositiveButton("Open GitHub") { _, _ -> openGitHubReleases() }
                 .setNegativeButton(android.R.string.cancel, null)
                 .show()
-            return
         }
+    }
 
-        // Sort by modification date (newest first)
-        apkFiles.sortByDescending { it.lastModified() }
+    /**
+     * Handle APK selected from file picker.
+     */
+    private fun handleSelectedApk(uri: Uri) {
+        try {
+            // Get file info from URI
+            val cursor = contentResolver.query(uri, null, null, null, null)
+            var fileName = "Unknown"
+            var fileSize = 0L
 
-        // Create list of display names
-        val displayNames = apkFiles.map { file ->
-            val sizeKb = file.length() / 1024
-            val modDate = java.text.SimpleDateFormat("MMM dd, HH:mm", java.util.Locale.US)
-                .format(java.util.Date(file.lastModified()))
-            "${file.name}\n${sizeKb}KB • $modDate"
-        }.toTypedArray()
-
-        android.app.AlertDialog.Builder(this)
-            .setTitle("Select APK to Install")
-            .setItems(displayNames) { _, which ->
-                val selectedFile = apkFiles[which]
-                showInstallConfirmation(selectedFile)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val nameIndex = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    val sizeIndex = it.getColumnIndex(android.provider.OpenableColumns.SIZE)
+                    if (nameIndex >= 0) fileName = it.getString(nameIndex) ?: "Unknown"
+                    if (sizeIndex >= 0) fileSize = it.getLong(sizeIndex)
+                }
             }
-            .setNeutralButton("Open GitHub") { _, _ -> openGitHubReleases() }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+
+            val sizeKb = fileSize / 1024
+
+            android.app.AlertDialog.Builder(this)
+                .setTitle("Install Update")
+                .setMessage(
+                    "File: $fileName\n" +
+                    "Size: ${sizeKb}KB\n\n" +
+                    "Install this APK?"
+                )
+                .setPositiveButton("Install") { _, _ -> installUpdateFromUri(uri) }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error reading file: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Install APK from content URI.
+     */
+    private fun installUpdateFromUri(uri: Uri) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not install: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun showInstallConfirmation(apkFile: File) {
