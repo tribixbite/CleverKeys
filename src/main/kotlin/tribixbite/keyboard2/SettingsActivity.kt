@@ -1941,12 +1941,43 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
+    /** Safely get a Boolean preference, handling cases where the value is stored as String or Int */
+    private fun SharedPreferences.getSafeBoolean(key: String, default: Boolean): Boolean {
+        return try {
+            getBoolean(key, default)
+        } catch (e: ClassCastException) {
+            // Value might be stored as String or Int
+            try {
+                val stringVal = getString(key, null)
+                when (stringVal?.lowercase()) {
+                    "true", "1", "yes" -> true
+                    "false", "0", "no" -> false
+                    else -> default
+                }
+            } catch (e2: ClassCastException) {
+                try {
+                    getInt(key, -1).let {
+                        when (it) {
+                            1 -> true
+                            0 -> false
+                            else -> default
+                        }
+                    }
+                } catch (e3: Exception) {
+                    default
+                }
+            } catch (e2: Exception) {
+                default
+            }
+        }
+    }
+
     private fun loadCurrentSettings() {
         // Swipe typing master switch
-        swipeTypingEnabled = prefs.getBoolean("swipe_typing_enabled", true)
+        swipeTypingEnabled = prefs.getSafeBoolean("swipe_typing_enabled", true)
 
         // Neural prediction settings
-        neuralPredictionEnabled = prefs.getBoolean("neural_prediction_enabled", true)
+        neuralPredictionEnabled = prefs.getSafeBoolean("neural_prediction_enabled", true)
         beamWidth = prefs.getSafeInt("neural_beam_width", 8)
         maxLength = prefs.getSafeInt("neural_max_length", 35)
         confidenceThreshold = prefs.getSafeFloat("neural_confidence_threshold", 0.1f)
@@ -1974,14 +2005,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         keyHorizontalMargin = (prefs.getSafeFloat("key_horizontal_margin", 2.0f) * 100).toInt()
 
         // Border customization settings
-        borderConfigEnabled = prefs.getBoolean("border_config", false)
+        borderConfigEnabled = prefs.getSafeBoolean("border_config", false)
         customBorderRadius = prefs.getSafeInt("custom_border_radius", 0)
         customBorderLineWidth = prefs.getSafeInt("custom_border_line_width", 0)
 
         // Input behavior settings
-        vibrationEnabled = prefs.getBoolean("vibration_enabled", false)
-        clipboardHistoryEnabled = prefs.getBoolean("clipboard_history_enabled", true)
-        autoCapitalizationEnabled = prefs.getBoolean("auto_capitalization_enabled", true)
+        vibrationEnabled = prefs.getSafeBoolean("vibration_enabled", false)
+        clipboardHistoryEnabled = prefs.getSafeBoolean("clipboard_history_enabled", true)
+        autoCapitalizationEnabled = prefs.getSafeBoolean("auto_capitalization_enabled", true)
 
         // Gesture sensitivity settings
         swipeDistance = prefs.getSafeString("swipe_dist", "15").toIntOrNull() ?: 15
@@ -1991,37 +2022,37 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Long press settings
         longPressTimeout = prefs.getSafeInt("longpress_timeout", 600)
         longPressInterval = prefs.getSafeInt("longpress_interval", 65)
-        keyRepeatEnabled = prefs.getBoolean("keyrepeat_enabled", true)
+        keyRepeatEnabled = prefs.getSafeBoolean("keyrepeat_enabled", true)
 
         // Behavior settings
-        doubleTapLockShift = prefs.getBoolean("lock_double_tap", true)
-        switchInputImmediate = prefs.getBoolean("switch_input_immediate", false)
+        doubleTapLockShift = prefs.getSafeBoolean("lock_double_tap", true)
+        switchInputImmediate = prefs.getSafeBoolean("switch_input_immediate", false)
 
         // Number row and numpad settings
         numberRowMode = prefs.getSafeString("number_row", "no_number_row")
         showNumpadMode = prefs.getSafeString("show_numpad", "never")
         numpadLayout = prefs.getSafeString("numpad_layout", "default")
-        pinEntryEnabled = prefs.getBoolean("pin_entry_enabled", false)
+        pinEntryEnabled = prefs.getSafeBoolean("pin_entry_enabled", false)
 
         // Advanced settings
-        debugEnabled = prefs.getBoolean("debug_enabled", false)
+        debugEnabled = prefs.getSafeBoolean("debug_enabled", false)
 
         // Accessibility settings
-        stickyKeysEnabled = prefs.getBoolean("sticky_keys_enabled", false)
+        stickyKeysEnabled = prefs.getSafeBoolean("sticky_keys_enabled", false)
         stickyKeysTimeout = prefs.getSafeInt("sticky_keys_timeout_ms", 5000)
-        voiceGuidanceEnabled = prefs.getBoolean("voice_guidance_enabled", false)
+        voiceGuidanceEnabled = prefs.getSafeBoolean("voice_guidance_enabled", false)
 
         // Phase 1: Load exposed Config.kt settings
-        wordPredictionEnabled = prefs.getBoolean("word_prediction_enabled", false)
+        wordPredictionEnabled = prefs.getSafeBoolean("word_prediction_enabled", false)
         suggestionBarOpacity = Config.safeGetInt(prefs, "suggestion_bar_opacity", 90)
-        autoCorrectEnabled = prefs.getBoolean("autocorrect_enabled", true)
-        termuxModeEnabled = prefs.getBoolean("termux_mode_enabled", false)
+        autoCorrectEnabled = prefs.getSafeBoolean("autocorrect_enabled", true)
+        termuxModeEnabled = prefs.getSafeBoolean("termux_mode_enabled", false)
         vibrationDuration = prefs.getSafeInt("vibrate_duration", 20)
-        swipeDebugEnabled = prefs.getBoolean("swipe_show_debug_scores", false)
+        swipeDebugEnabled = prefs.getSafeBoolean("swipe_show_debug_scores", false)
 
         // Swipe Corrections settings
-        swipeBeamAutocorrectEnabled = prefs.getBoolean("swipe_beam_autocorrect_enabled", true)
-        swipeFinalAutocorrectEnabled = prefs.getBoolean("swipe_final_autocorrect_enabled", true)
+        swipeBeamAutocorrectEnabled = prefs.getSafeBoolean("swipe_beam_autocorrect_enabled", true)
+        swipeFinalAutocorrectEnabled = prefs.getSafeBoolean("swipe_final_autocorrect_enabled", true)
         swipeCorrectionPreset = prefs.getSafeString("swipe_correction_preset", "balanced")
         swipeFuzzyMatchMode = prefs.getSafeString("swipe_fuzzy_match_mode", "edit_distance")
         autocorrectMaxLengthDiff = Config.safeGetInt(prefs, "autocorrect_max_length_diff", 2)
@@ -2033,7 +2064,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         swipeRareWordsPenalty = Config.safeGetFloat(prefs, "swipe_rare_words_penalty", 0.75f)
 
         // Swipe trail appearance settings
-        swipeTrailEnabled = prefs.getBoolean("swipe_trail_enabled", true)
+        swipeTrailEnabled = prefs.getSafeBoolean("swipe_trail_enabled", true)
         swipeTrailEffect = prefs.getSafeString("swipe_trail_effect", "glow")
         swipeTrailColor = prefs.getSafeInt("swipe_trail_color", 0xFF9B59B6.toInt())
         swipeTrailWidth = prefs.getSafeFloat("swipe_trail_width", 8.0f)

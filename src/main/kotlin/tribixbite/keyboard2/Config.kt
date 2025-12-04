@@ -513,12 +513,20 @@ class Config private constructor(
             return try {
                 prefs.getInt(key, defaultValue)
             } catch (e: ClassCastException) {
-                val stringValue = prefs.getString(key, defaultValue.toString()) ?: defaultValue.toString()
+                // Value might be stored as Float (from JSON import) or String
                 try {
-                    stringValue.toInt()
-                } catch (nfe: NumberFormatException) {
-                    Log.w("Config", "Invalid number format for $key: $stringValue, using default: $defaultValue")
-                    defaultValue
+                    // Try Float first - JSON numbers are often stored as Float
+                    val floatValue = prefs.getFloat(key, Float.MIN_VALUE)
+                    if (floatValue == Float.MIN_VALUE) defaultValue else floatValue.toInt()
+                } catch (e2: ClassCastException) {
+                    // Try String
+                    try {
+                        val stringValue = prefs.getString(key, null)
+                        stringValue?.toIntOrNull() ?: defaultValue
+                    } catch (e3: Exception) {
+                        Log.w("Config", "Corrupted int preference $key, using default: $defaultValue")
+                        defaultValue
+                    }
                 }
             }
         }
@@ -603,16 +611,27 @@ class Config private constructor(
             return try {
                 prefs.getFloat(key, defaultValue)
             } catch (e: ClassCastException) {
+                // Value might be stored as Int, String, or Boolean
                 try {
-                    val intValue = prefs.getInt(key, defaultValue.toInt())
-                    Log.w("Config", "Float preference $key was stored as int: $intValue")
-                    intValue.toFloat()
+                    val intValue = prefs.getInt(key, Int.MIN_VALUE)
+                    if (intValue == Int.MIN_VALUE) defaultValue else {
+                        Log.w("Config", "Float preference $key was stored as int: $intValue")
+                        intValue.toFloat()
+                    }
                 } catch (e2: ClassCastException) {
                     try {
-                        val stringValue = prefs.getString(key, defaultValue.toString()) ?: defaultValue.toString()
-                        val parsed = stringValue.toFloat()
-                        Log.w("Config", "Float preference $key was stored as string: $stringValue")
-                        parsed
+                        val stringValue = prefs.getString(key, null)
+                        if (stringValue == null) {
+                            defaultValue
+                        } else {
+                            val parsed = stringValue.toFloatOrNull()
+                            if (parsed != null) {
+                                Log.w("Config", "Float preference $key was stored as string: $stringValue")
+                                parsed
+                            } else {
+                                defaultValue
+                            }
+                        }
                     } catch (e3: Exception) {
                         Log.w("Config", "Corrupted float preference $key, using default: $defaultValue")
                         defaultValue
@@ -622,7 +641,44 @@ class Config private constructor(
         }
 
         /**
-         * Safely get a String preference, handling ClassCastException when value is stored as Int or Float.
+         * Safely get a Boolean preference, handling ClassCastException when value is stored as String or Int.
+         * This is critical for config import where types may be mismatched.
+         */
+        @JvmStatic
+        fun safeGetBoolean(prefs: SharedPreferences, key: String, defaultValue: Boolean): Boolean {
+            return try {
+                prefs.getBoolean(key, defaultValue)
+            } catch (e: ClassCastException) {
+                // Value might be stored as String or Int
+                try {
+                    val stringVal = prefs.getString(key, null)
+                    when (stringVal?.lowercase()) {
+                        "true", "1", "yes" -> true
+                        "false", "0", "no" -> false
+                        else -> defaultValue
+                    }
+                } catch (e2: ClassCastException) {
+                    try {
+                        prefs.getInt(key, -1).let {
+                            when (it) {
+                                1 -> true
+                                0 -> false
+                                else -> defaultValue
+                            }
+                        }
+                    } catch (e3: Exception) {
+                        Log.w("Config", "Corrupted boolean preference $key, using default: $defaultValue")
+                        defaultValue
+                    }
+                } catch (e2: Exception) {
+                    Log.w("Config", "Error reading boolean preference $key, using default: $defaultValue")
+                    defaultValue
+                }
+            }
+        }
+
+        /**
+         * Safely get a String preference, handling ClassCastException when value is stored as Int, Float, or Boolean.
          * This is critical for config import where numeric strings may be stored as integers.
          */
         @JvmStatic
@@ -630,7 +686,7 @@ class Config private constructor(
             return try {
                 prefs.getString(key, defaultValue) ?: defaultValue
             } catch (e: ClassCastException) {
-                // Value might be stored as Int (e.g., from config import)
+                // Value might be stored as Int, Float, or Boolean (e.g., from config import)
                 try {
                     val intValue = prefs.getInt(key, Int.MIN_VALUE)
                     if (intValue == Int.MIN_VALUE) {
@@ -649,8 +705,18 @@ class Config private constructor(
                             Log.w("Config", "String preference $key was stored as float: $floatValue")
                             floatValue.toString()
                         }
+                    } catch (e3: ClassCastException) {
+                        // Try Boolean
+                        try {
+                            val boolValue = prefs.getBoolean(key, false)
+                            Log.w("Config", "String preference $key was stored as boolean: $boolValue")
+                            boolValue.toString()
+                        } catch (e4: Exception) {
+                            Log.w("Config", "Corrupted string preference $key, using default: $defaultValue")
+                            defaultValue
+                        }
                     } catch (e3: Exception) {
-                        Log.w("Config", "Corrupted string preference $key, using default: $defaultValue")
+                        Log.w("Config", "Error reading string preference $key, using default: $defaultValue")
                         defaultValue
                     }
                 } catch (e2: Exception) {
