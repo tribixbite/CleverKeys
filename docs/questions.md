@@ -85,6 +85,73 @@ This file contains items flagged for user review during the spec audit and code 
 
 ---
 
+## 6. UK vs CK Config Differences - ✅ ANALYZED
+
+**Date**: 2025-12-04
+
+### CK-Only Features (not in UK):
+| Feature | CK Setting | Description |
+|---------|------------|-------------|
+| Swipe Trail | `swipe_trail_enabled` | Show swipe gesture trail |
+| Swipe Trail | `swipe_trail_effect` | Effect: none, solid, glow, rainbow, fade |
+| Swipe Trail | `swipe_trail_color` | Trail color (default: jewel purple) |
+| Swipe Trail | `swipe_trail_width` | Trail stroke width (dp) |
+| Swipe Trail | `swipe_trail_glow_radius` | Glow radius (dp) |
+
+### Different Default Values:
+
+| Setting | CK Default | UK Default | Notes |
+|---------|------------|------------|-------|
+| `longPressInterval` | 25 | 65 | CK is faster |
+| `characterSize` | 1.18 | 1.15 | CK slightly larger |
+| `clipboard_history_enabled` | true | false | CK enables by default |
+| `double_tap_lock_shift` | true | false | CK enables by default |
+
+### Code Improvements:
+- CK uses `safeGetString()` consistently for null-safe preference access
+- UK has inline try-catch blocks, CK uses utility methods
+
+---
+
+## 7. Privacy/AB-Test/Rollback Settings - ✅ VERIFIED IMPLEMENTED
+
+**Date**: 2025-12-04 (Updated)
+
+**Resolution**: These settings are FULLY IMPLEMENTED with backend logic:
+
+### Privacy Settings - ✅ Implemented via `PrivacyManager.kt`
+| Setting Key | Description | Backend |
+|-------------|-------------|---------|
+| `privacy_collect_swipe` | Allow swipe data collection | ✅ `PrivacyManager.kt` |
+| `privacy_collect_performance` | Allow performance data | ✅ `PrivacyManager.kt` |
+| `privacy_collect_errors` | Allow error logs | ✅ `PrivacyManager.kt` |
+| `privacy_anonymize` | Remove identifying info | ✅ `PrivacyManager.kt` |
+| `privacy_local_only` | Keep data on device | ✅ `PrivacyManager.kt` |
+| `privacy_allow_export` | Allow data export | ✅ `PrivacyManager.kt` |
+| `privacy_allow_sharing` | Allow model sharing | ✅ `PrivacyManager.kt` |
+| `privacy_retention_days` | Data retention period | ✅ `PrivacyManager.kt` |
+| `privacy_auto_delete` | Auto-delete old data | ✅ `PrivacyManager.kt` |
+
+### A/B Testing - ✅ Implemented via `ABTestManager.kt`
+| Setting Key | Description | Backend |
+|-------------|-------------|---------|
+| `ab_test_status` | Test progress view | ✅ `ABTestManager.kt` |
+| `ab_test_comparison` | Model comparison | ✅ `ModelComparisonTracker.kt` |
+| `ab_test_configure` | Configure test params | ✅ `ABTestManager.kt` |
+
+### Rollback Settings - ✅ Implemented via `ModelVersionManager.kt`
+| Setting Key | Description | Backend |
+|-------------|-------------|---------|
+| `rollback_status` | Version status view | ✅ `ModelVersionManager.kt` |
+| `rollback_history` | Version history | ✅ `ModelVersionManager.kt` |
+| `rollback_auto_enabled` | Auto-rollback | ✅ `ModelVersionManager.kt` |
+| `rollback_manual` | Manual rollback | ✅ `ModelVersionManager.kt` |
+| `rollback_pin_version` | Pin version | ✅ `ModelVersionManager.kt` |
+
+**Status**: All features have complete backend implementations. Settings are saved via `SettingsActivity.kt` and read by their respective manager classes.
+
+---
+
 ## Template for Adding Questions
 
 ```markdown
