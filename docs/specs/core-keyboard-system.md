@@ -198,6 +198,10 @@ CleverKeysService (InputMethodService)
 ---
 
 **Created**: 2025-10-21
-**Last Updated**: 2025-10-21
+**Last Updated**: 2025-12-04
 **Owner**: CleverKeys Development Team
-**Status**: All historical critical issues marked as fixed, verification tasks created
+**Status**: Core system implemented and stable
+
+**Note**: File paths in this spec reference `tribixbite/keyboard2/` but the actual
+package is `tribixbite/cleverkeys/`. Line numbers may have shifted from original
+references due to code evolution.
