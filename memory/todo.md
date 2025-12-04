@@ -21,12 +21,13 @@
 - [x] Check for load/latency inefficiencies (no blocking operations found)
 
 ### In Progress
-- [ ] Compare UK actual saved user settings vs CK runtime settings (not just defaults)
-- [ ] Review for duplicate/unimplemented settings in settings page
+- [ ] Review each docs/specs file line by line for accuracy
 
 ### Completed (this session continued)
 - [x] Triple-check ARCHITECTURE_MASTER.md for ALL params/weights/equations (v1.1.0)
 - [x] Verify dictionary management works (4 tabs confirmed via screenshot)
+- [x] Compare UK actual saved user settings vs CK runtime settings (Config.kt in sync)
+- [x] Review for duplicate/unimplemented settings → **Found 19 action buttons with no handlers** (see questions.md #8)
 
 ### Pending
 - [ ] Review each docs/specs file line by line for accuracy
@@ -59,10 +60,19 @@ All settings are saved via `SettingsActivity.kt` and used by respective manager 
 - CK has swipe trail settings (5 settings) not in UK
 - CK has different defaults for: longPressInterval (25 vs 65), characterSize (1.18 vs 1.15), clipboard_history_enabled (true vs false)
 
+### Unimplemented Action Buttons (P2 - UI Wiring Only)
+19 action buttons in settings.xml have no click handlers:
+- A/B Testing: `ab_test_status`, `ab_test_comparison`, `ab_test_configure`, `ab_test_export`, `ab_test_reset`
+- Rollback: `rollback_status`, `rollback_history`, `rollback_manual`, `rollback_pin_version`, `rollback_export`, `rollback_reset`
+- Privacy: `privacy_status`, `privacy_consent`, `privacy_delete_now`, `privacy_export`, `privacy_audit`
+- Neural: `neural_load_encoder`, `neural_load_decoder`, `neural_model_metadata`
+
+**Backend implementations exist** - only SettingsPreferenceFragment.kt handlers missing.
+
 ### Documentation Status
 - ARCHITECTURE_MASTER.md: Created with comprehensive parameter documentation
 - neural-prediction.md: Fixed all status inconsistencies
-- questions.md: Created with 7 resolved/analyzed items
+- questions.md: Created with 8 resolved/analyzed items (including unimplemented action buttons)
 
 ---
 

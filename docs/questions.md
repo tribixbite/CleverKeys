@@ -152,6 +152,68 @@ This file contains items flagged for user review during the spec audit and code 
 
 ---
 
+## 8. Unimplemented Action Button Handlers - ⚠️ NEEDS IMPLEMENTATION
+
+**Date**: 2025-12-04
+
+**Context**: Settings audit found action buttons in `res/xml/settings.xml` that have no click handlers in SettingsPreferenceFragment.kt or SettingsActivity.kt.
+
+### Missing Click Handlers:
+
+| XML Key | Description | Priority |
+|---------|-------------|----------|
+| `ab_test_status` | View A/B test progress | P2 |
+| `ab_test_comparison` | Compare model metrics | P2 |
+| `ab_test_configure` | Configure A/B test params | P2 |
+| `ab_test_export` | Export comparison data | P3 |
+| `ab_test_reset` | Clear A/B test data | P3 |
+| `rollback_status` | View model version status | P2 |
+| `rollback_history` | View version history | P2 |
+| `rollback_manual` | Force rollback to previous version | P2 |
+| `rollback_pin_version` | Lock current model version | P2 |
+| `rollback_export` | Export version history | P3 |
+| `rollback_reset` | Clear version data | P3 |
+| `privacy_status` | View privacy settings summary | P2 |
+| `privacy_consent` | Grant/revoke consent dialog | P2 |
+| `privacy_delete_now` | Delete all collected data | P2 |
+| `privacy_export` | Export collected data | P3 |
+| `privacy_audit` | View audit log | P3 |
+| `neural_load_encoder` | Load external encoder model | P2 |
+| `neural_load_decoder` | Load external decoder model | P2 |
+| `neural_model_metadata` | View loaded model details | P3 |
+
+### Analysis:
+
+**Total unimplemented**: 19 action buttons
+
+**Backend status**:
+- ✅ `ABTestManager.kt` exists with methods to handle A/B test operations
+- ✅ `ModelVersionManager.kt` exists with rollback/version methods
+- ✅ `PrivacyManager.kt` exists with privacy data methods
+- ❌ No handlers in SettingsPreferenceFragment.kt to call these methods
+
+### Recommended Fix:
+
+Add `findPreference<Preference>("key")?.setOnPreferenceClickListener` for each button in `SettingsPreferenceFragment.kt` that calls the appropriate manager method.
+
+**Example for `ab_test_status`**:
+```kotlin
+findPreference<Preference>("ab_test_status")?.setOnPreferenceClickListener {
+    val manager = ABTestManager.getInstance(requireContext())
+    val status = manager.getTestStatus()
+    MaterialAlertDialogBuilder(requireContext())
+        .setTitle("A/B Test Status")
+        .setMessage(status)
+        .setPositiveButton("OK", null)
+        .show()
+    true
+}
+```
+
+**Note**: The backend implementations exist - only the UI wiring is missing.
+
+---
+
 ## Template for Adding Questions
 
 ```markdown
