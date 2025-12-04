@@ -20,7 +20,7 @@
             android:text="word"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="?android:attr/textColorPrimary" />
 
         <TextView
             android:id="@+id/frequency_text"
@@ -29,11 +29,11 @@
             android:layout_marginTop="4dp"
             android:text="Frequency: 100"
             android:textSize="14sp"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:textColor="?android:attr/textColorSecondary" />
 
     </LinearLayout>
 
-    <com.google.android.material.materialswitch.MaterialSwitch
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/enable_toggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

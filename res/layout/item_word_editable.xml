@@ -20,7 +20,7 @@
             android:text="word"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="?android:attr/textColorPrimary" />
 
         <TextView
             android:id="@+id/frequency_text"
@@ -29,23 +29,25 @@
             android:layout_marginTop="4dp"
             android:text="Frequency: 100"
             android:textSize="14sp"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:textColor="?android:attr/textColorSecondary" />
 
     </LinearLayout>
 
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/edit_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Edit"
         android:layout_marginEnd="8dp"
-        style="@style/Widget.Material3.Button.OutlinedButton" />
+        android:background="#3A3A3A"
+        android:textColor="#FFFFFF" />
 
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/delete_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Delete"
-        style="@style/Widget.Material3.Button.TonalButton" />
+        android:background="#5A3A3A"
+        android:textColor="#FFFFFF" />
 
 </LinearLayout>

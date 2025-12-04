@@ -17,7 +17,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.button.MaterialButton
+import android.widget.Button
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import tribixbite.cleverkeys.onnx.SwipePredictorOrchestrator
@@ -31,7 +31,7 @@ class DictionaryManagerActivity : AppCompatActivity() {
     private lateinit var toolbar: Toolbar
     private lateinit var searchInput: EditText
     private lateinit var filterSpinner: Spinner
-    private lateinit var resetButton: MaterialButton
+    private lateinit var resetButton: Button
     private lateinit var tabLayout: TabLayout
     private lateinit var viewPager: ViewPager2
 

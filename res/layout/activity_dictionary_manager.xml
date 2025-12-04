@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?attr/colorSurface">
+    android:background="?android:attr/colorBackground">
 
     <!-- Toolbar -->
     <androidx.appcompat.widget.Toolbar
@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
-        android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar" />
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <!-- Search and Filter Header -->
     <LinearLayout
@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="?attr/colorSurfaceVariant">
+        android:background="#2A2A2A">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -35,9 +35,9 @@
                 android:layout_height="56dp"
                 android:layout_weight="1"
                 android:hint="Search words..."
-                android:textColorHint="?attr/colorOnSurfaceVariant"
-                android:textColor="?attr/colorOnSurface"
-                android:background="?attr/colorSurface"
+                android:textColorHint="#888888"
+                android:textColor="#FFFFFF"
+                android:background="#1E1E1E"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:singleLine="true"
@@ -49,18 +49,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="56dp"
                 android:layout_marginStart="8dp"
-                android:background="?attr/colorSurface"
+                android:background="#1E1E1E"
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp" />
 
             <!-- Reset Button -->
-            <com.google.android.material.button.MaterialButton
+            <Button
                 android:id="@+id/reset_button"
                 android:layout_width="wrap_content"
                 android:layout_height="56dp"
                 android:layout_marginStart="8dp"
                 android:text="Reset"
-                style="@style/Widget.Material3.Button.TonalButton" />
+                android:background="#3A3A3A"
+                android:textColor="#FFFFFF" />
         </LinearLayout>
     </LinearLayout>
 
@@ -69,9 +70,9 @@
         android:id="@+id/tab_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorSurfaceVariant"
-        app:tabTextColor="?attr/colorOnSurfaceVariant"
-        app:tabSelectedTextColor="?attr/colorOnSurface"
+        android:background="#2A2A2A"
+        app:tabTextColor="#888888"
+        app:tabSelectedTextColor="#FFFFFF"
         app:tabIndicatorColor="?attr/colorPrimary" />
 
     <!-- ViewPager2 for tabs -->
