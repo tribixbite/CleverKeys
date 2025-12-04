@@ -3277,15 +3277,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private fun checkForUpdates() {
         lifecycleScope.launch {
             try {
-                // Check for APK updates in common locations
+                // Use proper Android storage APIs instead of hardcoded paths
+                val downloadDir = android.os.Environment.getExternalStoragePublicDirectory(
+                    android.os.Environment.DIRECTORY_DOWNLOADS
+                )
+                val externalStorage = android.os.Environment.getExternalStorageDirectory()
+
+                // Check for APK updates in common locations using proper APIs
                 val possibleLocations = arrayOf(
-                    "/sdcard/Download/cleverkeys-debug.apk",
-                    "/storage/emulated/0/Download/cleverkeys-debug.apk",
-                    "/sdcard/Download/tribixbite.cleverkeys.debug.apk",
-                    "/storage/emulated/0/Download/tribixbite.cleverkeys.debug.apk",
-                    "/sdcard/unexpected/debug-kb.apk",
-                    "/storage/emulated/0/unexpected/debug-kb.apk",
-                    "${getExternalFilesDir(null)?.parent}/files/home/storage/downloads/cleverkeys-debug.apk"
+                    File(downloadDir, "cleverkeys-debug.apk").absolutePath,
+                    File(downloadDir, "tribixbite.cleverkeys.debug.apk").absolutePath,
+                    File(externalStorage, "unexpected/debug-kb.apk").absolutePath,
+                    File(externalStorage, "Download/cleverkeys-debug.apk").absolutePath,
+                    "${getExternalFilesDir(null)?.absolutePath}/cleverkeys-debug.apk"
                 )
 
                 var updateApk: File? = null
@@ -3315,22 +3319,26 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     /**
      * Install update from default location without prompting.
-     * Checks /sdcard/unexpected/debug-kb.apk first (like Unexpected-Keyboard),
-     * then falls back to other common locations.
+     * Uses proper Android storage APIs to check common update locations.
      */
     private fun installUpdateFromDefault() {
-        val defaultPath = File("/sdcard/unexpected/debug-kb.apk")
+        val externalStorage = android.os.Environment.getExternalStorageDirectory()
+        val downloadDir = android.os.Environment.getExternalStoragePublicDirectory(
+            android.os.Environment.DIRECTORY_DOWNLOADS
+        )
+
+        // Primary location (Unexpected-Keyboard compatible)
+        val defaultPath = File(externalStorage, "unexpected/debug-kb.apk")
         if (defaultPath.exists() && defaultPath.canRead()) {
             installUpdate(defaultPath)
             return
         }
 
-        // Fallback to other locations
+        // Fallback to other locations using proper APIs
         val possibleLocations = arrayOf(
-            "/storage/emulated/0/unexpected/debug-kb.apk",
-            "/sdcard/Download/cleverkeys-debug.apk",
-            "/storage/emulated/0/Download/cleverkeys-debug.apk",
-            "/sdcard/Download/tribixbite.cleverkeys.debug.apk"
+            File(downloadDir, "cleverkeys-debug.apk").absolutePath,
+            File(downloadDir, "tribixbite.cleverkeys.debug.apk").absolutePath,
+            File(externalStorage, "Download/cleverkeys-debug.apk").absolutePath
         )
 
         for (location in possibleLocations) {
@@ -3341,10 +3349,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
         }
 
-        // No update found
+        // No update found - use proper path in message
+        val expectedPath = File(externalStorage, "unexpected/debug-kb.apk").absolutePath
         Toast.makeText(
             this,
-            "No update APK found at /sdcard/unexpected/debug-kb.apk",
+            "No update APK found at $expectedPath",
             Toast.LENGTH_LONG
         ).show()
     }
@@ -3397,7 +3406,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Fallback: try to copy to accessible location
             try {
-                val publicApk = File("/sdcard/Download/cleverkeys-update.apk")
+                val downloadDir = android.os.Environment.getExternalStoragePublicDirectory(
+                    android.os.Environment.DIRECTORY_DOWNLOADS
+                )
+                val publicApk = File(downloadDir, "cleverkeys-update.apk")
                 apkFile.copyTo(publicApk, overwrite = true)
 
                 val fallbackIntent = Intent(Intent.ACTION_VIEW).apply {

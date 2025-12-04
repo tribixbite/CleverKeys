@@ -283,8 +283,12 @@ class VisualRegressionTestSuite {
         if (success) {
             println("Screenshot saved: ${screenshotFile.absolutePath}")
 
-            // Also save to accessible location for CI
-            val ciScreenshotFile = File("/sdcard/screenshots", "$fileName.png")
+            // Also save to accessible location for CI using proper storage API
+            val ciScreenshotDir = File(
+                android.os.Environment.getExternalStorageDirectory(),
+                "screenshots"
+            )
+            val ciScreenshotFile = File(ciScreenshotDir, "$fileName.png")
             ciScreenshotFile.parentFile?.mkdirs()
             screenshotFile.copyTo(ciScreenshotFile, overwrite = true)
 

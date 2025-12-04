@@ -33,6 +33,8 @@
 - [x] Verify CI/CD setup (comprehensive: ci.yml, build.yml, ui-testing.yml, release.yml)
 - [x] Implement on-the-fly theme creation for keyboard (ThemeSettingsActivity.kt)
 - [x] Implement swipe trail theme creation with colorwheel (integrated in ThemeSettingsActivity)
+- [x] Add Settings -> Appearance -> Keyboard Themes navigation (SettingsActivity.kt)
+- [x] Verify back button returns to Settings from ThemeSettingsActivity
 
 ---
 

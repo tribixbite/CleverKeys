@@ -30,15 +30,8 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat(),
     companion object {
         private const val TAG = "SettingsPreferenceFragment"
 
-        // APK search locations for updates
-        private val UPDATE_LOCATIONS = arrayOf(
-            "/sdcard/Download/cleverkeys-debug.apk",
-            "/storage/emulated/0/Download/cleverkeys-debug.apk",
-            "/sdcard/Download/tribixbite.cleverkeys.debug.apk",
-            "/storage/emulated/0/Download/tribixbite.cleverkeys.debug.apk",
-            "/sdcard/unexpected/debug-kb.apk",
-            "/storage/emulated/0/unexpected/debug-kb.apk"
-        )
+        // APK search locations built dynamically using proper Android APIs
+        // Note: UPDATE_LOCATIONS is generated at runtime in getUpdateLocations()
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -182,19 +175,44 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat(),
         }
     }
 
+    /**
+     * Get APK search locations using proper Android storage APIs
+     */
+    private fun getUpdateLocations(): List<File> {
+        val downloadDir = android.os.Environment.getExternalStoragePublicDirectory(
+            android.os.Environment.DIRECTORY_DOWNLOADS
+        )
+        val externalStorage = android.os.Environment.getExternalStorageDirectory()
+        val appFiles = requireContext().getExternalFilesDir(null)
+
+        return listOf(
+            File(externalStorage, "unexpected/debug-kb.apk"),
+            File(downloadDir, "cleverkeys-debug.apk"),
+            File(downloadDir, "tribixbite.cleverkeys.debug.apk"),
+            File(externalStorage, "Download/cleverkeys-debug.apk"),
+            appFiles?.let { File(it, "cleverkeys-debug.apk") }
+        ).filterNotNull()
+    }
+
     private fun checkForUpdates() {
         lifecycleScope.launch {
             try {
+                val updateLocations = getUpdateLocations()
                 val updateApk = withContext(Dispatchers.IO) {
-                    UPDATE_LOCATIONS.map { File(it) }.firstOrNull { it.exists() && it.canRead() }
+                    updateLocations.firstOrNull { it.exists() && it.canRead() }
                 }
 
                 if (updateApk != null) {
                     showUpdateFoundDialog(updateApk)
                 } else {
+                    val expectedPath = android.os.Environment.getExternalStorageDirectory()
+                        .let { File(it, "unexpected/debug-kb.apk").absolutePath }
+                    val downloadPath = android.os.Environment.getExternalStoragePublicDirectory(
+                        android.os.Environment.DIRECTORY_DOWNLOADS
+                    ).let { File(it, "cleverkeys-debug.apk").absolutePath }
                     Toast.makeText(
                         requireContext(),
-                        "No update found. Place APK in:\n/sdcard/unexpected/debug-kb.apk\nor\n/sdcard/Download/cleverkeys-debug.apk",
+                        "No update found. Place APK in:\n$expectedPath\nor\n$downloadPath",
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -217,18 +235,19 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat(),
     }
 
     private fun installUpdateFromDefault() {
-        val defaultPath = File("/sdcard/unexpected/debug-kb.apk")
+        val externalStorage = android.os.Environment.getExternalStorageDirectory()
+        val defaultPath = File(externalStorage, "unexpected/debug-kb.apk")
         if (defaultPath.exists() && defaultPath.canRead()) {
             installUpdate(defaultPath)
         } else {
-            // Try to find any available update
-            val updateApk = UPDATE_LOCATIONS.map { File(it) }.firstOrNull { it.exists() && it.canRead() }
+            // Try to find any available update using proper storage APIs
+            val updateApk = getUpdateLocations().firstOrNull { it.exists() && it.canRead() }
             if (updateApk != null) {
                 installUpdate(updateApk)
             } else {
                 Toast.makeText(
                     requireContext(),
-                    "No update APK found at /sdcard/unexpected/debug-kb.apk",
+                    "No update APK found at ${defaultPath.absolutePath}",
                     Toast.LENGTH_LONG
                 ).show()
             }
