@@ -3732,10 +3732,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun openFullSettings() {
-        startActivity(Intent(this, SettingsPreferenceActivity::class.java))
-    }
-
     private fun openGitHubReleases() {
         try {
             val intent = Intent(Intent.ACTION_VIEW).apply {
