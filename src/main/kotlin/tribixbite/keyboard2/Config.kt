@@ -97,14 +97,6 @@ class Config private constructor(
     @JvmField var swipe_top5000_boost = 0f
     @JvmField var swipe_rare_words_penalty = 0f
 
-    // Advanced swipe scoring weights (for shape/location/velocity scoring)
-    @JvmField var swipe_confidence_shape_weight = 168  // Shape matching weight (0-255)
-    @JvmField var swipe_confidence_location_weight = 130  // Location accuracy weight (0-255)
-    @JvmField var swipe_confidence_velocity_weight = 60  // Velocity consistency weight (0-255)
-    @JvmField var swipe_endpoint_bonus_weight = 200  // Start/end key bonus (0-255)
-    @JvmField var swipe_first_letter_weight = 150  // First letter accuracy bonus (0-255)
-    @JvmField var swipe_last_letter_weight = 150  // Last letter accuracy bonus (0-255)
-
     // Swipe autocorrect configuration
     @JvmField var swipe_beam_autocorrect_enabled = false
     @JvmField var swipe_final_autocorrect_enabled = false
@@ -303,14 +295,6 @@ class Config private constructor(
         swipe_common_words_boost = safeGetFloat(_prefs, "swipe_common_words_boost", 1.0f)
         swipe_top5000_boost = safeGetFloat(_prefs, "swipe_top5000_boost", 1.0f)
         swipe_rare_words_penalty = safeGetFloat(_prefs, "swipe_rare_words_penalty", 1.0f)
-
-        // Advanced swipe scoring weights (0-255 scale, normalized to 0-1 for use)
-        swipe_confidence_shape_weight = safeGetInt(_prefs, "swipe_confidence_shape_weight", 168)
-        swipe_confidence_location_weight = safeGetInt(_prefs, "swipe_confidence_location_weight", 130)
-        swipe_confidence_velocity_weight = safeGetInt(_prefs, "swipe_confidence_velocity_weight", 60)
-        swipe_endpoint_bonus_weight = safeGetInt(_prefs, "swipe_endpoint_bonus_weight", 200)
-        swipe_first_letter_weight = safeGetInt(_prefs, "swipe_first_letter_weight", 150)
-        swipe_last_letter_weight = safeGetInt(_prefs, "swipe_last_letter_weight", 150)
 
         short_gestures_enabled = _prefs.getBoolean("short_gestures_enabled", true)
         short_gesture_min_distance = safeGetInt(_prefs, "short_gesture_min_distance", 40)
@@ -548,13 +532,6 @@ class Config private constructor(
                 arrayOf("swipe_rare_words_penalty", "1.0"),
                 arrayOf("swipe_common_words_boost", "1.0"),
                 arrayOf("swipe_top5000_boost", "1.0"),
-                // Advanced swipe scoring weights (stored as int 0-255)
-                arrayOf("swipe_confidence_shape_weight", "168"),
-                arrayOf("swipe_confidence_location_weight", "130"),
-                arrayOf("swipe_confidence_velocity_weight", "60"),
-                arrayOf("swipe_endpoint_bonus_weight", "200"),
-                arrayOf("swipe_first_letter_weight", "150"),
-                arrayOf("swipe_last_letter_weight", "150"),
                 arrayOf("gaussian_sigma_x", "0.4"),
                 arrayOf("gaussian_sigma_y", "0.35"),
                 arrayOf("gaussian_min_prob", "0.01"),

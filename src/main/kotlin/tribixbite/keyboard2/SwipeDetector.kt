@@ -22,7 +22,8 @@ class SwipeDetector {
         // relative to other weights (path=30%, duration=20%, direction=20%, coverage=15%)
         // Default velocity is 15% of total (0.15f)
         // Scale the velocity weight from 0-255 to a proportion
-        val velocityProportion = config.swipe_confidence_velocity_weight / 255f
+        // v1.33: Parameter removed from Config, using fixed default (60/255)
+        val velocityProportion = 60f / 255f
 
         // Velocity weight ranges from 0.05 to 0.25 based on config
         velocityWeight = 0.05f + (velocityProportion * 0.20f)
