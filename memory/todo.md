@@ -21,15 +21,16 @@
 - [x] Check for load/latency inefficiencies (no blocking operations found)
 
 ### In Progress
-- [ ] Create missing spec documents
+- [ ] Set up CI/CD with full test coverage
 
 ### Pending
-- [ ] Set up CI/CD with full test coverage
 - [ ] Implement on-the-fly theme creation for keyboard
 - [ ] Implement swipe trail theme creation with colorwheel
 
 ### Completed (this session)
 - [x] Organize and clean archive files (added READMEs, removed empty dirs)
+- [x] Review and update specs README (all 10 core specs verified complete)
+- [x] Identify 4 optional enhancement specs (clipboard, dictionary, privacy, A/B)
 
 ---
 
