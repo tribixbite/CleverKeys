@@ -1,79 +1,87 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-04 (Dead Code Cleanup Complete)
-**Session**: Settings UI fixes and dead code removal
+**Last Updated**: 2025-12-04 (Session Complete)
+**Session**: Settings UI fixes, dead code removal, Material 3 compatibility fixes
 
 ---
 
-## Current Session Tasks
+## Completed This Session (2025-12-04)
 
-### Completed (2025-12-04 - Dead Code Cleanup)
-- [x] Remove old settings UI (SettingsPreferenceActivity.kt, SettingsPreferenceFragment.kt)
-- [x] Remove dead ABTestManager.kt (was never integrated anywhere)
-- [x] Remove dead ModelComparisonTracker.kt (only used by ABTestManager)
-- [x] Remove dead SwipeAdvancedSettings.kt (unused settings model)
+### Dead Code Removal
+- [x] Remove SettingsPreferenceActivity.kt (old XML-based settings)
+- [x] Remove SettingsPreferenceFragment.kt (old fragment-based settings)
+- [x] Remove ABTestManager.kt (never integrated - dead code)
+- [x] Remove ModelComparisonTracker.kt (only used by ABTestManager)
+- [x] Remove SwipeAdvancedSettings.kt (unused settings model)
 - [x] Remove res/xml/settings.xml and settings_compat.xml
-- [x] Remove SettingsPreferenceActivity from AndroidManifest.xml
 - [x] Remove unused openFullSettings() from SettingsActivity.kt
-- [x] Build and test - APK builds successfully (54MB)
 
-### Completed (2025-12-04 - Settings UI Fixes)
-- [x] Fix Dictionary Manager access - was opening Android system settings, now launches 4-tab DictionaryManagerActivity
-- [x] Add DictionaryManagerActivity to AndroidManifest.xml (was removed)
+### Settings UI Fixes
+- [x] Fix Dictionary Manager access - now launches 4-tab DictionaryManagerActivity
+- [x] Add DictionaryManagerActivity to AndroidManifest.xml
 - [x] Expose Theme Manager in Appearance section with prominent card
-- [x] Default Appearance section to expanded so Theme Manager is visible
+- [x] Default Appearance section to expanded
 
-### Pending (Future Sessions)
-- [ ] Create optional enhancement specs (clipboard, dictionary, privacy)
-- [ ] Manual device testing for Theme Manager and Dictionary Manager
-- [ ] Consider migrating prefs/ classes to modern Compose-compatible format
+### Material 3 Compatibility Fixes
+- [x] Replace MaterialButton with standard Button in dictionary layouts
+- [x] Replace MaterialSwitch with SwitchCompat
+- [x] Replace ?attr/colorSurface with ?android:attr/colorBackground
+- [x] Replace ?attr/colorOnSurface with ?android:attr/textColorPrimary
+- [x] Replace Widget.Material3 styles with AppCompat-compatible colors
 
 ---
 
-## Important Findings
+## Verified Working
 
-### Dead Code Removed (2025-12-04)
-The following files were removed as dead code:
-- `SettingsPreferenceActivity.kt` - Old XML-based settings (replaced by Compose SettingsActivity)
-- `SettingsPreferenceFragment.kt` - Old fragment-based settings UI
-- `ABTestManager.kt` - Never integrated into app workflow
-- `ModelComparisonTracker.kt` - Only used by ABTestManager
-- `SwipeAdvancedSettings.kt` - Unused data class
-- `res/xml/settings.xml` - Old settings XML
-- `res/xml/settings_compat.xml` - Old compat settings XML
+### Dictionary Manager (from Settings -> Dictionary -> Manage Custom Words)
+- 4 tabs: Active (49059), Disabled (0), User Dict (0), Custom (1)
+- Search input with filter dropdown
+- Word list with frequency and toggle switches
+- Dark theme UI
+
+### Theme Manager (from Settings -> Appearance -> Theme Manager card)
+- Gemstone themes: Ruby, Sapphire, Emerald
+- Neon themes: Electric Blue, Hot Pink, Lime Green
+- Keyboard preview with Trail button
+- Create custom theme with + button
+
+---
+
+## Pending (Future Sessions)
+
+- [ ] Create optional enhancement specs (clipboard, dictionary, privacy)
+- [ ] Manual device testing for all settings features
+- [ ] Consider full Material 3 theme migration (requires Theme.MaterialComponents as base)
+
+---
+
+## Important Technical Notes
+
+### Theme Compatibility
+The app uses `Theme.AppCompat.DayNight.DarkActionBar` as the base theme. Material 3 components (MaterialButton, MaterialSwitch, colorSurface attributes) require `Theme.MaterialComponents` or `Theme.Material3` as the base theme. All Dictionary Manager layouts have been converted to use AppCompat-compatible components.
 
 ### prefs/ Folder Retained
 The `prefs/` folder was NOT removed because these classes are used by:
 - `Config.kt` - Layout loading and extra keys management
 - `SubtypeManager.kt` - IME subtype handling
 - `LayoutManagerActivity.kt` - Layout selection UI
-- `BackupRestoreManager.kt` - Configuration backup/restore
-
-Classes retained:
-- `LayoutsPreference.kt` - Layout serialization/deserialization
-- `ListGroupPreference.kt` - Generic list preference storage
-- `ExtraKeysPreference.kt` - Extra keys configuration
-- `CustomExtraKeysPreference.kt` - Custom extra keys
-
-### Privacy/Rollback Settings Status
-- **Privacy settings**: Still functional via `PrivacyManager.kt`
-- **Rollback**: `ModelVersionManager.kt` exists but has no second model to roll back to
-- **A/B Testing**: Removed entirely (was dead code)
-
-### UK vs CK Differences
-- CK has swipe trail settings (5 settings) not in UK
-- CK has different defaults for: longPressInterval (25 vs 65), characterSize (1.18 vs 1.15)
 
 ---
 
 ## Files Modified This Session
 - `AndroidManifest.xml` - Removed SettingsPreferenceActivity, added DictionaryManagerActivity
-- `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` - Theme Manager card, expanded Appearance, fixed dictionary launch
-- Deleted: 7 files (see Dead Code Removed section)
+- `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` - Theme Manager card, fixed dictionary launch
+- `res/layout/activity_dictionary_manager.xml` - AppCompat components
+- `res/layout/fragment_word_list.xml` - AppCompat attributes
+- `res/layout/item_word_editable.xml` - Standard Button, AppCompat colors
+- `res/layout/item_word_toggle.xml` - SwitchCompat
+- `src/main/kotlin/tribixbite/cleverkeys/DictionaryManagerActivity.kt` - Button import
 
----
-
-## Reference Links
-- See `docs/questions.md` for detailed analysis
-- See `docs/specs/README.md` for spec index
-- See `docs/TABLE_OF_CONTENTS.md` for master file navigation
+### Deleted Files
+- `src/main/kotlin/tribixbite/cleverkeys/SettingsPreferenceActivity.kt`
+- `src/main/kotlin/tribixbite/cleverkeys/SettingsPreferenceFragment.kt`
+- `src/main/kotlin/tribixbite/cleverkeys/ABTestManager.kt`
+- `src/main/kotlin/tribixbite/cleverkeys/ModelComparisonTracker.kt`
+- `src/main/kotlin/tribixbite/cleverkeys/SwipeAdvancedSettings.kt`
+- `res/xml/settings.xml`
+- `res/xml/settings_compat.xml`
