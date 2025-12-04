@@ -21,16 +21,18 @@
 - [x] Check for load/latency inefficiencies (no blocking operations found)
 
 ### In Progress
-- [ ] Implement on-the-fly theme creation for keyboard
+(none)
 
 ### Pending
-- [ ] Implement swipe trail theme creation with colorwheel
+(none - all tasks complete)
 
 ### Completed (this session)
 - [x] Organize and clean archive files (added READMEs, removed empty dirs)
 - [x] Review and update specs README (all 10 core specs verified complete)
 - [x] Identify 4 optional enhancement specs (clipboard, dictionary, privacy, A/B)
 - [x] Verify CI/CD setup (comprehensive: ci.yml, build.yml, ui-testing.yml, release.yml)
+- [x] Implement on-the-fly theme creation for keyboard (ThemeSettingsActivity.kt)
+- [x] Implement swipe trail theme creation with colorwheel (integrated in ThemeSettingsActivity)
 
 ---
 
@@ -57,9 +59,13 @@ All settings are saved via `SettingsActivity.kt` and used by respective manager 
 
 ## Files Modified This Session
 - `docs/ARCHITECTURE_MASTER.md` (new)
-- `docs/questions.md` (new)
+- `docs/questions.md` (new/updated)
 - `docs/specs/neural-prediction.md` (fixed inconsistencies)
-- `memory/todo.md` (new)
+- `docs/specs/README.md` (updated status and dates)
+- `docs/history/README.md` (new)
+- `archive/README.md` (new)
+- `memory/todo.md` (new/updated)
+- `src/main/kotlin/tribixbite/cleverkeys/ThemeSettingsActivity.kt` (new - theme creator UI)
 
 ---
 
