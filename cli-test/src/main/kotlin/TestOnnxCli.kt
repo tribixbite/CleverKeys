@@ -174,7 +174,7 @@ fun createNearestKeysTensor(env: OrtEnvironment, features: TrajectoryFeatures): 
     // Shape: [batch_size=1, seq_length=150]
     val shape = longArrayOf(1, MAX_TRAJECTORY_POINTS.toLong())
     val data = features.nearestKeys.map { it.toLong() }.toLongArray()
-    return OnnxTensor.createTensor(env, data, shape)
+    return OnnxTensor.createTensor(env, java.nio.LongBuffer.wrap(data), shape)
 }
 
 fun createSourceMaskTensor(env: OrtEnvironment, actualLength: Int): OnnxTensor {
@@ -188,7 +188,7 @@ fun createSourceMaskTensor(env: OrtEnvironment, actualLength: Int): OnnxTensor {
 fun createTargetTokensTensor(env: OrtEnvironment, tokens: List<Long>): OnnxTensor {
     // Shape: [batch_size=1, seq_length]
     val shape = longArrayOf(1, tokens.size.toLong())
-    return OnnxTensor.createTensor(env, tokens.toLongArray(), shape)
+    return OnnxTensor.createTensor(env, java.nio.LongBuffer.wrap(tokens.toLongArray()), shape)
 }
 
 fun createTargetMaskTensor(env: OrtEnvironment, validLength: Int, totalLength: Int): OnnxTensor {
@@ -274,7 +274,9 @@ fun runEncoderInference(
     nearestKeysTensor.close()
     srcMaskTensor.close()
 
-    return outputs.get(0).get()
+    @Suppress("UNCHECKED_CAST")
+    val outputValue = outputs.iterator().next().value as OnnxValue
+    return outputValue
 }
 
 fun runDecoderStep(
@@ -286,15 +288,17 @@ fun runDecoderStep(
     val targetTensor = createTargetTokensTensor(models.env, targetTokens)
     val targetMaskTensor = createTargetMaskTensor(models.env, targetTokens.size, MAX_LENGTH)
 
-    val inputs = mapOf(
-        "memory" to encoderOutput,
+    val inputs = mapOf<String, OnnxTensorLike>(
+        "memory" to (encoderOutput as OnnxTensorLike),
         "target_tokens" to targetTensor,
         "src_mask" to srcMask,
         "target_mask" to targetMaskTensor
     )
 
     val outputs = models.decoder.run(inputs)
-    val logits = (outputs.get(0).get().value as Array<Array<FloatArray>>)[0]
+    @Suppress("UNCHECKED_CAST")
+    val outputTensor = outputs.iterator().next().value
+    val logits = (outputTensor as Array<Array<FloatArray>>)[0]
 
     // Clean up tensors
     targetTensor.close()
@@ -320,9 +324,10 @@ fun beamSearchDecode(
 ): PredictionResult {
     println("\n🔍 Beam Search Decoding (width=$BEAM_WIDTH)")
 
-    // Initialize beams
-    val beams = List(BEAM_WIDTH) {
-        BeamState(mutableListOf(SOS_IDX), 0f, false)
+    // Initialize beams (mutable)
+    var beams = mutableListOf<BeamState>()
+    repeat(BEAM_WIDTH) {
+        beams.add(BeamState(mutableListOf(SOS_IDX), 0f, false))
     }
 
     var step = 0
@@ -356,8 +361,7 @@ fun beamSearchDecode(
         }
 
         // Select top beams
-        beams.clear()
-        beams.addAll(allCandidates.sortedByDescending { it.score }.take(BEAM_WIDTH))
+        beams = allCandidates.sortedByDescending { it.score }.take(BEAM_WIDTH).toMutableList()
 
         step++
 
@@ -569,5 +573,3 @@ fun main() {
         System.exit(1)
     }
 }
-
-main()

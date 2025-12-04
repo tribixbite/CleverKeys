@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.9.0"
+    kotlin("jvm") version "2.0.21"
     application
 }
 
@@ -15,12 +15,12 @@ dependencies {
 }
 
 application {
-    mainClass.set("TestOnnxCli")
+    mainClass.set("TestOnnxCliKt")
 }
 
 tasks.register("runTest", JavaExec::class) {
     group = "verification"
     description = "Run complete ONNX CLI test"
     classpath = sourceSets.main.get().runtimeClasspath
-    mainClass.set("TestOnnxCli")
+    mainClass.set("TestOnnxCliKt")
 }
