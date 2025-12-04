@@ -271,8 +271,8 @@ To ensure CleverKeys is production-ready, reliable, and maintainable, we need co
 - [ ] `ExternalAppIntegrationTest.kt`
   ```bash
   # Test keyboard switching
-  adb shell ime enable tribixbite.keyboard2/.CleverKeysService
-  adb shell ime set tribixbite.keyboard2/.CleverKeysService
+  adb shell ime enable tribixbite.cleverkeys/.CleverKeysService
+  adb shell ime set tribixbite.cleverkeys/.CleverKeysService
 
   # Test input in various apps
   adb shell input text "Test input"

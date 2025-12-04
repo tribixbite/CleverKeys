@@ -290,7 +290,7 @@ tasks.register('checkKeyboardLayouts') {
 }
 
 tasks.register('compileComposeSequences') {
-  def out = "src/main/kotlin/tribixbite/keyboard2/ComposeKeyData.kt"
+  def out = "src/main/kotlin/tribixbite/cleverkeys/ComposeKeyData.kt"
   def outFile = file(out)
 
   // Skip if output already exists (CI builds use pre-generated file)

@@ -21,8 +21,8 @@ fi
 # 1. Set up environment
 export ANDROID_HOME="$HOME/android-sdk"
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
-export JAVA_HOME="/data/data/com.termux/files/usr/lib/jvm/java-17-openjdk"
-export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/35.0.0:$PATH"
+export JAVA_HOME="/data/data/com.termux/files/usr/lib/jvm/java-21-openjdk"
+export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/35.0.0:$PATH"
 
 echo "Step 1: Checking prerequisites..."
 
@@ -32,8 +32,8 @@ if ! java -version &>/dev/null; then
     exit 1
 fi
 
-# Check Gradle
-if ! gradle -v &>/dev/null; then
+# Check Gradle (Skipped, using gradlew)
+if false; then
     echo "Error: Gradle not found. Install with: pkg install gradle"
     exit 1
 fi
@@ -57,7 +57,7 @@ echo "Step 2: Preparing layout resources..."
 if [ ! -d "build/generated-resources/xml" ] || [ -z "$(ls -A build/generated-resources/xml 2>/dev/null)" ]; then
     echo "Copying layout definitions..."
     mkdir -p build/generated-resources/xml
-    cp srcs/layouts/*.xml build/generated-resources/xml/ 2>/dev/null || true
+    cp src/main/layouts/*.xml build/generated-resources/xml/ 2>/dev/null || true
 fi
 
 echo "Step 3: Cleaning previous builds..."
@@ -67,7 +67,7 @@ echo "Step 3: Cleaning previous builds..."
 
 # Re-copy layouts after clean
 mkdir -p build/generated-resources/xml
-cp srcs/layouts/*.xml build/generated-resources/xml/ 2>/dev/null || true
+cp src/main/layouts/*.xml build/generated-resources/xml/ 2>/dev/null || true
 
 # Determine gradle task and output path
 if [ "$BUILD_TYPE_LOWER" = "release" ]; then
@@ -77,10 +77,7 @@ if [ "$BUILD_TYPE_LOWER" = "release" ]; then
     
     # Create a test keystore for release builds if not present
     if [ ! -f "release.keystore" ]; then
-        keytool -genkey -v -keystore release.keystore -alias release \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass android -keypass android \
-            -dname "CN=Test, OU=Test, O=Test, L=Test, S=Test, C=US" 2>/dev/null || {
+        keytool -genkey -v -keystore release.keystore -alias release             -keyalg RSA -keysize 2048 -validity 10000             -storepass android -keypass android             -dname "CN=Test, OU=Test, O=Test, L=Test, S=Test, C=US" 2>/dev/null || {
             echo "Warning: Could not create release keystore"
         }
     fi
@@ -92,25 +89,17 @@ if [ "$BUILD_TYPE_LOWER" = "release" ]; then
     export RELEASE_KEY_PASSWORD="android"
     
     GRADLE_TASK="assembleRelease"
-    APK_PATH="build/outputs/apk/release/tribixbite.keyboard2.apk"
+    APK_PATH="build/outputs/apk/release/tribixbite.cleverkeys.apk"
 else
     GRADLE_TASK="assembleDebug"
-    APK_PATH="build/outputs/apk/debug/tribixbite.keyboard2.apk"
+    APK_PATH="build/outputs/apk/debug/tribixbite.cleverkeys.apk"
     echo "Step 4: Building Debug APK..."
 fi
 
 echo "This may take a few minutes on first run..."
 
 # Build with Termux-specific configuration (optimized for speed)
-./gradlew $GRADLE_TASK \
-    -Dorg.gradle.jvmargs="-Xmx2048m -XX:MaxMetaspaceSize=512m" \
-    -Pandroid.aapt2FromMavenOverride="/data/data/com.termux/files/home/git/swype/Unexpected-Keyboard/tools/aapt2-arm64/aapt2" \
-    --no-daemon \
-    --warning-mode=none \
-    --console=plain \
-    --parallel \
-    --build-cache \
-    2>&1 | tee build-${BUILD_TYPE_LOWER}.log
+./gradlew $GRADLE_TASK     -Dorg.gradle.jvmargs="-Xmx2048m -XX:MaxMetaspaceSize=512m"     -Pandroid.aapt2FromMavenOverride="/data/data/com.termux/files/home/git/swype/Unexpected-Keyboard/tools/aapt2-arm64/aapt2"     --no-daemon     --warning-mode=none     --console=plain     --parallel     --build-cache     2>&1 | tee build-${BUILD_TYPE_LOWER}.log
 
 # Check build result
 if [ -f "$APK_PATH" ]; then
@@ -175,8 +164,7 @@ if [ -f "$APK_PATH" ]; then
         # Check if nmap is available for port scanning
         if command -v nmap &>/dev/null; then
             echo "Scanning ports 30000-50000 for ADB..."
-            SCANNED_PORTS=$(nmap -p 30000-50000 --open -oG - "$HOST" 2>/dev/null | \
-                awk -F"Ports: " '/Ports:/{
+            SCANNED_PORTS=$(nmap -p 30000-50000 --open -oG - "$HOST" 2>/dev/null |                 awk -F"Ports: " '/Ports:/{
                     n=split($2,a,/, /); 
                     for(i=1;i<=n;i++){ 
                         if (a[i] ~ /open/){ 
@@ -234,7 +222,7 @@ if [ -f "$APK_PATH" ]; then
             # Uninstall old version if it's a debug build
             if [ "$BUILD_TYPE_LOWER" = "debug" ]; then
                 echo "Uninstalling previous debug version..."
-                adb uninstall tribixbite.keyboard2 2>/dev/null || true
+                adb uninstall tribixbite.cleverkeys 2>/dev/null || true
             fi
             
             # Install the new APK
@@ -284,7 +272,7 @@ else
     echo "Common issues:"
     echo "1. AAPT2 compatibility - ensure qemu-x86_64 is installed"
     echo "2. Memory issues - try closing other apps"
-    echo "3. Missing layouts - check if srcs/layouts/*.xml exist"
+    echo "3. Missing layouts - check if src/main/layouts/*.xml exist"
     echo "4. SDK version mismatch - check Android SDK installation"
     exit 1
 fi

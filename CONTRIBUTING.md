@@ -87,7 +87,7 @@ git checkout -b fix/bug-description
 
 # Build and test APK
 ./gradlew assembleDebug
-adb install build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
+adb install build/outputs/apk/debug/tribixbite.cleverkeys.debug.apk
 ```
 
 #### 4. Submit Pull Request
@@ -364,7 +364,7 @@ Before submitting a PR, manually test:
 adb logcat | grep "PERFORMANCE_METRIC"
 
 # Validate memory usage
-adb shell dumpsys meminfo tribixbite.keyboard2
+adb shell dumpsys meminfo tribixbite.cleverkeys
 ```
 
 ## 🚢 Release Process

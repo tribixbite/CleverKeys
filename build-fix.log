@@ -1,5 +1,0 @@
-=== Unexpected Keyboard Termux Build Script ===
-Building debug APK on Termux ARM64
-
-Step 1: Checking prerequisites...
-Error: Gradle not found. Install with: pkg install gradle
