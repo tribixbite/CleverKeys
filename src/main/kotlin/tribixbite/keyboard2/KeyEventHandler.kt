@@ -230,9 +230,14 @@ class KeyEventHandler(
 
             // Smart punctuation: If typing punctuation and previous char is space, delete the space
             // This attaches punctuation to the end of the previous word (e.g., "word ." -> "word.")
-            if (Config.globalConfig().smart_punctuation && isSmartPunctuationChar(char)) {
+            val smartPuncEnabled = Config.globalConfig().smart_punctuation
+            val isPunctChar = isSmartPunctuationChar(char)
+            android.util.Log.d("KeyEventHandler", "SMART_PUNCT: char='$char' enabled=$smartPuncEnabled isPunct=$isPunctChar")
+            if (smartPuncEnabled && isPunctChar) {
                 val textBefore = conn.getTextBeforeCursor(1, 0)
+                android.util.Log.d("KeyEventHandler", "SMART_PUNCT: textBefore='$textBefore'")
                 if (textBefore != null && textBefore.length == 1 && textBefore[0] == ' ') {
+                    android.util.Log.d("KeyEventHandler", "SMART_PUNCT: Deleting space before '$char'")
                     conn.deleteSurroundingText(1, 0)
                 }
             }

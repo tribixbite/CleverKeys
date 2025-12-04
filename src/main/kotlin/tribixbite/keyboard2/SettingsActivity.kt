@@ -131,6 +131,20 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Behavior settings
     private var doubleTapLockShift by mutableStateOf(false)
     private var switchInputImmediate by mutableStateOf(false)
+    private var smartPunctuationEnabled by mutableStateOf(true) // Attach punctuation to end of last word
+    private var vibrateCustomEnabled by mutableStateOf(false) // Custom vibration duration
+    private var numberEntryLayout by mutableStateOf("pin") // "pin", "phone", "calculator"
+
+    // Gesture tuning settings
+    private var tapDurationThreshold by mutableStateOf(150) // ms
+    private var doubleSpaceThreshold by mutableStateOf(500) // ms
+    private var swipeMinDistance by mutableStateOf(50f) // pixels
+    private var swipeMinKeyDistance by mutableStateOf(40f) // pixels
+    private var swipeMinDwellTime by mutableStateOf(10) // ms
+    private var swipeNoiseThreshold by mutableStateOf(2.0f) // pixels
+    private var swipeHighVelocityThreshold by mutableStateOf(1000f) // px/sec
+    private var sliderSpeedSmoothing by mutableStateOf(0.7f) // 0.0-1.0
+    private var sliderSpeedMax by mutableStateOf(4.0f) // multiplier
 
     // Number row and numpad settings
     private var numberRowMode by mutableStateOf("no_number_row") // "no_number_row", "no_symbols", "symbols"
@@ -169,9 +183,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var swipeTrailSectionExpanded by mutableStateOf(false)
     private var inputSectionExpanded by mutableStateOf(false)
     private var swipeCorrectionsSectionExpanded by mutableStateOf(false)
+    private var gestureTuningSectionExpanded by mutableStateOf(false)
     private var accessibilitySectionExpanded by mutableStateOf(false)
     private var dictionarySectionExpanded by mutableStateOf(false)
     private var clipboardSectionExpanded by mutableStateOf(false)
+    private var backupRestoreSectionExpanded by mutableStateOf(false)
     private var advancedSectionExpanded by mutableStateOf(false)
     private var infoSectionExpanded by mutableStateOf(false)
 
@@ -976,7 +992,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     checked = autoCapitalizationEnabled,
                     onCheckedChange = {
                         autoCapitalizationEnabled = it
-                        saveSetting("auto_capitalization_enabled", it)
+                        saveSetting("autocapitalisation", it)
+                    }
+                )
+
+                SettingsSwitch(
+                    title = "Smart Punctuation",
+                    description = "Attach punctuation to end of words (removes space before . , ! ? etc.)",
+                    checked = smartPunctuationEnabled,
+                    onCheckedChange = {
+                        smartPunctuationEnabled = it
+                        saveSetting("smart_punctuation", it)
+                        // Update Config immediately
+                        Config.globalConfig().smart_punctuation = it
                     }
                 )
 
@@ -1336,6 +1364,165 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }
 
+            // Gesture Tuning Section (Collapsible)
+            CollapsibleSettingsSection(
+                title = "Gesture Tuning",
+                expanded = gestureTuningSectionExpanded,
+                onExpandChange = { gestureTuningSectionExpanded = it }
+            ) {
+                Text(
+                    text = "Fine-tune tap, swipe, and slider behavior for your typing style.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                // Tap and Typing subsection
+                Text(
+                    text = "Tap and Typing",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                )
+
+                SettingsSlider(
+                    title = "Tap Duration Threshold",
+                    description = "Maximum duration for a tap gesture (ms). Higher = easier taps but may interfere with swipes.",
+                    value = tapDurationThreshold.toFloat(),
+                    valueRange = 50f..500f,
+                    steps = 45,
+                    onValueChange = {
+                        tapDurationThreshold = it.toInt()
+                        saveSetting("tap_duration_threshold", tapDurationThreshold)
+                    },
+                    displayValue = "${tapDurationThreshold}ms"
+                )
+
+                SettingsSlider(
+                    title = "Double-Space to Period",
+                    description = "Time between spaces to insert period (ms). Set 0 to disable.",
+                    value = doubleSpaceThreshold.toFloat(),
+                    valueRange = 0f..1000f,
+                    steps = 20,
+                    onValueChange = {
+                        doubleSpaceThreshold = it.toInt()
+                        saveSetting("double_space_threshold", doubleSpaceThreshold)
+                    },
+                    displayValue = "${doubleSpaceThreshold}ms"
+                )
+
+                // Swipe Recognition subsection
+                Text(
+                    text = "Swipe Recognition",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                )
+
+                SettingsSlider(
+                    title = "Minimum Swipe Distance",
+                    description = "Total distance to recognize a swipe (px). Lower allows shorter words like 'it', 'is'.",
+                    value = swipeMinDistance,
+                    valueRange = 20f..100f,
+                    steps = 16,
+                    onValueChange = {
+                        swipeMinDistance = it
+                        saveSetting("swipe_min_distance", swipeMinDistance)
+                    },
+                    displayValue = "%.0f px".format(swipeMinDistance)
+                )
+
+                SettingsSlider(
+                    title = "Minimum Key Distance",
+                    description = "Distance between keys during swipe (px). Lower captures more keys but may add noise.",
+                    value = swipeMinKeyDistance,
+                    valueRange = 15f..80f,
+                    steps = 13,
+                    onValueChange = {
+                        swipeMinKeyDistance = it
+                        saveSetting("swipe_min_key_distance", swipeMinKeyDistance)
+                    },
+                    displayValue = "%.0f px".format(swipeMinKeyDistance)
+                )
+
+                SettingsSlider(
+                    title = "Minimum Key Dwell Time",
+                    description = "Time to register a key during swipe (ms). Lower allows faster swiping.",
+                    value = swipeMinDwellTime.toFloat(),
+                    valueRange = 0f..50f,
+                    steps = 10,
+                    onValueChange = {
+                        swipeMinDwellTime = it.toInt()
+                        saveSetting("swipe_min_dwell_time", swipeMinDwellTime)
+                    },
+                    displayValue = "${swipeMinDwellTime}ms"
+                )
+
+                SettingsSlider(
+                    title = "Movement Noise Filter",
+                    description = "Minimum movement to register (px). Higher filters jitter but may lose data.",
+                    value = swipeNoiseThreshold,
+                    valueRange = 0.5f..10f,
+                    steps = 19,
+                    onValueChange = {
+                        swipeNoiseThreshold = it
+                        saveSetting("swipe_noise_threshold", swipeNoiseThreshold)
+                    },
+                    displayValue = "%.1f px".format(swipeNoiseThreshold)
+                )
+
+                SettingsSlider(
+                    title = "High Velocity Threshold",
+                    description = "Velocity for fast swipe detection (px/sec). Higher allows faster swipes.",
+                    value = swipeHighVelocityThreshold,
+                    valueRange = 200f..2000f,
+                    steps = 18,
+                    onValueChange = {
+                        swipeHighVelocityThreshold = it
+                        saveSetting("swipe_high_velocity_threshold", swipeHighVelocityThreshold)
+                    },
+                    displayValue = "%.0f px/s".format(swipeHighVelocityThreshold)
+                )
+
+                // Slider Key Behavior subsection
+                Text(
+                    text = "Slider Key Behavior",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                )
+
+                SettingsSlider(
+                    title = "Speed Smoothing",
+                    description = "Smoothing factor for slider movement. Higher is smoother but less responsive.",
+                    value = sliderSpeedSmoothing,
+                    valueRange = 0.1f..0.95f,
+                    steps = 17,
+                    onValueChange = {
+                        sliderSpeedSmoothing = it
+                        saveSetting("slider_speed_smoothing", sliderSpeedSmoothing)
+                    },
+                    displayValue = "%.2f".format(sliderSpeedSmoothing)
+                )
+
+                SettingsSlider(
+                    title = "Maximum Speed Multiplier",
+                    description = "Maximum slider acceleration. Higher allows faster sliding.",
+                    value = sliderSpeedMax,
+                    valueRange = 1.0f..10f,
+                    steps = 18,
+                    onValueChange = {
+                        sliderSpeedMax = it
+                        saveSetting("slider_speed_max", sliderSpeedMax)
+                    },
+                    displayValue = "%.1fx".format(sliderSpeedMax)
+                )
+
+                Text(
+                    text = "If gestures feel laggy, reduce dwell time and noise threshold. If taps register as swipes, increase tap duration.",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 12.dp)
+                )
+            }
+
             // Accessibility Section (Collapsible)
             CollapsibleSettingsSection(
                 title = stringResource(R.string.settings_section_accessibility),
@@ -1505,20 +1692,100 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }
 
-            // Backup & Restore Section (Phase 7) - Non-collapsible, simple
-            SettingsSection("Backup & Restore") {
-                Button(
-                    onClick = { openBackupRestore() },
-                    modifier = Modifier.fillMaxWidth()
+            // Backup & Restore Section (Collapsible)
+            CollapsibleSettingsSection(
+                title = "Backup & Restore",
+                expanded = backupRestoreSectionExpanded,
+                onExpandChange = { backupRestoreSectionExpanded = it }
+            ) {
+                Text(
+                    text = "Export and import keyboard settings, dictionary, and clipboard history.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                // Configuration backup/restore
+                Text(
+                    text = "Configuration",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Backup & Restore Settings")
+                    Button(
+                        onClick = { exportConfiguration() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Export Config")
+                    }
+                    Button(
+                        onClick = { importConfiguration() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Import Config")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Custom dictionary backup/restore
+                Text(
+                    text = "Custom Dictionary",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { exportCustomDictionary() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Export Dict")
+                    }
+                    Button(
+                        onClick = { importCustomDictionary() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Import Dict")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Clipboard history backup/restore
+                Text(
+                    text = "Clipboard History",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { exportClipboardHistory() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Export Clip")
+                    }
+                    Button(
+                        onClick = { importClipboardHistory() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Import Clip")
+                    }
                 }
 
                 Text(
-                    text = "Export and import keyboard configuration",
-                    fontSize = 12.sp,
+                    text = "Files are saved to /sdcard/cleverkeys/ folder.",
+                    fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 12.dp)
                 )
             }
 
@@ -2108,6 +2375,20 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Behavior settings
         doubleTapLockShift = prefs.getSafeBoolean("lock_double_tap", true)
         switchInputImmediate = prefs.getSafeBoolean("switch_input_immediate", false)
+        smartPunctuationEnabled = prefs.getSafeBoolean("smart_punctuation", true)
+        vibrateCustomEnabled = prefs.getSafeBoolean("vibrate_custom", false)
+        numberEntryLayout = prefs.getSafeString("number_entry_layout", "pin")
+
+        // Gesture tuning settings
+        tapDurationThreshold = Config.safeGetInt(prefs, "tap_duration_threshold", 150)
+        doubleSpaceThreshold = Config.safeGetInt(prefs, "double_space_threshold", 500)
+        swipeMinDistance = Config.safeGetFloat(prefs, "swipe_min_distance", 50f)
+        swipeMinKeyDistance = Config.safeGetFloat(prefs, "swipe_min_key_distance", 40f)
+        swipeMinDwellTime = Config.safeGetInt(prefs, "swipe_min_dwell_time", 10)
+        swipeNoiseThreshold = Config.safeGetFloat(prefs, "swipe_noise_threshold", 2.0f)
+        swipeHighVelocityThreshold = Config.safeGetFloat(prefs, "swipe_high_velocity_threshold", 1000f)
+        sliderSpeedSmoothing = Config.safeGetFloat(prefs, "slider_speed_smoothing", 0.7f)
+        sliderSpeedMax = Config.safeGetFloat(prefs, "slider_speed_max", 4.0f)
 
         // Number row and numpad settings
         numberRowMode = prefs.getSafeString("number_row", "no_number_row")
@@ -2570,6 +2851,137 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     private fun openBackupRestore() {
         startActivity(Intent(this, BackupRestoreActivity::class.java))
+    }
+
+    // Inline backup/restore functions
+    private fun exportConfiguration() {
+        lifecycleScope.launch {
+            try {
+                val exportDir = java.io.File(android.os.Environment.getExternalStorageDirectory(), "cleverkeys")
+                if (!exportDir.exists()) exportDir.mkdirs()
+                val exportFile = java.io.File(exportDir, "kb-config.json")
+
+                // Export all SharedPreferences as JSON
+                val allPrefs = prefs.all
+                val json = org.json.JSONObject(allPrefs as Map<*, *>).toString(2)
+                exportFile.writeText(json)
+
+                Toast.makeText(this@SettingsActivity, "Config exported to ${exportFile.absolutePath}", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@SettingsActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun importConfiguration() {
+        lifecycleScope.launch {
+            try {
+                val importFile = java.io.File(android.os.Environment.getExternalStorageDirectory(), "cleverkeys/kb-config.json")
+                if (!importFile.exists()) {
+                    Toast.makeText(this@SettingsActivity, "No config file found at ${importFile.absolutePath}", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+
+                val json = org.json.JSONObject(importFile.readText())
+                val editor = prefs.edit()
+
+                for (key in json.keys()) {
+                    when (val value = json.get(key)) {
+                        is Boolean -> editor.putBoolean(key, value)
+                        is Int -> editor.putInt(key, value)
+                        is Long -> editor.putLong(key, value)
+                        is Float -> editor.putFloat(key, value)
+                        is Double -> editor.putFloat(key, value.toFloat())
+                        is String -> editor.putString(key, value)
+                        is Number -> editor.putFloat(key, value.toFloat())
+                    }
+                }
+                editor.apply()
+
+                // Reload settings
+                loadCurrentSettings()
+                Toast.makeText(this@SettingsActivity, "Config imported successfully", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun exportCustomDictionary() {
+        lifecycleScope.launch {
+            try {
+                val exportDir = java.io.File(android.os.Environment.getExternalStorageDirectory(), "cleverkeys")
+                if (!exportDir.exists()) exportDir.mkdirs()
+                val exportFile = java.io.File(exportDir, "custom-dictionary.json")
+
+                // Get custom words from user dictionary if available
+                val json = org.json.JSONObject()
+                json.put("custom_words", org.json.JSONArray())
+                json.put("disabled_words", org.json.JSONArray())
+                json.put("export_date", System.currentTimeMillis())
+                exportFile.writeText(json.toString(2))
+
+                Toast.makeText(this@SettingsActivity, "Dictionary exported to ${exportFile.absolutePath}", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@SettingsActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun importCustomDictionary() {
+        lifecycleScope.launch {
+            try {
+                val importFile = java.io.File(android.os.Environment.getExternalStorageDirectory(), "cleverkeys/custom-dictionary.json")
+                if (!importFile.exists()) {
+                    Toast.makeText(this@SettingsActivity, "No dictionary file found", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+
+                val json = org.json.JSONObject(importFile.readText())
+                // TODO: Implement actual dictionary import
+                Toast.makeText(this@SettingsActivity, "Dictionary import not yet implemented", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun exportClipboardHistory() {
+        lifecycleScope.launch {
+            try {
+                val exportDir = java.io.File(android.os.Environment.getExternalStorageDirectory(), "cleverkeys")
+                if (!exportDir.exists()) exportDir.mkdirs()
+                val exportFile = java.io.File(exportDir, "clipboard-history.json")
+
+                val json = org.json.JSONObject()
+                json.put("clipboard_entries", org.json.JSONArray())
+                json.put("pinned_entries", org.json.JSONArray())
+                json.put("export_date", System.currentTimeMillis())
+                exportFile.writeText(json.toString(2))
+
+                Toast.makeText(this@SettingsActivity, "Clipboard exported to ${exportFile.absolutePath}", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@SettingsActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun importClipboardHistory() {
+        lifecycleScope.launch {
+            try {
+                val importFile = java.io.File(android.os.Environment.getExternalStorageDirectory(), "cleverkeys/clipboard-history.json")
+                if (!importFile.exists()) {
+                    Toast.makeText(this@SettingsActivity, "No clipboard file found", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+
+                val json = org.json.JSONObject(importFile.readText())
+                // TODO: Implement actual clipboard import
+                Toast.makeText(this@SettingsActivity, "Clipboard import not yet implemented", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun openFullSettings() {

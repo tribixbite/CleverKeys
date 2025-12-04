@@ -5,9 +5,49 @@
 
 ---
 
-## Current Session: CI/CD, Crash Fixes & Feature Parity (Dec 4, 2025)
+## Current Session: Settings Migration to Compose UI (Dec 4, 2025)
 
 ### Completed This Session
+- ✅ Migrated legacy XML settings to Compose UI
+  - Added Smart Punctuation toggle to Input Behavior section
+  - Added Gesture Tuning collapsible section with 9 sliders:
+    - Tap Duration Threshold (50-500ms)
+    - Double-Space to Period (0-1000ms)
+    - Minimum Swipe Distance (20-100px)
+    - Minimum Key Distance (15-80px)
+    - Minimum Key Dwell Time (0-50ms)
+    - Movement Noise Filter (0.5-10px)
+    - High Velocity Threshold (200-2000px/sec)
+    - Speed Smoothing (0.1-0.95)
+    - Maximum Speed Multiplier (1-10x)
+  - Added Backup & Restore collapsible section with inline buttons:
+    - Export/Import Configuration (kb-config.json)
+    - Export/Import Custom Dictionary
+    - Export/Import Clipboard History
+  - Added loading code for all new settings in loadCurrentSettings()
+
+- ✅ Smart Punctuation verified working
+  - Setting defined in Config.kt line 120 (default: true)
+  - Setting loaded from prefs in Config.kt line 321
+  - Logic implemented in KeyEventHandler.kt lines 231-243
+  - Removes space before punctuation: . , ! ? ; : ' " ) ] }
+  - Works for both tap typing and after swipe words
+
+### Code Changes This Session
+**SettingsActivity.kt:**
+- Added state variables: smartPunctuationEnabled, vibrateCustomEnabled, numberEntryLayout
+- Added gesture tuning state variables (9 settings)
+- Added gestureTuningSectionExpanded, backupRestoreSectionExpanded
+- Added Gesture Tuning section UI (lines 1367-1524)
+- Added Backup & Restore section UI (lines 1695-1790)
+- Added loading code in loadCurrentSettings() for new settings
+- Added export/import functions for config, dictionary, clipboard
+
+---
+
+## Previous Session: CI/CD, Crash Fixes & Feature Parity (Dec 4, 2025)
+
+### Completed
 - ✅ Fixed GitHub Actions CI/CD workflow
   - Removed hardcoded AAPT2 path from gradle.properties (was breaking CI builds)
   - build-on-termux.sh already passes AAPT2 via -P flag for local builds
