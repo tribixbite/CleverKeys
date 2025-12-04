@@ -378,11 +378,9 @@ class BeamSearchEngine(
         if (wordStr.isEmpty()) return null
         
         // Score is NLL, so Prob = exp(-score)
-        // FIX: Use Length-Normalized Score for Confidence
-        val len = beam.tokens.size.toFloat()
-        val normFactor = (5.0 + len).pow(lengthPenaltyAlpha.toDouble()).toFloat() / 6.0.pow(lengthPenaltyAlpha.toDouble()).toFloat()
-        val normalizedScore = beam.score / normFactor
-        val confidence = exp(-normalizedScore)
+        // Note: Length normalization is used for sorting (inside search) but NOT for final confidence.
+        // This matches Unexpected-Keyboard logic and ensures compatibility with its threshold settings.
+        val confidence = exp(-beam.score)
         
         // FIX #3: Lower confidence threshold
         if (confidence < confidenceThreshold) return null
