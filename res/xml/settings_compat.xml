@@ -31,6 +31,31 @@
     <SwitchPreferenceCompat android:key="neural_enabled" android:title="Neural Prediction" android:summary="Use neural network for swipe typing" android:defaultValue="true"/>
     <Preference android:key="neural_performance_stats" android:title="Neural Settings" android:summary="Configure neural model"/>
     <Preference android:key="swipe_calibration" android:title="Swipe Calibration" android:summary="Calibrate swipe sensitivity"/>
+    <Preference android:key="neural_load_encoder" android:title="Load Encoder Model" android:summary="Load external encoder ONNX file"/>
+    <Preference android:key="neural_load_decoder" android:title="Load Decoder Model" android:summary="Load external decoder ONNX file"/>
+    <Preference android:key="neural_model_metadata" android:title="Model Information" android:summary="View loaded model details"/>
+  </PreferenceCategory>
+  <PreferenceCategory android:title="A/B Testing">
+    <Preference android:key="ab_test_status" android:title="Test Status" android:summary="View current A/B test progress"/>
+    <Preference android:key="ab_test_comparison" android:title="Model Comparison" android:summary="Compare model performance metrics"/>
+    <Preference android:key="ab_test_configure" android:title="Configure Test" android:summary="Set up A/B test parameters"/>
+    <Preference android:key="ab_test_export" android:title="Export Data" android:summary="Export comparison data as JSON"/>
+    <Preference android:key="ab_test_reset" android:title="Reset Test" android:summary="Clear all A/B test data"/>
+  </PreferenceCategory>
+  <PreferenceCategory android:title="Rollback and Recovery">
+    <Preference android:key="rollback_status" android:title="Version Status" android:summary="View model version and health"/>
+    <Preference android:key="rollback_history" android:title="Version History" android:summary="View all model versions"/>
+    <Preference android:key="rollback_manual" android:title="Manual Rollback" android:summary="Force rollback to previous version"/>
+    <Preference android:key="rollback_pin_version" android:title="Pin Version" android:summary="Lock current model version"/>
+    <Preference android:key="rollback_export" android:title="Export History" android:summary="Export version history as JSON"/>
+    <Preference android:key="rollback_reset" android:title="Reset History" android:summary="Clear all version data"/>
+  </PreferenceCategory>
+  <PreferenceCategory android:title="Privacy and Data">
+    <Preference android:key="privacy_status" android:title="Privacy Status" android:summary="View privacy settings summary"/>
+    <Preference android:key="privacy_consent" android:title="Data Collection Consent" android:summary="Grant or revoke consent"/>
+    <Preference android:key="privacy_delete_now" android:title="Delete All Data" android:summary="Immediately delete collected data"/>
+    <Preference android:key="privacy_export" android:title="Export Data" android:summary="Export collected data"/>
+    <Preference android:key="privacy_audit" android:title="Privacy Audit Trail" android:summary="View privacy action history"/>
   </PreferenceCategory>
   <PreferenceCategory android:title="Backup">
     <Preference android:key="backup_config" android:title="Export Configuration" android:summary="Save settings to JSON"/>

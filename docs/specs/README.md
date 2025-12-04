@@ -124,9 +124,9 @@ These specs would document existing features that don't have formal documentatio
 - ✅ Model versioning/rollback (ModelVersionManager.kt - Phase 6.4)
 
 ### Remaining Work (All Non-Blocking)
-1. **CI/CD Setup**: Automated test coverage (pending)
-2. **Theme Creation**: On-the-fly keyboard themes (pending)
-3. **Swipe Trail Themes**: Colorwheel selection (pending)
+1. **CI/CD Setup**: ✅ Complete (7 workflows: ci.yml, build.yml, ui-testing.yml, release.yml, nightly.yml, etc.)
+2. **Theme Creation**: ✅ Complete (ThemeSettingsActivity with HSL color picker, custom themes, export/import)
+3. **Swipe Trail Themes**: ✅ Complete (KeyboardColorScheme includes swipeTrail, integrated in ThemeSettingsActivity)
 4. **Device Testing**: Manual validation (ongoing)
 
 ---
