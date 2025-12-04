@@ -54,6 +54,19 @@
   - Added generateBinaryDictionaries and generateBinaryContractions tasks to build.gradle
   - Tasks run as preBuild dependencies
 
+- ✅ Synced QWERTY layout with UK shortcuts
+  - Restored pronoun shortcuts on I key: sw="I'd", w="it", se="I'm"
+  - Restored word shortcuts: "we ", "to ", "up ", "of ", "as ", "at ", etc.
+  - Restored special char placeholders: loc tab, loc €, loc ß, loc †
+  - CK had different shortcuts (was overwritten with f1_* function keys)
+
+- ✅ UK vs CK Comparison Complete (Dec 4, 2025)
+  - **Settings**: Both have identical 165 settings keys in settings.xml
+  - **Layouts**: All 84 layouts from UK are present in CK (+ numeric.xml extra)
+  - **Kotlin files**: CK has more files (extra activities for settings UIs)
+  - **Binary loaders**: BinaryDictionaryLoader.kt and AsyncDictionaryLoader.kt identical
+  - **No missing settings found** - CK actually has MORE settings than UK
+
 ### Code Changes
 **gradle.properties:**
 - Commented out android.aapt2FromMavenOverride (line 7)
