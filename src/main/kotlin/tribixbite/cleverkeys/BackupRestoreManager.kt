@@ -614,7 +614,23 @@ class BackupRestoreManager(private val context: Context) {
             val prefs = context.getSharedPreferences("cleverkeys_prefs", android.content.Context.MODE_PRIVATE)
             val editor = prefs.edit()
 
-            if (root.has("user_words")) {
+            // Handle new format: custom_words as object with word -> frequency
+            if (root.has("custom_words") && root.get("custom_words").isJsonObject) {
+                val customWords = root.getAsJsonObject("custom_words")
+                for ((word, freqValue) in customWords.entrySet()) {
+                    val frequency = freqValue.asInt
+                    val key = "user_word_${word.hashCode()}"
+                    if (!prefs.contains(key)) {
+                        // Store as "word:frequency" format
+                        editor.putString(key, "$word:$frequency")
+                        result.userWordsImported++
+                    }
+                }
+                Log.i(TAG, "Imported ${result.userWordsImported} custom_words (new format)")
+            }
+
+            // Handle old format: user_words as array
+            if (root.has("user_words") && root.get("user_words").isJsonArray) {
                 val userWords = root.getAsJsonArray("user_words")
                 for (word in userWords) {
                     val wordStr = word.asString
@@ -626,7 +642,8 @@ class BackupRestoreManager(private val context: Context) {
                 }
             }
 
-            if (root.has("disabled_words")) {
+            // Handle disabled_words (array format)
+            if (root.has("disabled_words") && root.get("disabled_words").isJsonArray) {
                 val disabledWords = root.getAsJsonArray("disabled_words")
                 for (word in disabledWords) {
                     val wordStr = word.asString

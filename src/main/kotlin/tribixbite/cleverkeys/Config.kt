@@ -196,7 +196,7 @@ class Config private constructor(
             keyboardHeightPercent = safeGetInt(
                 _prefs,
                 if (this.foldable_unfolded) "keyboard_height_unfolded" else "keyboard_height",
-                35
+                27
             )
         }
 

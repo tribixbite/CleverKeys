@@ -3623,11 +3623,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private fun performConfigExport(uri: Uri) {
         lifecycleScope.launch {
             try {
-                contentResolver.openOutputStream(uri)?.use { outputStream ->
-                    val allPrefs = prefs.all
-                    val json = org.json.JSONObject(allPrefs as Map<*, *>).toString(2)
-                    outputStream.write(json.toByteArray())
-                }
+                val backupManager = BackupRestoreManager(this@SettingsActivity)
+                backupManager.exportConfig(uri, prefs)
                 Toast.makeText(this@SettingsActivity, "Config exported successfully", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -3638,28 +3635,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private fun performConfigImport(uri: Uri) {
         lifecycleScope.launch {
             try {
-                contentResolver.openInputStream(uri)?.use { inputStream ->
-                    val jsonText = inputStream.bufferedReader().readText()
-                    val json = org.json.JSONObject(jsonText)
-                    val editor = prefs.edit()
+                val backupManager = BackupRestoreManager(this@SettingsActivity)
+                val result = backupManager.importConfig(uri, prefs)
 
-                    for (key in json.keys()) {
-                        when (val value = json.get(key)) {
-                            is Boolean -> editor.putBoolean(key, value)
-                            is Int -> editor.putInt(key, value)
-                            is Long -> editor.putLong(key, value)
-                            is Float -> editor.putFloat(key, value)
-                            is Double -> editor.putFloat(key, value.toFloat())
-                            is String -> editor.putString(key, value)
-                            is Number -> editor.putFloat(key, value.toFloat())
-                        }
-                    }
-                    editor.apply()
+                // Reload settings to reflect imported values
+                loadCurrentSettings()
 
-                    // Reload settings
-                    loadCurrentSettings()
-                    Toast.makeText(this@SettingsActivity, "Config imported successfully", Toast.LENGTH_SHORT).show()
-                } ?: throw Exception("Could not open file")
+                Toast.makeText(
+                    this@SettingsActivity,
+                    "Config imported: ${result.importedCount} settings imported, ${result.skippedCount} skipped",
+                    Toast.LENGTH_LONG
+                ).show()
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
@@ -3669,13 +3655,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private fun performDictionaryExport(uri: Uri) {
         lifecycleScope.launch {
             try {
-                contentResolver.openOutputStream(uri)?.use { outputStream ->
-                    val json = org.json.JSONObject()
-                    json.put("custom_words", org.json.JSONArray())
-                    json.put("disabled_words", org.json.JSONArray())
-                    json.put("export_date", System.currentTimeMillis())
-                    outputStream.write(json.toString(2).toByteArray())
-                }
+                val backupManager = BackupRestoreManager(this@SettingsActivity)
+                backupManager.exportDictionaries(uri)
                 Toast.makeText(this@SettingsActivity, "Dictionary exported successfully", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -3686,13 +3667,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private fun performDictionaryImport(uri: Uri) {
         lifecycleScope.launch {
             try {
-                contentResolver.openInputStream(uri)?.use { inputStream ->
-                    val jsonText = inputStream.bufferedReader().readText()
-                    val json = org.json.JSONObject(jsonText)
-                    // TODO: Implement actual dictionary import from JSON
-                    val wordCount = json.optJSONArray("custom_words")?.length() ?: 0
-                    Toast.makeText(this@SettingsActivity, "Dictionary file read ($wordCount words) - import pending", Toast.LENGTH_SHORT).show()
-                } ?: throw Exception("Could not open file")
+                val backupManager = BackupRestoreManager(this@SettingsActivity)
+                val result = backupManager.importDictionaries(uri)
+
+                Toast.makeText(
+                    this@SettingsActivity,
+                    "Dictionary imported: ${result.userWordsImported} words, ${result.disabledWordsImported} disabled",
+                    Toast.LENGTH_LONG
+                ).show()
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
@@ -3702,13 +3684,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private fun performClipboardExport(uri: Uri) {
         lifecycleScope.launch {
             try {
-                contentResolver.openOutputStream(uri)?.use { outputStream ->
-                    val json = org.json.JSONObject()
-                    json.put("clipboard_entries", org.json.JSONArray())
-                    json.put("pinned_entries", org.json.JSONArray())
-                    json.put("export_date", System.currentTimeMillis())
-                    outputStream.write(json.toString(2).toByteArray())
-                }
+                val backupManager = BackupRestoreManager(this@SettingsActivity)
+                backupManager.exportClipboardHistory(uri)
                 Toast.makeText(this@SettingsActivity, "Clipboard exported successfully", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -3722,9 +3699,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 contentResolver.openInputStream(uri)?.use { inputStream ->
                     val jsonText = inputStream.bufferedReader().readText()
                     val json = org.json.JSONObject(jsonText)
-                    // TODO: Implement actual clipboard import from JSON
-                    val entryCount = json.optJSONArray("clipboard_entries")?.length() ?: 0
-                    Toast.makeText(this@SettingsActivity, "Clipboard file read ($entryCount entries) - import pending", Toast.LENGTH_SHORT).show()
+
+                    val clipboardDb = ClipboardDatabase.getInstance(this@SettingsActivity)
+                    val result = clipboardDb.importFromJSON(json)
+                    val imported = result[0]
+                    val duplicates = result[1]
+
+                    Toast.makeText(
+                        this@SettingsActivity,
+                        "Clipboard imported: $imported entries ($duplicates duplicates skipped)",
+                        Toast.LENGTH_LONG
+                    ).show()
                 } ?: throw Exception("Could not open file")
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()

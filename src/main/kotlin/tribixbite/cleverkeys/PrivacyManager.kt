@@ -176,11 +176,11 @@ class PrivacyManager(private val context: Context) {
      * Check if specific data collection type is allowed
      */
     fun canCollectSwipeData(): Boolean {
-        return hasConsent() && prefs.getBoolean(KEY_COLLECT_SWIPE_DATA, true)
+        return hasConsent() && prefs.getBoolean(KEY_COLLECT_SWIPE_DATA, false)
     }
 
     fun canCollectPerformanceData(): Boolean {
-        return hasConsent() && prefs.getBoolean(KEY_COLLECT_PERFORMANCE_DATA, true)
+        return hasConsent() && prefs.getBoolean(KEY_COLLECT_PERFORMANCE_DATA, false)
     }
 
     fun canCollectErrorLogs(): Boolean {
@@ -269,8 +269,8 @@ class PrivacyManager(private val context: Context) {
      */
     fun getSettings(): PrivacySettings {
         return PrivacySettings(
-            collectSwipeData = prefs.getBoolean(KEY_COLLECT_SWIPE_DATA, true),
-            collectPerformanceData = prefs.getBoolean(KEY_COLLECT_PERFORMANCE_DATA, true),
+            collectSwipeData = prefs.getBoolean(KEY_COLLECT_SWIPE_DATA, false),
+            collectPerformanceData = prefs.getBoolean(KEY_COLLECT_PERFORMANCE_DATA, false),
             collectErrorLogs = prefs.getBoolean(KEY_COLLECT_ERROR_LOGS, false),
             anonymizeData = prefs.getBoolean(KEY_ANONYMIZE_DATA, true),
             localOnlyTraining = prefs.getBoolean(KEY_LOCAL_ONLY_TRAINING, true),

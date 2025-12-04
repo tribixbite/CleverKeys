@@ -96,8 +96,8 @@ class ThemeSettingsActivity : ComponentActivity() {
                     ThemeSettingsScreen(
                         onBack = { finish() },
                         onThemeSelected = { themeId ->
-                            // Save selected theme and update Config
-                            prefs.edit().putString("selected_theme_id", themeId).apply()
+                            // Save selected theme - Config.kt reads from "theme" preference
+                            prefs.edit().putString("theme", themeId).apply()
                             Toast.makeText(this, "Theme applied!", Toast.LENGTH_SHORT).show()
                         }
                     )

@@ -332,10 +332,15 @@ class ClipboardDatabase private constructor(context: Context) :
                     val entry = activeEntries.getJSONObject(i)
                     val content = entry.getString("content")
                     val contentHash = content.hashCode().toString()
-                    db.rawQuery(
+                    // Check for duplicate
+                    val isDuplicate = db.rawQuery(
                         "SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ?",
                         arrayOf(contentHash, content)
-                    ).use { if (it.count > 0) { duplicatesSkipped++; return@use } }
+                    ).use { it.count > 0 }
+                    if (isDuplicate) {
+                        duplicatesSkipped++
+                        continue
+                    }
                     val values = ContentValues().apply {
                         put(COLUMN_CONTENT, content)
                         put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
@@ -352,14 +357,19 @@ class ClipboardDatabase private constructor(context: Context) :
                     val entry = pinnedEntries.getJSONObject(i)
                     val content = entry.getString("content")
                     val contentHash = content.hashCode().toString()
-                    db.rawQuery(
+                    // Check for duplicate
+                    val isDuplicate = db.rawQuery(
                         "SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ?",
                         arrayOf(contentHash, content)
-                    ).use { if (it.count > 0) { duplicatesSkipped++; return@use } }
+                    ).use { it.count > 0 }
+                    if (isDuplicate) {
+                        duplicatesSkipped++
+                        continue
+                    }
                     val values = ContentValues().apply {
                         put(COLUMN_CONTENT, content)
                         put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
-                        put(COLUMN_EXPIRY_TIMESTAMP, if (entry.has("expiry_timestamp")) 
+                        put(COLUMN_EXPIRY_TIMESTAMP, if (entry.has("expiry_timestamp"))
                             entry.getLong("expiry_timestamp") else System.currentTimeMillis() + HISTORY_TTL_MS)
                         put(COLUMN_IS_PINNED, 1)
                         put(COLUMN_CONTENT_HASH, contentHash)

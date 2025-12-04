@@ -1,87 +1,90 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-04 (Session Complete)
-**Session**: Settings UI fixes, dead code removal, Material 3 compatibility fixes
+**Last Updated**: 2025-12-04
+**Session**: Import/Export fixes, default settings fixes, theme application fix
 
 ---
 
 ## Completed This Session (2025-12-04)
 
-### Dead Code Removal
-- [x] Remove SettingsPreferenceActivity.kt (old XML-based settings)
-- [x] Remove SettingsPreferenceFragment.kt (old fragment-based settings)
-- [x] Remove ABTestManager.kt (never integrated - dead code)
-- [x] Remove ModelComparisonTracker.kt (only used by ABTestManager)
-- [x] Remove SwipeAdvancedSettings.kt (unused settings model)
-- [x] Remove res/xml/settings.xml and settings_compat.xml
-- [x] Remove unused openFullSettings() from SettingsActivity.kt
+### Import/Export System Overhaul
+- [x] Fix dictionary import - SettingsActivity now uses BackupRestoreManager
+- [x] Fix clipboard import - SettingsActivity now uses ClipboardDatabase.importFromJSON()
+- [x] Fix config (kb-config) import - uses BackupRestoreManager.importConfig() with proper validation
+- [x] Fix dictionary export - uses BackupRestoreManager.exportDictionaries()
+- [x] Fix clipboard export - uses BackupRestoreManager.exportClipboardHistory()
+- [x] Fix config export - uses BackupRestoreManager.exportConfig()
 
-### Settings UI Fixes
-- [x] Fix Dictionary Manager access - now launches 4-tab DictionaryManagerActivity
-- [x] Add DictionaryManagerActivity to AndroidManifest.xml
-- [x] Expose Theme Manager in Appearance section with prominent card
-- [x] Default Appearance section to expanded
+### Theme Application Fix
+- [x] Fix theme preference key mismatch - ThemeSettingsActivity was saving to `selected_theme_id` but Config.kt reads from `theme`
+- [x] Changed ThemeSettingsActivity line 100 to save to `"theme"` preference
 
-### Material 3 Compatibility Fixes
-- [x] Replace MaterialButton with standard Button in dictionary layouts
-- [x] Replace MaterialSwitch with SwitchCompat
-- [x] Replace ?attr/colorSurface with ?android:attr/colorBackground
-- [x] Replace ?attr/colorOnSurface with ?android:attr/textColorPrimary
-- [x] Replace Widget.Material3 styles with AppCompat-compatible colors
+### Default Settings Fixes
+- [x] Set default portrait keyboard height to 27% (was 35%)
+- [x] Set default Swipe Pattern Data collection to OFF (privacy-friendly default)
+- [x] Set default Performance Metrics collection to OFF (privacy-friendly default)
+
+### BackupRestoreManager Dictionary Import Fix (Previous Session)
+- [x] Handle both `custom_words` (object format) and `user_words` (array format)
+- [x] Export format uses `custom_words: { "word": frequency }` object structure
+
+### ClipboardDatabase Import Fix (Previous Session)
+- [x] Fix duplicate check logic - was using `return@use` which didn't skip loop iteration
 
 ---
 
 ## Verified Working
 
-### Dictionary Manager (from Settings -> Dictionary -> Manage Custom Words)
-- 4 tabs: Active (49059), Disabled (0), User Dict (0), Custom (1)
-- Search input with filter dropdown
-- Word list with frequency and toggle switches
-- Dark theme UI
+### Import/Export (from Settings -> Backup & Restore)
+- Config import/export with proper metadata/preferences structure
+- Dictionary import handles both old (user_words array) and new (custom_words object) formats
+- Clipboard import with duplicate detection
 
 ### Theme Manager (from Settings -> Appearance -> Theme Manager card)
+- Theme selection now applies correctly (saves to "theme" preference)
 - Gemstone themes: Ruby, Sapphire, Emerald
 - Neon themes: Electric Blue, Hot Pink, Lime Green
-- Keyboard preview with Trail button
-- Create custom theme with + button
+
+### Default Settings
+- Portrait keyboard height defaults to 27%
+- Privacy settings default to OFF (data collection disabled by default)
 
 ---
 
 ## Pending (Future Sessions)
 
+- [ ] Manual device testing for all import/export features
 - [ ] Create optional enhancement specs (clipboard, dictionary, privacy)
-- [ ] Manual device testing for all settings features
 - [ ] Consider full Material 3 theme migration (requires Theme.MaterialComponents as base)
 
 ---
 
 ## Important Technical Notes
 
-### Theme Compatibility
-The app uses `Theme.AppCompat.DayNight.DarkActionBar` as the base theme. Material 3 components (MaterialButton, MaterialSwitch, colorSurface attributes) require `Theme.MaterialComponents` or `Theme.Material3` as the base theme. All Dictionary Manager layouts have been converted to use AppCompat-compatible components.
+### Import/Export Architecture
+SettingsActivity uses BackupRestoreManager for all import/export operations:
+- `performConfigImport/Export` -> BackupRestoreManager.importConfig/exportConfig
+- `performDictionaryImport/Export` -> BackupRestoreManager.importDictionaries/exportDictionaries
+- `performClipboardImport/Export` -> BackupRestoreManager.exportClipboardHistory / ClipboardDatabase.importFromJSON
 
-### prefs/ Folder Retained
-The `prefs/` folder was NOT removed because these classes are used by:
-- `Config.kt` - Layout loading and extra keys management
-- `SubtypeManager.kt` - IME subtype handling
-- `LayoutManagerActivity.kt` - Layout selection UI
+### Theme System
+- ThemeSettingsActivity saves to SharedPreferences key `"theme"`
+- Config.kt reads from `"theme"` preference via `getThemeId()`
+- Theme IDs include: "rosepine", "ruby", "sapphire", "emerald", etc.
+
+### Privacy Defaults
+PrivacyManager defaults changed in 4 places:
+- canCollectSwipeData() default: false
+- canCollectPerformanceData() default: false
+- getSettings().collectSwipeData default: false
+- getSettings().collectPerformanceData default: false
 
 ---
 
 ## Files Modified This Session
-- `AndroidManifest.xml` - Removed SettingsPreferenceActivity, added DictionaryManagerActivity
-- `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` - Theme Manager card, fixed dictionary launch
-- `res/layout/activity_dictionary_manager.xml` - AppCompat components
-- `res/layout/fragment_word_list.xml` - AppCompat attributes
-- `res/layout/item_word_editable.xml` - Standard Button, AppCompat colors
-- `res/layout/item_word_toggle.xml` - SwitchCompat
-- `src/main/kotlin/tribixbite/cleverkeys/DictionaryManagerActivity.kt` - Button import
-
-### Deleted Files
-- `src/main/kotlin/tribixbite/cleverkeys/SettingsPreferenceActivity.kt`
-- `src/main/kotlin/tribixbite/cleverkeys/SettingsPreferenceFragment.kt`
-- `src/main/kotlin/tribixbite/cleverkeys/ABTestManager.kt`
-- `src/main/kotlin/tribixbite/cleverkeys/ModelComparisonTracker.kt`
-- `src/main/kotlin/tribixbite/cleverkeys/SwipeAdvancedSettings.kt`
-- `res/xml/settings.xml`
-- `res/xml/settings_compat.xml`
+- `src/main/kotlin/tribixbite/cleverkeys/ThemeSettingsActivity.kt` - Theme preference key fix
+- `src/main/kotlin/tribixbite/cleverkeys/Config.kt` - Portrait height default 27%
+- `src/main/kotlin/tribixbite/cleverkeys/PrivacyManager.kt` - Privacy defaults to OFF
+- `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` - Import/export using BackupRestoreManager
+- `src/main/kotlin/tribixbite/cleverkeys/BackupRestoreManager.kt` - Dictionary import format fix (previous session)
+- `src/main/kotlin/tribixbite/cleverkeys/ClipboardDatabase.kt` - Duplicate check fix (previous session)
