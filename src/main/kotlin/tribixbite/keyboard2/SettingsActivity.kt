@@ -2232,7 +2232,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     private fun openDictionaryManager() {
-        startActivity(Intent(this, DictionaryManagerActivity::class.java))
+        // Open Android's system User Dictionary settings
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_USER_DICTIONARY_SETTINGS)
+            startActivity(intent)
+        } catch (e: Exception) {
+            // Fallback: Try generic input settings if user dictionary not available
+            try {
+                val intent = Intent(android.provider.Settings.ACTION_INPUT_METHOD_SETTINGS)
+                startActivity(intent)
+            } catch (e2: Exception) {
+                Toast.makeText(this, "Unable to open dictionary settings", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun openLayoutManager() {
