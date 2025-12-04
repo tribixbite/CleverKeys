@@ -858,38 +858,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     }
                 }
 
-                // Quick theme dropdown for basic themes
-                SettingsDropdown(
-                    title = stringResource(R.string.settings_theme_title),
-                    description = stringResource(R.string.settings_theme_desc),
-                    options = listOf(
-                        "CleverKeys Dark",      // 0 - NEW default
-                        "CleverKeys Light",     // 1 - renamed from Jewel
-                        stringResource(R.string.pref_theme_e_system),      // 2
-                        stringResource(R.string.pref_theme_e_dark),        // 3
-                        stringResource(R.string.pref_theme_e_light),       // 4
-                        stringResource(R.string.pref_theme_e_black),       // 5
-                        stringResource(R.string.pref_theme_e_altblack),    // 6
-                        stringResource(R.string.pref_theme_e_white),       // 7
-                        stringResource(R.string.pref_theme_e_epaper),      // 8
-                        stringResource(R.string.pref_theme_e_epaperblack), // 9
-                        stringResource(R.string.pref_theme_e_desert),      // 10
-                        stringResource(R.string.pref_theme_e_jungle),      // 11
-                        stringResource(R.string.pref_theme_e_monet),       // 12
-                        stringResource(R.string.pref_theme_e_monetlight),  // 13
-                        stringResource(R.string.pref_theme_e_monetdark),   // 14
-                        stringResource(R.string.pref_theme_e_rosepine),    // 15
-                        stringResource(R.string.pref_theme_e_everforestlight), // 16
-                        stringResource(R.string.pref_theme_e_cobalt),      // 17
-                        stringResource(R.string.pref_theme_e_pine)         // 18
-                    ),
-                    selectedIndex = getThemeIndexFromName(currentThemeName),
-                    onSelectionChange = { index ->
-                        val themeName = getThemeNameFromIndex(index)
-                        currentThemeName = themeName
-                        saveSetting("theme", themeName)
-                    }
-                )
+                // Theme dropdown removed - all theme selection now happens in Theme Manager
+                // Use the Theme Manager card above to select themes
 
                 SettingsSlider(
                     title = "Keyboard Height (Portrait)",
@@ -2846,58 +2816,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     // Helper functions
-
-    /** Convert theme name to dropdown index (matches pref_theme_values order) */
-    private fun getThemeIndexFromName(themeName: String): Int {
-        return when (themeName) {
-            "cleverkeysdark", "" -> 0  // CleverKeys Dark is default
-            "cleverkeyslight", "jewel" -> 1  // CleverKeys Light (formerly Jewel)
-            "system" -> 2
-            "dark" -> 3
-            "light" -> 4
-            "black" -> 5
-            "altblack" -> 6
-            "white" -> 7
-            "epaper" -> 8
-            "epaperblack" -> 9
-            "desert" -> 10
-            "jungle" -> 11
-            "monet" -> 12
-            "monetlight" -> 13
-            "monetdark" -> 14
-            "rosepine" -> 15
-            "everforestlight" -> 16
-            "cobalt" -> 17
-            "pine" -> 18
-            else -> 0  // Default to CleverKeys Dark
-        }
-    }
-
-    /** Convert dropdown index back to theme name string */
-    private fun getThemeNameFromIndex(index: Int): String {
-        return when (index) {
-            0 -> "cleverkeysdark"
-            1 -> "cleverkeyslight"
-            2 -> "system"
-            3 -> "dark"
-            4 -> "light"
-            5 -> "black"
-            6 -> "altblack"
-            7 -> "white"
-            8 -> "epaper"
-            9 -> "epaperblack"
-            10 -> "desert"
-            11 -> "jungle"
-            12 -> "monet"
-            13 -> "monetlight"
-            14 -> "monetdark"
-            15 -> "rosepine"
-            16 -> "everforestlight"
-            17 -> "cobalt"
-            18 -> "pine"
-            else -> "cleverkeysdark"
-        }
-    }
 
     /** Safely get an Int preference, handling cases where the value is stored as a different type */
     private fun SharedPreferences.getSafeInt(key: String, default: Int): Int {

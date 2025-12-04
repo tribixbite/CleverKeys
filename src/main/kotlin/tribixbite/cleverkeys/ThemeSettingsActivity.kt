@@ -43,14 +43,50 @@ import kotlin.math.*
  * Theme Settings Activity for creating and managing keyboard themes.
  *
  * Features:
- * - Browse predefined themes (18 themes across 6 categories)
- * - Create custom themes with colorwheel color picker
- * - Edit/delete custom themes
- * - Live preview of keyboard appearance
- * - Special swipe trail color picker
- * - Export/import themes as JSON
+ * - Browse built-in XML themes (the actual working themes from themes.xml)
+ * - Preview themes with mini keyboard display
+ * - Create custom themes with colorwheel color picker (future: connect to keyboard)
  */
 class ThemeSettingsActivity : ComponentActivity() {
+
+    companion object {
+        /**
+         * Built-in themes that actually work (defined in res/values/themes.xml)
+         * These are the theme IDs that Config.kt's getThemeId() recognizes
+         */
+        val BUILTIN_THEMES = listOf(
+            BuiltinTheme("cleverkeysdark", "CleverKeys Dark", "Deep purple with silver accents (default)", 0xFF1E1030, 0xFF2A1845, 0xFFC0C0C0),
+            BuiltinTheme("cleverkeyslight", "CleverKeys Light", "Silver keys with purple accents", 0xFFC0C0C0, 0xFFD8D8D8, 0xFF2C3E50),
+            BuiltinTheme("dark", "Dark", "Classic dark theme with blue accents", 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF),
+            BuiltinTheme("light", "Light", "Classic light theme", 0xFFE3E3E3, 0xFFCCCCCC, 0xFF000000),
+            BuiltinTheme("black", "Black", "Pure black AMOLED theme", 0xFF000000, 0xFF000000, 0xFFEEEEEE),
+            BuiltinTheme("altblack", "Alt Black", "Black with visible borders", 0xFF000000, 0xFF000000, 0xFFEEEEEE),
+            BuiltinTheme("white", "White", "Pure white theme", 0xFFFFFFFF, 0xFFFFFFFF, 0xFF000000),
+            BuiltinTheme("rosepine", "Rosé Pine", "Elegant dark rose theme", 0xFF191724, 0xFF26233A, 0xFFE0DEF4),
+            BuiltinTheme("cobalt", "Cobalt", "Deep blue theme", 0xFF000000, 0xFF000000, 0xFF95C9FF),
+            BuiltinTheme("pine", "Pine", "Forest green theme", 0xFF000000, 0xFF000000, 0xFF91D7A6),
+            BuiltinTheme("desert", "Desert", "Warm sand colors", 0xFFFFE0B2, 0xFFFFF3E0, 0xFF000000),
+            BuiltinTheme("jungle", "Jungle", "Tropical teal theme", 0xFF4DB6AC, 0xFFE0F2F1, 0xFF000000),
+            BuiltinTheme("epaper", "ePaper", "High contrast e-ink style", 0xFFFFFFFF, 0xFFFFFFFF, 0xFF000000),
+            BuiltinTheme("epaperblack", "ePaper Black", "Inverted e-ink style", 0xFF000000, 0xFF000000, 0xFFFFFFFF),
+            BuiltinTheme("everforestlight", "Everforest Light", "Soft green theme", 0xFFF8F5E4, 0xFFE5E2D1, 0xFF5C6A72),
+            BuiltinTheme("monet", "Monet (Auto)", "Material You colors (follows system)", 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF),
+            BuiltinTheme("monetlight", "Monet Light", "Material You light variant", 0xFFE3E3E3, 0xFFCCCCCC, 0xFF000000),
+            BuiltinTheme("monetdark", "Monet Dark", "Material You dark variant", 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF),
+        )
+    }
+
+    /**
+     * Represents a built-in XML theme with preview colors
+     */
+    data class BuiltinTheme(
+        val id: String,
+        val name: String,
+        val description: String,
+        val backgroundColor: Long,  // For preview
+        val keyColor: Long,         // For preview
+        val labelColor: Long        // For preview
+    )
 
     private lateinit var prefs: SharedPreferences
 
@@ -114,6 +150,8 @@ fun ThemeSettingsScreen(
     onThemeSelected: (String) -> Unit
 ) {
     val context = LocalContext.current
+    val prefs = remember { PreferenceManager.getDefaultSharedPreferences(context) }
+    val currentThemeId = remember { mutableStateOf(prefs.getString("theme", "cleverkeysdark") ?: "cleverkeysdark") }
     val themeManager = remember { CustomThemeManager(context) }
     val customThemes by themeManager.customThemes.collectAsState()
 
@@ -148,12 +186,40 @@ fun ThemeSettingsScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Custom Themes Section
+            // Built-in XML Themes Section (these ACTUALLY work with the keyboard)
+            item {
+                Text(
+                    "Built-in Themes",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                )
+                Text(
+                    "These themes apply directly to the keyboard",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            items(ThemeSettingsActivity.BUILTIN_THEMES) { builtinTheme ->
+                BuiltinThemeCard(
+                    theme = builtinTheme,
+                    isSelected = currentThemeId.value == builtinTheme.id,
+                    onSelect = {
+                        currentThemeId.value = builtinTheme.id
+                        onThemeSelected(builtinTheme.id)
+                    }
+                )
+            }
+
+            // Custom Themes Section (user-created)
             if (customThemes.isNotEmpty()) {
                 item {
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         "Custom Themes",
                         style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
@@ -169,7 +235,24 @@ fun ThemeSettingsScreen(
                 }
             }
 
-            // Predefined Themes by Category
+            // Decorative Themes Section (visual only - for future keyboard connection)
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Decorative Themes (Preview Only)",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                )
+                Text(
+                    "Custom color schemes - not yet connected to keyboard rendering",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            // Predefined Decorative Themes by Category (from PredefinedThemes.kt)
             val predefinedThemes = getAllPredefinedThemes()
             ThemeCategory.entries.filter { it != ThemeCategory.CUSTOM }.forEach { category ->
                 val themesInCategory = predefinedThemes[category] ?: emptyList()
@@ -177,8 +260,9 @@ fun ThemeSettingsScreen(
                     item {
                         Text(
                             category.displayName,
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(vertical = 8.dp)
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(vertical = 4.dp)
                         )
                     }
                     items(themesInCategory) { themeInfo ->
@@ -187,7 +271,10 @@ fun ThemeSettingsScreen(
                             colorScheme = themeInfo.colorScheme,
                             description = themeInfo.description,
                             isCustom = false,
-                            onSelect = { onThemeSelected(themeInfo.id) }
+                            onSelect = {
+                                // TODO: Connect PredefinedThemes to keyboard rendering
+                                // For now just show a toast that this is preview only
+                            }
                         )
                     }
                 }
@@ -370,6 +457,112 @@ fun ThemePreview(colorScheme: KeyboardColorScheme) {
                 color = Color.White,
                 fontSize = 10.sp
             )
+        }
+    }
+}
+
+/**
+ * Card for displaying a built-in XML theme with preview colors.
+ * These themes directly integrate with Config.kt and the keyboard renderer.
+ */
+@Composable
+fun BuiltinThemeCard(
+    theme: ThemeSettingsActivity.BuiltinTheme,
+    isSelected: Boolean,
+    onSelect: () -> Unit
+) {
+    val borderColor by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+        label = "border"
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect() }
+            .then(
+                if (isSelected) {
+                    Modifier.border(2.dp, borderColor, RoundedCornerShape(12.dp))
+                } else {
+                    Modifier
+                }
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(theme.backgroundColor)
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            theme.name,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(theme.labelColor)
+                        )
+                        if (isSelected) {
+                            Spacer(Modifier.width(8.dp))
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = "Selected",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        theme.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(theme.labelColor).copy(alpha = 0.7f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Preview mini keyboard with theme colors
+            BuiltinThemePreview(theme)
+        }
+    }
+}
+
+/**
+ * Mini keyboard preview for built-in XML themes.
+ */
+@Composable
+fun BuiltinThemePreview(theme: ThemeSettingsActivity.BuiltinTheme) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        // Sample keys
+        listOf("Q", "W", "E", "R", "T").forEach { letter ->
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(32.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color(theme.keyColor))
+                    .border(
+                        1.dp,
+                        Color(theme.labelColor).copy(alpha = 0.3f),
+                        RoundedCornerShape(4.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    letter,
+                    color = Color(theme.labelColor),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }
