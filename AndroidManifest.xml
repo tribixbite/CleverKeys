@@ -64,7 +64,12 @@
       </intent-filter>
     </activity>
 
-    <!-- DictionaryManagerActivity removed - now opens Android's User Dictionary settings -->
+    <activity android:name="tribixbite.cleverkeys.DictionaryManagerActivity" android:label="Dictionary Manager" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+      </intent-filter>
+    </activity>
 
     <activity android:name="tribixbite.cleverkeys.LayoutManagerActivity" android:label="Keyboard Layouts" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>

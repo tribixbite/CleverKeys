@@ -269,7 +269,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var multiLangSectionExpanded by mutableStateOf(false)
     private var privacySectionExpanded by mutableStateOf(false)
     private var neuralSectionExpanded by mutableStateOf(true)
-    private var appearanceSectionExpanded by mutableStateOf(false)
+    private var appearanceSectionExpanded by mutableStateOf(true)
     private var swipeTrailSectionExpanded by mutableStateOf(false)
     private var inputSectionExpanded by mutableStateOf(false)
     private var swipeCorrectionsSectionExpanded by mutableStateOf(false)
@@ -807,13 +807,58 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 }
             }
 
-            // Appearance Section (Collapsible)
+            // Appearance Section (Collapsible) - default expanded to show Theme Manager
             CollapsibleSettingsSection(
                 title = stringResource(R.string.settings_section_appearance),
                 expanded = appearanceSectionExpanded,
                 onExpandChange = { appearanceSectionExpanded = it }
             ) {
-                // Full theme dropdown with all themes including CleverKeys branded
+                // Theme Manager Card - prominent access to full theme UI
+                val themeContext = LocalContext.current
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                        .clickable {
+                            val intent = Intent(themeContext, ThemeSettingsActivity::class.java)
+                            themeContext.startActivity(intent)
+                        },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "🎨",
+                            fontSize = 28.sp
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Theme Manager",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = "Neon, Pastel, DIY themes & custom colors",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                // Quick theme dropdown for basic themes
                 SettingsDropdown(
                     title = stringResource(R.string.settings_theme_title),
                     description = stringResource(R.string.settings_theme_desc),
@@ -845,22 +890,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         saveSetting("theme", themeName)
                     }
                 )
-
-                // Navigate to full Keyboard Themes activity with custom theme creation
-                val context = LocalContext.current
-                OutlinedButton(
-                    onClick = {
-                        val intent = Intent(context, ThemeSettingsActivity::class.java)
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    Text("🎨 Keyboard Themes", fontWeight = FontWeight.Medium)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Create & manage custom themes", fontSize = 12.sp, color = ComposeColor.Gray)
-                }
 
                 SettingsSlider(
                     title = "Keyboard Height (Portrait)",
@@ -3200,19 +3229,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     private fun openDictionaryManager() {
-        // Open Android's system User Dictionary settings
-        try {
-            val intent = Intent(android.provider.Settings.ACTION_USER_DICTIONARY_SETTINGS)
-            startActivity(intent)
-        } catch (e: Exception) {
-            // Fallback: Try generic input settings if user dictionary not available
-            try {
-                val intent = Intent(android.provider.Settings.ACTION_INPUT_METHOD_SETTINGS)
-                startActivity(intent)
-            } catch (e2: Exception) {
-                Toast.makeText(this, "Unable to open dictionary settings", Toast.LENGTH_SHORT).show()
-            }
-        }
+        // Launch our 4-tab Dictionary Manager (Active, Disabled, User, Custom)
+        startActivity(Intent(this, DictionaryManagerActivity::class.java))
     }
 
     private fun openLayoutManager() {
