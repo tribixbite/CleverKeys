@@ -5,32 +5,41 @@
 
 ---
 
-## Current Session: Config Import Crash Fix (Dec 3, 2025)
+## Current Session: Config Import Crash Fix Complete (Dec 3, 2025)
 
 ### Completed This Session
-- ✅ Fixed config import crash (ClassCastException: Integer cannot be cast to String)
-  - Root cause: Config.kt and SettingsActivity used raw `getString()` for preferences that could be stored as Int/Float after import
-  - Added `safeGetString()` to Config.kt with try-catch fallbacks for Int and Float types
-  - Added `getSafeString()` extension to SettingsActivity.kt
-  - Updated 25+ getString() calls to use safe variants in:
-    - Config.kt: show_numpad, numpad_layout, number_row, swipe_dist, slider_sensitivity, theme, number_entry_layout, circle_sensitivity, clipboard settings, learning_aggression, primary_language, swipe_fuzzy_match_mode, swipe_trail_effect, neural_model_version, neural_resampling_mode
-    - SettingsActivity.kt: loadCurrentSettings(), onSharedPreferenceChanged()
-  - APK built and installed successfully
+- ✅ Fixed config import crash (ClassCastException: Float cannot be cast to String)
+  - Root cause: JSON import stores numbers as Float, but safeGetInt tried String before Float
+  - Fixed `safeGetInt()` to try Float fallback before String (the key fix!)
+  - Improved `safeGetFloat()` with null-safe String parsing
+  - Added Boolean fallback to `safeGetString()` for completeness
+  - Added `safeGetBoolean()` for safe boolean preference reads
+  - Added `getSafeBoolean()` extension to SettingsActivity.kt
+  - Updated all 18 `prefs.getBoolean()` calls to use `prefs.getSafeBoolean()`
+  - APK built and installed successfully - Settings UI loads without crash!
 
 ### Code Changes
 **Config.kt:**
-- Added `safeGetString()` companion function (lines 638-671)
-- Updated 20+ _prefs.getString() calls to use safeGetString()
-- Wrapped nullable encoder/decoder paths in try-catch
+- Fixed `safeGetInt()` - now tries Float before String (lines 511-532)
+- Improved `safeGetFloat()` with null-safe String parsing (lines 609-641)
+- Added `safeGetBoolean()` function (lines 643-667)
+- Enhanced `safeGetString()` with Boolean fallback (lines 673-716)
 
 **SettingsActivity.kt:**
-- Added `getSafeString()` extension function (lines 1919-1942)
-- Updated 15+ prefs.getString() calls in loadCurrentSettings() and onSharedPreferenceChanged()
+- Added `getSafeBoolean()` extension function (lines 1944-1972)
+- Updated 18 getBoolean() calls to getSafeBoolean() in loadCurrentSettings():
+  - swipeTypingEnabled, neuralPredictionEnabled, borderConfigEnabled
+  - vibrationEnabled, clipboardHistoryEnabled, autoCapitalizationEnabled
+  - keyRepeatEnabled, doubleTapLockShift, switchInputImmediate
+  - pinEntryEnabled, debugEnabled, stickyKeysEnabled, voiceGuidanceEnabled
+  - wordPredictionEnabled, autoCorrectEnabled, termuxModeEnabled
+  - swipeDebugEnabled, swipeBeamAutocorrectEnabled, swipeFinalAutocorrectEnabled
+  - swipeTrailEnabled
 
-### Testing Required
-- [ ] Import uk-config.json from /sdcard/Download/
-- [ ] Verify settings UI loads correctly after import
-- [ ] Verify keyboard works with imported settings
+### Testing Verified
+- ✅ Import config from exportConfig folder works
+- ✅ Settings UI loads correctly after import
+- ✅ No ClassCastException errors in logcat
 
 ---
 
