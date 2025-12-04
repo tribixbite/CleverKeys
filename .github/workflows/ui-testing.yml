@@ -314,13 +314,11 @@ jobs:
         path: build/outputs/apk/
 
     - name: Authenticate to Google Cloud
-      if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
       uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
     - name: Run tests on Firebase Test Lab
-      if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
       run: |
         # Install gcloud CLI
         curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts

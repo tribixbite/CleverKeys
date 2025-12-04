@@ -312,15 +312,6 @@ jobs:
           - **Open Issues**: ${openIssues.length}
           - **Open Pull Requests**: ${openPRs.length}
 
-          ### 🏷️ Issue Categories
-          ${this.getCategoryBreakdown(openIssues)}
-
-          ### 🎯 Focus Areas
-          ${this.getFocusAreas(openIssues)}
-
-          ### 🙏 Top Contributors This Week
-          ${this.getTopContributors(weeklyIssues, weeklyPRs)}
-
           ---
           *Report generated automatically every Sunday*`;
 
@@ -328,9 +319,6 @@ jobs:
 
           // Create a discussion post with the report
           // (This would require GitHub GraphQL API for discussions)
-
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   stale-issue-management:
     runs-on: ubuntu-latest
