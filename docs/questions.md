@@ -152,9 +152,10 @@ This file contains items flagged for user review during the spec audit and code 
 
 ---
 
-## 8. Unimplemented Action Button Handlers - ⚠️ NEEDS IMPLEMENTATION
+## 8. Unimplemented Action Button Handlers - ✅ RESOLVED
 
 **Date**: 2025-12-04
+**Resolution**: All 19 handlers implemented in SettingsPreferenceFragment.kt
 
 **Context**: Settings audit found action buttons in `res/xml/settings.xml` that have no click handlers in SettingsPreferenceFragment.kt or SettingsActivity.kt.
 
@@ -190,27 +191,17 @@ This file contains items flagged for user review during the spec audit and code 
 - ✅ `ABTestManager.kt` exists with methods to handle A/B test operations
 - ✅ `ModelVersionManager.kt` exists with rollback/version methods
 - ✅ `PrivacyManager.kt` exists with privacy data methods
-- ❌ No handlers in SettingsPreferenceFragment.kt to call these methods
+- ✅ All handlers now implemented in SettingsPreferenceFragment.kt
 
-### Recommended Fix:
+### Fix Applied (2025-12-04):
 
-Add `findPreference<Preference>("key")?.setOnPreferenceClickListener` for each button in `SettingsPreferenceFragment.kt` that calls the appropriate manager method.
+All 19 handlers implemented in `SettingsPreferenceFragment.kt` with:
+- Dialog displays for status/info buttons
+- Confirmation dialogs for destructive actions (reset, delete)
+- File export functionality for export buttons
+- File picker integration for neural model loading
 
-**Example for `ab_test_status`**:
-```kotlin
-findPreference<Preference>("ab_test_status")?.setOnPreferenceClickListener {
-    val manager = ABTestManager.getInstance(requireContext())
-    val status = manager.getTestStatus()
-    MaterialAlertDialogBuilder(requireContext())
-        .setTitle("A/B Test Status")
-        .setMessage(status)
-        .setPositiveButton("OK", null)
-        .show()
-    true
-}
-```
-
-**Note**: The backend implementations exist - only the UI wiring is missing.
+**Commit**: `feat(settings): wire 19 action button handlers to backend managers`
 
 ---
 

@@ -32,8 +32,10 @@
 - [x] Compare UK actual saved user settings vs CK runtime settings (Config.kt in sync)
 - [x] Review for duplicate/unimplemented settings → **Found 19 action buttons with no handlers** (see questions.md #8)
 
+### Completed (2025-12-04 continued)
+- [x] Wire 19 action button handlers → **DONE!** (SettingsPreferenceFragment.kt)
+
 ### Pending (Future Sessions)
-- [ ] Wire 19 action button handlers (P2 - backend exists, UI wiring missing)
 - [ ] Create optional enhancement specs (clipboard, dictionary, privacy, A/B testing)
 - [ ] Manual device testing for new settings features
 
@@ -63,14 +65,14 @@ All settings are saved via `SettingsActivity.kt` and used by respective manager 
 - CK has swipe trail settings (5 settings) not in UK
 - CK has different defaults for: longPressInterval (25 vs 65), characterSize (1.18 vs 1.15), clipboard_history_enabled (true vs false)
 
-### Unimplemented Action Buttons (P2 - UI Wiring Only)
-19 action buttons in settings.xml have no click handlers:
+### ✅ Action Buttons - ALL WIRED (2025-12-04)
+All 19 action buttons now have click handlers in SettingsPreferenceFragment.kt:
 - A/B Testing: `ab_test_status`, `ab_test_comparison`, `ab_test_configure`, `ab_test_export`, `ab_test_reset`
 - Rollback: `rollback_status`, `rollback_history`, `rollback_manual`, `rollback_pin_version`, `rollback_export`, `rollback_reset`
 - Privacy: `privacy_status`, `privacy_consent`, `privacy_delete_now`, `privacy_export`, `privacy_audit`
 - Neural: `neural_load_encoder`, `neural_load_decoder`, `neural_model_metadata`
 
-**Backend implementations exist** - only SettingsPreferenceFragment.kt handlers missing.
+**Status**: All handlers implemented and connected to backend managers.
 
 ### Documentation Status
 - ARCHITECTURE_MASTER.md: Created with comprehensive parameter documentation
