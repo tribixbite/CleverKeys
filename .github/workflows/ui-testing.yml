@@ -92,11 +92,18 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
 
-    - name: Download APKs
+    - name: Download APK
       uses: actions/download-artifact@v4
       with:
         name: apks
-        path: build/outputs/apk/
+        path: ./apk/
+
+    - name: Verify APK download
+      run: |
+        echo "Downloaded APK files:"
+        ls -la ./apk/
+        APK_FILE=$(find ./apk -name "*.apk" | head -1)
+        echo "APK_FILE=$APK_FILE" >> $GITHUB_ENV
 
     - name: Enable KVM
       run: |
@@ -135,10 +142,9 @@ jobs:
         emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
         disable-animations: true
         script: |
-          # Find and install CleverKeys APK
-          APK_PATH=$(find build/outputs/apk -name "*.apk" 2>/dev/null | head -1)
-          echo "Installing APK from: $APK_PATH"
-          adb install "$APK_PATH"
+          # Install CleverKeys APK
+          echo "Installing APK: ${{ env.APK_FILE }}"
+          adb install "${{ env.APK_FILE }}"
 
           # List available input methods
           echo "Available input methods:"
@@ -182,11 +188,16 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Download APKs
+    - name: Download APK
       uses: actions/download-artifact@v4
       with:
         name: apks
-        path: build/outputs/apk/
+        path: ./apk/
+
+    - name: Verify APK download
+      run: |
+        APK_FILE=$(find ./apk -name "*.apk" | head -1)
+        echo "APK_FILE=$APK_FILE" >> $GITHUB_ENV
 
     - name: Enable KVM
       run: |
@@ -204,9 +215,8 @@ jobs:
         emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
         disable-animations: true
         script: |
-          # Find and install CleverKeys APK
-          APK_PATH=$(find build/outputs/apk -name "*.apk" 2>/dev/null | head -1)
-          adb install "$APK_PATH"
+          # Install CleverKeys APK
+          adb install "${{ env.APK_FILE }}"
 
           # Try to enable keyboard (may fail, that's OK)
           adb shell ime enable tribixbite.keyboard2/tribixbite.keyboard2.CleverKeysService || true
@@ -255,11 +265,16 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Download APKs
+    - name: Download APK
       uses: actions/download-artifact@v4
       with:
         name: apks
-        path: build/outputs/apk/
+        path: ./apk/
+
+    - name: Verify APK download
+      run: |
+        APK_FILE=$(find ./apk -name "*.apk" | head -1)
+        echo "APK_FILE=$APK_FILE" >> $GITHUB_ENV
 
     - name: Enable KVM
       run: |
@@ -277,9 +292,8 @@ jobs:
         emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
         disable-animations: true
         script: |
-          # Find and install CleverKeys APK
-          APK_PATH=$(find build/outputs/apk -name "*.apk" 2>/dev/null | head -1)
-          adb install "$APK_PATH"
+          # Install CleverKeys APK
+          adb install "${{ env.APK_FILE }}"
 
           # Try to enable keyboard (may fail, that's OK)
           adb shell ime enable tribixbite.keyboard2/tribixbite.keyboard2.CleverKeysService || true
