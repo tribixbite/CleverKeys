@@ -35,9 +35,16 @@
 ### Completed (2025-12-04 continued)
 - [x] Wire 19 action button handlers → **DONE!** (SettingsPreferenceFragment.kt)
 
+### Completed (2025-12-04 - Settings UI Fixes)
+- [x] Fix Dictionary Manager access - was opening Android system settings, now launches 4-tab DictionaryManagerActivity
+- [x] Add DictionaryManagerActivity to AndroidManifest.xml (was removed)
+- [x] Expose Theme Manager in Appearance section with prominent card
+- [x] Default Appearance section to expanded so Theme Manager is visible
+
 ### Pending (Future Sessions)
 - [ ] Create optional enhancement specs (clipboard, dictionary, privacy, A/B testing)
 - [ ] Manual device testing for new settings features
+- [ ] Remove dead code: ABTestManager (not integrated anywhere), neural model loading handlers (save URIs but nothing reads them)
 
 ### Completed (this session)
 - [x] Organize and clean archive files (added READMEs, removed empty dirs)
