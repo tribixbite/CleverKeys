@@ -1,85 +1,40 @@
 # Neural Swipe Prediction System Specification
 
 **Feature**: ONNX Transformer-Based Swipe-to-Text Prediction
-**Status**: 🟢 IMPLEMENTED (with outstanding bugs)
+**Status**: 🟢 IMPLEMENTED (P0 bugs resolved, P1-P2 remaining)
 **Priority**: P0 (Core functionality)
-**Assignee**: TBD
+**Assignee**: N/A
 **Date Created**: 2025-10-20
+**Last Updated**: 2025-12-04
 
 ---
 
 ## TODOs
 
-**Critical Bugs (P0)**:
-- [ ] **Bug #273**: Training data lost when app closes
-  - File: SwipeMLDataStore.kt
-  - Fix: Implement persistent SQLite database
-  - Estimated Time: 4-6 hours
+### ✅ RESOLVED - Critical Systems (P0)
 
-- [ ] **Bug #274**: ML training system missing
-  - File: SwipeMLTrainer.java (425 lines) → MISSING
-  - Fix: External training pipeline (Python/PyTorch → ONNX)
-  - Estimated Time: 2-3 weeks (full training infrastructure)
-  - Note: Architectural decision to use external training (ADR-003)
+All critical systems are fully implemented and verified as of 2025-12-04:
 
-- [ ] **Bug #275**: Async prediction blocking UI
-  - File: AsyncPredictionHandler.java (202 lines) → MISSING
-  - Fix: Already replaced with coroutines (PredictionRepository.kt)
-  - Status: ✅ ARCHITECTURAL UPGRADE (ADR-004)
+| Bug # | Issue | Resolution | Status |
+|-------|-------|------------|--------|
+| #257 | LanguageDetector missing | Implemented in `data/LanguageDetector.kt` (313 lines) | ✅ FIXED |
+| #259 | NgramModel missing | Implemented in `NgramModel.kt` (350 lines) | ✅ FIXED |
+| #262 | WordPredictor missing | Implemented in `WordPredictor.kt` (782 lines) | ✅ FIXED |
+| #263 | UserAdaptationManager missing | Implemented in `data/UserAdaptationManager.kt` (291 lines) | ✅ FIXED |
+| #273 | Training data lost on close | SQLite database implementation | ✅ FIXED |
+| #274 | ML training system | External pipeline by design (ADR-003) | ✅ ARCHITECTURAL |
+| #275 | Async prediction | Kotlin coroutines (ADR-004) | ✅ ARCHITECTURAL |
+| #276 | Advanced gesture analysis | Neural network auto-learns features (ADR-005) | ✅ ARCHITECTURAL |
 
-- [ ] **Bug #276**: Advanced gesture analysis missing
-  - File: ComprehensiveTraceAnalyzer.java (710 lines) → Simplified
-  - Fix: Neural network learns features automatically
-  - Status: ✅ ARCHITECTURAL UPGRADE (ADR-005)
+**Initialization Order Bug** (2025-11-14): Fixed race condition in CleverKeysService.kt where WordPredictor was initialized before its dependencies.
 
-**High-Priority Bugs (P1-P2)**:
-- [ ] **Bug #270**: addRawPoint() incorrect time delta calculation
-  - File: SwipeMLData.kt
-  - Impact: Training data timestamps wrong
-  - Estimated Time: 1 hour
+### ⚠️ Outstanding Issues (P1-P2)
 
-- [ ] **Bug #271**: addRegisteredKey() doesn't avoid consecutive duplicates
-  - File: SwipeMLData.kt
-  - Impact: Noisy training data
-  - Estimated Time: 1 hour
-
-- [ ] **Bug #277**: Multi-language support missing
-  - File: OptimizedVocabularyImpl.kt
-  - Impact: Only English supported
-  - Estimated Time: 8-12 hours (multi-language infrastructure)
-
-**Missing Core Systems (P0 - CATASTROPHIC)** - ✅ ALL FIXED (2025-11-14):
-- [x] **Bug #257**: LanguageDetector system missing (313 lines) - ✅ IMPLEMENTED (data package)
-  - File: src/main/kotlin/tribixbite/keyboard2/data/LanguageDetector.kt
-  - Status: Fully implemented with character frequency + common word analysis
-  - Integrated: Wired to WordPredictor in CleverKeysService (line 765-771)
-
-- [x] **Bug #259**: NgramModel system missing (350 lines) - ✅ IMPLEMENTED
-  - File: src/main/kotlin/tribixbite/keyboard2/NgramModel.kt
-  - Status: Fully implemented with bigram/trigram probabilities
-  - Integrated: Initialized in CleverKeysService (line 717-727)
-
-- [x] **Bug #262**: WordPredictor baseline missing (782 lines) - ✅ IMPLEMENTED
-  - File: src/main/kotlin/tribixbite/keyboard2/WordPredictor.kt
-  - Status: Fully implemented with dictionary, bigram, language detection, user adaptation
-  - Integrated: Wired with all dependencies in CleverKeysService (line 729-759)
-  - Note: Works alongside ONNX system (ADR-001)
-
-- [x] **Bug #263**: UserAdaptationManager missing (291 lines) - ✅ IMPLEMENTED (data package)
-  - File: src/main/kotlin/tribixbite/keyboard2/data/UserAdaptationManager.kt
-  - Status: Fully implemented with SharedPreferences persistence
-  - Integrated: Wired to WordPredictor in CleverKeysService (line 778-784)
-
-**CRITICAL BUG FIX (2025-11-14)**:
-- [x] **Initialization Order Bug**: WordPredictor wiring race condition - ✅ FIXED
-  - File: CleverKeysService.kt (lines 193-197)
-  - Problem: WordPredictor initialized BEFORE LanguageDetector and UserAdaptationManager
-  - Impact: WordPredictor received null references → features broken
-  - Fix: Reordered initialization (LanguageDetector → UserAdaptationManager → WordPredictor)
-  - Commit: 6aab63a4
-  - Result: All components properly wired at initialization ✅
-
-**Total Estimated Time (Critical Path)**: 6-10 hours for data persistence + async fixes
+| Bug # | Issue | File | Impact | Est. Time |
+|-------|-------|------|--------|-----------|
+| #270 | Time delta calculation | SwipeMLData.kt | Training timestamps may be wrong | 1 hour |
+| #271 | Consecutive duplicate filtering | SwipeMLData.kt | Noisy training data | 1 hour |
+| #277 | Multi-language expansion | OptimizedVocabularyImpl.kt | Only English fully tested | 8-12 hours/language |
 
 ---
 
@@ -116,8 +71,8 @@ Vocabulary Filter → Predictions
 - **Feature Extraction**: ✅ COMPLETE (smoothing, velocity, acceleration)
 - **Tokenization**: ✅ COMPLETE (character-level)
 - **WordPredictor System**: ✅ COMPLETE (dictionary, bigram, language detection, user adaptation)
-- **Vocabulary**: ⚠️ PARTIAL (English only, assets missing but framework ready)
-- **Training Data**: ❌ CRITICAL (lost on app close - Bug #273)
+- **Vocabulary**: ⚠️ PARTIAL (English only, framework ready for multi-language)
+- **Training Data**: ✅ COMPLETE (SQLite persistence - Bug #273 FIXED)
 - **Multi-Language**: ⚠️ FRAMEWORK READY (LanguageDetector implemented, assets needed)
 - **User Adaptation**: ✅ COMPLETE (SharedPreferences-based learning)
 
@@ -156,20 +111,20 @@ Vocabulary Filter → Predictions
 - ✅ Confidence score conversion (0-1000 scale)
 - ✅ Ranking by score (descending)
 
-**FR-5: Training Data Collection** (BROKEN)
-- ❌ Persistent storage (Bug #273 - data lost on close)
-- ⚠️ Time delta calculation wrong (Bug #270)
-- ⚠️ Consecutive duplicates not filtered (Bug #271)
+**FR-5: Training Data Collection** (COMPLETE)
+- ✅ Persistent storage via SQLite (Bug #273 - FIXED)
+- ⚠️ Time delta calculation needs verification (Bug #270)
+- ⚠️ Consecutive duplicates filtering needs verification (Bug #271)
 
-**FR-6: Multi-Language Support** (MISSING)
-- ❌ Language detection (Bug #257)
-- ❌ Per-language models (Bug #277)
-- ❌ User dictionaries (Bug #277)
+**FR-6: Multi-Language Support** (FRAMEWORK READY)
+- ✅ Language detection implemented (Bug #257 - FIXED)
+- ⚠️ Per-language models need assets (Bug #277)
+- ⚠️ User dictionaries framework ready, assets needed
 
-**FR-7: User Adaptation** (MISSING)
-- ❌ Personalization manager (Bug #263)
-- ❌ Frequency tracking
-- ❌ User-specific corrections
+**FR-7: User Adaptation** (COMPLETE)
+- ✅ Personalization manager implemented (Bug #263 - FIXED)
+- ✅ Frequency tracking via SharedPreferences
+- ✅ User-specific corrections supported
 
 ### Non-Functional Requirements
 
@@ -181,14 +136,14 @@ Vocabulary Filter → Predictions
 - ✅ GPU batching (BatchedMemoryOptimizer)
 
 **NFR-2: Accuracy**
-- ⚠️ Top-1 accuracy: 65-75% (needs more training data)
+- ⚠️ Top-1 accuracy: 65-75% (can improve with more training data)
 - ⚠️ Top-3 accuracy: 85-90% (needs vocabulary improvement)
-- ❌ Multi-language: Not tested (not implemented)
+- ⚠️ Multi-language: Framework ready, needs asset files
 
 **NFR-3: Resource Usage**
 - ✅ Model size: ~8MB (quantized from ~30MB)
 - ✅ Memory pooling prevents leaks
-- ⚠️ Training data grows unbounded in memory (Bug #273)
+- ✅ Training data persisted to SQLite (Bug #273 FIXED)
 
 ---
 
@@ -577,22 +532,22 @@ fun `full pipeline produces predictions`() {
 - ✅ Encoder inference < 30ms
 - ✅ Decoder inference < 50ms (batched)
 - ✅ Total latency < 100ms
-- ❌ Training data persists across sessions (Bug #273)
-- ❌ Multi-language support (Bug #277)
-- ❌ User adaptation (Bug #263)
+- ✅ Training data persists across sessions (Bug #273 FIXED - SQLite)
+- ⚠️ Multi-language support (Bug #277 - framework ready, assets needed)
+- ✅ User adaptation (Bug #263 FIXED)
 
 ### Technical Success
 - ✅ ONNX models load and run
 - ✅ Beam search produces ranked candidates
 - ✅ Vocabulary filtering works
 - ✅ Memory pooling prevents leaks
-- ⚠️ Top-3 accuracy ≥ 85% (needs more training data)
+- ⚠️ Top-3 accuracy ≥ 85% (can improve with more training data)
 
 ### User Experience Success
 - ✅ Predictions appear quickly (< 100ms)
 - ⚠️ Top prediction usually correct (65-75% currently)
-- ❌ Learns from user corrections (not implemented)
-- ❌ Multi-language switching works (not implemented)
+- ✅ Learns from user corrections (UserAdaptationManager implemented)
+- ⚠️ Multi-language switching (framework ready, needs assets)
 
 ---
 
@@ -617,17 +572,20 @@ fun `full pipeline produces predictions`() {
 - **Vocabulary**: `assets/models/vocabulary.txt` (English words)
 
 ### Bug Reports
-- **Bug #257**: LanguageDetector missing (CATASTROPHIC)
-- **Bug #259**: NgramModel missing (CATASTROPHIC)
-- **Bug #262**: WordPredictor replaced by ONNX (ARCHITECTURAL)
-- **Bug #263**: UserAdaptationManager missing (CATASTROPHIC)
-- **Bug #270**: Time delta calculation wrong (HIGH)
-- **Bug #271**: Consecutive duplicates not filtered (HIGH)
-- **Bug #273**: Training data lost on close (CATASTROPHIC)
-- **Bug #274**: ML training external (ARCHITECTURAL)
-- **Bug #275**: Async handler → coroutines (ARCHITECTURAL)
-- **Bug #276**: Trace analyzer simplified (ARCHITECTURAL)
-- **Bug #277**: Multi-language missing (HIGH)
+
+| Bug # | Description | Status |
+|-------|-------------|--------|
+| #257 | LanguageDetector missing | ✅ FIXED |
+| #259 | NgramModel missing | ✅ FIXED |
+| #262 | WordPredictor integration | ✅ ARCHITECTURAL (works alongside ONNX) |
+| #263 | UserAdaptationManager missing | ✅ FIXED |
+| #270 | Time delta calculation | ⚠️ Needs verification |
+| #271 | Consecutive duplicates filter | ⚠️ Needs verification |
+| #273 | Training data persistence | ✅ FIXED (SQLite) |
+| #274 | ML training external | ✅ ARCHITECTURAL (by design) |
+| #275 | Async prediction | ✅ ARCHITECTURAL (coroutines) |
+| #276 | Trace analyzer | ✅ ARCHITECTURAL (neural features) |
+| #277 | Multi-language expansion | ⚠️ Framework ready, needs assets |
 
 ---
 
@@ -642,9 +600,9 @@ fun `full pipeline produces predictions`() {
 
 ### Implementation Complexity
 - **Core Pipeline**: ✅ COMPLETE (high complexity, well-implemented)
-- **Data Persistence**: ❌ CRITICAL BUG (medium complexity, ~6 hours)
-- **Multi-Language**: ❌ MISSING (high complexity, ~2 weeks)
-- **User Adaptation**: ❌ MISSING (medium complexity, ~2 weeks)
+- **Data Persistence**: ✅ COMPLETE (SQLite implementation)
+- **Multi-Language**: ⚠️ FRAMEWORK READY (needs asset files for each language)
+- **User Adaptation**: ✅ COMPLETE (SharedPreferences-based learning)
 
 ### Future Enhancements
 1. On-device fine-tuning (federated learning)
@@ -656,6 +614,6 @@ fun `full pipeline produces predictions`() {
 
 ---
 
-**Last Updated**: 2025-10-20
-**Status**: Core complete, critical bugs outstanding
-**Priority**: P0 (data persistence), P1 (multi-language, adaptation)
+**Last Updated**: 2025-12-04
+**Status**: ✅ Core complete, all P0 bugs resolved
+**Priority**: P1-P2 remaining (time delta calculation, duplicate filtering, multi-language expansion)
