@@ -51,8 +51,10 @@ class InputCoordinator(
     // Swipe ML data collection
     private var currentSwipeData: SwipeMLData? = null
 
-    // v1.32.926: Track if shift was active when current swipe started (for ALL CAPS output)
+    // v1.32.926: Track if shift was active when current swipe started (for capitalize first letter)
     private var wasShiftActiveAtSwipeStart: Boolean = false
+    // v1.33.8: Track if shift was LOCKED (caps lock) when swipe started (for ALL CAPS output)
+    private var wasShiftLockedAtSwipeStart: Boolean = false
 
     // Async prediction execution
     private val predictionExecutor: ExecutorService = Executors.newSingleThreadExecutor()
@@ -406,14 +408,23 @@ class InputCoordinator(
                 }
 
                 // v1.32.926: If shift was active when swipe started, capitalize first letter only
+                // v1.33.8: If shift was LOCKED (caps lock), uppercase ENTIRE word
                 // This applies ONLY to swipe-auto-insertions (not manual candidate selections)
-                // Shift = capitalize first letter, Caps Lock = ALL CAPS (handled separately)
-                if (wasShiftActiveAtSwipeStart && isSwipeAutoInsert) {
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        android.util.Log.d("CleverKeysService", "SHIFT+SWIPE: Capitalizing first letter of '$processedWord'")
-                    }
-                    processedWord = processedWord.replaceFirstChar {
-                        if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
+                if (isSwipeAutoInsert) {
+                    if (wasShiftLockedAtSwipeStart) {
+                        // Caps Lock + Swipe = ALL CAPS
+                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                            android.util.Log.d("CleverKeysService", "CAPS_LOCK+SWIPE: Uppercasing entire word '$processedWord'")
+                        }
+                        processedWord = processedWord.uppercase(java.util.Locale.getDefault())
+                    } else if (wasShiftActiveAtSwipeStart) {
+                        // Shift + Swipe = Capitalize first letter
+                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                            android.util.Log.d("CleverKeysService", "SHIFT+SWIPE: Capitalizing first letter of '$processedWord'")
+                        }
+                        processedWord = processedWord.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
+                        }
                     }
                 }
 
@@ -447,7 +458,8 @@ class InputCoordinator(
                 // CRITICAL FIX: Clear shift state AFTER swipe word is committed
                 // If shift was active when swipe started, we've already capitalized the word,
                 // now we need to turn off the shift indicator for the NEXT word
-                if (wasShiftActiveAtSwipeStart && isSwipeAutoInsert) {
+                // NOTE: Only clear latched shift, NOT locked (caps lock) - user should manually unlock caps lock
+                if (wasShiftActiveAtSwipeStart && !wasShiftLockedAtSwipeStart && isSwipeAutoInsert) {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                         android.util.Log.d("CleverKeysService", "SHIFT+SWIPE: Clearing shift after word commit")
                     }
@@ -455,8 +467,10 @@ class InputCoordinator(
                     keyboardView.post {
                         keyboardView.clearLatchedModifiers()
                     }
-                    wasShiftActiveAtSwipeStart = false // Reset for next swipe
                 }
+                // Reset state tracking for next swipe
+                wasShiftActiveAtSwipeStart = false
+                wasShiftLockedAtSwipeStart = false
 
                 // Track that this commit was from candidate selection (manual tap)
                 // Note: Auto-insertions set this separately to NEURAL_SWIPE
@@ -738,7 +752,9 @@ class InputCoordinator(
     }
 
     /**
-     * Get user keyboard height percentage for logging
+     * Handle swipe typing gesture completion.
+     * @param wasShiftActive v1.32.926: True if shift was latched (single tap) - capitalize first letter
+     * @param wasShiftLocked v1.33.8: True if shift was locked (caps lock) - uppercase entire word
      */
     fun handleSwipeTyping(
         swipedKeys: List<KeyboardData.Key>,
@@ -747,10 +763,13 @@ class InputCoordinator(
         ic: InputConnection?,
         editorInfo: EditorInfo?,
         resources: Resources,
-        wasShiftActive: Boolean = false  // v1.32.926: Track if shift was active when swipe started
+        wasShiftActive: Boolean = false,  // v1.32.926: Track if shift was latched when swipe started
+        wasShiftLocked: Boolean = false   // v1.33.8: Track if shift was LOCKED (caps lock) when swipe started
     ) {
-        // v1.32.926: Store shift state for ALL CAPS transformation in onSuggestionSelected
+        // v1.32.926: Store shift state for capitalize first letter in onSuggestionSelected
         wasShiftActiveAtSwipeStart = wasShiftActive
+        // v1.33.8: Store caps lock state for ALL CAPS transformation in onSuggestionSelected
+        wasShiftLockedAtSwipeStart = wasShiftLocked
 
         // Clear auto-inserted word tracking when new swipe starts
         contextTracker.clearLastAutoInsertedWord()

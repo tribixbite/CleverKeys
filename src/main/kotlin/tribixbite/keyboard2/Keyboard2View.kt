@@ -288,6 +288,17 @@ class Keyboard2View @JvmOverloads constructor(
         invalidate()
     }
 
+    /**
+     * Check if shift is currently locked (caps lock mode, not just latched).
+     * Used for ALL CAPS swipe typing: caps lock + swipe = ENTIRE WORD UPPERCASE.
+     * @return true if shift is locked (caps lock), false if just latched or not active
+     */
+    fun isShiftLocked(): Boolean {
+        val shiftKv = _shift_kv ?: return false
+        val flags = _pointers.getKeyFlags(shiftKv)
+        return flags != -1 && (flags and Pointers.FLAG_P_LOCKED) != 0
+    }
+
     /** Called from [KeyEventHandler]. */
     fun set_compose_pending(pending: Boolean) {
         val composeKv = _compose_kv
@@ -352,11 +363,13 @@ class Keyboard2View @JvmOverloads constructor(
             val result = recognizer.endSwipe()
             if (_keyboard2 != null && result.keys != null && result.keys.isNotEmpty() &&
                 result.path != null && result.timestamps != null) {
-                // v1.32.926: Check if shift is active for ALL CAPS swipe typing
+                // v1.32.926: Check if shift is active for capitalize first letter
                 val wasShiftActive = _mods.has(KeyValue.Modifier.SHIFT)
+                // v1.33.8: Check if shift is LOCKED (caps lock) for ALL CAPS swipe typing
+                val wasShiftLocked = isShiftLocked()
 
                 // Pass full swipe data for ML collection
-                _keyboard2!!.handleSwipeTyping(result.keys, result.path, result.timestamps, wasShiftActive)
+                _keyboard2!!.handleSwipeTyping(result.keys, result.path, result.timestamps, wasShiftActive, wasShiftLocked)
             }
         } else {
             recognizer.endSwipe() // Clean up even if not swipe typing
