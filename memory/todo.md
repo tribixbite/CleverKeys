@@ -1,13 +1,42 @@
 # CleverKeys Development Status
 
-**Last Updated**: 2025-12-02
+**Last Updated**: 2025-12-03
 **Status**: ✅ Production Ready
 
 ---
 
-## Current Session: Shift-Swipe Fix & Browse APK (Dec 2, 2025)
+## Current Session: Config Import Crash Fix (Dec 3, 2025)
 
 ### Completed This Session
+- ✅ Fixed config import crash (ClassCastException: Integer cannot be cast to String)
+  - Root cause: Config.kt and SettingsActivity used raw `getString()` for preferences that could be stored as Int/Float after import
+  - Added `safeGetString()` to Config.kt with try-catch fallbacks for Int and Float types
+  - Added `getSafeString()` extension to SettingsActivity.kt
+  - Updated 25+ getString() calls to use safe variants in:
+    - Config.kt: show_numpad, numpad_layout, number_row, swipe_dist, slider_sensitivity, theme, number_entry_layout, circle_sensitivity, clipboard settings, learning_aggression, primary_language, swipe_fuzzy_match_mode, swipe_trail_effect, neural_model_version, neural_resampling_mode
+    - SettingsActivity.kt: loadCurrentSettings(), onSharedPreferenceChanged()
+  - APK built and installed successfully
+
+### Code Changes
+**Config.kt:**
+- Added `safeGetString()` companion function (lines 638-671)
+- Updated 20+ _prefs.getString() calls to use safeGetString()
+- Wrapped nullable encoder/decoder paths in try-catch
+
+**SettingsActivity.kt:**
+- Added `getSafeString()` extension function (lines 1919-1942)
+- Updated 15+ prefs.getString() calls in loadCurrentSettings() and onSharedPreferenceChanged()
+
+### Testing Required
+- [ ] Import uk-config.json from /sdcard/Download/
+- [ ] Verify settings UI loads correctly after import
+- [ ] Verify keyboard works with imported settings
+
+---
+
+## Previous Session: Shift-Swipe Fix & Browse APK (Dec 2, 2025)
+
+### Completed
 - ✅ Fixed Browse APK button to use Android SAF file picker:
   - Added `ActivityResultContracts.GetContent()` for proper file selection
   - Added `handleSelectedApk()` to show file info and confirmation

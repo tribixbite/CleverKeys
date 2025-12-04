@@ -189,7 +189,7 @@ class Config private constructor(
         this.foldable_unfolded = foldableUnfolded ?: false
 
         var characterSizeScale = 1f
-        val show_numpad_s = _prefs.getString("show_numpad", "never")
+        val show_numpad_s = safeGetString(_prefs, "show_numpad", "never")
         show_numpad = "always" == show_numpad_s
         
         if (orientation_landscape) {
@@ -209,18 +209,18 @@ class Config private constructor(
         }
 
         layouts = LayoutsPreference.load_from_preferences(res, _prefs).filterNotNull()
-        inverse_numpad = _prefs.getString("numpad_layout", "default") == "low_first"
+        inverse_numpad = safeGetString(_prefs, "numpad_layout", "default") == "low_first"
         
-        val number_row = _prefs.getString("number_row", "no_number_row")
+        val number_row = safeGetString(_prefs, "number_row", "no_number_row")
         add_number_row = number_row != "no_number_row"
         number_row_symbols = number_row == "symbols"
 
         val dpi_ratio = maxOf(dm.xdpi, dm.ydpi) / minOf(dm.xdpi, dm.ydpi)
         val swipe_scaling = minOf(dm.widthPixels, dm.heightPixels) / 10f * dpi_ratio
-        val swipe_dist_value = _prefs.getString("swipe_dist", "15")?.toFloat() ?: 15f
+        val swipe_dist_value = safeGetString(_prefs, "swipe_dist", "15").toFloatOrNull() ?: 15f
         swipe_dist_px = swipe_dist_value / 25f * swipe_scaling
-        
-        val slider_sensitivity = (_prefs.getString("slider_sensitivity", "30")?.toFloat() ?: 30f) / 100f
+
+        val slider_sensitivity = (safeGetString(_prefs, "slider_sensitivity", "30").toFloatOrNull() ?: 30f) / 100f
         slide_step_px = slider_sensitivity * swipe_scaling
 
         vibrate_custom = _prefs.getBoolean("vibrate_custom", false)
@@ -244,41 +244,26 @@ class Config private constructor(
         horizontal_margin = get_dip_pref_oriented(dm, "horizontal_margin", 3f, 28f)
         double_tap_lock_shift = _prefs.getBoolean("lock_double_tap", true)
         characterSize = safeGetFloat(_prefs, "character_size", 1.18f) * characterSizeScale
-        theme = getThemeId(res, _prefs.getString("theme", "") ?: "")
+        theme = getThemeId(res, safeGetString(_prefs, "theme", ""))
         autocapitalisation = _prefs.getBoolean("autocapitalisation", true)
         switch_input_immediate = _prefs.getBoolean("switch_input_immediate", false)
         extra_keys_param = ExtraKeysPreference.get_extra_keys(_prefs) ?: emptyMap()
         extra_keys_custom = CustomExtraKeysPreference.get(_prefs) ?: emptyMap()
-        selected_number_layout = NumberLayout.of_string(_prefs.getString("number_entry_layout", "pin") ?: "pin")
+        selected_number_layout = NumberLayout.of_string(safeGetString(_prefs, "number_entry_layout", "pin"))
         current_layout_narrow = safeGetInt(_prefs, "current_layout_portrait", 0)
         current_layout_wide = safeGetInt(_prefs, "current_layout_landscape", 0)
-        circle_sensitivity = _prefs.getString("circle_sensitivity", "2")?.toInt() ?: 2
+        circle_sensitivity = safeGetString(_prefs, "circle_sensitivity", "2").toIntOrNull() ?: 2
         clipboard_history_enabled = _prefs.getBoolean("clipboard_history_enabled", true)
 
-        clipboard_history_limit = try {
-            _prefs.getInt("clipboard_history_limit", 6)
-        } catch (e: ClassCastException) {
-            val stringValue = _prefs.getString("clipboard_history_limit", "6") ?: "6"
-            stringValue.toInt().also {
-                Log.w("Config", "Fixed clipboard_history_limit type mismatch: $stringValue")
-            }
-        }
+        clipboard_history_limit = safeGetString(_prefs, "clipboard_history_limit", "6").toIntOrNull() ?: 6
 
-        clipboard_pane_height_percent = _prefs.getInt("clipboard_pane_height_percent", 30).coerceIn(10, 50)
-        
-        clipboard_max_item_size_kb = try {
-            _prefs.getString("clipboard_max_item_size_kb", "500")?.toInt() ?: 500
-        } catch (e: NumberFormatException) {
-            500
-        }
+        clipboard_pane_height_percent = safeGetInt(_prefs, "clipboard_pane_height_percent", 30).coerceIn(10, 50)
 
-        clipboard_limit_type = _prefs.getString("clipboard_limit_type", "count")
-        
-        clipboard_size_limit_mb = try {
-            _prefs.getString("clipboard_size_limit_mb", "10")?.toInt() ?: 10
-        } catch (e: NumberFormatException) {
-            10
-        }
+        clipboard_max_item_size_kb = safeGetString(_prefs, "clipboard_max_item_size_kb", "500").toIntOrNull() ?: 500
+
+        clipboard_limit_type = safeGetString(_prefs, "clipboard_limit_type", "count")
+
+        clipboard_size_limit_mb = safeGetString(_prefs, "clipboard_size_limit_mb", "10").toIntOrNull() ?: 10
 
         swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", true)
         swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", false)
@@ -289,11 +274,11 @@ class Config private constructor(
         prediction_frequency_scale = safeGetFloat(_prefs, "prediction_frequency_scale", 100.0f)
         context_aware_predictions_enabled = _prefs.getBoolean("context_aware_predictions_enabled", true)
         personalized_learning_enabled = _prefs.getBoolean("personalized_learning_enabled", true)
-        learning_aggression = _prefs.getString("learning_aggression", "BALANCED") ?: "BALANCED"
+        learning_aggression = safeGetString(_prefs, "learning_aggression", "BALANCED")
 
         // Multi-language settings (Phase 8.3 & 8.4)
         enable_multilang = _prefs.getBoolean("pref_enable_multilang", false)
-        primary_language = _prefs.getString("pref_primary_language", "en") ?: "en"
+        primary_language = safeGetString(_prefs, "pref_primary_language", "en")
         auto_detect_language = _prefs.getBoolean("pref_auto_detect_language", true)
         // SlideBarPreference stores as Float (0.4-0.9), not Int
         language_detection_sensitivity = safeGetFloat(_prefs, "pref_language_detection_sensitivity", 0.6f)
@@ -309,7 +294,7 @@ class Config private constructor(
 
         swipe_beam_autocorrect_enabled = _prefs.getBoolean("swipe_beam_autocorrect_enabled", true)
         swipe_final_autocorrect_enabled = _prefs.getBoolean("swipe_final_autocorrect_enabled", true)
-        swipe_fuzzy_match_mode = _prefs.getString("swipe_fuzzy_match_mode", "edit_distance")
+        swipe_fuzzy_match_mode = safeGetString(_prefs, "swipe_fuzzy_match_mode", "edit_distance")
 
         val predictionSource = safeGetInt(_prefs, "swipe_prediction_source", 80)
         swipe_confidence_weight = predictionSource / 100.0f
@@ -346,7 +331,7 @@ class Config private constructor(
 
         // Swipe trail appearance
         swipe_trail_enabled = _prefs.getBoolean("swipe_trail_enabled", true)
-        swipe_trail_effect = _prefs.getString("swipe_trail_effect", "glow") ?: "glow"
+        swipe_trail_effect = safeGetString(_prefs, "swipe_trail_effect", "glow")
         swipe_trail_color = _prefs.getInt("swipe_trail_color", 0xFF9B59B6.toInt())
         swipe_trail_width = safeGetFloat(_prefs, "swipe_trail_width", 8.0f)
         swipe_trail_glow_radius = safeGetFloat(_prefs, "swipe_trail_glow_radius", 6.0f)
@@ -366,16 +351,21 @@ class Config private constructor(
         neural_beam_prune_confidence = safeGetFloat(_prefs, "neural_beam_prune_confidence", 0.03f)
         neural_beam_score_gap = safeGetFloat(_prefs, "neural_beam_score_gap", 20.0f)
 
-        neural_model_version = _prefs.getString("neural_model_version", "v2")
+        neural_model_version = safeGetString(_prefs, "neural_model_version", "v2")
         neural_use_quantized = _prefs.getBoolean("neural_use_quantized", true)
         neural_user_max_seq_length = safeGetInt(_prefs, "neural_user_max_seq_length", 0)
-        neural_resampling_mode = _prefs.getString("neural_resampling_mode", "discard")
+        neural_resampling_mode = safeGetString(_prefs, "neural_resampling_mode", "discard")
 
-        neural_custom_encoder_path = _prefs.getString("neural_custom_encoder_uri", null)
-            ?: _prefs.getString("neural_custom_encoder_path", null)
+        // Use try-catch for optional nullable strings (custom encoder/decoder paths)
+        neural_custom_encoder_path = try {
+            _prefs.getString("neural_custom_encoder_uri", null)
+                ?: _prefs.getString("neural_custom_encoder_path", null)
+        } catch (e: ClassCastException) { null }
 
-        neural_custom_decoder_path = _prefs.getString("neural_custom_decoder_uri", null)
-            ?: _prefs.getString("neural_custom_decoder_path", null)
+        neural_custom_decoder_path = try {
+            _prefs.getString("neural_custom_decoder_uri", null)
+                ?: _prefs.getString("neural_custom_decoder_path", null)
+        } catch (e: ClassCastException) { null }
 
         val screen_width_dp = dm.widthPixels / dm.density
         wide_screen = screen_width_dp >= WIDE_DEVICE_THRESHOLD
@@ -631,6 +621,45 @@ class Config private constructor(
             }
         }
 
+        /**
+         * Safely get a String preference, handling ClassCastException when value is stored as Int or Float.
+         * This is critical for config import where numeric strings may be stored as integers.
+         */
+        @JvmStatic
+        fun safeGetString(prefs: SharedPreferences, key: String, defaultValue: String): String {
+            return try {
+                prefs.getString(key, defaultValue) ?: defaultValue
+            } catch (e: ClassCastException) {
+                // Value might be stored as Int (e.g., from config import)
+                try {
+                    val intValue = prefs.getInt(key, Int.MIN_VALUE)
+                    if (intValue == Int.MIN_VALUE) {
+                        defaultValue
+                    } else {
+                        Log.w("Config", "String preference $key was stored as int: $intValue")
+                        intValue.toString()
+                    }
+                } catch (e2: ClassCastException) {
+                    // Try Float
+                    try {
+                        val floatValue = prefs.getFloat(key, Float.MIN_VALUE)
+                        if (floatValue == Float.MIN_VALUE) {
+                            defaultValue
+                        } else {
+                            Log.w("Config", "String preference $key was stored as float: $floatValue")
+                            floatValue.toString()
+                        }
+                    } catch (e3: Exception) {
+                        Log.w("Config", "Corrupted string preference $key, using default: $defaultValue")
+                        defaultValue
+                    }
+                } catch (e2: Exception) {
+                    Log.w("Config", "Error reading preference $key, using default: $defaultValue")
+                    defaultValue
+                }
+            }
+        }
+
         @JvmStatic
         fun migrate(prefs: SharedPreferences) {
             val saved_version = prefs.getInt("version", 0)
@@ -643,12 +672,12 @@ class Config private constructor(
             when (saved_version) {
                 0 -> {
                     val l = mutableListOf<LayoutsPreference.Layout>()
-                    l.add(migrate_layout(prefs.getString("layout", "system")))
-                    val snd_layout = prefs.getString("second_layout", "none")
-                    if (snd_layout != null && snd_layout != "none")
+                    l.add(migrate_layout(safeGetString(prefs, "layout", "system")))
+                    val snd_layout = safeGetString(prefs, "second_layout", "none")
+                    if (snd_layout != "none")
                         l.add(migrate_layout(snd_layout))
-                    val custom_layout = prefs.getString("custom_layout", "")
-                    if (custom_layout != null && custom_layout.isNotEmpty())
+                    val custom_layout = safeGetString(prefs, "custom_layout", "")
+                    if (custom_layout.isNotEmpty())
                         l.add(LayoutsPreference.CustomLayout.parse(custom_layout))
                     LayoutsPreference.save_to_preferences(e, l)
                     // Fallthrough to case 1

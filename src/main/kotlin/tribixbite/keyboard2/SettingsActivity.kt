@@ -248,7 +248,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 confidenceThreshold = prefs.getFloat(key, 0.1f)
             }
             "theme" -> {
-                currentThemeName = prefs.getString(key, "jewel") ?: "jewel"
+                currentThemeName = prefs.getSafeString(key, "jewel")
             }
             "keyboard_height_percent" -> {
                 keyboardHeight = prefs.getInt(key, 35)
@@ -293,10 +293,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
             // Gesture sensitivity settings
             "swipe_dist" -> {
-                swipeDistance = (prefs.getString(key, "15") ?: "15").toIntOrNull() ?: 15
+                swipeDistance = prefs.getSafeString(key, "15").toIntOrNull() ?: 15
             }
             "circle_sensitivity" -> {
-                circleSensitivity = (prefs.getString(key, "2") ?: "2").toIntOrNull() ?: 2
+                circleSensitivity = prefs.getSafeString(key, "2").toIntOrNull() ?: 2
             }
             // Long press settings
             "longpress_timeout" -> {
@@ -350,13 +350,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
             // Number row and numpad settings
             "number_row" -> {
-                numberRowMode = prefs.getString(key, "no_number_row") ?: "no_number_row"
+                numberRowMode = prefs.getSafeString(key, "no_number_row")
             }
             "show_numpad" -> {
-                showNumpadMode = prefs.getString(key, "never") ?: "never"
+                showNumpadMode = prefs.getSafeString(key, "never")
             }
             "numpad_layout" -> {
-                numpadLayout = prefs.getString(key, "default") ?: "default"
+                numpadLayout = prefs.getSafeString(key, "default")
             }
             "pin_entry_enabled" -> {
                 pinEntryEnabled = prefs.getBoolean(key, false)
@@ -382,7 +382,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
             // Phase 5: Gesture settings listeners
             "slider_sensitivity" -> {
-                sliderSensitivity = (prefs.getString(key, "30") ?: "30").toIntOrNull() ?: 30
+                sliderSensitivity = prefs.getSafeString(key, "30").toIntOrNull() ?: 30
             }
             // Swipe Corrections settings
             "swipe_beam_autocorrect_enabled" -> {
@@ -392,10 +392,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 swipeFinalAutocorrectEnabled = prefs.getBoolean(key, true)
             }
             "swipe_correction_preset" -> {
-                swipeCorrectionPreset = prefs.getString(key, "balanced") ?: "balanced"
+                swipeCorrectionPreset = prefs.getSafeString(key, "balanced")
             }
             "swipe_fuzzy_match_mode" -> {
-                swipeFuzzyMatchMode = prefs.getString(key, "edit_distance") ?: "edit_distance"
+                swipeFuzzyMatchMode = prefs.getSafeString(key, "edit_distance")
             }
             "autocorrect_max_length_diff" -> {
                 autocorrectMaxLengthDiff = Config.safeGetInt(prefs, key, 2)
@@ -1916,6 +1916,31 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
+    /** Safely get a String preference, handling cases where the value is stored as Int or other types */
+    private fun SharedPreferences.getSafeString(key: String, default: String): String {
+        return try {
+            getString(key, default) ?: default
+        } catch (e: ClassCastException) {
+            // Value might be stored as Int (e.g., from config import)
+            try {
+                getInt(key, -999999).let {
+                    if (it == -999999) default else it.toString()
+                }
+            } catch (e2: ClassCastException) {
+                // Try Float
+                try {
+                    getFloat(key, Float.MIN_VALUE).let {
+                        if (it == Float.MIN_VALUE) default else it.toString()
+                    }
+                } catch (e3: Exception) {
+                    default
+                }
+            } catch (e2: Exception) {
+                default
+            }
+        }
+    }
+
     private fun loadCurrentSettings() {
         // Swipe typing master switch
         swipeTypingEnabled = prefs.getBoolean("swipe_typing_enabled", true)
@@ -1927,7 +1952,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         confidenceThreshold = prefs.getSafeFloat("neural_confidence_threshold", 0.1f)
 
         // Appearance settings
-        currentThemeName = prefs.getString("theme", "jewel") ?: "jewel"
+        currentThemeName = prefs.getSafeString("theme", "jewel")
         keyboardHeight = prefs.getSafeInt("keyboard_height_percent", 35)
         keyboardHeightLandscape = prefs.getSafeInt("keyboard_height_landscape", 50)
 
@@ -1959,9 +1984,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         autoCapitalizationEnabled = prefs.getBoolean("auto_capitalization_enabled", true)
 
         // Gesture sensitivity settings
-        swipeDistance = (prefs.getString("swipe_dist", "15") ?: "15").toIntOrNull() ?: 15
-        circleSensitivity = (prefs.getString("circle_sensitivity", "2") ?: "2").toIntOrNull() ?: 2
-        sliderSensitivity = (prefs.getString("slider_sensitivity", "30") ?: "30").toIntOrNull() ?: 30
+        swipeDistance = prefs.getSafeString("swipe_dist", "15").toIntOrNull() ?: 15
+        circleSensitivity = prefs.getSafeString("circle_sensitivity", "2").toIntOrNull() ?: 2
+        sliderSensitivity = prefs.getSafeString("slider_sensitivity", "30").toIntOrNull() ?: 30
 
         // Long press settings
         longPressTimeout = prefs.getSafeInt("longpress_timeout", 600)
@@ -1973,9 +1998,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         switchInputImmediate = prefs.getBoolean("switch_input_immediate", false)
 
         // Number row and numpad settings
-        numberRowMode = prefs.getString("number_row", "no_number_row") ?: "no_number_row"
-        showNumpadMode = prefs.getString("show_numpad", "never") ?: "never"
-        numpadLayout = prefs.getString("numpad_layout", "default") ?: "default"
+        numberRowMode = prefs.getSafeString("number_row", "no_number_row")
+        showNumpadMode = prefs.getSafeString("show_numpad", "never")
+        numpadLayout = prefs.getSafeString("numpad_layout", "default")
         pinEntryEnabled = prefs.getBoolean("pin_entry_enabled", false)
 
         // Advanced settings
@@ -1997,8 +2022,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Swipe Corrections settings
         swipeBeamAutocorrectEnabled = prefs.getBoolean("swipe_beam_autocorrect_enabled", true)
         swipeFinalAutocorrectEnabled = prefs.getBoolean("swipe_final_autocorrect_enabled", true)
-        swipeCorrectionPreset = prefs.getString("swipe_correction_preset", "balanced") ?: "balanced"
-        swipeFuzzyMatchMode = prefs.getString("swipe_fuzzy_match_mode", "edit_distance") ?: "edit_distance"
+        swipeCorrectionPreset = prefs.getSafeString("swipe_correction_preset", "balanced")
+        swipeFuzzyMatchMode = prefs.getSafeString("swipe_fuzzy_match_mode", "edit_distance")
         autocorrectMaxLengthDiff = Config.safeGetInt(prefs, "autocorrect_max_length_diff", 2)
         autocorrectPrefixLength = Config.safeGetInt(prefs, "autocorrect_prefix_length", 2)
         autocorrectMaxBeamCandidates = Config.safeGetInt(prefs, "autocorrect_max_beam_candidates", 3)
@@ -2009,7 +2034,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
         // Swipe trail appearance settings
         swipeTrailEnabled = prefs.getBoolean("swipe_trail_enabled", true)
-        swipeTrailEffect = prefs.getString("swipe_trail_effect", "glow") ?: "glow"
+        swipeTrailEffect = prefs.getSafeString("swipe_trail_effect", "glow")
         swipeTrailColor = prefs.getSafeInt("swipe_trail_color", 0xFF9B59B6.toInt())
         swipeTrailWidth = prefs.getSafeFloat("swipe_trail_width", 8.0f)
         swipeTrailGlowRadius = prefs.getSafeFloat("swipe_trail_glow_radius", 12.0f)

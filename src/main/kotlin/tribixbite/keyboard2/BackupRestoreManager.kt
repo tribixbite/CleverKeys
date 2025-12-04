@@ -337,8 +337,9 @@ class BackupRestoreManager(private val context: Context) {
             "short_gesture_min_distance" -> value in 10..95
 
             // Neural network parameters
-            "neural_beam_width" -> value in 1..16
-            "neural_max_length" -> value in 10..50
+            "neural_beam_width" -> value in 1..32
+            "neural_max_length" -> value in 10..100
+            "neural_user_max_seq_length" -> value in 0..500
 
             // Auto-correction parameters
             "autocorrect_min_word_length" -> value in 2..5
@@ -378,6 +379,11 @@ class BackupRestoreManager(private val context: Context) {
 
             // Neural confidence threshold
             "neural_confidence_threshold" -> value in 0.0f..1.0f
+
+            // Neural beam search parameters
+            "neural_beam_score_gap" -> value in 0.0f..100.0f
+            "neural_beam_prune_confidence" -> value in 0.0f..1.0f
+            "neural_beam_alpha" -> value in 0.0f..10.0f
 
             // Swipe typing boost parameters (0.0-2.0 range)
             "swipe_rare_words_penalty", "swipe_common_words_boost", "swipe_top5000_boost" -> value in 0.0f..2.0f
