@@ -134,6 +134,10 @@ class ThemeSettingsActivity : ComponentActivity() {
                         onThemeSelected = { themeId ->
                             // Save selected theme - Config.kt reads from "theme" preference
                             prefs.edit().putString("theme", themeId).apply()
+                            // CRITICAL: Also copy to device protected storage for keyboard to see
+                            // CleverKeysService uses DirectBootAwarePreferences which reads from
+                            // device protected storage on API 24+
+                            DirectBootAwarePreferences.copy_preferences_to_protected_storage(this, prefs)
                             Toast.makeText(this, "Theme applied!", Toast.LENGTH_SHORT).show()
                         }
                     )
