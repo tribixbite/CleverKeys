@@ -9,74 +9,42 @@ jobs:
   Build-APK:
     runs-on: ubuntu-latest
     steps:
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'zulu'
-        java-version: '17'
-
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
-
-    - name: Checkout repository
+    - name: Checkout repo
       uses: actions/checkout@v4
 
     - name: Restore debug keystore from GitHub Secrets
       run: |
-        # Check if exist and use the secret named DEBUG_KEYSTORE
-        # The contents of the secret can be obtained from the debug.keystore.asc
-        # (refer to CONTRIBUTING.md for Using the local debug.keystore on the Github CI actions)
+        # DEBUG_KEYSTORE should contain base64-encoded content of debug.keystore.asc
+        # Create it with: cat debug.keystore.asc | base64 -w0
+        # Or use GPG: gpg -c --passphrase "debug0" --batch debug.keystore && base64 -w0 debug.keystore.gpg
         if [[ ! "${{ secrets.DEBUG_KEYSTORE }}" = "" ]]; then
-            echo "${{ secrets.DEBUG_KEYSTORE }}" > "debug.keystore.asc"
+            echo "Restoring debug keystore from GitHub secrets"
+            echo "${{ secrets.DEBUG_KEYSTORE }}" | base64 -d > "debug.keystore.asc"
             if [[ -s "debug.keystore.asc" ]]; then
-                echo "Restoring debug keystore from GitHub secrets"
                 gpg -d --passphrase "debug0" --batch "debug.keystore.asc" > "debug.keystore"
+                echo "Debug keystore restored ($(wc -c < debug.keystore) bytes)"
+            else
+                echo "Warning: decoded keystore.asc is empty"
             fi
+        else
+            echo "No DEBUG_KEYSTORE secret found, will auto-generate keystore"
         fi
 
-    - name: Generate layouts and resources
-      run: |
-        # Create expected directory structure for Python scripts
-        mkdir -p srcs/layouts srcs/juloo.keyboard2
+    - uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
 
-        # Copy layouts to expected location
-        if [ -d "src/main/layouts" ]; then
-          cp src/main/layouts/*.xml srcs/layouts/
-          echo "Copied $(ls srcs/layouts/*.xml | wc -l) layout files"
-        fi
-
-        # Copy compose files to expected location
-        if [ -d "src/main/compose" ]; then
-          mkdir -p srcs/compose
-          cp -r src/main/compose/* srcs/compose/
-          echo "Copied compose files"
-        fi
-
-        # Run resource generation with proper error handling
-        echo "Generating layouts..."
-        python gen_layouts.py || echo "Layout generation failed"
-
-        echo "Generating emoji data..."
-        python gen_emoji.py || echo "Emoji generation failed"
-
-        # Copy generated files to Kotlin locations
-        mkdir -p src/main/java/juloo/keyboard2
-        if [ -f "srcs/juloo.keyboard2/ComposeKeyData.java" ]; then
-          cp srcs/juloo.keyboard2/ComposeKeyData.java src/main/java/juloo/keyboard2/
-          echo "Copied generated ComposeKeyData.java"
-        fi
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
 
     - name: Build debug APK
-      uses: gradle/gradle-build-action@v3
+      run: ./gradlew assembleDebug
       env:
         DEBUG_KEYSTORE: "debug.keystore"
         DEBUG_KEYSTORE_PASSWORD: debug0
         DEBUG_KEY_ALIAS: debug
         DEBUG_KEY_PASSWORD: debug0
-      with:
-        arguments: assembleDebug
 
     - name: Artifact naming
       run: |
