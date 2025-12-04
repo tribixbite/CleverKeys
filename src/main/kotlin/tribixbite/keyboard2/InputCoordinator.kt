@@ -405,13 +405,16 @@ class InputCoordinator(
                     false
                 }
 
-                // v1.32.926: If shift was active when swipe started, convert entire word to UPPERCASE
+                // v1.32.926: If shift was active when swipe started, capitalize first letter only
                 // This applies ONLY to swipe-auto-insertions (not manual candidate selections)
+                // Shift = capitalize first letter, Caps Lock = ALL CAPS (handled separately)
                 if (wasShiftActiveAtSwipeStart && isSwipeAutoInsert) {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        android.util.Log.d("CleverKeysService", "SHIFT+SWIPE: Converting '$processedWord' to ALL CAPS")
+                        android.util.Log.d("CleverKeysService", "SHIFT+SWIPE: Capitalizing first letter of '$processedWord'")
                     }
-                    processedWord = processedWord.uppercase(java.util.Locale.getDefault())
+                    processedWord = processedWord.replaceFirstChar {
+                        if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
+                    }
                 }
 
                 // Commit the selected word - use Termux mode if enabled
@@ -442,7 +445,7 @@ class InputCoordinator(
                 keyeventhandler.notifyTextTyped(textToInsert)
 
                 // CRITICAL FIX: Clear shift state AFTER swipe word is committed
-                // If shift was active when swipe started, we've already uppercased the word,
+                // If shift was active when swipe started, we've already capitalized the word,
                 // now we need to turn off the shift indicator for the NEXT word
                 if (wasShiftActiveAtSwipeStart && isSwipeAutoInsert) {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {

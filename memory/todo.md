@@ -39,13 +39,20 @@
   - Verified numeric.xml layout already exists in src/main/layouts/
 
 - ✅ Fixed build scripts with residual juloo references
-  - build-on-termux.sh line 95: juloo.keyboard2.apk → tribixbite.keyboard2.apk
-  - check-keyboard-status.sh line 11: Fixed APK filename for debug builds
+  - build-on-termux.sh: Fixed APK paths and AAPT2 path to use swype/UK
+  - check-keyboard-status.sh: Fixed APK filename
 
-- ✅ Verified shift handling for swipe typing
-  - wasShiftActiveAtSwipeStart already implemented in InputCoordinator.kt
-  - Lines 410, 447, 455, 750 handle shift state during swipe typing
-  - Note: UK doesn't have swipe typing - this is a CK enhancement
+- ✅ Fixed shift+swipe to capitalize first letter only (not ALL CAPS)
+  - Bug: InputCoordinator.kt line 414 was using `.uppercase()` for entire word
+  - Fix: Changed to `.replaceFirstChar { it.titlecase() }` for proper capitalization
+  - Shift = capitalize first letter, Caps Lock = ALL CAPS (separate handling)
+
+- ✅ Added binary dictionaries and generation scripts from UK
+  - Copied en_enhanced.bin (1.2MB optimized), contractions.bin
+  - Copied JSON sources: en_enhanced.json, contraction_pairings.json, etc.
+  - Copied scripts/generate_binary_dict.py, generate_binary_contractions.py
+  - Added generateBinaryDictionaries and generateBinaryContractions tasks to build.gradle
+  - Tasks run as preBuild dependencies
 
 ### Code Changes
 **gradle.properties:**

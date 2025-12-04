@@ -1,0 +1,346 @@
+{
+  "are": [
+    {
+      "contraction": "aren't",
+      "frequency": 181
+    }
+  ],
+  "can": [
+    {
+      "contraction": "can't",
+      "frequency": 215
+    }
+  ],
+  "could": [
+    {
+      "contraction": "couldn't",
+      "frequency": 175
+    },
+    {
+      "contraction": "could've",
+      "frequency": 165
+    }
+  ],
+  "did": [
+    {
+      "contraction": "didn't",
+      "frequency": 209
+    }
+  ],
+  "do": [
+    {
+      "contraction": "do's",
+      "frequency": 131
+    },
+    {
+      "contraction": "don't",
+      "frequency": 228
+    }
+  ],
+  "does": [
+    {
+      "contraction": "doesn't",
+      "frequency": 204
+    }
+  ],
+  "had": [
+    {
+      "contraction": "hadn't",
+      "frequency": 215
+    }
+  ],
+  "has": [
+    {
+      "contraction": "hasn't",
+      "frequency": 156
+    }
+  ],
+  "have": [
+    {
+      "contraction": "haven't",
+      "frequency": 179
+    }
+  ],
+  "he": [
+    {
+      "contraction": "he'd",
+      "frequency": 134
+    },
+    {
+      "contraction": "he'll",
+      "frequency": 238
+    },
+    {
+      "contraction": "he's",
+      "frequency": 232
+    }
+  ],
+  "here": [
+    {
+      "contraction": "here's",
+      "frequency": 159
+    }
+  ],
+  "i": [
+    {
+      "contraction": "i's",
+      "frequency": 160
+    },
+    {
+      "contraction": "i'd",
+      "frequency": 226
+    },
+    {
+      "contraction": "i'll",
+      "frequency": 229
+    },
+    {
+      "contraction": "i've",
+      "frequency": 201
+    },
+    {
+      "contraction": "i'm",
+      "frequency": 226
+    }
+  ],
+  "is": [
+    {
+      "contraction": "isn't",
+      "frequency": 197
+    }
+  ],
+  "it": [
+    {
+      "contraction": "it'll",
+      "frequency": 185
+    },
+    {
+      "contraction": "it's",
+      "frequency": 255
+    },
+    {
+      "contraction": "it'd",
+      "frequency": 180
+    }
+  ],
+  "let": [
+    {
+      "contraction": "let's",
+      "frequency": 220
+    }
+  ],
+  "may": [
+    {
+      "contraction": "may's",
+      "frequency": 156
+    }
+  ],
+  "might": [
+    {
+      "contraction": "mightn't",
+      "frequency": 140
+    },
+    {
+      "contraction": "might've",
+      "frequency": 145
+    }
+  ],
+  "must": [
+    {
+      "contraction": "mustn't",
+      "frequency": 149
+    }
+  ],
+  "shall": [
+    {
+      "contraction": "shan't",
+      "frequency": 130
+    }
+  ],
+  "she": [
+    {
+      "contraction": "she'd",
+      "frequency": 211
+    },
+    {
+      "contraction": "she'll",
+      "frequency": 219
+    },
+    {
+      "contraction": "she's",
+      "frequency": 227
+    }
+  ],
+  "should": [
+    {
+      "contraction": "shouldn't",
+      "frequency": 164
+    },
+    {
+      "contraction": "should've",
+      "frequency": 160
+    }
+  ],
+  "that": [
+    {
+      "contraction": "that's",
+      "frequency": 221
+    },
+    {
+      "contraction": "that'll",
+      "frequency": 180
+    }
+  ],
+  "there": [
+    {
+      "contraction": "there's",
+      "frequency": 198
+    },
+    {
+      "contraction": "there'd",
+      "frequency": 155
+    },
+    {
+      "contraction": "there'll",
+      "frequency": 160
+    }
+  ],
+  "they": [
+    {
+      "contraction": "they'd",
+      "frequency": 140
+    },
+    {
+      "contraction": "they'll",
+      "frequency": 145
+    },
+    {
+      "contraction": "they're",
+      "frequency": 179
+    },
+    {
+      "contraction": "they've",
+      "frequency": 145
+    }
+  ],
+  "was": [
+    {
+      "contraction": "wasn't",
+      "frequency": 189
+    }
+  ],
+  "we": [
+    {
+      "contraction": "we'd",
+      "frequency": 193
+    },
+    {
+      "contraction": "we'll",
+      "frequency": 252
+    },
+    {
+      "contraction": "we're",
+      "frequency": 254
+    },
+    {
+      "contraction": "we've",
+      "frequency": 150
+    }
+  ],
+  "were": [
+    {
+      "contraction": "weren't",
+      "frequency": 148
+    },
+    {
+      "contraction": "we're",
+      "frequency": 200
+    }
+  ],
+  "what": [
+    {
+      "contraction": "what'll",
+      "frequency": 140
+    },
+    {
+      "contraction": "what're",
+      "frequency": 135
+    },
+    {
+      "contraction": "what've",
+      "frequency": 130
+    },
+    {
+      "contraction": "what's",
+      "frequency": 196
+    },
+    {
+      "contraction": "what'd",
+      "frequency": 135
+    }
+  ],
+  "who": [
+    {
+      "contraction": "who'd",
+      "frequency": 135
+    },
+    {
+      "contraction": "who'll",
+      "frequency": 145
+    },
+    {
+      "contraction": "who're",
+      "frequency": 197
+    },
+    {
+      "contraction": "who've",
+      "frequency": 135
+    },
+    {
+      "contraction": "who's",
+      "frequency": 154
+    }
+  ],
+  "will": [
+    {
+      "contraction": "will's",
+      "frequency": 143
+    },
+    {
+      "contraction": "won't",
+      "frequency": 205
+    }
+  ],
+  "would": [
+    {
+      "contraction": "wouldn't",
+      "frequency": 179
+    },
+    {
+      "contraction": "would've",
+      "frequency": 170
+    }
+  ],
+  "you": [
+    {
+      "contraction": "you's",
+      "frequency": 137
+    },
+    {
+      "contraction": "you'd",
+      "frequency": 141
+    },
+    {
+      "contraction": "you'll",
+      "frequency": 155
+    },
+    {
+      "contraction": "you're",
+      "frequency": 194
+    },
+    {
+      "contraction": "you've",
+      "frequency": 149
+    }
+  ]
+}

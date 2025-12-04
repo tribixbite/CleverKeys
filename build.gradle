@@ -279,6 +279,57 @@ tasks.register('compileComposeSequences') {
   }
 }
 
+tasks.register('generateBinaryDictionaries') {
+  description 'Generate optimized binary dictionaries from JSON sources'
+  doLast {
+    def dictDir = file("src/main/assets/dictionaries")
+    def jsonFiles = dictDir.listFiles().findAll { it.name.endsWith(".json") && !it.name.contains("contraction") }
+
+    jsonFiles.each { jsonFile ->
+      def binFile = new File(dictDir, jsonFile.name.replace(".json", ".bin"))
+
+      // Only regenerate if JSON is newer than binary, or binary doesn't exist
+      if (!binFile.exists() || jsonFile.lastModified() > binFile.lastModified()) {
+        println "Generating binary dictionary: ${binFile.name}"
+        exec {
+          workingDir = projectDir
+          commandLine "python", "scripts/generate_binary_dict.py", jsonFile.absolutePath, binFile.absolutePath
+        }
+      } else {
+        println "Binary dictionary up-to-date: ${binFile.name}"
+      }
+    }
+  }
+}
+
+tasks.register('generateBinaryContractions') {
+  description 'Generate optimized binary contractions from JSON sources'
+  doLast {
+    def dictDir = file("src/main/assets/dictionaries")
+    def nonPairedFile = new File(dictDir, "contractions_non_paired.json")
+    def pairedFile = new File(dictDir, "contraction_pairings.json")
+    def binFile = new File(dictDir, "contractions.bin")
+
+    // Only regenerate if either JSON is newer than binary, or binary doesn't exist
+    def needsRegenerate = !binFile.exists() ||
+                          nonPairedFile.lastModified() > binFile.lastModified() ||
+                          pairedFile.lastModified() > binFile.lastModified()
+
+    if (needsRegenerate) {
+      println "Generating binary contractions: ${binFile.name}"
+      exec {
+        workingDir = projectDir
+        commandLine "python", "scripts/generate_binary_contractions.py",
+                    nonPairedFile.absolutePath,
+                    pairedFile.absolutePath,
+                    binFile.absolutePath
+      }
+    } else {
+      println "Binary contractions up-to-date: ${binFile.name}"
+    }
+  }
+}
+
 tasks.register('generateVersionInfo') {
   doLast {
     def gitCommit = 'git rev-parse --short HEAD'.execute().text.trim()
@@ -286,7 +337,7 @@ tasks.register('generateVersionInfo') {
     def gitDate = 'git log -1 --format=%cd --date=short'.execute().text.trim()
     def buildDate = new Date().format('yyyy-MM-dd HH:mm:ss')
     def buildNumber = System.currentTimeMillis().toString()
-    
+
     def versionFile = file("build/generated-resources/raw/version_info.txt")
     versionFile.parentFile.mkdirs()
     versionFile.text = """commit=$gitCommit
@@ -295,7 +346,7 @@ commit_date=$gitDate
 build_date=$buildDate
 build_number=$buildNumber
 """
-    
+
     println "Generated version info: $gitCommit ($gitDate)"
   }
 }
@@ -304,6 +355,8 @@ tasks.named("preBuild") {
   dependsOn += "initDebugKeystore"
   dependsOn += "copyRawQwertyUS"
   dependsOn += "copyLayoutDefinitions"
+  dependsOn += "generateBinaryDictionaries"
+  dependsOn += "generateBinaryContractions"
   dependsOn += "generateVersionInfo"
 }
 

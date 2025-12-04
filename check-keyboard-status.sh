@@ -8,9 +8,9 @@ echo "════════════════════════�
 echo
 
 # Check if APK exists
-if [ -f "build/outputs/apk/debug/tribixbite.keyboard2.debug.apk" ]; then
-    APK_SIZE=$(du -h "build/outputs/apk/debug/tribixbite.keyboard2.debug.apk" | cut -f1)
-    APK_DATE=$(stat -c '%y' "build/outputs/apk/debug/tribixbite.keyboard2.debug.apk" | cut -d' ' -f1,2 | cut -d'.' -f1)
+if [ -f "build/outputs/apk/debug/tribixbite.keyboard2.apk" ]; then
+    APK_SIZE=$(du -h "build/outputs/apk/debug/tribixbite.keyboard2.apk" | cut -f1)
+    APK_DATE=$(stat -c '%y' "build/outputs/apk/debug/tribixbite.keyboard2.apk" | cut -d' ' -f1,2 | cut -d'.' -f1)
     echo "✅ APK Ready: $APK_SIZE (built: $APK_DATE)"
 else
     echo "❌ APK not found"
