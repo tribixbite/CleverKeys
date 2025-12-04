@@ -177,7 +177,60 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var swipeTrailWidth by mutableStateOf(8.0f)
     private var swipeTrailGlowRadius by mutableStateOf(12.0f)
 
+    // Word Prediction Advanced settings
+    private var contextAwarePredictionsEnabled by mutableStateOf(true)
+    private var personalizedLearningEnabled by mutableStateOf(true)
+    private var learningAggression by mutableStateOf("BALANCED")
+    private var predictionContextBoost by mutableStateOf(2.0f)
+    private var predictionFrequencyScale by mutableStateOf(1000f)
+
+    // Auto-correction advanced settings
+    private var autocorrectMinWordLength by mutableStateOf(3)
+    private var autocorrectCharMatchThreshold by mutableStateOf(0.67f)
+    private var autocorrectMinFrequency by mutableStateOf(500)
+
+    // Neural beam search advanced settings
+    private var neuralBatchBeams by mutableStateOf(false)
+    private var neuralGreedySearch by mutableStateOf(false)
+    private var neuralBeamAlpha by mutableStateOf(1.2f)
+    private var neuralBeamPruneConfidence by mutableStateOf(0.8f)
+    private var neuralBeamScoreGap by mutableStateOf(5.0f)
+
+    // Neural model config settings
+    private var neuralModelVersion by mutableStateOf("v2")
+    private var neuralUseQuantized by mutableStateOf(false)
+    private var neuralResamplingMode by mutableStateOf("discard")
+    private var neuralUserMaxSeqLength by mutableStateOf(0)
+
+    // Multi-language settings
+    private var multiLangEnabled by mutableStateOf(false)
+    private var primaryLanguage by mutableStateOf("en")
+    private var autoDetectLanguage by mutableStateOf(true)
+    private var languageDetectionSensitivity by mutableStateOf(0.6f)
+
+    // Privacy settings
+    private var privacyCollectSwipe by mutableStateOf(true)
+    private var privacyCollectPerformance by mutableStateOf(true)
+    private var privacyCollectErrors by mutableStateOf(false)
+    private var privacyAnonymize by mutableStateOf(true)
+    private var privacyLocalOnly by mutableStateOf(true)
+    private var privacyRetentionDays by mutableStateOf(90)
+    private var privacyAutoDelete by mutableStateOf(true)
+
+    // Short gesture settings
+    private var shortGesturesEnabled by mutableStateOf(true)
+    private var shortGestureMinDistance by mutableStateOf(30)
+
+    // Swipe debug advanced settings
+    private var swipeDebugDetailedLogging by mutableStateOf(false)
+    private var swipeDebugShowRawOutput by mutableStateOf(true)
+    private var swipeShowRawBeamPredictions by mutableStateOf(false)
+
     // Section expanded states
+    private var wordPredictionAdvancedExpanded by mutableStateOf(false)
+    private var neuralAdvancedExpanded by mutableStateOf(false)
+    private var multiLangSectionExpanded by mutableStateOf(false)
+    private var privacySectionExpanded by mutableStateOf(false)
     private var neuralSectionExpanded by mutableStateOf(true)
     private var appearanceSectionExpanded by mutableStateOf(false)
     private var swipeTrailSectionExpanded by mutableStateOf(false)
@@ -550,11 +603,169 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         }
                     )
 
-                    Button(
-                        onClick = { openNeuralSettings() },
-                        modifier = Modifier.fillMaxWidth()
+                    // Neural Advanced settings (expandable)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { neuralAdvancedExpanded = !neuralAdvancedExpanded }
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(stringResource(R.string.settings_neural_advanced_button))
+                        Text("Advanced Neural Settings", fontWeight = FontWeight.SemiBold)
+                        Icon(
+                            imageVector = if (neuralAdvancedExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = null
+                        )
+                    }
+
+                    AnimatedVisibility(visible = neuralAdvancedExpanded) {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            // Beam Search Config
+                            Text(
+                                text = "Beam Search",
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                            )
+
+                            SettingsSwitch(
+                                title = "Batch Processing",
+                                description = "Process all beams in single inference (faster but experimental)",
+                                checked = neuralBatchBeams,
+                                onCheckedChange = {
+                                    neuralBatchBeams = it
+                                    saveSetting("neural_batch_beams", it)
+                                }
+                            )
+
+                            SettingsSwitch(
+                                title = "Greedy Search",
+                                description = "Fastest speed, but lower accuracy",
+                                checked = neuralGreedySearch,
+                                onCheckedChange = {
+                                    neuralGreedySearch = it
+                                    saveSetting("neural_greedy_search", it)
+                                }
+                            )
+
+                            SettingsSlider(
+                                title = "Length Normalization",
+                                description = "Reward longer words (alpha). Higher = prefer longer words",
+                                value = neuralBeamAlpha,
+                                valueRange = 0.0f..5.0f,
+                                steps = 50,
+                                onValueChange = {
+                                    neuralBeamAlpha = it
+                                    saveSetting("neural_beam_alpha", neuralBeamAlpha)
+                                },
+                                displayValue = "%.1f".format(neuralBeamAlpha)
+                            )
+
+                            SettingsSlider(
+                                title = "Pruning Confidence",
+                                description = "Min confidence to reduce beam width (0.0-1.0)",
+                                value = neuralBeamPruneConfidence,
+                                valueRange = 0.0f..1.0f,
+                                steps = 20,
+                                onValueChange = {
+                                    neuralBeamPruneConfidence = it
+                                    saveSetting("neural_beam_prune_confidence", neuralBeamPruneConfidence)
+                                },
+                                displayValue = "%.2f".format(neuralBeamPruneConfidence)
+                            )
+
+                            SettingsSlider(
+                                title = "Early Stop Gap",
+                                description = "Score difference to stop early (higher = search longer)",
+                                value = neuralBeamScoreGap,
+                                valueRange = 0.0f..20.0f,
+                                steps = 40,
+                                onValueChange = {
+                                    neuralBeamScoreGap = it
+                                    saveSetting("neural_beam_score_gap", neuralBeamScoreGap)
+                                },
+                                displayValue = "%.1f".format(neuralBeamScoreGap)
+                            )
+
+                            // Model Config
+                            Text(
+                                text = "Model Configuration",
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                            )
+
+                            SettingsDropdown(
+                                title = "Model Version",
+                                description = "Neural model to use for predictions",
+                                options = listOf("v1 (Legacy)", "v2 (Current)", "v3 (Experimental)"),
+                                selectedIndex = when (neuralModelVersion) {
+                                    "v1" -> 0
+                                    "v2" -> 1
+                                    "v3" -> 2
+                                    else -> 1
+                                },
+                                onSelectionChange = { index ->
+                                    neuralModelVersion = when (index) {
+                                        0 -> "v1"
+                                        1 -> "v2"
+                                        2 -> "v3"
+                                        else -> "v2"
+                                    }
+                                    saveSetting("neural_model_version", neuralModelVersion)
+                                }
+                            )
+
+                            SettingsSwitch(
+                                title = "Use Quantized Models",
+                                description = "INT8 quantized (faster but less accurate: 73% vs 81%)",
+                                checked = neuralUseQuantized,
+                                onCheckedChange = {
+                                    neuralUseQuantized = it
+                                    saveSetting("neural_use_quantized", it)
+                                }
+                            )
+
+                            SettingsDropdown(
+                                title = "Trajectory Resampling",
+                                description = "How to handle long swipe paths",
+                                options = listOf("Discard Excess", "Interpolate", "Average"),
+                                selectedIndex = when (neuralResamplingMode) {
+                                    "discard" -> 0
+                                    "interpolate" -> 1
+                                    "average" -> 2
+                                    else -> 0
+                                },
+                                onSelectionChange = { index ->
+                                    neuralResamplingMode = when (index) {
+                                        0 -> "discard"
+                                        1 -> "interpolate"
+                                        2 -> "average"
+                                        else -> "discard"
+                                    }
+                                    saveSetting("neural_resampling_mode", neuralResamplingMode)
+                                }
+                            )
+
+                            SettingsSlider(
+                                title = "Max Sequence Length Override",
+                                description = "Override model's max length (0 = use default)",
+                                value = neuralUserMaxSeqLength.toFloat(),
+                                valueRange = 0f..400f,
+                                steps = 40,
+                                onValueChange = {
+                                    neuralUserMaxSeqLength = it.toInt()
+                                    saveSetting("neural_user_max_seq_length", neuralUserMaxSeqLength)
+                                },
+                                displayValue = if (neuralUserMaxSeqLength == 0) "Default" else "$neuralUserMaxSeqLength"
+                            )
+
+                            Button(
+                                onClick = { openNeuralSettings() },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Full Neural Settings Activity")
+                            }
+                        }
                     }
                 }
             }
@@ -965,6 +1176,95 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         },
                         displayValue = "$suggestionBarOpacity%"
                     )
+
+                    // Word Prediction Advanced section (expandable)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { wordPredictionAdvancedExpanded = !wordPredictionAdvancedExpanded }
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Advanced Prediction Settings", fontWeight = FontWeight.SemiBold)
+                        Icon(
+                            imageVector = if (wordPredictionAdvancedExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = null
+                        )
+                    }
+
+                    AnimatedVisibility(visible = wordPredictionAdvancedExpanded) {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            SettingsSwitch(
+                                title = "Context-Aware Predictions",
+                                description = "Learn from typing patterns (N-gram model)",
+                                checked = contextAwarePredictionsEnabled,
+                                onCheckedChange = {
+                                    contextAwarePredictionsEnabled = it
+                                    saveSetting("context_aware_predictions_enabled", it)
+                                }
+                            )
+
+                            SettingsSwitch(
+                                title = "Personalized Learning",
+                                description = "Boost predictions for frequently typed words",
+                                checked = personalizedLearningEnabled,
+                                onCheckedChange = {
+                                    personalizedLearningEnabled = it
+                                    saveSetting("personalized_learning_enabled", it)
+                                }
+                            )
+
+                            if (personalizedLearningEnabled) {
+                                SettingsDropdown(
+                                    title = "Learning Aggression",
+                                    description = "How strongly habits affect predictions",
+                                    options = listOf("Conservative", "Balanced", "Aggressive"),
+                                    selectedIndex = when (learningAggression) {
+                                        "CONSERVATIVE" -> 0
+                                        "BALANCED" -> 1
+                                        "AGGRESSIVE" -> 2
+                                        else -> 1
+                                    },
+                                    onSelectionChange = { index ->
+                                        learningAggression = when (index) {
+                                            0 -> "CONSERVATIVE"
+                                            1 -> "BALANCED"
+                                            2 -> "AGGRESSIVE"
+                                            else -> "BALANCED"
+                                        }
+                                        saveSetting("learning_aggression", learningAggression)
+                                    }
+                                )
+                            }
+
+                            SettingsSlider(
+                                title = "Context Boost Multiplier",
+                                description = "How strongly context influences predictions (0.5-5.0)",
+                                value = predictionContextBoost,
+                                valueRange = 0.5f..5.0f,
+                                steps = 45,
+                                onValueChange = {
+                                    predictionContextBoost = it
+                                    saveSetting("prediction_context_boost", predictionContextBoost)
+                                },
+                                displayValue = "%.1fx".format(predictionContextBoost)
+                            )
+
+                            SettingsSlider(
+                                title = "Frequency Scale",
+                                description = "Balance common vs uncommon words (100-5000)",
+                                value = predictionFrequencyScale,
+                                valueRange = 100f..5000f,
+                                steps = 49,
+                                onValueChange = {
+                                    predictionFrequencyScale = it
+                                    saveSetting("prediction_frequency_scale", predictionFrequencyScale)
+                                },
+                                displayValue = "%.0f".format(predictionFrequencyScale)
+                            )
+                        }
+                    }
                 }
 
                 SettingsSwitch(
@@ -978,12 +1278,45 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
 
                 if (autoCorrectEnabled) {
-                    Button(
-                        onClick = { openAutoCorrectionSettings() },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Auto-Correction Settings")
-                    }
+                    // Inline auto-correction settings instead of button
+                    SettingsSlider(
+                        title = "Minimum Word Length",
+                        description = "Don't correct words shorter than this (2-5 letters)",
+                        value = autocorrectMinWordLength.toFloat(),
+                        valueRange = 2f..5f,
+                        steps = 3,
+                        onValueChange = {
+                            autocorrectMinWordLength = it.toInt()
+                            saveSetting("autocorrect_min_word_length", autocorrectMinWordLength)
+                        },
+                        displayValue = "$autocorrectMinWordLength letters"
+                    )
+
+                    SettingsSlider(
+                        title = "Character Match Threshold",
+                        description = "How many characters must match (0.5-0.9)",
+                        value = autocorrectCharMatchThreshold,
+                        valueRange = 0.5f..0.9f,
+                        steps = 8,
+                        onValueChange = {
+                            autocorrectCharMatchThreshold = it
+                            saveSetting("autocorrect_char_match_threshold", autocorrectCharMatchThreshold)
+                        },
+                        displayValue = "%.0f%%".format(autocorrectCharMatchThreshold * 100)
+                    )
+
+                    SettingsSlider(
+                        title = "Minimum Frequency",
+                        description = "Only correct to words with frequency >= this",
+                        value = autocorrectMinFrequency.toFloat(),
+                        valueRange = 100f..5000f,
+                        steps = 49,
+                        onValueChange = {
+                            autocorrectMinFrequency = it.toInt()
+                            saveSetting("autocorrect_confidence_min_frequency", autocorrectMinFrequency)
+                        },
+                        displayValue = "$autocorrectMinFrequency"
+                    )
                 }
 
                 SettingsSwitch(
@@ -1201,6 +1534,32 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         saveSetting("pin_entry_enabled", it)
                     }
                 )
+
+                // Short gesture settings
+                SettingsSwitch(
+                    title = "Short Gestures",
+                    description = "Enable recognition of short swipes for quick words (it, is, at, etc.)",
+                    checked = shortGesturesEnabled,
+                    onCheckedChange = {
+                        shortGesturesEnabled = it
+                        saveSetting("short_gestures_enabled", it)
+                    }
+                )
+
+                if (shortGesturesEnabled) {
+                    SettingsSlider(
+                        title = "Short Gesture Min Distance",
+                        description = "Minimum distance for short gesture recognition (px)",
+                        value = shortGestureMinDistance.toFloat(),
+                        valueRange = 10f..60f,
+                        steps = 10,
+                        onValueChange = {
+                            shortGestureMinDistance = it.toInt()
+                            saveSetting("short_gesture_min_distance", shortGestureMinDistance)
+                        },
+                        displayValue = "${shortGestureMinDistance}px"
+                    )
+                }
             }
 
             // Swipe Corrections Section (NEW - migrated from XML Full settings)
@@ -1789,6 +2148,200 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }
 
+            // Multi-Language Section (Collapsible)
+            CollapsibleSettingsSection(
+                title = "Multi-Language",
+                expanded = multiLangSectionExpanded,
+                onExpandChange = { multiLangSectionExpanded = it }
+            ) {
+                SettingsSwitch(
+                    title = "Enable Multi-Language",
+                    description = "Support typing in multiple languages",
+                    checked = multiLangEnabled,
+                    onCheckedChange = {
+                        multiLangEnabled = it
+                        saveSetting("pref_enable_multilang", it)
+                    }
+                )
+
+                if (multiLangEnabled) {
+                    SettingsDropdown(
+                        title = "Primary Language",
+                        description = "Main language for predictions",
+                        options = listOf("English", "Spanish", "French", "German", "Portuguese", "Italian", "Russian", "Chinese", "Japanese", "Korean"),
+                        selectedIndex = when (primaryLanguage) {
+                            "en" -> 0
+                            "es" -> 1
+                            "fr" -> 2
+                            "de" -> 3
+                            "pt" -> 4
+                            "it" -> 5
+                            "ru" -> 6
+                            "zh" -> 7
+                            "ja" -> 8
+                            "ko" -> 9
+                            else -> 0
+                        },
+                        onSelectionChange = { index ->
+                            primaryLanguage = when (index) {
+                                0 -> "en"
+                                1 -> "es"
+                                2 -> "fr"
+                                3 -> "de"
+                                4 -> "pt"
+                                5 -> "it"
+                                6 -> "ru"
+                                7 -> "zh"
+                                8 -> "ja"
+                                9 -> "ko"
+                                else -> "en"
+                            }
+                            saveSetting("pref_primary_language", primaryLanguage)
+                        }
+                    )
+
+                    SettingsSwitch(
+                        title = "Auto-Detect Language",
+                        description = "Automatically detect and switch languages while typing",
+                        checked = autoDetectLanguage,
+                        onCheckedChange = {
+                            autoDetectLanguage = it
+                            saveSetting("pref_auto_detect_language", it)
+                        }
+                    )
+
+                    if (autoDetectLanguage) {
+                        SettingsSlider(
+                            title = "Detection Sensitivity",
+                            description = "How quickly to switch languages (0.4-0.9)",
+                            value = languageDetectionSensitivity,
+                            valueRange = 0.4f..0.9f,
+                            steps = 10,
+                            onValueChange = {
+                                languageDetectionSensitivity = it
+                                saveSetting("pref_language_detection_sensitivity", languageDetectionSensitivity)
+                            },
+                            displayValue = "%.2f".format(languageDetectionSensitivity)
+                        )
+                    }
+                }
+            }
+
+            // Privacy Section (Collapsible)
+            CollapsibleSettingsSection(
+                title = "Privacy & Data",
+                expanded = privacySectionExpanded,
+                onExpandChange = { privacySectionExpanded = it }
+            ) {
+                Text(
+                    text = "Control what data CleverKeys collects and how long it's stored.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                Text(
+                    text = "Data Collection",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                )
+
+                SettingsSwitch(
+                    title = "Swipe Pattern Data",
+                    description = "Collect swipe trajectories to improve predictions",
+                    checked = privacyCollectSwipe,
+                    onCheckedChange = {
+                        privacyCollectSwipe = it
+                        saveSetting("privacy_collect_swipe", it)
+                    }
+                )
+
+                SettingsSwitch(
+                    title = "Performance Metrics",
+                    description = "Collect timing data to optimize latency",
+                    checked = privacyCollectPerformance,
+                    onCheckedChange = {
+                        privacyCollectPerformance = it
+                        saveSetting("privacy_collect_performance", it)
+                    }
+                )
+
+                SettingsSwitch(
+                    title = "Error Reports",
+                    description = "Collect crash logs to fix bugs",
+                    checked = privacyCollectErrors,
+                    onCheckedChange = {
+                        privacyCollectErrors = it
+                        saveSetting("privacy_collect_errors", it)
+                    }
+                )
+
+                Text(
+                    text = "Data Privacy",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                )
+
+                SettingsSwitch(
+                    title = "Anonymize Data",
+                    description = "Strip personal identifiers from collected data",
+                    checked = privacyAnonymize,
+                    onCheckedChange = {
+                        privacyAnonymize = it
+                        saveSetting("privacy_anonymize", it)
+                    }
+                )
+
+                SettingsSwitch(
+                    title = "Local Only",
+                    description = "Keep all data on device (never upload)",
+                    checked = privacyLocalOnly,
+                    onCheckedChange = {
+                        privacyLocalOnly = it
+                        saveSetting("privacy_local_only", it)
+                    }
+                )
+
+                Text(
+                    text = "Data Retention",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                )
+
+                SettingsSlider(
+                    title = "Retention Period",
+                    description = "Days to keep collected data (7-365)",
+                    value = privacyRetentionDays.toFloat(),
+                    valueRange = 7f..365f,
+                    steps = 35,
+                    onValueChange = {
+                        privacyRetentionDays = it.toInt()
+                        saveSetting("privacy_retention_days", privacyRetentionDays)
+                    },
+                    displayValue = "$privacyRetentionDays days"
+                )
+
+                SettingsSwitch(
+                    title = "Auto-Delete Old Data",
+                    description = "Automatically delete data older than retention period",
+                    checked = privacyAutoDelete,
+                    onCheckedChange = {
+                        privacyAutoDelete = it
+                        saveSetting("privacy_auto_delete", it)
+                    }
+                )
+
+                Button(
+                    onClick = { clearAllPrivacyData() },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Clear All Collected Data")
+                }
+            }
+
             // Advanced Section (Collapsible)
             CollapsibleSettingsSection(
                 title = stringResource(R.string.settings_section_advanced),
@@ -1815,6 +2368,38 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         saveSetting("swipe_show_debug_scores", it)
                     }
                 )
+
+                if (swipeDebugEnabled) {
+                    SettingsSwitch(
+                        title = "Detailed Logging",
+                        description = "Include verbose trace information",
+                        checked = swipeDebugDetailedLogging,
+                        onCheckedChange = {
+                            swipeDebugDetailedLogging = it
+                            saveSetting("swipe_debug_detailed_logging", it)
+                        }
+                    )
+
+                    SettingsSwitch(
+                        title = "Show Raw Output",
+                        description = "Display raw neural model outputs",
+                        checked = swipeDebugShowRawOutput,
+                        onCheckedChange = {
+                            swipeDebugShowRawOutput = it
+                            saveSetting("swipe_debug_show_raw_output", it)
+                        }
+                    )
+
+                    SettingsSwitch(
+                        title = "Show Beam Predictions",
+                        description = "Display all beam search candidates",
+                        checked = swipeShowRawBeamPredictions,
+                        onCheckedChange = {
+                            swipeShowRawBeamPredictions = it
+                            saveSetting("swipe_show_raw_beam_predictions", it)
+                        }
+                    )
+                }
 
                 Button(
                     onClick = { openCalibration() },
@@ -2431,6 +3016,55 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         swipeTrailColor = prefs.getSafeInt("swipe_trail_color", 0xFF9B59B6.toInt())
         swipeTrailWidth = prefs.getSafeFloat("swipe_trail_width", 8.0f)
         swipeTrailGlowRadius = prefs.getSafeFloat("swipe_trail_glow_radius", 12.0f)
+
+        // Word Prediction Advanced settings
+        contextAwarePredictionsEnabled = prefs.getSafeBoolean("context_aware_predictions_enabled", true)
+        personalizedLearningEnabled = prefs.getSafeBoolean("personalized_learning_enabled", true)
+        learningAggression = prefs.getSafeString("learning_aggression", "BALANCED")
+        predictionContextBoost = Config.safeGetFloat(prefs, "prediction_context_boost", 2.0f)
+        predictionFrequencyScale = Config.safeGetFloat(prefs, "prediction_frequency_scale", 1000f)
+
+        // Auto-correction advanced settings
+        autocorrectMinWordLength = Config.safeGetInt(prefs, "autocorrect_min_word_length", 3)
+        autocorrectCharMatchThreshold = Config.safeGetFloat(prefs, "autocorrect_char_match_threshold", 0.67f)
+        autocorrectMinFrequency = Config.safeGetInt(prefs, "autocorrect_confidence_min_frequency", 500)
+
+        // Neural beam search advanced settings
+        neuralBatchBeams = prefs.getSafeBoolean("neural_batch_beams", false)
+        neuralGreedySearch = prefs.getSafeBoolean("neural_greedy_search", false)
+        neuralBeamAlpha = Config.safeGetFloat(prefs, "neural_beam_alpha", 1.2f)
+        neuralBeamPruneConfidence = Config.safeGetFloat(prefs, "neural_beam_prune_confidence", 0.8f)
+        neuralBeamScoreGap = Config.safeGetFloat(prefs, "neural_beam_score_gap", 5.0f)
+
+        // Neural model config settings
+        neuralModelVersion = prefs.getSafeString("neural_model_version", "v2")
+        neuralUseQuantized = prefs.getSafeBoolean("neural_use_quantized", false)
+        neuralResamplingMode = prefs.getSafeString("neural_resampling_mode", "discard")
+        neuralUserMaxSeqLength = Config.safeGetInt(prefs, "neural_user_max_seq_length", 0)
+
+        // Multi-language settings
+        multiLangEnabled = prefs.getSafeBoolean("pref_enable_multilang", false)
+        primaryLanguage = prefs.getSafeString("pref_primary_language", "en")
+        autoDetectLanguage = prefs.getSafeBoolean("pref_auto_detect_language", true)
+        languageDetectionSensitivity = Config.safeGetFloat(prefs, "pref_language_detection_sensitivity", 0.6f)
+
+        // Privacy settings
+        privacyCollectSwipe = prefs.getSafeBoolean("privacy_collect_swipe", true)
+        privacyCollectPerformance = prefs.getSafeBoolean("privacy_collect_performance", true)
+        privacyCollectErrors = prefs.getSafeBoolean("privacy_collect_errors", false)
+        privacyAnonymize = prefs.getSafeBoolean("privacy_anonymize", true)
+        privacyLocalOnly = prefs.getSafeBoolean("privacy_local_only", true)
+        privacyRetentionDays = Config.safeGetInt(prefs, "privacy_retention_days", 90)
+        privacyAutoDelete = prefs.getSafeBoolean("privacy_auto_delete", true)
+
+        // Short gesture settings
+        shortGesturesEnabled = prefs.getSafeBoolean("short_gestures_enabled", true)
+        shortGestureMinDistance = Config.safeGetInt(prefs, "short_gesture_min_distance", 30)
+
+        // Swipe debug advanced settings
+        swipeDebugDetailedLogging = prefs.getSafeBoolean("swipe_debug_detailed_logging", false)
+        swipeDebugShowRawOutput = prefs.getSafeBoolean("swipe_debug_show_raw_output", true)
+        swipeShowRawBeamPredictions = prefs.getSafeBoolean("swipe_show_raw_beam_predictions", false)
     }
 
     private fun saveSetting(key: String, value: Any) {
@@ -2997,6 +3631,41 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         } catch (e: Exception) {
             Toast.makeText(this, "Could not open browser", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun clearAllPrivacyData() {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Clear All Data")
+            .setMessage("This will delete all collected data including:\n\n" +
+                "• Swipe patterns\n" +
+                "• Performance metrics\n" +
+                "• Error logs\n" +
+                "• Learned word frequencies\n\n" +
+                "This cannot be undone.")
+            .setPositiveButton("Clear All") { _, _ ->
+                lifecycleScope.launch {
+                    try {
+                        // Clear privacy-related files
+                        val privacyDir = java.io.File(filesDir, "privacy_data")
+                        if (privacyDir.exists()) {
+                            privacyDir.deleteRecursively()
+                        }
+
+                        // Clear learned frequencies from prefs
+                        val editor = prefs.edit()
+                        prefs.all.keys.filter { it.startsWith("learned_") || it.startsWith("freq_") }.forEach {
+                            editor.remove(it)
+                        }
+                        editor.apply()
+
+                        Toast.makeText(this@SettingsActivity, "All collected data cleared", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(this@SettingsActivity, "Error clearing data: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     /**
