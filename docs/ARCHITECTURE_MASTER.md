@@ -1,8 +1,8 @@
 # CleverKeys Master Architecture Document
 
-**Version**: 1.0.0
+**Version**: 1.1.0
 **Last Updated**: 2025-12-04
-**Status**: Complete
+**Status**: Complete (Triple-Checked)
 
 This document contains all parameters, weights, coefficients, thresholds, and configuration values used in CleverKeys.
 
@@ -28,42 +28,43 @@ This document contains all parameters, weights, coefficients, thresholds, and co
 
 | Parameter | Type | Default | Range | Description |
 |-----------|------|---------|-------|-------------|
-| `neural_prediction_enabled` | Boolean | false | - | Enable ONNX neural prediction |
-| `neural_beam_width` | Int | 8 | 1-16 | Number of beams in beam search |
-| `neural_max_length` | Int | 20 | 10-35 | Maximum word length |
-| `neural_confidence_threshold` | Float | 0.1 | 0.0-1.0 | Minimum confidence to accept prediction |
-| `neural_batch_beams` | Boolean | true | - | Batch beam inference (50-70% speedup) |
+| `neural_prediction_enabled` | Boolean | true | - | Enable ONNX neural prediction |
+| `neural_beam_width` | Int | 3 | 1-16 | Number of beams in beam search |
+| `neural_max_length` | Int | 15 | 10-35 | Maximum word length |
+| `neural_confidence_threshold` | Float | 0.01 | 0.0-1.0 | Minimum confidence to accept prediction |
+| `neural_batch_beams` | Boolean | false | - | Batch beam inference (50-70% speedup) |
 | `neural_greedy_search` | Boolean | false | - | Use greedy instead of beam search |
 
 ### 1.2 Beam Search Tuning (Config.kt)
 
 | Parameter | Type | Default | Range | Description |
 |-----------|------|---------|-------|-------------|
-| `neural_beam_alpha` | Float | 0.6 | 0.0-2.0 | Length normalization alpha |
-| `neural_beam_prune_confidence` | Float | 0.01 | 0.0-0.5 | Minimum beam confidence to continue |
-| `neural_beam_score_gap` | Float | 5.0 | 0.0-20.0 | Max score gap for early stopping |
+| `neural_beam_alpha` | Float | 1.0 | 0.0-2.0 | Length normalization alpha |
+| `neural_beam_prune_confidence` | Float | 0.03 | 0.0-0.5 | Minimum beam confidence to continue |
+| `neural_beam_score_gap` | Float | 20.0 | 0.0-20.0 | Max score gap for early stopping |
 
 ### 1.3 Neural Model Versioning (Config.kt)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `neural_model_version` | String | "v1" | Model version identifier |
+| `neural_model_version` | String | "v2" | Model version identifier |
 | `neural_use_quantized` | Boolean | true | Use INT8 quantized models |
-| `neural_user_max_seq_length` | Int | 150 | Trajectory sequence length |
-| `neural_resampling_mode` | String | "linear" | Trajectory resampling: linear, spline |
+| `neural_user_max_seq_length` | Int | 0 (auto) | Trajectory sequence length (0 = auto) |
+| `neural_resampling_mode` | String | "discard" | Trajectory resampling: linear, spline, discard |
 | `neural_custom_encoder_path` | String | null | Custom encoder model path |
 | `neural_custom_decoder_path` | String | null | Custom decoder model path |
 
-### 1.5 Debug Settings (Config.kt)
+### 1.4 Debug Settings (Config.kt)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `swipe_debug_detailed_logging` | Boolean | false | Enable detailed swipe logging |
-| `swipe_debug_show_raw_output` | Boolean | false | Show raw neural output |
+| `swipe_debug_show_raw_output` | Boolean | true | Show raw neural output |
 | `swipe_show_raw_beam_predictions` | Boolean | false | Show raw beam predictions |
 | `swipe_show_debug_scores` | Boolean | false | Show debug scores in UI |
+| `termux_mode_enabled` | Boolean | false | Enable Termux compatibility mode |
 
-### 1.4 Token Mapping (BeamSearchEngine.kt)
+### 1.5 Token Mapping (BeamSearchEngine.kt)
 
 ```
 PAD_IDX = 0   # Padding token
@@ -78,12 +79,12 @@ space = 30, apostrophe = 31, hyphen = 32
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `word_prediction_enabled` | Boolean | false | Enable word prediction |
-| `context_aware_predictions_enabled` | Boolean | false | Dynamic N-gram learning |
-| `personalized_learning_enabled` | Boolean | false | Personalized word frequency learning |
+| `word_prediction_enabled` | Boolean | true | Enable word prediction |
+| `context_aware_predictions_enabled` | Boolean | true | Dynamic N-gram learning |
+| `personalized_learning_enabled` | Boolean | true | Personalized word frequency learning |
 | `learning_aggression` | String | "BALANCED" | Learning level: CONSERVATIVE, BALANCED, AGGRESSIVE |
-| `prediction_context_boost` | Float | 0.0 | Context boost multiplier (0.5-5.0) |
-| `prediction_frequency_scale` | Float | 0.0 | Frequency scaling factor (100-5000) |
+| `prediction_context_boost` | Float | 0.5 | Context boost multiplier (0.5-5.0) |
+| `prediction_frequency_scale` | Float | 100.0 | Frequency scaling factor (100-5000) |
 
 ### 1.7 Multi-Language Settings (Config.kt)
 
@@ -103,10 +104,10 @@ space = 30, apostrophe = 31, hyphen = 32
 | Parameter | Type | Default | Range | Description |
 |-----------|------|---------|-------|-------------|
 | `swipe_typing_enabled` | Boolean | true | - | Enable swipe typing |
-| `swipe_min_distance` | Float | 50.0 | 20-100 | Minimum swipe distance (px) |
-| `swipe_min_key_distance` | Float | 40.0 | 15-80 | Minimum distance between keys (px) |
-| `swipe_min_dwell_time` | Long | 10 | 0-50 | Minimum key dwell time (ms) |
-| `swipe_noise_threshold` | Float | 2.0 | 0.5-10.0 | Movement noise filter (px) |
+| `swipe_min_distance` | Float | 46.4 | 20-100 | Minimum swipe distance (px) |
+| `swipe_min_key_distance` | Float | 35.15 | 15-80 | Minimum distance between keys (px) |
+| `swipe_min_dwell_time` | Long | 7 | 0-50 | Minimum key dwell time (ms) |
+| `swipe_noise_threshold` | Float | 1.26 | 0.5-10.0 | Movement noise filter (px) |
 | `swipe_high_velocity_threshold` | Float | 1000.0 | 200-2000 | High velocity threshold (px/sec) |
 
 ### 2.2 Swipe Scoring Weights (Config.kt)
@@ -134,16 +135,16 @@ space = 30, apostrophe = 31, hyphen = 32
 
 | Parameter | Type | Default | Range | Description |
 |-----------|------|---------|-------|-------------|
-| `autocorrect_enabled` | Boolean | false | - | Enable auto-correction |
-| `autocorrect_min_word_length` | Int | 2 | 2-5 | Minimum word length |
-| `autocorrect_char_match_threshold` | Float | 0.7 | 0.5-0.9 | Character match threshold |
+| `autocorrect_enabled` | Boolean | true | - | Enable auto-correction |
+| `autocorrect_min_word_length` | Int | 3 | 2-5 | Minimum word length |
+| `autocorrect_char_match_threshold` | Float | 0.67 | 0.5-0.9 | Character match threshold |
 | `autocorrect_confidence_min_frequency` | Int | 100 | 100-5000 | Minimum frequency threshold |
 
 ### 2.5 Slider Settings (Config.kt)
 
 | Parameter | Type | Default | Range | Description |
 |-----------|------|---------|-------|-------------|
-| `slider_speed_smoothing` | Float | 0.7 | 0.1-0.95 | Smoothing factor for slider speed |
+| `slider_speed_smoothing` | Float | 0.54 | 0.1-0.95 | Smoothing factor for slider speed |
 | `slider_speed_max` | Float | 4.0 | 1.0-10.0 | Maximum slider speed multiplier |
 
 ### 2.6 Swipe Trail Appearance (Config.kt)
@@ -162,12 +163,15 @@ space = 30, apostrophe = 31, hyphen = 32
 
 ### 3.1 CGR Constants (ContinuousGestureRecognizer.kt)
 
-| Constant | Value | Description |
-|----------|-------|-------------|
-| `DEFAULT_E_SIGMA` | 200.0 | Error sigma for Gaussian |
-| `DEFAULT_BETA` | 400.0 | Beta parameter |
-| `DEFAULT_LAMBDA` | 0.4 | Lambda interpolation weight |
-| `DEFAULT_KAPPA` | 1.0 | Kappa parameter |
+| Constant | Default | Keyboard-Optimal | Description |
+|----------|---------|------------------|-------------|
+| `DEFAULT_E_SIGMA` | 200.0 | 120.0 | Error sigma for Gaussian |
+| `DEFAULT_BETA` | 400.0 | 400.0 | Beta parameter (variance ratio) |
+| `DEFAULT_LAMBDA` | 0.4 | 0.65 | Lambda interpolation weight (Euclidean vs angular) |
+| `DEFAULT_KAPPA` | 1.0 | 2.5 | Kappa parameter (end-point bias) |
+| `LENGTH_FILTER` | - | 0.70 | User-configurable length similarity threshold |
+| `MAX_RESAMPLING_PTS` | 3500 | 5000 | Max points for resampling |
+| `SAMPLE_POINT_DISTANCE` | 10 | 10 | Pixels between sample points |
 
 ### 3.2 Gesture Timing (Config.kt)
 
@@ -241,9 +245,15 @@ space = 30, apostrophe = 31, hyphen = 32
 |----------|-------|-------------|
 | `BEAM_WIDTH` | 8 | Default beam width |
 | `MAX_LENGTH` | 20 | Maximum output length |
+| `DECODER_SEQ_LEN` | 20 | Must match model export |
+| `LOG_PROB_THRESHOLD` | -13.8 | Approx ln(1e-6) |
 | `PRUNE_STEP_THRESHOLD` | 2 | Steps before pruning starts |
 | `ADAPTIVE_WIDTH_STEP` | 5 | Steps before width adaptation |
 | `SCORE_GAP_STEP` | 3 | Steps before score gap check |
+| `DIVERSITY_LAMBDA` | 0.5 | Penalty weight for similar beams |
+| `LENGTH_PENALTY_ALPHA` | 1.2 | Length normalization factor |
+| `ADAPTIVE_WIDTH_CONFIDENCE` | 0.8 | Pruning confidence threshold |
+| `SCORE_GAP_THRESHOLD` | 5.0 | Early stopping score gap |
 
 ### 5.2 Greedy Search (GreedySearchEngine.kt)
 

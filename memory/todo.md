@@ -7,13 +7,13 @@
 
 ## Current Session Tasks
 
-### Completed
-- [x] Run all tests including cli-test (compiles successfully)
+### Completed (Previous Session)
+- [x] Run all tests including cli-test (compiles successfully; cli-test requires x86_64 CI)
 - [x] Fix neural-prediction.md inconsistencies (Bug status conflicts resolved)
 - [x] Review and update remaining docs/specs files
 - [x] Update ARCHITECTURE_MASTER.md with all params/weights/equations
 - [x] Review settings discrepancies vs UK user settings
-- [x] Remove hardcoded paths like 'sdcard' (none found)
+- [x] Remove hardcoded paths like 'sdcard' → **FIXED! 2025-12-04** (SettingsActivity, SettingsPreferenceFragment, VisualRegressionTestSuite)
 - [x] Verify swipe calibration playground saves to runtime (SharedPreferences)
 - [x] Add log viewer/export for swipe debug log (SwipeDebugActivity already has it)
 - [x] Verify dictionary management tabs (has 4 tabs, not 3)
@@ -21,10 +21,17 @@
 - [x] Check for load/latency inefficiencies (no blocking operations found)
 
 ### In Progress
-(none)
+- [ ] Compare UK actual saved user settings vs CK runtime settings (not just defaults)
+- [ ] Review for duplicate/unimplemented settings in settings page
+
+### Completed (this session continued)
+- [x] Triple-check ARCHITECTURE_MASTER.md for ALL params/weights/equations (v1.1.0)
+- [x] Verify dictionary management works (4 tabs confirmed via screenshot)
 
 ### Pending
-(none - all tasks complete)
+- [ ] Review each docs/specs file line by line for accuracy
+- [ ] Create missing specs that should be documented
+- [ ] Ensure full CI/CD test coverage and modern Android best practices
 
 ### Completed (this session)
 - [x] Organize and clean archive files (added READMEs, removed empty dirs)
