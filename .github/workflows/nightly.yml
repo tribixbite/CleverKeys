@@ -1,0 +1,87 @@
+name: Nightly Build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Make gradlew executable
+      run: chmod +x gradlew
+
+    - name: Build debug APK
+      run: ./gradlew assembleDebug --stacktrace
+
+    - name: Get version info
+      id: version
+      run: |
+        echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+        echo "sha_short=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
+
+    - name: Rename APK with version
+      run: |
+        mv build/outputs/apk/debug/tribixbite.keyboard2.apk \
+           build/outputs/apk/debug/CleverKeys-nightly-${{ steps.version.outputs.sha_short }}.apk
+
+    - name: Update nightly release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: nightly
+        name: "🌙 Nightly Build"
+        body: |
+          ## Nightly Build - ${{ steps.version.outputs.date }}
+
+          **Commit**: `${{ steps.version.outputs.sha_short }}` (${{ github.sha }})
+
+          ⚠️ **This is an automated development build.** It may contain bugs or incomplete features.
+
+          ### Download
+          - **[CleverKeys-nightly.apk](https://github.com/${{ github.repository }}/releases/download/nightly/CleverKeys-nightly-${{ steps.version.outputs.sha_short }}.apk)** - Latest debug build
+
+          ### For Stable Releases
+          See [Releases](https://github.com/${{ github.repository }}/releases) for stable versions.
+
+          ---
+          🦝✨ *Built automatically from main branch*
+        files: build/outputs/apk/debug/CleverKeys-nightly-${{ steps.version.outputs.sha_short }}.apk
+        prerelease: true
+        make_latest: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Nightly summary
+      run: |
+        echo "## 🌙 Nightly Build Complete" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Date**: ${{ steps.version.outputs.date }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit**: ${{ steps.version.outputs.sha_short }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Download**: [CleverKeys-nightly.apk](https://github.com/${{ github.repository }}/releases/tag/nightly)" >> $GITHUB_STEP_SUMMARY

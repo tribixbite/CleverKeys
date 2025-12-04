@@ -5,10 +5,13 @@
 <h1 align="center">CleverKeys</h1>
 
 <p align="center">
+  <a href="https://github.com/tribixbite/CleverKeys/releases/latest"><img src="https://img.shields.io/github/v/release/tribixbite/CleverKeys?label=Release&color=success" alt="Latest Release"/></a>
+  <a href="https://github.com/tribixbite/CleverKeys/releases/tag/nightly"><img src="https://img.shields.io/badge/Nightly-Download-orange" alt="Nightly Build"/></a>
+  <a href="https://github.com/tribixbite/CleverKeys/actions"><img src="https://github.com/tribixbite/CleverKeys/actions/workflows/ci.yml/badge.svg" alt="Build"/></a>
+  <br/>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3"/></a>
   <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Android-8.0%2B-green.svg" alt="Android"/></a>
   <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-1.9.20-purple.svg" alt="Kotlin"/></a>
-  <a href="https://github.com/tribixbite/CleverKeys/actions"><img src="https://github.com/tribixbite/CleverKeys/actions/workflows/ci.yml/badge.svg" alt="Build"/></a>
 </p>
 
 <p align="center">
@@ -79,15 +82,19 @@ Android restricts clipboard access for security - apps can't read clipboard cont
 
 ## Installation
 
-### From APK
-Download the latest release from [GitHub Releases](https://github.com/tribixbite/CleverKeys/releases).
+### Download APK
+
+| Channel | Description | Link |
+|---------|-------------|------|
+| **Stable** | Latest tested release | [![Release](https://img.shields.io/github/v/release/tribixbite/CleverKeys?label=Download&color=success)](https://github.com/tribixbite/CleverKeys/releases/latest) |
+| **Nightly** | Latest development build | [![Nightly](https://img.shields.io/badge/Download-Nightly-orange)](https://github.com/tribixbite/CleverKeys/releases/tag/nightly) |
 
 ### Build from Source
 ```bash
 git clone https://github.com/tribixbite/CleverKeys.git
 cd CleverKeys
 ./gradlew assembleDebug
-# APK: build/outputs/apk/debug/tribixbite.cleverkeys.apk
+# APK: build/outputs/apk/debug/cleverkeys.apk
 ```
 
 ### Enable the Keyboard
