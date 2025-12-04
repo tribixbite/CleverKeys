@@ -53,16 +53,29 @@ Android restricts clipboard access for security - apps can't read clipboard cont
 
 ### Gesture Typing
 - Transformer-based encoder-decoder model (5.4MB encoder + 7.4MB decoder)
-- 73%+ word accuracy on common vocabulary
 - Sub-200ms predictions with hardware acceleration (XNNPACK)
-- Beam search with configurable width for speed/accuracy balance
 - 100% local processing - works in airplane mode
 
-### Tap Typing
-- Real-time word predictions
-- Context-aware suggestions using bigram model
-- Autocorrection with keyboard-layout-aware distance
-- Learns your vocabulary over time
+### Full Inference Control
+Unlike black-box keyboards, CleverKeys exposes all prediction parameters:
+
+**Beam Search Tuning**
+- Beam width (speed vs accuracy tradeoff)
+- Length normalization alpha
+- Pruning confidence threshold
+- Early stopping gap
+
+**Autocorrect Settings**
+- Enable/disable toggle
+- Minimum word length threshold
+- Character match threshold
+- Correction style presets (Strict/Balanced/Lenient)
+
+**Dictionary Control**
+- Custom word additions
+- Android/OS user dictionary integration
+- Frequency adjustments
+- Common/rare word boost/penalty
 
 ### Privacy First
 - Zero network permissions
@@ -74,7 +87,7 @@ Android restricts clipboard access for security - apps can't read clipboard cont
 ### Extensive Customization
 - 100+ keyboard layouts inherited from Unexpected Keyboard
 - Material 3 theming with custom colors
-- Configurable gesture sensitivity
+- Configurable gesture sensitivity and thresholds
 - One-handed mode
 - Terminal mode (Ctrl/Meta keys for Termux users)
 
