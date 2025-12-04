@@ -1,13 +1,52 @@
 # CleverKeys Development Status
 
-**Last Updated**: 2025-12-03
+**Last Updated**: 2025-12-04
 **Status**: ✅ Production Ready
 
 ---
 
-## Current Session: Config Import Crash Fix Complete (Dec 3, 2025)
+## Current Session: CI/CD & Clipboard Settings Fix (Dec 4, 2025)
 
 ### Completed This Session
+- ✅ Fixed GitHub Actions CI/CD workflow
+  - Removed hardcoded AAPT2 path from gradle.properties (was breaking CI builds)
+  - build-on-termux.sh already passes AAPT2 via -P flag for local builds
+  - Added R8 fullMode workaround from UK
+  - Set DEBUG_KEYSTORE secret with GPG-encrypted keystore
+  - CI build now completes successfully and uploads APK artifact
+
+- ✅ Fixed clipboard settings crash (missing ClipboardSettingsActivity)
+  - ClipboardSettingsActivity was declared in manifest but class never existed
+  - Inlined all clipboard settings directly in the Clipboard section:
+    - Clipboard History toggle
+    - Limit Type dropdown (By Count/By Size)
+    - History Limit slider (1-50 items)
+    - Size Limit slider (1-100 MB)
+    - Pane Height slider (10-50%)
+    - Max Item Size slider (100-5000 KB)
+  - Added state variables and loading for all clipboard settings
+  - Removed dead activity declaration from AndroidManifest.xml
+
+### Code Changes
+**gradle.properties:**
+- Commented out android.aapt2FromMavenOverride (line 7)
+- Added android.enableR8.fullMode=false (line 10)
+
+**SettingsActivity.kt:**
+- Added clipboard state variables: clipboardHistoryLimit, clipboardPaneHeightPercent,
+  clipboardMaxItemSizeKb, clipboardLimitType, clipboardSizeLimitMb
+- Replaced Clipboard Settings button with inline settings (lines 1422-1505)
+- Added loading logic for clipboard settings (lines 2077-2081)
+- Removed openClipboardSettings() function
+
+**AndroidManifest.xml:**
+- Removed ClipboardSettingsActivity declaration
+
+---
+
+## Previous Session: Config Import Crash Fix (Dec 3, 2025)
+
+### Completed
 - ✅ Fixed config import crash (ClassCastException: Float cannot be cast to String)
   - Root cause: JSON import stores numbers as Float, but safeGetInt tried String before Float
   - Fixed `safeGetInt()` to try Float fallback before String (the key fix!)
