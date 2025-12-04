@@ -1,7 +1,9 @@
 package tribixbite.cleverkeys
 
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -54,20 +56,52 @@ class ThemeSettingsActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Allow activity to show over lock screen for testing/accessibility
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+        } else {
+            @Suppress("DEPRECATION")
+            window.addFlags(
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            )
+        }
+
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
 
         setContent {
-            MaterialTheme(
-                colorScheme = darkColorScheme()
-            ) {
-                ThemeSettingsScreen(
-                    onBack = { finish() },
-                    onThemeSelected = { themeId ->
-                        // Save selected theme and update Config
-                        prefs.edit().putString("selected_theme_id", themeId).apply()
-                        Toast.makeText(this, "Theme applied!", Toast.LENGTH_SHORT).show()
-                    }
-                )
+            // Use a custom dark color scheme with visible surfaces
+            val colorScheme = darkColorScheme(
+                primary = Color(0xFF9B59B6),       // Purple accent
+                onPrimary = Color.White,
+                primaryContainer = Color(0xFF4A235A),
+                onPrimaryContainer = Color(0xFFE8DAEF),
+                secondary = Color(0xFF64B5F6),     // Blue accent
+                onSecondary = Color.Black,
+                surface = Color(0xFF1E1E1E),       // Dark but visible surface
+                onSurface = Color(0xFFE0E0E0),     // Light text
+                background = Color(0xFF121212),    // Material dark background
+                onBackground = Color(0xFFE0E0E0),
+                surfaceVariant = Color(0xFF2C2C2C),
+                onSurfaceVariant = Color(0xFFB0B0B0),
+                outline = Color(0xFF555555)
+            )
+            MaterialTheme(colorScheme = colorScheme) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    ThemeSettingsScreen(
+                        onBack = { finish() },
+                        onThemeSelected = { themeId ->
+                            // Save selected theme and update Config
+                            prefs.edit().putString("selected_theme_id", themeId).apply()
+                            Toast.makeText(this, "Theme applied!", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
             }
         }
     }

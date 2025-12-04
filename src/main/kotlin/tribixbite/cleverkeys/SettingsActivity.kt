@@ -846,6 +846,22 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     }
                 )
 
+                // Navigate to full Keyboard Themes activity with custom theme creation
+                val context = LocalContext.current
+                OutlinedButton(
+                    onClick = {
+                        val intent = Intent(context, ThemeSettingsActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Text("🎨 Keyboard Themes", fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Create & manage custom themes", fontSize = 12.sp, color = ComposeColor.Gray)
+                }
+
                 SettingsSlider(
                     title = "Keyboard Height (Portrait)",
                     description = "Adjust keyboard height in portrait mode",
