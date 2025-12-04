@@ -73,6 +73,16 @@
 - ✅ Multi-Language section shows correctly
 - ✅ Settings persist and load correctly
 
+### Fix: Export/Import Now Uses SAF File Picker (Dec 4, 2025)
+- Fixed broken export/import that was using deprecated `/sdcard/cleverkeys/` path
+- Added SAF (Storage Access Framework) file picker launchers:
+  - `configExportLauncher` / `configImportLauncher` for settings JSON
+  - `dictionaryExportLauncher` / `dictionaryImportLauncher` for custom dictionary
+  - `clipboardExportLauncher` / `clipboardImportLauncher` for clipboard history
+- Export now opens system file picker to choose save location
+- Import now opens file browser to select files
+- Updated help text: "Tap Export to choose save location, Import to browse for files."
+
 ---
 
 ## Previous Session: CI/CD, Crash Fixes & Feature Parity (Dec 4, 2025)

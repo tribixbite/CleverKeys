@@ -69,6 +69,43 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         uri?.let { handleSelectedApk(it) }
     }
 
+    // SAF file pickers for backup/restore
+    private val configExportLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri: Uri? ->
+        uri?.let { performConfigExport(it) }
+    }
+
+    private val configImportLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { performConfigImport(it) }
+    }
+
+    private val dictionaryExportLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri: Uri? ->
+        uri?.let { performDictionaryExport(it) }
+    }
+
+    private val dictionaryImportLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { performDictionaryImport(it) }
+    }
+
+    private val clipboardExportLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri: Uri? ->
+        uri?.let { performClipboardExport(it) }
+    }
+
+    private val clipboardImportLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { performClipboardImport(it) }
+    }
+
     // Settings state for reactive UI
     private var neuralPredictionEnabled by mutableStateOf(true)
     private var beamWidth by mutableStateOf(8)
@@ -2141,7 +2178,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 }
 
                 Text(
-                    text = "Files are saved to /sdcard/cleverkeys/ folder.",
+                    text = "Tap Export to choose save location, Import to browse for files.",
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 12.dp)
@@ -3487,131 +3524,162 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         startActivity(Intent(this, BackupRestoreActivity::class.java))
     }
 
-    // Inline backup/restore functions
+    // Inline backup/restore functions - launch SAF file pickers
     private fun exportConfiguration() {
-        lifecycleScope.launch {
-            try {
-                val exportDir = java.io.File(android.os.Environment.getExternalStorageDirectory(), "cleverkeys")
-                if (!exportDir.exists()) exportDir.mkdirs()
-                val exportFile = java.io.File(exportDir, "kb-config.json")
-
-                // Export all SharedPreferences as JSON
-                val allPrefs = prefs.all
-                val json = org.json.JSONObject(allPrefs as Map<*, *>).toString(2)
-                exportFile.writeText(json)
-
-                Toast.makeText(this@SettingsActivity, "Config exported to ${exportFile.absolutePath}", Toast.LENGTH_LONG).show()
-            } catch (e: Exception) {
-                Toast.makeText(this@SettingsActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+        try {
+            configExportLauncher.launch("cleverkeys-config.json")
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun importConfiguration() {
-        lifecycleScope.launch {
-            try {
-                val importFile = java.io.File(android.os.Environment.getExternalStorageDirectory(), "cleverkeys/kb-config.json")
-                if (!importFile.exists()) {
-                    Toast.makeText(this@SettingsActivity, "No config file found at ${importFile.absolutePath}", Toast.LENGTH_LONG).show()
-                    return@launch
-                }
-
-                val json = org.json.JSONObject(importFile.readText())
-                val editor = prefs.edit()
-
-                for (key in json.keys()) {
-                    when (val value = json.get(key)) {
-                        is Boolean -> editor.putBoolean(key, value)
-                        is Int -> editor.putInt(key, value)
-                        is Long -> editor.putLong(key, value)
-                        is Float -> editor.putFloat(key, value)
-                        is Double -> editor.putFloat(key, value.toFloat())
-                        is String -> editor.putString(key, value)
-                        is Number -> editor.putFloat(key, value.toFloat())
-                    }
-                }
-                editor.apply()
-
-                // Reload settings
-                loadCurrentSettings()
-                Toast.makeText(this@SettingsActivity, "Config imported successfully", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+        try {
+            configImportLauncher.launch(arrayOf("application/json", "*/*"))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun exportCustomDictionary() {
+        try {
+            dictionaryExportLauncher.launch("cleverkeys-dictionary.json")
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun importCustomDictionary() {
+        try {
+            dictionaryImportLauncher.launch(arrayOf("application/json", "*/*"))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun exportClipboardHistory() {
+        try {
+            clipboardExportLauncher.launch("cleverkeys-clipboard.json")
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun importClipboardHistory() {
+        try {
+            clipboardImportLauncher.launch(arrayOf("application/json", "*/*"))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // SAF callback functions that perform actual export/import
+    private fun performConfigExport(uri: Uri) {
         lifecycleScope.launch {
             try {
-                val exportDir = java.io.File(android.os.Environment.getExternalStorageDirectory(), "cleverkeys")
-                if (!exportDir.exists()) exportDir.mkdirs()
-                val exportFile = java.io.File(exportDir, "custom-dictionary.json")
-
-                // Get custom words from user dictionary if available
-                val json = org.json.JSONObject()
-                json.put("custom_words", org.json.JSONArray())
-                json.put("disabled_words", org.json.JSONArray())
-                json.put("export_date", System.currentTimeMillis())
-                exportFile.writeText(json.toString(2))
-
-                Toast.makeText(this@SettingsActivity, "Dictionary exported to ${exportFile.absolutePath}", Toast.LENGTH_LONG).show()
+                contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    val allPrefs = prefs.all
+                    val json = org.json.JSONObject(allPrefs as Map<*, *>).toString(2)
+                    outputStream.write(json.toByteArray())
+                }
+                Toast.makeText(this@SettingsActivity, "Config exported successfully", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun importCustomDictionary() {
+    private fun performConfigImport(uri: Uri) {
         lifecycleScope.launch {
             try {
-                val importFile = java.io.File(android.os.Environment.getExternalStorageDirectory(), "cleverkeys/custom-dictionary.json")
-                if (!importFile.exists()) {
-                    Toast.makeText(this@SettingsActivity, "No dictionary file found", Toast.LENGTH_LONG).show()
-                    return@launch
-                }
+                contentResolver.openInputStream(uri)?.use { inputStream ->
+                    val jsonText = inputStream.bufferedReader().readText()
+                    val json = org.json.JSONObject(jsonText)
+                    val editor = prefs.edit()
 
-                val json = org.json.JSONObject(importFile.readText())
-                // TODO: Implement actual dictionary import
-                Toast.makeText(this@SettingsActivity, "Dictionary import not yet implemented", Toast.LENGTH_SHORT).show()
+                    for (key in json.keys()) {
+                        when (val value = json.get(key)) {
+                            is Boolean -> editor.putBoolean(key, value)
+                            is Int -> editor.putInt(key, value)
+                            is Long -> editor.putLong(key, value)
+                            is Float -> editor.putFloat(key, value)
+                            is Double -> editor.putFloat(key, value.toFloat())
+                            is String -> editor.putString(key, value)
+                            is Number -> editor.putFloat(key, value.toFloat())
+                        }
+                    }
+                    editor.apply()
+
+                    // Reload settings
+                    loadCurrentSettings()
+                    Toast.makeText(this@SettingsActivity, "Config imported successfully", Toast.LENGTH_SHORT).show()
+                } ?: throw Exception("Could not open file")
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun exportClipboardHistory() {
+    private fun performDictionaryExport(uri: Uri) {
         lifecycleScope.launch {
             try {
-                val exportDir = java.io.File(android.os.Environment.getExternalStorageDirectory(), "cleverkeys")
-                if (!exportDir.exists()) exportDir.mkdirs()
-                val exportFile = java.io.File(exportDir, "clipboard-history.json")
-
-                val json = org.json.JSONObject()
-                json.put("clipboard_entries", org.json.JSONArray())
-                json.put("pinned_entries", org.json.JSONArray())
-                json.put("export_date", System.currentTimeMillis())
-                exportFile.writeText(json.toString(2))
-
-                Toast.makeText(this@SettingsActivity, "Clipboard exported to ${exportFile.absolutePath}", Toast.LENGTH_LONG).show()
+                contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    val json = org.json.JSONObject()
+                    json.put("custom_words", org.json.JSONArray())
+                    json.put("disabled_words", org.json.JSONArray())
+                    json.put("export_date", System.currentTimeMillis())
+                    outputStream.write(json.toString(2).toByteArray())
+                }
+                Toast.makeText(this@SettingsActivity, "Dictionary exported successfully", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun importClipboardHistory() {
+    private fun performDictionaryImport(uri: Uri) {
         lifecycleScope.launch {
             try {
-                val importFile = java.io.File(android.os.Environment.getExternalStorageDirectory(), "cleverkeys/clipboard-history.json")
-                if (!importFile.exists()) {
-                    Toast.makeText(this@SettingsActivity, "No clipboard file found", Toast.LENGTH_LONG).show()
-                    return@launch
-                }
+                contentResolver.openInputStream(uri)?.use { inputStream ->
+                    val jsonText = inputStream.bufferedReader().readText()
+                    val json = org.json.JSONObject(jsonText)
+                    // TODO: Implement actual dictionary import from JSON
+                    val wordCount = json.optJSONArray("custom_words")?.length() ?: 0
+                    Toast.makeText(this@SettingsActivity, "Dictionary file read ($wordCount words) - import pending", Toast.LENGTH_SHORT).show()
+                } ?: throw Exception("Could not open file")
+            } catch (e: Exception) {
+                Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
-                val json = org.json.JSONObject(importFile.readText())
-                // TODO: Implement actual clipboard import
-                Toast.makeText(this@SettingsActivity, "Clipboard import not yet implemented", Toast.LENGTH_SHORT).show()
+    private fun performClipboardExport(uri: Uri) {
+        lifecycleScope.launch {
+            try {
+                contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    val json = org.json.JSONObject()
+                    json.put("clipboard_entries", org.json.JSONArray())
+                    json.put("pinned_entries", org.json.JSONArray())
+                    json.put("export_date", System.currentTimeMillis())
+                    outputStream.write(json.toString(2).toByteArray())
+                }
+                Toast.makeText(this@SettingsActivity, "Clipboard exported successfully", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@SettingsActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun performClipboardImport(uri: Uri) {
+        lifecycleScope.launch {
+            try {
+                contentResolver.openInputStream(uri)?.use { inputStream ->
+                    val jsonText = inputStream.bufferedReader().readText()
+                    val json = org.json.JSONObject(jsonText)
+                    // TODO: Implement actual clipboard import from JSON
+                    val entryCount = json.optJSONArray("clipboard_entries")?.length() ?: 0
+                    Toast.makeText(this@SettingsActivity, "Clipboard file read ($entryCount entries) - import pending", Toast.LENGTH_SHORT).show()
+                } ?: throw Exception("Could not open file")
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
