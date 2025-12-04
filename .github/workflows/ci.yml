@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+# Required for security scan SARIF upload
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   build:
     name: Build and Test

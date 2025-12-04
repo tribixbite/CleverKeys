@@ -7,13 +7,32 @@ permissions:
   contents: read
   pages: write
   id-token: write
-  administration: write
 
 jobs:
   setup-pages:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Enable GitHub Pages
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Build static site
         run: |
-          echo "Enabling GitHub Pages for CleverKeys repository"
-          # This workflow triggers Pages setup and sets homepage to Pages URL
+          mkdir -p _site
+          cp README.md _site/index.md
+          echo "# CleverKeys Documentation" > _site/index.html
+          echo "<p>Privacy-first neural keyboard for Android</p>" >> _site/index.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

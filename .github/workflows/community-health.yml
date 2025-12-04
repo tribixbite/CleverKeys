@@ -11,6 +11,12 @@ on:
   push:
     branches: [main]
 
+# Required permissions for issue/PR management
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   issue-management:
     runs-on: ubuntu-latest
