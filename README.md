@@ -219,12 +219,20 @@ CleverKeys began as a fork of [Unexpected Keyboard](https://github.com/Julow/Une
 Over time, our vision diverged significantly:
 - Complete rewrite from Java to Kotlin
 - Addition of gesture typing via custom neural network
-- Clipboard history system (Clipper+)
+- Clipboard history system
 - Different architectural decisions (coroutines, ONNX integration)
 
 The projects are now ~900 commits apart. Our maintained fork with the divergence history is at: **[tribixbite/Unexpected-Keyboard](https://github.com/tribixbite/Unexpected-Keyboard)**
 
 If you want a battle-tested, lightweight keyboard without gesture typing, we highly recommend the original Unexpected Keyboard.
+
+### Neural Network Research
+
+The gesture recognition model was inspired by and trained on:
+
+- **[Neural Swipe Typing](https://github.com/proshian/neural-swipe-typing)** by [@proshian](https://github.com/proshian) - Initial neural network architecture inspiration. Our English-focused fork: [tribixbite/neural-swipe-typing](https://github.com/tribixbite/neural-swipe-typing/tree/english)
+- **[How We Swipe](https://github.com/nicosio2/how-we-swipe)** - Research paper and dataset on swipe typing behavior
+- **[FUTO Swipe Dataset](https://huggingface.co/datasets/nicosio2/FUTO-swipe-dataset)** - Hugging Face dataset used for training
 
 ### Other Credits
 - **ONNX Runtime** - Microsoft's inference engine
