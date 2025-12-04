@@ -108,12 +108,23 @@ class CustomThemeManager(private val context: Context) {
 
     /**
      * Get a custom theme by ID.
+     * Handles both raw UUID and "custom_" prefixed IDs.
      *
-     * @param themeId ID of theme to retrieve
+     * @param themeId ID of theme to retrieve (with or without "custom_" prefix)
      * @return CustomTheme if found, null otherwise
      */
     fun getCustomTheme(themeId: String): CustomTheme? {
-        return _customThemes.value.find { it.id == themeId }
+        // Strip "custom_" prefix if present
+        val rawId = themeId.removePrefix("custom_")
+        return _customThemes.value.find { it.id == rawId }
+    }
+
+    /**
+     * Get all custom theme IDs.
+     * Used by ThemeProvider to list available custom themes.
+     */
+    fun getAllCustomThemeIds(): List<String> {
+        return _customThemes.value.map { it.id }
     }
 
     /**

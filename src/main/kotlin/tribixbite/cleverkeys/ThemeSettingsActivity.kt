@@ -228,28 +228,33 @@ fun ThemeSettingsScreen(
                     )
                 }
                 items(customThemes) { theme ->
+                    val customId = "custom_${theme.id}"
                     ThemeCard(
                         name = theme.name,
                         colorScheme = theme.colors,
                         isCustom = true,
-                        onSelect = { onThemeSelected(theme.id) },
+                        isSelected = currentThemeId.value == customId,
+                        onSelect = {
+                            currentThemeId.value = customId
+                            onThemeSelected(customId)
+                        },
                         onEdit = { editingTheme = theme },
                         onDelete = { showDeleteConfirm = theme.id }
                     )
                 }
             }
 
-            // Decorative Themes Section (visual only - for future keyboard connection)
+            // Decorative Themes Section
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    "Decorative Themes (Preview Only)",
+                    "Decorative Themes",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
                 Text(
-                    "Custom color schemes - not yet connected to keyboard rendering",
+                    "Designer color schemes for your keyboard",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -270,14 +275,16 @@ fun ThemeSettingsScreen(
                         )
                     }
                     items(themesInCategory) { themeInfo ->
+                        val decorativeId = "decorative_${themeInfo.id}"
                         ThemeCard(
                             name = themeInfo.name,
                             colorScheme = themeInfo.colorScheme,
                             description = themeInfo.description,
                             isCustom = false,
+                            isSelected = currentThemeId.value == decorativeId,
                             onSelect = {
-                                // TODO: Connect PredefinedThemes to keyboard rendering
-                                // For now just show a toast that this is preview only
+                                currentThemeId.value = decorativeId
+                                onThemeSelected(decorativeId)
                             }
                         )
                     }
@@ -288,10 +295,17 @@ fun ThemeSettingsScreen(
         }
     }
 
-    // Create Theme Dialog
+    // Create Theme Dialog - use current theme's colors as defaults
     if (showCreateDialog) {
+        // Get the current theme's color scheme to use as defaults
+        val currentColors = remember(currentThemeId.value) {
+            val themeProvider = ThemeProvider.getInstance(context)
+            themeProvider.getColorScheme(currentThemeId.value)
+        }
+
         ThemeCreatorDialog(
             initialTheme = null,
+            defaultColors = currentColors,
             onDismiss = { showCreateDialog = false },
             onSave = { theme ->
                 themeManager.saveCustomTheme(theme)
@@ -343,17 +357,31 @@ fun ThemeCard(
     colorScheme: KeyboardColorScheme,
     description: String? = null,
     isCustom: Boolean,
+    isSelected: Boolean = false,
     onSelect: () -> Unit,
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null
 ) {
+    val borderColor by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+        label = "border"
+    )
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onSelect() },
+            .clickable { onSelect() }
+            .then(
+                if (isSelected) {
+                    Modifier.border(2.dp, borderColor, RoundedCornerShape(12.dp))
+                } else {
+                    Modifier
+                }
+            ),
         colors = CardDefaults.cardColors(
             containerColor = Color(colorScheme.keyboardBackground.toArgb())
-        )
+        ),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
@@ -575,11 +603,13 @@ fun BuiltinThemePreview(theme: ThemeSettingsActivity.BuiltinTheme) {
 @Composable
 fun ThemeCreatorDialog(
     initialTheme: CustomTheme?,
+    defaultColors: KeyboardColorScheme? = null,
     onDismiss: () -> Unit,
     onSave: (CustomTheme) -> Unit
 ) {
     var themeName by remember { mutableStateOf(initialTheme?.name ?: "My Theme") }
-    var colors by remember { mutableStateOf(initialTheme?.colors ?: darkKeyboardColorScheme()) }
+    // Use priority: initialTheme colors > defaultColors > darkKeyboardColorScheme
+    var colors by remember { mutableStateOf(initialTheme?.colors ?: defaultColors ?: darkKeyboardColorScheme()) }
     var selectedColorAttribute by remember { mutableStateOf<ColorAttribute?>(null) }
 
     Dialog(onDismissRequest = onDismiss) {

@@ -5,9 +5,20 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.util.AttributeSet
+import tribixbite.cleverkeys.theme.KeyboardColorScheme
 import kotlin.math.min
 
-class Theme(context: Context, attrs: AttributeSet?) {
+/**
+ * Theme class for keyboard rendering.
+ *
+ * Supports two modes:
+ * 1. XML-based themes: Created via constructor(Context, AttributeSet) - reads from res/values/themes.xml
+ * 2. Runtime themes: Created via constructor(Context, KeyboardColorScheme) - uses Compose color scheme
+ *
+ * This unified approach allows both built-in XML themes and user-defined/decorative themes
+ * to work with the same rendering pipeline.
+ */
+class Theme {
     // Key colors
     val colorKey: Int
     val colorKeyActivated: Int
@@ -40,12 +51,15 @@ class Theme(context: Context, attrs: AttributeSet?) {
     @JvmField
     val isLightNavBar: Boolean
 
-    init {
+    /**
+     * Primary constructor for XML-based themes.
+     * Reads colors from styled attributes defined in res/values/themes.xml
+     */
+    constructor(context: Context, attrs: AttributeSet?) {
         getKeyFont(context) // _key_font will be accessed
         val s = context.theme.obtainStyledAttributes(attrs, R.styleable.keyboard, 0, 0)
         colorKey = s.getColor(R.styleable.keyboard_colorKey, 0)
         colorKeyActivated = s.getColor(R.styleable.keyboard_colorKeyActivated, 0)
-        // colorKeyboard = s.getColor(R.styleable.keyboard_colorKeyboard, 0)
         colorNavBar = s.getColor(R.styleable.keyboard_navigationBarColor, 0)
         isLightNavBar = s.getBoolean(R.styleable.keyboard_windowLightNavigationBar, false)
         labelColor = s.getColor(R.styleable.keyboard_colorLabel, 0)
@@ -70,6 +84,44 @@ class Theme(context: Context, attrs: AttributeSet?) {
         s.recycle()
     }
 
+    /**
+     * Secondary constructor for runtime themes.
+     * Accepts a KeyboardColorScheme (from decorative themes or custom user themes)
+     * and maps it to the rendering properties.
+     *
+     * This enables decorative themes (Ruby, Sapphire, etc.) and user-created themes
+     * to work with the actual keyboard renderer.
+     */
+    constructor(context: Context, colorScheme: KeyboardColorScheme, density: Float = context.resources.displayMetrics.density) {
+        getKeyFont(context) // Initialize font
+
+        // Map KeyboardColorScheme to Theme properties
+        colorKey = colorScheme.keyDefault.toArgb()
+        colorKeyActivated = colorScheme.keyActivated.toArgb()
+        labelColor = colorScheme.keyLabel.toArgb()
+        activatedColor = colorScheme.keyLabel.toArgb() // Use same for activated
+        lockedColor = colorScheme.keyLabel.toArgb() // Use same for locked
+        subLabelColor = colorScheme.keySubLabel.toArgb()
+        secondaryLabelColor = colorScheme.keySecondaryLabel.toArgb()
+        greyedLabelColor = adjustLight(labelColor, 0.5f)
+
+        // Border colors - use the scheme's border color for all sides
+        val borderColor = colorScheme.keyBorder.toArgb()
+        keyBorderColorLeft = borderColor
+        keyBorderColorTop = borderColor
+        keyBorderColorRight = borderColor
+        keyBorderColorBottom = borderColor
+
+        // Default border dimensions (can be customized later)
+        keyBorderRadius = 8f * density  // 8dp default
+        keyBorderWidth = 1f * density   // 1dp default
+        keyBorderWidthActivated = 2f * density  // 2dp when activated
+
+        // Nav bar - derive from keyboard background
+        colorNavBar = colorScheme.keyboardBackground.toArgb()
+        isLightNavBar = isColorLight(colorNavBar)
+    }
+
     /** Interpolate the 'value' component toward its opposite by 'alpha'. */
     private fun adjustLight(color: Int, alpha: Float): Int {
         val hsv = FloatArray(3)
@@ -77,6 +129,22 @@ class Theme(context: Context, attrs: AttributeSet?) {
         val v = hsv[2]
         hsv[2] = alpha - (2 * alpha - 1) * v
         return Color.HSVToColor(hsv)
+    }
+
+    /** Determine if a color is light (for nav bar icon color) */
+    private fun isColorLight(color: Int): Boolean {
+        val darkness = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255
+        return darkness < 0.5
+    }
+
+    /** Convert Compose Color to Android ARGB Int */
+    private fun androidx.compose.ui.graphics.Color.toArgb(): Int {
+        return android.graphics.Color.argb(
+            (alpha * 255).toInt(),
+            (red * 255).toInt(),
+            (green * 255).toInt(),
+            (blue * 255).toInt()
+        )
     }
 
     fun initIndicationPaint(align: Paint.Align, font: Typeface?): Paint {

@@ -50,6 +50,7 @@ class Config private constructor(
     @JvmField var double_tap_lock_shift = false
     @JvmField var characterSize = 0f
     @JvmField var theme = 0
+    @JvmField var themeName: String = "" // Raw theme name for runtime theme detection
     @JvmField var autocapitalisation = false
     @JvmField var switch_input_immediate = false
     @JvmField var selected_number_layout: NumberLayout? = null
@@ -236,7 +237,8 @@ class Config private constructor(
         horizontal_margin = get_dip_pref_oriented(dm, "horizontal_margin", 3f, 28f)
         double_tap_lock_shift = _prefs.getBoolean("lock_double_tap", true)
         characterSize = safeGetFloat(_prefs, "character_size", 1.18f) * characterSizeScale
-        theme = getThemeId(res, safeGetString(_prefs, "theme", ""))
+        themeName = safeGetString(_prefs, "theme", "cleverkeysdark")
+        theme = getThemeId(res, themeName)
         autocapitalisation = _prefs.getBoolean("autocapitalisation", true)
         switch_input_immediate = _prefs.getBoolean("switch_input_immediate", false)
         extra_keys_param = ExtraKeysPreference.get_extra_keys(_prefs) ?: emptyMap()
@@ -423,31 +425,37 @@ class Config private constructor(
 
     private fun getThemeId(res: Resources, theme_name: String): Int {
         val night_mode = res.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        return when (theme_name) {
-            "light" -> R.style.Light
-            "black" -> R.style.Black
-            "altblack" -> R.style.AltBlack
-            "dark" -> R.style.Dark
-            "white" -> R.style.White
-            "epaper" -> R.style.ePaper
-            "desert" -> R.style.Desert
-            "jungle" -> R.style.Jungle
-            "monetlight" -> R.style.MonetLight
-            "monetdark" -> R.style.MonetDark
-            "monet" -> {
+        return when {
+            // Runtime themes (decorative/custom) use base theme for ContextThemeWrapper
+            // The actual colors come from KeyboardColorScheme via ThemeProvider
+            theme_name.startsWith("decorative_") -> R.style.CleverKeysDark
+            theme_name.startsWith("custom_") -> R.style.CleverKeysDark
+
+            // Built-in XML themes
+            theme_name == "light" -> R.style.Light
+            theme_name == "black" -> R.style.Black
+            theme_name == "altblack" -> R.style.AltBlack
+            theme_name == "dark" -> R.style.Dark
+            theme_name == "white" -> R.style.White
+            theme_name == "epaper" -> R.style.ePaper
+            theme_name == "desert" -> R.style.Desert
+            theme_name == "jungle" -> R.style.Jungle
+            theme_name == "monetlight" -> R.style.MonetLight
+            theme_name == "monetdark" -> R.style.MonetDark
+            theme_name == "monet" -> {
                 if (night_mode and Configuration.UI_MODE_NIGHT_NO != 0)
                     R.style.MonetLight
                 else
                     R.style.MonetDark
             }
-            "rosepine" -> R.style.RosePine
-            "everforestlight" -> R.style.EverforestLight
-            "cobalt" -> R.style.Cobalt
-            "pine" -> R.style.Pine
-            "epaperblack" -> R.style.ePaperBlack
-            "jewel" -> R.style.Jewel
-            "cleverkeysdark" -> R.style.CleverKeysDark
-            "cleverkeyslight" -> R.style.CleverKeysLight
+            theme_name == "rosepine" -> R.style.RosePine
+            theme_name == "everforestlight" -> R.style.EverforestLight
+            theme_name == "cobalt" -> R.style.Cobalt
+            theme_name == "pine" -> R.style.Pine
+            theme_name == "epaperblack" -> R.style.ePaperBlack
+            theme_name == "jewel" -> R.style.Jewel
+            theme_name == "cleverkeysdark" -> R.style.CleverKeysDark
+            theme_name == "cleverkeyslight" -> R.style.CleverKeysLight
             else -> {
                 // Default to CleverKeys Dark theme
                 if (theme_name.isEmpty()) {
@@ -458,6 +466,14 @@ class Config private constructor(
                     R.style.Dark
             }
         }
+    }
+
+    /**
+     * Check if current theme is a runtime theme (decorative or custom).
+     * Runtime themes use KeyboardColorScheme instead of XML attributes.
+     */
+    fun isRuntimeTheme(): Boolean {
+        return themeName.startsWith("decorative_") || themeName.startsWith("custom_")
     }
 
     interface IKeyEventHandler {
@@ -689,6 +705,39 @@ class Config private constructor(
                     Log.w("Config", "Error reading preference $key, using default: $defaultValue")
                     defaultValue
                 }
+            }
+        }
+
+        /**
+         * Get the Android style resource ID for a theme name.
+         * Used by ThemeProvider to load built-in XML themes.
+         *
+         * @param themeName Theme name string (e.g., "dark", "rosepine", "cobalt")
+         * @return The R.style.* resource ID
+         */
+        @JvmStatic
+        fun getThemeStyleId(themeName: String): Int {
+            return when (themeName) {
+                "light" -> R.style.Light
+                "black" -> R.style.Black
+                "altblack" -> R.style.AltBlack
+                "dark" -> R.style.Dark
+                "white" -> R.style.White
+                "epaper" -> R.style.ePaper
+                "desert" -> R.style.Desert
+                "jungle" -> R.style.Jungle
+                "monetlight" -> R.style.MonetLight
+                "monetdark" -> R.style.MonetDark
+                "monet" -> R.style.MonetDark // Default to dark for monet
+                "rosepine" -> R.style.RosePine
+                "everforestlight" -> R.style.EverforestLight
+                "cobalt" -> R.style.Cobalt
+                "pine" -> R.style.Pine
+                "epaperblack" -> R.style.ePaperBlack
+                "jewel" -> R.style.Jewel
+                "cleverkeysdark" -> R.style.CleverKeysDark
+                "cleverkeyslight" -> R.style.CleverKeysLight
+                else -> R.style.CleverKeysDark // Default theme
             }
         }
 

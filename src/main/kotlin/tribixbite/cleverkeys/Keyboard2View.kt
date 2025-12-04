@@ -19,6 +19,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import android.view.WindowInsets
+import tribixbite.cleverkeys.theme.ThemeProvider
 import java.util.ArrayList
 
 /**
@@ -109,8 +110,14 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     init {
-        _theme = Theme(getContext(), attrs)
         _config = Config.globalConfig()
+        // Load theme: use ThemeProvider for runtime themes (decorative/custom),
+        // otherwise use XML-based Theme constructor
+        _theme = if (_config.isRuntimeTheme()) {
+            ThemeProvider.getInstance(context).getTheme(_config.themeName)
+        } else {
+            Theme(getContext(), attrs)
+        }
         _pointers = Pointers(this, _config, getContext())
         _swipeRecognizer = _pointers._swipeRecognizer // Share the recognizer
         _themeCache = LruCache(5)
