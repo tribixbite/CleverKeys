@@ -60,6 +60,19 @@
   - Restored special char placeholders: loc tab, loc €, loc ß, loc †
   - CK had different shortcuts (was overwritten with f1_* function keys)
 
+- ✅ Added caps lock ALL CAPS support for swipe typing
+  - Shift (latched) + swipe = capitalize first letter only (existing behavior)
+  - Caps Lock (locked) + swipe = UPPERCASE ENTIRE WORD (new behavior)
+  - Added isShiftLocked() to Keyboard2View to detect caps lock state
+  - Updated handleSwipeTyping to pass wasShiftLocked parameter
+  - InputCoordinator now applies uppercase() when caps lock was active
+
+- ✅ Smart punctuation already implemented
+  - Setting exists in settings.xml line 172
+  - Config.kt has smart_punctuation field (line 120) loaded from prefs (line 321)
+  - KeyEventHandler.kt lines 231-238 removes space before punctuation
+  - Supported chars: . , ! ? ; : ' " ) ] }
+
 - ✅ UK vs CK Comparison Complete (Dec 4, 2025)
   - **Settings**: Both have identical 165 settings keys in settings.xml
   - **Layouts**: All 84 layouts from UK are present in CK (+ numeric.xml extra)
