@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.ui
+package tribixbite.cleverkeys.ui
 
 /**
  * Emoji categories and data for the emoji picker.

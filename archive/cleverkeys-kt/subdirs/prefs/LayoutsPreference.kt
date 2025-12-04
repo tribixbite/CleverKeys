@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.prefs
+package tribixbite.cleverkeys.prefs
 
 import android.app.AlertDialog
 import android.content.Context
@@ -10,7 +10,7 @@ import android.view.View
 import android.widget.ArrayAdapter
 import org.json.JSONException
 import org.json.JSONObject
-import tribixbite.keyboard2.*
+import tribixbite.cleverkeys.*
 
 /**
  * Layout selection preference for CleverKeys.

@@ -41,6 +41,6 @@
   <PreferenceCategory android:title="About">
     <Preference android:key="version_info" android:title="Version Info" android:summary="Loading..."/>
     <Preference android:key="check_updates" android:title="Check for Updates" android:summary="Look for new APK files"/>
-    <Preference android:key="update_app" android:title="Install Update" android:summary="Install from /sdcard/unexpected/debug-kb.apk"/>
+    <Preference android:key="update_app" android:title="Install Update" android:summary="Install from /sdcard/Download/cleverkeys.apk"/>
   </PreferenceCategory>
 </PreferenceScreen>

@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.ui
+package tribixbite.cleverkeys.ui
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -20,7 +20,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import tribixbite.keyboard2.theme.keyboardColors
+import tribixbite.cleverkeys.theme.keyboardColors
 import kotlin.math.abs
 
 /**

@@ -50,13 +50,13 @@ jobs:
       run: |
         chmod +x gradlew
         ./gradlew assembleDebug --stacktrace
-        echo "apk-path=build/outputs/apk/debug/tribixbite.keyboard2.apk" >> $GITHUB_OUTPUT
+        echo "apk-path=build/outputs/apk/debug/tribixbite.cleverkeys.apk" >> $GITHUB_OUTPUT
 
     - name: Upload APK for testing
       uses: actions/upload-artifact@v4
       with:
         name: apks
-        path: build/outputs/apk/debug/tribixbite.keyboard2.apk
+        path: build/outputs/apk/debug/tribixbite.cleverkeys.apk
         retention-days: 1
 
   ui-tests:
@@ -151,11 +151,11 @@ jobs:
           adb shell ime list -a
 
           # Try to enable CleverKeys (may fail on some API levels, that's OK)
-          adb shell ime enable tribixbite.keyboard2/tribixbite.keyboard2.CleverKeysService || true
-          adb shell ime set tribixbite.keyboard2/tribixbite.keyboard2.CleverKeysService || true
+          adb shell ime enable tribixbite.cleverkeys/tribixbite.cleverkeys.CleverKeysService || true
+          adb shell ime set tribixbite.cleverkeys/tribixbite.cleverkeys.CleverKeysService || true
 
           # Basic smoke test - launch settings activity
-          adb shell am start -n tribixbite.keyboard2/tribixbite.keyboard2.SettingsActivity || true
+          adb shell am start -n tribixbite.cleverkeys/tribixbite.cleverkeys.SettingsActivity || true
           sleep 2
 
           # Capture screenshot
@@ -219,14 +219,14 @@ jobs:
           adb install "${{ env.APK_FILE }}"
 
           # Try to enable keyboard (may fail, that's OK)
-          adb shell ime enable tribixbite.keyboard2/tribixbite.keyboard2.CleverKeysService || true
-          adb shell ime set tribixbite.keyboard2/tribixbite.keyboard2.CleverKeysService || true
+          adb shell ime enable tribixbite.cleverkeys/tribixbite.cleverkeys.CleverKeysService || true
+          adb shell ime set tribixbite.cleverkeys/tribixbite.cleverkeys.CleverKeysService || true
 
           # Capture screenshots
           mkdir -p screenshots
 
           # Launch settings to verify app works
-          adb shell am start -n tribixbite.keyboard2/tribixbite.keyboard2.SettingsActivity || true
+          adb shell am start -n tribixbite.cleverkeys/tribixbite.cleverkeys.SettingsActivity || true
           sleep 2
           adb exec-out screencap -p > screenshots/settings-screen.png || true
 
@@ -296,8 +296,8 @@ jobs:
           adb install "${{ env.APK_FILE }}"
 
           # Try to enable keyboard (may fail, that's OK)
-          adb shell ime enable tribixbite.keyboard2/tribixbite.keyboard2.CleverKeysService || true
-          adb shell ime set tribixbite.keyboard2/tribixbite.keyboard2.CleverKeysService || true
+          adb shell ime enable tribixbite.cleverkeys/tribixbite.cleverkeys.CleverKeysService || true
+          adb shell ime set tribixbite.cleverkeys/tribixbite.cleverkeys.CleverKeysService || true
 
           # Enable accessibility services for testing
           adb shell settings put secure accessibility_enabled 1 || true
@@ -343,7 +343,7 @@ jobs:
         # Run tests (requires Firebase project setup)
         gcloud firebase test android run \
           --type instrumentation \
-          --app build/outputs/apk/debug/tribixbite.keyboard2.apk \
+          --app build/outputs/apk/debug/tribixbite.cleverkeys.apk \
           --test build/outputs/apk/androidTest/debug/*.apk \
           --device model=Pixel6,version=33 \
           --timeout 10m \

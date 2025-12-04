@@ -1,4 +1,4 @@
-package tribixbite.keyboard2
+package tribixbite.cleverkeys
 
 import android.app.Activity
 import android.graphics.PointF

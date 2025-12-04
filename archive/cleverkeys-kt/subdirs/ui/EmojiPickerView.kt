@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.ui
+package tribixbite.cleverkeys.ui
 
 import android.content.Context
 import android.util.AttributeSet

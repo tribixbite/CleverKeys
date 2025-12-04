@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.animation
+package tribixbite.cleverkeys.animation
 
 import androidx.compose.animation.core.*
 import androidx.compose.ui.unit.Dp

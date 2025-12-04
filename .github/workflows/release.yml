@@ -77,7 +77,7 @@ jobs:
         echo "" >> CHANGELOG.md
         echo "## 📊 Build Information" >> CHANGELOG.md
         echo "- **APK Size**: ~43MB (includes ONNX Runtime + neural models)" >> CHANGELOG.md
-        echo "- **Package**: tribixbite.keyboard2" >> CHANGELOG.md
+        echo "- **Package**: tribixbite.cleverkeys" >> CHANGELOG.md
         echo "- **Min Android**: 5.0 (API 21)" >> CHANGELOG.md
         echo "- **Target Android**: 14 (API 34)" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
@@ -91,7 +91,7 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          build/outputs/apk/release/tribixbite.keyboard2.apk
+          build/outputs/apk/release/tribixbite.cleverkeys.apk
         name: CleverKeys ${{ env.TAG_NAME }}
         tag_name: ${{ env.TAG_NAME }}
         body_path: CHANGELOG.md
@@ -106,7 +106,7 @@ jobs:
       with:
         name: cleverkeys-release-${{ env.TAG_NAME }}
         path: |
-          build/outputs/apk/release/tribixbite.keyboard2.apk
+          build/outputs/apk/release/tribixbite.cleverkeys.apk
           CHANGELOG.md
         retention-days: 365
 
@@ -115,7 +115,7 @@ jobs:
         echo "## 🎉 Release ${{ env.TAG_NAME }} Published!" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### 📱 Download" >> $GITHUB_STEP_SUMMARY
-        echo "- **APK**: [CleverKeys-${{ env.TAG_NAME }}.apk](https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/tribixbite.keyboard2.apk)" >> $GITHUB_STEP_SUMMARY
+        echo "- **APK**: [CleverKeys-${{ env.TAG_NAME }}.apk](https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/tribixbite.cleverkeys.apk)" >> $GITHUB_STEP_SUMMARY
         echo "- **Release Page**: [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ env.TAG_NAME }})" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### 🧠 Neural Features" >> $GITHUB_STEP_SUMMARY

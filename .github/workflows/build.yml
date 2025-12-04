@@ -71,7 +71,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: cleverkeys-debug-${{ steps.vars.outputs.sha_short }}
-        path: build/outputs/apk/debug/tribixbite.keyboard2.apk
+        path: build/outputs/apk/debug/tribixbite.cleverkeys.apk
         retention-days: 30
 
     - name: Upload release APK
@@ -79,14 +79,14 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: cleverkeys-release-${{ github.event.release.tag_name }}
-        path: build/outputs/apk/release/tribixbite.keyboard2.apk
+        path: build/outputs/apk/release/tribixbite.cleverkeys.apk
         retention-days: 90
 
     - name: Upload release APK to GitHub Release
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v1
       with:
-        files: build/outputs/apk/release/tribixbite.keyboard2.apk
+        files: build/outputs/apk/release/tribixbite.cleverkeys.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -116,7 +116,7 @@ jobs:
 
     - name: Analyze APK size
       run: |
-        APK_FILE="tribixbite.keyboard2.apk"
+        APK_FILE="tribixbite.cleverkeys.apk"
         if [ ! -f "$APK_FILE" ]; then
           echo "APK file not found at expected path"
           ls -la
@@ -139,4 +139,4 @@ jobs:
         echo "## Build Analysis" >> $GITHUB_STEP_SUMMARY
         echo "- **APK Size**: ${APK_SIZE_MB}MB" >> $GITHUB_STEP_SUMMARY
         echo "- **Neural Models**: Included (ONNX Runtime + transformer models)" >> $GITHUB_STEP_SUMMARY
-        echo "- **Package**: tribixbite.keyboard2" >> $GITHUB_STEP_SUMMARY
+        echo "- **Package**: tribixbite.cleverkeys" >> $GITHUB_STEP_SUMMARY

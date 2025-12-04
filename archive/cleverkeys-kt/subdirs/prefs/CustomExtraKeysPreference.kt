@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.prefs
+package tribixbite.cleverkeys.prefs
 
 import android.app.AlertDialog
 import android.content.Context
@@ -7,9 +7,9 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
-import tribixbite.keyboard2.KeyValue
-import tribixbite.keyboard2.KeyboardData
-import tribixbite.keyboard2.R
+import tribixbite.cleverkeys.KeyValue
+import tribixbite.cleverkeys.KeyboardData
+import tribixbite.cleverkeys.R
 
 /**
  * Custom Extra Keys Preference

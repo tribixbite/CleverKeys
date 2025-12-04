@@ -1,4 +1,4 @@
-package tribixbite.keyboard2
+package tribixbite.cleverkeys
 
 import android.view.MotionEvent
 import kotlin.math.sqrt

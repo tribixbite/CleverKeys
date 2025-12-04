@@ -1,8 +1,8 @@
-package tribixbite.keyboard2.ui
+package tribixbite.cleverkeys.ui
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
-import tribixbite.keyboard2.theme.KeyboardThemePreview
+import tribixbite.cleverkeys.theme.KeyboardThemePreview
 
 /**
  * Compose previews for SuggestionBarM3.

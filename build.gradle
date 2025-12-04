@@ -86,11 +86,11 @@ def getVersionName() {
 }
 
 android {
-  namespace 'tribixbite.keyboard2'
+  namespace 'tribixbite.cleverkeys'
   compileSdk 35
 
   defaultConfig {
-    applicationId "tribixbite.keyboard2"
+    applicationId "tribixbite.cleverkeys"
     minSdk 21
     targetSdkVersion 35
     versionCode getVersionCode()

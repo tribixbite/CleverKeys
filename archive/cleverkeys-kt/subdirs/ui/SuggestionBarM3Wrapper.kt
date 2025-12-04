@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.ui
+package tribixbite.cleverkeys.ui
 
 import android.content.Context
 import android.widget.FrameLayout
@@ -15,7 +15,7 @@ import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import tribixbite.keyboard2.theme.KeyboardTheme
+import tribixbite.cleverkeys.theme.KeyboardTheme
 
 /**
  * View-based wrapper for Material 3 SuggestionBar (Composable).

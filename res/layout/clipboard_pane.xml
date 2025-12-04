@@ -3,7 +3,7 @@
 
   <!-- Pinned Section (at top, wrap_content with large maxHeight for 2 expanded entries) -->
   <ScrollView android:layout_width="fill_parent" android:layout_height="wrap_content" android:maxHeight="600dp" android:scrollbars="vertical" android:fadeScrollbars="false">
-    <tribixbite.keyboard2.ClipboardPinView android:id="@+id/clipboard_pin_view" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content" android:divider="?attr/clipboard_divider_color" android:dividerHeight="?attr/clipboard_divider_height"/>
+    <tribixbite.cleverkeys.ClipboardPinView android:id="@+id/clipboard_pin_view" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content" android:divider="?attr/clipboard_divider_color" android:dividerHeight="?attr/clipboard_divider_height"/>
   </ScrollView>
 
   <!-- History Section with Search (separate scrolling) -->
@@ -14,7 +14,7 @@
   </LinearLayout>
 
   <ScrollView android:layout_width="fill_parent" android:layout_height="0dp" android:layout_weight="1">
-    <tribixbite.keyboard2.ClipboardHistoryView android:id="@+id/clipboard_history_view" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content" android:divider="?attr/clipboard_divider_color" android:dividerHeight="?attr/clipboard_divider_height"/>
+    <tribixbite.cleverkeys.ClipboardHistoryView android:id="@+id/clipboard_history_view" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content" android:divider="?attr/clipboard_divider_color" android:dividerHeight="?attr/clipboard_divider_height"/>
   </ScrollView>
 
 </LinearLayout>

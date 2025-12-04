@@ -1,4 +1,4 @@
-package tribixbite.keyboard2
+package tribixbite.cleverkeys
 
 import android.graphics.Color
 import android.os.Bundle
@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import tribixbite.keyboard2.theme.KeyboardTheme
+import tribixbite.cleverkeys.theme.KeyboardTheme
 
 /**
  * Modern neural prediction parameter settings activity.

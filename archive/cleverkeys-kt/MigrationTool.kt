@@ -1,4 +1,4 @@
-package tribixbite.keyboard2
+package tribixbite.cleverkeys
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -14,7 +14,7 @@ class MigrationTool(private val context: Context) {
 
     companion object {
         private const val TAG = "MigrationTool"
-        private const val JAVA_PACKAGE = "tribixbite.keyboard2"
+        private const val JAVA_PACKAGE = "tribixbite.cleverkeys"
         private const val MIGRATION_COMPLETED_KEY = "kotlin_migration_completed"
     }
     

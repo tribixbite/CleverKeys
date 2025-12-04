@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.ui
+package tribixbite.cleverkeys.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -10,7 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import tribixbite.keyboard2.theme.keyboardColors
+import tribixbite.cleverkeys.theme.keyboardColors
 
 /**
  * Word Info Dialog - Material 3 dialog showing suggestion details.

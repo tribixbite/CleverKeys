@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.clipboard
+package tribixbite.cleverkeys.clipboard
 
 import java.util.UUID
 

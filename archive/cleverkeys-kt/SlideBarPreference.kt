@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.prefs
+package tribixbite.cleverkeys.prefs
 
 import android.content.Context
 import android.content.res.TypedArray

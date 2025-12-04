@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.prefs
+package tribixbite.cleverkeys.prefs
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -9,10 +9,10 @@ import android.preference.PreferenceCategory
 import android.util.AttributeSet
 import android.view.View
 import android.widget.TextView
-import tribixbite.keyboard2.*
-import tribixbite.keyboard2.KeyValue
-import tribixbite.keyboard2.KeyboardData
-import tribixbite.keyboard2.Theme
+import tribixbite.cleverkeys.*
+import tribixbite.cleverkeys.KeyValue
+import tribixbite.cleverkeys.KeyboardData
+import tribixbite.cleverkeys.Theme
 
 /**
  * Extra keys preference management for CleverKeys.

@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.emoji
+package tribixbite.cleverkeys.emoji
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

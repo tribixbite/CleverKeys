@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.prefs
+package tribixbite.cleverkeys.prefs
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -9,7 +9,7 @@ import android.preference.PreferenceCategory
 import android.util.AttributeSet
 import android.view.View
 import android.widget.TextView
-import tribixbite.keyboard2.*
+import tribixbite.cleverkeys.*
 
 /** This class implements the "extra keys" preference but also defines the
     possible extra keys. */

@@ -1,4 +1,4 @@
-package tribixbite.keyboard2
+package tribixbite.cleverkeys
 
 import android.content.Intent
 import android.os.Bundle
@@ -14,8 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import java.io.File
-import tribixbite.keyboard2.theme.*
-import tribixbite.keyboard2.ui.*
+import tribixbite.cleverkeys.theme.*
+import tribixbite.cleverkeys.ui.*
 
 /**
  * Theme settings activity for CleverKeys.

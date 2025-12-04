@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.emoji
+package tribixbite.cleverkeys.emoji
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -23,8 +23,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import tribixbite.keyboard2.Emoji
-import tribixbite.keyboard2.R
+import tribixbite.cleverkeys.Emoji
+import tribixbite.cleverkeys.R
 
 /**
  * Material 3 emoji grid with LazyVerticalGrid

@@ -3,8 +3,8 @@
 
 CleverKeys-UI-Tests:
   type: instrumentation
-  app: build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
-  test: build/outputs/apk/androidTest/debug/tribixbite.keyboard2.debug-androidTest.apk
+  app: build/outputs/apk/debug/tribixbite.cleverkeys.debug.apk
+  test: build/outputs/apk/androidTest/debug/tribixbite.cleverkeys.debug-androidTest.apk
 
   # Test on diverse device matrix
   device-ids:
@@ -59,10 +59,10 @@ CleverKeys-UI-Tests:
 
   # Test configuration
   test-targets:
-    - class: tribixbite.keyboard2.test.PerformanceTestSuite
-    - class: tribixbite.keyboard2.test.UIResponsivenessTest
-    - class: tribixbite.keyboard2.test.VisualRegressionTestSuite
-    - class: tribixbite.keyboard2.test.AccessibilityTestSuite
+    - class: tribixbite.cleverkeys.test.PerformanceTestSuite
+    - class: tribixbite.cleverkeys.test.UIResponsivenessTest
+    - class: tribixbite.cleverkeys.test.VisualRegressionTestSuite
+    - class: tribixbite.cleverkeys.test.AccessibilityTestSuite
 
   # Performance monitoring
   performance-metrics:
@@ -89,13 +89,13 @@ CleverKeys-UI-Tests:
     - "settings put secure enabled_accessibility_services ''"
     - "settings put secure accessibility_enabled 0"
     - "settings put system font_scale 1.0"
-    - "ime enable tribixbite.keyboard2/.CleverKeysService"
-    - "ime set tribixbite.keyboard2/.CleverKeysService"
+    - "ime enable tribixbite.cleverkeys/.CleverKeysService"
+    - "ime set tribixbite.cleverkeys/.CleverKeysService"
 
 CleverKeys-Performance-Tests:
   type: instrumentation
-  app: build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
-  test: build/outputs/apk/androidTest/debug/tribixbite.keyboard2.debug-androidTest.apk
+  app: build/outputs/apk/debug/tribixbite.cleverkeys.debug.apk
+  test: build/outputs/apk/androidTest/debug/tribixbite.cleverkeys.debug-androidTest.apk
 
   # Focus on high-performance devices for neural benchmarks
   device-ids:
@@ -115,8 +115,8 @@ CleverKeys-Performance-Tests:
       orientation: portrait
 
   test-targets:
-    - class: tribixbite.keyboard2.test.PerformanceTestSuite
-    - package: tribixbite.keyboard2.benchmark
+    - class: tribixbite.cleverkeys.test.PerformanceTestSuite
+    - package: tribixbite.cleverkeys.benchmark
 
   performance-metrics:
     - cpu
@@ -134,8 +134,8 @@ CleverKeys-Performance-Tests:
 
 CleverKeys-Accessibility-Tests:
   type: instrumentation
-  app: build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
-  test: build/outputs/apk/androidTest/debug/tribixbite.keyboard2.debug-androidTest.apk
+  app: build/outputs/apk/debug/tribixbite.cleverkeys.debug.apk
+  test: build/outputs/apk/androidTest/debug/tribixbite.cleverkeys.debug-androidTest.apk
 
   device-ids:
     - model: Pixel7
@@ -149,7 +149,7 @@ CleverKeys-Accessibility-Tests:
       orientation: portrait
 
   test-targets:
-    - class: tribixbite.keyboard2.test.AccessibilityTestSuite
+    - class: tribixbite.cleverkeys.test.AccessibilityTestSuite
 
   # Accessibility-specific setup
   setup:
@@ -157,15 +157,15 @@ CleverKeys-Accessibility-Tests:
     - "settings put system font_scale 1.3"
     - "settings put secure enabled_accessibility_services com.google.android.marvin.talkback/.TalkBackService"
     - "settings put secure accessibility_enabled 1"
-    - "ime enable tribixbite.keyboard2/.CleverKeysService"
-    - "ime set tribixbite.keyboard2/.CleverKeysService"
+    - "ime enable tribixbite.cleverkeys/.CleverKeysService"
+    - "ime set tribixbite.cleverkeys/.CleverKeysService"
 
   timeout: 20m
 
 CleverKeys-Multi-Language-Tests:
   type: instrumentation
-  app: build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
-  test: build/outputs/apk/androidTest/debug/tribixbite.keyboard2.debug-androidTest.apk
+  app: build/outputs/apk/debug/tribixbite.cleverkeys.debug.apk
+  test: build/outputs/apk/androidTest/debug/tribixbite.cleverkeys.debug-androidTest.apk
 
   # Test different language configurations
   device-ids:
@@ -190,15 +190,15 @@ CleverKeys-Multi-Language-Tests:
       orientation: portrait
 
   test-targets:
-    - class: tribixbite.keyboard2.test.MultiLanguageTestSuite
-    - class: tribixbite.keyboard2.test.UIResponsivenessTest
+    - class: tribixbite.cleverkeys.test.MultiLanguageTestSuite
+    - class: tribixbite.cleverkeys.test.UIResponsivenessTest
 
   timeout: 25m
 
 CleverKeys-Neural-Stress-Tests:
   type: instrumentation
-  app: build/outputs/apk/debug/tribixbite.keyboard2.debug.apk
-  test: build/outputs/apk/androidTest/debug/tribixbite.keyboard2.debug-androidTest.apk
+  app: build/outputs/apk/debug/tribixbite.cleverkeys.debug.apk
+  test: build/outputs/apk/androidTest/debug/tribixbite.cleverkeys.debug-androidTest.apk
 
   # Use highest-performance devices for neural stress testing
   device-ids:
@@ -213,7 +213,7 @@ CleverKeys-Neural-Stress-Tests:
       orientation: portrait
 
   test-targets:
-    - class: tribixbite.keyboard2.test.NeuralStressTestSuite
+    - class: tribixbite.cleverkeys.test.NeuralStressTestSuite
 
   # Extended timeout for stress testing
   timeout: 60m

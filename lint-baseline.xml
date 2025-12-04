@@ -1093,7 +1093,7 @@
     <issue
         id="SdCardPath"
         message="Do not hardcode &quot;/sdcard/&quot;; use `Environment.getExternalStorageDirectory().getPath()` instead"
-        errorLine1="                    &quot;/sdcard/Download/tribixbite.keyboard2.debug.apk&quot;,"
+        errorLine1="                    &quot;/sdcard/Download/tribixbite.cleverkeys.debug.apk&quot;,"
         errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/tribixbite/keyboard2/SettingsActivity.kt"
@@ -1126,7 +1126,7 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `directBootAware` is only used in API level 24 and higher (current min is 21)"
-        errorLine1="    &lt;service android:name=&quot;tribixbite.keyboard2.CleverKeysService&quot; android:label=&quot;CleverKeys Neural Keyboard&quot; android:permission=&quot;android.permission.BIND_INPUT_METHOD&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
+        errorLine1="    &lt;service android:name=&quot;tribixbite.cleverkeys.CleverKeysService&quot; android:label=&quot;CleverKeys Neural Keyboard&quot; android:permission=&quot;android.permission.BIND_INPUT_METHOD&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
         errorLine2="                                                                                                                                                                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -1137,7 +1137,7 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `directBootAware` is only used in API level 24 and higher (current min is 21)"
-        errorLine1="    &lt;activity android:name=&quot;tribixbite.keyboard2.SettingsActivity&quot; android:icon=&quot;@mipmap/ic_launcher&quot; android:label=&quot;@string/app_name&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
+        errorLine1="    &lt;activity android:name=&quot;tribixbite.cleverkeys.SettingsActivity&quot; android:icon=&quot;@mipmap/ic_launcher&quot; android:label=&quot;@string/app_name&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
         errorLine2="                                                                                                                                                                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -1148,7 +1148,7 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `directBootAware` is only used in API level 24 and higher (current min is 21)"
-        errorLine1="    &lt;activity android:name=&quot;tribixbite.keyboard2.LauncherActivity&quot; android:icon=&quot;@mipmap/ic_launcher&quot; android:theme=&quot;@style/appTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
+        errorLine1="    &lt;activity android:name=&quot;tribixbite.cleverkeys.LauncherActivity&quot; android:icon=&quot;@mipmap/ic_launcher&quot; android:theme=&quot;@style/appTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
         errorLine2="                                                                                                                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -1159,7 +1159,7 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `directBootAware` is only used in API level 24 and higher (current min is 21)"
-        errorLine1="    &lt;activity android:name=&quot;tribixbite.keyboard2.SwipeCalibrationActivity&quot; android:label=&quot;@string/pref_swipe_calibration_title&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;/>"
+        errorLine1="    &lt;activity android:name=&quot;tribixbite.cleverkeys.SwipeCalibrationActivity&quot; android:label=&quot;@string/pref_swipe_calibration_title&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;/>"
         errorLine2="                                                                                                                                                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -1170,7 +1170,7 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `directBootAware` is only used in API level 24 and higher (current min is 21)"
-        errorLine1="    &lt;activity android:name=&quot;tribixbite.keyboard2.NeuralSettingsActivity&quot; android:label=&quot;Neural Settings&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
+        errorLine1="    &lt;activity android:name=&quot;tribixbite.cleverkeys.NeuralSettingsActivity&quot; android:label=&quot;Neural Settings&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
         errorLine2="                                                                                                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -1181,7 +1181,7 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `directBootAware` is only used in API level 24 and higher (current min is 21)"
-        errorLine1="    &lt;activity android:name=&quot;tribixbite.keyboard2.DictionaryManagerActivity&quot; android:label=&quot;@string/dictionary_title&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
+        errorLine1="    &lt;activity android:name=&quot;tribixbite.cleverkeys.DictionaryManagerActivity&quot; android:label=&quot;@string/dictionary_title&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
         errorLine2="                                                                                                                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -1192,7 +1192,7 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `directBootAware` is only used in API level 24 and higher (current min is 21)"
-        errorLine1="    &lt;activity android:name=&quot;tribixbite.keyboard2.LayoutManagerActivity&quot; android:label=&quot;Keyboard Layouts&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
+        errorLine1="    &lt;activity android:name=&quot;tribixbite.cleverkeys.LayoutManagerActivity&quot; android:label=&quot;Keyboard Layouts&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
         errorLine2="                                                                                                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -1203,7 +1203,7 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `directBootAware` is only used in API level 24 and higher (current min is 21)"
-        errorLine1="    &lt;activity android:name=&quot;tribixbite.keyboard2.ExtraKeysConfigActivity&quot; android:label=&quot;Extra Keys Configuration&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
+        errorLine1="    &lt;activity android:name=&quot;tribixbite.cleverkeys.ExtraKeysConfigActivity&quot; android:label=&quot;Extra Keys Configuration&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
         errorLine2="                                                                                                                                                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -1214,7 +1214,7 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `directBootAware` is only used in API level 24 and higher (current min is 21)"
-        errorLine1="    &lt;activity android:name=&quot;tribixbite.keyboard2.AutoCorrectionSettingsActivity&quot; android:label=&quot;Auto-Correction Settings&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
+        errorLine1="    &lt;activity android:name=&quot;tribixbite.cleverkeys.AutoCorrectionSettingsActivity&quot; android:label=&quot;Auto-Correction Settings&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
         errorLine2="                                                                                                                                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -1225,7 +1225,7 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `directBootAware` is only used in API level 24 and higher (current min is 21)"
-        errorLine1="    &lt;activity android:name=&quot;tribixbite.keyboard2.ClipboardSettingsActivity&quot; android:label=&quot;Clipboard Settings&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
+        errorLine1="    &lt;activity android:name=&quot;tribixbite.cleverkeys.ClipboardSettingsActivity&quot; android:label=&quot;Clipboard Settings&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
         errorLine2="                                                                                                                                                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -1236,7 +1236,7 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `directBootAware` is only used in API level 24 and higher (current min is 21)"
-        errorLine1="    &lt;activity android:name=&quot;tribixbite.keyboard2.NeuralBrowserActivity&quot; android:label=&quot;Neural Model Browser (Legacy)&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
+        errorLine1="    &lt;activity android:name=&quot;tribixbite.cleverkeys.NeuralBrowserActivity&quot; android:label=&quot;Neural Model Browser (Legacy)&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
         errorLine2="                                                                                                                                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -1247,7 +1247,7 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `directBootAware` is only used in API level 24 and higher (current min is 21)"
-        errorLine1="    &lt;activity android:name=&quot;tribixbite.keyboard2.neural.NeuralBrowserActivityM3&quot; android:label=&quot;Neural Model Browser (Material 3)&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
+        errorLine1="    &lt;activity android:name=&quot;tribixbite.cleverkeys.neural.NeuralBrowserActivityM3&quot; android:label=&quot;Neural Model Browser (Material 3)&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
         errorLine2="                                                                                                                                                                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -1258,7 +1258,7 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `directBootAware` is only used in API level 24 and higher (current min is 21)"
-        errorLine1="    &lt;activity android:name=&quot;tribixbite.keyboard2.BackupRestoreActivity&quot; android:label=&quot;Backup &amp;amp; Restore&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
+        errorLine1="    &lt;activity android:name=&quot;tribixbite.cleverkeys.BackupRestoreActivity&quot; android:label=&quot;Backup &amp;amp; Restore&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
         errorLine2="                                                                                                                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -1269,7 +1269,7 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `directBootAware` is only used in API level 24 and higher (current min is 21)"
-        errorLine1="    &lt;activity android:name=&quot;tribixbite.keyboard2.SwipeDebugActivity&quot; android:label=&quot;Swipe Debug Log&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
+        errorLine1="    &lt;activity android:name=&quot;tribixbite.cleverkeys.SwipeDebugActivity&quot; android:label=&quot;Swipe Debug Log&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
         errorLine2="                                                                                                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -2446,7 +2446,7 @@
     <issue
         id="RedundantLabel"
         message="Redundant label can be removed"
-        errorLine1="    &lt;activity android:name=&quot;tribixbite.keyboard2.SettingsActivity&quot; android:icon=&quot;@mipmap/ic_launcher&quot; android:label=&quot;@string/app_name&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
+        errorLine1="    &lt;activity android:name=&quot;tribixbite.cleverkeys.SettingsActivity&quot; android:icon=&quot;@mipmap/ic_launcher&quot; android:label=&quot;@string/app_name&quot; android:theme=&quot;@style/settingsTheme&quot; android:exported=&quot;true&quot; android:directBootAware=&quot;true&quot;>"
         errorLine2="                                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="AndroidManifest.xml"
@@ -2633,7 +2633,7 @@
     <issue
         id="DiscouragedApi"
         message="Use of this function is discouraged because resource reflection makes it harder to perform build optimizations and compile-time verification of code. It is much more efficient to retrieve resources by identifier (e.g. `R.foo.bar`) than by name (e.g. `getIdentifier(&quot;bar&quot;, &quot;foo&quot;, null)`)."
-        errorLine1="            val resourceId = resources.getIdentifier(&quot;numpad&quot;, &quot;xml&quot;, &quot;tribixbite.keyboard2&quot;)"
+        errorLine1="            val resourceId = resources.getIdentifier(&quot;numpad&quot;, &quot;xml&quot;, &quot;tribixbite.cleverkeys&quot;)"
         errorLine2="                                       ~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/tribixbite/keyboard2/KeyboardData.kt"
@@ -5790,7 +5790,7 @@
     <issue
         id="MissingTranslation"
         message="&quot;settings_no_update_dialog_message&quot; is not translated in &quot;de&quot; (German), &quot;ru&quot; (Russian), &quot;ko&quot; (Korean), &quot;pt&quot; (Portuguese), &quot;in&quot; (Indonesian), &quot;fil&quot; (Filipino; Pilipino), &quot;lv&quot; (Latvian), &quot;it&quot; (Italian), &quot;fr&quot; (French), &quot;hu&quot; (Hungarian), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;cs&quot; (Czech), &quot;vi&quot; (Vietnamese), &quot;uk&quot; (Ukrainian), &quot;ja&quot; (Japanese), &quot;fa&quot; (Persian), &quot;pl&quot; (Polish), &quot;ro&quot; (Romanian), &quot;nl&quot; (Dutch), &quot;tr&quot; (Turkish)"
-        errorLine1="    &lt;string name=&quot;settings_no_update_dialog_message&quot;>Place APK file in one of these locations:\n\n• /sdcard/Download/cleverkeys-debug.apk\n• /sdcard/Download/tribixbite.keyboard2.debug.apk\n• /sdcard/unexpected/debug-kb.apk\n\nOr run from Termux:\n  ./install.sh&lt;/string>"
+        errorLine1="    &lt;string name=&quot;settings_no_update_dialog_message&quot;>Place APK file in one of these locations:\n\n• /sdcard/Download/cleverkeys-debug.apk\n• /sdcard/Download/tribixbite.cleverkeys.debug.apk\n• /sdcard/unexpected/debug-kb.apk\n\nOr run from Termux:\n  ./install.sh&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="res/values/strings.xml"
@@ -7428,7 +7428,7 @@
     <issue
         id="Overdraw"
         message="Possible overdraw: Root element paints background `?attr/colorKeyboard` with a theme that also paints a background (inferred theme is `@android:style/Theme.Holo`)"
-        errorLine1="&lt;tribixbite.keyboard2.Keyboard2View xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; android:hardwareAccelerated=&quot;false&quot; android:background=&quot;?attr/colorKeyboard&quot;/>"
+        errorLine1="&lt;tribixbite.cleverkeys.Keyboard2View xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; android:hardwareAccelerated=&quot;false&quot; android:background=&quot;?attr/colorKeyboard&quot;/>"
         errorLine2="                                                                                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="res/layout/keyboard.xml"
@@ -7863,7 +7863,7 @@
     <issue
         id="UnusedResources"
         message="The resource `R.layout.keyboard` appears to be unused"
-        errorLine1="&lt;tribixbite.keyboard2.Keyboard2View xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; android:hardwareAccelerated=&quot;false&quot; android:background=&quot;?attr/colorKeyboard&quot;/>"
+        errorLine1="&lt;tribixbite.cleverkeys.Keyboard2View xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; android:hardwareAccelerated=&quot;false&quot; android:background=&quot;?attr/colorKeyboard&quot;/>"
         errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="res/layout/keyboard.xml"

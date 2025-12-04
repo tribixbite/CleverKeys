@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.neural
+package tribixbite.cleverkeys.neural
 
 import android.graphics.PointF
 import android.os.Bundle
@@ -28,11 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import tribixbite.keyboard2.Config
-import tribixbite.keyboard2.NeuralSwipeEngine
-import tribixbite.keyboard2.PredictionResult
-import tribixbite.keyboard2.SwipeInput
-import tribixbite.keyboard2.theme.KeyboardTheme
+import tribixbite.cleverkeys.Config
+import tribixbite.cleverkeys.NeuralSwipeEngine
+import tribixbite.cleverkeys.PredictionResult
+import tribixbite.cleverkeys.SwipeInput
+import tribixbite.cleverkeys.theme.KeyboardTheme
 import kotlin.math.*
 
 /**

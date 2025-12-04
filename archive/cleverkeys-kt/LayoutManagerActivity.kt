@@ -1,4 +1,4 @@
-package tribixbite.keyboard2
+package tribixbite.cleverkeys
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -23,8 +23,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import org.burnoutcrew.reorderable.*
-import tribixbite.keyboard2.prefs.LayoutsPreference
-import tribixbite.keyboard2.prefs.ListGroupPreference
+import tribixbite.cleverkeys.prefs.LayoutsPreference
+import tribixbite.cleverkeys.prefs.ListGroupPreference
 
 /**
  * Layout Manager Activity - Manage Keyboard Layouts

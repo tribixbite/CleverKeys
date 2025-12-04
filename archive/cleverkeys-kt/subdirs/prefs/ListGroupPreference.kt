@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.prefs
+package tribixbite.cleverkeys.prefs
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -9,8 +9,8 @@ import android.view.View
 import android.view.ViewGroup
 import org.json.JSONArray
 import org.json.JSONException
-import tribixbite.keyboard2.Logs
-import tribixbite.keyboard2.R
+import tribixbite.cleverkeys.Logs
+import tribixbite.cleverkeys.R
 
 /**
  * A dynamic list preference where users can add, modify, and remove items.

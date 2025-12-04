@@ -337,7 +337,7 @@
     <string name="settings_update_dialog_message">APK found at:\n%1$s\n\nSize: %2$d KB</string>
     <string name="settings_update_dialog_install">Install</string>
     <string name="settings_no_update_dialog_title">No Updates Found</string>
-    <string name="settings_no_update_dialog_message">Place APK file in one of these locations:\n\n• /sdcard/Download/cleverkeys-debug.apk\n• /sdcard/Download/tribixbite.keyboard2.debug.apk\n• /sdcard/unexpected/debug-kb.apk\n\nOr run from Termux:\n  ./install.sh</string>
+    <string name="settings_no_update_dialog_message">Place APK file in one of these locations:\n\n• /sdcard/Download/cleverkeys-debug.apk\n• /sdcard/Download/tribixbite.cleverkeys.debug.apk\n• /sdcard/Download/cleverkeys.apk\n\nOr run from Termux:\n  ./install.sh</string>
 
     <!-- Toast Messages -->
     <string name="settings_toast_error_saving">Error saving setting: %1$s</string>

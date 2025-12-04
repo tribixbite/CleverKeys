@@ -1,0 +1,351 @@
+package tribixbite.cleverkeys
+
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import tribixbite.cleverkeys.theme.KeyboardTheme
+
+/**
+ * Modern neural prediction parameter settings activity.
+ *
+ * Features:
+ * - Real-time ONNX parameter tuning
+ * - Modern Compose UI with Material Design 3
+ * - Persistent settings with reactive updates (using default shared prefs)
+ * - Exposes critical beam search parameters for advanced users
+ */
+class NeuralSettingsActivity : ComponentActivity() {
+
+    // Current parameter values with reactive state
+    private var beamWidth by mutableStateOf(4)
+    private var maxLength by mutableStateOf(35)
+    private var confidenceThreshold by mutableStateOf(0.1f)
+    
+    // Advanced Beam Search Parameters
+    private var beamAlpha by mutableStateOf(1.2f)
+    private var beamPruneConfidence by mutableStateOf(0.8f)
+    private var beamScoreGap by mutableStateOf(5.0f)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // Load saved parameters
+        loadSavedParameters()
+
+        setContent {
+            KeyboardTheme(darkTheme = true) {
+                NeuralSettingsScreen()
+            }
+        }
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    private fun NeuralSettingsScreen() {
+        val scrollState = rememberScrollState()
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(16.dp)
+                .verticalScroll(scrollState),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Header
+            Text(
+                text = "Neural Prediction Settings",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Text(
+                text = "Configure the neural network swipe predictor. These settings affect accuracy, speed, and battery usage.",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 20.sp
+            )
+
+            // Core Parameters Section
+            ParameterSection("Core Parameters") {
+
+                // Beam Width
+                ParameterSlider(
+                    title = "Beam Width",
+                    description = "Number of candidate paths to explore. Higher = better accuracy, slower speed.",
+                    value = beamWidth.toFloat(),
+                    valueRange = 1f..16f,
+                    steps = 15,
+                    onValueChange = {
+                        beamWidth = it.toInt()
+                        updateNeuralParameters()
+                    },
+                    displayValue = beamWidth.toString()
+                )
+
+                // Max Length
+                ParameterSlider(
+                    title = "Max Sequence Length",
+                    description = "Maximum length of predicted words. Increase for longer words.",
+                    value = maxLength.toFloat(),
+                    valueRange = 10f..50f,
+                    steps = 40,
+                    onValueChange = {
+                        maxLength = it.toInt()
+                        updateNeuralParameters()
+                    },
+                    displayValue = maxLength.toString()
+                )
+
+                // Confidence Threshold
+                ParameterSlider(
+                    title = "Confidence Threshold",
+                    description = "Minimum probability for a word to be suggested. Lower = more suggestions.",
+                    value = confidenceThreshold,
+                    valueRange = 0.0f..1.0f,
+                    steps = 100,
+                    onValueChange = {
+                        confidenceThreshold = it
+                        updateNeuralParameters()
+                    },
+                    displayValue = "%.3f".format(confidenceThreshold)
+                )
+            }
+
+            // Advanced Parameters Section
+            ParameterSection("Advanced Beam Search") {
+
+                // Beam Alpha (Length Penalty)
+                ParameterSlider(
+                    title = "Length Penalty (Alpha)",
+                    description = "Controls bias towards longer words. >1.0 favors long words, <1.0 favors short words.",
+                    value = beamAlpha,
+                    valueRange = 0.0f..3.0f,
+                    steps = 30,
+                    onValueChange = {
+                        beamAlpha = it
+                        updateNeuralParameters()
+                    },
+                    displayValue = "%.2f".format(beamAlpha)
+                )
+
+                // Pruning Confidence
+                ParameterSlider(
+                    title = "Pruning Confidence",
+                    description = "Aggressiveness of beam pruning. Higher (0.8+) = safer, Lower (0.03) = faster but risks missing words.",
+                    value = beamPruneConfidence,
+                    valueRange = 0.0f..1.0f,
+                    steps = 100,
+                    onValueChange = {
+                        beamPruneConfidence = it
+                        updateNeuralParameters()
+                    },
+                    displayValue = "%.2f".format(beamPruneConfidence)
+                )
+
+                // Score Gap
+                ParameterSlider(
+                    title = "Score Gap Threshold",
+                    description = "Stop searching if top candidate is much better than others.",
+                    value = beamScoreGap,
+                    valueRange = 0.0f..50.0f,
+                    steps = 50,
+                    onValueChange = {
+                        beamScoreGap = it
+                        updateNeuralParameters()
+                    },
+                    displayValue = "%.1f".format(beamScoreGap)
+                )
+            }
+
+            // Action Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { resetToDefaults() },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Reset Defaults")
+                }
+
+                Button(
+                    onClick = { saveAndApplyParameters() },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Save & Exit")
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun ParameterSection(
+        title: String,
+        content: @Composable ColumnScope.() -> Unit
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            shape = RoundedCornerShape(8.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = title,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                content()
+            }
+        }
+    }
+
+    @Composable
+    private fun ParameterSlider(
+        title: String,
+        description: String,
+        value: Float,
+        valueRange: ClosedFloatingPointRange<Float>,
+        steps: Int,
+        onValueChange: (Float) -> Unit,
+        displayValue: String
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 16.sp
+                )
+                Text(
+                    text = displayValue,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Text(
+                text = description,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+
+            Slider(
+                value = value,
+                onValueChange = onValueChange,
+                valueRange = valueRange,
+                steps = steps
+            )
+        }
+    }
+
+    private fun updateNeuralParameters() {
+        lifecycleScope.launch {
+            try {
+                // Update global neural configuration in memory
+                val config = Config.globalConfig()
+                config.neural_beam_width = beamWidth
+                config.neural_max_length = maxLength
+                config.neural_confidence_threshold = confidenceThreshold
+                config.neural_beam_alpha = beamAlpha
+                config.neural_beam_prune_confidence = beamPruneConfidence
+                config.neural_beam_score_gap = beamScoreGap
+
+                // Save to preferences for immediate use
+                saveParametersToPrefs()
+
+                android.util.Log.d("NeuralSettings",
+                    "Updated parameters: beam=$beamWidth, maxLen=$maxLength, " +
+                    "conf=%.3f".format(confidenceThreshold))
+
+            } catch (e: Exception) {
+                android.util.Log.e("NeuralSettings", "Error updating configuration", e)
+            }
+        }
+    }
+
+    private fun resetToDefaults() {
+        beamWidth = 4
+        maxLength = 35
+        confidenceThreshold = 0.1f
+        beamAlpha = 1.2f
+        beamPruneConfidence = 0.8f
+        beamScoreGap = 5.0f
+
+        updateNeuralParameters()
+
+        Toast.makeText(this, "Reset to defaults", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun saveAndApplyParameters() {
+        lifecycleScope.launch {
+            try {
+                saveParametersToPrefs()
+                Toast.makeText(this@NeuralSettingsActivity, "Settings saved", Toast.LENGTH_SHORT).show()
+                finish()
+            } catch (e: Exception) {
+                android.util.Log.e("NeuralSettings", "Error saving", e)
+                Toast.makeText(this@NeuralSettingsActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun loadSavedParameters() {
+        // CRITICAL FIX: Use default shared preferences to match Config.kt
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        
+        beamWidth = Config.safeGetInt(prefs, "neural_beam_width", 4)
+        maxLength = Config.safeGetInt(prefs, "neural_max_length", 35)
+        confidenceThreshold = Config.safeGetFloat(prefs, "neural_confidence_threshold", 0.1f)
+        
+        beamAlpha = Config.safeGetFloat(prefs, "neural_beam_alpha", 1.2f)
+        beamPruneConfidence = Config.safeGetFloat(prefs, "neural_beam_prune_confidence", 0.8f)
+        beamScoreGap = Config.safeGetFloat(prefs, "neural_beam_score_gap", 5.0f)
+    }
+
+    private fun saveParametersToPrefs() {
+        // CRITICAL FIX: Use default shared preferences to match Config.kt
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        val editor = prefs.edit()
+        
+        editor.putInt("neural_beam_width", beamWidth)
+        editor.putInt("neural_max_length", maxLength)
+        editor.putFloat("neural_confidence_threshold", confidenceThreshold)
+        
+        editor.putFloat("neural_beam_alpha", beamAlpha)
+        editor.putFloat("neural_beam_prune_confidence", beamPruneConfidence)
+        editor.putFloat("neural_beam_score_gap", beamScoreGap)
+        
+        editor.apply()
+    }
+}

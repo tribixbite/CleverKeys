@@ -1,4 +1,4 @@
-package tribixbite.keyboard2
+package tribixbite.cleverkeys
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel

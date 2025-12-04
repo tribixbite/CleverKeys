@@ -49,7 +49,7 @@ jobs:
 
     - name: Rename APK with version
       run: |
-        mv build/outputs/apk/debug/tribixbite.keyboard2.apk \
+        mv build/outputs/apk/debug/tribixbite.cleverkeys.apk \
            build/outputs/apk/debug/CleverKeys-nightly-${{ steps.version.outputs.sha_short }}.apk
 
     - name: Update nightly release

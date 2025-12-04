@@ -1,11 +1,11 @@
-package tribixbite.keyboard2.emoji
+package tribixbite.cleverkeys.emoji
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import tribixbite.keyboard2.Emoji
+import tribixbite.cleverkeys.Emoji
 
 /**
  * ViewModel for emoji selection with Material 3 support

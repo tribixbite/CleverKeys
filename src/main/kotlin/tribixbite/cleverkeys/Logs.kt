@@ -1,0 +1,54 @@
+package tribixbite.cleverkeys
+
+import android.util.Log
+import android.util.LogPrinter
+import android.view.inputmethod.EditorInfo
+
+object Logs {
+    const val TAG = "tribixbite.cleverkeys"
+
+    private var debugLogs: LogPrinter? = null
+
+    @JvmStatic
+    fun set_debug_logs(d: Boolean) {
+        debugLogs = if (d) LogPrinter(Log.DEBUG, TAG) else null
+    }
+
+    /** Alias for set_debug_logs for SettingsActivity compatibility */
+    @JvmStatic
+    fun setDebugEnabled(enabled: Boolean) {
+        set_debug_logs(enabled)
+    }
+
+    @JvmStatic
+    fun debug_startup_input_view(info: EditorInfo, conf: Config) {
+        debugLogs?.let { logs ->
+            info.dump(logs, "")
+            info.extras?.let {
+                logs.println("extras: ${it}")
+            }
+            logs.println("swapEnterActionKey: ${conf.swapEnterActionKey}")
+            logs.println("actionLabel: ${conf.actionLabel}")
+        }
+    }
+
+    @JvmStatic
+    fun debug_config_migration(from_version: Int, to_version: Int) {
+        debug("Migrating config version from $from_version to $to_version")
+    }
+
+    @JvmStatic
+    fun debug(s: String) {
+        debugLogs?.println(s)
+    }
+
+    @JvmStatic
+    fun exn(msg: String, e: Exception) {
+        Log.e(TAG, msg, e)
+    }
+
+    @JvmStatic
+    fun trace() {
+        debugLogs?.println(Log.getStackTraceString(Exception()))
+    }
+}

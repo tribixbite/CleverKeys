@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.ui
+package tribixbite.cleverkeys.ui
 
 /**
  * Represents a single word suggestion for the suggestion bar.

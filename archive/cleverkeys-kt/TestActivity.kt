@@ -1,4 +1,4 @@
-package tribixbite.keyboard2
+package tribixbite.cleverkeys
 
 import android.app.Activity
 import android.graphics.PointF
@@ -10,7 +10,7 @@ import java.io.File
 
 /**
  * Simple test activity for neural prediction validation
- * Launch via: adb shell am start -n tribixbite.keyboard2/.TestActivity
+ * Launch via: adb shell am start -n tribixbite.cleverkeys/.TestActivity
  */
 class TestActivity : Activity() {
 

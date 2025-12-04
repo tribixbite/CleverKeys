@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.animation
+package tribixbite.cleverkeys.animation
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import tribixbite.keyboard2.KeyboardData
+import tribixbite.cleverkeys.KeyboardData
 
 /**
  * Central animation manager for CleverKeys keyboard.

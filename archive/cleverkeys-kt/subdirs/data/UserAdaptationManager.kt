@@ -1,11 +1,11 @@
-package tribixbite.keyboard2.data
+package tribixbite.cleverkeys.data
 
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import org.json.JSONException
 import org.json.JSONObject
-import tribixbite.keyboard2.DirectBootAwarePreferences
+import tribixbite.cleverkeys.DirectBootAwarePreferences
 
 /**
  * User Adaptation Manager for Personalized Word Predictions

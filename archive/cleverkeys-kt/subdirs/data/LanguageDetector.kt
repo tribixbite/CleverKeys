@@ -1,4 +1,4 @@
-package tribixbite.keyboard2.data
+package tribixbite.cleverkeys.data
 
 import android.content.Context
 import android.util.Log

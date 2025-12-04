@@ -24,7 +24,7 @@
   <application android:label="@string/app_name" android:allowBackup="true" android:icon="@mipmap/ic_launcher" android:hardwareAccelerated="true">
     <!-- CleverKeys Neural Keyboard Service -->
     <!-- FIX: Removed applicationIdSuffix ".debug" from build.gradle to fix keyboard crash -->
-    <service android:name="tribixbite.keyboard2.CleverKeysService"
+    <service android:name="tribixbite.cleverkeys.CleverKeysService"
              android:label="CleverKeys Neural Keyboard"
              android:permission="android.permission.BIND_INPUT_METHOD"
              android:exported="true"
@@ -35,29 +35,29 @@
       <meta-data android:name="android.view.im" android:resource="@xml/method"/>
     </service>
 
-    <activity android:name="tribixbite.keyboard2.SettingsActivity" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+    <activity android:name="tribixbite.cleverkeys.SettingsActivity" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
       </intent-filter>
     </activity>
 
-    <activity android:name="tribixbite.keyboard2.SettingsPreferenceActivity" android:label="@string/settings_title" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+    <activity android:name="tribixbite.cleverkeys.SettingsPreferenceActivity" android:label="@string/settings_title" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity>
 
-    <activity android:name="tribixbite.keyboard2.LauncherActivity" android:icon="@mipmap/ic_launcher" android:theme="@style/appTheme" android:exported="true" android:directBootAware="true">
+    <activity android:name="tribixbite.cleverkeys.LauncherActivity" android:icon="@mipmap/ic_launcher" android:theme="@style/appTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
     </activity>
 
-    <activity android:name="tribixbite.keyboard2.SwipeCalibrationActivity" android:label="@string/pref_swipe_calibration_title" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true"/>
+    <activity android:name="tribixbite.cleverkeys.SwipeCalibrationActivity" android:label="@string/pref_swipe_calibration_title" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true"/>
 
-    <activity android:name="tribixbite.keyboard2.NeuralSettingsActivity" android:label="Neural Settings" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+    <activity android:name="tribixbite.cleverkeys.NeuralSettingsActivity" android:label="Neural Settings" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.DEFAULT"/>
@@ -66,28 +66,28 @@
 
     <!-- DictionaryManagerActivity removed - now opens Android's User Dictionary settings -->
 
-    <activity android:name="tribixbite.keyboard2.LayoutManagerActivity" android:label="Keyboard Layouts" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+    <activity android:name="tribixbite.cleverkeys.LayoutManagerActivity" android:label="Keyboard Layouts" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity>
 
-    <activity android:name="tribixbite.keyboard2.ThemeSettingsActivity" android:label="Keyboard Themes" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+    <activity android:name="tribixbite.cleverkeys.ThemeSettingsActivity" android:label="Keyboard Themes" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity>
 
-    <activity android:name="tribixbite.keyboard2.ExtraKeysConfigActivity" android:label="Extra Keys Configuration" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+    <activity android:name="tribixbite.cleverkeys.ExtraKeysConfigActivity" android:label="Extra Keys Configuration" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity>
 
-    <activity android:name="tribixbite.keyboard2.AutoCorrectionSettingsActivity" android:label="Auto-Correction Settings" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+    <activity android:name="tribixbite.cleverkeys.AutoCorrectionSettingsActivity" android:label="Auto-Correction Settings" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.DEFAULT"/>
@@ -96,30 +96,30 @@
 
     <!-- ClipboardSettingsActivity removed - settings now inline in main SettingsActivity -->
 
-    <activity android:name="tribixbite.keyboard2.NeuralBrowserActivity" android:label="Neural Model Browser (Legacy)" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+    <activity android:name="tribixbite.cleverkeys.NeuralBrowserActivity" android:label="Neural Model Browser (Legacy)" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity>
 
-    <activity android:name="tribixbite.keyboard2.neural.NeuralBrowserActivityM3" android:label="Neural Model Browser (Material 3)" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+    <activity android:name="tribixbite.cleverkeys.neural.NeuralBrowserActivityM3" android:label="Neural Model Browser (Material 3)" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity>
 
-    <activity android:name="tribixbite.keyboard2.BackupRestoreActivity" android:label="Backup &amp; Restore" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+    <activity android:name="tribixbite.cleverkeys.BackupRestoreActivity" android:label="Backup &amp; Restore" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity>
 
-    <activity android:name="tribixbite.keyboard2.TestActivity" android:exported="true"/>
+    <activity android:name="tribixbite.cleverkeys.TestActivity" android:exported="true"/>
 
-    <activity android:name="tribixbite.keyboard2.SwipeDebugActivity" android:label="Swipe Debug Log" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
+    <activity android:name="tribixbite.cleverkeys.SwipeDebugActivity" android:label="Swipe Debug Log" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.DEFAULT"/>
