@@ -1,13 +1,23 @@
-# CleverKeys
+<p align="center">
+  <img src="assets/raccoon_logo.png" alt="CleverKeys Logo" width="200"/>
+</p>
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Android](https://img.shields.io/badge/Android-8.0%2B-green.svg)](https://developer.android.com)
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.9.20-purple.svg)](https://kotlinlang.org)
-[![Build](https://github.com/tribixbite/CleverKeys/actions/workflows/ci.yml/badge.svg)](https://github.com/tribixbite/CleverKeys/actions)
+<h1 align="center">CleverKeys</h1>
 
-**The only fully open-source, offline gesture keyboard for Android.**
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3"/></a>
+  <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Android-8.0%2B-green.svg" alt="Android"/></a>
+  <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-1.9.20-purple.svg" alt="Kotlin"/></a>
+  <a href="https://github.com/tribixbite/CleverKeys/actions"><img src="https://github.com/tribixbite/CleverKeys/actions/workflows/ci.yml/badge.svg" alt="Build"/></a>
+</p>
 
-No proprietary libraries. No cloud dependencies. No data collection. Just fast, accurate swipe typing that runs entirely on your device.
+<p align="center">
+  <strong>The only fully open-source, offline gesture keyboard for Android.</strong>
+</p>
+
+<p align="center">
+  <em>No proprietary libraries. No cloud dependencies. No data collection.<br/>Just fast, accurate swipe typing that runs entirely on your device.</em>
+</p>
 
 ---
 
@@ -211,5 +221,8 @@ If you want a battle-tested, lightweight keyboard without gesture typing, we hig
 
 ---
 
-*Built with Kotlin, ONNX, and a commitment to privacy.*
-*Developed in Termux on Android.*
+<p align="center">
+  <em>Built with Kotlin, ONNX, and a commitment to privacy.</em><br/>
+  <em>Developed in Termux on Android.</em><br/><br/>
+  🦝✨
+</p>
