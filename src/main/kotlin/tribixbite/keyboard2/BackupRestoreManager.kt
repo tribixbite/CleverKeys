@@ -433,7 +433,17 @@ class BackupRestoreManager(private val context: Context) {
             // Neural confidence threshold
             "neural_confidence_threshold",
             // Swipe typing boost parameters (SlideBarPreference floats)
-            "swipe_rare_words_penalty", "swipe_common_words_boost", "swipe_top5000_boost" -> true
+            "swipe_rare_words_penalty", "swipe_common_words_boost", "swipe_top5000_boost",
+            // Advanced gesture tuning floats
+            "slider_speed_smoothing", "slider_speed_max",
+            "swipe_min_distance", "swipe_min_key_distance", "swipe_noise_threshold",
+            "swipe_high_velocity_threshold",
+            // Neural beam search floats
+            "neural_beam_score_gap", "neural_beam_prune_confidence", "neural_beam_alpha",
+            // Language detection
+            "pref_language_detection_sensitivity",
+            // Swipe trail appearance
+            "swipe_trail_width", "swipe_trail_glow_radius" -> true
             else -> false
         }
     }
