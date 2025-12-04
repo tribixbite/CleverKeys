@@ -378,7 +378,11 @@ class BeamSearchEngine(
         if (wordStr.isEmpty()) return null
         
         // Score is NLL, so Prob = exp(-score)
-        val confidence = exp(-beam.score)
+        // FIX: Use Length-Normalized Score for Confidence
+        val len = beam.tokens.size.toFloat()
+        val normFactor = (5.0 + len).pow(lengthPenaltyAlpha.toDouble()).toFloat() / 6.0.pow(lengthPenaltyAlpha.toDouble()).toFloat()
+        val normalizedScore = beam.score / normFactor
+        val confidence = exp(-normalizedScore)
         
         // FIX #3: Lower confidence threshold
         if (confidence < confidenceThreshold) return null

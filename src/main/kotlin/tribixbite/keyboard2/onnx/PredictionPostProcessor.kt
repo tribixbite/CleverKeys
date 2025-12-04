@@ -138,12 +138,7 @@ class PredictionPostProcessor(
 
         // Add raw beam predictions if enabled
         if (showRawBeamPredictions && candidates.isNotEmpty()) {
-            var minFilteredScore = Int.MAX_VALUE
-            for (score in scores) {
-                if (score < minFilteredScore) minFilteredScore = score
-            }
-
-            val rawScoreCap = max(1, minFilteredScore / 10)
+            // FIX: Uncap raw scores
             val numRawToAdd = min(3, candidates.size)
 
             for (i in 0 until numRawToAdd) {
@@ -157,10 +152,19 @@ class PredictionPostProcessor(
                 }
 
                 if (!alreadyIncluded) {
-                    val rawScore = min((candidate.confidence * 1000).toInt(), rawScoreCap)
+                    val rawScore = (candidate.confidence * 1000).toInt()
                     words.add("raw:${candidate.word}")
                     scores.add(rawScore)
                 }
+            }
+
+            // Re-sort to rank raw candidates correctly
+            if (scores.size > 1) {
+                val combined = ArrayList<Pair<String, Int>>()
+                for (i in words.indices) combined.add(Pair(words[i], scores[i]))
+                combined.sortByDescending { it.second }
+                words.clear(); scores.clear()
+                for (p in combined) { words.add(p.first); scores.add(p.second) }
             }
         }
 
