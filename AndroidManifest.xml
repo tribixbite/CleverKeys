@@ -93,12 +93,7 @@
       </intent-filter>
     </activity>
 
-    <activity android:name="tribixbite.keyboard2.ClipboardSettingsActivity" android:label="Clipboard Settings" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
-      <intent-filter>
-        <action android:name="android.intent.action.MAIN"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-      </intent-filter>
-    </activity>
+    <!-- ClipboardSettingsActivity removed - settings now inline in main SettingsActivity -->
 
     <activity android:name="tribixbite.keyboard2.NeuralBrowserActivity" android:label="Neural Model Browser (Legacy)" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>

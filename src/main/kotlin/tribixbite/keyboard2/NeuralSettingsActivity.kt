@@ -1,8 +1,7 @@
 package tribixbite.keyboard2
 
-import android.graphics.Color
 import android.os.Bundle
-import android.widget.*
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -14,9 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color as ComposeColor
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,29 +23,23 @@ import tribixbite.keyboard2.theme.KeyboardTheme
 /**
  * Modern neural prediction parameter settings activity.
  *
- * Migrated from CGRSettingsActivity.java to focus on ONNX neural network parameters
- * instead of CGR (Continuous Gesture Recognition) parameters.
- *
  * Features:
  * - Real-time ONNX parameter tuning
  * - Modern Compose UI with Material Design 3
- * - Persistent settings with reactive updates
- * - Neural engine configuration validation
- * - Performance monitoring integration
+ * - Persistent settings with reactive updates (using default shared prefs)
+ * - Exposes critical beam search parameters for advanced users
  */
 class NeuralSettingsActivity : ComponentActivity() {
 
     // Current parameter values with reactive state
-    private var beamWidth by mutableStateOf(8)
+    private var beamWidth by mutableStateOf(4)
     private var maxLength by mutableStateOf(35)
     private var confidenceThreshold by mutableStateOf(0.1f)
-    private var temperatureScaling by mutableStateOf(1.0f)
-    private var repetitionPenalty by mutableStateOf(1.1f)
-    private var topK by mutableStateOf(50)
-    private var batchSize by mutableStateOf(4)
-    private var timeoutMs by mutableStateOf(200)
-    private var enableBatching by mutableStateOf(true)
-    private var enableCaching by mutableStateOf(true)
+    
+    // Advanced Beam Search Parameters
+    private var beamAlpha by mutableStateOf(1.2f)
+    private var beamPruneConfidence by mutableStateOf(0.8f)
+    private var beamScoreGap by mutableStateOf(5.0f)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,29 +69,29 @@ class NeuralSettingsActivity : ComponentActivity() {
         ) {
             // Header
             Text(
-                text = stringResource(R.string.neural_settings_title),
+                text = "Neural Prediction Settings",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = stringResource(R.string.neural_settings_description),
+                text = "Configure the neural network swipe predictor. These settings affect accuracy, speed, and battery usage.",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp
             )
 
             // Core Parameters Section
-            ParameterSection(stringResource(R.string.neural_section_core)) {
+            ParameterSection("Core Parameters") {
 
                 // Beam Width
                 ParameterSlider(
-                    title = stringResource(R.string.neural_beam_width_title),
-                    description = stringResource(R.string.neural_beam_width_desc),
+                    title = "Beam Width",
+                    description = "Number of candidate paths to explore. Higher = better accuracy, slower speed.",
                     value = beamWidth.toFloat(),
-                    valueRange = 1f..32f,
-                    steps = 31,
+                    valueRange = 1f..16f,
+                    steps = 15,
                     onValueChange = {
                         beamWidth = it.toInt()
                         updateNeuralParameters()
@@ -111,8 +101,8 @@ class NeuralSettingsActivity : ComponentActivity() {
 
                 // Max Length
                 ParameterSlider(
-                    title = stringResource(R.string.neural_max_length_title),
-                    description = stringResource(R.string.neural_max_length_desc),
+                    title = "Max Sequence Length",
+                    description = "Maximum length of predicted words. Increase for longer words.",
                     value = maxLength.toFloat(),
                     valueRange = 10f..50f,
                     steps = 40,
@@ -125,8 +115,8 @@ class NeuralSettingsActivity : ComponentActivity() {
 
                 // Confidence Threshold
                 ParameterSlider(
-                    title = stringResource(R.string.neural_confidence_title),
-                    description = stringResource(R.string.neural_confidence_desc),
+                    title = "Confidence Threshold",
+                    description = "Minimum probability for a word to be suggested. Lower = more suggestions.",
                     value = confidenceThreshold,
                     valueRange = 0.0f..1.0f,
                     steps = 100,
@@ -139,135 +129,49 @@ class NeuralSettingsActivity : ComponentActivity() {
             }
 
             // Advanced Parameters Section
-            ParameterSection(stringResource(R.string.neural_section_advanced)) {
+            ParameterSection("Advanced Beam Search") {
 
-                // Temperature Scaling
+                // Beam Alpha (Length Penalty)
                 ParameterSlider(
-                    title = stringResource(R.string.neural_temperature_title),
-                    description = stringResource(R.string.neural_temperature_desc),
-                    value = temperatureScaling,
-                    valueRange = 0.1f..2.0f,
-                    steps = 95,
+                    title = "Length Penalty (Alpha)",
+                    description = "Controls bias towards longer words. >1.0 favors long words, <1.0 favors short words.",
+                    value = beamAlpha,
+                    valueRange = 0.0f..3.0f,
+                    steps = 30,
                     onValueChange = {
-                        temperatureScaling = it
+                        beamAlpha = it
                         updateNeuralParameters()
                     },
-                    displayValue = "%.2f".format(temperatureScaling)
+                    displayValue = "%.2f".format(beamAlpha)
                 )
 
-                // Repetition Penalty
+                // Pruning Confidence
                 ParameterSlider(
-                    title = stringResource(R.string.neural_repetition_title),
-                    description = stringResource(R.string.neural_repetition_desc),
-                    value = repetitionPenalty,
-                    valueRange = 1.0f..2.0f,
+                    title = "Pruning Confidence",
+                    description = "Aggressiveness of beam pruning. Higher (0.8+) = safer, Lower (0.03) = faster but risks missing words.",
+                    value = beamPruneConfidence,
+                    valueRange = 0.0f..1.0f,
                     steps = 100,
                     onValueChange = {
-                        repetitionPenalty = it
+                        beamPruneConfidence = it
                         updateNeuralParameters()
                     },
-                    displayValue = "%.2f".format(repetitionPenalty)
+                    displayValue = "%.2f".format(beamPruneConfidence)
                 )
 
-                // Top-K
+                // Score Gap
                 ParameterSlider(
-                    title = stringResource(R.string.neural_topk_title),
-                    description = stringResource(R.string.neural_topk_desc),
-                    value = topK.toFloat(),
-                    valueRange = 1f..100f,
-                    steps = 99,
+                    title = "Score Gap Threshold",
+                    description = "Stop searching if top candidate is much better than others.",
+                    value = beamScoreGap,
+                    valueRange = 0.0f..50.0f,
+                    steps = 50,
                     onValueChange = {
-                        topK = it.toInt()
+                        beamScoreGap = it
                         updateNeuralParameters()
                     },
-                    displayValue = topK.toString()
+                    displayValue = "%.1f".format(beamScoreGap)
                 )
-            }
-
-            // Performance Options Section
-            ParameterSection(stringResource(R.string.neural_section_performance)) {
-
-                // Batch Size
-                ParameterSlider(
-                    title = stringResource(R.string.neural_batch_size_title),
-                    description = stringResource(R.string.neural_batch_size_desc),
-                    value = batchSize.toFloat(),
-                    valueRange = 1f..16f,
-                    steps = 15,
-                    onValueChange = {
-                        batchSize = it.toInt()
-                        updateNeuralParameters()
-                    },
-                    displayValue = batchSize.toString()
-                )
-
-                // Timeout
-                ParameterSlider(
-                    title = stringResource(R.string.neural_timeout_title),
-                    description = stringResource(R.string.neural_timeout_desc),
-                    value = timeoutMs.toFloat(),
-                    valueRange = 50f..1000f,
-                    steps = 95,
-                    onValueChange = {
-                        timeoutMs = it.toInt()
-                        updateNeuralParameters()
-                    },
-                    displayValue = "${timeoutMs}ms"
-                )
-
-                // Enable Batching
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.neural_enable_batching_title),
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 16.sp
-                        )
-                        Text(
-                            text = stringResource(R.string.neural_enable_batching_desc),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                    }
-                    Switch(
-                        checked = enableBatching,
-                        onCheckedChange = {
-                            enableBatching = it
-                            updateNeuralParameters()
-                        }
-                    )
-                }
-
-                // Enable Caching
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.neural_enable_caching_title),
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 16.sp
-                        )
-                        Text(
-                            text = stringResource(R.string.neural_enable_caching_desc),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                    }
-                    Switch(
-                        checked = enableCaching,
-                        onCheckedChange = {
-                            enableCaching = it
-                            updateNeuralParameters()
-                        }
-                    )
-                }
             }
 
             // Action Buttons
@@ -279,39 +183,14 @@ class NeuralSettingsActivity : ComponentActivity() {
                     onClick = { resetToDefaults() },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(stringResource(R.string.neural_reset_button))
+                    Text("Reset Defaults")
                 }
 
                 Button(
                     onClick = { saveAndApplyParameters() },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(stringResource(R.string.neural_save_button))
-                }
-            }
-
-            // Performance Info
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.neural_performance_impact_title),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.neural_performance_impact_desc),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        fontSize = 12.sp,
-                        lineHeight = 16.sp
-                    )
+                    Text("Save & Exit")
                 }
             }
         }
@@ -393,92 +272,80 @@ class NeuralSettingsActivity : ComponentActivity() {
     private fun updateNeuralParameters() {
         lifecycleScope.launch {
             try {
-                // Update global neural configuration
+                // Update global neural configuration in memory
                 val config = Config.globalConfig()
                 config.neural_beam_width = beamWidth
                 config.neural_max_length = maxLength
                 config.neural_confidence_threshold = confidenceThreshold
+                config.neural_beam_alpha = beamAlpha
+                config.neural_beam_prune_confidence = beamPruneConfidence
+                config.neural_beam_score_gap = beamScoreGap
 
                 // Save to preferences for immediate use
                 saveParametersToPrefs()
 
                 android.util.Log.d("NeuralSettings",
                     "Updated parameters: beam=$beamWidth, maxLen=$maxLength, " +
-                    "conf=%.3f, temp=%.2f, rep=%.2f, topK=$topK".format(
-                        confidenceThreshold, temperatureScaling, repetitionPenalty))
+                    "conf=%.3f".format(confidenceThreshold))
 
             } catch (e: Exception) {
                 android.util.Log.e("NeuralSettings", "Error updating configuration", e)
-                Toast.makeText(this@NeuralSettingsActivity,
-                    getString(R.string.neural_toast_error_update, e.message ?: ""),
-                    Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun resetToDefaults() {
-        beamWidth = 8
+        beamWidth = 4
         maxLength = 35
         confidenceThreshold = 0.1f
-        temperatureScaling = 1.0f
-        repetitionPenalty = 1.1f
-        topK = 50
-        batchSize = 4
-        timeoutMs = 200
-        enableBatching = true
-        enableCaching = true
+        beamAlpha = 1.2f
+        beamPruneConfidence = 0.8f
+        beamScoreGap = 5.0f
 
         updateNeuralParameters()
 
-        Toast.makeText(this, getString(R.string.neural_toast_reset), Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Reset to defaults", Toast.LENGTH_SHORT).show()
     }
 
     private fun saveAndApplyParameters() {
         lifecycleScope.launch {
             try {
                 saveParametersToPrefs()
-
-                // Apply parameters to neural engine
-                android.util.Log.d("NeuralSettings", "Applying new neural parameters")
-
-                Toast.makeText(this@NeuralSettingsActivity,
-                    getString(R.string.neural_toast_save_success), Toast.LENGTH_LONG).show()
+                Toast.makeText(this@NeuralSettingsActivity, "Settings saved", Toast.LENGTH_SHORT).show()
                 finish()
             } catch (e: Exception) {
-                android.util.Log.e("NeuralSettings", "Error saving and applying", e)
-                Toast.makeText(this@NeuralSettingsActivity,
-                    getString(R.string.neural_toast_error_apply, e.message ?: ""), Toast.LENGTH_SHORT).show()
+                android.util.Log.e("NeuralSettings", "Error saving", e)
+                Toast.makeText(this@NeuralSettingsActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun loadSavedParameters() {
-        val prefs = getSharedPreferences("neural_settings", MODE_PRIVATE)
-        beamWidth = prefs.getInt("beam_width", 8)
-        maxLength = prefs.getInt("max_length", 35)
-        confidenceThreshold = prefs.getFloat("confidence_threshold", 0.1f)
-        temperatureScaling = prefs.getFloat("temperature_scaling", 1.0f)
-        repetitionPenalty = prefs.getFloat("repetition_penalty", 1.1f)
-        topK = prefs.getInt("top_k", 50)
-        batchSize = prefs.getInt("batch_size", 4)
-        timeoutMs = prefs.getInt("timeout_ms", 200)
-        enableBatching = prefs.getBoolean("enable_batching", true)
-        enableCaching = prefs.getBoolean("enable_caching", true)
+        // CRITICAL FIX: Use default shared preferences to match Config.kt
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        
+        beamWidth = Config.safeGetInt(prefs, "neural_beam_width", 4)
+        maxLength = Config.safeGetInt(prefs, "neural_max_length", 35)
+        confidenceThreshold = Config.safeGetFloat(prefs, "neural_confidence_threshold", 0.1f)
+        
+        beamAlpha = Config.safeGetFloat(prefs, "neural_beam_alpha", 1.2f)
+        beamPruneConfidence = Config.safeGetFloat(prefs, "neural_beam_prune_confidence", 0.8f)
+        beamScoreGap = Config.safeGetFloat(prefs, "neural_beam_score_gap", 5.0f)
     }
 
     private fun saveParametersToPrefs() {
-        val prefs = getSharedPreferences("neural_settings", MODE_PRIVATE)
-        prefs.edit()
-            .putInt("beam_width", beamWidth)
-            .putInt("max_length", maxLength)
-            .putFloat("confidence_threshold", confidenceThreshold)
-            .putFloat("temperature_scaling", temperatureScaling)
-            .putFloat("repetition_penalty", repetitionPenalty)
-            .putInt("top_k", topK)
-            .putInt("batch_size", batchSize)
-            .putInt("timeout_ms", timeoutMs)
-            .putBoolean("enable_batching", enableBatching)
-            .putBoolean("enable_caching", enableCaching)
-            .apply()
+        // CRITICAL FIX: Use default shared preferences to match Config.kt
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        val editor = prefs.edit()
+        
+        editor.putInt("neural_beam_width", beamWidth)
+        editor.putInt("neural_max_length", maxLength)
+        editor.putFloat("neural_confidence_threshold", confidenceThreshold)
+        
+        editor.putFloat("neural_beam_alpha", beamAlpha)
+        editor.putFloat("neural_beam_prune_confidence", beamPruneConfidence)
+        editor.putFloat("neural_beam_score_gap", beamScoreGap)
+        
+        editor.apply()
     }
 }

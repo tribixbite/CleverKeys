@@ -80,6 +80,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var vibrationEnabled by mutableStateOf(false)
     private var debugEnabled by mutableStateOf(false)
     private var clipboardHistoryEnabled by mutableStateOf(true)
+    private var clipboardHistoryLimit by mutableStateOf(6)
+    private var clipboardPaneHeightPercent by mutableStateOf(30)
+    private var clipboardMaxItemSizeKb by mutableStateOf(500)
+    private var clipboardLimitType by mutableStateOf("count") // "count" or "size"
+    private var clipboardSizeLimitMb by mutableStateOf(10)
     private var autoCapitalizationEnabled by mutableStateOf(true)
 
     // Phase 1: Expose existing Config.kt settings
@@ -1414,18 +1419,89 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 expanded = clipboardSectionExpanded,
                 onExpandChange = { clipboardSectionExpanded = it }
             ) {
-                Button(
-                    onClick = { openClipboardSettings() },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Clipboard Settings")
+                // Enable/disable clipboard history
+                SettingsSwitch(
+                    title = "Clipboard History",
+                    description = "Remember copied text for quick pasting",
+                    checked = clipboardHistoryEnabled,
+                    onCheckedChange = {
+                        clipboardHistoryEnabled = it
+                        saveSetting("clipboard_history_enabled", it)
+                    }
+                )
+
+                // Clipboard limit type dropdown
+                val limitTypeOptions = listOf("By Count", "By Size")
+                val limitTypeIndex = if (clipboardLimitType == "count") 0 else 1
+                SettingsDropdown(
+                    title = "Limit Type",
+                    description = "How to limit clipboard history",
+                    options = limitTypeOptions,
+                    selectedIndex = limitTypeIndex,
+                    onSelectionChange = { idx ->
+                        clipboardLimitType = if (idx == 0) "count" else "size"
+                        saveSetting("clipboard_limit_type", clipboardLimitType)
+                    }
+                )
+
+                // History limit (only shown if limit type is "count")
+                if (clipboardLimitType == "count") {
+                    SettingsSlider(
+                        title = "History Limit",
+                        description = "Maximum number of clipboard entries",
+                        value = clipboardHistoryLimit.toFloat(),
+                        valueRange = 1f..50f,
+                        steps = 49,
+                        onValueChange = {
+                            clipboardHistoryLimit = it.toInt()
+                            saveSetting("clipboard_history_limit", clipboardHistoryLimit)
+                        },
+                        displayValue = "$clipboardHistoryLimit items"
+                    )
                 }
 
-                Text(
-                    text = "Configure clipboard history, limits, and duration",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp)
+                // Size limit (only shown if limit type is "size")
+                if (clipboardLimitType == "size") {
+                    SettingsSlider(
+                        title = "Size Limit",
+                        description = "Maximum total clipboard storage",
+                        value = clipboardSizeLimitMb.toFloat(),
+                        valueRange = 1f..100f,
+                        steps = 99,
+                        onValueChange = {
+                            clipboardSizeLimitMb = it.toInt()
+                            saveSetting("clipboard_size_limit_mb", clipboardSizeLimitMb)
+                        },
+                        displayValue = "$clipboardSizeLimitMb MB"
+                    )
+                }
+
+                // Pane height percentage
+                SettingsSlider(
+                    title = "Pane Height",
+                    description = "Clipboard pane height as percentage of keyboard",
+                    value = clipboardPaneHeightPercent.toFloat(),
+                    valueRange = 10f..50f,
+                    steps = 40,
+                    onValueChange = {
+                        clipboardPaneHeightPercent = it.toInt()
+                        saveSetting("clipboard_pane_height_percent", clipboardPaneHeightPercent)
+                    },
+                    displayValue = "$clipboardPaneHeightPercent%"
+                )
+
+                // Max item size
+                SettingsSlider(
+                    title = "Max Item Size",
+                    description = "Maximum size per clipboard entry",
+                    value = clipboardMaxItemSizeKb.toFloat(),
+                    valueRange = 100f..5000f,
+                    steps = 49,
+                    onValueChange = {
+                        clipboardMaxItemSizeKb = it.toInt()
+                        saveSetting("clipboard_max_item_size_kb", clipboardMaxItemSizeKb)
+                    },
+                    displayValue = "${clipboardMaxItemSizeKb}KB"
                 )
             }
 
@@ -2012,6 +2088,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Input behavior settings
         vibrationEnabled = prefs.getSafeBoolean("vibration_enabled", false)
         clipboardHistoryEnabled = prefs.getSafeBoolean("clipboard_history_enabled", true)
+        clipboardHistoryLimit = prefs.getSafeString("clipboard_history_limit", "6").toIntOrNull() ?: 6
+        clipboardPaneHeightPercent = Config.safeGetInt(prefs, "clipboard_pane_height_percent", 30).coerceIn(10, 50)
+        clipboardMaxItemSizeKb = prefs.getSafeString("clipboard_max_item_size_kb", "500").toIntOrNull() ?: 500
+        clipboardLimitType = prefs.getSafeString("clipboard_limit_type", "count")
+        clipboardSizeLimitMb = prefs.getSafeString("clipboard_size_limit_mb", "10").toIntOrNull() ?: 10
         autoCapitalizationEnabled = prefs.getSafeBoolean("auto_capitalization_enabled", true)
 
         // Gesture sensitivity settings
@@ -2473,9 +2554,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun openClipboardSettings() {
-        startActivity(Intent(this, ClipboardSettingsActivity::class.java))
-    }
+    // Clipboard settings now inline in main settings UI
 
     private fun openBackupRestore() {
         startActivity(Intent(this, BackupRestoreActivity::class.java))
