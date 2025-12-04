@@ -807,13 +807,58 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 }
             }
 
-            // Appearance Section (Collapsible) - default expanded
+            // Appearance Section (Collapsible) - default expanded to show Theme Manager
             CollapsibleSettingsSection(
                 title = stringResource(R.string.settings_section_appearance),
                 expanded = appearanceSectionExpanded,
                 onExpandChange = { appearanceSectionExpanded = it }
             ) {
-                // Theme dropdown - all available keyboard themes
+                // Theme Manager Card - prominent access to full theme UI
+                val themeContext = LocalContext.current
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                        .clickable {
+                            val intent = Intent(themeContext, ThemeSettingsActivity::class.java)
+                            themeContext.startActivity(intent)
+                        },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "🎨",
+                            fontSize = 28.sp
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Theme Manager",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = "Neon, Pastel, DIY themes & custom colors",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                // Quick theme dropdown for basic themes
                 SettingsDropdown(
                     title = stringResource(R.string.settings_theme_title),
                     description = stringResource(R.string.settings_theme_desc),

@@ -543,10 +543,6 @@ class BackupRestoreManager(private val context: Context) {
     /**
      * Export user dictionaries to JSON file
      * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
-     *
-     * Export format matches what importDictionaries expects:
-     * - custom_words: JSON object {"word": frequency, ...}
-     * - disabled_words: JSON array ["word1", "word2", ...]
      */
     fun exportDictionaries(uri: Uri) {
         try {
@@ -560,27 +556,22 @@ class BackupRestoreManager(private val context: Context) {
             metadata.addProperty("type", "dictionaries")
             root.add("metadata", metadata)
 
-            // Use the same prefs that DictionaryDataSource classes use
-            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+            // Export user dictionary words from SharedPreferences
+            val prefs = context.getSharedPreferences("cleverkeys_prefs", android.content.Context.MODE_PRIVATE)
+            val userWords = JsonArray()
+            val disabledWords = JsonArray()
 
-            // Export custom words as JSON object {word: frequency}
-            val customWordsJson = prefs.getString("custom_words", "{}")
-            val customWordsObj = try {
-                JsonParser.parseString(customWordsJson).asJsonObject
-            } catch (e: Exception) {
-                JsonObject()
+            // Note: Dictionary data is typically stored in the system user dictionary
+            // For now, we export any custom word preferences if they exist
+            prefs.all.filter { it.key.startsWith("user_word_") }.forEach { (key, value) ->
+                userWords.add(value.toString())
             }
-            root.add("custom_words", customWordsObj)
-
-            // Export disabled words as JSON array
-            val disabledWordsSet = prefs.getStringSet("disabled_words", emptySet()) ?: emptySet()
-            val disabledWordsArray = JsonArray()
-            disabledWordsSet.forEach { word ->
-                disabledWordsArray.add(word)
+            prefs.all.filter { it.key.startsWith("disabled_word_") }.forEach { (key, value) ->
+                disabledWords.add(value.toString())
             }
-            root.add("disabled_words", disabledWordsArray)
 
-            root.addProperty("export_version", 1)
+            root.add("user_words", userWords)
+            root.add("disabled_words", disabledWords)
 
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                 outputStream.writer().use { writer ->
@@ -589,7 +580,7 @@ class BackupRestoreManager(private val context: Context) {
                 }
             }
 
-            Log.i(TAG, "Exported dictionaries: ${customWordsObj.size()} custom words, ${disabledWordsArray.size()} disabled words")
+            Log.i(TAG, "Exported dictionaries: ${userWords.size()} user words, ${disabledWords.size()} disabled words")
         } catch (e: Exception) {
             Log.e(TAG, "Dictionary export failed", e)
             throw Exception("Dictionary export failed: ${e.message}", e)
@@ -600,10 +591,6 @@ class BackupRestoreManager(private val context: Context) {
      * Import user dictionaries from JSON file
      * @param uri URI from Storage Access Framework (ACTION_OPEN_DOCUMENT)
      * @return DictionaryImportResult with statistics
-     *
-     * Storage format must match what DictionaryDataSource classes read:
-     * - CustomDictionarySource reads "custom_words" as JSON object {"word": freq, ...}
-     * - DisabledDictionarySource reads "disabled_words" as StringSet
      */
     fun importDictionaries(uri: Uri): DictionaryImportResult {
         return try {
@@ -624,84 +611,52 @@ class BackupRestoreManager(private val context: Context) {
                 result.sourceVersion = metadata.get("app_version")?.asString ?: "unknown"
             }
 
-            // Use the same prefs that DictionaryDataSource classes use
-            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+            val prefs = context.getSharedPreferences("cleverkeys_prefs", android.content.Context.MODE_PRIVATE)
             val editor = prefs.edit()
 
-            // Import custom words - merge with existing
-            // CustomDictionarySource reads from "custom_words" pref as JSON: {"word": freq, ...}
+            // Handle new format: custom_words as object with word -> frequency
             if (root.has("custom_words") && root.get("custom_words").isJsonObject) {
-                val importedCustomWords = root.getAsJsonObject("custom_words")
-
-                // Load existing custom words
-                val existingJson = prefs.getString("custom_words", "{}")
-                val existingWords: MutableMap<String, Int> = try {
-                    gson.fromJson(existingJson, object : com.google.gson.reflect.TypeToken<MutableMap<String, Int>>() {}.type)
-                        ?: mutableMapOf()
-                } catch (e: Exception) {
-                    mutableMapOf()
-                }
-
-                // Merge imported words (don't overwrite existing)
-                for ((word, freqValue) in importedCustomWords.entrySet()) {
-                    if (!existingWords.containsKey(word)) {
-                        existingWords[word] = freqValue.asInt
+                val customWords = root.getAsJsonObject("custom_words")
+                for ((word, freqValue) in customWords.entrySet()) {
+                    val frequency = freqValue.asInt
+                    val key = "user_word_${word.hashCode()}"
+                    if (!prefs.contains(key)) {
+                        // Store as "word:frequency" format
+                        editor.putString(key, "$word:$frequency")
                         result.userWordsImported++
                     }
                 }
-
-                // Save merged custom words as JSON string
-                editor.putString("custom_words", gson.toJson(existingWords))
-                Log.i(TAG, "Imported ${result.userWordsImported} custom_words")
+                Log.i(TAG, "Imported ${result.userWordsImported} custom_words (new format)")
             }
 
-            // Handle old format: user_words as array (convert to custom_words format)
+            // Handle old format: user_words as array
             if (root.has("user_words") && root.get("user_words").isJsonArray) {
                 val userWords = root.getAsJsonArray("user_words")
-
-                // Load existing custom words
-                val existingJson = prefs.getString("custom_words", "{}")
-                val existingWords: MutableMap<String, Int> = try {
-                    gson.fromJson(existingJson, object : com.google.gson.reflect.TypeToken<MutableMap<String, Int>>() {}.type)
-                        ?: mutableMapOf()
-                } catch (e: Exception) {
-                    mutableMapOf()
-                }
-
                 for (word in userWords) {
                     val wordStr = word.asString
-                    if (!existingWords.containsKey(wordStr)) {
-                        existingWords[wordStr] = 100 // Default frequency
+                    val key = "user_word_${wordStr.hashCode()}"
+                    if (!prefs.contains(key)) {
+                        editor.putString(key, wordStr)
                         result.userWordsImported++
                     }
                 }
-
-                editor.putString("custom_words", gson.toJson(existingWords))
             }
 
-            // Import disabled words
-            // DisabledDictionarySource reads from "disabled_words" pref as StringSet
+            // Handle disabled_words (array format)
             if (root.has("disabled_words") && root.get("disabled_words").isJsonArray) {
-                val disabledWordsArray = root.getAsJsonArray("disabled_words")
-
-                // Load existing disabled words
-                val existingDisabled = prefs.getStringSet("disabled_words", emptySet())?.toMutableSet()
-                    ?: mutableSetOf()
-
-                for (word in disabledWordsArray) {
+                val disabledWords = root.getAsJsonArray("disabled_words")
+                for (word in disabledWords) {
                     val wordStr = word.asString
-                    if (!existingDisabled.contains(wordStr)) {
-                        existingDisabled.add(wordStr)
+                    val key = "disabled_word_${wordStr.hashCode()}"
+                    if (!prefs.contains(key)) {
+                        editor.putString(key, wordStr)
                         result.disabledWordsImported++
                     }
                 }
-
-                editor.putStringSet("disabled_words", existingDisabled)
-                Log.i(TAG, "Imported ${result.disabledWordsImported} disabled_words")
             }
 
             editor.apply()
-            Log.i(TAG, "Imported dictionaries: ${result.userWordsImported} custom words, ${result.disabledWordsImported} disabled words")
+            Log.i(TAG, "Imported dictionaries: ${result.userWordsImported} user words, ${result.disabledWordsImported} disabled words")
             result
         } catch (e: Exception) {
             Log.e(TAG, "Dictionary import failed", e)
