@@ -398,6 +398,15 @@ class CleverKeysService : InputMethodService(),
         // Clean up clipboard manager views for theme change
         _clipboardManager.cleanup()
 
+        // CRITICAL: Set the keyboard layout on the new view to enable swipe/touch handling
+        // Without this, _keyboard is null and key positions aren't calculated
+        _keyboardView.setKeyboard(current_layout())
+
+        // Re-initialize swipe typing components on the new view
+        // Pass null for word predictor (will be initialized by PredictionInitializer on next input)
+        // The service reference enables swipe handling callbacks
+        _keyboardView.setSwipeTypingComponents(null, this)
+
         setInputView(_keyboardView)
     }
 

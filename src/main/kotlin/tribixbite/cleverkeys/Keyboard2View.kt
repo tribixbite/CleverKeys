@@ -673,7 +673,13 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     override fun onMeasure(wSpec: Int, hSpec: Int) {
-        val keyboard = _keyboard ?: return
+        val keyboard = _keyboard
+        if (keyboard == null) {
+            // CRITICAL: Must call setMeasuredDimension even when keyboard is null
+            // to prevent IllegalStateException crash during theme changes
+            setMeasuredDimension(0, 0)
+            return
+        }
 
         var width = MeasureSpec.getSize(wSpec)
 
