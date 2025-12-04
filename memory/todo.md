@@ -5,7 +5,7 @@
 
 ---
 
-## Current Session: CI/CD & Clipboard Settings Fix (Dec 4, 2025)
+## Current Session: CI/CD, Crash Fixes & Feature Parity (Dec 4, 2025)
 
 ### Completed This Session
 - ✅ Fixed GitHub Actions CI/CD workflow
@@ -27,6 +27,17 @@
   - Added state variables and loading for all clipboard settings
   - Removed dead activity declaration from AndroidManifest.xml
 
+- ✅ Fixed dictionary manager crash (missing DictionaryManagerActivity)
+  - DictionaryManagerActivity was declared in manifest but class never existed
+  - Changed openDictionaryManager() to open Android's system User Dictionary settings
+  - Removed dead activity declaration from AndroidManifest.xml
+
+- ✅ UK Feature Parity Verification
+  - Added READ_USER_DICTIONARY permission for user dictionary access
+  - Added REQUEST_INSTALL_PACKAGES permission for in-app updates
+  - Verified dictionaries already exist in src/main/assets/dictionaries/
+  - Verified numeric.xml layout already exists in src/main/layouts/
+
 ### Code Changes
 **gradle.properties:**
 - Commented out android.aapt2FromMavenOverride (line 7)
@@ -38,9 +49,13 @@
 - Replaced Clipboard Settings button with inline settings (lines 1422-1505)
 - Added loading logic for clipboard settings (lines 2077-2081)
 - Removed openClipboardSettings() function
+- Changed openDictionaryManager() to open Android's User Dictionary settings
 
 **AndroidManifest.xml:**
+- Added READ_USER_DICTIONARY permission (user dictionary access)
+- Added REQUEST_INSTALL_PACKAGES permission (in-app updates)
 - Removed ClipboardSettingsActivity declaration
+- Removed DictionaryManagerActivity declaration
 
 ---
 
