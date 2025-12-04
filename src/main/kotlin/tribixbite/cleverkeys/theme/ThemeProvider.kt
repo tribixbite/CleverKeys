@@ -75,13 +75,13 @@ class ThemeProvider(
             "epaperblack", "everforestlight", "monet", "monetlight", "monetdark"
         )
 
-        // Decorative themes (from PredefinedThemes)
-        themes["Gemstone"] = mutableListOf("decorative_ruby", "decorative_sapphire", "decorative_emerald")
-        themes["Neon"] = mutableListOf("decorative_electric_blue", "decorative_hot_pink", "decorative_lime_green")
-        themes["Pastel"] = mutableListOf("decorative_soft_pink", "decorative_sky_blue", "decorative_mint_green")
-        themes["Nature"] = mutableListOf("decorative_forest", "decorative_ocean", "decorative_desert")
-        themes["Utilitarian"] = mutableListOf("decorative_charcoal", "decorative_slate", "decorative_concrete")
-        themes["Modern"] = mutableListOf("decorative_midnight", "decorative_sunrise", "decorative_aurora")
+        // Decorative themes (from PredefinedThemes) - IDs must match getDecorativeColorScheme()
+        themes["Gemstone"] = mutableListOf("decorative_gemstone_ruby", "decorative_gemstone_sapphire", "decorative_gemstone_emerald")
+        themes["Neon"] = mutableListOf("decorative_neon_electric_blue", "decorative_neon_hot_pink", "decorative_neon_lime_green")
+        themes["Pastel"] = mutableListOf("decorative_pastel_soft_pink", "decorative_pastel_sky_blue", "decorative_pastel_mint_green")
+        themes["Nature"] = mutableListOf("decorative_nature_forest", "decorative_nature_ocean", "decorative_nature_desert")
+        themes["Utilitarian"] = mutableListOf("decorative_utilitarian_charcoal", "decorative_utilitarian_slate", "decorative_utilitarian_concrete")
+        themes["Modern"] = mutableListOf("decorative_modern_midnight", "decorative_modern_sunrise", "decorative_modern_aurora")
 
         // Custom themes
         val customIds = customThemeManager.getAllCustomThemeIds()
@@ -114,38 +114,39 @@ class ThemeProvider(
 
     private fun getDecorativeColorScheme(themeId: String): KeyboardColorScheme? {
         // Strip "decorative_" prefix to get the actual theme name
+        // Theme names match PredefinedThemes IDs (e.g., "gemstone_ruby", "neon_electric_blue")
         val themeName = themeId.removePrefix("decorative_")
 
         return when (themeName) {
             // Gemstone themes
-            "ruby" -> themeGemstoneRuby().colorScheme
-            "sapphire" -> themeGemstoneSapphire().colorScheme
-            "emerald" -> themeGemstoneEmerald().colorScheme
+            "gemstone_ruby" -> themeGemstoneRuby().colorScheme
+            "gemstone_sapphire" -> themeGemstoneSapphire().colorScheme
+            "gemstone_emerald" -> themeGemstoneEmerald().colorScheme
 
             // Neon themes
-            "electric_blue" -> themeNeonElectricBlue().colorScheme
-            "hot_pink" -> themeNeonHotPink().colorScheme
-            "lime_green" -> themeNeonLimeGreen().colorScheme
+            "neon_electric_blue" -> themeNeonElectricBlue().colorScheme
+            "neon_hot_pink" -> themeNeonHotPink().colorScheme
+            "neon_lime_green" -> themeNeonLimeGreen().colorScheme
 
             // Pastel themes
-            "soft_pink" -> themePastelSoftPink().colorScheme
-            "sky_blue" -> themePastelSkyBlue().colorScheme
-            "mint_green" -> themePastelMintGreen().colorScheme
+            "pastel_soft_pink" -> themePastelSoftPink().colorScheme
+            "pastel_sky_blue" -> themePastelSkyBlue().colorScheme
+            "pastel_mint_green" -> themePastelMintGreen().colorScheme
 
             // Nature themes
-            "forest" -> themeNatureForest().colorScheme
-            "ocean" -> themeNatureOcean().colorScheme
-            "desert" -> themeNatureDesert().colorScheme
+            "nature_forest" -> themeNatureForest().colorScheme
+            "nature_ocean" -> themeNatureOcean().colorScheme
+            "nature_desert" -> themeNatureDesert().colorScheme
 
             // Utilitarian themes
-            "charcoal" -> themeUtilitarianCharcoal().colorScheme
-            "slate" -> themeUtilitarianSlate().colorScheme
-            "concrete" -> themeUtilitarianConcrete().colorScheme
+            "utilitarian_charcoal" -> themeUtilitarianCharcoal().colorScheme
+            "utilitarian_slate" -> themeUtilitarianSlate().colorScheme
+            "utilitarian_concrete" -> themeUtilitarianConcrete().colorScheme
 
             // Modern themes
-            "midnight" -> themeModernMidnight().colorScheme
-            "sunrise" -> themeModernSunrise().colorScheme
-            "aurora" -> themeModernAurora().colorScheme
+            "modern_midnight" -> themeModernMidnight().colorScheme
+            "modern_sunrise" -> themeModernSunrise().colorScheme
+            "modern_aurora" -> themeModernAurora().colorScheme
 
             else -> null
         }

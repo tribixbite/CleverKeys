@@ -83,6 +83,7 @@ class ConfigurationManager(
      */
     fun refresh(res: Resources) {
         val prevTheme = config.theme
+        val prevThemeName = config.themeName
 
         // Refresh config from SharedPreferences
         config.refresh(res, foldStateTracker.isUnfolded())
@@ -93,7 +94,8 @@ class ConfigurationManager(
         }
 
         // Special notification for theme changes (requires view recreation)
-        if (prevTheme != config.theme) {
+        // Check both theme (style ID) and themeName (for runtime themes that share base style)
+        if (prevTheme != config.theme || prevThemeName != config.themeName) {
             for (listener in listeners) {
                 listener.onThemeChanged(prevTheme, config.theme)
             }

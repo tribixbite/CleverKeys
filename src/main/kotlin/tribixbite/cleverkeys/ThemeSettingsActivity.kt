@@ -283,6 +283,7 @@ fun ThemeSettingsScreen(
                             isCustom = false,
                             isSelected = currentThemeId.value == decorativeId,
                             onSelect = {
+                                android.util.Log.d("ThemeSettings", "Decorative theme selected: $decorativeId")
                                 currentThemeId.value = decorativeId
                                 onThemeSelected(decorativeId)
                             }
