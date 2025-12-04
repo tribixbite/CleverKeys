@@ -36,7 +36,7 @@ Every other "open-source" swipe keyboard on Android has a catch:
 
 CleverKeys is different. Our gesture recognition uses a **fully open-source transformer neural network** trained specifically for swipe typing. The model, training code, and datasets are all publicly available at [CleverKeys-ML](https://github.com/tribixbite/CleverKeys-ML).
 
-### Clipper+ : Unlimited Clipboard History
+### Unlimited Clipboard History
 
 Android restricts clipboard access for security - apps can't read clipboard contents in the background. But keyboards are special. As an Input Method Editor (IME), CleverKeys has legitimate clipboard access, making it the only way to get truly unlimited clipboard history without root.
 
