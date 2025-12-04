@@ -92,7 +92,7 @@ if [ "$BUILD_TYPE_LOWER" = "release" ]; then
     export RELEASE_KEY_PASSWORD="android"
     
     GRADLE_TASK="assembleRelease"
-    APK_PATH="build/outputs/apk/release/juloo.keyboard2.apk"
+    APK_PATH="build/outputs/apk/release/tribixbite.keyboard2.apk"
 else
     GRADLE_TASK="assembleDebug"
     APK_PATH="build/outputs/apk/debug/tribixbite.keyboard2.debug.apk"

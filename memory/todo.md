@@ -38,6 +38,15 @@
   - Verified dictionaries already exist in src/main/assets/dictionaries/
   - Verified numeric.xml layout already exists in src/main/layouts/
 
+- ✅ Fixed build scripts with residual juloo references
+  - build-on-termux.sh line 95: juloo.keyboard2.apk → tribixbite.keyboard2.apk
+  - check-keyboard-status.sh line 11: Fixed APK filename for debug builds
+
+- ✅ Verified shift handling for swipe typing
+  - wasShiftActiveAtSwipeStart already implemented in InputCoordinator.kt
+  - Lines 410, 447, 455, 750 handle shift state during swipe typing
+  - Note: UK doesn't have swipe typing - this is a CK enhancement
+
 ### Code Changes
 **gradle.properties:**
 - Commented out android.aapt2FromMavenOverride (line 7)
