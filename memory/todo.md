@@ -7,6 +7,16 @@
 
 ## Completed This Session (2025-12-05)
 
+### Per-Key Short Swipe Customization Feature (NEW)
+- [x] Phase 1: Data layer (`ShortSwipeCustomization.kt`, `ShortSwipeCustomizationManager.kt`)
+- [x] Phase 2: Integration with `Pointers.kt` and `Keyboard2View.kt`
+- [x] Phase 3: UI - `ShortSwipeCustomizationActivity.kt`
+  - Interactive keyboard preview (native `KeyboardPreviewView`)
+  - 8-direction radial selector modal
+  - Editor for display text, action type, action value
+  - Theme integration via `ThemeProvider`
+  - Corner indicators showing mapped directions
+
 ### README Redesign (ImageToolbox Style)
 - [x] Add centered badge row (API, Kotlin, ONNX, Material 3, Downloads, Stars, Release)
 - [x] Create feature_banner.png with gradient background and screenshot collage
@@ -169,6 +179,13 @@ PrivacyManager defaults changed in 4 places:
 ---
 
 ## Files Modified This Session
+- `src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeCustomization.kt` - Data models for per-key short swipe
+- `src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeCustomizationManager.kt` - Persistence and state management
+- `src/main/kotlin/tribixbite/cleverkeys/customization/KeyboardPreviewView.kt` - Native View for actual keyboard rendering
+- `src/main/kotlin/tribixbite/cleverkeys/ShortSwipeCustomizationActivity.kt` - Full UI for customization
+- `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` - Integration with custom short swipe mappings
+- `src/main/kotlin/tribixbite/cleverkeys/Keyboard2View.kt` - Custom short swipe visual rendering
+- `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` - Added Short Swipe Customization entry
 - `src/main/kotlin/tribixbite/cleverkeys/OptimizedVocabulary.kt` - Contraction mapping fix (doesnt → doesn't)
 - `src/main/kotlin/tribixbite/cleverkeys/ThemeSettingsActivity.kt` - Theme Manager UI, DirectBootAwarePreferences fix
 - `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` - Removed theme dropdown, kept Theme Manager card
