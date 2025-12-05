@@ -122,7 +122,6 @@ class Keyboard2View @JvmOverloads constructor(
         _swipeRecognizer = _pointers._swipeRecognizer // Share the recognizer
         _themeCache = LruCache(5)
 
-        initSwipeTrailPaint()
         refresh_navigation_bar(context)
         setOnTouchListener(this)
         val layout_id = attrs?.getAttributeResourceValue(null, "layout", 0) ?: 0
@@ -216,6 +215,9 @@ class Keyboard2View @JvmOverloads constructor(
         _compose_kv = composeKv
         _compose_key = kw.findKeyWithValue(composeKv)
         kw.modmap?.let { KeyModifier.set_modmap(it) }
+
+        // Refresh swipe trail paint with latest config settings
+        initSwipeTrailPaint()
 
         // CRITICAL FIX: Pre-calculate key width based on screen width
         // This ensures getKeyAtPosition works immediately for swipes before onMeasure() runs
