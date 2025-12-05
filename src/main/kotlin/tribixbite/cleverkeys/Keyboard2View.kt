@@ -158,6 +158,15 @@ class Keyboard2View @JvmOverloads constructor(
                     )
                     alpha = 240 // More opaque for better visibility
                 }
+                "sparkle" -> {
+                    // Sparkle effect uses glow base + particles
+                    val glowRadius = (config?.swipe_trail_glow_radius ?: 8.0f) * density * 0.5f
+                    maskFilter = android.graphics.BlurMaskFilter(
+                        glowRadius.coerceAtLeast(1f),
+                        android.graphics.BlurMaskFilter.Blur.SOLID
+                    )
+                    alpha = 220
+                }
                 "solid" -> {
                     maskFilter = null
                     alpha = 255 // Fully opaque
@@ -823,6 +832,41 @@ class Keyboard2View @JvmOverloads constructor(
         }
 
         canvas.drawPath(_swipeTrailPath, paint)
+
+        // Handle sparkle effect
+        if (_config?.swipe_trail_effect == "sparkle") {
+            val time = System.currentTimeMillis()
+            val originalColor = paint.color
+            val originalStrokeWidth = paint.strokeWidth
+            val originalAlpha = paint.alpha
+            
+            paint.color = android.graphics.Color.WHITE
+            paint.style = Paint.Style.FILL
+            
+            // Draw sparkles along the path
+            // We skip points to avoid too many particles (draw every 3rd point)
+            for (i in 0 until swipePath.size step 3) {
+                val point = swipePath[i]
+                // Pseudo-random based on index and time for shimmering
+                val seed = (i * 12345 + time / 50).toInt()
+                val randomX = ((seed % 20) - 10).toFloat()
+                val randomY = (((seed / 20) % 20) - 10).toFloat()
+                
+                // Flicker size
+                val size = (seed % 5 + 2).toFloat() // 2-7px
+                
+                // Flicker alpha
+                paint.alpha = (seed % 155) + 100 // 100-255
+                
+                canvas.drawCircle(point.x + randomX, point.y + randomY, size, paint)
+            }
+            
+            // Restore paint
+            paint.color = originalColor
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = originalStrokeWidth
+            paint.alpha = originalAlpha
+        }
     }
 
     override fun onDetachedFromWindow() {

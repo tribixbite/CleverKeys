@@ -179,12 +179,20 @@ class ThemeSettingsActivity : ComponentActivity() {
                                 .putInt("swipe_trail_color", swipeTrailColor)
                                 .commit()
 
-                            // Send broadcast to notify service immediately
+                            // Send broadcast to notify service immediately (legacy support)
                             val intent = Intent(CleverKeysService.ACTION_THEME_CHANGED)
                             intent.setPackage(packageName) // Restrict to our own package
                             sendBroadcast(intent)
                             
-                            Toast.makeText(this, "Theme applied: $themeId", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "Applying theme: $themeId", Toast.LENGTH_SHORT).show()
+                            
+                            // Restart the app to the LauncherActivity to ensure clean theme application
+                            // Delay slightly to allow toast to show and preference to commit
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                // "Nuclear option": Kill the process to force a full restart
+                                android.os.Process.killProcess(android.os.Process.myPid())
+                                System.exit(0)
+                            }, 500)
                         }
                     )
                 }
@@ -221,6 +229,13 @@ fun ThemeSettingsScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = {
+                        // "Nuclear option": Kill the process to force a full restart
+                        android.os.Process.killProcess(android.os.Process.myPid())
+                        System.exit(0)
+                    }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Restart Keyboard")
+                    }
                     IconButton(onClick = { showCreateDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = "Create Theme")
                     }

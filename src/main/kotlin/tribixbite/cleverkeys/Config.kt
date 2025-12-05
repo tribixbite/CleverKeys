@@ -222,11 +222,11 @@ class Config private constructor(
         longPressInterval = safeGetInt(_prefs, "longpress_interval", 25).toLong()
         keyrepeat_enabled = _prefs.getBoolean("keyrepeat_enabled", true)
         margin_bottom = get_dip_pref_oriented(dm, "margin_bottom", 7f, 3f)
-        key_vertical_margin = get_dip_pref(dm, "key_vertical_margin", 1.5f) / 100
-        key_horizontal_margin = get_dip_pref(dm, "key_horizontal_margin", 2f) / 100
+        key_vertical_margin = get_dip_pref(dm, "key_vertical_margin", 0.65f) / 100
+        key_horizontal_margin = get_dip_pref(dm, "key_horizontal_margin", 0.7f) / 100
 
         labelBrightness = safeGetInt(_prefs, "label_brightness", 100) * 255 / 100
-        keyboardOpacity = safeGetInt(_prefs, "keyboard_opacity", 100) * 255 / 100
+        keyboardOpacity = safeGetInt(_prefs, "keyboard_opacity", 81) * 255 / 100
         keyOpacity = safeGetInt(_prefs, "key_opacity", 100) * 255 / 100
         keyActivatedOpacity = safeGetInt(_prefs, "key_activated_opacity", 100) * 255 / 100
 
@@ -249,7 +249,7 @@ class Config private constructor(
         circle_sensitivity = safeGetString(_prefs, "circle_sensitivity", "2").toIntOrNull() ?: 2
         clipboard_history_enabled = _prefs.getBoolean("clipboard_history_enabled", true)
 
-        clipboard_history_limit = safeGetString(_prefs, "clipboard_history_limit", "6").toIntOrNull() ?: 6
+        clipboard_history_limit = safeGetString(_prefs, "clipboard_history_limit", "0").toIntOrNull() ?: 0
 
         clipboard_pane_height_percent = safeGetInt(_prefs, "clipboard_pane_height_percent", 30).coerceIn(10, 50)
 
@@ -260,9 +260,9 @@ class Config private constructor(
         clipboard_size_limit_mb = safeGetString(_prefs, "clipboard_size_limit_mb", "10").toIntOrNull() ?: 10
 
         swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", true)
-        swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", false)
+        swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", true)
         word_prediction_enabled = _prefs.getBoolean("word_prediction_enabled", true)
-        suggestion_bar_opacity = safeGetInt(_prefs, "suggestion_bar_opacity", 90)
+        suggestion_bar_opacity = safeGetInt(_prefs, "suggestion_bar_opacity", 80)
 
         prediction_context_boost = safeGetFloat(_prefs, "prediction_context_boost", 0.5f)
         prediction_frequency_scale = safeGetFloat(_prefs, "prediction_frequency_scale", 100.0f)
@@ -317,24 +317,24 @@ class Config private constructor(
 
         // Swipe trail appearance
         swipe_trail_enabled = _prefs.getBoolean("swipe_trail_enabled", true)
-        swipe_trail_effect = safeGetString(_prefs, "swipe_trail_effect", "glow")
-        swipe_trail_color = _prefs.getInt("swipe_trail_color", 0xFF9B59B6.toInt())
+        swipe_trail_effect = safeGetString(_prefs, "swipe_trail_effect", "sparkle")
+        swipe_trail_color = _prefs.getInt("swipe_trail_color", 0xFFC0C0C0.toInt()) // Silver
         swipe_trail_width = safeGetFloat(_prefs, "swipe_trail_width", 8.0f)
         swipe_trail_glow_radius = safeGetFloat(_prefs, "swipe_trail_glow_radius", 6.0f)
 
         neural_prediction_enabled = _prefs.getBoolean("neural_prediction_enabled", true)
-        neural_beam_width = safeGetInt(_prefs, "neural_beam_width", 5)  // Increased from 3 to explore more paths
-        neural_max_length = safeGetInt(_prefs, "neural_max_length", 15)
+        neural_beam_width = safeGetInt(_prefs, "neural_beam_width", 4)
+        neural_max_length = safeGetInt(_prefs, "neural_max_length", 20)
         neural_confidence_threshold = safeGetFloat(_prefs, "neural_confidence_threshold", 0.01f)
         neural_batch_beams = _prefs.getBoolean("neural_batch_beams", false)
         neural_greedy_search = _prefs.getBoolean("neural_greedy_search", false)
-        termux_mode_enabled = _prefs.getBoolean("termux_mode_enabled", false)
+        termux_mode_enabled = _prefs.getBoolean("termux_mode_enabled", true)
         swipe_debug_detailed_logging = _prefs.getBoolean("swipe_debug_detailed_logging", false)
         swipe_debug_show_raw_output = _prefs.getBoolean("swipe_debug_show_raw_output", true)
-        swipe_show_raw_beam_predictions = _prefs.getBoolean("swipe_show_raw_beam_predictions", false)
+        swipe_show_raw_beam_predictions = _prefs.getBoolean("swipe_show_raw_beam_predictions", true)
 
         neural_beam_alpha = safeGetFloat(_prefs, "neural_beam_alpha", 1.0f)
-        neural_beam_prune_confidence = safeGetFloat(_prefs, "neural_beam_prune_confidence", 0.03f)
+        neural_beam_prune_confidence = safeGetFloat(_prefs, "neural_beam_prune_confidence", 0.17821783f)
         neural_beam_score_gap = safeGetFloat(_prefs, "neural_beam_score_gap", 20.0f)
 
         neural_model_version = safeGetString(_prefs, "neural_model_version", "v2")

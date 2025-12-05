@@ -69,7 +69,7 @@ class NeuralSettingsActivity : ComponentActivity() {
         ) {
             // Header
             Text(
-                text = "Neural Prediction Settings",
+                text = "Gesture Typing Settings",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground

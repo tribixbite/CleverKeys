@@ -69,7 +69,7 @@ class ThemeProvider(
                 keyDefault = androidx.compose.ui.graphics.Color(0xFF2A1845),
                 keyboardBackground = androidx.compose.ui.graphics.Color(0xFF1E1030),
                 keyLabel = androidx.compose.ui.graphics.Color(0xFFC0C0C0),
-                swipeTrail = androidx.compose.ui.graphics.Color(0xFF9B59B6)
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFFC0C0C0) // Silver trail
             )
             "cleverkeyslight" -> lightKeyboardColorScheme(
                 primary = androidx.compose.ui.graphics.Color(0xFF9B59B6)
@@ -77,7 +77,7 @@ class ThemeProvider(
                 keyDefault = androidx.compose.ui.graphics.Color(0xFFD8D8D8),
                 keyboardBackground = androidx.compose.ui.graphics.Color(0xFFC0C0C0),
                 keyLabel = androidx.compose.ui.graphics.Color(0xFF2C3E50),
-                swipeTrail = androidx.compose.ui.graphics.Color(0xFF9B59B6)
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFFC0C0C0) // Silver trail
             )
             "dark" -> darkKeyboardColorScheme(
                 primary = androidx.compose.ui.graphics.Color(0xFF33B5E5)
@@ -220,7 +220,7 @@ class ThemeProvider(
 
         // Decorative themes (from PredefinedThemes) - IDs must match getDecorativeColorScheme()
         themes["Gemstone"] = mutableListOf("decorative_gemstone_ruby", "decorative_gemstone_sapphire", "decorative_gemstone_emerald")
-        themes["Neon"] = mutableListOf("decorative_neon_electric_blue", "decorative_neon_hot_pink", "decorative_neon_lime_green")
+        themes["Neon"] = mutableListOf("decorative_neon_electric_blue", "decorative_neon_hot_pink", "decorative_neon_cyberpunk")
         themes["Pastel"] = mutableListOf("decorative_pastel_soft_pink", "decorative_pastel_sky_blue", "decorative_pastel_mint_green")
         themes["Nature"] = mutableListOf("decorative_nature_forest", "decorative_nature_ocean", "decorative_nature_desert")
         themes["Utilitarian"] = mutableListOf("decorative_utilitarian_charcoal", "decorative_utilitarian_slate", "decorative_utilitarian_concrete")
@@ -269,7 +269,7 @@ class ThemeProvider(
             // Neon themes
             "neon_electric_blue" -> themeNeonElectricBlue().colorScheme
             "neon_hot_pink" -> themeNeonHotPink().colorScheme
-            "neon_lime_green" -> themeNeonLimeGreen().colorScheme
+            "neon_cyberpunk" -> themeNeonCyberpunk().colorScheme
 
             // Pastel themes
             "pastel_soft_pink" -> themePastelSoftPink().colorScheme

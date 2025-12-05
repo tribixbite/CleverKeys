@@ -2286,7 +2286,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 onExpandChange = { privacySectionExpanded = it }
             ) {
                 Text(
-                    text = "Control what data CleverKeys collects and how long it's stored.",
+                    text = "Control what data CleverKeys collects and how long it's stored. This can be used for on-device personalized model fine-tuning",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)

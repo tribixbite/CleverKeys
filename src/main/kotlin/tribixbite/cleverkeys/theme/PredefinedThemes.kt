@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.Color
  *
  * Provides 18 professionally designed themes across 6 categories:
  * - Gemstone (3): Ruby, Sapphire, Emerald
- * - Neon (3): Electric Blue, Hot Pink, Lime Green
+ * - Neon (3): Electric Blue, Hot Pink, Cyberpunk
  * - Pastel (3): Soft Pink, Sky Blue, Mint Green
  * - Nature (3): Forest, Ocean, Desert
  * - Utilitarian (3): Charcoal, Slate, Concrete
@@ -53,7 +53,7 @@ fun themeGemstoneRuby(): ThemeInfo = ThemeInfo(
     id = "gemstone_ruby",
     name = "Ruby",
     category = ThemeCategory.GEMSTONE,
-    description = "Deep crimson inspired by precious rubies",
+    description = "Deep crimson inspired by rubies",
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF4A0E0E),              // Deep burgundy
         keyActivated = Color(0xFF6B1515),            // Brighter burgundy
@@ -87,7 +87,7 @@ fun themeGemstoneSapphire(): ThemeInfo = ThemeInfo(
     id = "gemstone_sapphire",
     name = "Sapphire",
     category = ThemeCategory.GEMSTONE,
-    description = "Rich blue inspired by precious sapphires",
+    description = "Rich blue inspired by sapphires",
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF0A1E4A),              // Deep navy
         keyActivated = Color(0xFF15306B),            // Brighter navy
@@ -121,7 +121,7 @@ fun themeGemstoneEmerald(): ThemeInfo = ThemeInfo(
     id = "gemstone_emerald",
     name = "Emerald",
     category = ThemeCategory.GEMSTONE,
-    description = "Lush green inspired by precious emeralds",
+    description = "Lush green inspired by emeralds",
     colorScheme = KeyboardColorScheme(
         keyDefault = Color(0xFF0E4A1E),              // Deep green
         keyActivated = Color(0xFF156B30),            // Brighter green
@@ -221,36 +221,36 @@ fun themeNeonHotPink(): ThemeInfo = ThemeInfo(
 )
 
 /**
- * Neon Lime Green - Vibrant lime green with neon glow.
+ * Neon Cyberpunk - Futuristic neon pink and blue aesthetics.
  */
-fun themeNeonLimeGreen(): ThemeInfo = ThemeInfo(
-    id = "neon_lime_green",
-    name = "Lime Green",
+fun themeNeonCyberpunk(): ThemeInfo = ThemeInfo(
+    id = "neon_cyberpunk",
+    name = "Cyberpunk",
     category = ThemeCategory.NEON,
-    description = "Vibrant lime green with neon glow",
+    description = "Futuristic neon pink and blue aesthetics",
     colorScheme = KeyboardColorScheme(
-        keyDefault = Color(0xFF1A3300),              // Very dark green
-        keyActivated = Color(0xFF2B5200),            // Dark green
-        keyLocked = Color(0xFF55AA00),               // Lime green
-        keyModifier = Color(0xFF3D7A00),             // Medium green
-        keySpecial = Color(0xFF77FF00),              // Bright lime
+        keyDefault = Color(0xFF121225),              // Dark blue-black
+        keyActivated = Color(0xFF2A2A40),            // Slightly lighter blue-black
+        keyLocked = Color(0xFFFF00FF),               // Neon Pink
+        keyModifier = Color(0xFF1A1A35),             // Darker blue-black
+        keySpecial = Color(0xFF00FFFF),              // Neon Cyan
 
-        keyLabel = Color(0xFFD4FF00),                // Yellow-green neon text
-        keySubLabel = Color(0xFFA8CC00),             // Bright lime
-        keySecondaryLabel = Color(0xFF88AA00),       // Medium lime
+        keyLabel = Color(0xFF00FFFF),                // Cyan neon text
+        keySubLabel = Color(0xFFFF00FF),             // Pink neon text
+        keySecondaryLabel = Color(0xFFCC00CC),       // Darker pink
 
-        keyBorder = Color(0xFF55AA00),               // Lime border
-        keyBorderActivated = Color(0xFFBBFF00),      // Bright neon
+        keyBorder = Color(0xFF00FFFF),               // Cyan border
+        keyBorderActivated = Color(0xFFFF00FF),      // Pink border
 
-        swipeTrail = Color(0xFFF0FF00),              // Neon lime trail
-        ripple = Color(0xFFF0FF00).copy(alpha = 0.6f),
+        swipeTrail = Color(0xFFFF00FF),              // Neon pink trail
+        ripple = Color(0xFF00FFFF).copy(alpha = 0.6f), // Cyan ripple
 
-        suggestionText = Color(0xFFD4FF00),
-        suggestionBackground = Color(0xFF1A3300),
-        suggestionHighConfidence = Color(0xFFF0FF00),
+        suggestionText = Color(0xFF00FFFF),
+        suggestionBackground = Color(0xFF121225),
+        suggestionHighConfidence = Color(0xFFFF00FF),
 
-        keyboardBackground = Color(0xFF0D1A00),      // Almost black
-        keyboardSurface = Color(0xFF141A00)          // Very dark green
+        keyboardBackground = Color(0xFF050510),      // Very dark blue/black
+        keyboardSurface = Color(0xFF0A0A20)          // Dark blue/black
     )
 )
 
@@ -695,7 +695,7 @@ fun getAllPredefinedThemes(): Map<ThemeCategory, List<ThemeInfo>> {
         ThemeCategory.NEON to listOf(
             themeNeonElectricBlue(),
             themeNeonHotPink(),
-            themeNeonLimeGreen()
+            themeNeonCyberpunk()
         ),
         ThemeCategory.PASTEL to listOf(
             themePastelSoftPink(),

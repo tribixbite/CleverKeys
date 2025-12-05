@@ -172,7 +172,9 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
         fun defaultChecked(name: String): Boolean {
             return when (name) {
                 "voice_typing", "change_method", "switch_clipboard", "compose",
-                "tab", "esc", "f11_placeholder", "f12_placeholder" -> true
+                "tab", "esc", "f11_placeholder", "f12_placeholder",
+                "cut", "copy", "paste", "undo", "redo",
+                "home", "end", "page_up", "page_down", "menu" -> true
                 else -> false
             }
         }

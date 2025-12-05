@@ -3,8 +3,8 @@
     <string name="app_name">CleverKeys</string>
     <string name="app_name_release">CleverKeys</string>
     <string name="app_name_debug">CleverKeys (Debug)</string>
-    <string name="short_description">AI-powered swipe typing keyboard with neural predictions running entirely on-device.</string>
-    <string name="store_description">CleverKeys combines privacy-first design with cutting-edge neural prediction technology. Features include:\n\n• Neural swipe typing with ONNX transformer models\n• 8-directional gesture support for programming symbols\n• 100% local processing - no cloud, no data collection\n• Hardware acceleration for modern Android devices\n• Real-time calibration and personalized training\n\nBuilt upon CleverKeys with enhanced neural intelligence.</string>
+    <string name="short_description">AI-powered swipe typing keyboard with neural network predictions running entirely on-device.</string>
+    <string name="store_description">CleverKeys combines privacy-first design with cutting-edge neural network prediction technology. Features include:\n\n• Neural network swipe typing with ONNX transformer models\n• 8-directional gesture support for programming symbols\n• 100% local processing - no cloud, no data collection\n• Hardware acceleration for modern Android devices\n• Real-time calibration and personalized training\n\nBuilt upon CleverKeys with enhanced neural network intelligence.</string>
     <string name="pref_portrait">In portrait mode</string>
     <string name="pref_portrait_unfolded">In portrait mode unfolded</string>
     <string name="pref_landscape">In landscape mode</string>
@@ -231,7 +231,7 @@
     <string name="emoji_empty">No emojis found</string>
 
     <!-- Neural Settings Activity (Material 3) -->
-    <string name="neural_settings_title">Neural Prediction Parameters</string>
+    <string name="neural_settings_title">Gesture Typing Network Settings</string>
     <string name="neural_settings_description">Configure ONNX neural network parameters for swipe prediction.\nChanges apply immediately to the prediction engine.</string>
     <string name="neural_section_core">Core Prediction Parameters</string>
     <string name="neural_beam_width_title">Beam Width</string>

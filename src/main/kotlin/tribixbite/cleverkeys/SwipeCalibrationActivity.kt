@@ -311,7 +311,7 @@ class SwipeCalibrationActivity : Activity() {
 
         // Title
         val title = TextView(this)
-        title.text = "🧠 Neural Swipe Calibration"
+        title.text = "🧠 Gesture Typing Calibration"
         title.textSize = 24f
         title.setTextColor(0xFF00d4ff.toInt()) // Neon blue
         title.setPadding(0, 0, 0, 20)

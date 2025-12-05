@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="docs/screenshots/social-preview.png" alt="CleverKeys Banner" width="100%"/>
+  <img src="docs/logos/app_icon_192.png" alt="CleverKeys Logo" width="120"/>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/promo_collage.png" alt="CleverKeys Screenshots" width="100%"/>
 </p>
 
 <p align="center">
