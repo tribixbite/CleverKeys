@@ -138,8 +138,7 @@
 ## Pending (Future Sessions)
 
 - [ ] Manual device testing for all import/export features
-- [ ] Create optional enhancement specs (clipboard, dictionary, privacy)
-- [ ] Consider full Material 3 theme migration (requires Theme.MaterialComponents as base)
+- [ ] Migrate legacy XML PreferenceScreen to Compose Material 3 (currently uses Theme.MaterialComponents)
 
 ---
 
