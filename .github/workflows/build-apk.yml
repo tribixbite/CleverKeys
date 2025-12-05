@@ -5,6 +5,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   Build-APK:
     runs-on: ubuntu-latest
