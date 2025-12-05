@@ -1,25 +1,27 @@
 <p align="center">
-  <img src="assets/raccoon_logo.png" alt="CleverKeys Logo" width="200"/>
-</p>
-
-<h1 align="center">CleverKeys</h1>
-
-<p align="center">
-  <a href="https://github.com/tribixbite/CleverKeys/releases/latest"><img src="https://img.shields.io/github/v/release/tribixbite/CleverKeys?label=Release&color=success" alt="Latest Release"/></a>
-  <a href="https://github.com/tribixbite/CleverKeys/releases/tag/nightly"><img src="https://img.shields.io/badge/Nightly-Download-orange" alt="Nightly Build"/></a>
-  <a href="https://github.com/tribixbite/CleverKeys/actions"><img src="https://github.com/tribixbite/CleverKeys/actions/workflows/ci.yml/badge.svg" alt="Build"/></a>
-  <br/>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3"/></a>
-  <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Android-8.0%2B-green.svg" alt="Android"/></a>
-  <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-1.9.20-purple.svg" alt="Kotlin"/></a>
+  <img src="docs/screenshots/social-preview.png" alt="CleverKeys Banner" width="100%"/>
 </p>
 
 <p align="center">
-  <strong>The only fully open-source, offline gesture keyboard for Android.</strong>
+  <a href="https://github.com/tribixbite/CleverKeys/releases/latest"><img src="https://img.shields.io/github/v/release/tribixbite/CleverKeys?style=for-the-badge&label=Release&color=9b59b6" alt="Latest Release"/></a>
+  <a href="https://github.com/tribixbite/CleverKeys/releases/tag/nightly"><img src="https://img.shields.io/badge/Nightly-Download-e67e22?style=for-the-badge" alt="Nightly Build"/></a>
+  <a href="https://github.com/tribixbite/CleverKeys/actions"><img src="https://img.shields.io/github/actions/workflow/status/tribixbite/CleverKeys/ci.yml?style=for-the-badge&label=Build" alt="Build"/></a>
 </p>
 
 <p align="center">
-  <em>No proprietary libraries. No cloud dependencies. No data collection.<br/>Just fast, accurate swipe typing that runs entirely on your device.</em>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-3498db?style=flat-square" alt="License: GPL v3"/></a>
+  <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Android-8.0+-2ecc71?style=flat-square" alt="Android"/></a>
+  <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-1.9.20-7f8c8d?style=flat-square" alt="Kotlin"/></a>
+  <img src="https://img.shields.io/badge/ONNX-Runtime-005CED?style=flat-square" alt="ONNX"/>
+  <img src="https://img.shields.io/badge/Themes-18+-e91e63?style=flat-square" alt="Themes"/>
+</p>
+
+<p align="center">
+  <strong>🚀 The only fully open-source, offline gesture keyboard for Android</strong>
+</p>
+
+<p align="center">
+  <em>No proprietary libraries • No cloud dependencies • No data collection<br/>Fast, accurate swipe typing that runs entirely on your device</em>
 </p>
 
 ---
