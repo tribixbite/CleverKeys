@@ -7,12 +7,13 @@
 
 ## Completed This Session (2025-12-05)
 
-### Swipe Prediction Improvements
-- [x] Investigate why "doesn't" and "asshole" not predicted from swipe
-- [x] Increase default beam width from 3 to 5 (explores more prediction paths)
-- [x] Lower confidence threshold from 0.05 to 0.01 (keeps more candidates)
-- [x] Add debug logging for raw beam outputs in OptimizedVocabulary
+### Swipe Prediction Investigation
+- [x] Deep dive on swipe prediction pipeline
+- [x] Investigate why "asshole" outputs as "asso" (truncated)
 - [x] Fix contraction mapping: "doesnt" → "doesn't" now works when model outputs it
+- [x] REVERTED: Beam search modifications (vocab validation, boosting, 4→8 width)
+  - Changes degraded accuracy and increased latency
+  - Root cause is model training data, not post-processing
 - [x] Fix Theme.kt runtime theme support for KeyboardColorScheme rendering
 
 ### Layout Cleanup
