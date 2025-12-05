@@ -12,6 +12,7 @@
 - [x] Increase default beam width from 3 to 5 (explores more prediction paths)
 - [x] Lower confidence threshold from 0.05 to 0.01 (keeps more candidates)
 - [x] Add debug logging for raw beam outputs in OptimizedVocabulary
+- [x] Fix contraction mapping: "doesnt" → "doesn't" now works when model outputs it
 - [x] Fix Theme.kt runtime theme support for KeyboardColorScheme rendering
 
 ### Layout Cleanup
@@ -122,9 +123,10 @@ PrivacyManager defaults changed in 4 places:
 ---
 
 ## Files Modified This Session
+- `src/main/kotlin/tribixbite/cleverkeys/OptimizedVocabulary.kt` - Contraction mapping fix (doesnt → doesn't)
 - `src/main/kotlin/tribixbite/cleverkeys/ThemeSettingsActivity.kt` - Theme Manager UI, DirectBootAwarePreferences fix
 - `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` - Removed theme dropdown, kept Theme Manager card
-- `src/main/kotlin/tribixbite/cleverkeys/Config.kt` - Portrait height default 27%
+- `src/main/kotlin/tribixbite/cleverkeys/Config.kt` - Portrait height default 27%, beam width 5
 - `src/main/kotlin/tribixbite/cleverkeys/PrivacyManager.kt` - Privacy defaults to OFF
 - `src/main/kotlin/tribixbite/cleverkeys/BackupRestoreManager.kt` - Dictionary import format fix (previous session)
 - `src/main/kotlin/tribixbite/cleverkeys/ClipboardDatabase.kt` - Duplicate check fix (previous session)
