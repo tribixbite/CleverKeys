@@ -1,0 +1,200 @@
+# Short Swipe Customization Feature Specification
+
+**Status**: In Progress
+**Branch**: `feature/per-key-short-swipe-customization`
+**Created**: 2025-12-05
+
+## Overview
+
+Allow users to fully customize short swipe gestures for every key on the keyboard through a dedicated settings UI.
+
+## User Flow
+
+```
+Settings -> Short Swipe Customization
+    |
+    v
++------------------------------------------+
+|  [Interactive Keyboard Preview]          |
+|                                          |
+|   q  w  e  r  t  y  u  i  o  p           |
+|   a  s  d  f  g  h  j  k  l              |
+|   z  x  c  v  b  n  m                    |
+|                                          |
+|  +------------------------------------+  |
+|  |   Press a key to customize         |  |
+|  +------------------------------------+  |
++------------------------------------------+
+    |
+    | (user taps 'e' key)
+    v
++------------------------------------------+
+|         Key Customization Modal          |
+|                                          |
+|              [NW] [N] [NE]               |
+|               \   |   /                  |
+|          [W] - [E] - [E]                 |
+|               /   |   \                  |
+|              [SW] [S] [SE]               |
+|                                          |
+|  Tap a direction to edit binding         |
+|  [Reset Key] [Close]                     |
++------------------------------------------+
+    |
+    | (user taps NE position)
+    v
++------------------------------------------+
+|         Direction Editor                 |
+|                                          |
+|  Direction: Northeast (NE)               |
+|                                          |
+|  Display Text: [____] (max 4 chars)      |
+|                                          |
+|  Action Type: [Text v]                   |
+|    - Text Input                          |
+|    - Command                             |
+|    - Key Event                           |
+|                                          |
+|  Action Value: [________________]        |
+|  (up to 100 characters for text)         |
+|                                          |
+|  [Delete] [Cancel] [Save]                |
++------------------------------------------+
+```
+
+## Data Model
+
+```kotlin
+// SwipeDirection.kt
+enum class SwipeDirection {
+    N,   // North (up)
+    NE,  // Northeast
+    E,   // East (right)
+    SE,  // Southeast
+    S,   // South (down)
+    SW,  // Southwest
+    W,   // West (left)
+    NW   // Northwest
+}
+
+// ActionType.kt
+enum class ActionType {
+    TEXT,     // Insert text string
+    COMMAND,  // Execute editing command
+    KEY_EVENT // Send key event
+}
+
+// ShortSwipeMapping.kt
+data class ShortSwipeMapping(
+    val keyCode: String,           // Key identifier
+    val direction: SwipeDirection,
+    val displayText: String,       // Max 4 chars for display
+    val actionType: ActionType,
+    val actionValue: String        // Text or command name
+)
+```
+
+## Available Commands
+
+| Command | Description |
+|---------|-------------|
+| COPY | Copy selected text |
+| PASTE | Paste from clipboard |
+| CUT | Cut selected text |
+| SELECT_ALL | Select all text |
+| UNDO | Undo last action |
+| REDO | Redo last action |
+| CURSOR_LEFT | Move cursor left |
+| CURSOR_RIGHT | Move cursor right |
+| CURSOR_UP | Move cursor up |
+| CURSOR_DOWN | Move cursor down |
+| CURSOR_HOME | Move to line start |
+| CURSOR_END | Move to line end |
+| CURSOR_DOC_START | Move to document start |
+| CURSOR_DOC_END | Move to document end |
+| DELETE_WORD | Delete word before cursor |
+| WORD_LEFT | Move cursor word left |
+| WORD_RIGHT | Move cursor word right |
+| SWITCH_IME | Switch input method |
+| VOICE_INPUT | Activate voice input |
+
+## Storage Format
+
+File: `short_swipe_customizations.json`
+
+```json
+{
+  "version": 1,
+  "mappings": {
+    "a": {
+      "N": { "displayText": "@", "actionType": "TEXT", "actionValue": "@" },
+      "NE": { "displayText": "sel", "actionType": "COMMAND", "actionValue": "SELECT_ALL" }
+    },
+    "e": {
+      "NW": { "displayText": "!", "actionType": "TEXT", "actionValue": "!" }
+    }
+  }
+}
+```
+
+## Integration Points
+
+1. **Pointers.kt** - `handleShortGesture()` checks custom mappings first
+2. **KeyEventHandler.kt** - Executes custom commands
+3. **KeyboardView.kt** - Renders custom sub-labels (future enhancement)
+4. **BackupRestoreManager.kt** - Export/import custom mappings
+
+## File Structure
+
+```
+src/main/kotlin/tribixbite/cleverkeys/
+├── customization/
+│   ├── SwipeDirection.kt
+│   ├── ActionType.kt
+│   ├── ShortSwipeMapping.kt
+│   ├── ShortSwipeCustomizationManager.kt
+│   └── CustomShortSwipeExecutor.kt
+└── ui/customization/
+    ├── ShortSwipeCustomizationActivity.kt
+    ├── InteractiveKeyboardPreview.kt
+    ├── KeyCustomizationModal.kt
+    └── DirectionEditorDialog.kt
+```
+
+## Implementation Phases
+
+### Phase 1: Data Layer
+- [x] Data models (SwipeDirection.kt, ActionType.kt, ShortSwipeMapping.kt)
+- [ ] ShortSwipeCustomizationManager
+- [ ] JSON persistence
+- [ ] Backup/restore integration
+
+### Phase 2: Integration
+- [ ] Pointers.kt integration
+- [ ] CustomShortSwipeExecutor
+- [ ] KeyEventHandler integration
+
+### Phase 3: UI
+- [ ] ShortSwipeCustomizationActivity
+- [ ] InteractiveKeyboardPreview
+- [ ] KeyCustomizationModal
+- [ ] DirectionEditorDialog
+- [ ] Settings navigation
+
+### Phase 4: Polish
+- [ ] Reset to defaults
+- [ ] Edge case handling
+- [ ] Device testing
+
+## Performance Requirements
+
+- Custom mapping lookup: < 1ms
+- UI response time: < 16ms (60fps)
+- Storage load time: < 100ms
+
+## Testing Strategy
+
+1. Unit tests for data layer
+2. Integration tests for gesture handling
+3. UI tests for customization flow
+4. Manual device testing
