@@ -36,6 +36,24 @@ All critical systems are fully implemented and verified as of 2025-12-04:
 | #271 | Consecutive duplicate filtering | SwipeMLData.kt | Noisy training data | 1 hour |
 | #277 | Multi-language expansion | OptimizedVocabularyImpl.kt | Only English fully tested | 8-12 hours/language |
 
+### 🔬 Beam Search Improvements (Dec 4, 2025)
+
+**Issue**: Words like "asshole" and "doesnt" weren't being predicted despite being in vocabulary.
+
+**Root Causes**:
+1. Unfinished beams (without EOS) were being returned as candidates
+2. NN model gives low confidence to less common word paths (e.g., "assh" vs "asso")
+
+**Solutions Implemented**:
+1. **Vocabulary Validation** (commit 381006a8): All beam candidates must exist in vocabulary trie
+2. **Vocabulary Boosting** (commit 55a9ff3f): Boost logits for vocabulary-guided paths
+   - VOCAB_CONTINUATION_BOOST = 3.0 (paths with more continuations)
+   - VOCAB_WORD_COMPLETION_BOOST = 4.0 (completing a valid word)
+3. **Wider Exploration**: Double beam width (8 candidates) for first 4 steps
+
+**Remaining Issue**: NN model training data doesn't include enough examples of less common words.
+This is a model retraining issue, not a code issue.
+
 ---
 
 ## 1. Feature Overview
