@@ -843,22 +843,35 @@ class Keyboard2View @JvmOverloads constructor(
             paint.color = android.graphics.Color.WHITE
             paint.style = Paint.Style.FILL
             
-            // Draw sparkles along the path
-            // We skip points to avoid too many particles (draw every 3rd point)
-            for (i in 0 until swipePath.size step 3) {
+            // Draw sparkles along the path ("Twinkly fairy dust")
+            // More numerous: Iterate every point (step 1)
+            val spread = 35 // Extend beyond trail slightly
+            
+            for (i in 0 until swipePath.size) {
                 val point = swipePath[i]
-                // Pseudo-random based on index and time for shimmering
-                val seed = (i * 12345 + time / 50).toInt()
-                val randomX = ((seed % 20) - 10).toFloat()
-                val randomY = (((seed / 20) % 20) - 10).toFloat()
                 
-                // Flicker size
-                val size = (seed % 5 + 2).toFloat() // 2-7px
-                
-                // Flicker alpha
-                paint.alpha = (seed % 155) + 100 // 100-255
-                
-                canvas.drawCircle(point.x + randomX, point.y + randomY, size, paint)
+                // Draw 2 particles per point for density
+                for (j in 0..1) {
+                    // Stable position based on index so particles stick to trail
+                    val posSeed = (i * 31337) + (j * 719)
+                    
+                    // Pseudo-random offsets
+                    val offsetX = ((posSeed % (spread * 2)) - spread).toFloat()
+                    val offsetY = (((posSeed / 100) % (spread * 2)) - spread).toFloat()
+                    
+                    // Pulse much slower: Use sine wave for smooth twinkling
+                    val pulseSpeed = 0.003f
+                    val pulsePhase = (i * 10 + j * 50).toFloat()
+                    val pulse = (kotlin.math.sin(time * pulseSpeed + pulsePhase) + 1f) / 2f
+                    
+                    // Much smaller: 1px to 3px
+                    val size = 1.0f + (pulse * 2.0f)
+                    
+                    // Flicker alpha
+                    paint.alpha = (50 + (pulse * 205)).toInt()
+                    
+                    canvas.drawCircle(point.x + offsetX, point.y + offsetY, size, paint)
+                }
             }
             
             // Restore paint
