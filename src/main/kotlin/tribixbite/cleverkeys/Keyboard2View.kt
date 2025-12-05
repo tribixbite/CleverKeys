@@ -19,6 +19,10 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import android.view.WindowInsets
+import android.view.inputmethod.InputMethodManager
+import tribixbite.cleverkeys.customization.AvailableCommand
+import tribixbite.cleverkeys.customization.CustomShortSwipeExecutor
+import tribixbite.cleverkeys.customization.ShortSwipeMapping
 import tribixbite.cleverkeys.theme.ThemeProvider
 import java.util.ArrayList
 
@@ -90,6 +94,9 @@ class Keyboard2View @JvmOverloads constructor(
     private val _cgrPredictions = ArrayList<String>()
     private var _cgrFinalPredictions = false
     private var _keyboard2: CleverKeysService? = null
+
+    // Custom short swipe executor for user-defined gesture mappings
+    private val _customSwipeExecutor = CustomShortSwipeExecutor(context)
 
     private var _keyWidth = 0f
     private var _mainLabelSize = 0f
@@ -500,6 +507,51 @@ class Keyboard2View @JvmOverloads constructor(
 
     override fun getKeyWidth(key: KeyboardData.Key): Float {
         return key.width * _keyWidth
+    }
+
+    /**
+     * Execute a custom short swipe mapping defined by the user.
+     * This is called from Pointers when a custom mapping is found for a short swipe gesture.
+     */
+    override fun onCustomShortSwipe(mapping: ShortSwipeMapping) {
+        Log.d("Keyboard2View", "Executing custom short swipe: ${mapping.keyCode}:${mapping.direction} -> ${mapping.actionType}:${mapping.actionValue}")
+
+        val service = _keyboard2
+        if (service == null) {
+            Log.w("Keyboard2View", "Cannot execute custom swipe: no service reference")
+            return
+        }
+
+        val inputConnection = service.currentInputConnection
+        val editorInfo = service.currentInputEditorInfo
+
+        // Execute the mapping using the CustomShortSwipeExecutor
+        val executed = _customSwipeExecutor.execute(mapping, inputConnection, editorInfo)
+
+        if (!executed) {
+            // Some commands need special handling (SWITCH_IME, VOICE_INPUT)
+            // Handle these system commands directly via InputMethodManager
+            val command = mapping.getCommand()
+            when (command) {
+                AvailableCommand.SWITCH_IME -> {
+                    Log.d("Keyboard2View", "Executing SWITCH_IME via InputMethodManager")
+                    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                    imm?.showInputMethodPicker()
+                }
+                AvailableCommand.VOICE_INPUT -> {
+                    // TODO: Implement voice input trigger when the feature is supported
+                    Log.w("Keyboard2View", "VOICE_INPUT command not yet implemented")
+                }
+                else -> {
+                    if (command != null) {
+                        Log.w("Keyboard2View", "Custom swipe command failed to execute: ${mapping.actionValue}")
+                    }
+                }
+            }
+        }
+
+        // Provide haptic feedback for successful gesture
+        performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
     }
 
     fun setSwipeTypingComponents(predictor: WordPredictor?, keyboard2: CleverKeysService?) {

@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Message
 import android.util.Log
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
+import tribixbite.cleverkeys.customization.ShortSwipeMapping
 import tribixbite.cleverkeys.customization.SwipeDirection
 import java.util.NoSuchElementException
 import kotlin.math.abs
@@ -1073,6 +1074,9 @@ class Pointers(
 
         /** Get the width of a key in pixels. */
         fun getKeyWidth(key: KeyboardData.Key): Float
+
+        /** Execute a custom short swipe mapping defined by the user. */
+        fun onCustomShortSwipe(mapping: ShortSwipeMapping)
     }
 
     companion object {
@@ -1113,5 +1117,38 @@ class Pointers(
         fun getSlidingSpeedSmoothing(): Float = Config.globalConfig().slider_speed_smoothing
         @JvmStatic
         fun getSlidingSpeedMax(): Float = Config.globalConfig().slider_speed_max
+
+        /**
+         * Maps 16-direction index to 8-direction SwipeDirection.
+         * The 16-direction system divides circle into 22.5° slices starting from top (N).
+         * Direction 0 = top/north, direction 4 = right/east, etc.
+         */
+        @JvmField
+        val DIRECTION_TO_SWIPE_DIRECTION = arrayOf(
+            SwipeDirection.N,   // 0 - top
+            SwipeDirection.NE,  // 1 - top-right (upper)
+            SwipeDirection.NE,  // 2 - top-right (lower)
+            SwipeDirection.E,   // 3 - right (upper)
+            SwipeDirection.SE,  // 4 - right (lower)
+            SwipeDirection.SE,  // 5 - bottom-right (upper)
+            SwipeDirection.SE,  // 6 - bottom-right (lower)
+            SwipeDirection.S,   // 7 - bottom (right)
+            SwipeDirection.S,   // 8 - bottom (left)
+            SwipeDirection.SW,  // 9 - bottom-left (upper)
+            SwipeDirection.SW,  // 10 - bottom-left (lower)
+            SwipeDirection.W,   // 11 - left (lower)
+            SwipeDirection.W,   // 12 - left (upper)
+            SwipeDirection.NW,  // 13 - top-left (lower)
+            SwipeDirection.NW,  // 14 - top-left (upper)
+            SwipeDirection.N    // 15 - top (left side)
+        )
+
+        /**
+         * Convert 16-direction to SwipeDirection enum.
+         */
+        @JvmStatic
+        fun directionToSwipeDirection(direction: Int): SwipeDirection {
+            return DIRECTION_TO_SWIPE_DIRECTION[direction and 0x0F]
+        }
     }
 }
