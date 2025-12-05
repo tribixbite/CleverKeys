@@ -543,6 +543,9 @@ class BackupRestoreManager(private val context: Context) {
     /**
      * Export user dictionaries to JSON file
      * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
+     *
+     * CRITICAL: DictionaryManager uses SharedPreferences file "user_dictionary" with key "user_words"
+     * stored as a StringSet. We export from that location to ensure consistency with import.
      */
     fun exportDictionaries(uri: Uri) {
         try {
@@ -556,18 +559,22 @@ class BackupRestoreManager(private val context: Context) {
             metadata.addProperty("type", "dictionaries")
             root.add("metadata", metadata)
 
-            // Export user dictionary words from SharedPreferences
-            val prefs = context.getSharedPreferences("cleverkeys_prefs", android.content.Context.MODE_PRIVATE)
+            // CRITICAL FIX: Export from the same location DictionaryManager uses
+            // DictionaryManager uses "user_dictionary" file with "user_words" StringSet key
+            val userDictPrefs = context.getSharedPreferences("user_dictionary", android.content.Context.MODE_PRIVATE)
+            val userWordsSet = userDictPrefs.getStringSet("user_words", emptySet()) ?: emptySet()
             val userWords = JsonArray()
-            val disabledWords = JsonArray()
-
-            // Note: Dictionary data is typically stored in the system user dictionary
-            // For now, we export any custom word preferences if they exist
-            prefs.all.filter { it.key.startsWith("user_word_") }.forEach { (key, value) ->
-                userWords.add(value.toString())
+            for (word in userWordsSet) {
+                userWords.add(word)
             }
-            prefs.all.filter { it.key.startsWith("disabled_word_") }.forEach { (key, value) ->
-                disabledWords.add(value.toString())
+
+            // Export disabled words from WordPredictor's storage
+            // WordPredictor uses DirectBootAwarePreferences with "disabled_words" key
+            val disabledWordsPrefs = DirectBootAwarePreferences.get_shared_preferences(context)
+            val disabledWordsSet = disabledWordsPrefs.getStringSet("disabled_words", emptySet()) ?: emptySet()
+            val disabledWords = JsonArray()
+            for (word in disabledWordsSet) {
+                disabledWords.add(word)
             }
 
             root.add("user_words", userWords)
@@ -591,6 +598,9 @@ class BackupRestoreManager(private val context: Context) {
      * Import user dictionaries from JSON file
      * @param uri URI from Storage Access Framework (ACTION_OPEN_DOCUMENT)
      * @return DictionaryImportResult with statistics
+     *
+     * CRITICAL: DictionaryManager uses SharedPreferences file "user_dictionary" with key "user_words"
+     * stored as a StringSet. We must write to that location for the Dictionary Manager to see imports.
      */
     fun importDictionaries(uri: Uri): DictionaryImportResult {
         return try {
@@ -611,51 +621,74 @@ class BackupRestoreManager(private val context: Context) {
                 result.sourceVersion = metadata.get("app_version")?.asString ?: "unknown"
             }
 
-            val prefs = context.getSharedPreferences("cleverkeys_prefs", android.content.Context.MODE_PRIVATE)
-            val editor = prefs.edit()
+            // CRITICAL FIX: Use the same SharedPreferences file and key as DictionaryManager
+            // DictionaryManager uses "user_dictionary" file with "user_words" StringSet key
+            val userDictPrefs = context.getSharedPreferences("user_dictionary", android.content.Context.MODE_PRIVATE)
+
+            // Load existing user words to avoid duplicates
+            val existingWords = userDictPrefs.getStringSet("user_words", emptySet())?.toMutableSet() ?: mutableSetOf()
+            val newWords = mutableSetOf<String>()
 
             // Handle new format: custom_words as object with word -> frequency
             if (root.has("custom_words") && root.get("custom_words").isJsonObject) {
                 val customWords = root.getAsJsonObject("custom_words")
-                for ((word, freqValue) in customWords.entrySet()) {
-                    val frequency = freqValue.asInt
-                    val key = "user_word_${word.hashCode()}"
-                    if (!prefs.contains(key)) {
-                        // Store as "word:frequency" format
-                        editor.putString(key, "$word:$frequency")
+                for ((word, _) in customWords.entrySet()) {
+                    // Just use the word, ignore frequency for now (DictionaryManager doesn't track frequency)
+                    if (word !in existingWords) {
+                        newWords.add(word)
                         result.userWordsImported++
                     }
                 }
-                Log.i(TAG, "Imported ${result.userWordsImported} custom_words (new format)")
+                Log.i(TAG, "Parsed ${customWords.size()} custom_words (new format), ${result.userWordsImported} new")
             }
 
             // Handle old format: user_words as array
             if (root.has("user_words") && root.get("user_words").isJsonArray) {
                 val userWords = root.getAsJsonArray("user_words")
-                for (word in userWords) {
-                    val wordStr = word.asString
-                    val key = "user_word_${wordStr.hashCode()}"
-                    if (!prefs.contains(key)) {
-                        editor.putString(key, wordStr)
+                for (wordElement in userWords) {
+                    val wordStr = wordElement.asString
+                    if (wordStr !in existingWords && wordStr !in newWords) {
+                        newWords.add(wordStr)
                         result.userWordsImported++
                     }
                 }
+                Log.i(TAG, "Parsed ${userWords.size()} user_words (old format), total new: ${result.userWordsImported}")
             }
 
-            // Handle disabled_words (array format)
+            // Merge and save to the correct SharedPreferences location
+            if (newWords.isNotEmpty()) {
+                val allWords = existingWords + newWords
+                userDictPrefs.edit()
+                    .putStringSet("user_words", allWords)
+                    .apply()
+                Log.i(TAG, "Saved ${allWords.size} total words (${newWords.size} new) to user_dictionary/user_words")
+            }
+
+            // Handle disabled_words - these go to WordPredictor's disabled words mechanism
+            // WordPredictor uses DirectBootAwarePreferences with "disabled_words" key
             if (root.has("disabled_words") && root.get("disabled_words").isJsonArray) {
+                val disabledWordsPrefs = DirectBootAwarePreferences.get_shared_preferences(context)
+                val existingDisabled = disabledWordsPrefs.getStringSet("disabled_words", emptySet())?.toMutableSet() ?: mutableSetOf()
+                val newDisabled = mutableSetOf<String>()
+
                 val disabledWords = root.getAsJsonArray("disabled_words")
-                for (word in disabledWords) {
-                    val wordStr = word.asString
-                    val key = "disabled_word_${wordStr.hashCode()}"
-                    if (!prefs.contains(key)) {
-                        editor.putString(key, wordStr)
+                for (wordElement in disabledWords) {
+                    val wordStr = wordElement.asString
+                    if (wordStr !in existingDisabled) {
+                        newDisabled.add(wordStr)
                         result.disabledWordsImported++
                     }
                 }
+
+                if (newDisabled.isNotEmpty()) {
+                    val allDisabled = existingDisabled + newDisabled
+                    disabledWordsPrefs.edit()
+                        .putStringSet("disabled_words", allDisabled)
+                        .apply()
+                    Log.i(TAG, "Saved ${allDisabled.size} disabled words (${newDisabled.size} new)")
+                }
             }
 
-            editor.apply()
             Log.i(TAG, "Imported dictionaries: ${result.userWordsImported} user words, ${result.disabledWordsImported} disabled words")
             result
         } catch (e: Exception) {

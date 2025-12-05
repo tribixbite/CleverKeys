@@ -145,8 +145,7 @@ Inherited from Unexpected Keyboard:
 
 ### 🛠️ Power User Features
 - **Terminal mode** — Ctrl/Meta/Fn keys for Termux users
-- **One-handed mode** — Resize and position keyboard
-- **Configurable gestures** — Swipe, hold, double-tap behaviors
+- **Short swipe gestures** — Swipe keys for symbols, navigation, clipboard, and function keys (inherited from Unexpected Keyboard)
 - **Backup & Restore** — Export all settings and custom data
 
 ### 📱 The Only Swipe Keyboard for Termux

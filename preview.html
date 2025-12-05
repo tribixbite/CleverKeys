@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CleverKeys README</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.0/github-markdown-dark.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    body { background-color: #0d1117; padding: 20px; margin: 0; }
+    .markdown-body { max-width: 980px; margin: 0 auto; padding: 45px; }
+  </style>
+</head>
+<body>
+<article class="markdown-body" id="content"></article>
+<script>
+fetch('/README.md').then(r=>r.text()).then(md=>{
+  document.getElementById('content').innerHTML = marked.parse(md);
+});
+</script>
+</body>
+</html>
