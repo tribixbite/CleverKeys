@@ -243,27 +243,20 @@ class CleverKeysService : InputMethodService(),
         prefs.registerOnSharedPreferenceChangeListener(this)
 
         // Register theme change broadcast receiver (for immediate theme updates from ThemeSettingsActivity)
-        android.util.Log.d("CleverKeysService", "Registering theme change receiver for action: $ACTION_THEME_CHANGED")
         _themeChangeReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
-                android.util.Log.d("CleverKeysService", "BroadcastReceiver.onReceive called, action=${intent?.action}")
                 if (intent?.action == ACTION_THEME_CHANGED) {
-                    android.util.Log.d("CleverKeysService", "Theme change broadcast received, refreshing config")
                     _configManager.refresh(resources)
-                    android.util.Log.d("CleverKeysService", "Config refresh completed")
                 }
             }
         }
         val filter = IntentFilter(ACTION_THEME_CHANGED)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            android.util.Log.d("CleverKeysService", "Registering receiver with RECEIVER_NOT_EXPORTED (API 33+)")
             registerReceiver(_themeChangeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
-            android.util.Log.d("CleverKeysService", "Registering receiver without flags (pre-API 33)")
             @Suppress("UnspecifiedRegisterReceiverFlag")
             registerReceiver(_themeChangeReceiver, filter)
         }
-        android.util.Log.d("CleverKeysService", "Theme change receiver registered")
 
         // Check if we're the default IME and remind user if not
         checkAndPromptDefaultIME()
@@ -480,13 +473,18 @@ class CleverKeysService : InputMethodService(),
         // This catches theme changes made while the keyboard was hidden (e.g., user changed theme in settings)
         // Without this check, the old cached view would be shown instead of the new themed view
         val latestThemeId = _config?.theme ?: 0
-        android.util.Log.d("CleverKeysService", "onStartInputView: currentViewTheme=$_currentViewThemeId, latestConfigTheme=$latestThemeId")
         if (_currentViewThemeId != latestThemeId && latestThemeId != 0) {
-            android.util.Log.d("CleverKeysService", "Stale theme detected! Recreating view...")
             _keyboardView = inflate_view(R.layout.keyboard) as Keyboard2View
             _emojiPane = null
             _keyboardView.setKeyboard(current_layout())
             _keyboardView.setSwipeTypingComponents(null, this)
+            setInputView(_keyboardView)
+        }
+
+        // CRITICAL: Ensure the view is actually attached to the window.
+        // If the view was recreated while hidden (e.g. via broadcast in Settings), setInputView()
+        // might not have persisted the attachment. This ensures the new view is shown.
+        if (_keyboardView.parent == null) {
             setInputView(_keyboardView)
         }
 
@@ -622,35 +620,25 @@ class CleverKeysService : InputMethodService(),
     }
 
     override fun onSharedPreferenceChanged(prefs: SharedPreferences, key: String?) {
-        android.util.Log.d("CleverKeysService", "onSharedPreferenceChanged called with key=$key")
-
         // NOTE: ConfigurationManager is the primary SharedPreferences listener and handles
         // config refresh. This method handles additional UI updates.
         // (v1.32.412: Delegated to PreferenceUIUpdateHandler)
 
         // Direct theme change handling - force view recreation when theme preference changes
         if (key == "theme") {
-            android.util.Log.d("CleverKeysService", "Theme preference changed!")
-
             // Refresh config to pick up new theme value
-            val oldTheme = _config?.theme
             _configManager.refresh(resources)
             _config = _configManager.getConfig()
-            android.util.Log.d("CleverKeysService", "Theme updated: old=$oldTheme new=${_config?.theme}")
 
             // If keyboard is currently visible, immediately recreate the view
             // If keyboard is hidden, the check in onStartInputView() will handle it when keyboard next appears
             if (isInputViewShown) {
-                android.util.Log.d("CleverKeysService", "Keyboard is visible, recreating view now...")
                 _keyboardView = inflate_view(R.layout.keyboard) as Keyboard2View
                 _emojiPane = null
                 _clipboardManager.cleanup()
                 _keyboardView.setKeyboard(current_layout())
                 _keyboardView.setSwipeTypingComponents(null, this)
                 setInputView(_keyboardView)
-                android.util.Log.d("CleverKeysService", "View recreated with theme=${_config?.theme}")
-            } else {
-                android.util.Log.d("CleverKeysService", "Keyboard is hidden, will apply theme on next show")
             }
             return
         }

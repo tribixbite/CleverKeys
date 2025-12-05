@@ -44,13 +44,156 @@ class ThemeProvider(
 
     /**
      * Get the KeyboardColorScheme for a theme (used by Theme Creator for defaults).
-     * Returns null if the theme doesn't have a color scheme (XML themes).
+     * Returns a color scheme based on the theme's style.
      */
     fun getColorScheme(themeId: String): KeyboardColorScheme? {
         return when {
             themeId.startsWith("custom_") -> customThemeManager.getCustomTheme(themeId)?.colors
             themeId.startsWith("decorative_") -> getDecorativeColorScheme(themeId)
-            else -> null // XML themes don't have KeyboardColorScheme
+            else -> getBuiltInColorScheme(themeId)
+        }
+    }
+
+    /**
+     * Get approximate color scheme for built-in XML themes.
+     * Used when creating custom themes based on a built-in theme.
+     *
+     * These are approximations of the XML theme colors - the actual keyboard
+     * uses XML attributes, but this provides starting colors for the theme creator.
+     */
+    private fun getBuiltInColorScheme(themeId: String): KeyboardColorScheme {
+        return when (themeId) {
+            "cleverkeysdark" -> darkKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFF9B59B6)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFF2A1845),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFF1E1030),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFFC0C0C0),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFF9B59B6)
+            )
+            "cleverkeyslight" -> lightKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFF9B59B6)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFFD8D8D8),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFFC0C0C0),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFF2C3E50),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFF9B59B6)
+            )
+            "dark" -> darkKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFF33B5E5)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFF333333),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFF1B1B1B),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFFFFFFFF),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFF33B5E5)
+            )
+            "light" -> lightKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFF33B5E5)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFFCCCCCC),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFFE3E3E3),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFF000000),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFF33B5E5)
+            )
+            "black", "altblack" -> darkKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFF009DFF)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFF000000),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFF000000),
+                keyboardSurface = androidx.compose.ui.graphics.Color(0xFF000000),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFFEEEEEE),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFF009DFF)
+            )
+            "white" -> lightKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFF0066CC)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFFFFFFFF),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFFFFFFFF),
+                keyboardSurface = androidx.compose.ui.graphics.Color(0xFFFFFFFF),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFF000000),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFF0066CC)
+            )
+            "rosepine" -> darkKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFFC4A7E7)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFF26233A),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFF191724),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFFE0DEF4),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFFC4A7E7)
+            )
+            "cobalt" -> darkKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFF78BFFF)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFF000000),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFF000000),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFF95C9FF),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFF78BFFF)
+            )
+            "pine" -> darkKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFF74CC8A)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFF000000),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFF000000),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFF91D7A6),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFF74CC8A)
+            )
+            "desert" -> lightKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFFE65100)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFFFFF3E0),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFFFFE0B2),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFF000000),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFFE65100)
+            )
+            "jungle" -> lightKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFF00695C)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFFE0F2F1),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFF4DB6AC),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFF000000),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFF00695C)
+            )
+            "epaper" -> lightKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFF000000)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFFFFFFFF),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFFFFFFFF),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFF000000),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFF000000)
+            )
+            "epaperblack" -> darkKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFFFFFFFF)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFF000000),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFF000000),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFFFFFFFF),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFFFFFFFF)
+            )
+            "everforestlight" -> lightKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFF828812)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFFE5E2D1),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFFF8F5E4),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFF5C6A72),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFF828812)
+            )
+            "monet", "monetdark" -> darkKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFF9B59B6)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFF333333),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFF1B1B1B),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFFFFFFFF),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFF9B59B6)
+            )
+            "monetlight" -> lightKeyboardColorScheme(
+                primary = androidx.compose.ui.graphics.Color(0xFF9B59B6)
+            ).copy(
+                keyDefault = androidx.compose.ui.graphics.Color(0xFFCCCCCC),
+                keyboardBackground = androidx.compose.ui.graphics.Color(0xFFE3E3E3),
+                keyLabel = androidx.compose.ui.graphics.Color(0xFF000000),
+                swipeTrail = androidx.compose.ui.graphics.Color(0xFF9B59B6)
+            )
+            else -> darkKeyboardColorScheme() // Fallback
         }
     }
 

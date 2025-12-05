@@ -56,24 +56,24 @@ class ThemeSettingsActivity : ComponentActivity() {
          * These are the theme IDs that Config.kt's getThemeId() recognizes
          */
         val BUILTIN_THEMES = listOf(
-            BuiltinTheme("cleverkeysdark", "CleverKeys Dark", "Deep purple with silver accents (default)", 0xFF1E1030, 0xFF2A1845, 0xFFC0C0C0),
-            BuiltinTheme("cleverkeyslight", "CleverKeys Light", "Silver keys with purple accents", 0xFFC0C0C0, 0xFFD8D8D8, 0xFF2C3E50),
-            BuiltinTheme("dark", "Dark", "Classic dark theme with blue accents", 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF),
-            BuiltinTheme("light", "Light", "Classic light theme", 0xFFE3E3E3, 0xFFCCCCCC, 0xFF000000),
-            BuiltinTheme("black", "Black", "Pure black AMOLED theme", 0xFF000000, 0xFF000000, 0xFFEEEEEE),
-            BuiltinTheme("altblack", "Alt Black", "Black with visible borders", 0xFF000000, 0xFF000000, 0xFFEEEEEE),
-            BuiltinTheme("white", "White", "Pure white theme", 0xFFFFFFFF, 0xFFFFFFFF, 0xFF000000),
-            BuiltinTheme("rosepine", "Rosé Pine", "Elegant dark rose theme", 0xFF191724, 0xFF26233A, 0xFFE0DEF4),
-            BuiltinTheme("cobalt", "Cobalt", "Deep blue theme", 0xFF000000, 0xFF000000, 0xFF95C9FF),
-            BuiltinTheme("pine", "Pine", "Forest green theme", 0xFF000000, 0xFF000000, 0xFF91D7A6),
-            BuiltinTheme("desert", "Desert", "Warm sand colors", 0xFFFFE0B2, 0xFFFFF3E0, 0xFF000000),
-            BuiltinTheme("jungle", "Jungle", "Tropical teal theme", 0xFF4DB6AC, 0xFFE0F2F1, 0xFF000000),
-            BuiltinTheme("epaper", "ePaper", "High contrast e-ink style", 0xFFFFFFFF, 0xFFFFFFFF, 0xFF000000),
-            BuiltinTheme("epaperblack", "ePaper Black", "Inverted e-ink style", 0xFF000000, 0xFF000000, 0xFFFFFFFF),
-            BuiltinTheme("everforestlight", "Everforest Light", "Soft green theme", 0xFFF8F5E4, 0xFFE5E2D1, 0xFF5C6A72),
-            BuiltinTheme("monet", "Monet (Auto)", "Material You colors (follows system)", 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF),
-            BuiltinTheme("monetlight", "Monet Light", "Material You light variant", 0xFFE3E3E3, 0xFFCCCCCC, 0xFF000000),
-            BuiltinTheme("monetdark", "Monet Dark", "Material You dark variant", 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF),
+            BuiltinTheme("cleverkeysdark", "CleverKeys Dark", "Deep purple with silver accents (default)", 0xFF1E1030, 0xFF2A1845, 0xFFC0C0C0, 0xFF9B59B6),
+            BuiltinTheme("cleverkeyslight", "CleverKeys Light", "Silver keys with purple accents", 0xFFC0C0C0, 0xFFD8D8D8, 0xFF2C3E50, 0xFF9B59B6),
+            BuiltinTheme("dark", "Dark", "Classic dark theme with blue accents", 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF, 0xFF33B5E5),
+            BuiltinTheme("light", "Light", "Classic light theme", 0xFFE3E3E3, 0xFFCCCCCC, 0xFF000000, 0xFF33B5E5),
+            BuiltinTheme("black", "Black", "Pure black AMOLED theme", 0xFF000000, 0xFF000000, 0xFFEEEEEE, 0xFF009DFF),
+            BuiltinTheme("altblack", "Alt Black", "Black with visible borders", 0xFF000000, 0xFF000000, 0xFFEEEEEE, 0xFF009DFF),
+            BuiltinTheme("white", "White", "Pure white theme", 0xFFFFFFFF, 0xFFFFFFFF, 0xFF000000, 0xFF0066CC),
+            BuiltinTheme("rosepine", "Rosé Pine", "Elegant dark rose theme", 0xFF191724, 0xFF26233A, 0xFFE0DEF4, 0xFFC4A7E7),
+            BuiltinTheme("cobalt", "Cobalt", "Deep blue theme", 0xFF000000, 0xFF000000, 0xFF95C9FF, 0xFF78BFFF),
+            BuiltinTheme("pine", "Pine", "Forest green theme", 0xFF000000, 0xFF000000, 0xFF91D7A6, 0xFF74CC8A),
+            BuiltinTheme("desert", "Desert", "Warm sand colors", 0xFFFFE0B2, 0xFFFFF3E0, 0xFF000000, 0xFFE65100),
+            BuiltinTheme("jungle", "Jungle", "Tropical teal theme", 0xFF4DB6AC, 0xFFE0F2F1, 0xFF000000, 0xFF00695C),
+            BuiltinTheme("epaper", "ePaper", "High contrast e-ink style", 0xFFFFFFFF, 0xFFFFFFFF, 0xFF000000, 0xFF000000),
+            BuiltinTheme("epaperblack", "ePaper Black", "Inverted e-ink style", 0xFF000000, 0xFF000000, 0xFFFFFFFF, 0xFFFFFFFF),
+            BuiltinTheme("everforestlight", "Everforest Light", "Soft green theme", 0xFFF8F5E4, 0xFFE5E2D1, 0xFF5C6A72, 0xFF828812),
+            BuiltinTheme("monet", "Monet (Auto)", "Material You colors (follows system)", 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF, 0xFF9B59B6),
+            BuiltinTheme("monetlight", "Monet Light", "Material You light variant", 0xFFE3E3E3, 0xFFCCCCCC, 0xFF000000, 0xFF9B59B6),
+            BuiltinTheme("monetdark", "Monet Dark", "Material You dark variant", 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF, 0xFF9B59B6),
         )
     }
 
@@ -86,7 +86,8 @@ class ThemeSettingsActivity : ComponentActivity() {
         val description: String,
         val backgroundColor: Long,  // For preview
         val keyColor: Long,         // For preview
-        val labelColor: Long        // For preview
+        val labelColor: Long,       // For preview
+        val swipeTrailColor: Long   // For prefs
     )
 
     private lateinit var prefs: SharedPreferences
@@ -140,25 +141,44 @@ class ThemeSettingsActivity : ComponentActivity() {
                     ThemeSettingsScreen(
                         onBack = { finish() },
                         onThemeSelected = { themeId ->
-                            android.util.Log.d("ThemeSettingsActivity", "Theme selected: $themeId")
+                            // Find swipe trail color
+                            var swipeTrailColor = 0xFF9B59B6.toInt() // Default purple
+                            
+                            // 1. Check built-in themes
+                            val builtin = BUILTIN_THEMES.find { it.id == themeId }
+                            if (builtin != null) {
+                                swipeTrailColor = builtin.swipeTrailColor.toInt()
+                            } else {
+                                // 2. Check decorative/custom themes
+                                // ThemeProvider isn't easily accessible here as a singleton without context, 
+                                // but we can check if it's custom/decorative
+                                if (themeId.startsWith("custom_") || themeId.startsWith("decorative_")) {
+                                    val themeProvider = ThemeProvider.getInstance(this)
+                                    val colorScheme = themeProvider.getColorScheme(themeId)
+                                    if (colorScheme != null) {
+                                        swipeTrailColor = colorScheme.swipeTrail.toArgb()
+                                    }
+                                }
+                            }
 
                             // Save selected theme to device protected storage (same prefs the keyboard listens to)
                             // This will immediately trigger the keyboard's OnSharedPreferenceChangeListener
-                            android.util.Log.d("ThemeSettingsActivity", "Writing to device protected prefs...")
-                            prefs.edit().putString("theme", themeId).commit() // Use commit() for synchronous write
+                            prefs.edit()
+                                .putString("theme", themeId)
+                                .putInt("swipe_trail_color", swipeTrailColor)
+                                .commit() // Use commit() for synchronous write
 
                             // Also save to default preferences for backup/consistency
-                            android.util.Log.d("ThemeSettingsActivity", "Writing to default prefs...")
                             PreferenceManager.getDefaultSharedPreferences(this)
-                                .edit().putString("theme", themeId).commit()
+                                .edit()
+                                .putString("theme", themeId)
+                                .putInt("swipe_trail_color", swipeTrailColor)
+                                .commit()
 
-                            android.util.Log.d("ThemeSettingsActivity", "Theme save complete")
-                            
                             // Send broadcast to notify service immediately
                             val intent = Intent(CleverKeysService.ACTION_THEME_CHANGED)
                             intent.setPackage(packageName) // Restrict to our own package
                             sendBroadcast(intent)
-                            android.util.Log.d("ThemeSettingsActivity", "Broadcast sent: ${CleverKeysService.ACTION_THEME_CHANGED}")
                             
                             Toast.makeText(this, "Theme applied: $themeId", Toast.LENGTH_SHORT).show()
                         }
@@ -176,7 +196,8 @@ fun ThemeSettingsScreen(
     onThemeSelected: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val prefs = remember { PreferenceManager.getDefaultSharedPreferences(context) }
+    // Use DirectBootAwarePreferences to ensure we read the same prefs as the service
+    val prefs = remember { DirectBootAwarePreferences.get_shared_preferences(context) }
     val currentThemeId = remember { mutableStateOf(prefs.getString("theme", "cleverkeysdark") ?: "cleverkeysdark") }
     val themeManager = remember { CustomThemeManager(context) }
     val customThemes by themeManager.customThemes.collectAsState()
@@ -232,7 +253,6 @@ fun ThemeSettingsScreen(
                     theme = builtinTheme,
                     isSelected = currentThemeId.value == builtinTheme.id,
                     onSelect = {
-                        android.util.Log.d("ThemeSettingsActivity", "Built-in theme tapped: ${builtinTheme.id}")
                         currentThemeId.value = builtinTheme.id
                         onThemeSelected(builtinTheme.id)
                     }

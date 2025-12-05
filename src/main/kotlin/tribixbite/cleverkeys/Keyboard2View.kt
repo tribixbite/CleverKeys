@@ -234,9 +234,6 @@ class Keyboard2View @JvmOverloads constructor(
                 _themeCache.put(cacheKey, computed)
                 computed
             }
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d("Keyboard2View", "Pre-calculated keyWidth=$_keyWidth for immediate touch handling")
-            }
         }
 
         // Initialize swipe recognizer if not already created
