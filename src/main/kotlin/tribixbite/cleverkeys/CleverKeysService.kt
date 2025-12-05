@@ -246,9 +246,19 @@ class CleverKeysService : InputMethodService(),
         _themeChangeReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent?.action == ACTION_THEME_CHANGED) {
-                    // Refreshing config will trigger onThemeChanged listener if the theme actually changed
-                    // OR if we force it. Since ConfigurationManager checks for changes, we rely on it.
+                    // Force config refresh
                     _configManager.refresh(resources)
+                    _config = _configManager.getConfig()
+
+                    // Force view recreation if visible (even if theme ID didn't change)
+                    if (isInputViewShown) {
+                        _keyboardView = inflate_view(R.layout.keyboard) as Keyboard2View
+                        _emojiPane = null
+                        _clipboardManager.cleanup()
+                        _keyboardView.setKeyboard(current_layout())
+                        _keyboardView.setSwipeTypingComponents(null, this@CleverKeysService)
+                        setInputView(_keyboardView)
+                    }
                 }
             }
         }
@@ -618,6 +628,25 @@ class CleverKeysService : InputMethodService(),
         // NOTE: ConfigurationManager is the primary SharedPreferences listener and handles
         // config refresh. This method handles additional UI updates.
         // (v1.32.412: Delegated to PreferenceUIUpdateHandler)
+
+        // Direct theme change handling - force view recreation when theme preference changes
+        if (key == "theme") {
+            // Refresh config to pick up new theme value
+            _configManager.refresh(resources)
+            _config = _configManager.getConfig()
+
+            // If keyboard is currently visible, immediately recreate the view
+            // If keyboard is hidden, the check in onStartInputView() will handle it when keyboard next appears
+            if (isInputViewShown) {
+                _keyboardView = inflate_view(R.layout.keyboard) as Keyboard2View
+                _emojiPane = null
+                _clipboardManager.cleanup()
+                _keyboardView.setKeyboard(current_layout())
+                _keyboardView.setSwipeTypingComponents(null, this)
+                setInputView(_keyboardView)
+            }
+            return
+        }
 
         // Initialize handler lazily (depends on components that may not exist yet)
         if (_preferenceUIUpdateHandler == null) {

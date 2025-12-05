@@ -43,28 +43,22 @@ class BeamSearchEngine(
 
     companion object {
         private const val TAG = "BeamSearchEngine"
-
+        
         // Special tokens
         private const val PAD_IDX = 0
         private const val UNK_IDX = 1
         private const val SOS_IDX = 2
         private const val EOS_IDX = 3
-
+        
         // Constants
         private const val DECODER_SEQ_LEN = 20 // Must match model export
         private const val LOG_PROB_THRESHOLD = -13.8f // approx ln(1e-6)
         private const val PRUNE_STEP_THRESHOLD = 2
         private const val ADAPTIVE_WIDTH_STEP = 5
         private const val SCORE_GAP_STEP = 3
-
+        
         // Diversity parameters (4D: Diverse Beam Search)
         private const val DIVERSITY_LAMBDA = 0.5f // Penalty weight for similar beams
-
-        // Vocabulary boosting: helps explore paths toward valid vocabulary words
-        // This boost is applied to logits for characters that lead to longer words
-        // Higher values = stronger preference for vocabulary-guided paths over raw NN confidence
-        private const val VOCAB_CONTINUATION_BOOST = 3.0f // Boost for paths with more continuations
-        private const val VOCAB_WORD_COMPLETION_BOOST = 4.0f // Boost for completing a valid word
     }
 
     data class BeamSearchCandidate(val word: String, val confidence: Float, val score: Float)
@@ -96,33 +90,24 @@ class BeamSearchEngine(
     fun search(memory: OnnxTensor, actualSrcLength: Int, useBatched: Boolean = false): List<BeamSearchCandidate> {
         val beams = ArrayList<BeamState>()
         beams.add(BeamState(SOS_IDX, 0.0f))
-
+        
         var step = 0
         var totalInferenceTime = 0L
-
-        // DEBUG: Log actual source length to understand encoder input
-        Log.d(TAG, "🔬 BEAM SEARCH START: actualSrcLength=$actualSrcLength, beamWidth=$beamWidth, maxLength=$maxLength")
-
+        
         // Main decoding loop
         while (step < maxLength) {
             val candidates = ArrayList<BeamState>()
             val activeBeams = beams.filter { !it.finished }
             val finishedBeams = beams.filter { it.finished }
-
+            
             // Pass finished beams to candidates for next step ranking
             candidates.addAll(finishedBeams.map { BeamState(it) })
-
+            
             if (activeBeams.isEmpty()) break
-
-            // DEBUG: Log active beams at each step
-            if (step <= 10) {
-                val beamWords = activeBeams.map { beam ->
-                    val word = beam.tokens.filter { it.toInt() !in listOf(SOS_IDX, EOS_IDX, PAD_IDX) }
-                        .map { tokenizer.indexToChar(it.toInt()) }
-                        .joinToString("")
-                    "$word(${exp(-beam.score).let { "%.3f".format(it) }})"
-                }.joinToString(", ")
-                Log.d(TAG, "🔬 Step $step: $beamWords")
+            
+            // Log every 5th step
+            if (step % 5 == 0) {
+                // logDebug("Step $step: ${activeBeams.size} active beams")
             }
 
             try {
@@ -208,11 +193,8 @@ class BeamSearchEngine(
             
             step++
         }
-
-        // DEBUG: Log final beam results
-        val finalResults = beams.mapNotNull { convertToCandidate(it) }
-        Log.d(TAG, "🔬 BEAM SEARCH COMPLETE after $step steps: ${finalResults.map { "${it.word}(${it.confidence.let { c -> "%.3f".format(c) }})" }.joinToString(", ")}")
-        return finalResults
+        
+        return beams.mapNotNull { convertToCandidate(it) }
     }
     
     private fun processSequential(
@@ -254,16 +236,14 @@ class BeamSearchEngine(
                     if (currentPos in 0 until DECODER_SEQ_LEN) {
                         val logits = logits3D[0][currentPos]
                         
-                        // Apply Trie Masking and vocabulary boosting
+                        // Apply Trie Masking
                         applyTrieMasking(beam, logits)
-
+                        
                         // FIX: Log-Softmax for numerical stability and correct scoring
                         val logProbs = logSoftmax(logits)
-
-                        // Get Top K with wider exploration in early steps
-                        // This helps discover less common but valid vocabulary paths
-                        val exploreFactor = if (step < 4) 2 else 1 // Double width for first 4 steps
-                        val topIndices = getTopKIndices(logProbs, beamWidth * exploreFactor)
+                        
+                        // Get Top K
+                        val topIndices = getTopKIndices(logProbs, beamWidth)
                         
                         for (idx in topIndices) {
                             // Handle Special Tokens
@@ -304,7 +284,7 @@ class BeamSearchEngine(
     
     private fun applyTrieMasking(beam: BeamState, logits: FloatArray) {
         if (vocabTrie == null) return
-
+        
         val partialWord = StringBuilder()
         for (token in beam.tokens) {
             val idx = token.toInt()
@@ -315,45 +295,22 @@ class BeamSearchEngine(
                 }
             }
         }
-
+        
         val prefix = partialWord.toString()
         val allowed = vocabTrie.getAllowedNextChars(prefix)
         val isWord = vocabTrie.containsWord(prefix)
-
-        // DEBUG: Log trie state for interesting prefixes (ass* path)
-        if (prefix.startsWith("ass") || prefix.startsWith("doe")) {
-            Log.d(TAG, "🌲 TRIE: prefix=\"$prefix\" isWord=$isWord allowed=${allowed.joinToString("")}")
-        }
-
+        
         for (i in logits.indices) {
             if (i == SOS_IDX || i == PAD_IDX) continue
             if (i == EOS_IDX) {
                 if (!isWord) logits[i] = Float.NEGATIVE_INFINITY
-                else logits[i] += VOCAB_WORD_COMPLETION_BOOST // Boost for completing a valid word
                 continue
             }
-
+            
             val c = tokenizer.indexToChar(i)
-            val cLower = c.lowercaseChar()
             // Trie stores lowercase
-            if (c == '?' || !allowed.contains(cLower)) {
+            if (c == '?' || !allowed.contains(c.lowercaseChar())) {
                 logits[i] = Float.NEGATIVE_INFINITY
-            } else {
-                // Apply vocabulary boosting: prefer paths that lead to longer words
-                val nextPrefix = prefix + cLower
-                val nextAllowed = vocabTrie.getAllowedNextChars(nextPrefix)
-                val nextIsWord = vocabTrie.containsWord(nextPrefix)
-
-                // Boost tokens that:
-                // 1. Complete a word (high boost)
-                // 2. Have more continuation options (indicates path toward longer words)
-                if (nextIsWord) {
-                    logits[i] += VOCAB_WORD_COMPLETION_BOOST
-                }
-                if (nextAllowed.size > 3) {
-                    // Many continuations = fertile path toward vocabulary words
-                    logits[i] += VOCAB_CONTINUATION_BOOST * (nextAllowed.size / 10.0f)
-                }
             }
         }
     }
@@ -410,34 +367,24 @@ class BeamSearchEngine(
         for (token in beam.tokens) {
             val idx = token.toInt()
             if (idx == SOS_IDX || idx == EOS_IDX || idx == PAD_IDX) continue
-
+            
             val ch = tokenizer.indexToChar(idx)
             if (ch != '?' && !ch.toString().startsWith("<")) {
                 word.append(ch)
             }
         }
-
+        
         val wordStr = word.toString()
         if (wordStr.isEmpty()) return null
-
-        // FIX: Only accept words that exist in the vocabulary
-        // The trie may force EOS (beam.finished=true) when no valid continuations exist,
-        // but that doesn't mean the prefix is a complete word.
-        // We must validate against the vocabulary even for "finished" beams.
-        val isInVocabulary = vocabTrie?.containsWord(wordStr) == true
-        if (!isInVocabulary) {
-            Log.d(TAG, "🚫 REJECTED non-vocabulary word: \"$wordStr\" (finished=${beam.finished}, inTrie=false)")
-            return null
-        }
-
+        
         // Score is NLL, so Prob = exp(-score)
         // Note: Length normalization is used for sorting (inside search) but NOT for final confidence.
         // This matches Unexpected-Keyboard logic and ensures compatibility with its threshold settings.
         val confidence = exp(-beam.score)
-
+        
         // FIX #3: Lower confidence threshold
         if (confidence < confidenceThreshold) return null
-
+        
         return BeamSearchCandidate(wordStr, confidence, beam.score)
     }
     
