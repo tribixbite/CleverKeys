@@ -1,11 +1,36 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-04
-**Session**: Theme Manager migration, DirectBootAwarePreferences fix
+**Last Updated**: 2025-12-05
+**Session**: Swipe prediction improvements, layout cleanup
 
 ---
 
-## Completed This Session (2025-12-04)
+## Completed This Session (2025-12-05)
+
+### Swipe Prediction Improvements
+- [x] Investigate why "doesn't" and "asshole" not predicted from swipe
+- [x] Increase default beam width from 3 to 5 (explores more prediction paths)
+- [x] Lower confidence threshold from 0.05 to 0.01 (keeps more candidates)
+- [x] Add debug logging for raw beam outputs in OptimizedVocabulary
+- [x] Fix Theme.kt runtime theme support for KeyboardColorScheme rendering
+
+### Layout Cleanup
+- [x] Remove 'as'/'at' short swipes from A key
+- [x] Remove 'be'/'by' short swipes from B key
+- [x] Remove 'hi' short swipe from H key
+- [x] Remove 'to' short swipe from T key
+- [x] Remove 'or' short swipe from O key
+
+### Theme Creator Defaults
+- [x] Fix theme creator to use current theme colors as defaults
+- [x] Add getBuiltInColorScheme() to ThemeProvider for all 17 built-in themes
+
+### CI/CD
+- [x] Reverse release logic: pushes to main are full releases, tags are prereleases
+
+---
+
+## Completed Previous Session (2025-12-04)
 
 ### Theme Manager Migration (Major UI Overhaul)
 - [x] Add 18 built-in XML themes to ThemeSettingsActivity with preview cards
