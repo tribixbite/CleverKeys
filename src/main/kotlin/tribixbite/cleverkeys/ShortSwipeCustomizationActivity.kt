@@ -21,12 +21,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import android.graphics.RectF
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.customization.*
@@ -208,39 +210,35 @@ fun InteractiveKeyboardPreview(
     mappings: List<ShortSwipeMapping>,
     onKeyClick: (String) -> Unit
 ) {
-    // Group mappings by key for quick lookup
-    val mappingsByKey = remember(mappings) {
-        mappings.groupBy { it.keyCode }
-    }
+    val context = LocalContext.current
+    val manager = remember { ShortSwipeCustomizationManager.getInstance(context) }
 
-    Column(
+    // Use the native KeyboardPreviewView for accurate rendering
+    Box(
         modifier = Modifier
             .fillMaxWidth()
+            .height(200.dp)
             .background(
                 MaterialTheme.colorScheme.surfaceVariant,
                 RoundedCornerShape(12.dp)
             )
-            .padding(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(8.dp)
     ) {
-        KEYBOARD_ROWS.forEach { row ->
-            Row(
-                modifier = Modifier.padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                row.forEach { key ->
-                    val hasCustomizations = mappingsByKey.containsKey(key)
-                    val customCount = mappingsByKey[key]?.size ?: 0
-
-                    KeyPreviewButton(
-                        keyCode = key,
-                        hasCustomizations = hasCustomizations,
-                        customCount = customCount,
-                        onClick = { onKeyClick(key) }
-                    )
+        AndroidView(
+            factory = { ctx ->
+                KeyboardPreviewView(ctx).apply {
+                    customizationManager = manager
+                    onKeyTap = { keyName, _ ->
+                        onKeyClick(keyName)
+                    }
                 }
-            }
-        }
+            },
+            update = { view ->
+                view.customizationManager = manager
+                view.refreshMappings()
+            },
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 
@@ -433,67 +431,160 @@ fun DirectionSelector(
     existingMappings: List<ShortSwipeMapping>,
     onDirectionSelected: (SwipeDirection) -> Unit
 ) {
-    val existingDirections = remember(existingMappings) {
-        existingMappings.map { it.direction }.toSet()
+    // Create lookup map for existing mappings
+    val mappingsByDirection = remember(existingMappings) {
+        existingMappings.associateBy { it.direction }
     }
 
     Text(
-        text = "Select direction to customize",
+        text = "Select a direction to customize",
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    // Radial layout: 3x3 grid with key in center
+    // Zoomed key view: 3x3 grid showing all 8 corners with mapped values
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Top row: NW, N, NE
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            DirectionButton(SwipeDirection.NW, existingDirections, onDirectionSelected)
-            DirectionButton(SwipeDirection.N, existingDirections, onDirectionSelected)
-            DirectionButton(SwipeDirection.NE, existingDirections, onDirectionSelected)
+            EnhancedDirectionButton(SwipeDirection.NW, mappingsByDirection[SwipeDirection.NW], onDirectionSelected)
+            EnhancedDirectionButton(SwipeDirection.N, mappingsByDirection[SwipeDirection.N], onDirectionSelected)
+            EnhancedDirectionButton(SwipeDirection.NE, mappingsByDirection[SwipeDirection.NE], onDirectionSelected)
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         // Middle row: W, [KEY], E
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            DirectionButton(SwipeDirection.W, existingDirections, onDirectionSelected)
+            EnhancedDirectionButton(SwipeDirection.W, mappingsByDirection[SwipeDirection.W], onDirectionSelected)
 
-            // Center key display
+            // Center key display (zoomed view)
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(64.dp)
                     .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = keyCode.uppercase(),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
+                    fontSize = 28.sp,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
 
-            DirectionButton(SwipeDirection.E, existingDirections, onDirectionSelected)
+            EnhancedDirectionButton(SwipeDirection.E, mappingsByDirection[SwipeDirection.E], onDirectionSelected)
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         // Bottom row: SW, S, SE
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            DirectionButton(SwipeDirection.SW, existingDirections, onDirectionSelected)
-            DirectionButton(SwipeDirection.S, existingDirections, onDirectionSelected)
-            DirectionButton(SwipeDirection.SE, existingDirections, onDirectionSelected)
+            EnhancedDirectionButton(SwipeDirection.SW, mappingsByDirection[SwipeDirection.SW], onDirectionSelected)
+            EnhancedDirectionButton(SwipeDirection.S, mappingsByDirection[SwipeDirection.S], onDirectionSelected)
+            EnhancedDirectionButton(SwipeDirection.SE, mappingsByDirection[SwipeDirection.SE], onDirectionSelected)
+        }
+    }
+
+    Spacer(modifier = Modifier.height(12.dp))
+
+    // Legend
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Mapped", style = MaterialTheme.typography.labelSmall)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Empty", style = MaterialTheme.typography.labelSmall)
+        }
+    }
+}
+
+/**
+ * Enhanced direction button that shows the mapped display text
+ */
+@Composable
+fun EnhancedDirectionButton(
+    direction: SwipeDirection,
+    mapping: ShortSwipeMapping?,
+    onDirectionSelected: (SwipeDirection) -> Unit
+) {
+    val hasMapping = mapping != null
+
+    Box(
+        modifier = Modifier
+            .size(56.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(
+                if (hasMapping)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.surfaceVariant
+            )
+            .border(
+                width = 2.dp,
+                color = if (hasMapping)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.outline,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .clickable { onDirectionSelected(direction) },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Show mapped display text or direction label
+            Text(
+                text = mapping?.displayText?.take(4) ?: direction.shortLabel,
+                fontWeight = FontWeight.Bold,
+                fontSize = if (hasMapping) 14.sp else 11.sp,
+                color = if (hasMapping)
+                    MaterialTheme.colorScheme.onPrimary
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
+            // Show action type hint if mapped
+            if (hasMapping) {
+                Text(
+                    text = when (mapping!!.actionType) {
+                        ActionType.TEXT -> "txt"
+                        ActionType.COMMAND -> "cmd"
+                        ActionType.KEY_EVENT -> "key"
+                    },
+                    fontSize = 8.sp,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                )
+            }
         }
     }
 }

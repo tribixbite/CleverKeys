@@ -1796,6 +1796,51 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
+                // Short Swipe Customization Navigation Card
+                val gestureContext = LocalContext.current
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                        .clickable {
+                            val intent = android.content.Intent(gestureContext, ShortSwipeCustomizationActivity::class.java)
+                            gestureContext.startActivity(intent)
+                        },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "👆",
+                            fontSize = 28.sp
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Short Swipe Customization",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = "Customize per-key short swipe gestures",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
                 // Tap and Typing subsection
                 Text(
                     text = "Tap and Typing",
