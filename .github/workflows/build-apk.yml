@@ -58,6 +58,37 @@ jobs:
         name: "${{env.artifact}} debug_apk"
         path: build/outputs/apk/debug/*.apk
 
+    - name: Get short SHA
+      id: sha
+      run: echo "short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Upload to releases (on every push to main)
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: build/outputs/apk/debug/*.apk
+        tag_name: "dev-${{ steps.sha.outputs.short }}"
+        name: "CleverKeys Dev Build (${{ steps.sha.outputs.short }})"
+        prerelease: true
+        body: |
+          CleverKeys Android APK - Development Build
+
+          **Commit:** ${{ github.sha }}
+          **Branch:** ${{ github.ref_name }}
+          **Date:** ${{ github.event.head_commit.timestamp }}
+
+          ## Features
+          - Neural swipe prediction with local processing
+          - Enhanced gesture support from Unexpected Keyboard
+          - Complete customization and transparency
+
+          ## Installation
+          1. Download APK
+          2. Enable "Unknown sources" in Android settings
+          3. Install and activate in Language & Input settings
+
+          ⚠️ This is a development build. For stable releases, use tagged versions.
+
     - name: Upload to releases (on tag)
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
