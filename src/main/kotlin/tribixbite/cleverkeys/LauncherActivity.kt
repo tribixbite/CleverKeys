@@ -198,9 +198,14 @@ fun LauncherScreen(
                     color = Color.White
                 )
                 Text(
-                    text = "Neural Network Keyboard",
+                    text = "Power, Privacy, Control. Take Back Your Keys.",
                     style = MaterialTheme.typography.titleMedium,
                     color = Color(0xFFB0B0E0) // Soft purple-grey
+                )
+                 Text(
+                    text = "An uncompromising and private open source keyboard app.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFB0B0E0).copy(alpha = 0.7f)
                 )
             }
 
@@ -350,7 +355,7 @@ fun MatrixSwipeRainBackground() {
     val density = LocalDensity.current
     
     // Configuration
-    val traceCount = 12
+    val traceCount = 40 // More traces for "everywhere" feel
     // Stardust Silver Palette
     val colors = listOf(
         Color(0xFFE0E0E0), // Light Silver
@@ -365,7 +370,7 @@ fun MatrixSwipeRainBackground() {
         initialValue = 0f,
         targetValue = 1000f,
         animationSpec = infiniteRepeatable(
-            animation = tween(25000, easing = LinearEasing), // Slower, majestic fall
+            animation = tween(10000, easing = LinearEasing), // Faster movement
             repeatMode = RepeatMode.Restart
         ),
         label = "time"
@@ -382,70 +387,81 @@ fun MatrixSwipeRainBackground() {
         val canvasWidth = size.width
         val canvasHeight = size.height
 
+        val currentMillis = System.currentTimeMillis()
+
         traces.forEachIndexed { index, trace ->
             // Calculate current Y position
             val loopHeight = canvasHeight + 500f // Extra padding for longer spell trails
             val progress = (time * trace.speed + trace.startDelay) % loopHeight
-            val currentY = progress - 200f
+            val currentY = progress - 200f // Start slightly above screen
 
             // Only draw if visible
             if (currentY > -300 && currentY < canvasHeight + 300) {
-                // 1. Draw faint glowing trail stroke
+                // 1. Draw main trace path (faint glowing line)
                 val composePath = androidx.compose.ui.graphics.Path()
                 if (trace.points.isNotEmpty()) {
-                    composePath.moveTo(trace.x + trace.points[0].x, currentY + trace.points[0].y)
+                    val headPoint = Offset(trace.x + trace.points[0].x, currentY + trace.points[0].y)
+                    composePath.moveTo(headPoint.x, headPoint.y)
                     for (i in 1 until trace.points.size) {
                         val p1 = trace.points[i]
                         composePath.lineTo(trace.x + p1.x, currentY + p1.y)
                     }
-                }
 
-                drawPath(
-                    path = composePath,
-                    color = trace.color.copy(alpha = 0.15f), // Very faint structure
-                    style = Stroke(width = 2.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
-                )
+                    // Draw the main curve
+                    drawPath(
+                        path = composePath,
+                        color = trace.color.copy(alpha = 0.4f), // More visible trace
+                        style = Stroke(width = 2.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                    )
 
-                // 2. Draw "Stardust Fairy Dust" Particles
-                val sparkleTime = System.currentTimeMillis()
-                val maxSpread = 30f // Emanating spread range
-                
-                trace.points.forEachIndexed { i, point ->
-                    // Draw 2 particles per point for density
-                    for (j in 0..1) {
-                        val posSeed = (index * 10000 + i * 100 + j)
-                        
-                        // Pseudo-random -1.0 to 1.0
-                        val rX = ((posSeed % 200) - 100) / 100f
-                        val rY = (((posSeed / 100) % 200) - 100) / 100f
-                        
-                        // Signed square concentration (clusters at center)
-                        val offsetX = rX * kotlin.math.abs(rX) * maxSpread
-                        val offsetY = rY * kotlin.math.abs(rY) * maxSpread
-                        
-                        val distFactor = (kotlin.math.abs(rX) + kotlin.math.abs(rY)) / 2f
-                        
-                        // Slow majestic pulse
-                        val pulseSpeed = 0.002f
-                        val pulsePhase = (i * 10 + j * 50).toFloat()
-                        val pulse = (sin(sparkleTime * pulseSpeed + pulsePhase) + 1f) / 2f
-                        
-                        // Size: Larger at core, tiny at edges
-                        val baseSize = 2.2f * (1f - distFactor * 0.8f)
-                        val size = (baseSize * (0.6f + pulse * 0.4f)).coerceAtLeast(0.5f)
-                        
-                        // Alpha: Bright core, fading edges
-                        val baseAlpha = 200 * (1f - distFactor)
-                        val alpha = (baseAlpha * (0.4f + pulse * 0.6f)).toInt().coerceIn(0, 255) / 255f
-                        
-                        if (alpha > 0.05f) {
-                            drawCircle(
-                                color = trace.color.copy(alpha = alpha),
-                                radius = size,
-                                center = Offset(trace.x + point.x + offsetX, currentY + point.y + offsetY)
-                            )
+                    // 2. Draw "Stardust Fairy Dust" Particles
+                    val maxSpread = 40f // Wider spread for "everywhere" feel
+                    val sparklePulseSpeed = 0.005f // Slightly faster pulse for shimmering
+
+                    trace.points.forEachIndexed { i, point ->
+                        // Draw 3 particles per point for density
+                        for (j in 0..2) {
+                            val posSeed = (index * 10000 + i * 100 + j)
+                            
+                            // Pseudo-random -1.0 to 1.0
+                            val rX = ((posSeed % 200) - 100) / 100f
+                            val rY = (((posSeed / 100) % 200) - 100) / 100f
+                            
+                            // Signed square concentration (clusters at center)
+                            val offsetX = rX * kotlin.math.abs(rX) * maxSpread
+                            val offsetY = rY * kotlin.math.abs(rY) * maxSpread
+                            
+                            val distFactor = (kotlin.math.abs(rX) + kotlin.math.abs(rY)) / 2f
+                            
+                            val pulsePhase = (i * 10 + j * 50).toFloat()
+                            val pulse = (sin(currentMillis * sparklePulseSpeed + pulsePhase) + 1f) / 2f
+                            
+                            // Size: More varied, larger overall range
+                            val baseSize = 3.0f * (1f - distFactor * 0.7f)
+                            val size = (baseSize * (0.5f + pulse * 0.5f)).coerceAtLeast(0.7f)
+                            
+                            // Alpha: Brighter and more "magical"
+                            val baseAlpha = 220 * (1f - distFactor * 0.5f) // Less fading at edges
+                            val alpha = (baseAlpha * (0.6f + pulse * 0.4f)).toInt().coerceIn(0, 255) / 255f
+                            
+                            if (alpha > 0.1f) {
+                                drawCircle(
+                                    color = trace.color.copy(alpha = alpha),
+                                    radius = size,
+                                    center = Offset(trace.x + point.x + offsetX, currentY + point.y + offsetY)
+                                )
+                            }
                         }
                     }
+
+                    // 3. Draw brighter "wand tip" / "lightning head" at the beginning of the trace
+                    val headRadius = 5.dp.toPx()
+                    val headAlpha = (sin(currentMillis * 0.008f) * 0.3f + 0.7f).coerceIn(0f, 1f) // Pulsing head
+                    drawCircle(
+                        color = Color.White.copy(alpha = headAlpha),
+                        radius = headRadius,
+                        center = headPoint
+                    )
                 }
             }
         }
@@ -459,17 +475,17 @@ fun generateRandomTrace(colors: List<Color>): SwipeTrace {
     var currentY = 0f
     points.add(Offset(0f, 0f))
     
-    val length = Random.nextInt(15, 25)
+    val length = Random.nextInt(8, 15) // Shorter, more lightning-like traces
     var angle = 1.57f // Start pointing down (PI/2)
     
     for (i in 0 until length) {
-        // Wander angle significantly to create loops/curves
-        angle += (Random.nextFloat() - 0.5f) * 2.5f
+        // Wander angle significantly to create loops/curves (more erratic)
+        angle += (Random.nextFloat() - 0.5f) * 3.5f 
         
-        // Move
-        val step = Random.nextFloat() * 40f + 15f
+        // Move - faster and more varied steps for "surreal lightning"
+        val step = Random.nextFloat() * 60f + 20f
         val dx = cos(angle) * step
-        val dy = sin(angle) * step + 10f // Mild gravity bias to ensure eventual fall
+        val dy = sin(angle) * step + 20f // Stronger gravity bias
         
         currentX += dx
         currentY += dy
@@ -479,7 +495,7 @@ fun generateRandomTrace(colors: List<Color>): SwipeTrace {
     return SwipeTrace(
         x = Random.nextFloat() * 1000f, 
         y = 0f,
-        speed = Random.nextFloat() * 1.5f + 0.5f, 
+        speed = Random.nextFloat() * 2f + 1.5f, // Faster overall speed
         points = points,
         color = colors.random(),
         startDelay = Random.nextFloat() * 5000f

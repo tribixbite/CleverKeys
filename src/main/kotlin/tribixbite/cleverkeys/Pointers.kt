@@ -5,6 +5,8 @@ import android.graphics.PointF
 import android.os.Handler
 import android.os.Message
 import android.util.Log
+import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
+import tribixbite.cleverkeys.customization.SwipeDirection
 import java.util.NoSuchElementException
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -25,6 +27,9 @@ class Pointers(
     private val _ptrs = ArrayList<Pointer>()
     private val _gestureClassifier = GestureClassifier(context)
     val _swipeRecognizer = EnhancedSwipeGestureRecognizer()
+
+    /** Custom short swipe manager for user-defined gesture mappings */
+    private val _customSwipeManager = ShortSwipeCustomizationManager.getInstance(context)
 
     /** Return the list of modifiers currently activated. */
     fun getModifiers(): Modifiers {
@@ -298,6 +303,22 @@ class Pointers(
                                 ptr.key.keys[0], dx, dy, distance, angleDeg, direction, keyIndex, posName
                             )
                         )
+
+                        // CUSTOM MAPPING CHECK: Check user-defined mappings first
+                        // Convert 16-direction to 8-direction SwipeDirection
+                        val swipeDir = directionToSwipeDirection(direction)
+                        val keyCode = ptr.key.keys[0]?.getString() ?: ""
+                        val customMapping = _customSwipeManager.getMapping(keyCode, swipeDir)
+
+                        if (customMapping != null) {
+                            Log.d("Pointers", "CUSTOM_SHORT_SWIPE: Found custom mapping for $keyCode:$swipeDir -> ${customMapping.actionType}:${customMapping.actionValue}")
+                            // Delegate to handler for custom mapping execution
+                            _handler.onCustomShortSwipe(customMapping)
+                            clearLatched()
+                            _swipeRecognizer.reset()
+                            removePtr(ptr)
+                            return
+                        }
 
                         // Use getNearestKeyAtDirection to search nearby if exact direction not defined
                         val gestureValue = getNearestKeyAtDirection(ptr, direction)
