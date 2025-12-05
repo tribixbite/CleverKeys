@@ -62,6 +62,20 @@
 - [x] Fix: Initialize swipe recognizer when EITHER `swipe_typing_enabled` OR `short_gestures_enabled` is true
 - [x] File changed: `Pointers.kt` line 416 - added `|| _config.short_gestures_enabled` to condition
 
+### Document Navigation Keys (Arrow Key Corners)
+- [x] Issue: NW (key1) and SE (key3) on arrow key moved to line start/end, not document start/end
+  - `KEYCODE_MOVE_HOME` and `KEYCODE_MOVE_END` only navigate within current line on Android
+  - User expectation: corner swipes should navigate to document boundaries
+- [x] Solution: Add new Editing enum entries and send Ctrl+Home/Ctrl+End key events
+  - Added `CURSOR_DOC_START` and `CURSOR_DOC_END` to `KeyValue.Editing` enum
+  - Added `doc_home` and `doc_end` key definitions using same icons as home/end (0xE00B, 0xE00C)
+  - Added handler in `KeyEventHandler.handleEditingKey()` to send `Ctrl+MOVE_HOME` and `Ctrl+MOVE_END`
+- [x] Files changed:
+  - `KeyValue.kt` - Added enum entries and key definitions
+  - `KeyEventHandler.kt` - Added Ctrl+Home/End handling
+  - `res/xml/bottom_row.xml` - Changed key1 from `loc home` to `doc_home`, key3 from `loc end` to `doc_end`
+  - `res/values/strings.xml` - Added `key_descr_doc_home` and `key_descr_doc_end`
+
 ---
 
 ## Completed Previous Session (2025-12-04)

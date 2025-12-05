@@ -664,8 +664,8 @@ class KeyValue private constructor(
             "autofill" -> editingKey("auto", Editing.AUTOFILL)
 
             /* Document navigation - Ctrl+Home/End to move to start/end of entire text */
-            "doc_home" -> editingKey(0xE00B, Editing.CURSOR_DOC_START, FLAG_SMALLER_FONT)
-            "doc_end" -> editingKey(0xE00C, Editing.CURSOR_DOC_END, FLAG_SMALLER_FONT)
+            "doc_home" -> editingKey(0xE00B, Editing.CURSOR_DOC_START)
+            "doc_end" -> editingKey(0xE00C, Editing.CURSOR_DOC_END)
 
             /* The compose key */
             "compose" -> makeComposePending(0xE016, ComposeKeyData.compose, FLAG_SECONDARY)
