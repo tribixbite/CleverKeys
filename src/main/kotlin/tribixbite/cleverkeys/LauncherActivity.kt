@@ -1,7 +1,11 @@
 package tribixbite.cleverkeys
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
+import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
@@ -260,6 +264,7 @@ fun LauncherScreen(
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun SetupCard(
     number: String,
@@ -389,22 +394,20 @@ fun MatrixSwipeRainBackground() {
             val pathAlpha = if (currentY < 0 || currentY > canvasHeight) 0f else 1f
             
             if (pathAlpha > 0) {
-                // Draw the main curve
-                val pathObj = Path()
+                // Draw the main curve using Compose Path
+                val composePath = androidx.compose.ui.graphics.Path()
                 if (trace.points.isNotEmpty()) {
-                    pathObj.moveTo(trace.x + trace.points[0].x, currentY + trace.points[0].y)
+                    composePath.moveTo(trace.x + trace.points[0].x, currentY + trace.points[0].y)
                     for (i in 1 until trace.points.size) {
-                        // Smooth curve between points
-                        val p0 = trace.points[i-1]
                         val p1 = trace.points[i]
                         // Simple line for now, could be bezier
-                        pathObj.lineTo(trace.x + p1.x, currentY + p1.y)
+                        composePath.lineTo(trace.x + p1.x, currentY + p1.y)
                     }
                 }
 
                 // Draw glowing trail
                 drawPath(
-                    path = androidx.compose.ui.graphics.Path().apply { addPath(pathObj) },
+                    path = composePath,
                     color = trace.color.copy(alpha = 0.6f),
                     style = Stroke(width = 4.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
                 )
@@ -459,6 +462,28 @@ fun generateRandomTrace(colors: List<Color>): SwipeTrace {
         points = points,
         color = colors.random(),
         startDelay = Random.nextFloat() * 2000f
+    )
+}
+
+// --- Raccoon Mascot Composable ---
+
+/**
+ * Composable wrapper for the RaccoonAnimationView.
+ * Used as fallback when raccoon_logo.webp asset is not available.
+ */
+@Composable
+fun RaccoonMascot(modifier: Modifier = Modifier) {
+    AndroidView(
+        modifier = modifier,
+        factory = { context ->
+            RaccoonAnimationView(context).apply {
+                startBlinking()
+                startAnimations()
+            }
+        },
+        onRelease = { view ->
+            view.stopBlinking()
+        }
     )
 }
 
