@@ -43,22 +43,28 @@ class BeamSearchEngine(
 
     companion object {
         private const val TAG = "BeamSearchEngine"
-        
+
         // Special tokens
         private const val PAD_IDX = 0
         private const val UNK_IDX = 1
         private const val SOS_IDX = 2
         private const val EOS_IDX = 3
-        
+
         // Constants
         private const val DECODER_SEQ_LEN = 20 // Must match model export
         private const val LOG_PROB_THRESHOLD = -13.8f // approx ln(1e-6)
         private const val PRUNE_STEP_THRESHOLD = 2
         private const val ADAPTIVE_WIDTH_STEP = 5
         private const val SCORE_GAP_STEP = 3
-        
+
         // Diversity parameters (4D: Diverse Beam Search)
         private const val DIVERSITY_LAMBDA = 0.5f // Penalty weight for similar beams
+
+        // Vocabulary boosting: helps explore paths toward valid vocabulary words
+        // This boost is applied to logits for characters that lead to longer words
+        // Higher values = stronger preference for vocabulary-guided paths over raw NN confidence
+        private const val VOCAB_CONTINUATION_BOOST = 3.0f // Boost for paths with more continuations
+        private const val VOCAB_WORD_COMPLETION_BOOST = 4.0f // Boost for completing a valid word
     }
 
     data class BeamSearchCandidate(val word: String, val confidence: Float, val score: Float)
@@ -248,14 +254,16 @@ class BeamSearchEngine(
                     if (currentPos in 0 until DECODER_SEQ_LEN) {
                         val logits = logits3D[0][currentPos]
                         
-                        // Apply Trie Masking
+                        // Apply Trie Masking and vocabulary boosting
                         applyTrieMasking(beam, logits)
-                        
+
                         // FIX: Log-Softmax for numerical stability and correct scoring
                         val logProbs = logSoftmax(logits)
-                        
-                        // Get Top K
-                        val topIndices = getTopKIndices(logProbs, beamWidth)
+
+                        // Get Top K with wider exploration in early steps
+                        // This helps discover less common but valid vocabulary paths
+                        val exploreFactor = if (step < 4) 2 else 1 // Double width for first 4 steps
+                        val topIndices = getTopKIndices(logProbs, beamWidth * exploreFactor)
                         
                         for (idx in topIndices) {
                             // Handle Special Tokens
@@ -321,13 +329,31 @@ class BeamSearchEngine(
             if (i == SOS_IDX || i == PAD_IDX) continue
             if (i == EOS_IDX) {
                 if (!isWord) logits[i] = Float.NEGATIVE_INFINITY
+                else logits[i] += VOCAB_WORD_COMPLETION_BOOST // Boost for completing a valid word
                 continue
             }
 
             val c = tokenizer.indexToChar(i)
+            val cLower = c.lowercaseChar()
             // Trie stores lowercase
-            if (c == '?' || !allowed.contains(c.lowercaseChar())) {
+            if (c == '?' || !allowed.contains(cLower)) {
                 logits[i] = Float.NEGATIVE_INFINITY
+            } else {
+                // Apply vocabulary boosting: prefer paths that lead to longer words
+                val nextPrefix = prefix + cLower
+                val nextAllowed = vocabTrie.getAllowedNextChars(nextPrefix)
+                val nextIsWord = vocabTrie.containsWord(nextPrefix)
+
+                // Boost tokens that:
+                // 1. Complete a word (high boost)
+                // 2. Have more continuation options (indicates path toward longer words)
+                if (nextIsWord) {
+                    logits[i] += VOCAB_WORD_COMPLETION_BOOST
+                }
+                if (nextAllowed.size > 3) {
+                    // Many continuations = fertile path toward vocabulary words
+                    logits[i] += VOCAB_CONTINUATION_BOOST * (nextAllowed.size / 10.0f)
+                }
             }
         }
     }
