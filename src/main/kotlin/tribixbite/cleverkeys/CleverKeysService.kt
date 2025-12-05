@@ -476,14 +476,11 @@ class CleverKeysService : InputMethodService(),
     override fun onStartInputView(info: EditorInfo, restarting: Boolean) {
         // NOTE: Config refresh is handled by SharedPreferences listener (onSharedPreferenceChanged)
         // We only do initial config load here if config is completely null (shouldn't happen normally)
-        // Removed the problematic refresh_config() call that was overwriting theme changes
         if (_config == null) {
             refresh_config()
         }
 
-        // CRITICAL: Check if the current view was created with a stale theme
-        // This catches theme changes made while the keyboard was hidden (e.g., user changed theme in settings)
-        // Without this check, the old cached view would be shown instead of the new themed view
+        // Check if the current view was created with a stale theme
         val latestThemeId = _config?.theme ?: 0
         if (_currentViewThemeId != latestThemeId && latestThemeId != 0) {
             _keyboardView = inflate_view(R.layout.keyboard) as Keyboard2View
@@ -491,12 +488,8 @@ class CleverKeysService : InputMethodService(),
             _keyboardView.setKeyboard(current_layout())
             _keyboardView.setSwipeTypingComponents(null, this)
             setInputView(_keyboardView)
-        }
-
-        // CRITICAL: Ensure the view is actually attached to the window.
-        // If the view was recreated while hidden (e.g. via broadcast in Settings), setInputView()
-        // might not have persisted the attachment. This ensures the new view is shown.
-        if (_keyboardView.parent == null) {
+        } else if (_keyboardView.parent == null) {
+            // Ensure view is attached if it was detached
             setInputView(_keyboardView)
         }
 
