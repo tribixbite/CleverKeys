@@ -90,24 +90,33 @@ class BeamSearchEngine(
     fun search(memory: OnnxTensor, actualSrcLength: Int, useBatched: Boolean = false): List<BeamSearchCandidate> {
         val beams = ArrayList<BeamState>()
         beams.add(BeamState(SOS_IDX, 0.0f))
-        
+
         var step = 0
         var totalInferenceTime = 0L
-        
+
+        // DEBUG: Log actual source length to understand encoder input
+        Log.d(TAG, "🔬 BEAM SEARCH START: actualSrcLength=$actualSrcLength, beamWidth=$beamWidth, maxLength=$maxLength")
+
         // Main decoding loop
         while (step < maxLength) {
             val candidates = ArrayList<BeamState>()
             val activeBeams = beams.filter { !it.finished }
             val finishedBeams = beams.filter { it.finished }
-            
+
             // Pass finished beams to candidates for next step ranking
             candidates.addAll(finishedBeams.map { BeamState(it) })
-            
+
             if (activeBeams.isEmpty()) break
-            
-            // Log every 5th step
-            if (step % 5 == 0) {
-                // logDebug("Step $step: ${activeBeams.size} active beams")
+
+            // DEBUG: Log active beams at each step
+            if (step <= 10) {
+                val beamWords = activeBeams.map { beam ->
+                    val word = beam.tokens.filter { it.toInt() !in listOf(SOS_IDX, EOS_IDX, PAD_IDX) }
+                        .map { tokenizer.indexToChar(it.toInt()) }
+                        .joinToString("")
+                    "$word(${exp(-beam.score).let { "%.3f".format(it) }})"
+                }.joinToString(", ")
+                Log.d(TAG, "🔬 Step $step: $beamWords")
             }
 
             try {
@@ -193,8 +202,11 @@ class BeamSearchEngine(
             
             step++
         }
-        
-        return beams.mapNotNull { convertToCandidate(it) }
+
+        // DEBUG: Log final beam results
+        val finalResults = beams.mapNotNull { convertToCandidate(it) }
+        Log.d(TAG, "🔬 BEAM SEARCH COMPLETE after $step steps: ${finalResults.map { "${it.word}(${it.confidence.let { c -> "%.3f".format(c) }})" }.joinToString(", ")}")
+        return finalResults
     }
     
     private fun processSequential(
@@ -284,7 +296,7 @@ class BeamSearchEngine(
     
     private fun applyTrieMasking(beam: BeamState, logits: FloatArray) {
         if (vocabTrie == null) return
-        
+
         val partialWord = StringBuilder()
         for (token in beam.tokens) {
             val idx = token.toInt()
@@ -295,18 +307,23 @@ class BeamSearchEngine(
                 }
             }
         }
-        
+
         val prefix = partialWord.toString()
         val allowed = vocabTrie.getAllowedNextChars(prefix)
         val isWord = vocabTrie.containsWord(prefix)
-        
+
+        // DEBUG: Log trie state for interesting prefixes (ass* path)
+        if (prefix.startsWith("ass") || prefix.startsWith("doe")) {
+            Log.d(TAG, "🌲 TRIE: prefix=\"$prefix\" isWord=$isWord allowed=${allowed.joinToString("")}")
+        }
+
         for (i in logits.indices) {
             if (i == SOS_IDX || i == PAD_IDX) continue
             if (i == EOS_IDX) {
                 if (!isWord) logits[i] = Float.NEGATIVE_INFINITY
                 continue
             }
-            
+
             val c = tokenizer.indexToChar(i)
             // Trie stores lowercase
             if (c == '?' || !allowed.contains(c.lowercaseChar())) {
@@ -367,24 +384,34 @@ class BeamSearchEngine(
         for (token in beam.tokens) {
             val idx = token.toInt()
             if (idx == SOS_IDX || idx == EOS_IDX || idx == PAD_IDX) continue
-            
+
             val ch = tokenizer.indexToChar(idx)
             if (ch != '?' && !ch.toString().startsWith("<")) {
                 word.append(ch)
             }
         }
-        
+
         val wordStr = word.toString()
         if (wordStr.isEmpty()) return null
-        
+
+        // FIX: Only accept words that exist in the vocabulary
+        // The trie may force EOS (beam.finished=true) when no valid continuations exist,
+        // but that doesn't mean the prefix is a complete word.
+        // We must validate against the vocabulary even for "finished" beams.
+        val isInVocabulary = vocabTrie?.containsWord(wordStr) == true
+        if (!isInVocabulary) {
+            Log.d(TAG, "🚫 REJECTED non-vocabulary word: \"$wordStr\" (finished=${beam.finished}, inTrie=false)")
+            return null
+        }
+
         // Score is NLL, so Prob = exp(-score)
         // Note: Length normalization is used for sorting (inside search) but NOT for final confidence.
         // This matches Unexpected-Keyboard logic and ensures compatibility with its threshold settings.
         val confidence = exp(-beam.score)
-        
+
         // FIX #3: Lower confidence threshold
         if (confidence < confidenceThreshold) return null
-        
+
         return BeamSearchCandidate(wordStr, confidence, beam.score)
     }
     

@@ -221,6 +221,13 @@ fun ThemeSettingsScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = {
+                        // "Nuclear option": Kill the process to force a full restart
+                        android.os.Process.killProcess(android.os.Process.myPid())
+                        System.exit(0)
+                    }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Restart Keyboard")
+                    }
                     IconButton(onClick = { showCreateDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = "Create Theme")
                     }
