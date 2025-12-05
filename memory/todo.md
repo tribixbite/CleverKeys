@@ -39,6 +39,21 @@
 ### CI/CD
 - [x] Reverse release logic: pushes to main are full releases, tags are prereleases
 
+### Dictionary Import Fix (CRITICAL)
+- [x] Root cause: BackupRestoreManager used wrong SharedPreferences file
+  - Was using: `cleverkeys_prefs` with `user_word_{hash}` keys
+  - Should use: `user_dictionary` file with `user_words` StringSet key
+- [x] Fix importDictionaries() to use same file/key as DictionaryManager
+- [x] Fix exportDictionaries() to match new format
+- [x] Fix disabled_words to use DirectBootAwarePreferences (matches WordPredictor)
+
+### LauncherActivity.kt Compilation Fix
+- [x] Add missing animation imports (AnimatorSet, ObjectAnimator, ValueAnimator)
+- [x] Add missing android.graphics.Canvas import for RaccoonAnimationView.onDraw()
+- [x] Fix Path type mismatch (use Compose Path instead of android.graphics.Path)
+- [x] Add RaccoonMascot Composable wrapper for AndroidView integration
+- [x] Add @OptIn annotation for ExperimentalMaterial3Api Card onClick
+
 ---
 
 ## Completed Previous Session (2025-12-04)
@@ -100,6 +115,9 @@
 
 ## Pending (Future Sessions)
 
+- [ ] Arrow key SW/NW navigation short swipes not working (end/home keys)
+  - Investigation started: XML definitions and Kotlin code appear identical to UK
+  - May be gesture threshold or detection timing issue
 - [ ] Manual device testing for all import/export features
 - [ ] Create optional enhancement specs (clipboard, dictionary, privacy)
 - [ ] Consider full Material 3 theme migration (requires Theme.MaterialComponents as base)
@@ -138,5 +156,6 @@ PrivacyManager defaults changed in 4 places:
 - `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` - Removed theme dropdown, kept Theme Manager card
 - `src/main/kotlin/tribixbite/cleverkeys/Config.kt` - Portrait height default 27%, beam width 5
 - `src/main/kotlin/tribixbite/cleverkeys/PrivacyManager.kt` - Privacy defaults to OFF
-- `src/main/kotlin/tribixbite/cleverkeys/BackupRestoreManager.kt` - Dictionary import format fix (previous session)
+- `src/main/kotlin/tribixbite/cleverkeys/BackupRestoreManager.kt` - Dictionary import fix (use user_dictionary file with user_words StringSet)
 - `src/main/kotlin/tribixbite/cleverkeys/ClipboardDatabase.kt` - Duplicate check fix (previous session)
+- `src/main/kotlin/tribixbite/cleverkeys/LauncherActivity.kt` - Compilation fixes (imports, Path type, RaccoonMascot, Material3 opt-in)
