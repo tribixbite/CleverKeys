@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
@@ -94,6 +95,9 @@ class ThemeSettingsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Allow activity to show over lock screen for testing/accessibility
+        // NOTE: These flags were causing touch events to not reach Compose clickables
+        // Commented out - the theme settings don't need to show over lock screen anyway
+        /*
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
@@ -104,8 +108,12 @@ class ThemeSettingsActivity : ComponentActivity() {
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
             )
         }
+        */
 
-        prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        // CRITICAL: Use DirectBootAwarePreferences to get the SAME SharedPreferences
+        // that CleverKeysService is listening to. This ensures when we write "theme",
+        // the service's OnSharedPreferenceChangeListener fires immediately.
+        prefs = DirectBootAwarePreferences.get_shared_preferences(this)
 
         setContent {
             // Use a custom dark color scheme with visible surfaces
@@ -132,13 +140,27 @@ class ThemeSettingsActivity : ComponentActivity() {
                     ThemeSettingsScreen(
                         onBack = { finish() },
                         onThemeSelected = { themeId ->
-                            // Save selected theme - Config.kt reads from "theme" preference
-                            prefs.edit().putString("theme", themeId).apply()
-                            // CRITICAL: Also copy to device protected storage for keyboard to see
-                            // CleverKeysService uses DirectBootAwarePreferences which reads from
-                            // device protected storage on API 24+
-                            DirectBootAwarePreferences.copy_preferences_to_protected_storage(this, prefs)
-                            Toast.makeText(this, "Theme applied!", Toast.LENGTH_SHORT).show()
+                            android.util.Log.d("ThemeSettingsActivity", "Theme selected: $themeId")
+
+                            // Save selected theme to device protected storage (same prefs the keyboard listens to)
+                            // This will immediately trigger the keyboard's OnSharedPreferenceChangeListener
+                            android.util.Log.d("ThemeSettingsActivity", "Writing to device protected prefs...")
+                            prefs.edit().putString("theme", themeId).commit() // Use commit() for synchronous write
+
+                            // Also save to default preferences for backup/consistency
+                            android.util.Log.d("ThemeSettingsActivity", "Writing to default prefs...")
+                            PreferenceManager.getDefaultSharedPreferences(this)
+                                .edit().putString("theme", themeId).commit()
+
+                            android.util.Log.d("ThemeSettingsActivity", "Theme save complete")
+                            
+                            // Send broadcast to notify service immediately
+                            val intent = Intent(CleverKeysService.ACTION_THEME_CHANGED)
+                            intent.setPackage(packageName) // Restrict to our own package
+                            sendBroadcast(intent)
+                            android.util.Log.d("ThemeSettingsActivity", "Broadcast sent: ${CleverKeysService.ACTION_THEME_CHANGED}")
+                            
+                            Toast.makeText(this, "Theme applied: $themeId", Toast.LENGTH_SHORT).show()
                         }
                     )
                 }
@@ -210,6 +232,7 @@ fun ThemeSettingsScreen(
                     theme = builtinTheme,
                     isSelected = currentThemeId.value == builtinTheme.id,
                     onSelect = {
+                        android.util.Log.d("ThemeSettingsActivity", "Built-in theme tapped: ${builtinTheme.id}")
                         currentThemeId.value = builtinTheme.id
                         onThemeSelected(builtinTheme.id)
                     }
@@ -276,6 +299,7 @@ fun ThemeSettingsScreen(
                     }
                     items(themesInCategory) { themeInfo ->
                         val decorativeId = "decorative_${themeInfo.id}"
+                        println("CKTHEME Rendering: $decorativeId, current=${currentThemeId.value}")
                         ThemeCard(
                             name = themeInfo.name,
                             colorScheme = themeInfo.colorScheme,
@@ -283,9 +307,10 @@ fun ThemeSettingsScreen(
                             isCustom = false,
                             isSelected = currentThemeId.value == decorativeId,
                             onSelect = {
-                                android.util.Log.d("ThemeSettings", "Decorative theme selected: $decorativeId")
+                                println("CKTHEME TAPPED: $decorativeId")
                                 currentThemeId.value = decorativeId
                                 onThemeSelected(decorativeId)
+                                println("CKTHEME SAVED: $decorativeId")
                             }
                         )
                     }
@@ -352,6 +377,7 @@ fun ThemeSettingsScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeCard(
     name: String,
@@ -369,9 +395,9 @@ fun ThemeCard(
     )
 
     Card(
+        onClick = { onSelect() },
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onSelect() }
             .then(
                 if (isSelected) {
                     Modifier.border(2.dp, borderColor, RoundedCornerShape(12.dp))
@@ -498,6 +524,7 @@ fun ThemePreview(colorScheme: KeyboardColorScheme) {
  * Card for displaying a built-in XML theme with preview colors.
  * These themes directly integrate with Config.kt and the keyboard renderer.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BuiltinThemeCard(
     theme: ThemeSettingsActivity.BuiltinTheme,
@@ -510,9 +537,9 @@ fun BuiltinThemeCard(
     )
 
     Card(
+        onClick = { onSelect() },
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onSelect() }
             .then(
                 if (isSelected) {
                     Modifier.border(2.dp, borderColor, RoundedCornerShape(12.dp))

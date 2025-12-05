@@ -85,8 +85,12 @@ class ConfigurationManager(
         val prevTheme = config.theme
         val prevThemeName = config.themeName
 
+        android.util.Log.d(TAG, "refresh() called - prevTheme=$prevTheme, prevThemeName=$prevThemeName")
+
         // Refresh config from SharedPreferences
         config.refresh(res, foldStateTracker.isUnfolded())
+
+        android.util.Log.d(TAG, "After config.refresh() - newTheme=${config.theme}, newThemeName=${config.themeName}")
 
         // Notify listeners of config change
         for (listener in listeners) {
@@ -95,7 +99,10 @@ class ConfigurationManager(
 
         // Special notification for theme changes (requires view recreation)
         // Check both theme (style ID) and themeName (for runtime themes that share base style)
-        if (prevTheme != config.theme || prevThemeName != config.themeName) {
+        val themeChanged = prevTheme != config.theme || prevThemeName != config.themeName
+        android.util.Log.d(TAG, "Theme changed? $themeChanged (prevTheme=$prevTheme vs ${config.theme}, prevThemeName=$prevThemeName vs ${config.themeName})")
+        if (themeChanged) {
+            android.util.Log.d(TAG, "Notifying ${listeners.size} listeners of theme change")
             for (listener in listeners) {
                 listener.onThemeChanged(prevTheme, config.theme)
             }

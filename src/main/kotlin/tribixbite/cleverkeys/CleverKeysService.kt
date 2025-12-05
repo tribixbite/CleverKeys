@@ -1,5 +1,9 @@
 package tribixbite.cleverkeys
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.inputmethodservice.InputMethodService
@@ -73,6 +77,9 @@ class CleverKeysService : InputMethodService(),
     private lateinit var _configManager: ConfigurationManager
     private var _config: Config? = null // Cached reference from _configManager, updated by ConfigChangeListener
 
+    // Track the theme ID used to create the current keyboard view (for stale view detection)
+    private var _currentViewThemeId: Int = 0
+
     // Prediction coordination (v1.32.346: extracted to PredictionCoordinator)
     private var _predictionCoordinator: PredictionCoordinator? = null
 
@@ -124,6 +131,14 @@ class CleverKeysService : InputMethodService(),
 
     // Preference UI update handler (v1.32.412: extracted to PreferenceUIUpdateHandler)
     private var _preferenceUIUpdateHandler: PreferenceUIUpdateHandler? = null
+
+    // Theme change broadcast receiver
+    private var _themeChangeReceiver: BroadcastReceiver? = null
+
+    companion object {
+        /** Broadcast action sent when theme changes in ThemeSettingsActivity */
+        const val ACTION_THEME_CHANGED = "tribixbite.cleverkeys.ACTION_THEME_CHANGED"
+    }
 
     /**
      * Layout currently visible before it has been modified.
@@ -224,6 +239,31 @@ class CleverKeysService : InputMethodService(),
 
         // Register ConfigurationManager as SharedPreferences listener
         prefs.registerOnSharedPreferenceChangeListener(_configManager)
+        // Also register this service to handle theme changes directly
+        prefs.registerOnSharedPreferenceChangeListener(this)
+
+        // Register theme change broadcast receiver (for immediate theme updates from ThemeSettingsActivity)
+        android.util.Log.d("CleverKeysService", "Registering theme change receiver for action: $ACTION_THEME_CHANGED")
+        _themeChangeReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                android.util.Log.d("CleverKeysService", "BroadcastReceiver.onReceive called, action=${intent?.action}")
+                if (intent?.action == ACTION_THEME_CHANGED) {
+                    android.util.Log.d("CleverKeysService", "Theme change broadcast received, refreshing config")
+                    _configManager.refresh(resources)
+                    android.util.Log.d("CleverKeysService", "Config refresh completed")
+                }
+            }
+        }
+        val filter = IntentFilter(ACTION_THEME_CHANGED)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            android.util.Log.d("CleverKeysService", "Registering receiver with RECEIVER_NOT_EXPORTED (API 33+)")
+            registerReceiver(_themeChangeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            android.util.Log.d("CleverKeysService", "Registering receiver without flags (pre-API 33)")
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(_themeChangeReceiver, filter)
+        }
+        android.util.Log.d("CleverKeysService", "Theme change receiver registered")
 
         // Check if we're the default IME and remind user if not
         checkAndPromptDefaultIME()
@@ -298,6 +338,16 @@ class CleverKeysService : InputMethodService(),
 
     override fun onDestroy() {
         super.onDestroy()
+
+        // Unregister theme change broadcast receiver
+        _themeChangeReceiver?.let {
+            try {
+                unregisterReceiver(it)
+            } catch (e: Exception) {
+                // Receiver may not have been registered
+            }
+            _themeChangeReceiver = null
+        }
 
         // Cleanup all managers (v1.32.404: extracted to CleanupHandler)
         CleanupHandler.create(
@@ -419,10 +469,25 @@ class CleverKeysService : InputMethodService(),
     }
 
     override fun onStartInputView(info: EditorInfo, restarting: Boolean) {
-        // OPTIMIZATION: Only refresh config if null (first load) or explicitly restarting
-        // SharedPreferences listener will handle config changes, no need to reload every time
-        if (_config == null || !restarting) {
+        // NOTE: Config refresh is handled by SharedPreferences listener (onSharedPreferenceChanged)
+        // We only do initial config load here if config is completely null (shouldn't happen normally)
+        // Removed the problematic refresh_config() call that was overwriting theme changes
+        if (_config == null) {
             refresh_config()
+        }
+
+        // CRITICAL: Check if the current view was created with a stale theme
+        // This catches theme changes made while the keyboard was hidden (e.g., user changed theme in settings)
+        // Without this check, the old cached view would be shown instead of the new themed view
+        val latestThemeId = _config?.theme ?: 0
+        android.util.Log.d("CleverKeysService", "onStartInputView: currentViewTheme=$_currentViewThemeId, latestConfigTheme=$latestThemeId")
+        if (_currentViewThemeId != latestThemeId && latestThemeId != 0) {
+            android.util.Log.d("CleverKeysService", "Stale theme detected! Recreating view...")
+            _keyboardView = inflate_view(R.layout.keyboard) as Keyboard2View
+            _emojiPane = null
+            _keyboardView.setKeyboard(current_layout())
+            _keyboardView.setSwipeTypingComponents(null, this)
+            setInputView(_keyboardView)
         }
 
         // Initialize subtype and layout if not already done (v1.32.413: ensure layoutManager is ready)
@@ -557,9 +622,38 @@ class CleverKeysService : InputMethodService(),
     }
 
     override fun onSharedPreferenceChanged(prefs: SharedPreferences, key: String?) {
+        android.util.Log.d("CleverKeysService", "onSharedPreferenceChanged called with key=$key")
+
         // NOTE: ConfigurationManager is the primary SharedPreferences listener and handles
         // config refresh. This method handles additional UI updates.
         // (v1.32.412: Delegated to PreferenceUIUpdateHandler)
+
+        // Direct theme change handling - force view recreation when theme preference changes
+        if (key == "theme") {
+            android.util.Log.d("CleverKeysService", "Theme preference changed!")
+
+            // Refresh config to pick up new theme value
+            val oldTheme = _config?.theme
+            _configManager.refresh(resources)
+            _config = _configManager.getConfig()
+            android.util.Log.d("CleverKeysService", "Theme updated: old=$oldTheme new=${_config?.theme}")
+
+            // If keyboard is currently visible, immediately recreate the view
+            // If keyboard is hidden, the check in onStartInputView() will handle it when keyboard next appears
+            if (isInputViewShown) {
+                android.util.Log.d("CleverKeysService", "Keyboard is visible, recreating view now...")
+                _keyboardView = inflate_view(R.layout.keyboard) as Keyboard2View
+                _emojiPane = null
+                _clipboardManager.cleanup()
+                _keyboardView.setKeyboard(current_layout())
+                _keyboardView.setSwipeTypingComponents(null, this)
+                setInputView(_keyboardView)
+                android.util.Log.d("CleverKeysService", "View recreated with theme=${_config?.theme}")
+            } else {
+                android.util.Log.d("CleverKeysService", "Keyboard is hidden, will apply theme on next show")
+            }
+            return
+        }
 
         // Initialize handler lazily (depends on components that may not exist yet)
         if (_preferenceUIUpdateHandler == null) {
@@ -660,9 +754,15 @@ class CleverKeysService : InputMethodService(),
     /**
      * Inflates a view with the current theme.
      * (v1.32.368: Made public for KeyboardReceiver)
+     * (v1.32.500: Stamps _currentViewThemeId for stale view detection)
      */
     fun inflate_view(layout: Int): View {
-        return View.inflate(ContextThemeWrapper(this, _config?.theme ?: 0), layout, null)
+        val themeId = _config?.theme ?: 0
+        // Stamp the theme ID when inflating keyboard layout (for stale view detection in onStartInputView)
+        if (layout == R.layout.keyboard) {
+            _currentViewThemeId = themeId
+        }
+        return View.inflate(ContextThemeWrapper(this, themeId), layout, null)
     }
 
     // CGR Prediction Methods (v1.32.407: Delegated to NeuralLayoutBridge)
