@@ -163,6 +163,14 @@ class Pointers(
             ptr.key != null
         ) {
             Log.d("Pointers", "ENTERING gesture classification block")
+        } else {
+            Log.d("Pointers", "SKIPPING gesture block: canSwipe=$canSwipeType canShort=$canShortGesture " +
+                "gesture=${ptr.gesture} excluded=${ptr.hasFlagsAny(FLAG_P_SLIDING or FLAG_P_SWIPE_TYPING or FLAG_P_LATCHED)} hasKey=${ptr.key != null}")
+        }
+        if ((canSwipeType || canShortGesture) && ptr.gesture == null &&
+            !ptr.hasFlagsAny(FLAG_P_SLIDING or FLAG_P_SWIPE_TYPING or FLAG_P_LATCHED) &&
+            ptr.key != null
+        ) {
             // Collect gesture data for classification
             val swipePath = _swipeRecognizer.getSwipePath()
             var totalDistance = 0.0f
@@ -302,14 +310,23 @@ class Pointers(
                         )
 
                         if (gestureValue != null) {
+                            Log.d("Pointers", "SHORT_GESTURE SUCCESS: triggering ${gestureValue}")
                             _handler.onPointerDown(gestureValue, false)
                             _handler.onPointerUp(gestureValue, ptr.modifiers)
                             clearLatched() // Clear shift after gesture completes
                             _swipeRecognizer.reset()
                             removePtr(ptr)
                             return
+                        } else {
+                            Log.d("Pointers", "SHORT_GESTURE FAILED: getNearestKeyAtDirection returned null for direction $direction")
                         }
+                    } else {
+                        Log.d("Pointers", "SHORT_GESTURE SKIP: distance $distance < minDistance $minDistance")
                     }
+                } else {
+                    Log.d("Pointers", "SHORT_GESTURE BLOCKED: short_gestures_enabled=${_config.short_gestures_enabled} " +
+                        "hasLeftStartingKey=${ptr.hasLeftStartingKey} allowLeftKey=$allowLeftKey " +
+                        "distance=$distance shouldBlockGesture=$shouldBlockGesture")
                 }
 
                 // Regular TAP - output the key character only if it was deferred
@@ -393,9 +410,11 @@ class Pointers(
             return
         }
 
-        // Initialize swipe typing if enabled and this could be the start of a swipe
+        // Initialize swipe recognizer if swipe typing OR short gestures enabled
+        // Short gestures (e.g. arrow key SW/NW for home/end) also need path tracking
         // Use countActivePointers() == 0 instead of _ptrs.isEmpty() to handle latched Shift
-        if (_config.swipe_typing_enabled && countActivePointers() == 0 && key != null) {
+        if ((_config.swipe_typing_enabled || _config.short_gestures_enabled) &&
+            countActivePointers() == 0 && key != null) {
             _swipeRecognizer.startSwipe(x, y, key)
         }
 

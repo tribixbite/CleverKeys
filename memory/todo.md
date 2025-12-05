@@ -54,6 +54,14 @@
 - [x] Add RaccoonMascot Composable wrapper for AndroidView integration
 - [x] Add @OptIn annotation for ExperimentalMaterial3Api Card onClick
 
+### Arrow Key Short Gesture Fix (CRITICAL)
+- [x] Root cause: `startSwipe()` only called when `swipe_typing_enabled=true`
+  - Short gestures on non-Char keys (like compose/arrow key) need path tracking too
+  - Without path initialization, `getSwipePath()` returns empty list
+  - Direction calculation fails and short gestures don't trigger
+- [x] Fix: Initialize swipe recognizer when EITHER `swipe_typing_enabled` OR `short_gestures_enabled` is true
+- [x] File changed: `Pointers.kt` line 416 - added `|| _config.short_gestures_enabled` to condition
+
 ---
 
 ## Completed Previous Session (2025-12-04)
@@ -115,9 +123,6 @@
 
 ## Pending (Future Sessions)
 
-- [ ] Arrow key SW/NW navigation short swipes not working (end/home keys)
-  - Investigation started: XML definitions and Kotlin code appear identical to UK
-  - May be gesture threshold or detection timing issue
 - [ ] Manual device testing for all import/export features
 - [ ] Create optional enhancement specs (clipboard, dictionary, privacy)
 - [ ] Consider full Material 3 theme migration (requires Theme.MaterialComponents as base)
@@ -159,3 +164,4 @@ PrivacyManager defaults changed in 4 places:
 - `src/main/kotlin/tribixbite/cleverkeys/BackupRestoreManager.kt` - Dictionary import fix (use user_dictionary file with user_words StringSet)
 - `src/main/kotlin/tribixbite/cleverkeys/ClipboardDatabase.kt` - Duplicate check fix (previous session)
 - `src/main/kotlin/tribixbite/cleverkeys/LauncherActivity.kt` - Compilation fixes (imports, Path type, RaccoonMascot, Material3 opt-in)
+- `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` - Arrow key short gesture fix (startSwipe for short_gestures_enabled)
