@@ -304,6 +304,10 @@ class OptimizedVocabulary(private val context: Context) {
                 continue // Word not in vocabulary
             }
 
+            // Check if this word should be displayed as a contraction (e.g., "doesnt" -> "doesn't")
+            // This happens AFTER vocabulary lookup succeeds - the word is valid, just needs apostrophe
+            val displayWord = nonPairedContractions[word] ?: word
+
             // OPTIMIZATION: Tier is embedded in WordInfo (no additional lookups!)
             // v1.33+: Use configurable boost values instead of hardcoded constants
             val boost: Float
@@ -343,12 +347,15 @@ class OptimizedVocabulary(private val context: Context) {
 
             // v1.33+: Pass configurable weights to scoring function
             val score = VocabularyUtils.calculateCombinedScore(candidate.confidence, info.frequency, boost, confidenceWeight, frequencyWeight)
-            validPredictions.add(FilteredPrediction(word, score, candidate.confidence, info.frequency, source))
+            // Use displayWord for contractions (e.g., "doesn't" instead of "doesnt")
+            val sourceLabel = if (displayWord != word) "$source-contraction" else source
+            validPredictions.add(FilteredPrediction(displayWord, score, candidate.confidence, info.frequency, sourceLabel))
 
             // DEBUG: Show successful candidates with all scoring details
             if (debugMode) {
-                detailedLog?.append(String.format("✅ \"%s\" - KEPT (tier=%d, freq=%.4f, boost=%.2fx, NN=%.4f → score=%.4f) [%s]\n",
-                    word, info.tier, info.frequency, boost, candidate.confidence, score, source))
+                val displayInfo = if (displayWord != word) " [mapped from \"$word\"]" else ""
+                detailedLog?.append(String.format("✅ \"%s\"%s - KEPT (tier=%d, freq=%.4f, boost=%.2fx, NN=%.4f → score=%.4f) [%s]\n",
+                    displayWord, displayInfo, info.tier, info.frequency, boost, candidate.confidence, score, sourceLabel))
             }
         }
 
