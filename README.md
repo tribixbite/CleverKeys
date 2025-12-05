@@ -51,14 +51,12 @@ CleverKeys is the only fully open-source neural network gesture keyboard for And
     <img src="./docs/banners/feature_banner.png" width="99%" />
 </p>
 
+CleverKeys is different. Our gesture recognition uses a fully open-source transformer neural network trained specifically for swipe typing. The model, training code, and datasets are all publicly available at [CleverKeys-ML](https://github.com/tribixbite/CleverKeys-ML).
+
+### Unlimited Clipboard History
+Android restricts clipboard access for security - apps can't read clipboard contents in the background. But keyboards are special. As an Input Method Editor (IME), CleverKeys has legitimate clipboard access, making it the only way to get truly unlimited clipboard history without root.
+
 <div align="center">
-
-# ☕ Buy me a coffee
-
-This application is completely free and open source. If you want to support continued development, you can send a donation via the methods below:
-
-| </br> ![Solana](https://img.shields.io/badge/Solana-9945FF?style=for-the-badge&logo=solana&logoColor=white) <br/> <br/> `triQem2gDXHXweNceTKWGfDfN6AnpCHmjR745LXcbix` <br/> <br/> |
-|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
 
 # 📲 Download
 
@@ -220,6 +218,17 @@ CleverKeys uses a custom transformer neural network model for gesture recognitio
 | Total Size | ~13MB (encoder + decoder) |
 
 Training code, model architecture, and datasets: **[CleverKeys-ML](https://github.com/tribixbite/CleverKeys-ML)**
+
+<div align="center">
+
+# ☕ Buy me a coffee
+
+This application is completely free and open source. If you want to support continued development, you can send a donation via the methods below:
+
+| </br> ![Solana](https://img.shields.io/badge/Solana-9945FF?style=for-the-badge&logo=solana&logoColor=white) <br/> <br/> `triQem2gDXHXweNceTKWGfDfN6AnpCHmjR745LXcbix` <br/> <br/> |
+|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+
+</div>
 
 <div align="center">
 
