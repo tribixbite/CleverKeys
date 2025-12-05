@@ -54,43 +54,45 @@ enum class ActionType(
 enum class AvailableCommand(
     /** Display name for UI */
     val displayName: String,
+    /** Description for settings UI */
+    val description: String,
     /** Icon resource name (optional) */
     val iconName: String? = null
 ) {
     // Clipboard operations
-    COPY("Copy", "content_copy"),
-    PASTE("Paste", "content_paste"),
-    CUT("Cut", "content_cut"),
-    SELECT_ALL("Select All", "select_all"),
+    COPY("Copy", "Copy selected text to clipboard", "content_copy"),
+    PASTE("Paste", "Paste from clipboard", "content_paste"),
+    CUT("Cut", "Cut selected text to clipboard", "content_cut"),
+    SELECT_ALL("Select All", "Select all text in field", "select_all"),
 
     // Undo/Redo
-    UNDO("Undo", "undo"),
-    REDO("Redo", "redo"),
+    UNDO("Undo", "Undo last action", "undo"),
+    REDO("Redo", "Redo last undone action", "redo"),
 
     // Cursor movement - character
-    CURSOR_LEFT("Cursor Left", "keyboard_arrow_left"),
-    CURSOR_RIGHT("Cursor Right", "keyboard_arrow_right"),
-    CURSOR_UP("Cursor Up", "keyboard_arrow_up"),
-    CURSOR_DOWN("Cursor Down", "keyboard_arrow_down"),
+    CURSOR_LEFT("Cursor Left", "Move cursor one character left", "keyboard_arrow_left"),
+    CURSOR_RIGHT("Cursor Right", "Move cursor one character right", "keyboard_arrow_right"),
+    CURSOR_UP("Cursor Up", "Move cursor one line up", "keyboard_arrow_up"),
+    CURSOR_DOWN("Cursor Down", "Move cursor one line down", "keyboard_arrow_down"),
 
     // Cursor movement - line
-    CURSOR_HOME("Line Start", "first_page"),
-    CURSOR_END("Line End", "last_page"),
+    CURSOR_HOME("Line Start", "Move cursor to line start", "first_page"),
+    CURSOR_END("Line End", "Move cursor to line end", "last_page"),
 
     // Cursor movement - document
-    CURSOR_DOC_START("Document Start", "vertical_align_top"),
-    CURSOR_DOC_END("Document End", "vertical_align_bottom"),
+    CURSOR_DOC_START("Document Start", "Move cursor to document start", "vertical_align_top"),
+    CURSOR_DOC_END("Document End", "Move cursor to document end", "vertical_align_bottom"),
 
     // Cursor movement - word
-    WORD_LEFT("Word Left", "keyboard_double_arrow_left"),
-    WORD_RIGHT("Word Right", "keyboard_double_arrow_right"),
+    WORD_LEFT("Word Left", "Move cursor one word left", "keyboard_double_arrow_left"),
+    WORD_RIGHT("Word Right", "Move cursor one word right", "keyboard_double_arrow_right"),
 
     // Delete operations
-    DELETE_WORD("Delete Word", "backspace"),
+    DELETE_WORD("Delete Word", "Delete word before cursor", "backspace"),
 
     // Input switching
-    SWITCH_IME("Switch Keyboard", "keyboard"),
-    VOICE_INPUT("Voice Input", "mic");
+    SWITCH_IME("Switch Keyboard", "Show input method picker", "keyboard"),
+    VOICE_INPUT("Voice Input", "Activate voice input", "mic");
 
     companion object {
         /**

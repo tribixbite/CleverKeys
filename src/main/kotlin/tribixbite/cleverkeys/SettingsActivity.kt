@@ -1611,6 +1611,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         },
                         displayValue = "${shortGestureMinDistance}px"
                     )
+
+                    // Button to customize short swipe actions per key
+                    Button(
+                        onClick = { openShortSwipeCustomization() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Customize Short Swipes")
+                    }
                 }
             }
 
@@ -3157,6 +3165,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     private fun openExtraKeysConfig() {
         startActivity(Intent(this, ExtraKeysConfigActivity::class.java))
+    }
+
+    private fun openShortSwipeCustomization() {
+        startActivity(Intent(this, ShortSwipeCustomizationActivity::class.java))
     }
 
     private fun openAutoCorrectionSettings() {
