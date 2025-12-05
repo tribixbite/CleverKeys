@@ -246,7 +246,19 @@ class CleverKeysService : InputMethodService(),
         _themeChangeReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent?.action == ACTION_THEME_CHANGED) {
+                    // Force config refresh
                     _configManager.refresh(resources)
+                    _config = _configManager.getConfig()
+
+                    // Force view recreation if visible (even if theme ID didn't change)
+                    if (isInputViewShown) {
+                        _keyboardView = inflate_view(R.layout.keyboard) as Keyboard2View
+                        _emojiPane = null
+                        _clipboardManager.cleanup()
+                        _keyboardView.setKeyboard(current_layout())
+                        _keyboardView.setSwipeTypingComponents(null, this@CleverKeysService)
+                        setInputView(_keyboardView)
+                    }
                 }
             }
         }
