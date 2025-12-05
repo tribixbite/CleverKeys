@@ -213,7 +213,17 @@ class OptimizedVocabulary(private val context: Context) {
      * Implements fast-path lookup and combined scoring from web app
      */
     fun filterPredictions(rawPredictions: List<CandidateWord>, swipeStats: SwipeStats): List<FilteredPrediction> {
-        Log.d(TAG, "DEBUG: Checking for 'asshole' in vocabulary. Is present: " + vocabulary.containsKey("asshole"))
+        // Always log raw beam outputs for debugging prediction issues
+        if (rawPredictions.isNotEmpty()) {
+            val debug = StringBuilder("🔥 RAW BEAM (${rawPredictions.size}): ")
+            val numToShow = min(8, rawPredictions.size)
+            for (i in 0 until numToShow) {
+                val c = rawPredictions[i]
+                if (i > 0) debug.append(", ")
+                debug.append("${c.word}(${"%.2f".format(c.confidence)})")
+            }
+            Log.d(TAG, debug.toString())
+        }
         if (!isLoaded) {
             Log.w(TAG, "Vocabulary not loaded, returning raw predictions")
             return convertToFiltered(rawPredictions)

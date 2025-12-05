@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.util.AttributeSet
+import android.view.ContextThemeWrapper
 import tribixbite.cleverkeys.theme.KeyboardColorScheme
 import kotlin.math.min
 
@@ -57,7 +58,14 @@ class Theme {
      */
     constructor(context: Context, attrs: AttributeSet?) {
         getKeyFont(context) // _key_font will be accessed
-        val s = context.theme.obtainStyledAttributes(attrs, R.styleable.keyboard, 0, 0)
+        
+        // CRITICAL FIX: Explicitly wrap the context with the current global config theme.
+        // This ensures that even if the passed context (from View inflation) doesn't have
+        // the correct theme applied yet, we force it here.
+        val themeId = Config.globalConfig().theme
+        val themedContext = if (themeId != 0) ContextThemeWrapper(context, themeId) else context
+        
+        val s = themedContext.obtainStyledAttributes(attrs, R.styleable.keyboard, 0, 0)
         colorKey = s.getColor(R.styleable.keyboard_colorKey, 0)
         colorKeyActivated = s.getColor(R.styleable.keyboard_colorKeyActivated, 0)
         colorNavBar = s.getColor(R.styleable.keyboard_navigationBarColor, 0)

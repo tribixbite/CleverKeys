@@ -79,7 +79,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
         newConfig?.let {
             beamWidth = if (it.neural_beam_width != 0) it.neural_beam_width else 4
             maxLength = if (it.neural_max_length != 0) it.neural_max_length else 20
-            confidenceThreshold = if (it.neural_confidence_threshold != 0f) it.neural_confidence_threshold else 0.05f
+            confidenceThreshold = if (it.neural_confidence_threshold != 0f) it.neural_confidence_threshold else 0.01f  // Lowered from 0.05 to keep more candidates
             beamAlpha = it.neural_beam_alpha
             beamPruneConfidence = it.neural_beam_prune_confidence
             beamScoreGap = it.neural_beam_score_gap

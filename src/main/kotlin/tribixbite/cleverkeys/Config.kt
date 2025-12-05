@@ -323,7 +323,7 @@ class Config private constructor(
         swipe_trail_glow_radius = safeGetFloat(_prefs, "swipe_trail_glow_radius", 6.0f)
 
         neural_prediction_enabled = _prefs.getBoolean("neural_prediction_enabled", true)
-        neural_beam_width = safeGetInt(_prefs, "neural_beam_width", 3)
+        neural_beam_width = safeGetInt(_prefs, "neural_beam_width", 5)  // Increased from 3 to explore more paths
         neural_max_length = safeGetInt(_prefs, "neural_max_length", 15)
         neural_confidence_threshold = safeGetFloat(_prefs, "neural_confidence_threshold", 0.01f)
         neural_batch_beams = _prefs.getBoolean("neural_batch_beams", false)

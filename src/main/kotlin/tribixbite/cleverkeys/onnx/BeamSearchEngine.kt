@@ -34,7 +34,7 @@ class BeamSearchEngine(
     private val vocabTrie: VocabularyTrie?,
     private val beamWidth: Int,
     private val maxLength: Int,
-    private val confidenceThreshold: Float = 0.05f, // Lowered default (0.1 -> 0.05)
+    private val confidenceThreshold: Float = 0.01f, // Lowered default (0.05 -> 0.01) to keep more candidates
     private val lengthPenaltyAlpha: Float = 1.2f, // Length normalization factor
     private val adaptiveWidthConfidence: Float = 0.8f, // Pruning confidence threshold
     private val scoreGapThreshold: Float = 5.0f, // Early stopping score gap

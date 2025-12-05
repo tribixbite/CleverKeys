@@ -198,7 +198,8 @@ fun ThemeSettingsScreen(
     val context = LocalContext.current
     // Use DirectBootAwarePreferences to ensure we read the same prefs as the service
     val prefs = remember { DirectBootAwarePreferences.get_shared_preferences(context) }
-    val currentThemeId = remember { mutableStateOf(prefs.getString("theme", "cleverkeysdark") ?: "cleverkeysdark") }
+    // Use mutableStringStateOf instead of mutableStateOf to avoid type inference issues
+    var currentThemeId by remember { mutableStateOf(prefs.getString("theme", "cleverkeysdark") ?: "cleverkeysdark") }
     val themeManager = remember { CustomThemeManager(context) }
     val customThemes by themeManager.customThemes.collectAsState()
 
@@ -251,9 +252,9 @@ fun ThemeSettingsScreen(
             items(ThemeSettingsActivity.BUILTIN_THEMES) { builtinTheme ->
                 BuiltinThemeCard(
                     theme = builtinTheme,
-                    isSelected = currentThemeId.value == builtinTheme.id,
+                    isSelected = currentThemeId == builtinTheme.id,
                     onSelect = {
-                        currentThemeId.value = builtinTheme.id
+                        currentThemeId = builtinTheme.id
                         onThemeSelected(builtinTheme.id)
                     }
                 )
@@ -276,9 +277,9 @@ fun ThemeSettingsScreen(
                         name = theme.name,
                         colorScheme = theme.colors,
                         isCustom = true,
-                        isSelected = currentThemeId.value == customId,
+                        isSelected = currentThemeId == customId,
                         onSelect = {
-                            currentThemeId.value = customId
+                            currentThemeId = customId
                             onThemeSelected(customId)
                         },
                         onEdit = { editingTheme = theme },
@@ -319,18 +320,15 @@ fun ThemeSettingsScreen(
                     }
                     items(themesInCategory) { themeInfo ->
                         val decorativeId = "decorative_${themeInfo.id}"
-                        println("CKTHEME Rendering: $decorativeId, current=${currentThemeId.value}")
                         ThemeCard(
                             name = themeInfo.name,
                             colorScheme = themeInfo.colorScheme,
                             description = themeInfo.description,
                             isCustom = false,
-                            isSelected = currentThemeId.value == decorativeId,
+                            isSelected = currentThemeId == decorativeId,
                             onSelect = {
-                                println("CKTHEME TAPPED: $decorativeId")
-                                currentThemeId.value = decorativeId
+                                currentThemeId = decorativeId
                                 onThemeSelected(decorativeId)
-                                println("CKTHEME SAVED: $decorativeId")
                             }
                         )
                     }
@@ -344,9 +342,9 @@ fun ThemeSettingsScreen(
     // Create Theme Dialog - use current theme's colors as defaults
     if (showCreateDialog) {
         // Get the current theme's color scheme to use as defaults
-        val currentColors = remember(currentThemeId.value) {
+        val currentColors = remember(currentThemeId) {
             val themeProvider = ThemeProvider.getInstance(context)
-            themeProvider.getColorScheme(currentThemeId.value)
+            themeProvider.getColorScheme(currentThemeId)
         }
 
         ThemeCreatorDialog(
