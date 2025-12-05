@@ -445,6 +445,9 @@ class OptimizedVocabulary(private val context: Context) {
                         continue // Already in validPredictions
                     }
 
+                    // v1.34 DEBUG: Log that we're trying fuzzy matching for this rejected word
+                    Log.d(TAG, "🔎 FUZZY TRYING: \"$beamWord\" (len=${ beamWord.length }, conf=${"%.3f".format(beamConfidence)})")
+
                     // OPTIMIZATION Phase 2: Use length-based buckets instead of iterating entire vocabulary
                     // This reduces iteration from 50k+ words to ~2k words (only similar lengths)
                     // v1.33.2: CRITICAL FIX - find BEST match (highest score), not FIRST match
@@ -454,9 +457,21 @@ class OptimizedVocabulary(private val context: Context) {
                     var bestFrequency = 0.0f
                     var bestSource: String? = null
 
-                    // Iterate only through length buckets within maxLengthDiff range
+                    // v1.34: ADAPTIVE LENGTH TOLERANCE - longer target words allow more length difference
+                    // This helps with cases like "asso" (4) -> "asshole" (7) where neural model truncates
+                    // For short words (<=4): use configured maxLengthDiff (default 2)
+                    // For longer words: scale up tolerance to allow longer dictionary matches
+                    val adaptiveLengthDiff = if (targetLength <= 4) {
+                        // Short beam words might be truncated versions of longer words
+                        // Allow searching for words up to 2x the beam length + base tolerance
+                        max(maxLengthDiff, targetLength)
+                    } else {
+                        maxLengthDiff
+                    }
+
+                    // Iterate only through length buckets within adaptive range
                     val minLengthBucket = max(1, targetLength - maxLengthDiff)
-                    val maxLengthBucket = targetLength + maxLengthDiff
+                    val maxLengthBucket = targetLength + adaptiveLengthDiff
 
                     for (len in minLengthBucket..maxLengthBucket) {
                         val bucket = vocabularyByLength[len]
@@ -471,8 +486,40 @@ class OptimizedVocabulary(private val context: Context) {
                                 continue
                             }
 
-                            // Try fuzzy matching
-                            if (VocabularyUtils.fuzzyMatch(dictWord, beamWord, charMatchThreshold, maxLengthDiff, prefixLength, minWordLength)) {
+                            // v1.34: ADAPTIVE FUZZY MATCHING
+                            // For short beam words (<=4), use prefix-based extension matching
+                            // This allows "asso" to match "asshole" if they share a common prefix
+                            val matchFound: Boolean
+                            if (targetLength <= 4 && dictWord.length > targetLength) {
+                                // PREFIX EXTENSION MODE: beam word might be truncated version
+                                // Check if dict word starts with the beam word's prefix (at least 2 chars)
+                                val minPrefix = min(2, beamWord.length)
+                                val beamPrefix = beamWord.substring(0, minPrefix)
+                                if (dictWord.startsWith(beamPrefix)) {
+                                    // Calculate how much of beam word is a prefix of dict word
+                                    var commonPrefixLen = 0
+                                    val maxPossiblePrefix = min(beamWord.length, dictWord.length)
+                                    for (j in 0 until maxPossiblePrefix) {
+                                        if (beamWord[j] == dictWord[j]) {
+                                            commonPrefixLen++
+                                        } else {
+                                            break
+                                        }
+                                    }
+                                    // Require at least 60% of beam word to match as prefix
+                                    matchFound = commonPrefixLen >= (beamWord.length * 0.6).toInt()
+                                } else {
+                                    matchFound = false
+                                }
+                            } else {
+                                // Standard fuzzy matching for normal-length words
+                                matchFound = VocabularyUtils.fuzzyMatch(dictWord, beamWord, charMatchThreshold, maxLengthDiff, prefixLength, minWordLength)
+                            }
+
+                            if (matchFound) {
+                                // v1.34 DEBUG: Log matched word
+                                Log.d(TAG, "🎯 FUZZY MATCH: \"$dictWord\" matches \"$beamWord\"")
+
                                 // Determine tier boost for matched word
                                 val boost: Float
                                 val source: String
