@@ -41,6 +41,17 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
 
+    - name: Install ImageMagick
+      run: sudo apt-get update && sudo apt-get install -y imagemagick
+
+    - name: Generate App Icons
+      run: |
+        chmod +x scripts/generate_icons.sh
+        ./scripts/generate_icons.sh
+
+    - name: Clean Gradle
+      run: ./gradlew clean
+
     - name: Build debug APK
       run: ./gradlew assembleDebug
       env:
