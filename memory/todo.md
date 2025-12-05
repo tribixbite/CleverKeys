@@ -7,6 +7,15 @@
 
 ## Completed This Session (2025-12-05)
 
+### README Redesign (ImageToolbox Style)
+- [x] Add centered badge row (API, Kotlin, ONNX, Material 3, Downloads, Stars, Release)
+- [x] Create feature_banner.png with gradient background and screenshot collage
+- [x] Create social_preview.png for Discord/Twitter embeds
+- [x] Add Buy Me a Coffee section with Solana address
+- [x] Add prominent Download APK section (GitHub only)
+- [x] Add extensive theme engine documentation with DIY creator details
+- [x] Reorganize sections with improved visual hierarchy
+
 ### Swipe Prediction Investigation
 - [x] Deep dive on swipe prediction pipeline
 - [x] Investigate why "asshole" outputs as "asso" (truncated)
