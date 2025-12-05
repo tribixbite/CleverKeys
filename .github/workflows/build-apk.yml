@@ -72,7 +72,7 @@ jobs:
         files: build/outputs/apk/debug/*.apk
         tag_name: "dev-${{ steps.sha.outputs.short }}"
         name: "CleverKeys Dev Build (${{ steps.sha.outputs.short }})"
-        prerelease: true
+        prerelease: false
         body: |
           CleverKeys Android APK - Development Build
 
@@ -90,16 +90,15 @@ jobs:
           2. Enable "Unknown sources" in Android settings
           3. Install and activate in Language & Input settings
 
-          ⚠️ This is a development build. For stable releases, use tagged versions.
-
     - name: Upload to releases (on tag)
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
         files: build/outputs/apk/debug/*.apk
         name: "CleverKeys ${{ github.ref_name }}"
+        prerelease: true
         body: |
-          CleverKeys Android APK - Privacy-first neural keyboard
+          CleverKeys Android APK - Privacy-first neural keyboard (Pre-release)
 
           ## Features
           - Neural swipe prediction with local processing
