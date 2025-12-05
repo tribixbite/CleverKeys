@@ -51,10 +51,23 @@ CleverKeys is the only fully open-source neural network gesture keyboard for And
     <img src="./docs/banners/feature_banner.png" width="99%" />
 </p>
 
+## What Makes CleverKeys Unique
+
+### The Only Open-Source Open-Model NN Gesture Keyboard
+
+Every other "open-source" swipe keyboard on Android has a catch:
+- **HeliBoard** requires a closed-source gesture library for swipe typing
+- **FUTO Keyboard** has proprietary components
+- **AnySoftKeyboard** has no gesture typing at all
+- **FlorisBoard** gesture typing is experimental/incomplete
+
 CleverKeys is different. Our gesture recognition uses a fully open-source transformer neural network trained specifically for swipe typing. The model, training code, and datasets are all publicly available at [CleverKeys-ML](https://github.com/tribixbite/CleverKeys-ML).
 
 ### Unlimited Clipboard History
 Android restricts clipboard access for security - apps can't read clipboard contents in the background. But keyboards are special. As an Input Method Editor (IME), CleverKeys has legitimate clipboard access, making it the only way to get truly unlimited clipboard history without root.
+
+### 📱 The Only Swipe Keyboard for Termux
+CleverKeys is the **only keyboard that offers swipe/gesture typing in Termux**. Popular keyboards like Gboard and SwiftKey disable their swipe functionality when Termux is focused, but CleverKeys works everywhere — including terminal emulators, SSH sessions, and developer tools.
 
 <div align="center">
 
@@ -145,9 +158,6 @@ Inherited from Unexpected Keyboard:
 - **Terminal mode** — Ctrl/Meta/Fn keys for Termux users
 - **Short swipe gestures** — Swipe keys for symbols, navigation, clipboard, and function keys (inherited from Unexpected Keyboard)
 - **Backup & Restore** — Export all settings and custom data
-
-### 📱 The Only Swipe Keyboard for Termux
-CleverKeys is the **only keyboard that offers swipe/gesture typing in Termux**. Popular keyboards like Gboard and SwiftKey disable their swipe functionality when Termux is focused, but CleverKeys works everywhere — including terminal emulators, SSH sessions, and developer tools.
 
 <div align="center">
 
