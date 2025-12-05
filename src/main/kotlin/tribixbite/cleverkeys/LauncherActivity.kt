@@ -350,12 +350,13 @@ fun MatrixSwipeRainBackground() {
     val density = LocalDensity.current
     
     // Configuration
-    val traceCount = 15
+    val traceCount = 12
+    // Stardust Silver Palette
     val colors = listOf(
-        Color(0xFF9B59B6), // Purple
-        Color(0xFF64B5F6), // Blue
-        Color(0xFF00E5FF), // Cyan
-        Color(0xFFFF4081)  // Pink
+        Color(0xFFE0E0E0), // Light Silver
+        Color(0xFFC0C0C0), // Silver
+        Color(0xFFFFFFFF), // White
+        Color(0xFFAAAAAA)  // Dark Silver
     )
 
     // State for animation
@@ -364,7 +365,7 @@ fun MatrixSwipeRainBackground() {
         initialValue = 0f,
         targetValue = 1000f,
         animationSpec = infiniteRepeatable(
-            animation = tween(20000, easing = LinearEasing),
+            animation = tween(25000, easing = LinearEasing), // Slower, majestic fall
             repeatMode = RepeatMode.Restart
         ),
         label = "time"
@@ -382,55 +383,66 @@ fun MatrixSwipeRainBackground() {
         val canvasHeight = size.height
 
         traces.forEachIndexed { index, trace ->
-            // Calculate current Y position based on time and speed
-            // Loop height is canvasHeight + padding
-            val loopHeight = canvasHeight + 300f
+            // Calculate current Y position
+            val loopHeight = canvasHeight + 500f // Extra padding for longer spell trails
             val progress = (time * trace.speed + trace.startDelay) % loopHeight
-            val currentY = progress - 150f // Start slightly above screen
+            val currentY = progress - 200f
 
-            // Draw the trace path relative to current position
-            // We'll draw the path points shifted by currentY
-            
-            val pathAlpha = if (currentY < 0 || currentY > canvasHeight) 0f else 1f
-            
-            if (pathAlpha > 0) {
-                // Draw the main curve using Compose Path
+            // Only draw if visible
+            if (currentY > -300 && currentY < canvasHeight + 300) {
+                // 1. Draw faint glowing trail stroke
                 val composePath = androidx.compose.ui.graphics.Path()
                 if (trace.points.isNotEmpty()) {
                     composePath.moveTo(trace.x + trace.points[0].x, currentY + trace.points[0].y)
                     for (i in 1 until trace.points.size) {
                         val p1 = trace.points[i]
-                        // Simple line for now, could be bezier
                         composePath.lineTo(trace.x + p1.x, currentY + p1.y)
                     }
                 }
 
-                // Draw glowing trail
                 drawPath(
                     path = composePath,
-                    color = trace.color.copy(alpha = 0.6f),
-                    style = Stroke(width = 4.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                    color = trace.color.copy(alpha = 0.15f), // Very faint structure
+                    style = Stroke(width = 2.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
                 )
 
-                // Draw sparkles/fairy dust around the trace
-                val sparkleTime = System.currentTimeMillis() / 1000f
+                // 2. Draw "Stardust Fairy Dust" Particles
+                val sparkleTime = System.currentTimeMillis()
+                val maxSpread = 30f // Emanating spread range
+                
                 trace.points.forEachIndexed { i, point ->
-                    if (i % 2 == 0) { // Don't draw on every point
-                        val seed = (index * 100 + i).toFloat()
+                    // Draw 2 particles per point for density
+                    for (j in 0..1) {
+                        val posSeed = (index * 10000 + i * 100 + j)
                         
-                        // Twinkle effect
-                        val twinkle = (sin(sparkleTime * 5f + seed) + 1f) / 2f
-                        val alpha = twinkle * 0.8f
+                        // Pseudo-random -1.0 to 1.0
+                        val rX = ((posSeed % 200) - 100) / 100f
+                        val rY = (((posSeed / 100) % 200) - 100) / 100f
                         
-                        if (alpha > 0.1f) {
-                            // Random offset for "dust" look
-                            val xOff = (sin(seed * 1.1f) * 15f)
-                            val yOff = (cos(seed * 1.3f) * 15f)
-                            
+                        // Signed square concentration (clusters at center)
+                        val offsetX = rX * kotlin.math.abs(rX) * maxSpread
+                        val offsetY = rY * kotlin.math.abs(rY) * maxSpread
+                        
+                        val distFactor = (kotlin.math.abs(rX) + kotlin.math.abs(rY)) / 2f
+                        
+                        // Slow majestic pulse
+                        val pulseSpeed = 0.002f
+                        val pulsePhase = (i * 10 + j * 50).toFloat()
+                        val pulse = (sin(sparkleTime * pulseSpeed + pulsePhase) + 1f) / 2f
+                        
+                        // Size: Larger at core, tiny at edges
+                        val baseSize = 2.2f * (1f - distFactor * 0.8f)
+                        val size = (baseSize * (0.6f + pulse * 0.4f)).coerceAtLeast(0.5f)
+                        
+                        // Alpha: Bright core, fading edges
+                        val baseAlpha = 200 * (1f - distFactor)
+                        val alpha = (baseAlpha * (0.4f + pulse * 0.6f)).toInt().coerceIn(0, 255) / 255f
+                        
+                        if (alpha > 0.05f) {
                             drawCircle(
-                                color = Color.White.copy(alpha = alpha),
-                                radius = (1.5f + twinkle), // Pulse size
-                                center = Offset(trace.x + point.x + xOff, currentY + point.y + yOff)
+                                color = trace.color.copy(alpha = alpha),
+                                radius = size,
+                                center = Offset(trace.x + point.x + offsetX, currentY + point.y + offsetY)
                             )
                         }
                     }
@@ -441,27 +453,36 @@ fun MatrixSwipeRainBackground() {
 }
 
 fun generateRandomTrace(colors: List<Color>): SwipeTrace {
-    // Generate a random curved path (list of offsets relative to start)
+    // Generate a "spell-like" curved path (loops and swirls)
     val points = mutableListOf<Offset>()
     var currentX = 0f
     var currentY = 0f
     points.add(Offset(0f, 0f))
     
-    val length = Random.nextInt(3, 8)
+    val length = Random.nextInt(15, 25)
+    var angle = 1.57f // Start pointing down (PI/2)
+    
     for (i in 0 until length) {
-        // Zig-zag downwards
-        currentX += Random.nextFloat() * 100f - 50f
-        currentY += Random.nextFloat() * 80f + 40f // Always move down
+        // Wander angle significantly to create loops/curves
+        angle += (Random.nextFloat() - 0.5f) * 2.5f
+        
+        // Move
+        val step = Random.nextFloat() * 40f + 15f
+        val dx = cos(angle) * step
+        val dy = sin(angle) * step + 10f // Mild gravity bias to ensure eventual fall
+        
+        currentX += dx
+        currentY += dy
         points.add(Offset(currentX, currentY))
     }
 
     return SwipeTrace(
-        x = Random.nextFloat() * 1000f, // Will be scaled to width in draw if needed, or just assume wide enough
+        x = Random.nextFloat() * 1000f, 
         y = 0f,
-        speed = Random.nextFloat() * 2f + 1f, // Speed multiplier
+        speed = Random.nextFloat() * 1.5f + 0.5f, 
         points = points,
         color = colors.random(),
-        startDelay = Random.nextFloat() * 2000f
+        startDelay = Random.nextFloat() * 5000f
     )
 }
 

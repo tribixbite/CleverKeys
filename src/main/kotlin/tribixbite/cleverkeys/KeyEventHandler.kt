@@ -291,6 +291,14 @@ class KeyEventHandler(
             )
             KeyValue.Editing.SELECTION_CANCEL -> cancelSelection()
             KeyValue.Editing.DELETE_LAST_WORD -> recv.handle_delete_last_word()
+            KeyValue.Editing.CURSOR_DOC_START -> send_key_down_up(
+                KeyEvent.KEYCODE_MOVE_HOME,
+                KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
+            )
+            KeyValue.Editing.CURSOR_DOC_END -> send_key_down_up(
+                KeyEvent.KEYCODE_MOVE_END,
+                KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
+            )
         }
     }
 

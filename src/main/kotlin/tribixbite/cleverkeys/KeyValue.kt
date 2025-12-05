@@ -95,6 +95,8 @@ class KeyValue private constructor(
         FORWARD_DELETE_WORD,
         SELECTION_CANCEL,
         DELETE_LAST_WORD, // Smart delete of last auto-inserted or typed word
+        CURSOR_DOC_START, // Move cursor to start of document (Ctrl+Home)
+        CURSOR_DOC_END, // Move cursor to end of document (Ctrl+End)
     }
 
     enum class Placeholder {
@@ -660,6 +662,10 @@ class KeyValue private constructor(
             "replaceText" -> editingKey("repl", Editing.REPLACE)
             "textAssist" -> editingKey(0xE038, Editing.ASSIST)
             "autofill" -> editingKey("auto", Editing.AUTOFILL)
+
+            /* Document navigation - Ctrl+Home/End to move to start/end of entire text */
+            "doc_home" -> editingKey(0xE00B, Editing.CURSOR_DOC_START, FLAG_SMALLER_FONT)
+            "doc_end" -> editingKey(0xE00C, Editing.CURSOR_DOC_END, FLAG_SMALLER_FONT)
 
             /* The compose key */
             "compose" -> makeComposePending(0xE016, ComposeKeyData.compose, FLAG_SECONDARY)
