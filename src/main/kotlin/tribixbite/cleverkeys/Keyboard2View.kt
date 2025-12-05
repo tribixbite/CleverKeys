@@ -844,31 +844,41 @@ class Keyboard2View @JvmOverloads constructor(
             paint.style = Paint.Style.FILL
             
             // Draw sparkles along the path ("Twinkly fairy dust")
-            // More numerous: Iterate every point (step 1)
-            val spread = 35 // Extend beyond trail slightly
+            // High density on trail, fading out to create "emanating" effect
+            val maxSpread = 40 // Max reach, but heavily concentrated at center
             
             for (i in 0 until swipePath.size) {
                 val point = swipePath[i]
                 
-                // Draw 2 particles per point for density
-                for (j in 0..1) {
+                // Draw 3 particles per point for dense core
+                for (j in 0..2) {
                     // Stable position based on index so particles stick to trail
                     val posSeed = (i * 31337) + (j * 719)
                     
-                    // Pseudo-random offsets
-                    val offsetX = ((posSeed % (spread * 2)) - spread).toFloat()
-                    val offsetY = (((posSeed / 100) % (spread * 2)) - spread).toFloat()
+                    // Generate pseudo-random -1.0 to 1.0
+                    val rX = ((posSeed % 200) - 100) / 100f
+                    val rY = (((posSeed / 100) % 200) - 100) / 100f
                     
-                    // Pulse much slower: Use sine wave for smooth twinkling
-                    val pulseSpeed = 0.003f
-                    val pulsePhase = (i * 10 + j * 50).toFloat()
+                    // Apply concentration (signed square): pushes values much closer to 0 (center)
+                    // This ensures "mostly present on the trail" while allowing occasional outliers
+                    val offsetX = rX * kotlin.math.abs(rX) * maxSpread
+                    val offsetY = rY * kotlin.math.abs(rY) * maxSpread
+                    
+                    // Calculate distance factor (0.0 at center, 1.0 at edge)
+                    val distFactor = (kotlin.math.abs(rX) + kotlin.math.abs(rY)) / 2f
+                    
+                    // Pulse animation (Slower)
+                    val pulseSpeed = 0.002f
+                    val pulsePhase = (i * 5 + j * 100).toFloat()
                     val pulse = (kotlin.math.sin(time * pulseSpeed + pulsePhase) + 1f) / 2f
                     
-                    // Much smaller: 1px to 3px
-                    val size = 1.0f + (pulse * 2.0f)
+                    // Size: Larger at center (up to ~3.5px), tiny at edges (~0.5px)
+                    val baseSize = 2.8f * (1f - distFactor * 0.8f)
+                    val size = (baseSize * (0.7f + pulse * 0.6f)).coerceAtLeast(0.5f)
                     
-                    // Flicker alpha
-                    paint.alpha = (50 + (pulse * 205)).toInt()
+                    // Alpha: High at center (core), fading out edges to avoid "heavy footprint"
+                    val baseAlpha = 220 * (1f - distFactor) 
+                    paint.alpha = (baseAlpha * (0.5f + pulse * 0.5f)).toInt().coerceIn(0, 255)
                     
                     canvas.drawCircle(point.x + offsetX, point.y + offsetY, size, paint)
                 }
