@@ -175,7 +175,7 @@
     <string name="pref_clipboard_history_limit_summary">Maximum number of clipboard entries to keep (%s)</string>
 
     <!-- Neural Model Settings -->
-    <string name="pref_neural_model_version_title">Neural Model Version</string>
+    <string name="pref_neural_model_version_title">Neural Network Model Version</string>
     <string name="pref_neural_model_version_summary">Select which ONNX model to use (%s)</string>
     <string name="pref_neural_model_v1">v1 (External, 150-len, ~65%%)</string>
     <string name="pref_neural_model_v2">v2 (Builtin, 250-len, 80.6%% ⭐)</string>
@@ -270,8 +270,8 @@
     <string name="settings_description">Configure your keyboard settings for optimal typing experience.</string>
 
     <!-- Neural Prediction Section -->
-    <string name="settings_section_neural">🧠 Neural Prediction</string>
-    <string name="settings_neural_enable_title">Enable Neural Swipe Prediction</string>
+    <string name="settings_section_neural">🧠 Neural Network Prediction</string>
+    <string name="settings_neural_enable_title">Enable Neural Network Swipe Prediction</string>
     <string name="settings_neural_enable_desc">Use ONNX neural networks for accurate swipe prediction</string>
     <string name="settings_neural_beam_width_title">Beam Width</string>
     <string name="settings_neural_beam_width_desc">Number of prediction candidates (1-32). Higher = more accurate.</string>
@@ -279,7 +279,7 @@
     <string name="settings_neural_max_length_desc">Maximum characters in predicted words (10-50).</string>
     <string name="settings_neural_confidence_title">Confidence Threshold</string>
     <string name="settings_neural_confidence_desc">Minimum confidence for predictions (0.0-1.0).</string>
-    <string name="settings_neural_advanced_button">🔧 Advanced Neural Settings</string>
+    <string name="settings_neural_advanced_button">🔧 Advanced Neural Network Settings</string>
 
     <!-- Appearance Section -->
     <string name="settings_section_appearance">🎨 Appearance</string>
@@ -348,10 +348,10 @@
 
     <!-- Legacy UI (fallback) -->
     <string name="settings_legacy_title">⚙️ CleverKeys Settings</string>
-    <string name="settings_legacy_neural_switch">Enable Neural Swipe Prediction</string>
+    <string name="settings_legacy_neural_switch">Enable Neural Network Swipe Prediction</string>
     <string name="settings_legacy_beam_width">Beam Width: %1$d</string>
-    <string name="settings_legacy_advanced_button">🔧 Advanced Neural Settings</string>
-    <string name="settings_legacy_calibration_button">📊 Neural Calibration</string>
+    <string name="settings_legacy_advanced_button">🔧 Advanced Neural Network Settings</string>
+    <string name="settings_legacy_calibration_button">📊 Neural Network Calibration</string>
     <string name="settings_legacy_version">CleverKeys v2.0 (Kotlin)\n\nNote: Compose UI unavailable. Using legacy settings.</string>
     <string name="settings_legacy_error">Settings UI failed to load: %1$s</string>
 

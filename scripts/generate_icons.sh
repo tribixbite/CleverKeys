@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script to generate Android app icons from assets/raccoon_logo.png
 
-SOURCE_IMG="assets/raccoon_logo.png"
+SOURCE_IMG="docs/logos/app_icon_512.png"
 
 if [ ! -f "$SOURCE_IMG" ]; then
     echo "Error: Source image $SOURCE_IMG not found."
