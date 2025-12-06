@@ -34,6 +34,15 @@
 - [x] Key preview now maintains correct proportions (~0.85 width/height ratio)
 - [x] Tested: "g" key shows correct mappings (-, go, _) with proper aspect ratio
 
+### Special Font Fix for Private Use Area Characters
+- [x] Fixed Chinese characters appearing in S and D key SE positions ("鯨" and "符")
+- [x] Root cause: KeyMagnifierView wasn't using special_font.ttf for private use area Unicode chars
+- [x] Added keyFont lazy property using Theme.getKeyFont(context)
+- [x] Added specialSubLabelPaint with special font typeface
+- [x] Updated drawSubLabels() to check FLAG_KEY_FONT on each KeyValue
+- [x] Updated drawSubLabelForDirection() to accept useKeyFont parameter
+- [x] Tested: S and D keys now show correct cursor arrow symbols
+
 ---
 
 ## Completed Previous Session (2025-12-05)
@@ -231,3 +240,4 @@ PrivacyManager defaults changed in 4 places:
 - `src/main/kotlin/tribixbite/cleverkeys/ClipboardDatabase.kt` - Duplicate check fix (previous session)
 - `src/main/kotlin/tribixbite/cleverkeys/LauncherActivity.kt` - Compilation fixes (imports, Path type, RaccoonMascot, Material3 opt-in)
 - `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` - Arrow key short gesture fix (startSwipe for short_gestures_enabled)
+- `src/main/kotlin/tribixbite/cleverkeys/customization/KeyMagnifierView.kt` - Special font support for private use area chars
