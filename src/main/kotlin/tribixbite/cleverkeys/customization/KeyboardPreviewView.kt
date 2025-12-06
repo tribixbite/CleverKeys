@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import tribixbite.cleverkeys.Config
@@ -122,11 +123,15 @@ class KeyboardPreviewView @JvmOverloads constructor(
         val availableWidth = viewWidth - (2 * padding)
         val availableHeight = viewHeight - (2 * padding)
 
+        Log.d(TAG, "calculateKeyPositions: viewWidth=$viewWidth, viewHeight=$viewHeight")
+
         // Use actual keyboard data if available, otherwise fall back to QWERTY
         val keyboard = _keyboard
         if (keyboard != null && keyboard.rows.isNotEmpty()) {
+            Log.d(TAG, "Using actual keyboard data with ${keyboard.rows.size} rows")
             calculateFromKeyboardData(keyboard, padding, availableWidth, availableHeight)
         } else {
+            Log.d(TAG, "Using QWERTY fallback")
             calculateFromQwertyFallback(padding, availableWidth, availableHeight)
         }
     }
@@ -155,6 +160,8 @@ class KeyboardPreviewView @JvmOverloads constructor(
                 }
             }
         }
+
+        Log.d(TAG, "KeyboardData loaded ${_keyRects.size} keys: ${_keyRects.keys.take(15)}...")
     }
 
     private fun calculateFromQwertyFallback(
@@ -174,6 +181,9 @@ class KeyboardPreviewView @JvmOverloads constructor(
         val maxKeysInRow = QWERTY_ROWS.maxOf { it.size }
         _keyWidth = (availableWidth - (_keySpacing * (maxKeysInRow - 1))) / maxKeysInRow
 
+        Log.d(TAG, "calculateFromQwertyFallback: padding=$padding, width=$availableWidth, height=$availableHeight")
+        Log.d(TAG, "keyWidth=$_keyWidth, keyHeight=$_keyHeight, spacing=$_keySpacing")
+
         QWERTY_ROWS.forEachIndexed { rowIndex, rowKeys ->
             val keyCount = rowKeys.size
             val rowY = padding + rowIndex * (_keyHeight + _keySpacing)
@@ -187,6 +197,8 @@ class KeyboardPreviewView @JvmOverloads constructor(
                 _keyRects[keyName] = RectF(keyX, rowY, keyX + _keyWidth, rowY + _keyHeight)
             }
         }
+
+        Log.d(TAG, "QWERTY fallback loaded ${_keyRects.size} keys: ${_keyRects.keys}")
     }
 
     private fun getKeyName(key: KeyboardData.Key): String {
@@ -258,21 +270,34 @@ class KeyboardPreviewView @JvmOverloads constructor(
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        val x = event.x
+        val y = event.y
+
         when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                // Must return true on ACTION_DOWN to receive subsequent events
+                Log.d(TAG, "ACTION_DOWN at ($x, $y), keyRects count: ${_keyRects.size}")
+                return true
+            }
             MotionEvent.ACTION_UP -> {
-                val x = event.x
-                val y = event.y
+                Log.d(TAG, "ACTION_UP at ($x, $y)")
 
                 // Find which key was tapped
-                _keyRects.forEach { (keyName, rect) ->
+                for ((keyName, rect) in _keyRects) {
                     if (rect.contains(x, y)) {
+                        Log.d(TAG, "Key tapped: $keyName at rect $rect")
                         onKeyTap?.invoke(keyName, rect)
                         return true
                     }
                 }
+                Log.d(TAG, "No key found at tap location")
             }
         }
         return true
+    }
+
+    companion object {
+        private const val TAG = "KeyboardPreviewView"
     }
 
     /**

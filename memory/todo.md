@@ -1,21 +1,71 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-05
-**Session**: Swipe prediction improvements, layout cleanup
+**Last Updated**: 2025-12-06
+**Session**: Short swipe customization improvements
 
 ---
 
-## Completed This Session (2025-12-05)
+## Completed This Session (2025-12-06)
+
+### CommandRegistry Expansion
+- [x] Added 30+ new commands from KeyValue.getSpecialKeyByName:
+  - Combining diacritics (acute, grave, circumflex, tilde, trema, etc.)
+  - Compose key and compose_cancel
+  - Document navigation (doc_home, doc_end)
+  - Bidi brackets/parentheses (b(, b), b[, b], b{, b}, blt, bgt)
+  - Zero-width joiner/non-joiner (zwj, zwnj, halfspace)
+  - Additional editing commands (replaceText, textAssist, autofill)
+  - Removed placeholder key
+- [x] Total available commands now ~120+
+- [x] All commands have searchable keywords
+
+### Short Swipe Customization v4
+- Already implemented KeyMagnifierView shows actual key mappings:
+  - Shows key.keys[1-8] sub-labels from KeyboardData.Key
+  - Custom mappings override and display in theme accent color
+  - Uses proper 3x3 grid layout matching keyboard rendering
+  - Direction indices match KeyboardData.Key layout (1=NW, 7=N, 2=NE, etc.)
+- Already implemented CommandPaletteDialog has search filter
+- Already implemented KeyCustomizationDialog shows "existing layout mappings + custom mappings"
+
+### Aspect Ratio Fix
+- [x] Fixed KeyMagnifierView.onMeasure() to handle MeasureSpec modes (EXACTLY, AT_MOST, UNSPECIFIED)
+- [x] Added aspectRatio modifier to Compose AndroidView container (key.width / rowHeight)
+- [x] Key preview now maintains correct proportions (~0.85 width/height ratio)
+- [x] Tested: "g" key shows correct mappings (-, go, _) with proper aspect ratio
+
+### Special Font Fix for Private Use Area Characters
+- [x] Fixed Chinese characters appearing in S and D key SE positions ("鯨" and "符")
+- [x] Root cause: KeyMagnifierView wasn't using special_font.ttf for private use area Unicode chars
+- [x] Added keyFont lazy property using Theme.getKeyFont(context)
+- [x] Added specialSubLabelPaint with special font typeface
+- [x] Updated drawSubLabels() to check FLAG_KEY_FONT on each KeyValue
+- [x] Updated drawSubLabelForDirection() to accept useKeyFont parameter
+- [x] Tested: S and D keys now show correct cursor arrow symbols
+
+### NullPointerException Fix in ShortSwipeCustomizationActivity
+- [x] Fixed NPE when selecting command or text mapping in Toast.makeText()
+- [x] Root cause: editingDirection set to null before being used in Toast message
+- [x] Fix: Save direction to local variable before nullifying editingDirection
+
+---
+
+## Completed Previous Session (2025-12-05)
 
 ### Per-Key Short Swipe Customization Feature (NEW)
 - [x] Phase 1: Data layer (`ShortSwipeCustomization.kt`, `ShortSwipeCustomizationManager.kt`)
 - [x] Phase 2: Integration with `Pointers.kt` and `Keyboard2View.kt`
 - [x] Phase 3: UI - `ShortSwipeCustomizationActivity.kt`
-  - Interactive keyboard preview (native `KeyboardPreviewView`)
-  - 8-direction radial selector modal
-  - Editor for display text, action type, action value
+  - Interactive keyboard preview (pure Compose with Card(onClick))
+  - 8-direction radial selector modal (EnhancedDirectionButton)
+  - Editor for display text (max 4 chars), action type, action value
+  - Supports TEXT (up to 100 chars), COMMAND (copy/paste/etc), KEY_EVENT
   - Theme integration via `ThemeProvider`
   - Corner indicators showing mapped directions
+- [x] Phase 4: Fix touch handling - replace Box+clickable with Card(onClick)
+  - Box+clickable had unreliable touch event propagation
+  - Card with onClick parameter provides reliable built-in click handling
+  - Added @OptIn(ExperimentalMaterial3Api::class) annotations
 
 ### README Redesign (ImageToolbox Style)
 - [x] Add centered badge row (API, Kotlin, ONNX, Material 3, Downloads, Stars, Release)
@@ -195,3 +245,4 @@ PrivacyManager defaults changed in 4 places:
 - `src/main/kotlin/tribixbite/cleverkeys/ClipboardDatabase.kt` - Duplicate check fix (previous session)
 - `src/main/kotlin/tribixbite/cleverkeys/LauncherActivity.kt` - Compilation fixes (imports, Path type, RaccoonMascot, Material3 opt-in)
 - `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` - Arrow key short gesture fix (startSwipe for short_gestures_enabled)
+- `src/main/kotlin/tribixbite/cleverkeys/customization/KeyMagnifierView.kt` - Special font support for private use area chars

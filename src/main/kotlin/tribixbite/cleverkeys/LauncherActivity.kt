@@ -39,6 +39,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -339,166 +341,261 @@ fun SetupCard(
     }
 }
 
-// --- Matrix Swipe Rain Animation ---
+// --- Matrix Swipe Rain Animation (Refactored to Wizard/Sparkle Style) ---
 
-data class SwipeTrace(
-    var x: Float,
-    var y: Float,
-    var speed: Float,
-    var points: List<Offset>,
-    var color: Color,
-    var startDelay: Float
+data class Sparkle(
+    val id: Long,
+    val x: Float,
+    val y: Float,
+    val vx: Float,
+    val vy: Float,
+    val color: Color,
+    val startTime: Long,
+    val duration: Long,
+    val maxRadius: Float
+)
+
+data class MagicSpell(
+    val id: Long,
+    val points: List<Offset>,
+    val color: Color,
+    val startTime: Long,
+    val duration: Long,
+    val scale: Float
 )
 
 @Composable
 fun MatrixSwipeRainBackground() {
+    // Stardust Silver & Ethereal Magic Palette
+    val baseColors = listOf(
+        Color(0xFFFFFFFF), // Pure Light
+        Color(0xFFE0E0E0), // Silver
+        Color(0xFFF0F8FF), // Alice Blue
+        Color(0xFFB0C4DE)  // Light Steel Blue
+    )
+
     val density = LocalDensity.current
-    
-    // Configuration
-    val traceCount = 40 // More traces for "everywhere" feel
-    // Stardust Silver Palette
-    val colors = listOf(
-        Color(0xFFE0E0E0), // Light Silver
-        Color(0xFFC0C0C0), // Silver
-        Color(0xFFFFFFFF), // White
-        Color(0xFFAAAAAA)  // Dark Silver
-    )
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val screenWidth = with(density) { configuration.screenWidthDp.dp.toPx() }
+    val screenHeight = with(density) { configuration.screenHeightDp.dp.toPx() }
 
-    // State for animation
-    val infiniteTransition = rememberInfiniteTransition(label = "rain")
-    val time by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(10000, easing = LinearEasing), // Faster movement
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "time"
-    )
+    // State
+    val spells = remember { mutableStateListOf<MagicSpell>() }
+    val sparkles = remember { mutableStateListOf<Sparkle>() }
+    var lastSpawnTime by remember { mutableStateOf(0L) }
 
-    // Generate persistent random traces
-    val traces = remember {
-        List(traceCount) {
-            generateRandomTrace(colors)
+    // Animation Loop
+    LaunchedEffect(Unit) {
+        while (true) {
+            withFrameMillis { frameTime ->
+                val currentTime = System.currentTimeMillis()
+
+                // 1. Spawn new spells (Gestures)
+                // Less frequent but more impactful
+                if (currentTime - lastSpawnTime > Random.nextLong(600, 1200) && spells.size < 6) {
+                    spells.add(generateMagicSpell(baseColors, currentTime, screenWidth, screenHeight))
+                    lastSpawnTime = currentTime
+                }
+
+                // 2. Update & Spawn Sparkles from active spells
+                spells.forEach { spell ->
+                    val elapsed = currentTime - spell.startTime
+                    val progress = (elapsed.toFloat() / spell.duration).coerceIn(0f, 1f)
+                    
+                    if (progress < 1f && spell.points.isNotEmpty()) {
+                        val totalPoints = spell.points.size
+                        val currentPointIndex = (totalPoints * progress).toInt().coerceIn(0, totalPoints - 1)
+                        val currentPoint = spell.points[currentPointIndex]
+
+                        // Emit sparkles at the "tip" of the wand (The Casting Point)
+                        // Higher chance when moving
+                        if (progress < 0.9f) {
+                            // Multi-spawn for density
+                            repeat(Random.nextInt(1, 3)) {
+                                sparkles.add(generateSparkle(currentPoint, spell.color, currentTime))
+                            }
+                        }
+                    }
+                }
+
+                // 3. Cleanup
+                spells.removeAll { currentTime - it.startTime > it.duration }
+                sparkles.removeAll { currentTime - it.startTime > it.duration }
+            }
         }
     }
 
     Canvas(modifier = Modifier.fillMaxSize()) {
-        val canvasWidth = size.width
-        val canvasHeight = size.height
+        val currentTime = System.currentTimeMillis()
 
-        val currentMillis = System.currentTimeMillis()
+        // Draw Spells (The Light Traces)
+        spells.forEach { spell ->
+            val elapsed = currentTime - spell.startTime
+            val progress = (elapsed.toFloat() / spell.duration).coerceIn(0f, 1f)
+            if (spell.points.size < 2) return@forEach
 
-        traces.forEachIndexed { index, trace ->
-            // Calculate current Y position
-            val loopHeight = canvasHeight + 500f // Extra padding for longer spell trails
-            val progress = (time * trace.speed + trace.startDelay) % loopHeight
-            val currentY = progress - 200f // Start slightly above screen
+            val visiblePoints = (spell.points.size * progress).toInt()
+            if (visiblePoints < 2) return@forEach
 
-            // Only draw if visible
-            if (currentY > -300 && currentY < canvasHeight + 300) {
-                // 1. Draw main trace path (faint glowing line)
-                val composePath = androidx.compose.ui.graphics.Path()
-                if (trace.points.isNotEmpty()) {
-                    val headPoint = Offset(trace.x + trace.points[0].x, currentY + trace.points[0].y)
-                    composePath.moveTo(headPoint.x, headPoint.y)
-                    for (i in 1 until trace.points.size) {
-                        val p1 = trace.points[i]
-                        composePath.lineTo(trace.x + p1.x, currentY + p1.y)
-                    }
-
-                    // Draw the main curve
-                    drawPath(
-                        path = composePath,
-                        color = trace.color.copy(alpha = 0.4f), // More visible trace
-                        style = Stroke(width = 2.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
-                    )
-
-                    // 2. Draw "Stardust Fairy Dust" Particles
-                    val maxSpread = 40f // Wider spread for "everywhere" feel
-                    val sparklePulseSpeed = 0.005f // Slightly faster pulse for shimmering
-
-                    trace.points.forEachIndexed { i, point ->
-                        // Draw 3 particles per point for density
-                        for (j in 0..2) {
-                            val posSeed = (index * 10000 + i * 100 + j)
-                            
-                            // Pseudo-random -1.0 to 1.0
-                            val rX = ((posSeed % 200) - 100) / 100f
-                            val rY = (((posSeed / 100) % 200) - 100) / 100f
-                            
-                            // Signed square concentration (clusters at center)
-                            val offsetX = rX * kotlin.math.abs(rX) * maxSpread
-                            val offsetY = rY * kotlin.math.abs(rY) * maxSpread
-                            
-                            val distFactor = (kotlin.math.abs(rX) + kotlin.math.abs(rY)) / 2f
-                            
-                            val pulsePhase = (i * 10 + j * 50).toFloat()
-                            val pulse = (sin(currentMillis * sparklePulseSpeed + pulsePhase) + 1f) / 2f
-                            
-                            // Size: More varied, larger overall range
-                            val baseSize = 3.0f * (1f - distFactor * 0.7f)
-                            val size = (baseSize * (0.5f + pulse * 0.5f)).coerceAtLeast(0.7f)
-                            
-                            // Alpha: Brighter and more "magical"
-                            val baseAlpha = 220 * (1f - distFactor * 0.5f) // Less fading at edges
-                            val alpha = (baseAlpha * (0.6f + pulse * 0.4f)).toInt().coerceIn(0, 255) / 255f
-                            
-                            if (alpha > 0.1f) {
-                                drawCircle(
-                                    color = trace.color.copy(alpha = alpha),
-                                    radius = size,
-                                    center = Offset(trace.x + point.x + offsetX, currentY + point.y + offsetY)
-                                )
-                            }
-                        }
-                    }
-
-                    // 3. Draw brighter "wand tip" / "lightning head" at the beginning of the trace
-                    val headRadius = 5.dp.toPx()
-                    val headAlpha = (sin(currentMillis * 0.008f) * 0.3f + 0.7f).coerceIn(0f, 1f) // Pulsing head
-                    drawCircle(
-                        color = Color.White.copy(alpha = headAlpha),
-                        radius = headRadius,
-                        center = headPoint
-                    )
-                }
+            val path = androidx.compose.ui.graphics.Path()
+            path.moveTo(spell.points[0].x, spell.points[0].y)
+            
+            // Draw the path
+            for (i in 1 until visiblePoints) {
+                path.lineTo(spell.points[i].x, spell.points[i].y)
             }
+
+            // Fade out logic: Fades tail-first or overall fade?
+            // Spell traces linger and then fizzle.
+            val alpha = if (progress > 0.8f) (1f - progress) * 5f else 1f
+            
+            // 1. Ethereal Glow (Wide, diffuse)
+            drawPath(
+                path = path,
+                color = spell.color.copy(alpha = alpha * 0.2f),
+                style = Stroke(
+                    width = 25f * spell.scale, 
+                    cap = StrokeCap.Round, 
+                    join = StrokeJoin.Round
+                )
+            )
+            
+            // 2. Secondary Glow
+            drawPath(
+                path = path,
+                color = spell.color.copy(alpha = alpha * 0.4f),
+                style = Stroke(
+                    width = 12f * spell.scale, 
+                    cap = StrokeCap.Round, 
+                    join = StrokeJoin.Round
+                )
+            )
+
+            // 3. Core Beam (Focused, bright)
+            drawPath(
+                path = path,
+                color = Color.White.copy(alpha = alpha),
+                style = Stroke(
+                    width = 4f * spell.scale, 
+                    cap = StrokeCap.Round, 
+                    join = StrokeJoin.Round
+                )
+            )
+        }
+
+        // Draw Sparkles (Magic Dust)
+        sparkles.forEach { sparkle ->
+            val life = (currentTime - sparkle.startTime).toFloat() / sparkle.duration
+            if (life >= 1f) return@forEach
+            
+            // Physics update (done in draw for simplicity in this tight loop)
+            val t = (currentTime - sparkle.startTime) / 15f
+            val currentX = sparkle.x + sparkle.vx * t
+            val currentY = sparkle.y + sparkle.vy * t
+            
+            // Twinkle: Oscillate alpha rapidly
+            // sin wave based on time + unique ID to desync
+            val twinklePhase = (currentTime / 100.0) + sparkle.id
+            val twinkle = (sin(twinklePhase).toFloat() + 1f) / 2f
+            val base = 1f - life
+            val baseAlpha = base * base
+            
+            val finalAlpha = (baseAlpha * (0.5f + 0.5f * twinkle)).coerceIn(0f, 1f)
+            
+            drawCircle(
+                color = sparkle.color.copy(alpha = finalAlpha),
+                radius = sparkle.maxRadius * (1f - life * 0.5f),
+                center = Offset(currentX, currentY)
+            )
         }
     }
 }
 
-fun generateRandomTrace(colors: List<Color>): SwipeTrace {
-    // Generate a "spell-like" curved path (loops and swirls)
+fun generateSparkle(origin: Offset, baseColor: Color, currentTime: Long): Sparkle {
+    // Explosion/diffusion velocity
+    val angle = Random.nextFloat() * 6.28f
+    val speed = Random.nextFloat() * 2f + 0.5f
+    
+    return Sparkle(
+        id = Random.nextLong(),
+        x = origin.x,
+        y = origin.y,
+        vx = cos(angle) * speed,
+        vy = sin(angle) * speed,
+        color = if (Random.nextBoolean()) Color.White else baseColor,
+        startTime = currentTime,
+        duration = Random.nextLong(500, 2000), // 0.5 - 2s life
+        maxRadius = Random.nextFloat() * 3f + 1f
+    )
+}
+
+fun generateMagicSpell(colors: List<Color>, currentTime: Long, maxWidth: Float, maxHeight: Float): MagicSpell {
     val points = mutableListOf<Offset>()
-    var currentX = 0f
-    var currentY = 0f
-    points.add(Offset(0f, 0f))
     
-    val length = Random.nextInt(8, 15) // Shorter, more lightning-like traces
-    var angle = 1.57f // Start pointing down (PI/2)
+    // 1. Pick a random central area for this "word"
+    val clusterCenterX = Random.nextFloat() * (maxWidth * 0.8f) + (maxWidth * 0.1f)
+    val clusterCenterY = Random.nextFloat() * (maxHeight * 0.8f) + (maxHeight * 0.1f)
     
-    for (i in 0 until length) {
-        // Wander angle significantly to create loops/curves (more erratic)
-        angle += (Random.nextFloat() - 0.5f) * 3.5f 
-        
-        // Move - faster and more varied steps for "surreal lightning"
-        val step = Random.nextFloat() * 60f + 20f
-        val dx = cos(angle) * step
-        val dy = sin(angle) * step + 20f // Stronger gravity bias
-        
-        currentX += dx
-        currentY += dy
-        points.add(Offset(currentX, currentY))
+    // Constrain swipes to ~20% of screen size around this center
+    val maxRadiusX = maxWidth * 0.15f
+    val maxRadiusY = maxHeight * 0.15f
+
+    // Start near the center
+    var currentPos = Offset(
+        clusterCenterX + (Random.nextFloat() - 0.5f) * maxRadiusX,
+        clusterCenterY + (Random.nextFloat() - 0.5f) * maxRadiusY
+    )
+    points.add(currentPos)
+
+    // 2. Generate "Key Targets" (The word to swipe)
+    // 4 to 8 targets (letters) in the localized cluster
+    val targets = List(Random.nextInt(4, 9)) {
+        Offset(
+            clusterCenterX + (Random.nextFloat() - 0.5f) * 2 * maxRadiusX,
+            clusterCenterY + (Random.nextFloat() - 0.5f) * 2 * maxRadiusY
+        )
     }
 
-    return SwipeTrace(
-        x = Random.nextFloat() * 1000f, 
-        y = 0f,
-        speed = Random.nextFloat() * 2f + 1.5f, // Faster overall speed
+    // Physics State
+    var velocity = Offset.Zero
+    val maxSpeed = 15f          // Slower, more readable movement (was 25f)
+    val steeringFactor = 0.12f  // Slightly looser curves
+    
+    // 3. Trace the path from target to target
+    for (target in targets) {
+        var distance = (target - currentPos).getDistance()
+        
+        // Move towards this target until we are close
+        var steps = 0
+        while (distance > 20f && steps < 150) { 
+            val desiredVelocity = (target - currentPos).div(distance) * maxSpeed
+            val steering = (desiredVelocity - velocity) * steeringFactor
+            
+            velocity += steering
+            currentPos += velocity
+            
+            // Subtle Jitter
+            if (Random.nextFloat() > 0.8f) {
+                val jitter = Offset(
+                    (Random.nextFloat() - 0.5f) * 1.5f,
+                    (Random.nextFloat() - 0.5f) * 1.5f
+                )
+                currentPos += jitter
+            }
+
+            points.add(currentPos)
+            distance = (target - currentPos).getDistance()
+            steps++
+        }
+    }
+
+    return MagicSpell(
+        id = currentTime + Random.nextLong(),
         points = points,
         color = colors.random(),
-        startDelay = Random.nextFloat() * 5000f
+        startTime = currentTime,
+        duration = Random.nextLong(2000, 4500), // 2 - 4.5s duration (slower feel)
+        scale = Random.nextFloat() * 0.5f + 0.5f
     )
 }
 
