@@ -7,6 +7,19 @@
 
 ## Completed This Session (2025-12-06)
 
+### Short Swipe Mapping - Separate Label and Action Fields
+- [x] Fixed app crash when adding certain short gesture mappings
+- [x] Root cause: ShortSwipeMapping validated command names against AvailableCommand enum (SCREAMING_SNAKE)
+  - But CommandRegistry uses camelCase names (selectAll vs SELECT_ALL)
+  - Creating mapping with "selectAll" threw IllegalArgumentException
+- [x] Added MappingSelection data class with displayLabel, actionType, actionValue
+- [x] Added LabelConfirmationDialog for customizing display label separately from action
+- [x] Updated CommandPaletteDialog with onMappingSelected callback for full control
+- [x] Removed strict command validation from ShortSwipeMapping.kt
+- [x] Added executeRegistryCommand() to CustomShortSwipeExecutor.kt for 143+ commands
+- [x] Updated ShortSwipeCustomizationActivity.kt to use new onMappingSelected flow
+- [x] Users can now select 'Select All' as action and 's(a)' as custom label
+
 ### CommandRegistry Expansion
 - [x] Added 30+ new commands from KeyValue.getSpecialKeyByName:
   - Combining diacritics (acute, grave, circumflex, tilde, trema, etc.)
