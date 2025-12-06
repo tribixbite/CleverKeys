@@ -532,43 +532,55 @@ fun generateSparkle(origin: Offset, baseColor: Color, currentTime: Long): Sparkl
 fun generateMagicSpell(colors: List<Color>, currentTime: Long, maxWidth: Float, maxHeight: Float): MagicSpell {
     val points = mutableListOf<Offset>()
     
-    // Start position (random screen location)
-    var x = Random.nextFloat() * maxWidth
-    var y = Random.nextFloat() * maxHeight
+    // 1. Pick a random starting point (somewhere in the middle-ish to start)
+    var currentPos = Offset(
+        Random.nextFloat() * maxWidth,
+        Random.nextFloat() * maxHeight
+    )
+    points.add(currentPos)
+
+    // 2. Generate "Key Targets" (The word to swipe)
+    // 3 to 6 targets (letters)
+    val targets = List(Random.nextInt(3, 7)) {
+        Offset(
+            Random.nextFloat() * maxWidth,
+            Random.nextFloat() * maxHeight
+        )
+    }
+
+    // Physics State
+    var velocity = Offset.Zero
+    val maxSpeed = 25f        // Swift movement
+    val steeringFactor = 0.15f // How sharply it turns (lower = looser curves, higher = tighter)
     
-    // Initial velocity (momentum)
-    var vx = (Random.nextFloat() - 0.5f) * 15f
-    var vy = (Random.nextFloat() - 0.5f) * 15f
-    
-    points.add(Offset(x, y))
-    
-    // Simulate fluid hand movement using inertia
-    val segments = 80 // Longer, smoother strokes
-    for (i in 0 until segments) {
-        // Random steering force (Change of intention)
-        // Low magnitude ensures smooth curves
-        val ax = (Random.nextFloat() - 0.5f) * 1.5f
-        val ay = (Random.nextFloat() - 0.5f) * 1.5f
+    // 3. Trace the path from target to target
+    for (target in targets) {
+        var distance = (target - currentPos).getDistance()
         
-        vx += ax
-        vy += ay
-        
-        // Slight damping to prevent runaway speed
-        vx *= 0.98f
-        vy *= 0.98f
-        
-        // Apply velocity
-        x += vx * 4f 
-        y += vy * 4f
-        
-        // Wrap around or bounce? Let's just let them go off screen for "infinite canvas" feel
-        // But we can gently steer back to center if too far out
-        /*
-        if (x < 0 || x > maxWidth) vx = -vx
-        if (y < 0 || y > maxHeight) vy = -vy
-        */
-        
-        points.add(Offset(x, y))
+        // Move towards this target until we are close
+        // Timeout loop to prevent infinite orbiting
+        var steps = 0
+        while (distance > 40f && steps < 100) { 
+            val desiredVelocity = (target - currentPos).div(distance) * maxSpeed
+            val steering = (desiredVelocity - velocity) * steeringFactor
+            
+            velocity += steering
+            currentPos += velocity
+            
+            // Jitter/Erratic movement (The "Magic" instability)
+            // Adds small random noise to the path
+            if (Random.nextFloat() > 0.7f) {
+                val jitter = Offset(
+                    (Random.nextFloat() - 0.5f) * 2f,
+                    (Random.nextFloat() - 0.5f) * 2f
+                )
+                currentPos += jitter
+            }
+
+            points.add(currentPos)
+            distance = (target - currentPos).getDistance()
+            steps++
+        }
     }
 
     return MagicSpell(
@@ -576,8 +588,8 @@ fun generateMagicSpell(colors: List<Color>, currentTime: Long, maxWidth: Float, 
         points = points,
         color = colors.random(),
         startTime = currentTime,
-        duration = Random.nextLong(2000, 4000),
-        scale = Random.nextFloat() * 0.6f + 0.4f
+        duration = Random.nextLong(1500, 3000), // 1.5 - 3s duration
+        scale = Random.nextFloat() * 0.5f + 0.5f
     )
 }
 
