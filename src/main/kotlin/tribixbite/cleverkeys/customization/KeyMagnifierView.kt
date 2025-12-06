@@ -11,6 +11,7 @@ import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
 import tribixbite.cleverkeys.Theme
 import tribixbite.cleverkeys.theme.ThemeProvider
+import android.graphics.Typeface
 
 /**
  * A magnified view of a single keyboard key showing all 8 short swipe directions.
@@ -72,6 +73,11 @@ class KeyMagnifierView @JvmOverloads constructor(
     private var theme: Theme? = null
     private var config: Config? = null
 
+    // Special key font for private use area characters (cursor arrows, etc.)
+    private val keyFont: Typeface by lazy {
+        Theme.getKeyFont(context)
+    }
+
     // Paints for rendering
     private val keyBackgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
@@ -84,6 +90,10 @@ class KeyMagnifierView @JvmOverloads constructor(
         textAlign = Paint.Align.CENTER
     }
     private val subLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    // Paint for labels that need the special key font (arrows, symbols)
+    private val specialSubLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        typeface = keyFont
+    }
     private val directionZonePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
     }
@@ -448,12 +458,13 @@ class KeyMagnifierView @JvmOverloads constructor(
      */
     private fun drawSubLabels(canvas: Canvas, key: KeyboardData.Key, keyRect: RectF) {
         subLabelPaint.textSize = keyRect.height() * 0.14f
+        specialSubLabelPaint.textSize = keyRect.height() * 0.14f
 
         for ((index, direction) in DIRECTION_POSITIONS) {
             // Check for custom mapping first
             val customMapping = customMappings[direction]
             if (customMapping != null) {
-                drawSubLabelForDirection(canvas, keyRect, direction, customMapping.displayText, true)
+                drawSubLabelForDirection(canvas, keyRect, direction, customMapping.displayText, true, false)
                 continue
             }
 
@@ -461,7 +472,9 @@ class KeyMagnifierView @JvmOverloads constructor(
             val subKv = key.keys.getOrNull(index)
             if (subKv != null) {
                 val label = subKv.getString().take(4)
-                drawSubLabelForDirection(canvas, keyRect, direction, label, false)
+                // Check if this KeyValue needs the special key font (for cursor arrows, symbols)
+                val useKeyFont = subKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT)
+                drawSubLabelForDirection(canvas, keyRect, direction, label, false, useKeyFont)
             }
         }
     }
@@ -480,18 +493,29 @@ class KeyMagnifierView @JvmOverloads constructor(
 
     /**
      * Draw a sub-label at the appropriate position for a direction.
+     *
+     * @param canvas The canvas to draw on
+     * @param keyRect The key bounding rectangle
+     * @param direction The swipe direction for this sub-label
+     * @param label The text to display
+     * @param isCustom Whether this is a custom mapping (uses highlight color)
+     * @param useKeyFont Whether to use the special key font (for cursor arrows, symbols in private use area)
      */
     private fun drawSubLabelForDirection(
         canvas: Canvas,
         keyRect: RectF,
         direction: SwipeDirection,
         label: String,
-        isCustom: Boolean
+        isCustom: Boolean,
+        useKeyFont: Boolean = false
     ) {
         val bounds = directionBounds[direction] ?: return
 
+        // Select the appropriate paint (special font for private use area characters)
+        val paint = if (useKeyFont) specialSubLabelPaint else subLabelPaint
+
         // Use different color for custom mappings
-        subLabelPaint.color = if (isCustom) {
+        paint.color = if (isCustom) {
             theme?.activatedColor ?: Color.parseColor("#9B59B6")
         } else {
             theme?.subLabelColor ?: Color.parseColor("#BBBBBB")
@@ -500,13 +524,13 @@ class KeyMagnifierView @JvmOverloads constructor(
         // Set text alignment based on position
         when (direction) {
             SwipeDirection.NW, SwipeDirection.W, SwipeDirection.SW -> {
-                subLabelPaint.textAlign = Paint.Align.LEFT
+                paint.textAlign = Paint.Align.LEFT
             }
             SwipeDirection.NE, SwipeDirection.E, SwipeDirection.SE -> {
-                subLabelPaint.textAlign = Paint.Align.RIGHT
+                paint.textAlign = Paint.Align.RIGHT
             }
             SwipeDirection.N, SwipeDirection.S -> {
-                subLabelPaint.textAlign = Paint.Align.CENTER
+                paint.textAlign = Paint.Align.CENTER
             }
         }
 
@@ -515,17 +539,17 @@ class KeyMagnifierView @JvmOverloads constructor(
         val y: Float
 
         when (direction) {
-            SwipeDirection.NW -> { x = bounds.left + padding; y = bounds.top + padding - subLabelPaint.ascent() }
-            SwipeDirection.N -> { x = bounds.centerX(); y = bounds.top + padding - subLabelPaint.ascent() }
-            SwipeDirection.NE -> { x = bounds.right - padding; y = bounds.top + padding - subLabelPaint.ascent() }
-            SwipeDirection.W -> { x = bounds.left + padding; y = bounds.centerY() - (subLabelPaint.descent() + subLabelPaint.ascent()) / 2 }
-            SwipeDirection.E -> { x = bounds.right - padding; y = bounds.centerY() - (subLabelPaint.descent() + subLabelPaint.ascent()) / 2 }
-            SwipeDirection.SW -> { x = bounds.left + padding; y = bounds.bottom - padding - subLabelPaint.descent() }
-            SwipeDirection.S -> { x = bounds.centerX(); y = bounds.bottom - padding - subLabelPaint.descent() }
-            SwipeDirection.SE -> { x = bounds.right - padding; y = bounds.bottom - padding - subLabelPaint.descent() }
+            SwipeDirection.NW -> { x = bounds.left + padding; y = bounds.top + padding - paint.ascent() }
+            SwipeDirection.N -> { x = bounds.centerX(); y = bounds.top + padding - paint.ascent() }
+            SwipeDirection.NE -> { x = bounds.right - padding; y = bounds.top + padding - paint.ascent() }
+            SwipeDirection.W -> { x = bounds.left + padding; y = bounds.centerY() - (paint.descent() + paint.ascent()) / 2 }
+            SwipeDirection.E -> { x = bounds.right - padding; y = bounds.centerY() - (paint.descent() + paint.ascent()) / 2 }
+            SwipeDirection.SW -> { x = bounds.left + padding; y = bounds.bottom - padding - paint.descent() }
+            SwipeDirection.S -> { x = bounds.centerX(); y = bounds.bottom - padding - paint.descent() }
+            SwipeDirection.SE -> { x = bounds.right - padding; y = bounds.bottom - padding - paint.descent() }
         }
 
-        canvas.drawText(label.take(4), x, y, subLabelPaint)
+        canvas.drawText(label.take(4), x, y, paint)
     }
 
     /**
