@@ -138,6 +138,20 @@ class CleverKeysService : InputMethodService(),
     companion object {
         /** Broadcast action sent when theme changes in ThemeSettingsActivity */
         const val ACTION_THEME_CHANGED = "tribixbite.cleverkeys.ACTION_THEME_CHANGED"
+
+        /** Flag indicating we're in short swipe customization mode (for UI to react) */
+        @Volatile
+        private var _customizationMode: Boolean = false
+
+        /** Set whether we're in short swipe customization mode */
+        @JvmStatic
+        fun setCustomizationMode(enabled: Boolean) {
+            _customizationMode = enabled
+        }
+
+        /** Check if we're in short swipe customization mode */
+        @JvmStatic
+        fun isCustomizationMode(): Boolean = _customizationMode
     }
 
     /**

@@ -186,6 +186,32 @@ class KeyMagnifierView @JvmOverloads constructor(
     }
 
     /**
+     * Set the key to display using just the key code string.
+     * This is a simplified version that doesn't require the full KeyboardData.Key object.
+     * It shows the key code as the main label and all 8 direction zones.
+     *
+     * @param keyCode The key code string (e.g., "a", "shift", "space")
+     * @param customMappings Custom short swipe mappings for this key
+     */
+    fun setKeyCode(
+        keyCode: String,
+        customMappings: Map<SwipeDirection, ShortSwipeMapping> = emptyMap()
+    ) {
+        // Set the key code as the main label text (we won't have a real Key object)
+        this.key = null
+        this.keyCodeLabel = keyCode
+        this.customMappings = customMappings
+        this.keyWidthUnits = 1.0f
+        this.rowHeightUnits = 1.0f  // Square for simplified view
+        Log.d(TAG, "setKeyCode: keyCode=$keyCode, mappings=${customMappings.size}")
+        requestLayout()
+        invalidate()
+    }
+
+    /** Key code label for simplified mode (when no Key object is available) */
+    private var keyCodeLabel: String? = null
+
+    /**
      * Update custom mappings for the current key.
      */
     fun updateMappings(mappings: Map<SwipeDirection, ShortSwipeMapping>) {
@@ -198,6 +224,7 @@ class KeyMagnifierView @JvmOverloads constructor(
      */
     fun clear() {
         this.key = null
+        this.keyCodeLabel = null
         this.customMappings = emptyMap()
         invalidate()
     }
@@ -242,7 +269,11 @@ class KeyMagnifierView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        val k = key ?: run {
+        val k = key
+        val label = keyCodeLabel
+
+        // Check if we have either a key or a key code label
+        if (k == null && label == null) {
             drawEmptyState(canvas)
             return
         }
@@ -262,11 +293,19 @@ class KeyMagnifierView @JvmOverloads constructor(
         calculateDirectionBounds(keyRect)
         drawDirectionZones(canvas, keyRect)
 
-        // Draw main label (center)
-        drawMainLabel(canvas, k, keyRect)
+        // Draw main label (center) - use key object or fall back to keyCodeLabel
+        if (k != null) {
+            drawMainLabel(canvas, k, keyRect)
+        } else if (label != null) {
+            drawMainLabelText(canvas, label.uppercase(), keyRect)
+        }
 
-        // Draw sub-labels (corners and edges)
-        drawSubLabels(canvas, k, keyRect)
+        // Draw sub-labels (corners and edges) - only if we have a real key or custom mappings
+        if (k != null) {
+            drawSubLabels(canvas, k, keyRect)
+        } else {
+            drawSubLabelsFromMappings(canvas, keyRect)
+        }
     }
 
     /**
@@ -353,11 +392,18 @@ class KeyMagnifierView @JvmOverloads constructor(
      */
     private fun drawMainLabel(canvas: Canvas, key: KeyboardData.Key, keyRect: RectF) {
         val mainKv = key.keys[0] ?: return
+        val label = mainKv.getString()
+        drawMainLabelText(canvas, label, keyRect)
+    }
 
+    /**
+     * Draw the main label text in the center of the key.
+     * Used for both full key mode and simplified keyCode mode.
+     */
+    private fun drawMainLabelText(canvas: Canvas, label: String, keyRect: RectF) {
         mainLabelPaint.textSize = keyRect.height() * 0.35f
         mainLabelPaint.isFakeBoldText = true
 
-        val label = mainKv.getString()
         val cx = keyRect.centerX()
         val cy = keyRect.centerY() - (mainLabelPaint.descent() + mainLabelPaint.ascent()) / 2
 
@@ -384,6 +430,18 @@ class KeyMagnifierView @JvmOverloads constructor(
                 val label = subKv.getString().take(4)
                 drawSubLabelForDirection(canvas, keyRect, direction, label, false)
             }
+        }
+    }
+
+    /**
+     * Draw sub-labels from custom mappings only (for simplified keyCode mode).
+     * When we don't have a Key object, we can only show custom mappings.
+     */
+    private fun drawSubLabelsFromMappings(canvas: Canvas, keyRect: RectF) {
+        subLabelPaint.textSize = keyRect.height() * 0.14f
+
+        for ((direction, mapping) in customMappings) {
+            drawSubLabelForDirection(canvas, keyRect, direction, mapping.displayText, true)
         }
     }
 

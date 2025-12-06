@@ -1,36 +1,47 @@
 package tribixbite.cleverkeys
 
+import android.content.Context
 import android.os.Bundle
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.customization.*
 
 /**
- * Short Swipe Customization Activity v3
+ * Short Swipe Customization Activity v4
  *
- * Complete rewrite that uses the ACTUAL keyboard view for preview.
+ * Uses the ACTUAL system keyboard by triggering it with a hidden TextField.
+ * When the user types a key, we capture it and show the customization modal.
  *
  * Features:
- * - Real Keyboard2View at the bottom showing the user's actual themed keyboard
- * - Tap any key to open a magnified customization modal
+ * - Triggers real CleverKeys IME at the bottom of the screen
+ * - Captures key presses and opens customization modal
  * - KeyMagnifierView shows the selected key at ~200% scale with all current mappings
  * - 8-direction tappable zones for adding/editing short swipe gestures
  * - CommandPaletteDialog with searchable list of ALL 100+ keyboard commands
@@ -41,24 +52,37 @@ class ShortSwipeCustomizationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Enable the customization mode flag so CleverKeys knows we're in customization
+        CleverKeysService.setCustomizationMode(true)
+
         setContent {
             MaterialTheme(
                 colorScheme = darkColorScheme()
             ) {
-                ShortSwipeCustomizationScreenV3(
-                    onBack = { finish() }
+                ShortSwipeCustomizationScreenV4(
+                    onBack = {
+                        CleverKeysService.setCustomizationMode(false)
+                        finish()
+                    }
                 )
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        CleverKeysService.setCustomizationMode(false)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShortSwipeCustomizationScreenV3(onBack: () -> Unit) {
+fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val manager = remember { ShortSwipeCustomizationManager.getInstance(context) }
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
 
     // Load mappings on first composition
     LaunchedEffect(Unit) {
@@ -68,10 +92,11 @@ fun ShortSwipeCustomizationScreenV3(onBack: () -> Unit) {
     // Observe mappings
     val mappings by manager.mappingsFlow.collectAsState()
 
+    // Text field state for capturing key presses
+    var textFieldValue by remember { mutableStateOf(TextFieldValue("")) }
+
     // Selected key for customization modal
-    var selectedKey by remember { mutableStateOf<KeyboardData.Key?>(null) }
     var selectedKeyCode by remember { mutableStateOf<String?>(null) }
-    var selectedKeyRowHeight by remember { mutableStateOf(1.0f) }
 
     // Direction being edited
     var editingDirection by remember { mutableStateOf<SwipeDirection?>(null) }
@@ -79,8 +104,30 @@ fun ShortSwipeCustomizationScreenV3(onBack: () -> Unit) {
     // Show command palette
     var showCommandPalette by remember { mutableStateOf(false) }
 
-    // Keyboard preview host reference
-    var keyboardPreviewHost by remember { mutableStateOf<KeyboardPreviewHost?>(null) }
+    // Track last captured key for customization
+    var lastCapturedKey by remember { mutableStateOf<String?>(null) }
+
+    // Request focus when the screen opens to show keyboard
+    LaunchedEffect(Unit) {
+        delay(300) // Small delay to let the UI settle
+        focusRequester.requestFocus()
+        // Show the soft keyboard
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
+    }
+
+    // Monitor text changes to detect key presses
+    LaunchedEffect(textFieldValue.text) {
+        val text = textFieldValue.text
+        if (text.isNotEmpty()) {
+            // Get the last character typed
+            val lastChar = text.last().toString()
+            lastCapturedKey = lastChar.lowercase()
+            selectedKeyCode = lastChar.lowercase()
+            // Clear the text field
+            textFieldValue = TextFieldValue("")
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -144,46 +191,82 @@ fun ShortSwipeCustomizationScreenV3(onBack: () -> Unit) {
                 }
             }
 
-            // Keyboard preview takes remaining space
+            // Hidden text field to capture keyboard input
+            // This is invisible but captures key presses
+            BasicTextField(
+                value = textFieldValue,
+                onValueChange = { newValue ->
+                    textFieldValue = newValue
+                },
+                modifier = Modifier
+                    .focusRequester(focusRequester)
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color.Transparent),
+                textStyle = TextStyle(color = Color.Transparent, fontSize = 1.sp)
+            )
+
+            // Instruction area (takes remaining space above keyboard)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
             ) {
-                AndroidView(
-                    factory = { ctx ->
-                        KeyboardPreviewHost(ctx).apply {
-                            keyboardPreviewHost = this
-                            previewMode = true
-                            // Use extended callback with row height for proper aspect ratio
-                            onKeyTappedWithRowHeight = { key, rowHeight ->
-                                selectedKey = key
-                                selectedKeyCode = getKeyCodeFromKey(key)
-                                selectedKeyRowHeight = rowHeight
-                            }
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Type any key to customize it",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "The keyboard below is your actual CleverKeys keyboard.\nTap a key to add short swipe actions to it.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
+                    )
+
+                    if (lastCapturedKey != null) {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text(
+                            text = "Last key: ${lastCapturedKey?.uppercase()}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
             }
         }
 
         // Key customization modal
-        selectedKey?.let { key ->
-            val keyCode = selectedKeyCode ?: return@let
+        selectedKeyCode?.let { keyCode ->
             val keyMappings = mappings.filter { it.keyCode == keyCode }
                 .associateBy { it.direction }
 
-            KeyCustomizationDialogV3(
-                key = key,
+            KeyCustomizationDialogSimple(
                 keyCode = keyCode,
-                rowHeight = selectedKeyRowHeight,
                 existingMappings = keyMappings,
                 onDismiss = {
-                    selectedKey = null
                     selectedKeyCode = null
                     editingDirection = null
+                    // Refocus the text field to keep keyboard visible
+                    scope.launch {
+                        delay(100)
+                        focusRequester.requestFocus()
+                    }
                 },
                 onDirectionTapped = { direction ->
                     editingDirection = direction
@@ -240,38 +323,12 @@ fun ShortSwipeCustomizationScreenV3(onBack: () -> Unit) {
 }
 
 /**
- * Get a simple key code string from a KeyboardData.Key for storage.
- */
-private fun getKeyCodeFromKey(key: KeyboardData.Key): String? {
-    val mainKey = key.keys[0] ?: return null
-
-    return when (mainKey.getKind()) {
-        KeyValue.Kind.Char -> mainKey.getChar().lowercaseChar().toString()
-        KeyValue.Kind.String -> mainKey.getString().lowercase()
-        KeyValue.Kind.Event -> mainKey.getEvent().name.lowercase()
-        KeyValue.Kind.Keyevent -> "keyevent_${mainKey.getKeyevent()}"
-        KeyValue.Kind.Modifier -> mainKey.getModifier().name.lowercase()
-        KeyValue.Kind.Editing -> mainKey.getEditing().name.lowercase()
-        else -> mainKey.getString().lowercase().ifEmpty { null }
-    }
-}
-
-/**
- * Key customization dialog showing magnified key with 8-direction zones.
- *
- * @param key The key to customize
- * @param keyCode The key code identifier
- * @param rowHeight The row height in keyboard units (for proper aspect ratio)
- * @param existingMappings Existing custom mappings for this key
- * @param onDismiss Called when dialog is dismissed
- * @param onDirectionTapped Called when a direction zone is tapped
- * @param onDeleteMapping Called when a mapping should be deleted
+ * Simplified key customization dialog that doesn't need the KeyboardData.Key object.
+ * Shows the key code and 8-direction swipe zones.
  */
 @Composable
-fun KeyCustomizationDialogV3(
-    key: KeyboardData.Key,
+fun KeyCustomizationDialogSimple(
     keyCode: String,
-    rowHeight: Float = 1.0f,
     existingMappings: Map<SwipeDirection, ShortSwipeMapping>,
     onDismiss: () -> Unit,
     onDirectionTapped: (SwipeDirection) -> Unit,
@@ -309,12 +366,11 @@ fun KeyCustomizationDialogV3(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Magnified key view with 8-direction zones
-                // Use fillMaxWidth with fixed max height to maintain proper aspect ratio
+                // Simple directional grid for key customization
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 280.dp)
+                        .aspectRatio(1f)
                         .padding(horizontal = 16.dp)
                         .background(
                             MaterialTheme.colorScheme.surfaceVariant,
@@ -322,11 +378,11 @@ fun KeyCustomizationDialogV3(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
+                    // Use the KeyMagnifierView for directional zones
                     AndroidView(
                         factory = { ctx ->
                             KeyMagnifierView(ctx).apply {
-                                // Pass row height for proper aspect ratio calculation
-                                setKey(key, existingMappings, rowHeight)
+                                setKeyCode(keyCode, existingMappings)
                                 this.onDirectionTapped = { direction ->
                                     selectedDirection = direction
                                     onDirectionTapped(direction)
@@ -334,8 +390,7 @@ fun KeyCustomizationDialogV3(
                             }
                         },
                         update = { view ->
-                            // Pass row height when updating too
-                            view.setKey(key, existingMappings, rowHeight)
+                            view.setKeyCode(keyCode, existingMappings)
                         },
                         modifier = Modifier.fillMaxSize()
                     )

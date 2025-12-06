@@ -581,7 +581,7 @@ class BackupRestoreActivity : ComponentActivity() {
                 showResultDialog = true
 
                 // Send a broadcast to notify DictionaryManagerActivity to refresh
-                LocalBroadcastManager.getInstance(this).sendBroadcast(Intent(ACTION_DICTIONARY_IMPORTED))
+                LocalBroadcastManager.getInstance(this@BackupRestoreActivity).sendBroadcast(Intent(ACTION_DICTIONARY_IMPORTED))
 
                 android.util.Log.i(TAG, "Dictionary import successful: userWords=${result.userWordsImported}, disabledWords=${result.disabledWordsImported}")
             } catch (e: Exception) {
