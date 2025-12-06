@@ -1,8 +1,9 @@
 # Short Swipe Customization Feature Specification
 
-**Status**: In Progress
-**Branch**: `feature/per-key-short-swipe-customization`
+**Status**: Complete ✅
+**Branch**: `main` (merged)
 **Created**: 2025-12-05
+**Updated**: 2025-12-06
 
 ## Overview
 
@@ -163,28 +164,32 @@ src/main/kotlin/tribixbite/cleverkeys/
 
 ## Implementation Phases
 
-### Phase 1: Data Layer
+### Phase 1: Data Layer ✅
 - [x] Data models (SwipeDirection.kt, ActionType.kt, ShortSwipeMapping.kt)
-- [ ] ShortSwipeCustomizationManager
-- [ ] JSON persistence
-- [ ] Backup/restore integration
+- [x] ShortSwipeCustomizationManager with JSON persistence
+- [x] Backup/restore integration
+- [x] MappingSelection data class for separate label/action control
 
-### Phase 2: Integration
-- [ ] Pointers.kt integration
-- [ ] CustomShortSwipeExecutor
-- [ ] KeyEventHandler integration
+### Phase 2: Integration ✅
+- [x] Pointers.kt integration
+- [x] CustomShortSwipeExecutor supporting 143+ commands
+- [x] KeyEventHandler integration
+- [x] CommandRegistry with searchable keywords
 
-### Phase 3: UI
-- [ ] ShortSwipeCustomizationActivity
-- [ ] InteractiveKeyboardPreview
-- [ ] KeyCustomizationModal
-- [ ] DirectionEditorDialog
-- [ ] Settings navigation
+### Phase 3: UI ✅
+- [x] ShortSwipeCustomizationActivity (v4 with actual keyboard)
+- [x] KeyMagnifierView showing existing layout + custom mappings
+- [x] KeyCustomizationDialog with 8-direction selector
+- [x] CommandPaletteDialog with search filter
+- [x] LabelConfirmationDialog for custom display labels
+- [x] DirectionTouchOverlay (Compose 3x3 grid) for reliable touch detection
+- [x] Settings navigation
 
-### Phase 4: Polish
-- [ ] Reset to defaults
-- [ ] Edge case handling
-- [ ] Device testing
+### Phase 4: Polish ✅
+- [x] Reset to defaults (delete individual mappings)
+- [x] Edge case handling (command name validation)
+- [x] Touch event handling fix (AndroidView interop)
+- [ ] Manual device testing (ongoing)
 
 ## Performance Requirements
 
