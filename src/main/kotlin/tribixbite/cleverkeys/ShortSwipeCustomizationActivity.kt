@@ -5,28 +5,17 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import android.graphics.RectF
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -35,13 +24,17 @@ import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.customization.*
 
 /**
- * Short Swipe Customization Activity
+ * Short Swipe Customization Activity v3
  *
- * Allows users to customize short swipe gestures for every key:
- * - Interactive keyboard preview showing all keys
- * - Tap a key to open customization modal
- * - 8-direction radial selector for choosing swipe direction
- * - Editor for setting display text, action type, and action value
+ * Complete rewrite that uses the ACTUAL keyboard view for preview.
+ *
+ * Features:
+ * - Real Keyboard2View at the bottom showing the user's actual themed keyboard
+ * - Tap any key to open a magnified customization modal
+ * - KeyMagnifierView shows the selected key at ~200% scale with all current mappings
+ * - 8-direction tappable zones for adding/editing short swipe gestures
+ * - CommandPaletteDialog with searchable list of ALL 100+ keyboard commands
+ * - Support for custom text input (up to 100 characters)
  */
 class ShortSwipeCustomizationActivity : ComponentActivity() {
 
@@ -52,7 +45,7 @@ class ShortSwipeCustomizationActivity : ComponentActivity() {
             MaterialTheme(
                 colorScheme = darkColorScheme()
             ) {
-                ShortSwipeCustomizationScreen(
+                ShortSwipeCustomizationScreenV3(
                     onBack = { finish() }
                 )
             }
@@ -60,16 +53,9 @@ class ShortSwipeCustomizationActivity : ComponentActivity() {
     }
 }
 
-// Standard QWERTY layout for preview
-private val KEYBOARD_ROWS = listOf(
-    listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p"),
-    listOf("a", "s", "d", "f", "g", "h", "j", "k", "l"),
-    listOf("z", "x", "c", "v", "b", "n", "m")
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShortSwipeCustomizationScreen(onBack: () -> Unit) {
+fun ShortSwipeCustomizationScreenV3(onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val manager = remember { ShortSwipeCustomizationManager.getInstance(context) }
@@ -83,7 +69,18 @@ fun ShortSwipeCustomizationScreen(onBack: () -> Unit) {
     val mappings by manager.mappingsFlow.collectAsState()
 
     // Selected key for customization modal
-    var selectedKey by remember { mutableStateOf<String?>(null) }
+    var selectedKey by remember { mutableStateOf<KeyboardData.Key?>(null) }
+    var selectedKeyCode by remember { mutableStateOf<String?>(null) }
+    var selectedKeyRowHeight by remember { mutableStateOf(1.0f) }
+
+    // Direction being edited
+    var editingDirection by remember { mutableStateOf<SwipeDirection?>(null) }
+
+    // Show command palette
+    var showCommandPalette by remember { mutableStateOf(false) }
+
+    // Keyboard preview host reference
+    var keyboardPreviewHost by remember { mutableStateOf<KeyboardPreviewHost?>(null) }
 
     Scaffold(
         topBar = {
@@ -121,307 +118,165 @@ fun ShortSwipeCustomizationScreen(onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
         ) {
-            // Info card
+            // Info card at top
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Tap a key to customize its short swipe gestures",
+                        text = "Tap any key below to customize its short swipe gestures",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "${mappings.size} custom mappings configured",
+                        text = "${mappings.size} custom mappings • ${CommandRegistry.totalCount} commands available",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Interactive keyboard preview
-            InteractiveKeyboardPreview(
-                mappings = mappings,
-                onKeyClick = { keyCode -> selectedKey = keyCode }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // List of current customizations
-            if (mappings.isNotEmpty()) {
-                Text(
-                    text = "Current Customizations",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(mappings.sortedBy { "${it.keyCode}:${it.direction.ordinal}" }) { mapping ->
-                        CustomizationItem(
-                            mapping = mapping,
-                            onEdit = { selectedKey = mapping.keyCode },
-                            onDelete = {
-                                scope.launch {
-                                    manager.removeMapping(mapping.keyCode, mapping.direction)
-                                }
+            // Keyboard preview takes remaining space
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                AndroidView(
+                    factory = { ctx ->
+                        KeyboardPreviewHost(ctx).apply {
+                            keyboardPreviewHost = this
+                            previewMode = true
+                            // Use extended callback with row height for proper aspect ratio
+                            onKeyTappedWithRowHeight = { key, rowHeight ->
+                                selectedKey = key
+                                selectedKeyCode = getKeyCodeFromKey(key)
+                                selectedKeyRowHeight = rowHeight
                             }
-                        )
-                    }
-                }
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
 
         // Key customization modal
         selectedKey?.let { key ->
-            KeyCustomizationDialog(
-                keyCode = key,
-                existingMappings = mappings.filter { it.keyCode == key },
-                onDismiss = { selectedKey = null },
-                onSave = { mapping ->
-                    scope.launch {
-                        manager.setMapping(mapping)
-                    }
+            val keyCode = selectedKeyCode ?: return@let
+            val keyMappings = mappings.filter { it.keyCode == keyCode }
+                .associateBy { it.direction }
+
+            KeyCustomizationDialogV3(
+                key = key,
+                keyCode = keyCode,
+                rowHeight = selectedKeyRowHeight,
+                existingMappings = keyMappings,
+                onDismiss = {
+                    selectedKey = null
+                    selectedKeyCode = null
+                    editingDirection = null
                 },
-                onDelete = { direction ->
+                onDirectionTapped = { direction ->
+                    editingDirection = direction
+                    showCommandPalette = true
+                },
+                onDeleteMapping = { direction ->
                     scope.launch {
-                        manager.removeMapping(key, direction)
+                        manager.removeMapping(keyCode, direction)
                     }
                 }
             )
         }
-    }
-}
 
-@Composable
-fun InteractiveKeyboardPreview(
-    mappings: List<ShortSwipeMapping>,
-    onKeyClick: (String) -> Unit
-) {
-    // Build mapping lookup by key code
-    val mappingsByKey = remember(mappings) {
-        mappings.groupBy { it.keyCode }
-    }
-
-    // Pure Compose keyboard preview with clickable keys
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                MaterialTheme.colorScheme.surfaceVariant,
-                RoundedCornerShape(12.dp)
+        // Command palette for selecting action
+        if (showCommandPalette && selectedKeyCode != null && editingDirection != null) {
+            CommandPaletteDialog(
+                onDismiss = {
+                    showCommandPalette = false
+                    editingDirection = null
+                },
+                onCommandSelected = { command ->
+                    scope.launch {
+                        val mapping = ShortSwipeMapping(
+                            keyCode = selectedKeyCode!!,
+                            direction = editingDirection!!,
+                            displayText = command.displayName.take(4),
+                            actionType = ActionType.COMMAND,
+                            actionValue = command.name
+                        )
+                        manager.setMapping(mapping)
+                        showCommandPalette = false
+                        editingDirection = null
+                        Toast.makeText(context, "Mapped ${editingDirection!!.displayName} to ${command.displayName}", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onTextSelected = { text ->
+                    scope.launch {
+                        val mapping = ShortSwipeMapping(
+                            keyCode = selectedKeyCode!!,
+                            direction = editingDirection!!,
+                            displayText = text.take(4),
+                            actionType = ActionType.TEXT,
+                            actionValue = text
+                        )
+                        manager.setMapping(mapping)
+                        showCommandPalette = false
+                        editingDirection = null
+                        Toast.makeText(context, "Mapped ${editingDirection!!.displayName} to text: \"$text\"", Toast.LENGTH_SHORT).show()
+                    }
+                }
             )
-            .padding(8.dp)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            // Row 1: Q W E R T Y U I O P
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(3.dp)
-            ) {
-                KEYBOARD_ROWS[0].forEach { key ->
-                    val keyMappings = mappingsByKey[key] ?: emptyList()
-                    KeyPreviewButton(
-                        keyCode = key,
-                        hasCustomizations = keyMappings.isNotEmpty(),
-                        customCount = keyMappings.size,
-                        onClick = { onKeyClick(key) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-
-            // Row 2: A S D F G H J K L (with padding for offset)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(3.dp)
-            ) {
-                KEYBOARD_ROWS[1].forEach { key ->
-                    val keyMappings = mappingsByKey[key] ?: emptyList()
-                    KeyPreviewButton(
-                        keyCode = key,
-                        hasCustomizations = keyMappings.isNotEmpty(),
-                        customCount = keyMappings.size,
-                        onClick = { onKeyClick(key) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-
-            // Row 3: Z X C V B N M (with more padding for offset)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 48.dp),
-                horizontalArrangement = Arrangement.spacedBy(3.dp)
-            ) {
-                KEYBOARD_ROWS[2].forEach { key ->
-                    val keyMappings = mappingsByKey[key] ?: emptyList()
-                    KeyPreviewButton(
-                        keyCode = key,
-                        hasCustomizations = keyMappings.isNotEmpty(),
-                        customCount = keyMappings.size,
-                        onClick = { onKeyClick(key) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
         }
     }
 }
 
 /**
- * Individual key button in the preview - uses Card with onClick for reliable touch handling
+ * Get a simple key code string from a KeyboardData.Key for storage.
  */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun KeyPreviewButton(
-    keyCode: String,
-    hasCustomizations: Boolean,
-    customCount: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    // Use Card with onClick parameter for reliable click handling
-    // Box+clickable can have touch event propagation issues in some Compose versions
-    Card(
-        onClick = onClick,
-        modifier = modifier.height(48.dp),
-        shape = RoundedCornerShape(6.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (hasCustomizations)
-                MaterialTheme.colorScheme.primaryContainer
-            else
-                MaterialTheme.colorScheme.surface
-        ),
-        border = BorderStroke(
-            width = 1.dp,
-            color = if (hasCustomizations)
-                MaterialTheme.colorScheme.primary
-            else
-                MaterialTheme.colorScheme.outline
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = keyCode.uppercase(),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (hasCustomizations)
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    else
-                        MaterialTheme.colorScheme.onSurface
-                )
-                if (hasCustomizations) {
-                    Text(
-                        text = "$customCount",
-                        fontSize = 9.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-        }
+private fun getKeyCodeFromKey(key: KeyboardData.Key): String? {
+    val mainKey = key.keys[0] ?: return null
+
+    return when (mainKey.getKind()) {
+        KeyValue.Kind.Char -> mainKey.getChar().lowercaseChar().toString()
+        KeyValue.Kind.String -> mainKey.getString().lowercase()
+        KeyValue.Kind.Event -> mainKey.getEvent().name.lowercase()
+        KeyValue.Kind.Keyevent -> "keyevent_${mainKey.getKeyevent()}"
+        KeyValue.Kind.Modifier -> mainKey.getModifier().name.lowercase()
+        KeyValue.Kind.Editing -> mainKey.getEditing().name.lowercase()
+        else -> mainKey.getString().lowercase().ifEmpty { null }
     }
 }
 
+/**
+ * Key customization dialog showing magnified key with 8-direction zones.
+ *
+ * @param key The key to customize
+ * @param keyCode The key code identifier
+ * @param rowHeight The row height in keyboard units (for proper aspect ratio)
+ * @param existingMappings Existing custom mappings for this key
+ * @param onDismiss Called when dialog is dismissed
+ * @param onDirectionTapped Called when a direction zone is tapped
+ * @param onDeleteMapping Called when a mapping should be deleted
+ */
 @Composable
-fun CustomizationItem(
-    mapping: ShortSwipeMapping,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Key + Direction indicator
-            Column(
-                modifier = Modifier.width(60.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = mapping.keyCode.uppercase(),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-                Text(
-                    text = mapping.direction.shortLabel,
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Mapping details
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "\"${mapping.displayText}\" -> ${mapping.actionType.displayName}",
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = mapping.actionValue,
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            // Actions
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Filled.Edit, contentDescription = "Edit")
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Filled.Delete, contentDescription = "Delete")
-            }
-        }
-    }
-}
-
-@Composable
-fun KeyCustomizationDialog(
+fun KeyCustomizationDialogV3(
+    key: KeyboardData.Key,
     keyCode: String,
-    existingMappings: List<ShortSwipeMapping>,
+    rowHeight: Float = 1.0f,
+    existingMappings: Map<SwipeDirection, ShortSwipeMapping>,
     onDismiss: () -> Unit,
-    onSave: (ShortSwipeMapping) -> Unit,
-    onDelete: (SwipeDirection) -> Unit
+    onDirectionTapped: (SwipeDirection) -> Unit,
+    onDeleteMapping: (SwipeDirection) -> Unit
 ) {
-    // Selected direction for editing
     var selectedDirection by remember { mutableStateOf<SwipeDirection?>(null) }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -431,479 +286,162 @@ fun KeyCustomizationDialog(
                 .padding(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
-            )
+            ),
+            shape = RoundedCornerShape(16.dp)
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Header
                 Text(
                     text = "Customize \"${keyCode.uppercase()}\" Key",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
 
+                Text(
+                    text = "Tap a direction to add or edit a short swipe gesture",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 8-direction radial selector
-                if (selectedDirection == null) {
-                    DirectionSelector(
-                        keyCode = keyCode,
-                        existingMappings = existingMappings,
-                        onDirectionSelected = { selectedDirection = it }
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    TextButton(onClick = onDismiss) {
-                        Text("Close")
-                    }
-                } else {
-                    // Direction editor
-                    DirectionEditor(
-                        keyCode = keyCode,
-                        direction = selectedDirection!!,
-                        existingMapping = existingMappings.find { it.direction == selectedDirection },
-                        onSave = { mapping ->
-                            onSave(mapping)
-                            selectedDirection = null
-                        },
-                        onDelete = {
-                            onDelete(selectedDirection!!)
-                            selectedDirection = null
-                        },
-                        onBack = { selectedDirection = null }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun DirectionSelector(
-    keyCode: String,
-    existingMappings: List<ShortSwipeMapping>,
-    onDirectionSelected: (SwipeDirection) -> Unit
-) {
-    // Create lookup map for existing mappings
-    val mappingsByDirection = remember(existingMappings) {
-        existingMappings.associateBy { it.direction }
-    }
-
-    Text(
-        text = "Select a direction to customize",
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
-
-    Spacer(modifier = Modifier.height(16.dp))
-
-    // Zoomed key view: 3x3 grid showing all 8 corners with mapped values
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Top row: NW, N, NE
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            EnhancedDirectionButton(SwipeDirection.NW, mappingsByDirection[SwipeDirection.NW], onDirectionSelected)
-            EnhancedDirectionButton(SwipeDirection.N, mappingsByDirection[SwipeDirection.N], onDirectionSelected)
-            EnhancedDirectionButton(SwipeDirection.NE, mappingsByDirection[SwipeDirection.NE], onDirectionSelected)
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Middle row: W, [KEY], E
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            EnhancedDirectionButton(SwipeDirection.W, mappingsByDirection[SwipeDirection.W], onDirectionSelected)
-
-            // Center key display (zoomed view)
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = keyCode.uppercase(),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-
-            EnhancedDirectionButton(SwipeDirection.E, mappingsByDirection[SwipeDirection.E], onDirectionSelected)
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Bottom row: SW, S, SE
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            EnhancedDirectionButton(SwipeDirection.SW, mappingsByDirection[SwipeDirection.SW], onDirectionSelected)
-            EnhancedDirectionButton(SwipeDirection.S, mappingsByDirection[SwipeDirection.S], onDirectionSelected)
-            EnhancedDirectionButton(SwipeDirection.SE, mappingsByDirection[SwipeDirection.SE], onDirectionSelected)
-        }
-    }
-
-    Spacer(modifier = Modifier.height(12.dp))
-
-    // Legend
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("Mapped", style = MaterialTheme.typography.labelSmall)
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
-                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("Empty", style = MaterialTheme.typography.labelSmall)
-        }
-    }
-}
-
-/**
- * Enhanced direction button that shows the mapped display text
- * Uses Card with onClick for reliable touch handling
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun EnhancedDirectionButton(
-    direction: SwipeDirection,
-    mapping: ShortSwipeMapping?,
-    onDirectionSelected: (SwipeDirection) -> Unit
-) {
-    val hasMapping = mapping != null
-
-    Card(
-        onClick = { onDirectionSelected(direction) },
-        modifier = Modifier.size(56.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (hasMapping)
-                MaterialTheme.colorScheme.primary
-            else
-                MaterialTheme.colorScheme.surfaceVariant
-        ),
-        border = BorderStroke(
-            width = 2.dp,
-            color = if (hasMapping)
-                MaterialTheme.colorScheme.primary
-            else
-                MaterialTheme.colorScheme.outline
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // Show mapped display text or direction label
-                Text(
-                    text = mapping?.displayText?.take(4) ?: direction.shortLabel,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = if (hasMapping) 14.sp else 11.sp,
-                    color = if (hasMapping)
-                        MaterialTheme.colorScheme.onPrimary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1
-                )
-                // Show action type hint if mapped
-                if (hasMapping) {
-                    Text(
-                        text = when (mapping!!.actionType) {
-                            ActionType.TEXT -> "txt"
-                            ActionType.COMMAND -> "cmd"
-                            ActionType.KEY_EVENT -> "key"
-                        },
-                        fontSize = 8.sp,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * Simple direction button (circular) - uses Card for reliable touch handling
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DirectionButton(
-    direction: SwipeDirection,
-    existingDirections: Set<SwipeDirection>,
-    onDirectionSelected: (SwipeDirection) -> Unit
-) {
-    val hasMapping = direction in existingDirections
-
-    Card(
-        onClick = { onDirectionSelected(direction) },
-        modifier = Modifier.size(48.dp),
-        shape = CircleShape,
-        colors = CardDefaults.cardColors(
-            containerColor = if (hasMapping)
-                MaterialTheme.colorScheme.primary
-            else
-                MaterialTheme.colorScheme.surfaceVariant
-        ),
-        border = BorderStroke(
-            width = 2.dp,
-            color = if (hasMapping)
-                MaterialTheme.colorScheme.primary
-            else
-                MaterialTheme.colorScheme.outline
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = direction.shortLabel,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
-                color = if (hasMapping)
-                    MaterialTheme.colorScheme.onPrimary
-                else
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DirectionEditor(
-    keyCode: String,
-    direction: SwipeDirection,
-    existingMapping: ShortSwipeMapping?,
-    onSave: (ShortSwipeMapping) -> Unit,
-    onDelete: () -> Unit,
-    onBack: () -> Unit
-) {
-    var displayText by remember { mutableStateOf(existingMapping?.displayText ?: "") }
-    var actionType by remember { mutableStateOf(existingMapping?.actionType ?: ActionType.TEXT) }
-    var actionValue by remember { mutableStateOf(existingMapping?.actionValue ?: "") }
-
-    var actionTypeExpanded by remember { mutableStateOf(false) }
-    var commandExpanded by remember { mutableStateOf(false) }
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Direction indicator
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-            }
-            Text(
-                text = "${direction.displayName} (${direction.shortLabel})",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Display text input
-        OutlinedTextField(
-            value = displayText,
-            onValueChange = { if (it.length <= 4) displayText = it },
-            label = { Text("Display Text (max 4 chars)") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            supportingText = {
-                Text("${displayText.length}/4 - shown on key corner")
-            }
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Action type dropdown
-        ExposedDropdownMenuBox(
-            expanded = actionTypeExpanded,
-            onExpandedChange = { actionTypeExpanded = it }
-        ) {
-            OutlinedTextField(
-                value = actionType.displayName,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Action Type") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = actionTypeExpanded) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor()
-            )
-            ExposedDropdownMenu(
-                expanded = actionTypeExpanded,
-                onDismissRequest = { actionTypeExpanded = false }
-            ) {
-                ActionType.entries.forEach { type ->
-                    DropdownMenuItem(
-                        text = {
-                            Column {
-                                Text(type.displayName)
-                                Text(
-                                    text = type.description,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                // Magnified key view with 8-direction zones
+                // Use fillMaxWidth with fixed max height to maintain proper aspect ratio
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 280.dp)
+                        .padding(horizontal = 16.dp)
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AndroidView(
+                        factory = { ctx ->
+                            KeyMagnifierView(ctx).apply {
+                                // Pass row height for proper aspect ratio calculation
+                                setKey(key, existingMappings, rowHeight)
+                                this.onDirectionTapped = { direction ->
+                                    selectedDirection = direction
+                                    onDirectionTapped(direction)
+                                }
                             }
                         },
-                        onClick = {
-                            actionType = type
-                            actionValue = ""
-                            actionTypeExpanded = false
-                        }
+                        update = { view ->
+                            // Pass row height when updating too
+                            view.setKey(key, existingMappings, rowHeight)
+                        },
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
-            }
-        }
 
-        Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-        // Action value input (depends on type)
-        when (actionType) {
-            ActionType.TEXT -> {
-                OutlinedTextField(
-                    value = actionValue,
-                    onValueChange = { if (it.length <= 100) actionValue = it },
-                    label = { Text("Text to Insert") },
-                    modifier = Modifier.fillMaxWidth(),
-                    supportingText = {
-                        Text("${actionValue.length}/100 characters")
-                    },
-                    maxLines = 3
-                )
-            }
-            ActionType.COMMAND -> {
-                ExposedDropdownMenuBox(
-                    expanded = commandExpanded,
-                    onExpandedChange = { commandExpanded = it }
-                ) {
-                    OutlinedTextField(
-                        value = AvailableCommand.entries.find { it.name == actionValue }?.displayName ?: "Select command...",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Command") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = commandExpanded) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
+                // Current mappings list
+                if (existingMappings.isNotEmpty()) {
+                    Text(
+                        text = "Custom Mappings",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.fillMaxWidth()
                     )
-                    ExposedDropdownMenu(
-                        expanded = commandExpanded,
-                        onDismissRequest = { commandExpanded = false }
-                    ) {
-                        AvailableCommand.entries.forEach { command ->
-                            DropdownMenuItem(
-                                text = {
-                                    Column {
-                                        Text(command.displayName)
-                                        Text(
-                                            text = command.description,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                },
-                                onClick = {
-                                    actionValue = command.name
-                                    commandExpanded = false
-                                }
-                            )
-                        }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    existingMappings.forEach { (direction, mapping) ->
+                        MappingListItem(
+                            direction = direction,
+                            mapping = mapping,
+                            onEdit = { onDirectionTapped(direction) },
+                            onDelete = { onDeleteMapping(direction) }
+                        )
                     }
                 }
-            }
-            ActionType.KEY_EVENT -> {
-                OutlinedTextField(
-                    value = actionValue,
-                    onValueChange = { actionValue = it.filter { c -> c.isDigit() } },
-                    label = { Text("Key Event Code") },
-                    modifier = Modifier.fillMaxWidth(),
-                    supportingText = {
-                        Text("Android KeyEvent code (e.g., 67 for DEL)")
-                    },
-                    singleLine = true
-                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Close button
+                TextButton(onClick = onDismiss) {
+                    Text("Close")
+                }
             }
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Action buttons
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MappingListItem(
+    direction: SwipeDirection,
+    mapping: ShortSwipeMapping,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card(
+        onClick = onEdit,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+        )
+    ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (existingMapping != null) {
-                OutlinedButton(
-                    onClick = onDelete,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
+            // Direction badge
+            Box(
+                modifier = Modifier
+                    .background(
+                        MaterialTheme.colorScheme.primary,
+                        RoundedCornerShape(4.dp)
                     )
-                ) {
-                    Icon(Icons.Filled.Delete, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Delete")
-                }
+                    .padding(horizontal = 8.dp, vertical = 2.dp)
+            ) {
+                Text(
+                    text = direction.shortLabel,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
             }
 
-            Button(
-                onClick = {
-                    // Validate and create mapping
-                    val finalDisplayText = displayText.ifEmpty {
-                        when (actionType) {
-                            ActionType.TEXT -> actionValue.take(4)
-                            ActionType.COMMAND -> AvailableCommand.entries.find { it.name == actionValue }?.displayName?.take(4) ?: "CMD"
-                            ActionType.KEY_EVENT -> "KEY"
-                        }
-                    }
+            Spacer(modifier = Modifier.width(8.dp))
 
-                    val mapping = ShortSwipeMapping(
-                        keyCode = keyCode,
-                        direction = direction,
-                        displayText = finalDisplayText,
-                        actionType = actionType,
-                        actionValue = actionValue
-                    )
-                    onSave(mapping)
-                },
-                modifier = Modifier.weight(1f),
-                enabled = actionValue.isNotEmpty()
+            // Mapping info
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "\"${mapping.displayText}\"",
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp
+                )
+                Text(
+                    text = "${mapping.actionType.displayName}: ${mapping.actionValue.take(30)}${if (mapping.actionValue.length > 30) "..." else ""}",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Delete button
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.size(32.dp)
             ) {
-                Icon(Icons.Filled.Check, contentDescription = null)
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Save")
+                Icon(
+                    Icons.Filled.Delete,
+                    contentDescription = "Delete",
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.error
+                )
             }
         }
     }

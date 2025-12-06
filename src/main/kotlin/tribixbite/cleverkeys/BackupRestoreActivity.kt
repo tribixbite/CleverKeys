@@ -28,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tribixbite.cleverkeys.theme.KeyboardTheme
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -48,6 +49,7 @@ class BackupRestoreActivity : ComponentActivity() {
 
     companion object {
         private const val TAG = "BackupRestoreActivity"
+        const val ACTION_DICTIONARY_IMPORTED = "tribixbite.cleverkeys.ACTION_DICTIONARY_IMPORTED"
     }
 
     // SharedPreferences
@@ -577,6 +579,9 @@ class BackupRestoreActivity : ComponentActivity() {
                 resultTitle = "Dictionary Import Successful"
                 resultMessage = messageBuilder.toString()
                 showResultDialog = true
+
+                // Send a broadcast to notify DictionaryManagerActivity to refresh
+                LocalBroadcastManager.getInstance(this).sendBroadcast(Intent(ACTION_DICTIONARY_IMPORTED))
 
                 android.util.Log.i(TAG, "Dictionary import successful: userWords=${result.userWordsImported}, disabledWords=${result.disabledWordsImported}")
             } catch (e: Exception) {
