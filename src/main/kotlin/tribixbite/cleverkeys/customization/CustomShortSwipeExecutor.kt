@@ -33,8 +33,127 @@ class CustomShortSwipeExecutor(private val context: Context) {
 
         return when (mapping.actionType) {
             ActionType.TEXT -> executeTextInput(mapping.actionValue, inputConnection)
-            ActionType.COMMAND -> executeCommand(mapping.getCommand(), inputConnection, editorInfo)
+            ActionType.COMMAND -> executeCommandByName(mapping.actionValue, inputConnection, editorInfo)
             ActionType.KEY_EVENT -> executeKeyEvent(mapping.getKeyEventCode(), inputConnection)
+        }
+    }
+
+    /**
+     * Execute a command by name, supporting both AvailableCommand enum (SCREAMING_SNAKE)
+     * and CommandRegistry names (camelCase).
+     */
+    private fun executeCommandByName(
+        commandName: String,
+        inputConnection: InputConnection,
+        editorInfo: EditorInfo?
+    ): Boolean {
+        // First try the legacy AvailableCommand enum
+        val legacyCommand = AvailableCommand.fromString(commandName)
+        if (legacyCommand != null) {
+            return executeCommand(legacyCommand, inputConnection, editorInfo)
+        }
+
+        // Try CommandRegistry for the full 143+ command set
+        val registryCommand = CommandRegistry.getByName(commandName)
+        if (registryCommand != null) {
+            return executeRegistryCommand(registryCommand, inputConnection, editorInfo)
+        }
+
+        Log.w(TAG, "Unknown command: $commandName")
+        return false
+    }
+
+    /**
+     * Execute a command from the CommandRegistry.
+     */
+    private fun executeRegistryCommand(
+        command: CommandRegistry.Command,
+        inputConnection: InputConnection,
+        editorInfo: EditorInfo?
+    ): Boolean {
+        return try {
+            // Map CommandRegistry commands to actions
+            val success = when (command.name) {
+                // Clipboard operations
+                "copy" -> inputConnection.performContextMenuAction(android.R.id.copy)
+                "paste" -> inputConnection.performContextMenuAction(android.R.id.paste)
+                "cut" -> inputConnection.performContextMenuAction(android.R.id.cut)
+                "selectAll" -> inputConnection.performContextMenuAction(android.R.id.selectAll)
+                "pasteAsPlainText" -> inputConnection.performContextMenuAction(android.R.id.paste)
+                "shareText" -> inputConnection.performContextMenuAction(android.R.id.copy) // Copy first, then share handled elsewhere
+
+                // Edit operations
+                "undo" -> inputConnection.performContextMenuAction(android.R.id.undo)
+                "redo" -> inputConnection.performContextMenuAction(android.R.id.redo)
+
+                // Cursor movement - character
+                "left" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_DPAD_LEFT)
+                "right" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_DPAD_RIGHT)
+                "up" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_DPAD_UP)
+                "down" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_DPAD_DOWN)
+
+                // Cursor movement - line
+                "home" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MOVE_HOME)
+                "end" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MOVE_END)
+
+                // Cursor movement - word
+                "word_left" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.META_CTRL_ON)
+                "word_right" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.META_CTRL_ON)
+
+                // Page navigation
+                "page_up" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_PAGE_UP)
+                "page_down" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_PAGE_DOWN)
+
+                // Delete operations
+                "backspace" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_DEL)
+                "delete" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_FORWARD_DEL)
+                "delete_word" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_DEL, KeyEvent.META_CTRL_ON)
+                "delete_line" -> {
+                    // Select to beginning of line, then delete
+                    sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_MOVE_HOME, KeyEvent.META_SHIFT_ON)
+                    sendKeyEvent(inputConnection, KeyEvent.KEYCODE_DEL)
+                }
+
+                // Special keys
+                "enter" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_ENTER)
+                "tab" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_TAB)
+                "esc" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_ESCAPE)
+                "space" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_SPACE)
+
+                // Function keys
+                "f1" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_F1)
+                "f2" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_F2)
+                "f3" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_F3)
+                "f4" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_F4)
+                "f5" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_F5)
+                "f6" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_F6)
+                "f7" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_F7)
+                "f8" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_F8)
+                "f9" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_F9)
+                "f10" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_F10)
+                "f11" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_F11)
+                "f12" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_F12)
+
+                // Selection with shift
+                "selectLeft" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.META_SHIFT_ON)
+                "selectRight" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.META_SHIFT_ON)
+                "selectUp" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_DPAD_UP, KeyEvent.META_SHIFT_ON)
+                "selectDown" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.META_SHIFT_ON)
+                "selectWordLeft" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.META_CTRL_ON or KeyEvent.META_SHIFT_ON)
+                "selectWordRight" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.META_CTRL_ON or KeyEvent.META_SHIFT_ON)
+                "selectToLineStart" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_MOVE_HOME, KeyEvent.META_SHIFT_ON)
+                "selectToLineEnd" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_MOVE_END, KeyEvent.META_SHIFT_ON)
+
+                else -> {
+                    Log.w(TAG, "Unimplemented CommandRegistry command: ${command.name}")
+                    false
+                }
+            }
+            Log.d(TAG, "Executed registry command: ${command.name} -> $success")
+            success
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to execute registry command: ${command.name}", e)
+            false
         }
     }
 

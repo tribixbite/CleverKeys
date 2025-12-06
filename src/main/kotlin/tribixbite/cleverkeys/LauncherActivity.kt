@@ -200,14 +200,16 @@ fun LauncherScreen(
                     color = Color.White
                 )
                 Text(
-                    text = "Power, Privacy, Control. Take Back Your Keys.",
+                    text = "Privacy, power, and control— with a brain. Take back your keys.",
                     style = MaterialTheme.typography.titleMedium,
-                    color = Color(0xFFB0B0E0) // Soft purple-grey
+                    color = Color(0xFFB0B0E0), // Soft purple-grey
+                    textAlign = TextAlign.Center
                 )
-                 Text(
-                    text = "An uncompromising and private open source keyboard app.",
+                Text(
+                    text = "An uncompromising open source keyboard app.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFB0B0E0).copy(alpha = 0.7f)
+                    color = Color(0xFFB0B0E0).copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center
                 )
             }
 

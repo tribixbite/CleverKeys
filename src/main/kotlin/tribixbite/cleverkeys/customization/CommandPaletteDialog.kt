@@ -22,6 +22,15 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
 /**
+ * Data class to hold the complete mapping selection with separate label and action.
+ */
+data class MappingSelection(
+    val displayLabel: String,  // What shows on the key (user-customizable)
+    val actionType: ActionType,
+    val actionValue: String    // The actual command name or text to insert
+)
+
+/**
  * Searchable command palette dialog for selecting keyboard commands.
  *
  * Features:
@@ -29,6 +38,7 @@ import androidx.compose.ui.window.DialogProperties
  * - Grouped by category for easy browsing
  * - Shows all 100+ commands from CommandRegistry
  * - Supports both command selection and custom text input
+ * - Allows customizing the display label separately from the action
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,11 +46,17 @@ fun CommandPaletteDialog(
     onDismiss: () -> Unit,
     onCommandSelected: (CommandRegistry.Command) -> Unit,
     onTextSelected: (String) -> Unit,
+    onMappingSelected: ((MappingSelection) -> Unit)? = null, // New callback with full control
     initialSearchQuery: String = ""
 ) {
     var searchQuery by remember { mutableStateOf(initialSearchQuery) }
     var showTextInput by remember { mutableStateOf(false) }
     var customText by remember { mutableStateOf("") }
+
+    // State for label confirmation dialog
+    var pendingCommand by remember { mutableStateOf<CommandRegistry.Command?>(null) }
+    var pendingText by remember { mutableStateOf<String?>(null) }
+    var customLabel by remember { mutableStateOf("") }
 
     // Get filtered commands
     val filteredCommands = remember(searchQuery) {
@@ -49,6 +65,64 @@ fun CommandPaletteDialog(
         } else {
             CommandRegistry.searchRanked(searchQuery).groupBy { it.category }
         }
+    }
+
+    // Show label confirmation dialog when pending selection exists
+    if (pendingCommand != null || pendingText != null) {
+        LabelConfirmationDialog(
+            defaultLabel = when {
+                pendingCommand != null -> pendingCommand!!.displayName.take(4)
+                pendingText != null -> pendingText!!.take(4)
+                else -> ""
+            },
+            actionDescription = when {
+                pendingCommand != null -> "Command: ${pendingCommand!!.displayName}"
+                pendingText != null -> "Text: \"${pendingText!!.take(30)}${if (pendingText!!.length > 30) "..." else ""}\""
+                else -> ""
+            },
+            currentLabel = customLabel,
+            onLabelChange = { customLabel = it },
+            onConfirm = {
+                val label = customLabel.ifBlank {
+                    when {
+                        pendingCommand != null -> pendingCommand!!.displayName.take(4)
+                        pendingText != null -> pendingText!!.take(4)
+                        else -> "?"
+                    }
+                }
+
+                if (onMappingSelected != null) {
+                    // Use the new callback with full mapping data
+                    val selection = when {
+                        pendingCommand != null -> MappingSelection(
+                            displayLabel = label,
+                            actionType = ActionType.COMMAND,
+                            actionValue = pendingCommand!!.name
+                        )
+                        pendingText != null -> MappingSelection(
+                            displayLabel = label,
+                            actionType = ActionType.TEXT,
+                            actionValue = pendingText!!
+                        )
+                        else -> null
+                    }
+                    selection?.let { onMappingSelected(it) }
+                } else {
+                    // Fallback to legacy callbacks (for backwards compatibility)
+                    pendingCommand?.let { onCommandSelected(it) }
+                    pendingText?.let { onTextSelected(it) }
+                }
+
+                pendingCommand = null
+                pendingText = null
+                customLabel = ""
+            },
+            onCancel = {
+                pendingCommand = null
+                pendingText = null
+                customLabel = ""
+            }
+        )
     }
 
     Dialog(
@@ -102,7 +176,9 @@ fun CommandPaletteDialog(
                         onTextChange = { customText = it },
                         onConfirm = {
                             if (customText.isNotBlank()) {
-                                onTextSelected(customText)
+                                // Show label confirmation instead of directly calling callback
+                                pendingText = customText
+                                customLabel = customText.take(4)
                             }
                         }
                     )
@@ -112,9 +188,118 @@ fun CommandPaletteDialog(
                         searchQuery = searchQuery,
                         onSearchChange = { searchQuery = it },
                         filteredCommands = filteredCommands,
-                        onCommandSelected = onCommandSelected,
+                        onCommandSelected = { command ->
+                            // Show label confirmation instead of directly calling callback
+                            pendingCommand = command
+                            customLabel = command.displayName.take(4)
+                        },
                         onShowTextInput = { showTextInput = true }
                     )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Dialog for confirming and customizing the display label for a mapping.
+ */
+@Composable
+private fun LabelConfirmationDialog(
+    defaultLabel: String,
+    actionDescription: String,
+    currentLabel: String,
+    onLabelChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit
+) {
+    Dialog(onDismissRequest = onCancel) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Customize Label",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    actionDescription,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = currentLabel,
+                    onValueChange = { if (it.length <= 8) onLabelChange(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Display Label") },
+                    placeholder = { Text(defaultLabel) },
+                    supportingText = {
+                        Text("What shows on the key (max 8 chars). Leave blank for default: \"$defaultLabel\"")
+                    },
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Preview
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Preview: ", color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Text(
+                            currentLabel.ifBlank { defaultLabel },
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onCancel,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel")
+                    }
+
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Confirm")
+                    }
                 }
             }
         }

@@ -294,42 +294,40 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
         }
 
         // Command palette for selecting action
+        // Uses onMappingSelected to get both custom label and action separately
         if (showCommandPalette && selectedKeyCode != null && editingDirection != null) {
             CommandPaletteDialog(
                 onDismiss = {
                     showCommandPalette = false
                     editingDirection = null
                 },
-                onCommandSelected = { command ->
+                onCommandSelected = { /* Legacy callback - not used when onMappingSelected is provided */ },
+                onTextSelected = { /* Legacy callback - not used when onMappingSelected is provided */ },
+                onMappingSelected = { selection ->
+                    // This callback receives separate label and action from the dialog
                     scope.launch {
                         val direction = editingDirection!!
                         val mapping = ShortSwipeMapping(
                             keyCode = selectedKeyCode!!,
                             direction = direction,
-                            displayText = command.displayName.take(4),
-                            actionType = ActionType.COMMAND,
-                            actionValue = command.name
+                            displayText = selection.displayLabel,  // User-customized label
+                            actionType = selection.actionType,
+                            actionValue = selection.actionValue    // Actual action/command
                         )
                         manager.setMapping(mapping)
                         showCommandPalette = false
                         editingDirection = null
-                        Toast.makeText(context, "Mapped ${direction.displayName} to ${command.displayName}", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                onTextSelected = { text ->
-                    scope.launch {
-                        val direction = editingDirection!!
-                        val mapping = ShortSwipeMapping(
-                            keyCode = selectedKeyCode!!,
-                            direction = direction,
-                            displayText = text.take(4),
-                            actionType = ActionType.TEXT,
-                            actionValue = text
-                        )
-                        manager.setMapping(mapping)
-                        showCommandPalette = false
-                        editingDirection = null
-                        Toast.makeText(context, "Mapped ${direction.displayName} to text: \"$text\"", Toast.LENGTH_SHORT).show()
+
+                        val actionDesc = when (selection.actionType) {
+                            ActionType.COMMAND -> "command: ${selection.actionValue}"
+                            ActionType.TEXT -> "text: \"${selection.actionValue.take(20)}${if (selection.actionValue.length > 20) "..." else ""}\""
+                            ActionType.KEY_EVENT -> "key event: ${selection.actionValue}"
+                        }
+                        Toast.makeText(
+                            context,
+                            "Mapped ${direction.displayName} → \"${selection.displayLabel}\" ($actionDesc)",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             )

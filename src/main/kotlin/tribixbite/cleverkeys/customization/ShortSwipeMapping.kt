@@ -24,12 +24,10 @@ data class ShortSwipeMapping(
         require(actionValue.length <= MAX_ACTION_LENGTH) {
             "actionValue must be at most $MAX_ACTION_LENGTH characters"
         }
-        // Validate command exists if action type is COMMAND
-        if (actionType == ActionType.COMMAND) {
-            require(AvailableCommand.fromString(actionValue) != null) {
-                "Invalid command: $actionValue. Must be one of: ${AvailableCommand.entries.map { it.name }}"
-            }
-        }
+        // Note: We no longer validate command names here because we support two systems:
+        // 1. CommandRegistry (camelCase names like "selectAll") - new system with 143+ commands
+        // 2. AvailableCommand enum (SCREAMING_SNAKE like "SELECT_ALL") - legacy system
+        // The executor handles both naming conventions
     }
 
     companion object {
