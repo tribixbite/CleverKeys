@@ -532,47 +532,53 @@ fun generateSparkle(origin: Offset, baseColor: Color, currentTime: Long): Sparkl
 fun generateMagicSpell(colors: List<Color>, currentTime: Long, maxWidth: Float, maxHeight: Float): MagicSpell {
     val points = mutableListOf<Offset>()
     
-    // 1. Pick a random starting point (somewhere in the middle-ish to start)
+    // 1. Pick a random central area for this "word"
+    val clusterCenterX = Random.nextFloat() * (maxWidth * 0.8f) + (maxWidth * 0.1f)
+    val clusterCenterY = Random.nextFloat() * (maxHeight * 0.8f) + (maxHeight * 0.1f)
+    
+    // Constrain swipes to ~20% of screen size around this center
+    val maxRadiusX = maxWidth * 0.15f
+    val maxRadiusY = maxHeight * 0.15f
+
+    // Start near the center
     var currentPos = Offset(
-        Random.nextFloat() * maxWidth,
-        Random.nextFloat() * maxHeight
+        clusterCenterX + (Random.nextFloat() - 0.5f) * maxRadiusX,
+        clusterCenterY + (Random.nextFloat() - 0.5f) * maxRadiusY
     )
     points.add(currentPos)
 
     // 2. Generate "Key Targets" (The word to swipe)
-    // 3 to 6 targets (letters)
-    val targets = List(Random.nextInt(3, 7)) {
+    // 4 to 8 targets (letters) in the localized cluster
+    val targets = List(Random.nextInt(4, 9)) {
         Offset(
-            Random.nextFloat() * maxWidth,
-            Random.nextFloat() * maxHeight
+            clusterCenterX + (Random.nextFloat() - 0.5f) * 2 * maxRadiusX,
+            clusterCenterY + (Random.nextFloat() - 0.5f) * 2 * maxRadiusY
         )
     }
 
     // Physics State
     var velocity = Offset.Zero
-    val maxSpeed = 25f        // Swift movement
-    val steeringFactor = 0.15f // How sharply it turns (lower = looser curves, higher = tighter)
+    val maxSpeed = 15f          // Slower, more readable movement (was 25f)
+    val steeringFactor = 0.12f  // Slightly looser curves
     
     // 3. Trace the path from target to target
     for (target in targets) {
         var distance = (target - currentPos).getDistance()
         
         // Move towards this target until we are close
-        // Timeout loop to prevent infinite orbiting
         var steps = 0
-        while (distance > 40f && steps < 100) { 
+        while (distance > 20f && steps < 150) { 
             val desiredVelocity = (target - currentPos).div(distance) * maxSpeed
             val steering = (desiredVelocity - velocity) * steeringFactor
             
             velocity += steering
             currentPos += velocity
             
-            // Jitter/Erratic movement (The "Magic" instability)
-            // Adds small random noise to the path
-            if (Random.nextFloat() > 0.7f) {
+            // Subtle Jitter
+            if (Random.nextFloat() > 0.8f) {
                 val jitter = Offset(
-                    (Random.nextFloat() - 0.5f) * 2f,
-                    (Random.nextFloat() - 0.5f) * 2f
+                    (Random.nextFloat() - 0.5f) * 1.5f,
+                    (Random.nextFloat() - 0.5f) * 1.5f
                 )
                 currentPos += jitter
             }
@@ -588,7 +594,7 @@ fun generateMagicSpell(colors: List<Color>, currentTime: Long, maxWidth: Float, 
         points = points,
         color = colors.random(),
         startTime = currentTime,
-        duration = Random.nextLong(1500, 3000), // 1.5 - 3s duration
+        duration = Random.nextLong(2000, 4500), // 2 - 4.5s duration (slower feel)
         scale = Random.nextFloat() * 0.5f + 0.5f
     )
 }

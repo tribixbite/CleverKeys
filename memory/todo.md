@@ -28,6 +28,12 @@
 - Already implemented CommandPaletteDialog has search filter
 - Already implemented KeyCustomizationDialog shows "existing layout mappings + custom mappings"
 
+### Aspect Ratio Fix
+- [x] Fixed KeyMagnifierView.onMeasure() to handle MeasureSpec modes (EXACTLY, AT_MOST, UNSPECIFIED)
+- [x] Added aspectRatio modifier to Compose AndroidView container (key.width / rowHeight)
+- [x] Key preview now maintains correct proportions (~0.85 width/height ratio)
+- [x] Tested: "g" key shows correct mappings (-, go, _) with proper aspect ratio
+
 ---
 
 ## Completed Previous Session (2025-12-05)
