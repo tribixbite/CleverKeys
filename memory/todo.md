@@ -148,7 +148,7 @@
 ## Pending (Future Sessions)
 
 - [ ] Manual device testing for all import/export features
-- [ ] Migrate legacy XML PreferenceScreen to Compose Material 3 (currently uses Theme.MaterialComponents)
+- [x] ~~Migrate legacy XML PreferenceScreen to Compose Material 3~~ - Already using Compose M3 in SettingsActivity
 
 ---
 
