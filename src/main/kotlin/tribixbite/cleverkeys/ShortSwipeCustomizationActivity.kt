@@ -302,9 +302,10 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                 },
                 onCommandSelected = { command ->
                     scope.launch {
+                        val direction = editingDirection!!
                         val mapping = ShortSwipeMapping(
                             keyCode = selectedKeyCode!!,
-                            direction = editingDirection!!,
+                            direction = direction,
                             displayText = command.displayName.take(4),
                             actionType = ActionType.COMMAND,
                             actionValue = command.name
@@ -312,14 +313,15 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                         manager.setMapping(mapping)
                         showCommandPalette = false
                         editingDirection = null
-                        Toast.makeText(context, "Mapped ${editingDirection!!.displayName} to ${command.displayName}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Mapped ${direction.displayName} to ${command.displayName}", Toast.LENGTH_SHORT).show()
                     }
                 },
                 onTextSelected = { text ->
                     scope.launch {
+                        val direction = editingDirection!!
                         val mapping = ShortSwipeMapping(
                             keyCode = selectedKeyCode!!,
-                            direction = editingDirection!!,
+                            direction = direction,
                             displayText = text.take(4),
                             actionType = ActionType.TEXT,
                             actionValue = text
@@ -327,7 +329,7 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                         manager.setMapping(mapping)
                         showCommandPalette = false
                         editingDirection = null
-                        Toast.makeText(context, "Mapped ${editingDirection!!.displayName} to text: \"$text\"", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Mapped ${direction.displayName} to text: \"$text\"", Toast.LENGTH_SHORT).show()
                     }
                 }
             )
