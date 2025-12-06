@@ -11,11 +11,16 @@
 - [x] Phase 1: Data layer (`ShortSwipeCustomization.kt`, `ShortSwipeCustomizationManager.kt`)
 - [x] Phase 2: Integration with `Pointers.kt` and `Keyboard2View.kt`
 - [x] Phase 3: UI - `ShortSwipeCustomizationActivity.kt`
-  - Interactive keyboard preview (native `KeyboardPreviewView`)
-  - 8-direction radial selector modal
-  - Editor for display text, action type, action value
+  - Interactive keyboard preview (pure Compose with Card(onClick))
+  - 8-direction radial selector modal (EnhancedDirectionButton)
+  - Editor for display text (max 4 chars), action type, action value
+  - Supports TEXT (up to 100 chars), COMMAND (copy/paste/etc), KEY_EVENT
   - Theme integration via `ThemeProvider`
   - Corner indicators showing mapped directions
+- [x] Phase 4: Fix touch handling - replace Box+clickable with Card(onClick)
+  - Box+clickable had unreliable touch event propagation
+  - Card with onClick parameter provides reliable built-in click handling
+  - Added @OptIn(ExperimentalMaterial3Api::class) annotations
 
 ### README Redesign (ImageToolbox Style)
 - [x] Add centered badge row (API, Kotlin, ONNX, Material 3, Downloads, Stars, Release)
