@@ -395,11 +395,18 @@ fun KeyCustomizationDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Magnified key view - uses full Key if available
+                // Calculate aspect ratio for the container: keyWidth / rowHeight
+                // Keys are typically slightly taller than wide (e.g., 1.0 width / 1.1 height = 0.91)
+                val keyAspectRatio = if (key != null && rowHeight > 0) {
+                    key.width / rowHeight
+                } else {
+                    0.85f // Default: keys are typically slightly taller than wide
+                }
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 280.dp)
-                        .padding(horizontal = 16.dp)
+                        .padding(horizontal = 32.dp)
                         .background(
                             MaterialTheme.colorScheme.surfaceVariant,
                             RoundedCornerShape(12.dp)
@@ -407,6 +414,7 @@ fun KeyCustomizationDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     // Use the KeyMagnifierView for directional zones
+                    // Provide explicit size constraints with proper aspect ratio
                     AndroidView(
                         factory = { ctx ->
                             KeyMagnifierView(ctx).apply {
@@ -429,7 +437,10 @@ fun KeyCustomizationDialog(
                                 view.setKeyCode(keyCode, existingMappings)
                             }
                         },
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(keyAspectRatio)
+                            .padding(16.dp)
                     )
                 }
 

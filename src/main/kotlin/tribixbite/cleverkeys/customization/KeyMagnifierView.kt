@@ -230,40 +230,73 @@ class KeyMagnifierView @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val widthMode = MeasureSpec.getMode(widthMeasureSpec)
+        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
         val availableWidth = MeasureSpec.getSize(widthMeasureSpec)
         val availableHeight = MeasureSpec.getSize(heightMeasureSpec)
 
+        Log.d(TAG, "onMeasure: widthMode=${modeName(widthMode)}, heightMode=${modeName(heightMode)}")
+        Log.d(TAG, "onMeasure: available=${availableWidth}x${availableHeight}")
+
         // Get key aspect ratio from the stored dimensions
-        val k = key
-        if (k != null && rowHeightUnits > 0) {
-            // Calculate aspect ratio: width / height
-            // For keys that are taller than wide, aspectRatio < 1.0
-            // For keys that are wider than tall, aspectRatio > 1.0
-            val aspectRatio = keyWidthUnits / rowHeightUnits
-
-            Log.d(TAG, "onMeasure: keyWidthUnits=$keyWidthUnits, rowHeightUnits=$rowHeightUnits, aspectRatio=$aspectRatio")
-            Log.d(TAG, "onMeasure: available=${availableWidth}x${availableHeight}")
-
-            // Fit within available space while maintaining aspect ratio
-            val width: Int
-            val height: Int
-            if (availableWidth / aspectRatio <= availableHeight) {
-                // Limited by width - key will fill width, height calculated
-                width = availableWidth
-                height = (availableWidth / aspectRatio).toInt()
-            } else {
-                // Limited by height - key will fill height, width calculated
-                height = availableHeight
-                width = (availableHeight * aspectRatio).toInt()
-            }
-
-            Log.d(TAG, "onMeasure: result=${width}x${height}")
-            setMeasuredDimension(width, height)
+        // keyWidthUnits is the key's width (usually 1.0 for standard keys)
+        // rowHeightUnits is the row's height (usually 1.0-1.2 for standard rows)
+        // For typical keyboard keys, they are slightly taller than wide
+        val aspectRatio = if (rowHeightUnits > 0 && keyWidthUnits > 0) {
+            keyWidthUnits / rowHeightUnits
         } else {
-            // No key set - use square
-            val size = minOf(availableWidth, availableHeight)
-            setMeasuredDimension(size, size)
+            0.85f // Default: keys are typically slightly taller than wide
         }
+
+        Log.d(TAG, "onMeasure: keyWidthUnits=$keyWidthUnits, rowHeightUnits=$rowHeightUnits, aspectRatio=$aspectRatio")
+
+        // Handle cases where parent doesn't provide useful constraints
+        val effectiveWidth = if (availableWidth > 0 && widthMode != MeasureSpec.UNSPECIFIED) {
+            availableWidth
+        } else {
+            (300 * resources.displayMetrics.density).toInt() // Default 300dp
+        }
+
+        val effectiveHeight = if (availableHeight > 0 && heightMode != MeasureSpec.UNSPECIFIED) {
+            availableHeight
+        } else {
+            (350 * resources.displayMetrics.density).toInt() // Default 350dp
+        }
+
+        // Calculate dimensions maintaining aspect ratio
+        // aspectRatio = width / height, so:
+        // - heightFromWidth = width / aspectRatio
+        // - widthFromHeight = height * aspectRatio
+        val width: Int
+        val height: Int
+
+        val heightFromWidth = (effectiveWidth / aspectRatio).toInt()
+        val widthFromHeight = (effectiveHeight * aspectRatio).toInt()
+
+        if (heightFromWidth <= effectiveHeight) {
+            // Width is the limiting factor
+            width = effectiveWidth
+            height = heightFromWidth
+        } else {
+            // Height is the limiting factor
+            height = effectiveHeight
+            width = widthFromHeight
+        }
+
+        // Ensure minimum size
+        val minSize = (100 * resources.displayMetrics.density).toInt()
+        val finalWidth = maxOf(width, minSize)
+        val finalHeight = maxOf(height, (minSize / aspectRatio).toInt())
+
+        Log.d(TAG, "onMeasure: result=${finalWidth}x${finalHeight}")
+        setMeasuredDimension(finalWidth, finalHeight)
+    }
+
+    private fun modeName(mode: Int): String = when (mode) {
+        MeasureSpec.EXACTLY -> "EXACTLY"
+        MeasureSpec.AT_MOST -> "AT_MOST"
+        MeasureSpec.UNSPECIFIED -> "UNSPECIFIED"
+        else -> "UNKNOWN"
     }
 
     override fun onDraw(canvas: Canvas) {
