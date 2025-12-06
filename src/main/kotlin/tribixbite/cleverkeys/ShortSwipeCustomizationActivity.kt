@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -210,84 +211,138 @@ fun InteractiveKeyboardPreview(
     mappings: List<ShortSwipeMapping>,
     onKeyClick: (String) -> Unit
 ) {
-    val context = LocalContext.current
-    val manager = remember { ShortSwipeCustomizationManager.getInstance(context) }
+    // Build mapping lookup by key code
+    val mappingsByKey = remember(mappings) {
+        mappings.groupBy { it.keyCode }
+    }
 
-    // Use the native KeyboardPreviewView for accurate rendering
+    // Pure Compose keyboard preview with clickable keys
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp)
             .background(
                 MaterialTheme.colorScheme.surfaceVariant,
                 RoundedCornerShape(12.dp)
             )
             .padding(8.dp)
     ) {
-        AndroidView(
-            factory = { ctx ->
-                KeyboardPreviewView(ctx).apply {
-                    customizationManager = manager
-                    onKeyTap = { keyName, _ ->
-                        onKeyClick(keyName)
-                    }
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // Row 1: Q W E R T Y U I O P
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                KEYBOARD_ROWS[0].forEach { key ->
+                    val keyMappings = mappingsByKey[key] ?: emptyList()
+                    KeyPreviewButton(
+                        keyCode = key,
+                        hasCustomizations = keyMappings.isNotEmpty(),
+                        customCount = keyMappings.size,
+                        onClick = { onKeyClick(key) },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
-            },
-            update = { view ->
-                view.customizationManager = manager
-                view.refreshMappings()
-            },
-            modifier = Modifier.fillMaxSize()
-        )
+            }
+
+            // Row 2: A S D F G H J K L (with padding for offset)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                KEYBOARD_ROWS[1].forEach { key ->
+                    val keyMappings = mappingsByKey[key] ?: emptyList()
+                    KeyPreviewButton(
+                        keyCode = key,
+                        hasCustomizations = keyMappings.isNotEmpty(),
+                        customCount = keyMappings.size,
+                        onClick = { onKeyClick(key) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            // Row 3: Z X C V B N M (with more padding for offset)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 48.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                KEYBOARD_ROWS[2].forEach { key ->
+                    val keyMappings = mappingsByKey[key] ?: emptyList()
+                    KeyPreviewButton(
+                        keyCode = key,
+                        hasCustomizations = keyMappings.isNotEmpty(),
+                        customCount = keyMappings.size,
+                        onClick = { onKeyClick(key) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
     }
 }
 
+/**
+ * Individual key button in the preview - uses Card with onClick for reliable touch handling
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KeyPreviewButton(
     keyCode: String,
     hasCustomizations: Boolean,
     customCount: Int,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = Modifier
-            .size(36.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .background(
-                if (hasCustomizations)
-                    MaterialTheme.colorScheme.primaryContainer
-                else
-                    MaterialTheme.colorScheme.surface
-            )
-            .border(
-                width = 1.dp,
-                color = if (hasCustomizations)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(6.dp)
-            )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+    // Use Card with onClick parameter for reliable click handling
+    // Box+clickable can have touch event propagation issues in some Compose versions
+    Card(
+        onClick = onClick,
+        modifier = modifier.height(48.dp),
+        shape = RoundedCornerShape(6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (hasCustomizations)
+                MaterialTheme.colorScheme.primaryContainer
+            else
+                MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (hasCustomizations)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.outline
+        )
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = keyCode.uppercase(),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (hasCustomizations)
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                else
-                    MaterialTheme.colorScheme.onSurface
-            )
-            if (hasCustomizations) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
-                    text = "$customCount",
-                    fontSize = 8.sp,
-                    color = MaterialTheme.colorScheme.primary
+                    text = keyCode.uppercase(),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (hasCustomizations)
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    else
+                        MaterialTheme.colorScheme.onSurface
                 )
+                if (hasCustomizations) {
+                    Text(
+                        text = "$customCount",
+                        fontSize = 9.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }
@@ -527,7 +582,9 @@ fun DirectionSelector(
 
 /**
  * Enhanced direction button that shows the mapped display text
+ * Uses Card with onClick for reliable touch handling
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EnhancedDirectionButton(
     direction: SwipeDirection,
@@ -536,59 +593,65 @@ fun EnhancedDirectionButton(
 ) {
     val hasMapping = mapping != null
 
-    Box(
-        modifier = Modifier
-            .size(56.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(
-                if (hasMapping)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.surfaceVariant
-            )
-            .border(
-                width = 2.dp,
-                color = if (hasMapping)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(8.dp)
-            )
-            .clickable { onDirectionSelected(direction) },
-        contentAlignment = Alignment.Center
+    Card(
+        onClick = { onDirectionSelected(direction) },
+        modifier = Modifier.size(56.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (hasMapping)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.surfaceVariant
+        ),
+        border = BorderStroke(
+            width = 2.dp,
+            color = if (hasMapping)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.outline
+        )
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            // Show mapped display text or direction label
-            Text(
-                text = mapping?.displayText?.take(4) ?: direction.shortLabel,
-                fontWeight = FontWeight.Bold,
-                fontSize = if (hasMapping) 14.sp else 11.sp,
-                color = if (hasMapping)
-                    MaterialTheme.colorScheme.onPrimary
-                else
-                    MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                maxLines = 1
-            )
-            // Show action type hint if mapped
-            if (hasMapping) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                // Show mapped display text or direction label
                 Text(
-                    text = when (mapping!!.actionType) {
-                        ActionType.TEXT -> "txt"
-                        ActionType.COMMAND -> "cmd"
-                        ActionType.KEY_EVENT -> "key"
-                    },
-                    fontSize = 8.sp,
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                    text = mapping?.displayText?.take(4) ?: direction.shortLabel,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = if (hasMapping) 14.sp else 11.sp,
+                    color = if (hasMapping)
+                        MaterialTheme.colorScheme.onPrimary
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
                 )
+                // Show action type hint if mapped
+                if (hasMapping) {
+                    Text(
+                        text = when (mapping!!.actionType) {
+                            ActionType.TEXT -> "txt"
+                            ActionType.COMMAND -> "cmd"
+                            ActionType.KEY_EVENT -> "key"
+                        },
+                        fontSize = 8.sp,
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                    )
+                }
             }
         }
     }
 }
 
+/**
+ * Simple direction button (circular) - uses Card for reliable touch handling
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DirectionButton(
     direction: SwipeDirection,
@@ -597,36 +660,38 @@ fun DirectionButton(
 ) {
     val hasMapping = direction in existingDirections
 
-    Box(
-        modifier = Modifier
-            .size(48.dp)
-            .clip(CircleShape)
-            .background(
-                if (hasMapping)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.surfaceVariant
-            )
-            .border(
-                width = 2.dp,
-                color = if (hasMapping)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.outline,
-                shape = CircleShape
-            )
-            .clickable { onDirectionSelected(direction) },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = direction.shortLabel,
-            fontWeight = FontWeight.Bold,
-            fontSize = 12.sp,
-            color = if (hasMapping)
-                MaterialTheme.colorScheme.onPrimary
+    Card(
+        onClick = { onDirectionSelected(direction) },
+        modifier = Modifier.size(48.dp),
+        shape = CircleShape,
+        colors = CardDefaults.cardColors(
+            containerColor = if (hasMapping)
+                MaterialTheme.colorScheme.primary
             else
-                MaterialTheme.colorScheme.onSurfaceVariant
+                MaterialTheme.colorScheme.surfaceVariant
+        ),
+        border = BorderStroke(
+            width = 2.dp,
+            color = if (hasMapping)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.outline
         )
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = direction.shortLabel,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                color = if (hasMapping)
+                    MaterialTheme.colorScheme.onPrimary
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
