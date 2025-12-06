@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -27,6 +28,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.delay
@@ -282,6 +285,7 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                     }
                 },
                 onDirectionTapped = { direction ->
+                    android.util.Log.d("ShortSwipe", "Direction tapped: $direction, showing command palette")
                     editingDirection = direction
                     showCommandPalette = true
                 },
@@ -348,6 +352,7 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
  * @param onDirectionTapped Called when a direction zone is tapped
  * @param onDeleteMapping Called when a mapping should be deleted
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun KeyCustomizationDialog(
     keyCode: String,
@@ -403,6 +408,8 @@ fun KeyCustomizationDialog(
                     0.85f // Default: keys are typically slightly taller than wide
                 }
 
+                // Use Compose-based direction selection instead of AndroidView touch handling
+                // This ensures reliable touch events in Dialog context
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -413,8 +420,7 @@ fun KeyCustomizationDialog(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Use the KeyMagnifierView for directional zones
-                    // Provide explicit size constraints with proper aspect ratio
+                    // Use the KeyMagnifierView for visual display only
                     AndroidView(
                         factory = { ctx ->
                             KeyMagnifierView(ctx).apply {
@@ -424,10 +430,7 @@ fun KeyCustomizationDialog(
                                 } else {
                                     setKeyCode(keyCode, existingMappings)
                                 }
-                                this.onDirectionTapped = { direction ->
-                                    selectedDirection = direction
-                                    onDirectionTapped(direction)
-                                }
+                                // Touch handling is done via Compose overlay below
                             }
                         },
                         update = { view ->
@@ -441,6 +444,19 @@ fun KeyCustomizationDialog(
                             .fillMaxWidth()
                             .aspectRatio(keyAspectRatio)
                             .padding(16.dp)
+                    )
+
+                    // Compose-based touch overlay for reliable direction detection
+                    // This overlays the AndroidView and handles all touch events
+                    DirectionTouchOverlay(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(keyAspectRatio)
+                            .padding(16.dp),
+                        onDirectionTapped = { direction ->
+                            selectedDirection = direction
+                            onDirectionTapped(direction)
+                        }
                     )
                 }
 
@@ -548,4 +564,62 @@ private fun MappingListItem(
             }
         }
     }
+}
+
+/**
+ * Compose-based touch overlay for direction detection.
+ * This overlays the KeyMagnifierView and handles touch events reliably in Dialog context.
+ * Divides the area into 9 zones: 8 directions + center.
+ */
+@Composable
+private fun DirectionTouchOverlay(
+    modifier: Modifier = Modifier,
+    onDirectionTapped: (SwipeDirection) -> Unit
+) {
+    Box(modifier = modifier) {
+        // Create a 3x3 grid of clickable zones
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Top row: NW, N, NE
+            Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                DirectionZone(SwipeDirection.NW, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
+                DirectionZone(SwipeDirection.N, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
+                DirectionZone(SwipeDirection.NE, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
+            }
+            // Middle row: W, Center (no action), E
+            Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                DirectionZone(SwipeDirection.W, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
+                // Center zone - no action, just transparent
+                Box(modifier = Modifier.weight(1f).fillMaxHeight())
+                DirectionZone(SwipeDirection.E, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
+            }
+            // Bottom row: SW, S, SE
+            Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                DirectionZone(SwipeDirection.SW, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
+                DirectionZone(SwipeDirection.S, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
+                DirectionZone(SwipeDirection.SE, Modifier.weight(1f).fillMaxHeight(), onDirectionTapped)
+            }
+        }
+    }
+}
+
+/**
+ * Individual clickable zone for a direction.
+ */
+@Composable
+private fun DirectionZone(
+    direction: SwipeDirection,
+    modifier: Modifier = Modifier,
+    onTapped: (SwipeDirection) -> Unit
+) {
+    Box(
+        modifier = modifier
+            .clickable(
+                // Disable ripple to avoid visual noise
+                indication = null,
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+            ) {
+                android.util.Log.d("DirectionZone", "Tapped direction: $direction")
+                onTapped(direction)
+            }
+    )
 }
