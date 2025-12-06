@@ -95,8 +95,10 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
     // Text field state for capturing key presses
     var textFieldValue by remember { mutableStateOf(TextFieldValue("")) }
 
-    // Selected key for customization modal
+    // Selected key for customization modal - now includes both keyCode and optional KeyboardData.Key
     var selectedKeyCode by remember { mutableStateOf<String?>(null) }
+    var selectedKey by remember { mutableStateOf<KeyboardData.Key?>(null) }
+    var selectedKeyRowHeight by remember { mutableStateOf(1.0f) }
 
     // Direction being edited
     var editingDirection by remember { mutableStateOf<SwipeDirection?>(null) }
@@ -124,6 +126,14 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
             val lastChar = text.last().toString()
             lastCapturedKey = lastChar.lowercase()
             selectedKeyCode = lastChar.lowercase()
+
+            // Try to find the full KeyboardData.Key from the loaded layout
+            val foundKey = CleverKeysService.findKeyByChar(lastChar)
+            selectedKey = foundKey
+            if (foundKey != null) {
+                selectedKeyRowHeight = CleverKeysService.getRowHeightForKey(foundKey)
+            }
+
             // Clear the text field
             textFieldValue = TextFieldValue("")
         }
@@ -256,11 +266,14 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
             val keyMappings = mappings.filter { it.keyCode == keyCode }
                 .associateBy { it.direction }
 
-            KeyCustomizationDialogSimple(
+            KeyCustomizationDialog(
                 keyCode = keyCode,
+                key = selectedKey,  // Pass the full key if available
+                rowHeight = selectedKeyRowHeight,
                 existingMappings = keyMappings,
                 onDismiss = {
                     selectedKeyCode = null
+                    selectedKey = null
                     editingDirection = null
                     // Refocus the text field to keep keyboard visible
                     scope.launch {
@@ -323,12 +336,23 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
 }
 
 /**
- * Simplified key customization dialog that doesn't need the KeyboardData.Key object.
- * Shows the key code and 8-direction swipe zones.
+ * Key customization dialog that shows the magnified key with all 8 direction zones.
+ * If a KeyboardData.Key is available, it shows the full layout-defined sub-labels.
+ * Otherwise, falls back to showing just the key code with custom mappings.
+ *
+ * @param keyCode The key code string (e.g., "h")
+ * @param key Optional full KeyboardData.Key from the loaded layout
+ * @param rowHeight The row height for proper aspect ratio
+ * @param existingMappings Custom short swipe mappings for this key
+ * @param onDismiss Called when dialog is dismissed
+ * @param onDirectionTapped Called when a direction zone is tapped
+ * @param onDeleteMapping Called when a mapping should be deleted
  */
 @Composable
-fun KeyCustomizationDialogSimple(
+fun KeyCustomizationDialog(
     keyCode: String,
+    key: KeyboardData.Key?,
+    rowHeight: Float = 1.0f,
     existingMappings: Map<SwipeDirection, ShortSwipeMapping>,
     onDismiss: () -> Unit,
     onDirectionTapped: (SwipeDirection) -> Unit,
@@ -358,7 +382,11 @@ fun KeyCustomizationDialogSimple(
                 )
 
                 Text(
-                    text = "Tap a direction to add or edit a short swipe gesture",
+                    text = if (key != null) {
+                        "Shows existing layout mappings + custom mappings"
+                    } else {
+                        "Tap a direction to add or edit a short swipe gesture"
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -366,11 +394,11 @@ fun KeyCustomizationDialogSimple(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Simple directional grid for key customization
+                // Magnified key view - uses full Key if available
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(1f)
+                        .heightIn(max = 280.dp)
                         .padding(horizontal = 16.dp)
                         .background(
                             MaterialTheme.colorScheme.surfaceVariant,
@@ -382,7 +410,12 @@ fun KeyCustomizationDialogSimple(
                     AndroidView(
                         factory = { ctx ->
                             KeyMagnifierView(ctx).apply {
-                                setKeyCode(keyCode, existingMappings)
+                                // Use full key if available, otherwise fall back to keyCode mode
+                                if (key != null) {
+                                    setKey(key, existingMappings, rowHeight)
+                                } else {
+                                    setKeyCode(keyCode, existingMappings)
+                                }
                                 this.onDirectionTapped = { direction ->
                                     selectedDirection = direction
                                     onDirectionTapped(direction)
@@ -390,7 +423,11 @@ fun KeyCustomizationDialogSimple(
                             }
                         },
                         update = { view ->
-                            view.setKeyCode(keyCode, existingMappings)
+                            if (key != null) {
+                                view.setKey(key, existingMappings, rowHeight)
+                            } else {
+                                view.setKeyCode(keyCode, existingMappings)
+                            }
                         },
                         modifier = Modifier.fillMaxSize()
                     )

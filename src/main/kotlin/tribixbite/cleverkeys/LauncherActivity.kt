@@ -39,6 +39,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -339,7 +341,19 @@ fun SetupCard(
     }
 }
 
-// --- Matrix Swipe Rain Animation ---
+// --- Matrix Swipe Rain Animation (Refactored to Wizard/Sparkle Style) ---
+
+data class Sparkle(
+    val id: Long,
+    val x: Float,
+    val y: Float,
+    val vx: Float,
+    val vy: Float,
+    val color: Color,
+    val startTime: Long,
+    val duration: Long,
+    val maxRadius: Float
+)
 
 data class MagicSpell(
     val id: Long,
@@ -352,12 +366,11 @@ data class MagicSpell(
 
 @Composable
 fun MatrixSwipeRainBackground() {
-    // Configuration
-    // Stardust Silver & Digital Magic Palette
-    val colors = listOf(
-        Color(0xFFE0E0E0), // Bright Silver
-        Color(0xFFFFFFFF), // Pure White
-        Color(0xFFE6E6FA), // Lavender Mist
+    // Stardust Silver & Ethereal Magic Palette
+    val baseColors = listOf(
+        Color(0xFFFFFFFF), // Pure Light
+        Color(0xFFE0E0E0), // Silver
+        Color(0xFFF0F8FF), // Alice Blue
         Color(0xFFB0C4DE)  // Light Steel Blue
     )
 
@@ -366,8 +379,9 @@ fun MatrixSwipeRainBackground() {
     val screenWidth = with(density) { configuration.screenWidthDp.dp.toPx() }
     val screenHeight = with(density) { configuration.screenHeightDp.dp.toPx() }
 
-    // State for active spells
+    // State
     val spells = remember { mutableStateListOf<MagicSpell>() }
+    val sparkles = remember { mutableStateListOf<Sparkle>() }
     var lastSpawnTime by remember { mutableStateOf(0L) }
 
     // Animation Loop
@@ -376,15 +390,37 @@ fun MatrixSwipeRainBackground() {
             withFrameMillis { frameTime ->
                 val currentTime = System.currentTimeMillis()
 
-                // 1. Spawn new spells (fizzle/pop into existence)
-                // Spawn roughly every 100-300ms for "active" feel
-                if (currentTime - lastSpawnTime > Random.nextLong(100, 300) && spells.size < 20) {
-                    spells.add(generateMagicSpell(colors, currentTime, screenWidth, screenHeight))
+                // 1. Spawn new spells (Gestures)
+                // Less frequent but more impactful
+                if (currentTime - lastSpawnTime > Random.nextLong(600, 1200) && spells.size < 6) {
+                    spells.add(generateMagicSpell(baseColors, currentTime, screenWidth, screenHeight))
                     lastSpawnTime = currentTime
                 }
 
-                // 2. Clean up old spells (fizzle out)
+                // 2. Update & Spawn Sparkles from active spells
+                spells.forEach { spell ->
+                    val elapsed = currentTime - spell.startTime
+                    val progress = (elapsed.toFloat() / spell.duration).coerceIn(0f, 1f)
+                    
+                    if (progress < 1f && spell.points.isNotEmpty()) {
+                        val totalPoints = spell.points.size
+                        val currentPointIndex = (totalPoints * progress).toInt().coerceIn(0, totalPoints - 1)
+                        val currentPoint = spell.points[currentPointIndex]
+
+                        // Emit sparkles at the "tip" of the wand (The Casting Point)
+                        // Higher chance when moving
+                        if (progress < 0.9f) {
+                            // Multi-spawn for density
+                            repeat(Random.nextInt(1, 3)) {
+                                sparkles.add(generateSparkle(currentPoint, spell.color, currentTime))
+                            }
+                        }
+                    }
+                }
+
+                // 3. Cleanup
                 spells.removeAll { currentTime - it.startTime > it.duration }
+                sparkles.removeAll { currentTime - it.startTime > it.duration }
             }
         }
     }
@@ -392,135 +428,147 @@ fun MatrixSwipeRainBackground() {
     Canvas(modifier = Modifier.fillMaxSize()) {
         val currentTime = System.currentTimeMillis()
 
+        // Draw Spells (The Light Traces)
         spells.forEach { spell ->
             val elapsed = currentTime - spell.startTime
             val progress = (elapsed.toFloat() / spell.duration).coerceIn(0f, 1f)
+            if (spell.points.size < 2) return@forEach
 
-            if (spell.points.isEmpty()) return@forEach
-
-            // Determine how much of the path is visible (Casting effect)
-            val totalPoints = spell.points.size
-            val currentPointIndex = (totalPoints * progress).toInt().coerceAtMost(totalPoints - 1)
-
-            if (currentPointIndex < 1) return@forEach
+            val visiblePoints = (spell.points.size * progress).toInt()
+            if (visiblePoints < 2) return@forEach
 
             val path = androidx.compose.ui.graphics.Path()
-            val first = spell.points.first()
-            path.moveTo(first.x, first.y)
-
-            for (i in 1..currentPointIndex) {
+            path.moveTo(spell.points[0].x, spell.points[0].y)
+            
+            // Draw the path
+            for (i in 1 until visiblePoints) {
                 path.lineTo(spell.points[i].x, spell.points[i].y)
             }
 
-            // Animation Lifecycle:
-            // 0.0 - 0.8: Drawing/Active
-            // 0.8 - 1.0: Fading out
-            val alpha = if (progress > 0.8f) {
-                (1f - progress) * 5f // Fade out quickly at end
-            } else {
-                1f
-            }
-
-            // 1. Focused Central Beam (The Spell Trace)
+            // Fade out logic: Fades tail-first or overall fade?
+            // Spell traces linger and then fizzle.
+            val alpha = if (progress > 0.8f) (1f - progress) * 5f else 1f
+            
+            // 1. Ethereal Glow (Wide, diffuse)
             drawPath(
                 path = path,
-                color = spell.color.copy(alpha = alpha * 0.4f), // Outer glow
+                color = spell.color.copy(alpha = alpha * 0.2f),
                 style = Stroke(
-                    width = 8f * spell.scale,
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                    join = androidx.compose.ui.graphics.StrokeJoin.Round
+                    width = 25f * spell.scale, 
+                    cap = StrokeCap.Round, 
+                    join = StrokeJoin.Round
                 )
             )
+            
+            // 2. Secondary Glow
             drawPath(
                 path = path,
-                color = Color.White.copy(alpha = alpha * 0.9f), // Inner core
+                color = spell.color.copy(alpha = alpha * 0.4f),
                 style = Stroke(
-                    width = 3f * spell.scale,
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                    join = androidx.compose.ui.graphics.StrokeJoin.Round
+                    width = 12f * spell.scale, 
+                    cap = StrokeCap.Round, 
+                    join = StrokeJoin.Round
                 )
             )
 
-            // 2. The "Wand Tip" / Caster (Leading edge)
-            if (progress < 0.9f) {
-                val headPoint = spell.points[currentPointIndex]
-                
-                // Tip Glow
-                drawCircle(
-                    color = Color.White,
-                    radius = 4f * spell.scale,
-                    center = headPoint
+            // 3. Core Beam (Focused, bright)
+            drawPath(
+                path = path,
+                color = Color.White.copy(alpha = alpha),
+                style = Stroke(
+                    width = 4f * spell.scale, 
+                    cap = StrokeCap.Round, 
+                    join = StrokeJoin.Round
                 )
-                drawCircle(
-                    color = spell.color.copy(alpha = 0.5f),
-                    radius = 10f * spell.scale,
-                    center = headPoint
-                )
+            )
+        }
 
-                // Dynamic Particles at tip (Sparks)
-                for (k in 0..2) {
-                    val particleAngle = Random.nextFloat() * 6.28f
-                    val particleDist = Random.nextFloat() * 15f * spell.scale
-                    val pX = headPoint.x + cos(particleAngle) * particleDist
-                    val pY = headPoint.y + sin(particleAngle) * particleDist
-                    drawCircle(
-                        color = spell.color.copy(alpha = 0.8f),
-                        radius = 1.5f * spell.scale,
-                        center = Offset(pX, pY)
-                    )
-                }
-            }
-
-            // 3. Glitter / Stardust along the path
-            // Randomly sparkle existing points
-            if (alpha > 0.1f) {
-                for (i in 0 until currentPointIndex step 2) {
-                    // Random chance to twinkle this frame
-                    if (Random.nextFloat() > 0.92f) {
-                        val p = spell.points[i]
-                        // Add some jitter
-                        val jitterX = (Random.nextFloat() - 0.5f) * 10f * spell.scale
-                        val jitterY = (Random.nextFloat() - 0.5f) * 10f * spell.scale
-                        
-                        drawCircle(
-                            color = Color.White.copy(alpha = alpha),
-                            radius = Random.nextFloat() * 2f * spell.scale,
-                            center = p + Offset(jitterX, jitterY)
-                        )
-                    }
-                }
-            }
+        // Draw Sparkles (Magic Dust)
+        sparkles.forEach { sparkle ->
+            val life = (currentTime - sparkle.startTime).toFloat() / sparkle.duration
+            if (life >= 1f) return@forEach
+            
+            // Physics update (done in draw for simplicity in this tight loop)
+            val t = (currentTime - sparkle.startTime) / 15f
+            val currentX = sparkle.x + sparkle.vx * t
+            val currentY = sparkle.y + sparkle.vy * t
+            
+            // Twinkle: Oscillate alpha rapidly
+            // sin wave based on time + unique ID to desync
+            val twinklePhase = (currentTime / 100.0) + sparkle.id
+            val twinkle = (sin(twinklePhase).toFloat() + 1f) / 2f
+            val base = 1f - life
+            val baseAlpha = base * base
+            
+            val finalAlpha = (baseAlpha * (0.5f + 0.5f * twinkle)).coerceIn(0f, 1f)
+            
+            drawCircle(
+                color = sparkle.color.copy(alpha = finalAlpha),
+                radius = sparkle.maxRadius * (1f - life * 0.5f),
+                center = Offset(currentX, currentY)
+            )
         }
     }
 }
 
+fun generateSparkle(origin: Offset, baseColor: Color, currentTime: Long): Sparkle {
+    // Explosion/diffusion velocity
+    val angle = Random.nextFloat() * 6.28f
+    val speed = Random.nextFloat() * 2f + 0.5f
+    
+    return Sparkle(
+        id = Random.nextLong(),
+        x = origin.x,
+        y = origin.y,
+        vx = cos(angle) * speed,
+        vy = sin(angle) * speed,
+        color = if (Random.nextBoolean()) Color.White else baseColor,
+        startTime = currentTime,
+        duration = Random.nextLong(500, 2000), // 0.5 - 2s life
+        maxRadius = Random.nextFloat() * 3f + 1f
+    )
+}
+
 fun generateMagicSpell(colors: List<Color>, currentTime: Long, maxWidth: Float, maxHeight: Float): MagicSpell {
-    // Start anywhere on screen
-    var currentX = Random.nextFloat() * maxWidth
-    var currentY = Random.nextFloat() * maxHeight
-    
     val points = mutableListOf<Offset>()
-    points.add(Offset(currentX, currentY))
     
-    // Random gesture direction
-    var angle = Random.nextFloat() * 2 * Math.PI.toFloat()
-    var angleVelocity = 0f
+    // Start position (random screen location)
+    var x = Random.nextFloat() * maxWidth
+    var y = Random.nextFloat() * maxHeight
     
-    // Length of the spell trace
-    val length = Random.nextInt(15, 40)
+    // Initial velocity (momentum)
+    var vx = (Random.nextFloat() - 0.5f) * 15f
+    var vy = (Random.nextFloat() - 0.5f) * 15f
     
-    for (i in 0 until length) {
-        // Wiggle the path to look like a hand gesture
-        val accel = (Random.nextFloat() - 0.5f) * 0.5f
-        angleVelocity += accel
-        angleVelocity = angleVelocity.coerceIn(-0.3f, 0.3f) // Cap turn speed
-        angle += angleVelocity
+    points.add(Offset(x, y))
+    
+    // Simulate fluid hand movement using inertia
+    val segments = 80 // Longer, smoother strokes
+    for (i in 0 until segments) {
+        // Random steering force (Change of intention)
+        // Low magnitude ensures smooth curves
+        val ax = (Random.nextFloat() - 0.5f) * 1.5f
+        val ay = (Random.nextFloat() - 0.5f) * 1.5f
         
-        val step = Random.nextFloat() * 15f + 5f
-        currentX += cos(angle) * step
-        currentY += sin(angle) * step
+        vx += ax
+        vy += ay
         
-        points.add(Offset(currentX, currentY))
+        // Slight damping to prevent runaway speed
+        vx *= 0.98f
+        vy *= 0.98f
+        
+        // Apply velocity
+        x += vx * 4f 
+        y += vy * 4f
+        
+        // Wrap around or bounce? Let's just let them go off screen for "infinite canvas" feel
+        // But we can gently steer back to center if too far out
+        /*
+        if (x < 0 || x > maxWidth) vx = -vx
+        if (y < 0 || y > maxHeight) vy = -vy
+        */
+        
+        points.add(Offset(x, y))
     }
 
     return MagicSpell(
@@ -528,7 +576,7 @@ fun generateMagicSpell(colors: List<Color>, currentTime: Long, maxWidth: Float, 
         points = points,
         color = colors.random(),
         startTime = currentTime,
-        duration = Random.nextLong(1000, 2500), // 1 - 2.5 seconds lifespan
+        duration = Random.nextLong(2000, 4000),
         scale = Random.nextFloat() * 0.6f + 0.4f
     )
 }

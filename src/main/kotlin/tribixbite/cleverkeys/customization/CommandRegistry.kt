@@ -292,7 +292,97 @@ object CommandRegistry {
         Command("arrows", "Arrows", "Modifier for arrow symbols", Category.DIACRITICS,
             keywords = listOf("arrows", "modifier")),
         Command("box", "Box Drawing", "Modifier for box drawing characters", Category.DIACRITICS,
-            keywords = listOf("box", "drawing", "lines"))
+            keywords = listOf("box", "drawing", "lines")),
+
+        // ========== COMBINING DIACRITICS (Type characters with accents) ==========
+        Command("combining_aigu", "Combining Acute", "Add acute accent to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "acute", "accent")),
+        Command("combining_grave", "Combining Grave", "Add grave accent to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "grave", "accent")),
+        Command("combining_circonflexe", "Combining Circumflex", "Add circumflex to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "circumflex", "hat")),
+        Command("combining_tilde", "Combining Tilde", "Add tilde to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "tilde")),
+        Command("combining_trema", "Combining Umlaut", "Add umlaut to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "umlaut", "trema", "diaeresis")),
+        Command("combining_cedille", "Combining Cedilla", "Add cedilla to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "cedilla")),
+        Command("combining_caron", "Combining Caron", "Add caron to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "caron", "hacek")),
+        Command("combining_macron", "Combining Macron", "Add macron to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "macron", "bar")),
+        Command("combining_ring", "Combining Ring", "Add ring above to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "ring", "circle")),
+        Command("combining_ogonek", "Combining Ogonek", "Add ogonek to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "ogonek", "tail")),
+        Command("combining_dot_above", "Combining Dot Above", "Add dot above to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "dot", "above")),
+        Command("combining_dot_below", "Combining Dot Below", "Add dot below to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "dot", "below")),
+        Command("combining_double_aigu", "Combining Double Acute", "Add double acute to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "double", "acute")),
+        Command("combining_breve", "Combining Breve", "Add breve to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "breve", "short")),
+        Command("combining_slash", "Combining Slash", "Add slash through previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "slash", "stroke")),
+        Command("combining_bar", "Combining Bar", "Add bar through previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "bar", "stroke")),
+        Command("combining_horn", "Combining Horn", "Add horn to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "horn", "vietnamese")),
+        Command("combining_hook_above", "Combining Hook Above", "Add hook above to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "hook", "vietnamese")),
+        Command("combining_arrow_right", "Combining Arrow Right", "Add rightward arrow to previous char", Category.DIACRITICS,
+            keywords = listOf("combining", "arrow", "vector")),
+
+        // ========== COMPOSE KEY ==========
+        Command("compose", "Compose Key", "Start compose sequence for special characters", Category.SPECIAL_KEYS,
+            keywords = listOf("compose", "special", "accent", "combine")),
+        Command("compose_cancel", "Cancel Compose", "Cancel current compose sequence", Category.SPECIAL_KEYS,
+            keywords = listOf("compose", "cancel")),
+
+        // ========== DOCUMENT NAVIGATION ==========
+        Command("doc_home", "Document Start", "Move cursor to start of document (Ctrl+Home)", Category.NAVIGATION,
+            keywords = listOf("document", "start", "beginning", "top", "ctrl", "home")),
+        Command("doc_end", "Document End", "Move cursor to end of document (Ctrl+End)", Category.NAVIGATION,
+            keywords = listOf("document", "end", "bottom", "ctrl")),
+
+        // ========== BIDI (Bidirectional Text) ==========
+        Command("b(", "Bidi Open Paren", "Bidirectional open parenthesis (displays as close)", Category.TEXT,
+            keywords = listOf("bidi", "parenthesis", "rtl", "arabic", "hebrew")),
+        Command("b)", "Bidi Close Paren", "Bidirectional close parenthesis (displays as open)", Category.TEXT,
+            keywords = listOf("bidi", "parenthesis", "rtl")),
+        Command("b[", "Bidi Open Bracket", "Bidirectional open bracket", Category.TEXT,
+            keywords = listOf("bidi", "bracket", "rtl")),
+        Command("b]", "Bidi Close Bracket", "Bidirectional close bracket", Category.TEXT,
+            keywords = listOf("bidi", "bracket", "rtl")),
+        Command("b{", "Bidi Open Brace", "Bidirectional open brace", Category.TEXT,
+            keywords = listOf("bidi", "brace", "rtl")),
+        Command("b}", "Bidi Close Brace", "Bidirectional close brace", Category.TEXT,
+            keywords = listOf("bidi", "brace", "rtl")),
+        Command("blt", "Bidi Less Than", "Bidirectional less than (displays as greater)", Category.TEXT,
+            keywords = listOf("bidi", "less", "angle", "rtl")),
+        Command("bgt", "Bidi Greater Than", "Bidirectional greater than (displays as less)", Category.TEXT,
+            keywords = listOf("bidi", "greater", "angle", "rtl")),
+
+        // ========== ZERO-WIDTH CHARACTERS ==========
+        Command("zwj", "Zero-Width Joiner", "Join characters for ligatures/emoji", Category.SPACES,
+            keywords = listOf("zwj", "zero", "width", "joiner", "ligature", "emoji")),
+        Command("zwnj", "Zero-Width Non-Joiner", "Prevent ligatures (halfspace)", Category.SPACES,
+            keywords = listOf("zwnj", "zero", "width", "non-joiner", "halfspace")),
+        Command("halfspace", "Half Space", "Zero-width non-joiner (halfspace)", Category.SPACES,
+            keywords = listOf("halfspace", "zero", "width", "persian", "arabic")),
+
+        // ========== REMOVED/PLACEHOLDER KEYS ==========
+        Command("removed", "Removed", "Placeholder for removed key (no action)", Category.SPECIAL_KEYS,
+            keywords = listOf("removed", "placeholder", "none", "empty")),
+
+        // ========== TEXT EDITING (additional) ==========
+        Command("replaceText", "Replace Text", "Open replace dialog", Category.EDITING,
+            keywords = listOf("replace", "find", "substitute")),
+        Command("textAssist", "Text Assist", "AI text assistance", Category.EDITING,
+            keywords = listOf("assist", "ai", "help")),
+        Command("autofill", "Autofill", "Trigger autofill", Category.EDITING,
+            keywords = listOf("autofill", "password", "form"))
     )
 
     /**

@@ -143,6 +143,10 @@ class CleverKeysService : InputMethodService(),
         @Volatile
         private var _customizationMode: Boolean = false
 
+        /** Reference to the current service instance for UI components */
+        @Volatile
+        private var _instance: CleverKeysService? = null
+
         /** Set whether we're in short swipe customization mode */
         @JvmStatic
         fun setCustomizationMode(enabled: Boolean) {
@@ -152,6 +156,69 @@ class CleverKeysService : InputMethodService(),
         /** Check if we're in short swipe customization mode */
         @JvmStatic
         fun isCustomizationMode(): Boolean = _customizationMode
+
+        /** Get the current service instance (may be null if service not running) */
+        @JvmStatic
+        fun getInstance(): CleverKeysService? = _instance
+
+        /**
+         * Find a key by its main character in the current keyboard layout.
+         * This looks through all rows and keys to find one where the main key (index 0)
+         * matches the given character.
+         *
+         * @param char The lowercase character to search for
+         * @return The KeyboardData.Key if found, null otherwise
+         */
+        @JvmStatic
+        fun findKeyByChar(char: String): KeyboardData.Key? {
+            val instance = _instance ?: return null
+            val layout = try {
+                instance.current_layout()
+            } catch (e: Exception) {
+                return null
+            }
+
+            // Search through all rows and keys
+            for (row in layout.rows) {
+                for (key in row.keys) {
+                    // Check if the main key (index 0) matches the character
+                    val mainKv = key.keys.getOrNull(0) ?: continue
+                    val mainChar = when (mainKv.getKind()) {
+                        KeyValue.Kind.Char -> mainKv.getChar().lowercaseChar().toString()
+                        KeyValue.Kind.String -> mainKv.getString().lowercase()
+                        else -> continue
+                    }
+                    if (mainChar == char.lowercase()) {
+                        return key
+                    }
+                }
+            }
+            return null
+        }
+
+        /**
+         * Get the row height for a key in the current layout.
+         * Searches for the key and returns the height of its containing row.
+         *
+         * @param key The key to find the row height for
+         * @return The row height, or 1.0f if not found
+         */
+        @JvmStatic
+        fun getRowHeightForKey(key: KeyboardData.Key): Float {
+            val instance = _instance ?: return 1.0f
+            val layout = try {
+                instance.current_layout()
+            } catch (e: Exception) {
+                return 1.0f
+            }
+
+            for (row in layout.rows) {
+                if (row.keys.contains(key)) {
+                    return row.height
+                }
+            }
+            return 1.0f
+        }
     }
 
     /**
@@ -228,6 +295,9 @@ class CleverKeysService : InputMethodService(),
 
     override fun onCreate() {
         super.onCreate()
+
+        // Store instance for static access (needed by ShortSwipeCustomizationActivity)
+        _instance = this
 
         // Initialize ComposeKeyData early (required for shift key modifier operations)
         ComposeKeyData.initialize(this)
@@ -354,6 +424,11 @@ class CleverKeysService : InputMethodService(),
 
     override fun onDestroy() {
         super.onDestroy()
+
+        // Clear static instance reference
+        if (_instance == this) {
+            _instance = null
+        }
 
         // Unregister theme change broadcast receiver
         _themeChangeReceiver?.let {
