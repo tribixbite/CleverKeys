@@ -1,11 +1,36 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-05
-**Session**: Swipe prediction improvements, layout cleanup
+**Last Updated**: 2025-12-06
+**Session**: Short swipe customization improvements
 
 ---
 
-## Completed This Session (2025-12-05)
+## Completed This Session (2025-12-06)
+
+### CommandRegistry Expansion
+- [x] Added 30+ new commands from KeyValue.getSpecialKeyByName:
+  - Combining diacritics (acute, grave, circumflex, tilde, trema, etc.)
+  - Compose key and compose_cancel
+  - Document navigation (doc_home, doc_end)
+  - Bidi brackets/parentheses (b(, b), b[, b], b{, b}, blt, bgt)
+  - Zero-width joiner/non-joiner (zwj, zwnj, halfspace)
+  - Additional editing commands (replaceText, textAssist, autofill)
+  - Removed placeholder key
+- [x] Total available commands now ~120+
+- [x] All commands have searchable keywords
+
+### Short Swipe Customization v4
+- Already implemented KeyMagnifierView shows actual key mappings:
+  - Shows key.keys[1-8] sub-labels from KeyboardData.Key
+  - Custom mappings override and display in theme accent color
+  - Uses proper 3x3 grid layout matching keyboard rendering
+  - Direction indices match KeyboardData.Key layout (1=NW, 7=N, 2=NE, etc.)
+- Already implemented CommandPaletteDialog has search filter
+- Already implemented KeyCustomizationDialog shows "existing layout mappings + custom mappings"
+
+---
+
+## Completed Previous Session (2025-12-05)
 
 ### Per-Key Short Swipe Customization Feature (NEW)
 - [x] Phase 1: Data layer (`ShortSwipeCustomization.kt`, `ShortSwipeCustomizationManager.kt`)
