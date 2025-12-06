@@ -20,6 +20,15 @@
 - [x] Updated ShortSwipeCustomizationActivity.kt to use new onMappingSelected flow
 - [x] Users can now select 'Select All' as action and 's(a)' as custom label
 
+### Touch Event Handling Fix for KeyCustomizationDialog
+- [x] AndroidView inside Compose Dialog wasn't receiving touch events (interop issue)
+- [x] pointerInteropFilter approach didn't work reliably
+- [x] Created DirectionTouchOverlay - pure Compose 3x3 grid overlay
+- [x] Each zone maps to SwipeDirection (NW, N, NE, W, E, SW, S, SE)
+- [x] Center zone has no action (taps on center key letter are ignored)
+- [x] Overlays the KeyMagnifierView for reliable touch detection
+- [x] Successfully tested: S key SW zone → selectAll mapping saved as "sa"
+
 ### CommandRegistry Expansion
 - [x] Added 30+ new commands from KeyValue.getSpecialKeyByName:
   - Combining diacritics (acute, grave, circumflex, tilde, trema, etc.)
