@@ -43,6 +43,11 @@
 - [x] Updated drawSubLabelForDirection() to accept useKeyFont parameter
 - [x] Tested: S and D keys now show correct cursor arrow symbols
 
+### NullPointerException Fix in ShortSwipeCustomizationActivity
+- [x] Fixed NPE when selecting command or text mapping in Toast.makeText()
+- [x] Root cause: editingDirection set to null before being used in Toast message
+- [x] Fix: Save direction to local variable before nullifying editingDirection
+
 ---
 
 ## Completed Previous Session (2025-12-05)
