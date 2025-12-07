@@ -1,11 +1,26 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-06
-**Session**: Short swipe customization improvements
+**Last Updated**: 2025-12-07
+**Session**: Short swipe with shift key fix
 
 ---
 
-## Completed This Session (2025-12-06)
+## Completed This Session (2025-12-07)
+
+### Custom Short Swipes Work with Shift Active
+- [x] Issue: Custom short swipe mappings were blocked when shift/fn/ctrl was active on char keys
+- [x] Root cause: `shouldBlockGesture` check in Pointers.kt blocked ALL gestures when modifiers were active
+- [x] Fix: Restructured logic to check custom mappings BEFORE the blocking check
+  - Custom user-defined mappings now bypass modifier block (work even with shift held)
+  - Built-in sublabel gestures still blocked when modifiers active (prevents accidental punctuation)
+- [x] Renamed `shouldBlockGesture` to `shouldBlockBuiltInGesture` for clarity
+- [x] Fixed CustomDictionarySource prefs in WordListFragment to use correct file ("user_dictionary")
+- [x] Removed unused R import from ThemeProvider.kt (build fix)
+- [x] Commit: 93c32b82 - feat: custom short swipes work with shift key active
+
+---
+
+## Completed Previous Session (2025-12-06)
 
 ### Short Swipe Mapping - Separate Label and Action Fields
 - [x] Fixed app crash when adding certain short gesture mappings
