@@ -715,6 +715,12 @@ class CleverKeysService : InputMethodService(),
         // config refresh. This method handles additional UI updates.
         // (v1.32.412: Delegated to PreferenceUIUpdateHandler)
 
+        // Skip if keyboard components aren't initialized yet (happens when SettingsActivity
+        // triggers preference changes before keyboard has been used)
+        if (!::_layoutBridge.isInitialized) {
+            return
+        }
+
         // Initialize handler lazily (depends on components that may not exist yet)
         if (_preferenceUIUpdateHandler == null) {
             _preferenceUIUpdateHandler = PreferenceUIUpdateHandler.create(
