@@ -334,17 +334,7 @@ object CommandRegistry {
         Command("combining_arrow_right", "Combining Arrow Right", "Add rightward arrow to previous char", Category.DIACRITICS,
             keywords = listOf("combining", "arrow", "vector")),
 
-        // ========== COMPOSE KEY ==========
-        Command("compose", "Compose Key", "Start compose sequence for special characters", Category.SPECIAL_KEYS,
-            keywords = listOf("compose", "special", "accent", "combine")),
-        Command("compose_cancel", "Cancel Compose", "Cancel current compose sequence", Category.SPECIAL_KEYS,
-            keywords = listOf("compose", "cancel")),
-
-        // ========== DOCUMENT NAVIGATION ==========
-        Command("doc_home", "Document Start", "Move cursor to start of document (Ctrl+Home)", Category.NAVIGATION,
-            keywords = listOf("document", "start", "beginning", "top", "ctrl", "home")),
-        Command("doc_end", "Document End", "Move cursor to end of document (Ctrl+End)", Category.NAVIGATION,
-            keywords = listOf("document", "end", "bottom", "ctrl")),
+        // NOTE: compose, compose_cancel, doc_home, doc_end already defined above - removed duplicates
 
         // ========== BIDI (Bidirectional Text) ==========
         Command("b(", "Bidi Open Paren", "Bidirectional open parenthesis (displays as close)", Category.TEXT,
@@ -364,11 +354,7 @@ object CommandRegistry {
         Command("bgt", "Bidi Greater Than", "Bidirectional greater than (displays as less)", Category.TEXT,
             keywords = listOf("bidi", "greater", "angle", "rtl")),
 
-        // ========== ZERO-WIDTH CHARACTERS ==========
-        Command("zwj", "Zero-Width Joiner", "Join characters for ligatures/emoji", Category.SPACES,
-            keywords = listOf("zwj", "zero", "width", "joiner", "ligature", "emoji")),
-        Command("zwnj", "Zero-Width Non-Joiner", "Prevent ligatures (halfspace)", Category.SPACES,
-            keywords = listOf("zwnj", "zero", "width", "non-joiner", "halfspace")),
+        // NOTE: zwj and zwnj are defined above in the SPACES category (lines ~236-239)
         Command("halfspace", "Half Space", "Zero-width non-joiner (halfspace)", Category.SPACES,
             keywords = listOf("halfspace", "zero", "width", "persian", "arabic")),
 
