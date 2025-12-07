@@ -18,6 +18,16 @@
 - [x] Removed unused R import from ThemeProvider.kt (build fix)
 - [x] Commit: 93c32b82 - feat: custom short swipes work with shift key active
 
+### Colored Direction Zones in Short Swipe Customization
+- [x] Issue: Direction zones in key customization dialog were invisible (no visual feedback)
+- [x] Fix: Added distinct colored backgrounds to each of the 8 direction zones
+  - NW: Red (#FF6B6B), N: Teal (#4ECDC4), NE: Yellow (#FFE66D)
+  - W: Mint (#95E1D3), E: Coral (#F38181)
+  - SW: Purple (#AA96DA), S: Cyan (#72D4E8), SE: Pink (#FCBAD3)
+- [x] Added direction labels (NW, N, NE, W, E, SW, S, SE) in each zone
+- [x] Center zone remains transparent (no action)
+- [x] Commit: 1a68c58c - fix: add colored direction zones to short swipe customization
+
 ---
 
 ## Completed Previous Session (2025-12-06)
