@@ -70,6 +70,15 @@
 - [x] Root cause: editingDirection set to null before being used in Toast message
 - [x] Fix: Save direction to local variable before nullifying editingDirection
 
+### Custom Mapping Display on Keyboard
+- [x] Custom short swipe mappings now render directly on keyboard keys
+- [x] Added ShortSwipeCustomizationManager reference to Keyboard2View
+- [x] Added drawCustomMappings() to render custom labels during key drawing
+- [x] Added drawCustomSubLabel() for accent-colored custom mapping text
+- [x] Added directionToSubIndex() to map SwipeDirection → sublabel positions (1-8)
+- [x] Custom mappings display with theme's activatedColor for visual distinction
+- [x] Commit: 571d6519 - feat: display custom short swipe mappings on keyboard
+
 ---
 
 ## Completed Previous Session (2025-12-05)
