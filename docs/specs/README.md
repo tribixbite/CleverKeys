@@ -1,7 +1,7 @@
 # CleverKeys Feature Specifications
 
-**Last Updated**: 2025-12-04
-**Total Specs**: 10 (core) + 4 (optional enhancements)
+**Last Updated**: 2025-12-07
+**Total Specs**: 11 (core) + 4 (optional enhancements)
 
 This directory contains feature specifications and architectural decision records (ADRs) for CleverKeys. All specifications follow the template in `SPEC_TEMPLATE.md`.
 
@@ -80,7 +80,14 @@ This directory contains feature specifications and architectural decision record
    - Last Updated: 2025-11-16
    - Outstanding: None (all documented)
 
-10. **[SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md)** - Template
+10. **[Short Swipe Customization](./short-swipe-customization.md)** - P1
+    - Status: ✅ Complete (Updated 2025-12-07)
+    - Covers: Per-key short swipe customization, 8-direction gestures, command palette
+    - Recent Updates: ✅ Shift+custom swipe support (2025-12-07)
+    - Recent Updates: ✅ Colored direction zones with labels (2025-12-07)
+    - Outstanding: Manual device testing
+
+11. **[SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md)** - Template
     - Template for creating new feature specifications
     - Use this when creating new specs
 
@@ -88,19 +95,19 @@ This directory contains feature specifications and architectural decision record
 
 These specs would document existing features that don't have formal documentation yet:
 
-11. **Clipboard System** (optional)
+12. **Clipboard System** (optional)
     - Components: `ClipboardManager.kt`, `ClipboardDatabase.kt`, `ClipboardHistoryView.kt`
     - Status: ✅ Implemented (no spec needed for current functionality)
 
-12. **Dictionary & Word Prediction** (optional)
+13. **Dictionary & Word Prediction** (optional)
     - Components: `DictionaryManager.kt`, `WordPredictor.kt`, `UserAdaptationManager.kt`
     - Status: ✅ Implemented (partially covered in neural-prediction.md)
 
-13. **Privacy & ML Collection** (optional)
+14. **Privacy & ML Collection** (optional)
     - Components: `PrivacyManager.kt`, `MLDataCollector.kt`, `SwipeMLDataStore.kt`
     - Status: ✅ Implemented (new Phase 6.5 feature)
 
-14. **A/B Testing & Model Versioning** (optional)
+15. **A/B Testing & Model Versioning** (optional)
     - Components: `ABTestManager.kt`, `ModelVersionManager.kt`, `ModelComparisonTracker.kt`
     - Status: ✅ Implemented (new Phase 6.3-6.4 features)
 
@@ -139,9 +146,10 @@ These specs would document existing features that don't have formal documentatio
   - Gesture: ✅ Implemented (Bug #267 resolved)
   - Neural: ✅ Implemented (Bug #273 resolved)
 
-- **P1 (High)**: 2 specs (Layout, Settings)
+- **P1 (High)**: 3 specs (Layout, Settings, Short Swipe Customization)
   - Layout: ✅ Implemented (Bug #266 resolved)
   - Settings: ✅ Complete ✅ **100% PARITY (45/45 settings)**
+  - Short Swipe Customization: ✅ Complete (shift+swipe, colored zones)
 
 - **P2 (Medium)**: 3 specs (UI, Performance, Testing)
   - UI: ✅ Implemented
@@ -149,7 +157,7 @@ These specs would document existing features that don't have formal documentatio
   - Testing: 🟡 Partially (automated script ✅ complete, device testing pending)
 
 ### By Status
-- ✅ **Fully Implemented**: 8 (Core, Gesture, Layout, Neural, Settings, UI, Performance, Architectural)
+- ✅ **Fully Implemented**: 9 (Core, Gesture, Layout, Neural, Settings, UI, Performance, Architectural, Short Swipe Customization)
 - 🟡 **Partially Implemented**: 1 (Testing - automated script ready, device testing pending)
 - 🔴 **Not Started**: 0
 

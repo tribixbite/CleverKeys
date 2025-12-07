@@ -3,7 +3,7 @@
 **Status**: Complete ✅
 **Branch**: `main` (merged)
 **Created**: 2025-12-05
-**Updated**: 2025-12-06
+**Updated**: 2025-12-07
 
 ## Overview
 
@@ -189,7 +189,23 @@ src/main/kotlin/tribixbite/cleverkeys/
 - [x] Reset to defaults (delete individual mappings)
 - [x] Edge case handling (command name validation)
 - [x] Touch event handling fix (AndroidView interop)
+- [x] Colored direction zones with labels (8 distinct colors + direction labels)
+- [x] Shift+custom swipe support (custom mappings work even with shift active)
 - [ ] Manual device testing (ongoing)
+
+### Phase 5: Modifier Key Support ✅ (2025-12-07)
+- [x] Custom short swipe mappings bypass modifier blocking check
+- [x] Built-in sublabel gestures still blocked when shift/fn/ctrl active
+- [x] Restructured Pointers.kt gesture handling logic
+- [x] Renamed `shouldBlockGesture` → `shouldBlockBuiltInGesture` for clarity
+
+### Phase 6: UI Enhancement ✅ (2025-12-07)
+- [x] DirectionZone colored backgrounds for visual identification:
+  - NW: Red (#FF6B6B), N: Teal (#4ECDC4), NE: Yellow (#FFE66D)
+  - W: Mint (#95E1D3), E: Coral (#F38181)
+  - SW: Purple (#AA96DA), S: Cyan (#72D4E8), SE: Pink (#FCBAD3)
+- [x] Direction labels (NW, N, NE, W, E, SW, S, SE) displayed in each zone
+- [x] Center zone transparent (no action)
 
 ## Performance Requirements
 
