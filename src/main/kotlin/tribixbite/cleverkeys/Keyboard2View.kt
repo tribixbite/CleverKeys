@@ -22,7 +22,9 @@ import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
 import tribixbite.cleverkeys.customization.AvailableCommand
 import tribixbite.cleverkeys.customization.CustomShortSwipeExecutor
+import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
+import tribixbite.cleverkeys.customization.SwipeDirection
 import tribixbite.cleverkeys.theme.ThemeProvider
 import java.util.ArrayList
 
@@ -97,6 +99,11 @@ class Keyboard2View @JvmOverloads constructor(
 
     // Custom short swipe executor for user-defined gesture mappings
     private val _customSwipeExecutor = CustomShortSwipeExecutor(context)
+
+    // Custom short swipe mappings manager for visual display
+    private val _shortSwipeManager: ShortSwipeCustomizationManager by lazy {
+        ShortSwipeCustomizationManager.getInstance(context)
+    }
 
     private var _keyWidth = 0f
     private var _mainLabelSize = 0f
@@ -838,6 +845,8 @@ class Keyboard2View @JvmOverloads constructor(
                     if (k.keys[i] != null)
                         drawSubLabel(canvas, k.keys[i]!!, x, y, keyW, keyH, i, isKeyDown, tc_key)
                 }
+                // Draw custom short swipe mappings (override existing sublabels with accent color)
+                drawCustomMappings(canvas, k, x, y, keyW, keyH, tc)
                 drawIndication(canvas, k, x, y, keyW, keyH, tc)
                 x += _keyWidth * k.width
             }
@@ -1012,6 +1021,113 @@ class Keyboard2View @JvmOverloads constructor(
         if (label_len > 3 && modifiedKv.getKind() == KeyValue.Kind.String)
             label_len = 3
         canvas.drawText(label, 0, label_len, xPos, yPos, p)
+    }
+
+    /**
+     * Draw custom short swipe mappings for a key.
+     * Custom mappings are drawn with accent color to distinguish from built-in mappings.
+     */
+    private fun drawCustomMappings(
+        canvas: Canvas,
+        k: KeyboardData.Key,
+        x: Float,
+        y: Float,
+        keyW: Float,
+        keyH: Float,
+        tc: Theme.Computed
+    ) {
+        // Get the key identifier from the main key (index 0)
+        val mainKey = k.keys[0] ?: return
+        val keyCode = mainKey.getString().lowercase()
+
+        // Skip if empty or too long (likely a special key)
+        if (keyCode.isEmpty() || keyCode.length > 4) return
+
+        // Get custom mappings for this key
+        val customMappings = _shortSwipeManager.getMappingsForKey(keyCode)
+        if (customMappings.isEmpty()) return
+
+        // Use activated/locked color for custom mappings (stands out from normal sublabels)
+        val accentColor = _theme.activatedColor
+
+        for ((direction, mapping) in customMappings) {
+            val subIndex = directionToSubIndex(direction)
+            if (subIndex < 1 || subIndex > 8) continue
+
+            // Draw the custom mapping label
+            drawCustomSubLabel(
+                canvas,
+                mapping.displayText,
+                x, y, keyW, keyH,
+                subIndex,
+                accentColor,
+                tc.key
+            )
+        }
+    }
+
+    /**
+     * Convert SwipeDirection to sublabel index (1-8).
+     * Layout: 1=NW, 2=NE, 3=SW, 4=SE, 5=W, 6=E, 7=N, 8=S
+     */
+    private fun directionToSubIndex(direction: SwipeDirection): Int {
+        return when (direction) {
+            SwipeDirection.NW -> 1
+            SwipeDirection.NE -> 2
+            SwipeDirection.SW -> 3
+            SwipeDirection.SE -> 4
+            SwipeDirection.W -> 5
+            SwipeDirection.E -> 6
+            SwipeDirection.N -> 7
+            SwipeDirection.S -> 8
+        }
+    }
+
+    /**
+     * Draw a custom sublabel with specific color (for custom short swipe mappings).
+     */
+    private fun drawCustomSubLabel(
+        canvas: Canvas,
+        label: String,
+        x: Float,
+        y: Float,
+        keyW: Float,
+        keyH: Float,
+        sub_index: Int,
+        color: Int,
+        tc_key: Theme.Computed.Key
+    ) {
+        val a = LABEL_POSITION_H[sub_index]
+        val v = LABEL_POSITION_V[sub_index]
+        val textSize = _subLabelSize * 0.9f // Slightly smaller for custom labels
+
+        // Create paint with accent color
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            this.color = color
+            this.textSize = textSize
+            this.textAlign = a
+            this.typeface = tc_key.label_paint(false, color, textSize).typeface
+        }
+
+        val subPadding = _config.keyPadding
+        var yPos = y
+        var xPos = x
+
+        yPos += when (v) {
+            Vertical.CENTER -> (keyH - paint.ascent() - paint.descent()) / 2f
+            Vertical.TOP -> subPadding - paint.ascent()
+            Vertical.BOTTOM -> keyH - subPadding - paint.descent()
+        }
+
+        xPos += when (a) {
+            Paint.Align.CENTER -> keyW / 2f
+            Paint.Align.LEFT -> subPadding
+            Paint.Align.RIGHT -> keyW - subPadding
+        }
+
+        // Limit label length for display
+        val displayLen = minOf(label.length, 4)
+        canvas.drawText(label, 0, displayLen, xPos, yPos, paint)
     }
 
     private fun drawIndication(canvas: Canvas, k: KeyboardData.Key, x: Float, y: Float, keyW: Float, keyH: Float, tc: Theme.Computed) {
