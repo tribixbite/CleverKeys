@@ -342,21 +342,28 @@ class CustomDictionarySource(private val prefs: SharedPreferences) : DictionaryD
 
     private val gson = Gson()
 
-    private fun getCustomWords(): MutableMap<String, Int> {
-        val json = prefs.getString(PREF_CUSTOM_WORDS, "{}")
-        val type = object : TypeToken<Map<String, Int>>() {}.type
-        return gson.fromJson(json, type) ?: mutableMapOf()
+    // CRITICAL FIX: Key must match what DictionaryManager and BackupRestoreManager use
+    // Previous "custom_words" (json map) was wrong; it should be "user_words" (string set)
+    // But wait, the old BackupRestoreManager used "user_words" as a Set<String> in the old implementation?
+    // Let's look at DictionaryManager.kt:
+    // private const val USER_WORDS_KEY = "user_words"
+    // val words = userDictPrefs.getStringSet(USER_WORDS_KEY, emptySet())
+    //
+    // So the internal storage is a StringSet, not a JSON map.
+    
+    private fun getCustomWords(): MutableSet<String> {
+        return prefs.getStringSet(PREF_CUSTOM_WORDS, emptySet())?.toMutableSet() ?: mutableSetOf()
     }
 
-    private fun saveCustomWords(words: Map<String, Int>) {
-        val json = gson.toJson(words)
-        prefs.edit().putString(PREF_CUSTOM_WORDS, json).apply()
+    private fun saveCustomWords(words: Set<String>) {
+        prefs.edit().putStringSet(PREF_CUSTOM_WORDS, words).apply()
     }
 
     override suspend fun getAllWords(): List<DictionaryWord> = withContext(Dispatchers.IO) {
         getCustomWords()
-            .map { (word, freq) ->
-                DictionaryWord(word, freq, WordSource.CUSTOM, true)
+            .map { word ->
+                // Custom words don't store frequency in StringSet, assume default
+                DictionaryWord(word, 100, WordSource.CUSTOM, true)
             }
             .sorted()
     }
@@ -373,7 +380,7 @@ class CustomDictionarySource(private val prefs: SharedPreferences) : DictionaryD
 
     override suspend fun addWord(word: String, frequency: Int) {
         val words = getCustomWords()
-        words[word] = frequency
+        words.add(word)
         saveCustomWords(words)
     }
 
@@ -386,11 +393,12 @@ class CustomDictionarySource(private val prefs: SharedPreferences) : DictionaryD
     override suspend fun updateWord(oldWord: String, newWord: String, frequency: Int) {
         val words = getCustomWords()
         words.remove(oldWord)
-        words[newWord] = frequency
+        words.add(newWord)
         saveCustomWords(words)
     }
 
     companion object {
-        private const val PREF_CUSTOM_WORDS = "custom_words"
+        // CRITICAL: Must match DictionaryManager.USER_WORDS_KEY
+        private const val PREF_CUSTOM_WORDS = "user_words"
     }
 }
