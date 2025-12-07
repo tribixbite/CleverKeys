@@ -614,7 +614,8 @@ class BackupRestoreManager(private val context: Context) {
      * @param uri URI from Storage Access Framework (ACTION_OPEN_DOCUMENT)
      * @return DictionaryImportResult with statistics
      *
-     * CRITICAL: Use Android's system UserDictionary API to add words.
+     * CRITICAL: Imports into internal 'user_dictionary' SharedPreferences (Custom Words)
+     * instead of system UserDictionary, as requested.
      */
     fun importDictionaries(uri: Uri): DictionaryImportResult {
         return try {
@@ -635,33 +636,26 @@ class BackupRestoreManager(private val context: Context) {
                 result.sourceVersion = metadata.get("app_version")?.asString ?: "unknown"
             }
 
-            // Load existing user words from Android's UserDictionary to avoid re-adding
-            val existingUserWords = mutableSetOf<String>()
-            val cursor = context.contentResolver.query(
-                UserDictionary.Words.CONTENT_URI,
-                arrayOf(UserDictionary.Words.WORD),
-                null, null, null
-            )
-            cursor?.use {
-                val wordIndex = it.getColumnIndex(UserDictionary.Words.WORD)
-                while (it.moveToNext()) {
-                    existingUserWords.add(it.getString(wordIndex))
+            // Load existing Custom Words from SharedPreferences (internal storage)
+            val userDictPrefs = context.getSharedPreferences("user_dictionary", Context.MODE_PRIVATE)
+            val existingCustomWords = userDictPrefs.getStringSet("user_words", emptySet())?.toMutableSet() ?: mutableSetOf()
+            val initialSize = existingCustomWords.size
+
+            // Helper to add word to internal set
+            fun addWordToCustom(word: String) {
+                if (word !in existingCustomWords) {
+                    existingCustomWords.add(word)
+                    result.userWordsImported++
                 }
             }
-            Log.i(TAG, "Existing user words in system dictionary: ${existingUserWords.size}")
 
             // Handle new format: custom_words as object with word -> frequency
             if (root.has("custom_words") && root.get("custom_words").isJsonObject) {
                 val customWords = root.getAsJsonObject("custom_words")
-                for ((word, freqElement) in customWords.entrySet()) {
-                    val frequency = freqElement.asInt.coerceIn(1, 255) // Android UserDictionary uses 1-255
-                    if (word !in existingUserWords) {
-                        UserDictionary.Words.addWord(context, word, frequency, null, null)
-                        existingUserWords.add(word) // Add to our set to prevent re-adding
-                        result.userWordsImported++
-                    }
+                for ((word, _) in customWords.entrySet()) {
+                    addWordToCustom(word)
                 }
-                Log.i(TAG, "Parsed ${customWords.size()} custom_words (new format), added ${result.userWordsImported} new")
+                Log.i(TAG, "Parsed ${customWords.size()} custom_words (new format)")
             }
 
             // Handle old format: user_words as array of strings or objects
@@ -669,26 +663,20 @@ class BackupRestoreManager(private val context: Context) {
                 val userWordsArray = root.getAsJsonArray("user_words")
                 for (element in userWordsArray) {
                     val word: String
-                    val frequency: Int
-
                     if (element.isJsonObject) {
-                        // Handle format {"word": "abc", "frequency": 100}
-                        val wordObj = element.getAsJsonObject()
-                        word = wordObj.get("word").asString
-                        frequency = wordObj.get("frequency")?.asInt?.coerceIn(1, 255) ?: DEFAULT_USER_WORD_FREQ
+                        word = element.getAsJsonObject().get("word").asString
                     } else {
-                        // Handle format "abc" (just string)
                         word = element.asString
-                        frequency = DEFAULT_USER_WORD_FREQ
                     }
-
-                    if (word !in existingUserWords) {
-                        UserDictionary.Words.addWord(context, word, frequency, null, null)
-                        existingUserWords.add(word)
-                        result.userWordsImported++
-                    }
+                    addWordToCustom(word)
                 }
-                Log.i(TAG, "Parsed ${userWordsArray.size()} user_words (old format), total added: ${result.userWordsImported}")
+                Log.i(TAG, "Parsed ${userWordsArray.size()} user_words (old format)")
+            }
+
+            // Save updated custom words back to SharedPreferences
+            if (existingCustomWords.size > initialSize) {
+                userDictPrefs.edit().putStringSet("user_words", existingCustomWords).apply()
+                Log.i(TAG, "Saved ${existingCustomWords.size} custom words (+${result.userWordsImported} new)")
             }
 
             // Handle disabled_words - these go to DirectBootAwarePreferences
