@@ -207,6 +207,13 @@ src/main/kotlin/tribixbite/cleverkeys/
 - [x] Direction labels (NW, N, NE, W, E, SW, S, SE) displayed in each zone
 - [x] Center zone transparent (no action)
 
+### Phase 7: Bug Fixes ✅ (2025-12-07)
+- [x] Fixed LazyColumn crash when scrolling command palette
+  - Root cause: Duplicate command names in CommandRegistry.kt
+  - Removed 6 duplicates: compose, compose_cancel, doc_home, doc_end, zwj, zwnj
+  - Commands reduced from 143 to 137 (all unique)
+  - Error: `IllegalArgumentException: Key was already used`
+
 ## Performance Requirements
 
 - Custom mapping lookup: < 1ms
