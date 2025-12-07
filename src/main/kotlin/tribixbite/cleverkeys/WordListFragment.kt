@@ -73,14 +73,17 @@ class WordListFragment : Fragment() {
     }
 
     private fun initializeDataSource() {
-        val prefs = DirectBootAwarePreferences.get_shared_preferences(requireContext())
-        val disabledSource = DisabledDictionarySource(prefs)
+        val defaultPrefs = DirectBootAwarePreferences.get_shared_preferences(requireContext())
+        val disabledSource = DisabledDictionarySource(defaultPrefs)
 
         dataSource = when (tabType) {
             TabType.ACTIVE -> MainDictionarySource(requireContext(), disabledSource)
             TabType.DISABLED -> disabledSource
             TabType.USER -> UserDictionarySource(requireContext(), requireContext().contentResolver)
-            TabType.CUSTOM -> CustomDictionarySource(prefs)
+            TabType.CUSTOM -> {
+                val customPrefs = requireContext().getSharedPreferences("user_dictionary", android.content.Context.MODE_PRIVATE)
+                CustomDictionarySource(customPrefs)
+            }
         }
     }
 

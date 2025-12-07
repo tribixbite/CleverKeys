@@ -3,7 +3,6 @@ package tribixbite.cleverkeys.theme
 import android.content.Context
 import android.view.ContextThemeWrapper
 import tribixbite.cleverkeys.Config
-import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.Theme
 
 /**
