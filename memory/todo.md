@@ -228,7 +228,12 @@
 
 ## Pending (Future Sessions)
 
-- [ ] Manual device testing for all import/export features
+- [x] Manual device testing for all import/export features
+  - Tested 2025-12-06: BackupRestoreActivity UI functional
+  - Export Settings, Import Settings buttons working
+  - Dictionary Backup Export/Import buttons visible
+  - Clipboard History Backup Export/Import buttons visible
+  - Important Notes section displayed correctly
 - [x] ~~Migrate legacy XML PreferenceScreen to Compose Material 3~~ - Already using Compose M3 in SettingsActivity
 
 ---
