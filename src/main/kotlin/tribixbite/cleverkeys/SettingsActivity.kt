@@ -3650,6 +3650,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     "Dictionary imported: ${result.userWordsImported} words, ${result.disabledWordsImported} disabled",
                     Toast.LENGTH_LONG
                 ).show()
+
+                // Broadcast the change so Dictionary Manager can refresh
+                if (result.userWordsImported > 0 || result.disabledWordsImported > 0) {
+                    androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this@SettingsActivity)
+                        .sendBroadcast(Intent(BackupRestoreActivity.ACTION_DICTIONARY_IMPORTED))
+                }
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
