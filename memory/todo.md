@@ -1,11 +1,29 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2025-12-07
-**Session**: Command palette crash fix
+**Session**: Dictionary import fix verification
 
 ---
 
 ## Completed This Session (2025-12-07)
+
+### Dictionary Import Fix Verification
+- [x] Verified colleague's fix for imported custom words ending up in wrong dictionary
+- [x] Confirmed code flow alignment:
+  - **Import path** (BackupRestoreManager.kt lines 639-679): Imports to SharedPreferences file `"user_dictionary"`, key `"user_words"` as StringSet
+  - **Read path** (WordListFragment.kt lines 83-86): Custom tab reads from same `"user_dictionary"` file
+  - **CustomDictionarySource** (DictionaryDataSource.kt lines 354-402): Uses key `"user_words"` from the prefs file passed to it
+- [x] Fix is **CORRECT** - both import and read now use the same storage location
+- [x] Build successful (APK compiles without errors)
+
+### SettingsActivity lateinit Crash Fix
+- [x] Issue: Error toast "Error saving setting: lateinit property _layoutBridge has..."
+- [x] Error: `kotlin.UninitializedPropertyAccessException: lateinit property _layoutBridge has not been initialized`
+- [x] Root cause: SettingsActivity triggers SharedPreferences changes, which calls onSharedPreferenceChanged
+  in CleverKeysService, but _layoutBridge isn't initialized until keyboard is used
+- [x] Fix: Added `::_layoutBridge.isInitialized` check in onSharedPreferenceChanged to skip
+  preference UI updates when keyboard components aren't ready
+- [x] Commit: fbf2ff9c - fix: prevent lateinit _layoutBridge crash in SettingsActivity
 
 ### Command Palette LazyColumn Crash Fix
 - [x] Issue: App crashed when scrolling command options in short swipe customization
