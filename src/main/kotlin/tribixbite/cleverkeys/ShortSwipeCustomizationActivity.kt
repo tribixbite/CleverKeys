@@ -604,6 +604,7 @@ private fun DirectionTouchOverlay(
 
 /**
  * Individual clickable zone for a direction.
+ * Uses distinct colors to make each zone visually identifiable.
  */
 @Composable
 private fun DirectionZone(
@@ -611,8 +612,21 @@ private fun DirectionZone(
     modifier: Modifier = Modifier,
     onTapped: (SwipeDirection) -> Unit
 ) {
+    // Assign distinct colors to each direction for visual identification
+    val zoneColor = when (direction) {
+        SwipeDirection.NW -> Color(0x40FF6B6B)  // Red-ish
+        SwipeDirection.N  -> Color(0x404ECDC4)  // Teal
+        SwipeDirection.NE -> Color(0x40FFE66D)  // Yellow
+        SwipeDirection.W  -> Color(0x4095E1D3)  // Mint
+        SwipeDirection.E  -> Color(0x40F38181)  // Coral
+        SwipeDirection.SW -> Color(0x40AA96DA)  // Purple
+        SwipeDirection.S  -> Color(0x4072D4E8)  // Cyan
+        SwipeDirection.SE -> Color(0x40FCBAD3)  // Pink
+    }
+
     Box(
         modifier = modifier
+            .background(zoneColor)
             .clickable(
                 // Disable ripple to avoid visual noise
                 indication = null,
@@ -620,6 +634,15 @@ private fun DirectionZone(
             ) {
                 android.util.Log.d("DirectionZone", "Tapped direction: $direction")
                 onTapped(direction)
-            }
-    )
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        // Show direction label in each zone
+        Text(
+            text = direction.shortLabel,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White.copy(alpha = 0.8f)
+        )
+    }
 }
