@@ -30,7 +30,7 @@ class WordListFragment : Fragment() {
     private var searchJob: kotlinx.coroutines.Job? = null  // Track search coroutine for cancellation
 
     enum class TabType {
-        ACTIVE, DISABLED, USER_DICT, CUSTOM
+        ACTIVE, DISABLED, USER, CUSTOM
     }
 
     companion object {
@@ -79,7 +79,7 @@ class WordListFragment : Fragment() {
         dataSource = when (tabType) {
             TabType.ACTIVE -> MainDictionarySource(requireContext(), disabledSource)
             TabType.DISABLED -> disabledSource
-            TabType.USER_DICT -> UserDictionarySource(requireContext(), requireContext().contentResolver)
+            TabType.USER -> UserDictionarySource(requireContext(), requireContext().contentResolver)
             TabType.CUSTOM -> CustomDictionarySource(prefs)
         }
     }
@@ -330,25 +330,5 @@ class WordListFragment : Fragment() {
 
     fun refresh() {
         loadWords()
-    }
-
-    /**
-     * Search words by query (called from DictionaryManagerActivity)
-     */
-    fun search(query: String) {
-        filter(query, currentSourceFilter)
-    }
-
-    /**
-     * Apply source filter (called from DictionaryManagerActivity)
-     */
-    fun applyFilter(filterType: DictionaryManagerActivity.FilterType) {
-        val sourceFilter = when (filterType) {
-            DictionaryManagerActivity.FilterType.ALL -> null
-            DictionaryManagerActivity.FilterType.MAIN -> WordSource.MAIN
-            DictionaryManagerActivity.FilterType.USER -> WordSource.USER
-            DictionaryManagerActivity.FilterType.CUSTOM -> WordSource.CUSTOM
-        }
-        filter("", sourceFilter)
     }
 }
