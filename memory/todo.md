@@ -1,11 +1,25 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2025-12-07
-**Session**: Short swipe with shift key fix
+**Session**: Command palette crash fix
 
 ---
 
 ## Completed This Session (2025-12-07)
+
+### Command Palette LazyColumn Crash Fix
+- [x] Issue: App crashed when scrolling command options in short swipe customization
+- [x] Error: `java.lang.IllegalArgumentException: Key "doc_home" was already used`
+- [x] Root cause: Duplicate command names in CommandRegistry.kt violated LazyColumn unique key requirement
+- [x] Fix: Removed 6 duplicate command entries:
+  - compose (line 337, original at 220)
+  - compose_cancel (line 339, original at 222)
+  - doc_home (line 341, original at 118)
+  - doc_end (line 343, original at 120)
+  - zwj (line 358, original at 236)
+  - zwnj (line 360, original at 238)
+- [x] Command count reduced from 143 to 137 available commands
+- [x] Commit: 207b10ea - fix: remove duplicate command entries causing LazyColumn crash
 
 ### Custom Short Swipes Work with Shift Active
 - [x] Issue: Custom short swipe mappings were blocked when shift/fn/ctrl was active on char keys
