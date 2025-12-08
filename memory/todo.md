@@ -1,11 +1,30 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-07
-**Session**: Dictionary import fix verification
+**Last Updated**: 2025-12-08
+**Session**: GitHub social preview banner
 
 ---
 
-## Completed This Session (2025-12-07)
+## Completed This Session (2025-12-08)
+
+### GitHub Social Preview Banner (ImageToolbox Style)
+- [x] Created professional 3-phone banner layout matching ImageToolbox (7k+ stars)
+- [x] Fixed ICC color profile issues preserving neon cyan/magenta colors
+- [x] Added synthetic swipe trail with "swipe" prediction demonstration
+- [x] Gemini AI confirmed 9/10 rating - matches ImageToolbox quality
+- [x] Cleaned up 12 intermediate banner versions (~6.6MB)
+- [x] Added banner to README.md header
+- [x] Commits: 538e1384, c9088d96, c2c63209, 676c7c73, ef09fefd
+- [ ] **Manual**: Upload social_preview.jpg to GitHub Settings → Social preview
+
+### Files Created
+- `assets/banner/social_preview.jpg` (169KB, 1280x640) - Final banner
+- `assets/banner/social_preview.png` (592KB) - PNG version
+- `assets/banner/banner_v6_final.jpg` - Working copy
+
+---
+
+## Completed Previous Session (2025-12-07)
 
 ### Dictionary Import Fix Verification
 - [x] Verified colleague's fix for imported custom words ending up in wrong dictionary
