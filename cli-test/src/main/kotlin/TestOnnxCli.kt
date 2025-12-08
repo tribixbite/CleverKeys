@@ -38,10 +38,11 @@ data class PredictionResult(
 // ============================================================================
 
 const val MAX_TRAJECTORY_POINTS = 150
-const val KEYBOARD_WIDTH = 1080f
-const val KEYBOARD_HEIGHT = 400f
+const val DECODER_SEQ_LENGTH = 20  // Fixed decoder sequence length
+const val KEYBOARD_WIDTH = 360f   // Normalized keyboard width (matches Python)
+const val KEYBOARD_HEIGHT = 280f  // Normalized keyboard height (matches Python)
 const val BEAM_WIDTH = 8
-const val MAX_LENGTH = 35
+const val MAX_LENGTH = 20  // Match decoder seq length
 const val PAD_IDX = 0L
 const val UNK_IDX = 1L
 const val SOS_IDX = 2L
@@ -179,24 +180,27 @@ fun createNearestKeysTensor(env: OrtEnvironment, features: TrajectoryFeatures): 
 
 fun createSourceMaskTensor(env: OrtEnvironment, actualLength: Int): OnnxTensor {
     // Shape: [batch_size=1, seq_length=150]
-    // Convention: 1.0f = padded, 0.0f = valid
-    val shape = longArrayOf(1, MAX_TRAJECTORY_POINTS.toLong())
-    val data = FloatArray(MAX_TRAJECTORY_POINTS) { i -> if (i >= actualLength) 1.0f else 0.0f }
-    return OnnxTensor.createTensor(env, java.nio.FloatBuffer.wrap(data), shape)
+    // Convention: true = padded (masked), false = valid
+    // Use Array<BooleanArray> for 2D tensor creation
+    val maskData = Array(1) { BooleanArray(MAX_TRAJECTORY_POINTS) { i -> i >= actualLength } }
+    return OnnxTensor.createTensor(env, maskData)
 }
 
 fun createTargetTokensTensor(env: OrtEnvironment, tokens: List<Long>): OnnxTensor {
-    // Shape: [batch_size=1, seq_length]
-    val shape = longArrayOf(1, tokens.size.toLong())
-    return OnnxTensor.createTensor(env, java.nio.LongBuffer.wrap(tokens.toLongArray()), shape)
+    // Shape: [batch_size=1, DECODER_SEQ_LENGTH] - fixed length with padding
+    val shape = longArrayOf(1, DECODER_SEQ_LENGTH.toLong())
+    val data = LongArray(DECODER_SEQ_LENGTH) { i ->
+        if (i < tokens.size) tokens[i] else PAD_IDX
+    }
+    return OnnxTensor.createTensor(env, java.nio.LongBuffer.wrap(data), shape)
 }
 
-fun createTargetMaskTensor(env: OrtEnvironment, validLength: Int, totalLength: Int): OnnxTensor {
-    // Shape: [batch_size=1, seq_length]
-    // Convention: 1.0f = padded, 0.0f = valid
-    val shape = longArrayOf(1, totalLength.toLong())
-    val data = FloatArray(totalLength) { i -> if (i >= validLength) 1.0f else 0.0f }
-    return OnnxTensor.createTensor(env, java.nio.FloatBuffer.wrap(data), shape)
+fun createTargetMaskTensor(env: OrtEnvironment, validLength: Int): OnnxTensor {
+    // Shape: [batch_size=1, DECODER_SEQ_LENGTH]
+    // Convention: true = padded (masked), false = valid
+    // Use Array<BooleanArray> for 2D tensor creation
+    val maskData = Array(1) { BooleanArray(DECODER_SEQ_LENGTH) { i -> i >= validLength } }
+    return OnnxTensor.createTensor(env, maskData)
 }
 
 // ============================================================================
@@ -258,7 +262,7 @@ fun runEncoderInference(
     val srcMaskTensor = createSourceMaskTensor(models.env, features.actualLength)
 
     val inputs = mapOf(
-        "trajectory" to trajectoryTensor,
+        "trajectory_features" to trajectoryTensor,
         "nearest_keys" to nearestKeysTensor,
         "src_mask" to srcMaskTensor
     )
@@ -286,7 +290,7 @@ fun runDecoderStep(
     srcMask: OnnxTensor
 ): FloatArray {
     val targetTensor = createTargetTokensTensor(models.env, targetTokens)
-    val targetMaskTensor = createTargetMaskTensor(models.env, targetTokens.size, MAX_LENGTH)
+    val targetMaskTensor = createTargetMaskTensor(models.env, targetTokens.size)
 
     val inputs = mapOf<String, OnnxTensorLike>(
         "memory" to (encoderOutput as OnnxTensorLike),
@@ -296,9 +300,12 @@ fun runDecoderStep(
     )
 
     val outputs = models.decoder.run(inputs)
+    val outputTensor = outputs.iterator().next().value as OnnxTensor
+
+    // Get the raw data from tensor - shape is [batch, seq_len, vocab_size]
     @Suppress("UNCHECKED_CAST")
-    val outputTensor = outputs.iterator().next().value
-    val logits = (outputTensor as Array<Array<FloatArray>>)[0]
+    val logits3D = outputTensor.value as Array<Array<FloatArray>>
+    val logits = logits3D[0]  // Get batch 0
 
     // Clean up tensors
     targetTensor.close()
@@ -306,7 +313,8 @@ fun runDecoderStep(
     outputs.close()
 
     // Get logits at current position (targetTokens.size - 1)
-    return logits[targetTokens.size - 1]
+    val pos = (targetTokens.size - 1).coerceIn(0, DECODER_SEQ_LENGTH - 1)
+    return logits[pos]
 }
 
 fun applyLogSoftmax(logits: FloatArray): FloatArray {
@@ -324,11 +332,8 @@ fun beamSearchDecode(
 ): PredictionResult {
     println("\n🔍 Beam Search Decoding (width=$BEAM_WIDTH)")
 
-    // Initialize beams (mutable)
-    var beams = mutableListOf<BeamState>()
-    repeat(BEAM_WIDTH) {
-        beams.add(BeamState(mutableListOf(SOS_IDX), 0f, false))
-    }
+    // Initialize beams with <sos> token - using negative log prob (lower is better)
+    var beams = listOf(BeamState(mutableListOf(SOS_IDX), 0f, false))
 
     var step = 0
     while (step < MAX_LENGTH) {
@@ -342,33 +347,38 @@ fun beamSearchDecode(
 
             // Run decoder for this beam
             val logits = runDecoderStep(models, encoderOutput, beam.tokens, srcMask)
-            val logProbs = applyLogSoftmax(logits)
 
-            // Get top-k tokens
-            val topK = logProbs.withIndex()
+            // Convert to probabilities via softmax
+            val maxLogit = logits.maxOrNull() ?: 0f
+            val expValues = logits.map { exp((it - maxLogit).toDouble()).toFloat() }
+            val sumExp = expValues.sum()
+            val probs = expValues.map { it / sumExp }.toFloatArray()
+
+            // Get top-k tokens by probability
+            val topK = probs.withIndex()
                 .sortedByDescending { it.value }
                 .take(BEAM_WIDTH)
 
-            for ((tokenIdx, logProb) in topK) {
+            for ((tokenIdx, prob) in topK) {
                 val newTokens = beam.tokens.toMutableList()
                 newTokens.add(tokenIdx.toLong())
 
-                val newScore = beam.score + logProb
-                val finished = tokenIdx.toLong() == EOS_IDX || newTokens.size >= MAX_LENGTH
+                // Negative log probability (lower score is better)
+                val newScore = beam.score - ln((prob + 1e-10f).toDouble()).toFloat()
+                val finished = tokenIdx.toLong() == EOS_IDX || tokenIdx.toLong() == PAD_IDX
 
                 allCandidates.add(BeamState(newTokens, newScore, finished))
             }
         }
 
-        // Select top beams
-        beams = allCandidates.sortedByDescending { it.score }.take(BEAM_WIDTH).toMutableList()
+        // Select top beams (lower score is better)
+        beams = allCandidates.sortedBy { it.score }.take(BEAM_WIDTH)
 
         step++
 
-        // Early stopping optimization
-        val finishedCount = beams.count { it.finished }
-        if (beams.all { it.finished } || (step >= 10 && finishedCount >= 3)) {
-            println("   ⚡ Early stopping at step $step ($finishedCount beams finished)")
+        // Check if all beams ended
+        if (beams.all { it.finished }) {
+            println("   ⚡ All beams finished at step $step")
             break
         }
     }
@@ -378,12 +388,13 @@ fun beamSearchDecode(
     // Convert beams to words
     val words = beams.map { beam ->
         beam.tokens
-            .filter { it > EOS_IDX } // Remove special tokens
+            .filter { it > EOS_IDX } // Remove special tokens (pad, unk, sos, eos)
             .mapNotNull { TOKEN_TO_CHAR[it] }
             .joinToString("")
     }
 
-    val scores = beams.map { exp(it.score) } // Convert log probs to probabilities
+    // Convert negative log prob back to probability estimate
+    val scores = beams.map { exp(-it.score.toDouble()).toFloat() }
 
     return PredictionResult(words, scores)
 }
@@ -487,15 +498,19 @@ fun displayPredictions(result: PredictionResult) {
 fun createTestSwipe(word: String): List<PointF> {
     println("\n📝 Creating Test Swipe for '$word'")
 
-    // Map characters to approximate QWERTY positions
+    // Map characters to approximate QWERTY positions (360x280 keyboard)
+    // Matching Python test_cli_predict.py layout
     val keyPositions = mapOf(
-        'h' to PointF(540f, 200f),  // ASDF row, middle
-        'e' to PointF(280f, 100f),  // QWER row, left-middle
-        'l' to PointF(730f, 200f),  // ASDF row, right-middle
-        'o' to PointF(820f, 100f),  // QWER row, right-middle
-        't' to PointF(430f, 100f),  // QWER row, middle
-        's' to PointF(190f, 200f),  // ASDF row, left
-        // Add more as needed
+        'q' to PointF(18f, 34f), 'w' to PointF(54f, 34f), 'e' to PointF(90f, 34f),
+        'r' to PointF(126f, 34f), 't' to PointF(162f, 34f), 'y' to PointF(198f, 34f),
+        'u' to PointF(234f, 34f), 'i' to PointF(270f, 34f), 'o' to PointF(306f, 34f),
+        'p' to PointF(342f, 34f),
+        'a' to PointF(36f, 93f), 's' to PointF(72f, 93f), 'd' to PointF(108f, 93f),
+        'f' to PointF(144f, 93f), 'g' to PointF(180f, 93f), 'h' to PointF(216f, 93f),
+        'j' to PointF(252f, 93f), 'k' to PointF(288f, 93f), 'l' to PointF(324f, 93f),
+        'z' to PointF(72f, 152f), 'x' to PointF(108f, 152f), 'c' to PointF(144f, 152f),
+        'v' to PointF(180f, 152f), 'b' to PointF(216f, 152f), 'n' to PointF(252f, 152f),
+        'm' to PointF(288f, 152f)
     )
 
     val points = mutableListOf<PointF>()
@@ -505,8 +520,8 @@ fun createTestSwipe(word: String): List<PointF> {
 
         // Add several points around each key (simulate continuous swipe)
         for (i in 0 until 10) {
-            val x = keyPos.x + (Math.random() * 20 - 10).toFloat()
-            val y = keyPos.y + (Math.random() * 15 - 7.5).toFloat()
+            val x = keyPos.x + (Math.random() * 10 - 5).toFloat()
+            val y = keyPos.y + (Math.random() * 8 - 4).toFloat()
             points.add(PointF(x, y))
         }
     }
