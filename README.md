@@ -2,11 +2,9 @@
 </br>
 <img src="./res/mipmap-xxxhdpi/ic_launcher.png" width="200" />
 
-</div>
-
-<div align="center">
-
 # CleverKeys
+
+<img src="./assets/banner/social_preview.jpg" width="100%" />
 
 </div>
 
