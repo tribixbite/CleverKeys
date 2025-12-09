@@ -106,6 +106,7 @@ class Config private constructor(
     // Short gesture configuration
     @JvmField var short_gestures_enabled = false
     @JvmField var short_gesture_min_distance = 0
+    @JvmField var short_gesture_max_distance = 100 // Max distance as % of key diagonal (min+1 to 150, 100=key boundary)
 
     // Gesture timing configuration (exposed hardcoded constants)
     @JvmField var tap_duration_threshold = 150L // Max duration for a tap gesture (ms)
@@ -300,6 +301,7 @@ class Config private constructor(
 
         short_gestures_enabled = _prefs.getBoolean("short_gestures_enabled", true)
         short_gesture_min_distance = safeGetInt(_prefs, "short_gesture_min_distance", 40)
+        short_gesture_max_distance = safeGetInt(_prefs, "short_gesture_max_distance", 100)
 
         // Gesture timing configuration
         tap_duration_threshold = safeGetInt(_prefs, "tap_duration_threshold", 150).toLong()

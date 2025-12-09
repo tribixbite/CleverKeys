@@ -270,28 +270,32 @@ class Pointers(
                     
                     // CRITICAL FIX: Calculate keyHypotenuse since it's needed for threshold calculation
                     val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
-                    
-                    // Calculate threshold: Use MIN of percentage-based and absolute threshold
-                    // This ensures wide keys (like Backspace) don't require huge swipes, 
+
+                    // Calculate MIN threshold: Use MIN of percentage-based and absolute threshold
+                    // This ensures wide keys (like Backspace) don't require huge swipes,
                     // while small keys still respect the percentage to avoid accidental triggers.
-                    val percentThreshold = keyHypotenuse * (_config.short_gesture_min_distance / 100.0f)
+                    val percentMinThreshold = keyHypotenuse * (_config.short_gesture_min_distance / 100.0f)
                     val absoluteThreshold = _config.swipe_dist_px.toFloat()
-                    
+
                     // RELAXED THRESHOLD: Use 0.8 factor to approximate Manhattan->Euclidean conversion
                     // (Manhattan distance is ~1.4x Euclidean for diagonals).
                     // Also removed the 1.5f multiplier which made triggering too hard.
                     val effectiveAbsolute = if (absoluteThreshold > 0) absoluteThreshold * 0.8f else Float.MAX_VALUE
-                    
-                    // Use the easier (smaller) of the two thresholds
-                    val minDistance = min(percentThreshold, effectiveAbsolute)
+
+                    // Use the easier (smaller) of the two thresholds for minimum
+                    val minDistance = min(percentMinThreshold, effectiveAbsolute)
+
+                    // Calculate MAX threshold as percentage of key diagonal
+                    // Default 100% = roughly the key boundary, higher values allow swipes beyond key
+                    val maxDistance = keyHypotenuse * (_config.short_gesture_max_distance / 100.0f)
 
                     Log.d(
                         "Pointers", "Short gesture check: distance=$distance " +
-                            "minDistance=$minDistance (abs=$absoluteThreshold, effAbs=$effectiveAbsolute, pct=$percentThreshold) " +
-                            "(${_config.short_gesture_min_distance}% of $keyHypotenuse)"
+                            "minDistance=$minDistance maxDistance=$maxDistance " +
+                            "(min=${_config.short_gesture_min_distance}% max=${_config.short_gesture_max_distance}% of $keyHypotenuse)"
                     )
 
-                    if (distance >= minDistance) {
+                    if (distance >= minDistance && distance <= maxDistance) {
                         // Trigger short gesture - calculate direction (same as original repo)
                         val a = atan2(dy, dx) + Math.PI
                         // a is between 0 and 2pi, 0 is pointing to the left

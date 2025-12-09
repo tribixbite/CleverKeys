@@ -257,6 +257,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Short gesture settings
     private var shortGesturesEnabled by mutableStateOf(true)
     private var shortGestureMinDistance by mutableStateOf(30)
+    private var shortGestureMaxDistance by mutableStateOf(100)
 
     // Swipe debug advanced settings
     private var swipeDebugDetailedLogging by mutableStateOf(false)
@@ -1601,7 +1602,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 if (shortGesturesEnabled) {
                     SettingsSlider(
                         title = "Short Gesture Min Distance",
-                        description = "Minimum distance for short gesture recognition (px)",
+                        description = "Minimum swipe distance to trigger (% of key diagonal)",
                         value = shortGestureMinDistance.toFloat(),
                         valueRange = 10f..60f,
                         steps = 10,
@@ -1609,7 +1610,20 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             shortGestureMinDistance = it.toInt()
                             saveSetting("short_gesture_min_distance", shortGestureMinDistance)
                         },
-                        displayValue = "${shortGestureMinDistance}px"
+                        displayValue = "${shortGestureMinDistance}%"
+                    )
+
+                    SettingsSlider(
+                        title = "Short Gesture Max Distance",
+                        description = "Maximum swipe distance before ignored (% of key diagonal, 100=key boundary)",
+                        value = shortGestureMaxDistance.toFloat(),
+                        valueRange = 50f..150f,
+                        steps = 20,
+                        onValueChange = {
+                            shortGestureMaxDistance = it.toInt()
+                            saveSetting("short_gesture_max_distance", shortGestureMaxDistance)
+                        },
+                        displayValue = "${shortGestureMaxDistance}%"
                     )
 
                     // Button to customize short swipe actions per key
@@ -3113,6 +3127,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Short gesture settings
         shortGesturesEnabled = prefs.getSafeBoolean("short_gestures_enabled", true)
         shortGestureMinDistance = Config.safeGetInt(prefs, "short_gesture_min_distance", 30)
+        shortGestureMaxDistance = Config.safeGetInt(prefs, "short_gesture_max_distance", 100)
 
         // Swipe debug advanced settings
         swipeDebugDetailedLogging = prefs.getSafeBoolean("swipe_debug_detailed_logging", false)
