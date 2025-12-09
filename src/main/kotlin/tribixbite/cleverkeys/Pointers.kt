@@ -285,22 +285,16 @@ class Pointers(
                     // Use the easier (smaller) of the two thresholds for minimum
                     val minDistance = min(percentMinThreshold, effectiveAbsolute)
 
-                    // MAX distance check is OPTIONAL - hasLeftStartingKey already bounds the gesture
-                    // Only apply max if user explicitly set it below 150% (the "disabled" value)
-                    val maxDistance = if (_config.short_gesture_max_distance < 150) {
-                        keyHypotenuse * (_config.short_gesture_max_distance / 100.0f)
-                    } else {
-                        Float.MAX_VALUE  // Disabled - rely on hasLeftStartingKey only
-                    }
-
+                    // Max distance is now handled by hasLeftStartingKey calculation during MOVE
+                    // If we got here, hasLeftStartingKey is false, meaning we're within max_distance
                     Log.d(
                         "Pointers", "Short gesture check: distance=$distance " +
-                            "minDistance=$minDistance maxDistance=$maxDistance " +
+                            "minDistance=$minDistance " +
                             "(min=${_config.short_gesture_min_distance}% max=${_config.short_gesture_max_distance}% of $keyHypotenuse) " +
                             "hasLeftKey=${ptr.hasLeftStartingKey}"
                     )
 
-                    if (distance >= minDistance && (maxDistance == Float.MAX_VALUE || distance <= maxDistance)) {
+                    if (distance >= minDistance) {
                         // Trigger short gesture - calculate direction (same as original repo)
                         val a = atan2(dy, dx) + Math.PI
                         // a is between 0 and 2pi, 0 is pointing to the left
@@ -562,9 +556,18 @@ class Pointers(
         }
 
         // Track if pointer has left the starting key (for short gesture detection on UP)
-        // Use 40% tolerance margin to allow directional swipes that naturally go toward corners
+        // Use short_gesture_max_distance to define the boundary (as % of key diagonal)
+        // Higher values = more lenient, allows swipes further from key center
         if (ptr.key != null && !ptr.hasLeftStartingKey) {
-            if (!_handler.isPointWithinKeyWithTolerance(x, y, ptr.key, 0.40f)) {
+            val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
+            val maxAllowedDistance = keyHypotenuse * (_config.short_gesture_max_distance / 100.0f)
+
+            // Calculate distance from key center
+            val keyCenterX = ptr.downX  // Approximation: touch down point is roughly key center
+            val keyCenterY = ptr.downY
+            val distanceFromStart = sqrt((x - keyCenterX) * (x - keyCenterX) + (y - keyCenterY) * (y - keyCenterY))
+
+            if (distanceFromStart > maxAllowedDistance) {
                 ptr.hasLeftStartingKey = true
             }
         }
