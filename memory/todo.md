@@ -1,11 +1,32 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2025-12-08
-**Session**: GitHub social preview banner
+**Session**: CLI ONNX test fixes
 
 ---
 
 ## Completed This Session (2025-12-08)
+
+### CLI ONNX Test Architecture Updates
+- [x] Fixed Kotlin CLI test (TestOnnxCli.kt) to match current model architecture
+  - Fix encoder input name: `trajectory` → `trajectory_features`
+  - Fix keyboard dimensions: 360x280 (matches Python test)
+  - Fix mask tensors: use `Array<BooleanArray>` for boolean 2D tensors
+  - Fix decoder: use fixed `DECODER_SEQ_LENGTH=20` with padding
+  - Fix beam search: use negative log prob scoring (lower is better)
+  - Add complete QWERTY key positions for test swipe generation
+- [x] Verified Python CLI test (test_cli_predict.py) works in Termux
+  - Uses onnxruntime 1.22.2 natively
+  - Loads encoder/decoder models successfully
+  - Runs beam search predictions
+- [x] Verified Kotlin CLI test works with patched Android JAR
+  - Patched JAR: `~/tmp/onnx-jar-fix/onnxruntime-1.20.0-android.jar`
+  - Test prediction "hello" found at rank 2 (28.6% confidence)
+- [x] Verified web demo (swipe-onnx.html) already uses correct architecture
+  - Uses `trajectory_features`, `nearest_keys`, `src_mask` input names
+  - Uses `DECODER_SEQ_LENGTH = 20` fixed length
+  - Uses boolean masks (`bool` type)
+- [x] Commit: 4d59de17 - fix(cli-test): update Kotlin ONNX test to match current model architecture
 
 ### GitHub Social Preview Banner (ImageToolbox Style)
 - [x] Created professional 3-phone banner layout matching ImageToolbox (7k+ stars)

@@ -232,13 +232,26 @@ class KeyEventHandler(
             // This attaches punctuation to the end of the previous word (e.g., "word ." -> "word.")
             val smartPuncEnabled = Config.globalConfig().smart_punctuation
             val isPunctChar = isSmartPunctuationChar(char)
-            android.util.Log.d("KeyEventHandler", "SMART_PUNCT: char='$char' enabled=$smartPuncEnabled isPunct=$isPunctChar")
-            if (smartPuncEnabled && isPunctChar) {
-                val textBefore = conn.getTextBeforeCursor(1, 0)
-                android.util.Log.d("KeyEventHandler", "SMART_PUNCT: textBefore='$textBefore'")
-                if (textBefore != null && textBefore.length == 1 && textBefore[0] == ' ') {
-                    android.util.Log.d("KeyEventHandler", "SMART_PUNCT: Deleting space before '$char'")
+            val isQuote = isQuoteChar(char)
+
+            if (smartPuncEnabled && (isPunctChar || isQuote)) {
+                val textBefore = conn.getTextBeforeCursor(10, 0)  // Get more context for quote logic
+                val lastCharIsSpace = textBefore?.lastOrNull() == ' '
+
+                if (isPunctChar && lastCharIsSpace) {
+                    // Regular punctuation: always attach to previous word
                     conn.deleteSurroundingText(1, 0)
+                } else if (isQuote && lastCharIsSpace) {
+                    // Quote handling: only attach if it's a CLOSING quote, not apostrophe
+                    if (!isLikelyApostrophe(char, textBefore?.dropLast(1))) {
+                        // Not an apostrophe - check if closing quote
+                        if (isClosingQuote(char, textBefore)) {
+                            // Closing quote: delete space to attach to word
+                            conn.deleteSurroundingText(1, 0)
+                        }
+                        // Opening quote: keep the space (do nothing)
+                    }
+                    // Apostrophe: just insert normally (handled by contraction logic elsewhere)
                 }
             }
 
@@ -256,10 +269,48 @@ class KeyEventHandler(
     /** Characters that should attach to the previous word (smart punctuation). */
     private fun isSmartPunctuationChar(c: Char): Boolean {
         return when (c) {
-            '.', ',', '!', '?', ';', ':', '\'', '"', ')', ']', '}' -> true
+            '.', ',', '!', '?', ';', ':', ')', ']', '}' -> true
+            // Quotes handled separately by isClosingQuote()
+            '\'', '"' -> false
             else -> false
         }
     }
+
+    /**
+     * Determines if a quote character is likely an apostrophe (contractions/possessives).
+     * Apostrophes should NOT trigger smart punctuation spacing logic.
+     * Examples: don't, it's, John's, 90's
+     */
+    private fun isLikelyApostrophe(quote: Char, textBefore: CharSequence?): Boolean {
+        if (quote != '\'') return false
+        if (textBefore.isNullOrEmpty()) return false
+        val lastChar = textBefore.last()
+        // Apostrophe if preceded by letter or digit (contractions, possessives, decades)
+        return lastChar.isLetterOrDigit()
+    }
+
+    /**
+     * Determines if a quote should attach to the previous word (closing quote).
+     * Opening quotes should have space before them; closing quotes should not.
+     *
+     * Heuristic: A quote is closing if preceded by a letter/digit (possibly with trailing space).
+     * Example: 'hello "' + '"' → closing (delete space, attach quote)
+     * Example: 'said "' + opening quote already there, now typing word...
+     */
+    private fun isClosingQuote(quote: Char, textBefore: CharSequence?): Boolean {
+        if (quote != '\'' && quote != '"') return false
+        if (textBefore.isNullOrEmpty()) return false
+
+        val trimmed = textBefore.trimEnd()
+        if (trimmed.isEmpty()) return false
+
+        val lastChar = trimmed.last()
+        // Closing if preceded by letter/digit (the word being quoted)
+        return lastChar.isLetterOrDigit()
+    }
+
+    /** Check if quote character needs smart punctuation handling. */
+    private fun isQuoteChar(c: Char): Boolean = c == '\'' || c == '"'
 
     /** See {!InputConnection.performContextMenuAction}. */
     private fun sendContextMenuAction(id: Int) {
