@@ -256,8 +256,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Short gesture settings
     private var shortGesturesEnabled by mutableStateOf(true)
-    private var shortGestureMinDistance by mutableStateOf(30)
-    private var shortGestureMaxDistance by mutableStateOf(100)
+    private var shortGestureMinDistance by mutableStateOf(40) // Consistent with Config.kt default
+    private var shortGestureMaxDistance by mutableStateOf(150) // 150 = disabled (rely on key boundary)
 
     // Swipe debug advanced settings
     private var swipeDebugDetailedLogging by mutableStateOf(false)
@@ -1615,7 +1615,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                     SettingsSlider(
                         title = "Short Gesture Max Distance",
-                        description = "Maximum swipe distance before ignored (% of key diagonal, 100=key boundary)",
+                        description = "Maximum swipe distance (% of key diagonal). 150% = disabled (use key boundary only)",
                         value = shortGestureMaxDistance.toFloat(),
                         valueRange = 50f..150f,
                         steps = 20,
@@ -1623,7 +1623,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             shortGestureMaxDistance = it.toInt()
                             saveSetting("short_gesture_max_distance", shortGestureMaxDistance)
                         },
-                        displayValue = "${shortGestureMaxDistance}%"
+                        displayValue = if (shortGestureMaxDistance >= 150) "OFF" else "${shortGestureMaxDistance}%"
                     )
 
                     // Button to customize short swipe actions per key
@@ -3126,8 +3126,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
         // Short gesture settings
         shortGesturesEnabled = prefs.getSafeBoolean("short_gestures_enabled", true)
-        shortGestureMinDistance = Config.safeGetInt(prefs, "short_gesture_min_distance", 30)
-        shortGestureMaxDistance = Config.safeGetInt(prefs, "short_gesture_max_distance", 100)
+        shortGestureMinDistance = Config.safeGetInt(prefs, "short_gesture_min_distance", 40)
+        shortGestureMaxDistance = Config.safeGetInt(prefs, "short_gesture_max_distance", 150) // 150 = disabled
 
         // Swipe debug advanced settings
         swipeDebugDetailedLogging = prefs.getSafeBoolean("swipe_debug_detailed_logging", false)

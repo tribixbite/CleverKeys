@@ -285,17 +285,22 @@ class Pointers(
                     // Use the easier (smaller) of the two thresholds for minimum
                     val minDistance = min(percentMinThreshold, effectiveAbsolute)
 
-                    // Calculate MAX threshold as percentage of key diagonal
-                    // Default 100% = roughly the key boundary, higher values allow swipes beyond key
-                    val maxDistance = keyHypotenuse * (_config.short_gesture_max_distance / 100.0f)
+                    // MAX distance check is OPTIONAL - hasLeftStartingKey already bounds the gesture
+                    // Only apply max if user explicitly set it below 150% (the "disabled" value)
+                    val maxDistance = if (_config.short_gesture_max_distance < 150) {
+                        keyHypotenuse * (_config.short_gesture_max_distance / 100.0f)
+                    } else {
+                        Float.MAX_VALUE  // Disabled - rely on hasLeftStartingKey only
+                    }
 
                     Log.d(
                         "Pointers", "Short gesture check: distance=$distance " +
                             "minDistance=$minDistance maxDistance=$maxDistance " +
-                            "(min=${_config.short_gesture_min_distance}% max=${_config.short_gesture_max_distance}% of $keyHypotenuse)"
+                            "(min=${_config.short_gesture_min_distance}% max=${_config.short_gesture_max_distance}% of $keyHypotenuse) " +
+                            "hasLeftKey=${ptr.hasLeftStartingKey}"
                     )
 
-                    if (distance >= minDistance && distance <= maxDistance) {
+                    if (distance >= minDistance && (maxDistance == Float.MAX_VALUE || distance <= maxDistance)) {
                         // Trigger short gesture - calculate direction (same as original repo)
                         val a = atan2(dy, dx) + Math.PI
                         // a is between 0 and 2pi, 0 is pointing to the left

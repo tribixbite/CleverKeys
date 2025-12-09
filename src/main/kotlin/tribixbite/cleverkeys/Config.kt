@@ -301,7 +301,7 @@ class Config private constructor(
 
         short_gestures_enabled = _prefs.getBoolean("short_gestures_enabled", true)
         short_gesture_min_distance = safeGetInt(_prefs, "short_gesture_min_distance", 40)
-        short_gesture_max_distance = safeGetInt(_prefs, "short_gesture_max_distance", 100)
+        short_gesture_max_distance = safeGetInt(_prefs, "short_gesture_max_distance", 150) // 150 = disabled
 
         // Gesture timing configuration
         tap_duration_threshold = safeGetInt(_prefs, "tap_duration_threshold", 150).toLong()
