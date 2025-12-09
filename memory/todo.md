@@ -38,6 +38,15 @@
 - [x] Commits: 538e1384, c9088d96, c2c63209, 676c7c73, ef09fefd
 - [ ] **Manual**: Upload social_preview.jpg to GitHub Settings → Social preview
 
+### Smart Quote Detection (Opening vs Closing)
+- [x] Quotes only attach to previous word when CLOSING a quoted phrase
+- [x] `isClosingQuote()`: Detects closing quotes (preceded by letter/digit)
+- [x] `isLikelyApostrophe()`: Detects contractions (don't), possessives (John's), decades (90's)
+- [x] Opening quotes preserve normal spacing
+- [x] Apostrophes bypass smart punctuation entirely
+- [x] Reviewed by Gemini 2.5 Pro via zen MCP
+- [x] Commit: 1efe81ce
+
 ### Files Created
 - `assets/banner/social_preview.jpg` (169KB, 1280x640) - Final banner
 - `assets/banner/social_preview.png` (592KB) - PNG version
