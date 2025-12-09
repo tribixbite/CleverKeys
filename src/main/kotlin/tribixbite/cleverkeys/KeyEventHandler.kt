@@ -235,7 +235,7 @@ class KeyEventHandler(
             val isQuote = isQuoteChar(char)
 
             if (smartPuncEnabled && (isPunctChar || isQuote)) {
-                val textBefore = conn.getTextBeforeCursor(10, 0)  // Get more context for quote logic
+                val textBefore = conn.getTextBeforeCursor(500, 0)  // Get enough context for quote counting
                 val lastCharIsSpace = textBefore?.lastOrNull() == ' '
 
                 if (isPunctChar && lastCharIsSpace) {
@@ -293,20 +293,23 @@ class KeyEventHandler(
      * Determines if a quote should attach to the previous word (closing quote).
      * Opening quotes should have space before them; closing quotes should not.
      *
-     * Heuristic: A quote is closing if preceded by a letter/digit (possibly with trailing space).
-     * Example: 'hello "' + '"' → closing (delete space, attach quote)
-     * Example: 'said "' + opening quote already there, now typing word...
+     * Heuristic: Count quotes of the same type in textBefore. If odd count,
+     * there's an unmatched opening quote, so this is a closing quote.
+     * If even count (or zero), this is an opening quote.
+     *
+     * Example: 'He said "hello ' + '"' → one " found (odd) → closing
+     * Example: 'He said ' + '"' → zero " found (even) → opening
      */
     private fun isClosingQuote(quote: Char, textBefore: CharSequence?): Boolean {
         if (quote != '\'' && quote != '"') return false
         if (textBefore.isNullOrEmpty()) return false
 
-        val trimmed = textBefore.trimEnd()
-        if (trimmed.isEmpty()) return false
+        // Count occurrences of this quote type in the text before cursor
+        val quoteCount = textBefore.count { it == quote }
 
-        val lastChar = trimmed.last()
-        // Closing if preceded by letter/digit (the word being quoted)
-        return lastChar.isLetterOrDigit()
+        // Odd count means there's an unmatched opening quote → this is closing
+        // Even count (including 0) means no unmatched quote → this is opening
+        return quoteCount % 2 == 1
     }
 
     /** Check if quote character needs smart punctuation handling. */

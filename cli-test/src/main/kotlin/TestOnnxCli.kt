@@ -37,7 +37,7 @@ data class PredictionResult(
 // Constants
 // ============================================================================
 
-const val MAX_TRAJECTORY_POINTS = 150
+const val MAX_TRAJECTORY_POINTS = 250
 const val DECODER_SEQ_LENGTH = 20  // Fixed decoder sequence length
 const val KEYBOARD_WIDTH = 360f   // Normalized keyboard width (matches Python)
 const val KEYBOARD_HEIGHT = 280f  // Normalized keyboard height (matches Python)
