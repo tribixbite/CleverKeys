@@ -423,6 +423,6 @@ tasks.register('copyLayoutDefinitions')
   copy {
     from "src/main/layouts"
     include "*.xml"
-    into "build/generated-resources/xml"
+    into "build/generated-resources/raw"
   }
 }

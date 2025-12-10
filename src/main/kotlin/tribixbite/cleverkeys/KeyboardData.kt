@@ -483,14 +483,28 @@ class KeyboardData private constructor(
             if (_layoutCache.containsKey(id))
                 return _layoutCache[id]
             var l: KeyboardData? = null
-            var parser: XmlResourceParser? = null
+            
             try {
-                parser = res.getXml(id)
-                l = parse_keyboard(parser)
+                // Try loading as compiled XML first
+                val parser = res.getXml(id)
+                try {
+                    l = parse_keyboard(parser)
+                } finally {
+                    parser.close()
+                }
             } catch (e: Exception) {
-                Logs.exn("Failed to load layout id $id", e)
+                // Fallback: Try loading as raw XML stream
+                 try {
+                    res.openRawResource(id).use { stream ->
+                        val parser = Xml.newPullParser()
+                        parser.setInput(stream, "UTF-8")
+                        l = parse_keyboard(parser)
+                    }
+                } catch (e2: Exception) {
+                    Logs.exn("Failed to load layout id $id", e2)
+                }
             }
-            parser?.close()
+            
             _layoutCache[id] = l
             return l
         }
