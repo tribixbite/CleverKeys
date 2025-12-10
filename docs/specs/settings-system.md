@@ -173,11 +173,58 @@ SettingsActivity (Material 3 Compose)
     ├── Config (reads SharedPreferences)
     └── ConfigurationManager (applies settings)
 
+Defaults Architecture (added 2025-12-10):
+    └── Defaults object (Config.kt)
+        ├── Single source of truth for all ~100 default values
+        ├── Referenced by Config.kt refresh()
+        ├── Referenced by SettingsActivity.kt loadCurrentSettings()
+        └── Referenced by onSharedPreferenceChanged()
+
 Storage Strategy:
     ├── SharedPreferences (settings data)
+    ├── DirectBootAwarePreferences (device-protected storage)
     ├── App-specific storage (getExternalFilesDir)
     └── Scoped storage (Android 11+)
 ```
+
+### Defaults Object (Config.kt)
+
+**Added**: 2025-12-10 (commit f85a2a33)
+
+The `Defaults` object centralizes all app default values to prevent mismatches between different code paths:
+
+```kotlin
+object Defaults {
+    // Appearance
+    const val THEME = "cleverkeysdark"
+    const val KEYBOARD_HEIGHT_PORTRAIT = 28
+    const val KEYBOARD_HEIGHT_LANDSCAPE = 50
+    // ... ~100 constants organized by category
+
+    // Neural prediction
+    const val NEURAL_BEAM_WIDTH = 6
+    const val NEURAL_MAX_LENGTH = 20
+    // ...
+}
+```
+
+**Why this matters**: Previously, Config.kt and SettingsActivity.kt had separate hardcoded defaults. If they disagreed, new users would see one value in the settings UI but the keyboard would use a different value. Now both files reference `Defaults.X`.
+
+**Categories**:
+- Appearance (theme, opacity, sizing)
+- Layout (margins, numpad, number row)
+- Input behavior (vibration, long press, key repeat)
+- Gesture settings (swipe distance, tap threshold)
+- Short gestures
+- Swipe trail appearance
+- Neural prediction
+- Word prediction
+- Autocorrect
+- Clipboard
+- Multi-language
+- Debug
+- Privacy
+- Accessibility
 
 ### Component Breakdown
 1. **SettingsActivity**: Material 3 Compose UI for settings
@@ -259,6 +306,6 @@ Storage Strategy:
 ---
 
 **Created**: 2025-10-21
-**Last Updated**: 2025-10-21
+**Last Updated**: 2025-12-10
 **Owner**: CleverKeys Development Team
-**Status**: Historical issues documented, verification tasks created
+**Status**: Defaults object added to centralize default values (f85a2a33)

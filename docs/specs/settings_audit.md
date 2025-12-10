@@ -209,7 +209,14 @@ All short gesture settings moved to Gesture Tuning section
    - ✅ Consolidated autocorrect settings into single section
    - ✅ Moved Short Gesture settings to Gesture Tuning
 
-3. **Phase 3** (Optional - Low Priority):
+3. **Phase 2.5** ✅ COMPLETE (commit f85a2a33):
+   - ✅ Created `Defaults` object as single source of truth for all ~100 defaults
+   - ✅ Updated Config.kt to use `Defaults.X` instead of hardcoded values
+   - ✅ Updated SettingsActivity.kt loadCurrentSettings() to use `Defaults.X`
+   - ✅ Updated onSharedPreferenceChanged() listener to use `Defaults.X`
+   - **Bug fixed**: Settings UI showing different values than keyboard used
+
+4. **Phase 3** (Optional - Low Priority):
    - Add sensitivity presets for distance settings
    - Standardize units across distance settings
    - Further section merges if desired
