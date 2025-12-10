@@ -126,7 +126,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Phase 1: Expose existing Config.kt settings
     private var swipeTypingEnabled by mutableStateOf(true)  // Master switch for swipe typing (default ON for CleverKeys)
-    private var wordPredictionEnabled by mutableStateOf(false)
+    private var wordPredictionEnabled by mutableStateOf(true)  // Match Config.kt default
     private var suggestionBarOpacity by mutableStateOf(90)
     private var autoCorrectEnabled by mutableStateOf(true)
     private var termuxModeEnabled by mutableStateOf(false)
@@ -470,7 +470,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
             // Phase 1: Exposed Config.kt settings listeners
             "word_prediction_enabled" -> {
-                wordPredictionEnabled = prefs.getBoolean(key, false)
+                wordPredictionEnabled = prefs.getBoolean(key, true)
             }
             "suggestion_bar_opacity" -> {
                 suggestionBarOpacity = Config.safeGetInt(prefs, key, 90)
@@ -2999,7 +2999,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         voiceGuidanceEnabled = prefs.getSafeBoolean("voice_guidance_enabled", false)
 
         // Phase 1: Load exposed Config.kt settings
-        wordPredictionEnabled = prefs.getSafeBoolean("word_prediction_enabled", false)
+        wordPredictionEnabled = prefs.getSafeBoolean("word_prediction_enabled", true)
         suggestionBarOpacity = Config.safeGetInt(prefs, "suggestion_bar_opacity", 90)
         autoCorrectEnabled = prefs.getSafeBoolean("autocorrect_enabled", true)
         termuxModeEnabled = prefs.getSafeBoolean("termux_mode_enabled", false)
