@@ -7,16 +7,20 @@ Comprehensive review of all settings in `SettingsActivity.kt` to identify:
 - Settings in wrong categories
 - UX restructuring recommendations
 
-## Status: PARTIALLY FIXED
+## Status: MOSTLY FIXED
 
 **Fixed (commit 8a1315af):**
 - ✅ Removed duplicate `clipboard_history_enabled` from Input section
 - ✅ Deleted legacy XML fallback UI (~105 lines removed)
 
-**Remaining:**
-- 5+ confusing similar settings (swipe distances)
-- 6 settings in wrong categories
-- Autocorrect split across 2 sections
+**Fixed (commit e35d2642):**
+- ✅ Moved Terminal Mode from Neural to Advanced section
+- ✅ Moved Short Gestures from Input to Gesture Tuning section
+- ✅ Consolidated autocorrect settings into single "Auto-Correction" section with subsections
+
+**Remaining (Low Priority):**
+- 5+ confusing similar settings (swipe distances with different units)
+- Could further merge sections (14 → 11) but current organization is functional
 
 ---
 
@@ -57,49 +61,34 @@ Comprehensive review of all settings in `SettingsActivity.kt` to identify:
 2. Standardize units (either all pixels or all % of key size)
 3. Add clear unit labels to each setting
 
-### 2.2 Autocorrect Settings (SPLIT ACROSS SECTIONS)
+### 2.2 Autocorrect Settings ~~(SPLIT ACROSS SECTIONS)~~ ✅ FIXED
 
-**In Input Section (lines 1308-1358):**
-- Enable Auto-Correction (`autocorrect_enabled`)
-- Minimum Word Length (`autocorrect_min_word_length`)
-- Character Match Threshold (`autocorrect_char_match_threshold`)
-- Minimum Frequency (`autocorrect_confidence_min_frequency`)
+~~**In Input Section (lines 1308-1358):**~~
+~~**In Swipe Corrections Section (lines 1624-1782):**~~
 
-**In Swipe Corrections Section (lines 1624-1782):**
-- Beam Autocorrect (`swipe_beam_autocorrect_enabled`)
-- Final Autocorrect (`swipe_final_autocorrect_enabled`)
-- Typo Forgiveness (`autocorrect_max_length_diff`)
-- Starting Letter Accuracy (`autocorrect_prefix_length`)
-- Correction Search Depth (`autocorrect_max_beam_candidates`)
+**Status**: ✅ FIXED (commit e35d2642) - All autocorrect settings consolidated into single "Auto-Correction" section with:
+- Master toggle at top
+- Basic Settings subsection
+- Swipe Correction subsection
+- Advanced subsection
+- Word Scoring subsection
 
-**Problem**: User must look in 2 places for autocorrect settings
+### 2.3 Short Gesture Settings ~~(SPLIT ACROSS SECTIONS)~~ ✅ FIXED
 
-**Recommendation**: Merge all autocorrect settings into ONE section titled "Auto-Correction"
-
-### 2.3 Short Gesture Settings (SPLIT ACROSS SECTIONS)
-
-**In Input Section:**
-- Short Gestures toggle
-- Short Gesture Min/Max Distance
-- "Customize Short Swipes" button
-
-**In Gesture Tuning Section:**
-- Short Swipe Customization card (navigation)
-
-**Recommendation**: Move all short gesture settings to Gesture Tuning section
+**Status**: ✅ FIXED (commit e35d2642) - All short gesture settings moved to Gesture Tuning section
 
 ---
 
 ## 3. SETTINGS IN WRONG CATEGORIES
 
-| Setting | Current Section | Better Section | Reason |
+| Setting | Current Section | Better Section | Status |
 |---------|-----------------|----------------|--------|
-| Clipboard History toggle | Input | Clipboard | All clipboard settings should be together |
-| Terminal Mode | Neural | Advanced or Input | Not related to neural prediction |
-| Short Gestures (all) | Input | Gesture Tuning | Gesture configuration belongs together |
-| Vibration | Input | Appearance or Accessibility | User preference, not input behavior |
-| Smart Punctuation | Input | Swipe Corrections | Auto-formatting behavior |
-| Pin Entry Layout | Input | Appearance | Layout/visual setting |
+| Clipboard History toggle | ~~Input~~ | Clipboard | ✅ FIXED - Removed duplicate |
+| Terminal Mode | ~~Neural~~ | Advanced | ✅ FIXED - Moved to Advanced |
+| Short Gestures (all) | ~~Input~~ | Gesture Tuning | ✅ FIXED - Moved to Gesture Tuning |
+| Vibration | Input | Appearance or Accessibility | Low priority |
+| Smart Punctuation | Input | Auto-Correction | Low priority |
+| Pin Entry Layout | Input | Appearance | Low priority |
 
 ---
 
@@ -176,55 +165,54 @@ Comprehensive review of all settings in `SettingsActivity.kt` to identify:
 
 ---
 
-## 5. SPECIFIC FIXES REQUIRED
+## 5. SPECIFIC FIXES COMPLETED
 
-### Priority 1: Remove True Duplicate
-```kotlin
-// Remove from Input Section (around line 1382-1390):
-// The clipboard_history_enabled toggle - ALREADY EXISTS in Clipboard section
-```
+### ✅ Priority 1: Remove True Duplicate (commit 8a1315af)
+Removed duplicate `clipboard_history_enabled` from Input section
 
-### Priority 2: Move Terminal Mode
-```kotlin
-// Move from Neural section to Advanced section
-// Terminal Mode is about key layout, not neural prediction
-```
+### ✅ Priority 2: Move Terminal Mode (commit e35d2642)
+Moved from Neural section to Advanced section
 
-### Priority 3: Consolidate Distance Settings
-Add clear documentation or consolidate the 5 distance-related settings:
+### ✅ Priority 3: Consolidate Autocorrect (commit e35d2642)
+All autocorrect settings consolidated into single "Auto-Correction" section
+
+### ✅ Priority 4: Move Short Gestures (commit e35d2642)
+All short gesture settings moved to Gesture Tuning section
+
+### Remaining (Low Priority): Distance Settings
+5 distance-related settings with different units could be clarified:
 - Consider adding a "Swipe Sensitivity" preset (Low/Medium/High) that sets multiple values
-
-### Priority 4: Consolidate Autocorrect
-Move all autocorrect_* settings to single section
+- Or add clearer unit labels to each setting
 
 ---
 
 ## 6. METRICS
 
-| Metric | Current | After Fixes |
-|--------|---------|-------------|
-| Total sections | 14 | 11 |
-| Duplicate settings | 1 | 0 |
-| Confusing similar settings | 5+ | 2-3 |
-| Settings in wrong category | 6 | 0 |
-| Lines of code (UI) | ~2500 | ~2300 (est.) |
+| Metric | Before | After Fixes |
+|--------|--------|-------------|
+| Total sections | 14 | 13 (Auto-Correction renamed) |
+| Duplicate settings | 1 | 0 ✅ |
+| Settings in wrong category | 6 | 3 (low priority) |
+| Confusing similar settings | 5+ | 5 (distance units - low priority) |
+| Lines changed | - | -19 net (210 insertions, 229 deletions) |
 
 ---
 
 ## 7. IMPLEMENTATION PLAN
 
-1. **Phase 1** (Quick wins - 15 min):
-   - Remove duplicate `clipboard_history_enabled` from Input section
-   - Move Terminal Mode to Advanced section
+1. **Phase 1** ✅ COMPLETE (commit 8a1315af):
+   - ✅ Removed duplicate `clipboard_history_enabled` from Input section
+   - ✅ Deleted legacy XML fallback UI
 
-2. **Phase 2** (Moderate - 1 hour):
-   - Consolidate autocorrect settings into single section
-   - Move Short Gesture settings to Gesture Tuning
+2. **Phase 2** ✅ COMPLETE (commit e35d2642):
+   - ✅ Moved Terminal Mode to Advanced section
+   - ✅ Consolidated autocorrect settings into single section
+   - ✅ Moved Short Gesture settings to Gesture Tuning
 
-3. **Phase 3** (Major - 2-3 hours):
-   - Merge sections as proposed
+3. **Phase 3** (Optional - Low Priority):
    - Add sensitivity presets for distance settings
    - Standardize units across distance settings
+   - Further section merges if desired
 
 ---
 
