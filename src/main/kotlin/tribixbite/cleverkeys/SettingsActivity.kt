@@ -340,190 +340,190 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Handle preference changes for reactive updates
         when (key) {
             "swipe_typing_enabled" -> {
-                swipeTypingEnabled = prefs.getBoolean(key, false)
+                swipeTypingEnabled = prefs.getBoolean(key, Defaults.SWIPE_TYPING_ENABLED)
             }
             "neural_prediction_enabled" -> {
-                neuralPredictionEnabled = prefs.getBoolean(key, true)
+                neuralPredictionEnabled = prefs.getBoolean(key, Defaults.NEURAL_PREDICTION_ENABLED)
             }
             "neural_beam_width" -> {
-                beamWidth = prefs.getInt(key, 8)
+                beamWidth = prefs.getInt(key, Defaults.NEURAL_BEAM_WIDTH)
             }
             "neural_max_length" -> {
-                maxLength = prefs.getInt(key, 35)
+                maxLength = prefs.getInt(key, Defaults.NEURAL_MAX_LENGTH)
             }
             "neural_confidence_threshold" -> {
-                confidenceThreshold = prefs.getFloat(key, 0.1f)
+                confidenceThreshold = prefs.getFloat(key, Defaults.NEURAL_CONFIDENCE_THRESHOLD)
             }
             "theme" -> {
-                currentThemeName = prefs.getSafeString(key, "jewel")
+                currentThemeName = prefs.getSafeString(key, Defaults.THEME)
             }
             "keyboard_height_percent" -> {
-                keyboardHeight = prefs.getInt(key, 35)
+                keyboardHeight = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_PORTRAIT)
             }
             "vibration_enabled" -> {
-                vibrationEnabled = prefs.getBoolean(key, false)
+                vibrationEnabled = prefs.getBoolean(key, Defaults.VIBRATE_CUSTOM)
             }
             "debug_enabled" -> {
-                debugEnabled = prefs.getBoolean(key, false)
+                debugEnabled = prefs.getBoolean(key, Defaults.DEBUG_ENABLED)
                 Logs.setDebugEnabled(debugEnabled)
             }
             "clipboard_history_enabled" -> {
-                clipboardHistoryEnabled = prefs.getBoolean(key, true)
+                clipboardHistoryEnabled = prefs.getBoolean(key, Defaults.CLIPBOARD_HISTORY_ENABLED)
             }
             "auto_capitalization_enabled" -> {
-                autoCapitalizationEnabled = prefs.getBoolean(key, true)
+                autoCapitalizationEnabled = prefs.getBoolean(key, Defaults.AUTOCAPITALISATION)
             }
             "sticky_keys_enabled" -> {
-                stickyKeysEnabled = prefs.getBoolean(key, false)
+                stickyKeysEnabled = prefs.getBoolean(key, Defaults.STICKY_KEYS_ENABLED)
             }
             "sticky_keys_timeout_ms" -> {
-                stickyKeysTimeout = prefs.getInt(key, 5000)
+                stickyKeysTimeout = prefs.getInt(key, Defaults.STICKY_KEYS_TIMEOUT)
             }
             "voice_guidance_enabled" -> {
-                voiceGuidanceEnabled = prefs.getBoolean(key, false)
+                voiceGuidanceEnabled = prefs.getBoolean(key, Defaults.VOICE_GUIDANCE_ENABLED)
             }
             // Adaptive layout settings
             "keyboard_height_landscape" -> {
-                keyboardHeightLandscape = prefs.getInt(key, 50)
+                keyboardHeightLandscape = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_LANDSCAPE)
             }
             "margin_bottom_portrait" -> {
-                marginBottomPortrait = prefs.getInt(key, 7)
+                marginBottomPortrait = prefs.getInt(key, Defaults.MARGIN_BOTTOM_PORTRAIT)
             }
             "margin_bottom_landscape" -> {
-                marginBottomLandscape = prefs.getInt(key, 3)
+                marginBottomLandscape = prefs.getInt(key, Defaults.MARGIN_BOTTOM_LANDSCAPE)
             }
             "horizontal_margin_portrait" -> {
-                horizontalMarginPortrait = prefs.getInt(key, 3)
+                horizontalMarginPortrait = prefs.getInt(key, Defaults.HORIZONTAL_MARGIN_PORTRAIT)
             }
             "horizontal_margin_landscape" -> {
-                horizontalMarginLandscape = prefs.getInt(key, 28)
+                horizontalMarginLandscape = prefs.getInt(key, Defaults.HORIZONTAL_MARGIN_LANDSCAPE)
             }
             // Gesture sensitivity settings
             "swipe_dist" -> {
-                swipeDistance = prefs.getSafeString(key, "15").toIntOrNull() ?: 15
+                swipeDistance = prefs.getSafeString(key, Defaults.SWIPE_DIST).toIntOrNull() ?: Defaults.SWIPE_DIST_FALLBACK.toInt()
             }
             "circle_sensitivity" -> {
-                circleSensitivity = prefs.getSafeString(key, "2").toIntOrNull() ?: 2
+                circleSensitivity = prefs.getSafeString(key, Defaults.CIRCLE_SENSITIVITY).toIntOrNull() ?: Defaults.CIRCLE_SENSITIVITY_FALLBACK
             }
             // Long press settings
             "longpress_timeout" -> {
-                longPressTimeout = prefs.getInt(key, 600)
+                longPressTimeout = prefs.getInt(key, Defaults.LONGPRESS_TIMEOUT)
             }
             "longpress_interval" -> {
-                longPressInterval = prefs.getInt(key, 65)
+                longPressInterval = prefs.getInt(key, Defaults.LONGPRESS_INTERVAL)
             }
             "keyrepeat_enabled" -> {
-                keyRepeatEnabled = prefs.getBoolean(key, true)
+                keyRepeatEnabled = prefs.getBoolean(key, Defaults.KEYREPEAT_ENABLED)
             }
             // Visual customization settings
             "label_brightness" -> {
-                labelBrightness = prefs.getInt(key, 100)
+                labelBrightness = prefs.getInt(key, Defaults.LABEL_BRIGHTNESS)
             }
             "keyboard_opacity" -> {
-                keyboardOpacity = prefs.getInt(key, 100)
+                keyboardOpacity = prefs.getInt(key, Defaults.KEYBOARD_OPACITY)
             }
             "key_opacity" -> {
-                keyOpacity = prefs.getInt(key, 100)
+                keyOpacity = prefs.getInt(key, Defaults.KEY_OPACITY)
             }
             "key_activated_opacity" -> {
-                keyActivatedOpacity = prefs.getInt(key, 100)
+                keyActivatedOpacity = prefs.getInt(key, Defaults.KEY_ACTIVATED_OPACITY)
             }
             // Spacing and sizing settings
             "character_size" -> {
-                characterSize = (prefs.getFloat(key, 1.15f) * 100).toInt()
+                characterSize = (prefs.getFloat(key, Defaults.CHARACTER_SIZE) * 100).toInt()
             }
             "key_vertical_margin" -> {
-                keyVerticalMargin = (prefs.getFloat(key, 1.5f) * 100).toInt()
+                keyVerticalMargin = (prefs.getFloat(key, Defaults.KEY_VERTICAL_MARGIN) * 100).toInt()
             }
             "key_horizontal_margin" -> {
-                keyHorizontalMargin = (prefs.getFloat(key, 2.0f) * 100).toInt()
+                keyHorizontalMargin = (prefs.getFloat(key, Defaults.KEY_HORIZONTAL_MARGIN) * 100).toInt()
             }
             // Border customization settings
             "border_config" -> {
-                borderConfigEnabled = prefs.getBoolean(key, false)
+                borderConfigEnabled = prefs.getBoolean(key, Defaults.BORDER_CONFIG)
             }
             "custom_border_radius" -> {
-                customBorderRadius = prefs.getInt(key, 0)
+                customBorderRadius = prefs.getInt(key, Defaults.CUSTOM_BORDER_RADIUS)
             }
             "custom_border_line_width" -> {
-                customBorderLineWidth = prefs.getInt(key, 0)
+                customBorderLineWidth = prefs.getInt(key, Defaults.CUSTOM_BORDER_LINE_WIDTH)
             }
             // Behavior settings
             "lock_double_tap" -> {
-                doubleTapLockShift = prefs.getBoolean(key, false)
+                doubleTapLockShift = prefs.getBoolean(key, Defaults.DOUBLE_TAP_LOCK_SHIFT)
             }
             "switch_input_immediate" -> {
-                switchInputImmediate = prefs.getBoolean(key, false)
+                switchInputImmediate = prefs.getBoolean(key, Defaults.SWITCH_INPUT_IMMEDIATE)
             }
             // Number row and numpad settings
             "number_row" -> {
-                numberRowMode = prefs.getSafeString(key, "no_number_row")
+                numberRowMode = prefs.getSafeString(key, Defaults.NUMBER_ROW)
             }
             "show_numpad" -> {
-                showNumpadMode = prefs.getSafeString(key, "never")
+                showNumpadMode = prefs.getSafeString(key, Defaults.SHOW_NUMPAD)
             }
             "numpad_layout" -> {
-                numpadLayout = prefs.getSafeString(key, "default")
+                numpadLayout = prefs.getSafeString(key, Defaults.NUMPAD_LAYOUT)
             }
             "pin_entry_enabled" -> {
                 pinEntryEnabled = prefs.getBoolean(key, false)
             }
             // Phase 1: Exposed Config.kt settings listeners
             "word_prediction_enabled" -> {
-                wordPredictionEnabled = prefs.getBoolean(key, true)
+                wordPredictionEnabled = prefs.getBoolean(key, Defaults.WORD_PREDICTION_ENABLED)
             }
             "suggestion_bar_opacity" -> {
-                suggestionBarOpacity = Config.safeGetInt(prefs, key, 90)
+                suggestionBarOpacity = Config.safeGetInt(prefs, key, Defaults.SUGGESTION_BAR_OPACITY)
             }
             "autocorrect_enabled" -> {
-                autoCorrectEnabled = prefs.getBoolean(key, true)
+                autoCorrectEnabled = prefs.getBoolean(key, Defaults.AUTOCORRECT_ENABLED)
             }
             "termux_mode_enabled" -> {
-                termuxModeEnabled = prefs.getBoolean(key, false)
+                termuxModeEnabled = prefs.getBoolean(key, Defaults.TERMUX_MODE_ENABLED)
             }
             "vibrate_duration" -> {
-                vibrationDuration = prefs.getInt(key, 20)
+                vibrationDuration = prefs.getInt(key, Defaults.VIBRATE_DURATION)
             }
             "swipe_show_debug_scores" -> {
-                swipeDebugEnabled = prefs.getBoolean(key, false)
+                swipeDebugEnabled = prefs.getBoolean(key, Defaults.SWIPE_SHOW_DEBUG_SCORES)
             }
             // Phase 5: Gesture settings listeners
             "slider_sensitivity" -> {
-                sliderSensitivity = prefs.getSafeString(key, "30").toIntOrNull() ?: 30
+                sliderSensitivity = prefs.getSafeString(key, Defaults.SLIDER_SENSITIVITY).toIntOrNull() ?: 30
             }
             // Swipe Corrections settings
             "swipe_beam_autocorrect_enabled" -> {
-                swipeBeamAutocorrectEnabled = prefs.getBoolean(key, true)
+                swipeBeamAutocorrectEnabled = prefs.getBoolean(key, Defaults.SWIPE_BEAM_AUTOCORRECT_ENABLED)
             }
             "swipe_final_autocorrect_enabled" -> {
-                swipeFinalAutocorrectEnabled = prefs.getBoolean(key, true)
+                swipeFinalAutocorrectEnabled = prefs.getBoolean(key, Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
             }
             "swipe_correction_preset" -> {
                 swipeCorrectionPreset = prefs.getSafeString(key, "balanced")
             }
             "swipe_fuzzy_match_mode" -> {
-                swipeFuzzyMatchMode = prefs.getSafeString(key, "edit_distance")
+                swipeFuzzyMatchMode = prefs.getSafeString(key, Defaults.SWIPE_FUZZY_MATCH_MODE)
             }
             "autocorrect_max_length_diff" -> {
-                autocorrectMaxLengthDiff = Config.safeGetInt(prefs, key, 2)
+                autocorrectMaxLengthDiff = Config.safeGetInt(prefs, key, Defaults.AUTOCORRECT_MAX_LENGTH_DIFF)
             }
             "autocorrect_prefix_length" -> {
-                autocorrectPrefixLength = Config.safeGetInt(prefs, key, 2)
+                autocorrectPrefixLength = Config.safeGetInt(prefs, key, Defaults.AUTOCORRECT_PREFIX_LENGTH)
             }
             "autocorrect_max_beam_candidates" -> {
-                autocorrectMaxBeamCandidates = Config.safeGetInt(prefs, key, 3)
+                autocorrectMaxBeamCandidates = Config.safeGetInt(prefs, key, Defaults.AUTOCORRECT_MAX_BEAM_CANDIDATES)
             }
             "swipe_prediction_source" -> {
-                swipePredictionSource = Config.safeGetInt(prefs, key, 60)
+                swipePredictionSource = Config.safeGetInt(prefs, key, Defaults.SWIPE_PREDICTION_SOURCE)
             }
             "swipe_common_words_boost" -> {
-                swipeCommonWordsBoost = Config.safeGetFloat(prefs, key, 1.3f)
+                swipeCommonWordsBoost = Config.safeGetFloat(prefs, key, Defaults.SWIPE_COMMON_WORDS_BOOST)
             }
             "swipe_top5000_boost" -> {
-                swipeTop5000Boost = Config.safeGetFloat(prefs, key, 1.0f)
+                swipeTop5000Boost = Config.safeGetFloat(prefs, key, Defaults.SWIPE_TOP5000_BOOST)
             }
             "swipe_rare_words_penalty" -> {
-                swipeRareWordsPenalty = Config.safeGetFloat(prefs, key, 0.75f)
+                swipeRareWordsPenalty = Config.safeGetFloat(prefs, key, Defaults.SWIPE_RARE_WORDS_PENALTY)
             }
         }
     }
@@ -2911,165 +2911,165 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     private fun loadCurrentSettings() {
         // Swipe typing master switch
-        swipeTypingEnabled = prefs.getSafeBoolean("swipe_typing_enabled", true)
+        swipeTypingEnabled = prefs.getSafeBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
 
         // Neural prediction settings
-        neuralPredictionEnabled = prefs.getSafeBoolean("neural_prediction_enabled", true)
-        beamWidth = prefs.getSafeInt("neural_beam_width", 6)
-        maxLength = prefs.getSafeInt("neural_max_length", 20)
-        confidenceThreshold = prefs.getSafeFloat("neural_confidence_threshold", 0.01f)
+        neuralPredictionEnabled = prefs.getSafeBoolean("neural_prediction_enabled", Defaults.NEURAL_PREDICTION_ENABLED)
+        beamWidth = prefs.getSafeInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
+        maxLength = prefs.getSafeInt("neural_max_length", Defaults.NEURAL_MAX_LENGTH)
+        confidenceThreshold = prefs.getSafeFloat("neural_confidence_threshold", Defaults.NEURAL_CONFIDENCE_THRESHOLD)
 
         // Appearance settings
-        currentThemeName = prefs.getSafeString("theme", "cleverkeysdark")
-        keyboardHeight = prefs.getSafeInt("keyboard_height_percent", 28)
-        keyboardHeightLandscape = prefs.getSafeInt("keyboard_height_landscape", 50)
+        currentThemeName = prefs.getSafeString("theme", Defaults.THEME)
+        keyboardHeight = prefs.getSafeInt("keyboard_height_percent", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
+        keyboardHeightLandscape = prefs.getSafeInt("keyboard_height_landscape", Defaults.KEYBOARD_HEIGHT_LANDSCAPE)
 
         // Adaptive layout settings
-        marginBottomPortrait = prefs.getSafeInt("margin_bottom_portrait", 7)
-        marginBottomLandscape = prefs.getSafeInt("margin_bottom_landscape", 3)
-        horizontalMarginPortrait = prefs.getSafeInt("horizontal_margin_portrait", 3)
-        horizontalMarginLandscape = prefs.getSafeInt("horizontal_margin_landscape", 28)
+        marginBottomPortrait = prefs.getSafeInt("margin_bottom_portrait", Defaults.MARGIN_BOTTOM_PORTRAIT)
+        marginBottomLandscape = prefs.getSafeInt("margin_bottom_landscape", Defaults.MARGIN_BOTTOM_LANDSCAPE)
+        horizontalMarginPortrait = prefs.getSafeInt("horizontal_margin_portrait", Defaults.HORIZONTAL_MARGIN_PORTRAIT)
+        horizontalMarginLandscape = prefs.getSafeInt("horizontal_margin_landscape", Defaults.HORIZONTAL_MARGIN_LANDSCAPE)
 
         // Visual customization settings
-        labelBrightness = prefs.getSafeInt("label_brightness", 100)
-        keyboardOpacity = prefs.getSafeInt("keyboard_opacity", 100)
-        keyOpacity = prefs.getSafeInt("key_opacity", 100)
-        keyActivatedOpacity = prefs.getSafeInt("key_activated_opacity", 100)
+        labelBrightness = prefs.getSafeInt("label_brightness", Defaults.LABEL_BRIGHTNESS)
+        keyboardOpacity = prefs.getSafeInt("keyboard_opacity", Defaults.KEYBOARD_OPACITY)
+        keyOpacity = prefs.getSafeInt("key_opacity", Defaults.KEY_OPACITY)
+        keyActivatedOpacity = prefs.getSafeInt("key_activated_opacity", Defaults.KEY_ACTIVATED_OPACITY)
 
         // Spacing and sizing settings
-        characterSize = (prefs.getSafeFloat("character_size", 1.15f) * 100).toInt()
-        keyVerticalMargin = (prefs.getSafeFloat("key_vertical_margin", 1.5f) * 100).toInt()
-        keyHorizontalMargin = (prefs.getSafeFloat("key_horizontal_margin", 2.0f) * 100).toInt()
+        characterSize = (prefs.getSafeFloat("character_size", Defaults.CHARACTER_SIZE) * 100).toInt()
+        keyVerticalMargin = (prefs.getSafeFloat("key_vertical_margin", Defaults.KEY_VERTICAL_MARGIN) * 100).toInt()
+        keyHorizontalMargin = (prefs.getSafeFloat("key_horizontal_margin", Defaults.KEY_HORIZONTAL_MARGIN) * 100).toInt()
 
         // Border customization settings
-        borderConfigEnabled = prefs.getSafeBoolean("border_config", false)
-        customBorderRadius = prefs.getSafeInt("custom_border_radius", 0)
-        customBorderLineWidth = prefs.getSafeInt("custom_border_line_width", 0)
+        borderConfigEnabled = prefs.getSafeBoolean("border_config", Defaults.BORDER_CONFIG)
+        customBorderRadius = prefs.getSafeInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS)
+        customBorderLineWidth = prefs.getSafeInt("custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH)
 
         // Input behavior settings
-        vibrationEnabled = prefs.getSafeBoolean("vibration_enabled", false)
-        clipboardHistoryEnabled = prefs.getSafeBoolean("clipboard_history_enabled", true)
-        clipboardHistoryLimit = prefs.getSafeString("clipboard_history_limit", "6").toIntOrNull() ?: 6
-        clipboardPaneHeightPercent = Config.safeGetInt(prefs, "clipboard_pane_height_percent", 30).coerceIn(10, 50)
-        clipboardMaxItemSizeKb = prefs.getSafeString("clipboard_max_item_size_kb", "500").toIntOrNull() ?: 500
-        clipboardLimitType = prefs.getSafeString("clipboard_limit_type", "count")
-        clipboardSizeLimitMb = prefs.getSafeString("clipboard_size_limit_mb", "10").toIntOrNull() ?: 10
-        autoCapitalizationEnabled = prefs.getSafeBoolean("auto_capitalization_enabled", true)
+        vibrationEnabled = prefs.getSafeBoolean("vibration_enabled", Defaults.VIBRATE_CUSTOM)
+        clipboardHistoryEnabled = prefs.getSafeBoolean("clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
+        clipboardHistoryLimit = prefs.getSafeString("clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
+        clipboardPaneHeightPercent = Config.safeGetInt(prefs, "clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT).coerceIn(10, 50)
+        clipboardMaxItemSizeKb = prefs.getSafeString("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK
+        clipboardLimitType = prefs.getSafeString("clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
+        clipboardSizeLimitMb = prefs.getSafeString("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
+        autoCapitalizationEnabled = prefs.getSafeBoolean("auto_capitalization_enabled", Defaults.AUTOCAPITALISATION)
 
         // Gesture sensitivity settings
-        swipeDistance = prefs.getSafeString("swipe_dist", "23").toIntOrNull() ?: 23
-        circleSensitivity = prefs.getSafeString("circle_sensitivity", "2").toIntOrNull() ?: 2
-        sliderSensitivity = prefs.getSafeString("slider_sensitivity", "30").toIntOrNull() ?: 30
+        swipeDistance = prefs.getSafeString("swipe_dist", Defaults.SWIPE_DIST).toIntOrNull() ?: Defaults.SWIPE_DIST_FALLBACK.toInt()
+        circleSensitivity = prefs.getSafeString("circle_sensitivity", Defaults.CIRCLE_SENSITIVITY).toIntOrNull() ?: Defaults.CIRCLE_SENSITIVITY_FALLBACK
+        sliderSensitivity = prefs.getSafeString("slider_sensitivity", Defaults.SLIDER_SENSITIVITY).toIntOrNull() ?: 30
 
         // Long press settings
-        longPressTimeout = prefs.getSafeInt("longpress_timeout", 600)
-        longPressInterval = prefs.getSafeInt("longpress_interval", 65)
-        keyRepeatEnabled = prefs.getSafeBoolean("keyrepeat_enabled", true)
+        longPressTimeout = prefs.getSafeInt("longpress_timeout", Defaults.LONGPRESS_TIMEOUT)
+        longPressInterval = prefs.getSafeInt("longpress_interval", Defaults.LONGPRESS_INTERVAL)
+        keyRepeatEnabled = prefs.getSafeBoolean("keyrepeat_enabled", Defaults.KEYREPEAT_ENABLED)
 
         // Behavior settings
-        doubleTapLockShift = prefs.getSafeBoolean("lock_double_tap", true)
-        switchInputImmediate = prefs.getSafeBoolean("switch_input_immediate", false)
-        smartPunctuationEnabled = prefs.getSafeBoolean("smart_punctuation", true)
-        vibrateCustomEnabled = prefs.getSafeBoolean("vibrate_custom", false)
-        numberEntryLayout = prefs.getSafeString("number_entry_layout", "pin")
+        doubleTapLockShift = prefs.getSafeBoolean("lock_double_tap", Defaults.DOUBLE_TAP_LOCK_SHIFT)
+        switchInputImmediate = prefs.getSafeBoolean("switch_input_immediate", Defaults.SWITCH_INPUT_IMMEDIATE)
+        smartPunctuationEnabled = prefs.getSafeBoolean("smart_punctuation", Defaults.SMART_PUNCTUATION)
+        vibrateCustomEnabled = prefs.getSafeBoolean("vibrate_custom", Defaults.VIBRATE_CUSTOM)
+        numberEntryLayout = prefs.getSafeString("number_entry_layout", Defaults.NUMBER_ENTRY_LAYOUT)
 
         // Gesture tuning settings
-        tapDurationThreshold = Config.safeGetInt(prefs, "tap_duration_threshold", 150)
-        doubleSpaceThreshold = Config.safeGetInt(prefs, "double_space_threshold", 500)
-        swipeMinDistance = Config.safeGetFloat(prefs, "swipe_min_distance", 72f)
-        swipeMinKeyDistance = Config.safeGetFloat(prefs, "swipe_min_key_distance", 38f)
-        swipeMinDwellTime = Config.safeGetInt(prefs, "swipe_min_dwell_time", 10)
-        swipeNoiseThreshold = Config.safeGetFloat(prefs, "swipe_noise_threshold", 2.0f)
-        swipeHighVelocityThreshold = Config.safeGetFloat(prefs, "swipe_high_velocity_threshold", 1000f)
-        sliderSpeedSmoothing = Config.safeGetFloat(prefs, "slider_speed_smoothing", 0.7f)
-        sliderSpeedMax = Config.safeGetFloat(prefs, "slider_speed_max", 4.0f)
+        tapDurationThreshold = Config.safeGetInt(prefs, "tap_duration_threshold", Defaults.TAP_DURATION_THRESHOLD)
+        doubleSpaceThreshold = Config.safeGetInt(prefs, "double_space_threshold", Defaults.DOUBLE_SPACE_THRESHOLD)
+        swipeMinDistance = Config.safeGetFloat(prefs, "swipe_min_distance", Defaults.SWIPE_MIN_DISTANCE)
+        swipeMinKeyDistance = Config.safeGetFloat(prefs, "swipe_min_key_distance", Defaults.SWIPE_MIN_KEY_DISTANCE)
+        swipeMinDwellTime = Config.safeGetInt(prefs, "swipe_min_dwell_time", Defaults.SWIPE_MIN_DWELL_TIME)
+        swipeNoiseThreshold = Config.safeGetFloat(prefs, "swipe_noise_threshold", Defaults.SWIPE_NOISE_THRESHOLD)
+        swipeHighVelocityThreshold = Config.safeGetFloat(prefs, "swipe_high_velocity_threshold", Defaults.SWIPE_HIGH_VELOCITY_THRESHOLD)
+        sliderSpeedSmoothing = Config.safeGetFloat(prefs, "slider_speed_smoothing", Defaults.SLIDER_SPEED_SMOOTHING)
+        sliderSpeedMax = Config.safeGetFloat(prefs, "slider_speed_max", Defaults.SLIDER_SPEED_MAX)
 
         // Number row and numpad settings
-        numberRowMode = prefs.getSafeString("number_row", "no_number_row")
-        showNumpadMode = prefs.getSafeString("show_numpad", "never")
-        numpadLayout = prefs.getSafeString("numpad_layout", "default")
+        numberRowMode = prefs.getSafeString("number_row", Defaults.NUMBER_ROW)
+        showNumpadMode = prefs.getSafeString("show_numpad", Defaults.SHOW_NUMPAD)
+        numpadLayout = prefs.getSafeString("numpad_layout", Defaults.NUMPAD_LAYOUT)
         pinEntryEnabled = prefs.getSafeBoolean("pin_entry_enabled", false)
 
         // Advanced settings
-        debugEnabled = prefs.getSafeBoolean("debug_enabled", false)
+        debugEnabled = prefs.getSafeBoolean("debug_enabled", Defaults.DEBUG_ENABLED)
 
         // Accessibility settings
-        stickyKeysEnabled = prefs.getSafeBoolean("sticky_keys_enabled", false)
-        stickyKeysTimeout = prefs.getSafeInt("sticky_keys_timeout_ms", 5000)
-        voiceGuidanceEnabled = prefs.getSafeBoolean("voice_guidance_enabled", false)
+        stickyKeysEnabled = prefs.getSafeBoolean("sticky_keys_enabled", Defaults.STICKY_KEYS_ENABLED)
+        stickyKeysTimeout = prefs.getSafeInt("sticky_keys_timeout_ms", Defaults.STICKY_KEYS_TIMEOUT)
+        voiceGuidanceEnabled = prefs.getSafeBoolean("voice_guidance_enabled", Defaults.VOICE_GUIDANCE_ENABLED)
 
         // Phase 1: Load exposed Config.kt settings
-        wordPredictionEnabled = prefs.getSafeBoolean("word_prediction_enabled", true)
-        suggestionBarOpacity = Config.safeGetInt(prefs, "suggestion_bar_opacity", 90)
-        autoCorrectEnabled = prefs.getSafeBoolean("autocorrect_enabled", true)
-        termuxModeEnabled = prefs.getSafeBoolean("termux_mode_enabled", false)
-        vibrationDuration = prefs.getSafeInt("vibrate_duration", 20)
-        swipeDebugEnabled = prefs.getSafeBoolean("swipe_show_debug_scores", false)
+        wordPredictionEnabled = prefs.getSafeBoolean("word_prediction_enabled", Defaults.WORD_PREDICTION_ENABLED)
+        suggestionBarOpacity = Config.safeGetInt(prefs, "suggestion_bar_opacity", Defaults.SUGGESTION_BAR_OPACITY)
+        autoCorrectEnabled = prefs.getSafeBoolean("autocorrect_enabled", Defaults.AUTOCORRECT_ENABLED)
+        termuxModeEnabled = prefs.getSafeBoolean("termux_mode_enabled", Defaults.TERMUX_MODE_ENABLED)
+        vibrationDuration = prefs.getSafeInt("vibrate_duration", Defaults.VIBRATE_DURATION)
+        swipeDebugEnabled = prefs.getSafeBoolean("swipe_show_debug_scores", Defaults.SWIPE_SHOW_DEBUG_SCORES)
 
         // Swipe Corrections settings
-        swipeBeamAutocorrectEnabled = prefs.getSafeBoolean("swipe_beam_autocorrect_enabled", true)
-        swipeFinalAutocorrectEnabled = prefs.getSafeBoolean("swipe_final_autocorrect_enabled", true)
+        swipeBeamAutocorrectEnabled = prefs.getSafeBoolean("swipe_beam_autocorrect_enabled", Defaults.SWIPE_BEAM_AUTOCORRECT_ENABLED)
+        swipeFinalAutocorrectEnabled = prefs.getSafeBoolean("swipe_final_autocorrect_enabled", Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
         swipeCorrectionPreset = prefs.getSafeString("swipe_correction_preset", "balanced")
-        swipeFuzzyMatchMode = prefs.getSafeString("swipe_fuzzy_match_mode", "edit_distance")
-        autocorrectMaxLengthDiff = Config.safeGetInt(prefs, "autocorrect_max_length_diff", 2)
-        autocorrectPrefixLength = Config.safeGetInt(prefs, "autocorrect_prefix_length", 1)
-        autocorrectMaxBeamCandidates = Config.safeGetInt(prefs, "autocorrect_max_beam_candidates", 3)
-        swipePredictionSource = Config.safeGetInt(prefs, "swipe_prediction_source", 80)
-        swipeCommonWordsBoost = Config.safeGetFloat(prefs, "swipe_common_words_boost", 1.0f)
-        swipeTop5000Boost = Config.safeGetFloat(prefs, "swipe_top5000_boost", 1.0f)
-        swipeRareWordsPenalty = Config.safeGetFloat(prefs, "swipe_rare_words_penalty", 1.0f)
+        swipeFuzzyMatchMode = prefs.getSafeString("swipe_fuzzy_match_mode", Defaults.SWIPE_FUZZY_MATCH_MODE)
+        autocorrectMaxLengthDiff = Config.safeGetInt(prefs, "autocorrect_max_length_diff", Defaults.AUTOCORRECT_MAX_LENGTH_DIFF)
+        autocorrectPrefixLength = Config.safeGetInt(prefs, "autocorrect_prefix_length", Defaults.AUTOCORRECT_PREFIX_LENGTH)
+        autocorrectMaxBeamCandidates = Config.safeGetInt(prefs, "autocorrect_max_beam_candidates", Defaults.AUTOCORRECT_MAX_BEAM_CANDIDATES)
+        swipePredictionSource = Config.safeGetInt(prefs, "swipe_prediction_source", Defaults.SWIPE_PREDICTION_SOURCE)
+        swipeCommonWordsBoost = Config.safeGetFloat(prefs, "swipe_common_words_boost", Defaults.SWIPE_COMMON_WORDS_BOOST)
+        swipeTop5000Boost = Config.safeGetFloat(prefs, "swipe_top5000_boost", Defaults.SWIPE_TOP5000_BOOST)
+        swipeRareWordsPenalty = Config.safeGetFloat(prefs, "swipe_rare_words_penalty", Defaults.SWIPE_RARE_WORDS_PENALTY)
 
         // Swipe trail appearance settings
-        swipeTrailEnabled = prefs.getSafeBoolean("swipe_trail_enabled", true)
-        swipeTrailEffect = prefs.getSafeString("swipe_trail_effect", "glow")
-        swipeTrailColor = prefs.getSafeInt("swipe_trail_color", 0xFF9B59B6.toInt())
-        swipeTrailWidth = prefs.getSafeFloat("swipe_trail_width", 8.0f)
-        swipeTrailGlowRadius = prefs.getSafeFloat("swipe_trail_glow_radius", 12.0f)
+        swipeTrailEnabled = prefs.getSafeBoolean("swipe_trail_enabled", Defaults.SWIPE_TRAIL_ENABLED)
+        swipeTrailEffect = prefs.getSafeString("swipe_trail_effect", Defaults.SWIPE_TRAIL_EFFECT)
+        swipeTrailColor = prefs.getSafeInt("swipe_trail_color", Defaults.SWIPE_TRAIL_COLOR)
+        swipeTrailWidth = prefs.getSafeFloat("swipe_trail_width", Defaults.SWIPE_TRAIL_WIDTH)
+        swipeTrailGlowRadius = prefs.getSafeFloat("swipe_trail_glow_radius", Defaults.SWIPE_TRAIL_GLOW_RADIUS)
 
         // Word Prediction Advanced settings
-        contextAwarePredictionsEnabled = prefs.getSafeBoolean("context_aware_predictions_enabled", true)
-        personalizedLearningEnabled = prefs.getSafeBoolean("personalized_learning_enabled", true)
-        learningAggression = prefs.getSafeString("learning_aggression", "BALANCED")
-        predictionContextBoost = Config.safeGetFloat(prefs, "prediction_context_boost", 2.0f)
-        predictionFrequencyScale = Config.safeGetFloat(prefs, "prediction_frequency_scale", 1000f)
+        contextAwarePredictionsEnabled = prefs.getSafeBoolean("context_aware_predictions_enabled", Defaults.CONTEXT_AWARE_PREDICTIONS_ENABLED)
+        personalizedLearningEnabled = prefs.getSafeBoolean("personalized_learning_enabled", Defaults.PERSONALIZED_LEARNING_ENABLED)
+        learningAggression = prefs.getSafeString("learning_aggression", Defaults.LEARNING_AGGRESSION)
+        predictionContextBoost = Config.safeGetFloat(prefs, "prediction_context_boost", Defaults.PREDICTION_CONTEXT_BOOST)
+        predictionFrequencyScale = Config.safeGetFloat(prefs, "prediction_frequency_scale", Defaults.PREDICTION_FREQUENCY_SCALE)
 
         // Auto-correction advanced settings
-        autocorrectMinWordLength = Config.safeGetInt(prefs, "autocorrect_min_word_length", 3)
-        autocorrectCharMatchThreshold = Config.safeGetFloat(prefs, "autocorrect_char_match_threshold", 0.67f)
-        autocorrectMinFrequency = Config.safeGetInt(prefs, "autocorrect_confidence_min_frequency", 100)
+        autocorrectMinWordLength = Config.safeGetInt(prefs, "autocorrect_min_word_length", Defaults.AUTOCORRECT_MIN_WORD_LENGTH)
+        autocorrectCharMatchThreshold = Config.safeGetFloat(prefs, "autocorrect_char_match_threshold", Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD)
+        autocorrectMinFrequency = Config.safeGetInt(prefs, "autocorrect_confidence_min_frequency", Defaults.AUTOCORRECT_MIN_FREQUENCY)
 
         // Neural beam search advanced settings
-        neuralBatchBeams = prefs.getSafeBoolean("neural_batch_beams", false)
-        neuralGreedySearch = prefs.getSafeBoolean("neural_greedy_search", false)
-        neuralBeamAlpha = Config.safeGetFloat(prefs, "neural_beam_alpha", 1.55f)
-        neuralBeamPruneConfidence = Config.safeGetFloat(prefs, "neural_beam_prune_confidence", 0.33f)
-        neuralBeamScoreGap = Config.safeGetFloat(prefs, "neural_beam_score_gap", 50.0f)
+        neuralBatchBeams = prefs.getSafeBoolean("neural_batch_beams", Defaults.NEURAL_BATCH_BEAMS)
+        neuralGreedySearch = prefs.getSafeBoolean("neural_greedy_search", Defaults.NEURAL_GREEDY_SEARCH)
+        neuralBeamAlpha = Config.safeGetFloat(prefs, "neural_beam_alpha", Defaults.NEURAL_BEAM_ALPHA)
+        neuralBeamPruneConfidence = Config.safeGetFloat(prefs, "neural_beam_prune_confidence", Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE)
+        neuralBeamScoreGap = Config.safeGetFloat(prefs, "neural_beam_score_gap", Defaults.NEURAL_BEAM_SCORE_GAP)
 
         // Neural model config settings
-        neuralModelVersion = prefs.getSafeString("neural_model_version", "v2")
-        neuralResamplingMode = prefs.getSafeString("neural_resampling_mode", "discard")
-        neuralUserMaxSeqLength = Config.safeGetInt(prefs, "neural_user_max_seq_length", 0)
+        neuralModelVersion = prefs.getSafeString("neural_model_version", Defaults.NEURAL_MODEL_VERSION)
+        neuralResamplingMode = prefs.getSafeString("neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE)
+        neuralUserMaxSeqLength = Config.safeGetInt(prefs, "neural_user_max_seq_length", Defaults.NEURAL_USER_MAX_SEQ_LENGTH)
 
         // Multi-language settings
-        multiLangEnabled = prefs.getSafeBoolean("pref_enable_multilang", false)
-        primaryLanguage = prefs.getSafeString("pref_primary_language", "en")
-        autoDetectLanguage = prefs.getSafeBoolean("pref_auto_detect_language", true)
-        languageDetectionSensitivity = Config.safeGetFloat(prefs, "pref_language_detection_sensitivity", 0.6f)
+        multiLangEnabled = prefs.getSafeBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)
+        primaryLanguage = prefs.getSafeString("pref_primary_language", Defaults.PRIMARY_LANGUAGE)
+        autoDetectLanguage = prefs.getSafeBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
+        languageDetectionSensitivity = Config.safeGetFloat(prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
 
         // Privacy settings - all OFF by default (CleverKeys is fully offline)
-        privacyCollectSwipe = prefs.getSafeBoolean("privacy_collect_swipe", false)
-        privacyCollectPerformance = prefs.getSafeBoolean("privacy_collect_performance", false)
-        privacyCollectErrors = prefs.getSafeBoolean("privacy_collect_errors", false)
+        privacyCollectSwipe = prefs.getSafeBoolean("privacy_collect_swipe", Defaults.PRIVACY_COLLECT_SWIPE)
+        privacyCollectPerformance = prefs.getSafeBoolean("privacy_collect_performance", Defaults.PRIVACY_COLLECT_PERFORMANCE)
+        privacyCollectErrors = prefs.getSafeBoolean("privacy_collect_errors", Defaults.PRIVACY_COLLECT_ERRORS)
 
         // Short gesture settings
-        shortGesturesEnabled = prefs.getSafeBoolean("short_gestures_enabled", true)
-        shortGestureMinDistance = Config.safeGetInt(prefs, "short_gesture_min_distance", 37)
-        shortGestureMaxDistance = Config.safeGetInt(prefs, "short_gesture_max_distance", 141)
+        shortGesturesEnabled = prefs.getSafeBoolean("short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)
+        shortGestureMinDistance = Config.safeGetInt(prefs, "short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE)
+        shortGestureMaxDistance = Config.safeGetInt(prefs, "short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE)
 
         // Swipe debug advanced settings
-        swipeDebugDetailedLogging = prefs.getSafeBoolean("swipe_debug_detailed_logging", false)
-        swipeDebugShowRawOutput = prefs.getSafeBoolean("swipe_debug_show_raw_output", true)
-        swipeShowRawBeamPredictions = prefs.getSafeBoolean("swipe_show_raw_beam_predictions", false)
+        swipeDebugDetailedLogging = prefs.getSafeBoolean("swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
+        swipeDebugShowRawOutput = prefs.getSafeBoolean("swipe_debug_show_raw_output", Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT)
+        swipeShowRawBeamPredictions = prefs.getSafeBoolean("swipe_show_raw_beam_predictions", Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS)
     }
 
     private fun saveSetting(key: String, value: Any) {

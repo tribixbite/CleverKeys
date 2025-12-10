@@ -10,6 +10,151 @@ import tribixbite.cleverkeys.prefs.CustomExtraKeysPreference
 import tribixbite.cleverkeys.prefs.ExtraKeysPreference
 import tribixbite.cleverkeys.prefs.LayoutsPreference
 
+/**
+ * Single source of truth for all app default values.
+ * Both Config.kt and SettingsActivity.kt should reference these constants.
+ */
+object Defaults {
+    // Appearance
+    const val THEME = "cleverkeysdark"
+    const val KEYBOARD_HEIGHT_PORTRAIT = 28
+    const val KEYBOARD_HEIGHT_LANDSCAPE = 50
+    const val LABEL_BRIGHTNESS = 100
+    const val KEYBOARD_OPACITY = 81
+    const val KEY_OPACITY = 100
+    const val KEY_ACTIVATED_OPACITY = 100
+    const val CHARACTER_SIZE = 1.18f
+    const val KEY_VERTICAL_MARGIN = 1.5f
+    const val KEY_HORIZONTAL_MARGIN = 2.0f
+    const val BORDER_CONFIG = false
+    const val CUSTOM_BORDER_RADIUS = 0
+    const val CUSTOM_BORDER_LINE_WIDTH = 0
+
+    // Layout
+    const val SHOW_NUMPAD = "never"
+    const val NUMPAD_LAYOUT = "default"
+    const val NUMBER_ROW = "no_number_row"
+    const val NUMBER_ENTRY_LAYOUT = "pin"
+    const val MARGIN_BOTTOM_PORTRAIT = 7
+    const val MARGIN_BOTTOM_LANDSCAPE = 3
+    const val HORIZONTAL_MARGIN_PORTRAIT = 3
+    const val HORIZONTAL_MARGIN_LANDSCAPE = 28
+
+    // Input behavior
+    const val VIBRATE_CUSTOM = false
+    const val VIBRATE_DURATION = 20
+    const val LONGPRESS_TIMEOUT = 600
+    const val LONGPRESS_INTERVAL = 25
+    const val KEYREPEAT_ENABLED = true
+    const val DOUBLE_TAP_LOCK_SHIFT = true
+    const val AUTOCAPITALISATION = true
+    const val SWITCH_INPUT_IMMEDIATE = false
+    const val SMART_PUNCTUATION = true
+
+    // Gesture settings
+    const val SWIPE_DIST = "23"
+    const val SWIPE_DIST_FALLBACK = 23f
+    const val SLIDER_SENSITIVITY = "30"
+    const val CIRCLE_SENSITIVITY = "2"
+    const val CIRCLE_SENSITIVITY_FALLBACK = 2
+    const val TAP_DURATION_THRESHOLD = 150
+    const val DOUBLE_SPACE_THRESHOLD = 500
+    const val SWIPE_MIN_DISTANCE = 72f
+    const val SWIPE_MIN_KEY_DISTANCE = 38f
+    const val SWIPE_MIN_DWELL_TIME = 7
+    const val SWIPE_NOISE_THRESHOLD = 1.26f
+    const val SWIPE_HIGH_VELOCITY_THRESHOLD = 1000f
+    const val SLIDER_SPEED_SMOOTHING = 0.54f
+    const val SLIDER_SPEED_MAX = 4.0f
+
+    // Short gestures
+    const val SHORT_GESTURES_ENABLED = true
+    const val SHORT_GESTURE_MIN_DISTANCE = 37
+    const val SHORT_GESTURE_MAX_DISTANCE = 141
+
+    // Swipe trail
+    const val SWIPE_TRAIL_ENABLED = true
+    const val SWIPE_TRAIL_EFFECT = "sparkle"
+    const val SWIPE_TRAIL_COLOR = 0xFFC0C0C0.toInt() // Silver
+    const val SWIPE_TRAIL_WIDTH = 8.0f
+    const val SWIPE_TRAIL_GLOW_RADIUS = 6.0f
+
+    // Neural prediction
+    const val NEURAL_PREDICTION_ENABLED = true
+    const val NEURAL_BEAM_WIDTH = 6
+    const val NEURAL_MAX_LENGTH = 20
+    const val NEURAL_CONFIDENCE_THRESHOLD = 0.01f
+    const val NEURAL_BATCH_BEAMS = false
+    const val NEURAL_GREEDY_SEARCH = false
+    const val NEURAL_BEAM_ALPHA = 1.55f
+    const val NEURAL_BEAM_PRUNE_CONFIDENCE = 0.33f
+    const val NEURAL_BEAM_SCORE_GAP = 50.0f
+    const val NEURAL_MODEL_VERSION = "v2"
+    const val NEURAL_RESAMPLING_MODE = "discard"
+    const val NEURAL_USER_MAX_SEQ_LENGTH = 0
+
+    // Word prediction
+    const val SWIPE_TYPING_ENABLED = true
+    const val WORD_PREDICTION_ENABLED = true
+    const val SUGGESTION_BAR_OPACITY = 80
+    const val CONTEXT_AWARE_PREDICTIONS_ENABLED = true
+    const val PERSONALIZED_LEARNING_ENABLED = true
+    const val LEARNING_AGGRESSION = "BALANCED"
+    const val PREDICTION_CONTEXT_BOOST = 0.5f
+    const val PREDICTION_FREQUENCY_SCALE = 100.0f
+
+    // Autocorrect
+    const val AUTOCORRECT_ENABLED = true
+    const val AUTOCORRECT_MIN_WORD_LENGTH = 3
+    const val AUTOCORRECT_CHAR_MATCH_THRESHOLD = 0.67f
+    const val AUTOCORRECT_MIN_FREQUENCY = 100
+    const val AUTOCORRECT_MAX_LENGTH_DIFF = 2
+    const val AUTOCORRECT_PREFIX_LENGTH = 1
+    const val AUTOCORRECT_MAX_BEAM_CANDIDATES = 3
+    const val SWIPE_BEAM_AUTOCORRECT_ENABLED = true
+    const val SWIPE_FINAL_AUTOCORRECT_ENABLED = true
+    const val SWIPE_FUZZY_MATCH_MODE = "edit_distance"
+    const val SWIPE_PREDICTION_SOURCE = 80
+    const val SWIPE_COMMON_WORDS_BOOST = 1.0f
+    const val SWIPE_TOP5000_BOOST = 1.0f
+    const val SWIPE_RARE_WORDS_PENALTY = 1.0f
+
+    // Clipboard
+    const val CLIPBOARD_HISTORY_ENABLED = true
+    const val CLIPBOARD_HISTORY_LIMIT = "0"
+    const val CLIPBOARD_HISTORY_LIMIT_FALLBACK = 0
+    const val CLIPBOARD_PANE_HEIGHT_PERCENT = 30
+    const val CLIPBOARD_MAX_ITEM_SIZE_KB = "500"
+    const val CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK = 500
+    const val CLIPBOARD_LIMIT_TYPE = "count"
+    const val CLIPBOARD_SIZE_LIMIT_MB = "10"
+    const val CLIPBOARD_SIZE_LIMIT_MB_FALLBACK = 10
+
+    // Multi-language
+    const val ENABLE_MULTILANG = false
+    const val PRIMARY_LANGUAGE = "en"
+    const val AUTO_DETECT_LANGUAGE = true
+    const val LANGUAGE_DETECTION_SENSITIVITY = 0.6f
+
+    // Debug
+    const val DEBUG_ENABLED = false
+    const val SWIPE_SHOW_DEBUG_SCORES = false
+    const val SWIPE_DEBUG_DETAILED_LOGGING = false
+    const val SWIPE_DEBUG_SHOW_RAW_OUTPUT = true
+    const val SWIPE_SHOW_RAW_BEAM_PREDICTIONS = true
+    const val TERMUX_MODE_ENABLED = true
+
+    // Privacy
+    const val PRIVACY_COLLECT_SWIPE = false
+    const val PRIVACY_COLLECT_PERFORMANCE = false
+    const val PRIVACY_COLLECT_ERRORS = false
+
+    // Accessibility
+    const val STICKY_KEYS_ENABLED = false
+    const val STICKY_KEYS_TIMEOUT = 5000
+    const val VOICE_GUIDANCE_ENABLED = false
+}
+
 class Config private constructor(
     private val _prefs: SharedPreferences,
     res: Resources,
@@ -181,165 +326,165 @@ class Config private constructor(
         this.foldable_unfolded = foldableUnfolded ?: false
 
         var characterSizeScale = 1f
-        val show_numpad_s = safeGetString(_prefs, "show_numpad", "never")
+        val show_numpad_s = safeGetString(_prefs, "show_numpad", Defaults.SHOW_NUMPAD)
         show_numpad = "always" == show_numpad_s
-        
+
         if (orientation_landscape) {
             if ("landscape" == show_numpad_s) show_numpad = true
             keyboardHeightPercent = safeGetInt(
                 _prefs,
                 if (this.foldable_unfolded) "keyboard_height_landscape_unfolded" else "keyboard_height_landscape",
-                50
+                Defaults.KEYBOARD_HEIGHT_LANDSCAPE
             )
             characterSizeScale = 1.25f
         } else {
             keyboardHeightPercent = safeGetInt(
                 _prefs,
                 if (this.foldable_unfolded) "keyboard_height_unfolded" else "keyboard_height",
-                28
+                Defaults.KEYBOARD_HEIGHT_PORTRAIT
             )
         }
 
         layouts = LayoutsPreference.load_from_preferences(res, _prefs).filterNotNull()
-        inverse_numpad = safeGetString(_prefs, "numpad_layout", "default") == "low_first"
-        
-        val number_row = safeGetString(_prefs, "number_row", "no_number_row")
+        inverse_numpad = safeGetString(_prefs, "numpad_layout", Defaults.NUMPAD_LAYOUT) == "low_first"
+
+        val number_row = safeGetString(_prefs, "number_row", Defaults.NUMBER_ROW)
         add_number_row = number_row != "no_number_row"
         number_row_symbols = number_row == "symbols"
 
         val dpi_ratio = maxOf(dm.xdpi, dm.ydpi) / minOf(dm.xdpi, dm.ydpi)
         val swipe_scaling = minOf(dm.widthPixels, dm.heightPixels) / 10f * dpi_ratio
-        val swipe_dist_value = safeGetString(_prefs, "swipe_dist", "23").toFloatOrNull() ?: 23f
+        val swipe_dist_value = safeGetString(_prefs, "swipe_dist", Defaults.SWIPE_DIST).toFloatOrNull() ?: Defaults.SWIPE_DIST_FALLBACK
         swipe_dist_px = swipe_dist_value / 25f * swipe_scaling
 
-        val slider_sensitivity = (safeGetString(_prefs, "slider_sensitivity", "30").toFloatOrNull() ?: 30f) / 100f
+        val slider_sensitivity = (safeGetString(_prefs, "slider_sensitivity", Defaults.SLIDER_SENSITIVITY).toFloatOrNull() ?: 30f) / 100f
         slide_step_px = slider_sensitivity * swipe_scaling
 
-        vibrate_custom = _prefs.getBoolean("vibrate_custom", false)
-        vibrate_duration = safeGetInt(_prefs, "vibrate_duration", 20).toLong()
-        longPressTimeout = safeGetInt(_prefs, "longpress_timeout", 600).toLong()
-        longPressInterval = safeGetInt(_prefs, "longpress_interval", 25).toLong()
-        keyrepeat_enabled = _prefs.getBoolean("keyrepeat_enabled", true)
-        margin_bottom = get_dip_pref_oriented(dm, "margin_bottom", 7f, 3f)
-        key_vertical_margin = get_dip_pref(dm, "key_vertical_margin", 0.65f) / 100
-        key_horizontal_margin = get_dip_pref(dm, "key_horizontal_margin", 0.7f) / 100
+        vibrate_custom = _prefs.getBoolean("vibrate_custom", Defaults.VIBRATE_CUSTOM)
+        vibrate_duration = safeGetInt(_prefs, "vibrate_duration", Defaults.VIBRATE_DURATION).toLong()
+        longPressTimeout = safeGetInt(_prefs, "longpress_timeout", Defaults.LONGPRESS_TIMEOUT).toLong()
+        longPressInterval = safeGetInt(_prefs, "longpress_interval", Defaults.LONGPRESS_INTERVAL).toLong()
+        keyrepeat_enabled = _prefs.getBoolean("keyrepeat_enabled", Defaults.KEYREPEAT_ENABLED)
+        margin_bottom = get_dip_pref_oriented(dm, "margin_bottom", Defaults.MARGIN_BOTTOM_PORTRAIT.toFloat(), Defaults.MARGIN_BOTTOM_LANDSCAPE.toFloat())
+        key_vertical_margin = get_dip_pref(dm, "key_vertical_margin", Defaults.KEY_VERTICAL_MARGIN) / 100
+        key_horizontal_margin = get_dip_pref(dm, "key_horizontal_margin", Defaults.KEY_HORIZONTAL_MARGIN) / 100
 
-        labelBrightness = safeGetInt(_prefs, "label_brightness", 100) * 255 / 100
-        keyboardOpacity = safeGetInt(_prefs, "keyboard_opacity", 81) * 255 / 100
-        keyOpacity = safeGetInt(_prefs, "key_opacity", 100) * 255 / 100
-        keyActivatedOpacity = safeGetInt(_prefs, "key_activated_opacity", 100) * 255 / 100
+        labelBrightness = safeGetInt(_prefs, "label_brightness", Defaults.LABEL_BRIGHTNESS) * 255 / 100
+        keyboardOpacity = safeGetInt(_prefs, "keyboard_opacity", Defaults.KEYBOARD_OPACITY) * 255 / 100
+        keyOpacity = safeGetInt(_prefs, "key_opacity", Defaults.KEY_OPACITY) * 255 / 100
+        keyActivatedOpacity = safeGetInt(_prefs, "key_activated_opacity", Defaults.KEY_ACTIVATED_OPACITY) * 255 / 100
 
-        borderConfig = _prefs.getBoolean("border_config", false)
-        customBorderRadius = _prefs.getInt("custom_border_radius", 0) / 100f
-        customBorderLineWidth = get_dip_pref(dm, "custom_border_line_width", 0f)
+        borderConfig = _prefs.getBoolean("border_config", Defaults.BORDER_CONFIG)
+        customBorderRadius = _prefs.getInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS) / 100f
+        customBorderLineWidth = get_dip_pref(dm, "custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH.toFloat())
         screenHeightPixels = dm.heightPixels
-        horizontal_margin = get_dip_pref_oriented(dm, "horizontal_margin", 3f, 28f)
-        double_tap_lock_shift = _prefs.getBoolean("lock_double_tap", true)
-        characterSize = safeGetFloat(_prefs, "character_size", 1.18f) * characterSizeScale
-        themeName = safeGetString(_prefs, "theme", "cleverkeysdark")
+        horizontal_margin = get_dip_pref_oriented(dm, "horizontal_margin", Defaults.HORIZONTAL_MARGIN_PORTRAIT.toFloat(), Defaults.HORIZONTAL_MARGIN_LANDSCAPE.toFloat())
+        double_tap_lock_shift = _prefs.getBoolean("lock_double_tap", Defaults.DOUBLE_TAP_LOCK_SHIFT)
+        characterSize = safeGetFloat(_prefs, "character_size", Defaults.CHARACTER_SIZE) * characterSizeScale
+        themeName = safeGetString(_prefs, "theme", Defaults.THEME)
         theme = getThemeId(res, themeName)
-        autocapitalisation = _prefs.getBoolean("autocapitalisation", true)
-        switch_input_immediate = _prefs.getBoolean("switch_input_immediate", false)
+        autocapitalisation = _prefs.getBoolean("autocapitalisation", Defaults.AUTOCAPITALISATION)
+        switch_input_immediate = _prefs.getBoolean("switch_input_immediate", Defaults.SWITCH_INPUT_IMMEDIATE)
         extra_keys_param = ExtraKeysPreference.get_extra_keys(_prefs) ?: emptyMap()
         extra_keys_custom = CustomExtraKeysPreference.get(_prefs) ?: emptyMap()
-        selected_number_layout = NumberLayout.of_string(safeGetString(_prefs, "number_entry_layout", "pin"))
+        selected_number_layout = NumberLayout.of_string(safeGetString(_prefs, "number_entry_layout", Defaults.NUMBER_ENTRY_LAYOUT))
         current_layout_narrow = safeGetInt(_prefs, "current_layout_portrait", 0)
         current_layout_wide = safeGetInt(_prefs, "current_layout_landscape", 0)
-        circle_sensitivity = safeGetString(_prefs, "circle_sensitivity", "2").toIntOrNull() ?: 2
-        clipboard_history_enabled = _prefs.getBoolean("clipboard_history_enabled", true)
+        circle_sensitivity = safeGetString(_prefs, "circle_sensitivity", Defaults.CIRCLE_SENSITIVITY).toIntOrNull() ?: Defaults.CIRCLE_SENSITIVITY_FALLBACK
+        clipboard_history_enabled = _prefs.getBoolean("clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
 
-        clipboard_history_limit = safeGetString(_prefs, "clipboard_history_limit", "0").toIntOrNull() ?: 0
+        clipboard_history_limit = safeGetString(_prefs, "clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
 
-        clipboard_pane_height_percent = safeGetInt(_prefs, "clipboard_pane_height_percent", 30).coerceIn(10, 50)
+        clipboard_pane_height_percent = safeGetInt(_prefs, "clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT).coerceIn(10, 50)
 
-        clipboard_max_item_size_kb = safeGetString(_prefs, "clipboard_max_item_size_kb", "500").toIntOrNull() ?: 500
+        clipboard_max_item_size_kb = safeGetString(_prefs, "clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK
 
-        clipboard_limit_type = safeGetString(_prefs, "clipboard_limit_type", "count")
+        clipboard_limit_type = safeGetString(_prefs, "clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
 
-        clipboard_size_limit_mb = safeGetString(_prefs, "clipboard_size_limit_mb", "10").toIntOrNull() ?: 10
+        clipboard_size_limit_mb = safeGetString(_prefs, "clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
 
-        swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", true)
-        swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", false)
-        word_prediction_enabled = _prefs.getBoolean("word_prediction_enabled", true)
-        suggestion_bar_opacity = safeGetInt(_prefs, "suggestion_bar_opacity", 80)
+        swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
+        swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", Defaults.SWIPE_SHOW_DEBUG_SCORES)
+        word_prediction_enabled = _prefs.getBoolean("word_prediction_enabled", Defaults.WORD_PREDICTION_ENABLED)
+        suggestion_bar_opacity = safeGetInt(_prefs, "suggestion_bar_opacity", Defaults.SUGGESTION_BAR_OPACITY)
 
-        prediction_context_boost = safeGetFloat(_prefs, "prediction_context_boost", 0.5f)
-        prediction_frequency_scale = safeGetFloat(_prefs, "prediction_frequency_scale", 100.0f)
-        context_aware_predictions_enabled = _prefs.getBoolean("context_aware_predictions_enabled", true)
-        personalized_learning_enabled = _prefs.getBoolean("personalized_learning_enabled", true)
-        learning_aggression = safeGetString(_prefs, "learning_aggression", "BALANCED")
+        prediction_context_boost = safeGetFloat(_prefs, "prediction_context_boost", Defaults.PREDICTION_CONTEXT_BOOST)
+        prediction_frequency_scale = safeGetFloat(_prefs, "prediction_frequency_scale", Defaults.PREDICTION_FREQUENCY_SCALE)
+        context_aware_predictions_enabled = _prefs.getBoolean("context_aware_predictions_enabled", Defaults.CONTEXT_AWARE_PREDICTIONS_ENABLED)
+        personalized_learning_enabled = _prefs.getBoolean("personalized_learning_enabled", Defaults.PERSONALIZED_LEARNING_ENABLED)
+        learning_aggression = safeGetString(_prefs, "learning_aggression", Defaults.LEARNING_AGGRESSION)
 
         // Multi-language settings (Phase 8.3 & 8.4)
-        enable_multilang = _prefs.getBoolean("pref_enable_multilang", false)
-        primary_language = safeGetString(_prefs, "pref_primary_language", "en")
-        auto_detect_language = _prefs.getBoolean("pref_auto_detect_language", true)
+        enable_multilang = _prefs.getBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)
+        primary_language = safeGetString(_prefs, "pref_primary_language", Defaults.PRIMARY_LANGUAGE)
+        auto_detect_language = _prefs.getBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
         // SlideBarPreference stores as Float (0.4-0.9), not Int
-        language_detection_sensitivity = safeGetFloat(_prefs, "pref_language_detection_sensitivity", 0.6f)
+        language_detection_sensitivity = safeGetFloat(_prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
 
-        autocorrect_enabled = _prefs.getBoolean("autocorrect_enabled", true)
-        autocorrect_min_word_length = safeGetInt(_prefs, "autocorrect_min_word_length", 3)
-        autocorrect_char_match_threshold = safeGetFloat(_prefs, "autocorrect_char_match_threshold", 0.67f)
-        autocorrect_confidence_min_frequency = safeGetInt(_prefs, "autocorrect_confidence_min_frequency", 100)
+        autocorrect_enabled = _prefs.getBoolean("autocorrect_enabled", Defaults.AUTOCORRECT_ENABLED)
+        autocorrect_min_word_length = safeGetInt(_prefs, "autocorrect_min_word_length", Defaults.AUTOCORRECT_MIN_WORD_LENGTH)
+        autocorrect_char_match_threshold = safeGetFloat(_prefs, "autocorrect_char_match_threshold", Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD)
+        autocorrect_confidence_min_frequency = safeGetInt(_prefs, "autocorrect_confidence_min_frequency", Defaults.AUTOCORRECT_MIN_FREQUENCY)
 
-        autocorrect_max_length_diff = safeGetInt(_prefs, "autocorrect_max_length_diff", 2)
-        autocorrect_prefix_length = safeGetInt(_prefs, "autocorrect_prefix_length", 1)
-        autocorrect_max_beam_candidates = safeGetInt(_prefs, "autocorrect_max_beam_candidates", 3)
+        autocorrect_max_length_diff = safeGetInt(_prefs, "autocorrect_max_length_diff", Defaults.AUTOCORRECT_MAX_LENGTH_DIFF)
+        autocorrect_prefix_length = safeGetInt(_prefs, "autocorrect_prefix_length", Defaults.AUTOCORRECT_PREFIX_LENGTH)
+        autocorrect_max_beam_candidates = safeGetInt(_prefs, "autocorrect_max_beam_candidates", Defaults.AUTOCORRECT_MAX_BEAM_CANDIDATES)
 
-        swipe_beam_autocorrect_enabled = _prefs.getBoolean("swipe_beam_autocorrect_enabled", true)
-        swipe_final_autocorrect_enabled = _prefs.getBoolean("swipe_final_autocorrect_enabled", true)
-        swipe_fuzzy_match_mode = safeGetString(_prefs, "swipe_fuzzy_match_mode", "edit_distance")
+        swipe_beam_autocorrect_enabled = _prefs.getBoolean("swipe_beam_autocorrect_enabled", Defaults.SWIPE_BEAM_AUTOCORRECT_ENABLED)
+        swipe_final_autocorrect_enabled = _prefs.getBoolean("swipe_final_autocorrect_enabled", Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
+        swipe_fuzzy_match_mode = safeGetString(_prefs, "swipe_fuzzy_match_mode", Defaults.SWIPE_FUZZY_MATCH_MODE)
 
-        val predictionSource = safeGetInt(_prefs, "swipe_prediction_source", 80)
+        val predictionSource = safeGetInt(_prefs, "swipe_prediction_source", Defaults.SWIPE_PREDICTION_SOURCE)
         swipe_confidence_weight = predictionSource / 100.0f
         swipe_frequency_weight = 1.0f - swipe_confidence_weight
 
-        swipe_common_words_boost = safeGetFloat(_prefs, "swipe_common_words_boost", 1.0f)
-        swipe_top5000_boost = safeGetFloat(_prefs, "swipe_top5000_boost", 1.0f)
-        swipe_rare_words_penalty = safeGetFloat(_prefs, "swipe_rare_words_penalty", 1.0f)
+        swipe_common_words_boost = safeGetFloat(_prefs, "swipe_common_words_boost", Defaults.SWIPE_COMMON_WORDS_BOOST)
+        swipe_top5000_boost = safeGetFloat(_prefs, "swipe_top5000_boost", Defaults.SWIPE_TOP5000_BOOST)
+        swipe_rare_words_penalty = safeGetFloat(_prefs, "swipe_rare_words_penalty", Defaults.SWIPE_RARE_WORDS_PENALTY)
 
-        short_gestures_enabled = _prefs.getBoolean("short_gestures_enabled", true)
-        short_gesture_min_distance = safeGetInt(_prefs, "short_gesture_min_distance", 37)
-        short_gesture_max_distance = safeGetInt(_prefs, "short_gesture_max_distance", 141)
+        short_gestures_enabled = _prefs.getBoolean("short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)
+        short_gesture_min_distance = safeGetInt(_prefs, "short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE)
+        short_gesture_max_distance = safeGetInt(_prefs, "short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE)
 
         // Gesture timing configuration
-        tap_duration_threshold = safeGetInt(_prefs, "tap_duration_threshold", 150).toLong()
-        double_space_threshold = safeGetInt(_prefs, "double_space_threshold", 500).toLong()
-        smart_punctuation = _prefs.getBoolean("smart_punctuation", true)
-        swipe_min_dwell_time = safeGetInt(_prefs, "swipe_min_dwell_time", 7).toLong()
-        swipe_noise_threshold = safeGetFloat(_prefs, "swipe_noise_threshold", 1.26f)
-        swipe_high_velocity_threshold = safeGetFloat(_prefs, "swipe_high_velocity_threshold", 1000.0f)
-        swipe_min_distance = safeGetFloat(_prefs, "swipe_min_distance", 72f)
-        swipe_min_key_distance = safeGetFloat(_prefs, "swipe_min_key_distance", 38f)
+        tap_duration_threshold = safeGetInt(_prefs, "tap_duration_threshold", Defaults.TAP_DURATION_THRESHOLD).toLong()
+        double_space_threshold = safeGetInt(_prefs, "double_space_threshold", Defaults.DOUBLE_SPACE_THRESHOLD).toLong()
+        smart_punctuation = _prefs.getBoolean("smart_punctuation", Defaults.SMART_PUNCTUATION)
+        swipe_min_dwell_time = safeGetInt(_prefs, "swipe_min_dwell_time", Defaults.SWIPE_MIN_DWELL_TIME).toLong()
+        swipe_noise_threshold = safeGetFloat(_prefs, "swipe_noise_threshold", Defaults.SWIPE_NOISE_THRESHOLD)
+        swipe_high_velocity_threshold = safeGetFloat(_prefs, "swipe_high_velocity_threshold", Defaults.SWIPE_HIGH_VELOCITY_THRESHOLD)
+        swipe_min_distance = safeGetFloat(_prefs, "swipe_min_distance", Defaults.SWIPE_MIN_DISTANCE)
+        swipe_min_key_distance = safeGetFloat(_prefs, "swipe_min_key_distance", Defaults.SWIPE_MIN_KEY_DISTANCE)
 
         // Slider speed configuration
-        slider_speed_smoothing = safeGetFloat(_prefs, "slider_speed_smoothing", 0.54f)
-        slider_speed_max = safeGetFloat(_prefs, "slider_speed_max", 4.0f)
+        slider_speed_smoothing = safeGetFloat(_prefs, "slider_speed_smoothing", Defaults.SLIDER_SPEED_SMOOTHING)
+        slider_speed_max = safeGetFloat(_prefs, "slider_speed_max", Defaults.SLIDER_SPEED_MAX)
 
         // Swipe trail appearance
-        swipe_trail_enabled = _prefs.getBoolean("swipe_trail_enabled", true)
-        swipe_trail_effect = safeGetString(_prefs, "swipe_trail_effect", "sparkle")
-        swipe_trail_color = _prefs.getInt("swipe_trail_color", 0xFFC0C0C0.toInt()) // Silver
-        swipe_trail_width = safeGetFloat(_prefs, "swipe_trail_width", 8.0f)
-        swipe_trail_glow_radius = safeGetFloat(_prefs, "swipe_trail_glow_radius", 6.0f)
+        swipe_trail_enabled = _prefs.getBoolean("swipe_trail_enabled", Defaults.SWIPE_TRAIL_ENABLED)
+        swipe_trail_effect = safeGetString(_prefs, "swipe_trail_effect", Defaults.SWIPE_TRAIL_EFFECT)
+        swipe_trail_color = _prefs.getInt("swipe_trail_color", Defaults.SWIPE_TRAIL_COLOR)
+        swipe_trail_width = safeGetFloat(_prefs, "swipe_trail_width", Defaults.SWIPE_TRAIL_WIDTH)
+        swipe_trail_glow_radius = safeGetFloat(_prefs, "swipe_trail_glow_radius", Defaults.SWIPE_TRAIL_GLOW_RADIUS)
 
-        neural_prediction_enabled = _prefs.getBoolean("neural_prediction_enabled", true)
-        neural_beam_width = safeGetInt(_prefs, "neural_beam_width", 6)
-        neural_max_length = safeGetInt(_prefs, "neural_max_length", 20)
-        neural_confidence_threshold = safeGetFloat(_prefs, "neural_confidence_threshold", 0.01f)
-        neural_batch_beams = _prefs.getBoolean("neural_batch_beams", false)
-        neural_greedy_search = _prefs.getBoolean("neural_greedy_search", false)
-        termux_mode_enabled = _prefs.getBoolean("termux_mode_enabled", true)
-        swipe_debug_detailed_logging = _prefs.getBoolean("swipe_debug_detailed_logging", false)
-        swipe_debug_show_raw_output = _prefs.getBoolean("swipe_debug_show_raw_output", true)
-        swipe_show_raw_beam_predictions = _prefs.getBoolean("swipe_show_raw_beam_predictions", true)
+        neural_prediction_enabled = _prefs.getBoolean("neural_prediction_enabled", Defaults.NEURAL_PREDICTION_ENABLED)
+        neural_beam_width = safeGetInt(_prefs, "neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
+        neural_max_length = safeGetInt(_prefs, "neural_max_length", Defaults.NEURAL_MAX_LENGTH)
+        neural_confidence_threshold = safeGetFloat(_prefs, "neural_confidence_threshold", Defaults.NEURAL_CONFIDENCE_THRESHOLD)
+        neural_batch_beams = _prefs.getBoolean("neural_batch_beams", Defaults.NEURAL_BATCH_BEAMS)
+        neural_greedy_search = _prefs.getBoolean("neural_greedy_search", Defaults.NEURAL_GREEDY_SEARCH)
+        termux_mode_enabled = _prefs.getBoolean("termux_mode_enabled", Defaults.TERMUX_MODE_ENABLED)
+        swipe_debug_detailed_logging = _prefs.getBoolean("swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
+        swipe_debug_show_raw_output = _prefs.getBoolean("swipe_debug_show_raw_output", Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT)
+        swipe_show_raw_beam_predictions = _prefs.getBoolean("swipe_show_raw_beam_predictions", Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS)
 
-        neural_beam_alpha = safeGetFloat(_prefs, "neural_beam_alpha", 1.55f)
-        neural_beam_prune_confidence = safeGetFloat(_prefs, "neural_beam_prune_confidence", 0.33f)
-        neural_beam_score_gap = safeGetFloat(_prefs, "neural_beam_score_gap", 50.0f)
+        neural_beam_alpha = safeGetFloat(_prefs, "neural_beam_alpha", Defaults.NEURAL_BEAM_ALPHA)
+        neural_beam_prune_confidence = safeGetFloat(_prefs, "neural_beam_prune_confidence", Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE)
+        neural_beam_score_gap = safeGetFloat(_prefs, "neural_beam_score_gap", Defaults.NEURAL_BEAM_SCORE_GAP)
 
-        neural_model_version = safeGetString(_prefs, "neural_model_version", "v2")
-        neural_user_max_seq_length = safeGetInt(_prefs, "neural_user_max_seq_length", 0)
-        neural_resampling_mode = safeGetString(_prefs, "neural_resampling_mode", "discard")
+        neural_model_version = safeGetString(_prefs, "neural_model_version", Defaults.NEURAL_MODEL_VERSION)
+        neural_user_max_seq_length = safeGetInt(_prefs, "neural_user_max_seq_length", Defaults.NEURAL_USER_MAX_SEQ_LENGTH)
+        neural_resampling_mode = safeGetString(_prefs, "neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE)
 
         val screen_width_dp = dm.widthPixels / dm.density
         wide_screen = screen_width_dp >= WIDE_DEVICE_THRESHOLD
