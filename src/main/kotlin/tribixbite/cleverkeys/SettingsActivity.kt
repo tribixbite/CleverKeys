@@ -245,14 +245,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var autoDetectLanguage by mutableStateOf(true)
     private var languageDetectionSensitivity by mutableStateOf(0.6f)
 
-    // Privacy settings
-    private var privacyCollectSwipe by mutableStateOf(true)
-    private var privacyCollectPerformance by mutableStateOf(true)
+    // Privacy settings - all OFF by default (CleverKeys is fully offline)
+    private var privacyCollectSwipe by mutableStateOf(false)
+    private var privacyCollectPerformance by mutableStateOf(false)
     private var privacyCollectErrors by mutableStateOf(false)
-    private var privacyAnonymize by mutableStateOf(true)
-    private var privacyLocalOnly by mutableStateOf(true)
-    private var privacyRetentionDays by mutableStateOf(90)
-    private var privacyAutoDelete by mutableStateOf(true)
 
     // Short gesture settings
     private var shortGesturesEnabled by mutableStateOf(true)
@@ -2353,21 +2349,22 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 onExpandChange = { privacySectionExpanded = it }
             ) {
                 Text(
-                    text = "Control what data CleverKeys collects and how long it's stored. This can be used for on-device personalized model fine-tuning",
+                    text = "CleverKeys is fully offline — no data ever leaves your device. " +
+                           "These optional settings store local data for potential future on-device model fine-tuning.",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
                 Text(
-                    text = "Data Collection",
+                    text = "Local Data Collection (Optional)",
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
 
                 SettingsSwitch(
                     title = "Swipe Pattern Data",
-                    description = "Collect swipe trajectories to improve predictions",
+                    description = "Store swipe trajectories locally for on-device learning",
                     checked = privacyCollectSwipe,
                     onCheckedChange = {
                         privacyCollectSwipe = it
@@ -2377,7 +2374,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                 SettingsSwitch(
                     title = "Performance Metrics",
-                    description = "Collect timing data to optimize latency",
+                    description = "Store timing data locally for optimization",
                     checked = privacyCollectPerformance,
                     onCheckedChange = {
                         privacyCollectPerformance = it
@@ -2387,7 +2384,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                 SettingsSwitch(
                     title = "Error Reports",
-                    description = "Collect crash logs to fix bugs",
+                    description = "Store crash logs locally for debugging",
                     checked = privacyCollectErrors,
                     onCheckedChange = {
                         privacyCollectErrors = it
@@ -2395,69 +2392,54 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     }
                 )
 
+                // Collected Data Stats and Export
                 Text(
-                    text = "Data Privacy",
+                    text = "Collected Data",
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                 )
 
-                SettingsSwitch(
-                    title = "Anonymize Data",
-                    description = "Strip personal identifiers from collected data",
-                    checked = privacyAnonymize,
-                    onCheckedChange = {
-                        privacyAnonymize = it
-                        saveSetting("privacy_anonymize", it)
+                // Show stats
+                val stats = remember {
+                    try {
+                        tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(this@SettingsActivity).getStatistics()
+                    } catch (e: Exception) {
+                        null
                     }
-                )
+                }
 
-                SettingsSwitch(
-                    title = "Local Only",
-                    description = "Keep all data on device (never upload)",
-                    checked = privacyLocalOnly,
-                    onCheckedChange = {
-                        privacyLocalOnly = it
-                        saveSetting("privacy_local_only", it)
-                    }
-                )
-
-                Text(
-                    text = "Data Retention",
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
-                )
-
-                SettingsSlider(
-                    title = "Retention Period",
-                    description = "Days to keep collected data (7-365)",
-                    value = privacyRetentionDays.toFloat(),
-                    valueRange = 7f..365f,
-                    steps = 35,
-                    onValueChange = {
-                        privacyRetentionDays = it.toInt()
-                        saveSetting("privacy_retention_days", privacyRetentionDays)
-                    },
-                    displayValue = "$privacyRetentionDays days"
-                )
-
-                SettingsSwitch(
-                    title = "Auto-Delete Old Data",
-                    description = "Automatically delete data older than retention period",
-                    checked = privacyAutoDelete,
-                    onCheckedChange = {
-                        privacyAutoDelete = it
-                        saveSetting("privacy_auto_delete", it)
-                    }
-                )
-
-                Button(
-                    onClick = { clearAllPrivacyData() },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
+                if (stats != null && stats.totalCount > 0) {
+                    Text(
+                        text = "Total swipes: ${stats.totalCount} • Unique words: ${stats.uniqueWords}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
-                ) {
-                    Text("Clear All Collected Data")
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { exportSwipeDataJSON() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Export JSON")
+                        }
+                        OutlinedButton(
+                            onClick = { exportSwipeDataNDJSON() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Export NDJSON")
+                        }
+                    }
+                } else {
+                    Text(
+                        text = "No swipe data collected yet. Enable collection above to start storing patterns for future on-device learning.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
                 }
             }
 
@@ -3115,14 +3097,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         autoDetectLanguage = prefs.getSafeBoolean("pref_auto_detect_language", true)
         languageDetectionSensitivity = Config.safeGetFloat(prefs, "pref_language_detection_sensitivity", 0.6f)
 
-        // Privacy settings
-        privacyCollectSwipe = prefs.getSafeBoolean("privacy_collect_swipe", true)
-        privacyCollectPerformance = prefs.getSafeBoolean("privacy_collect_performance", true)
+        // Privacy settings - all OFF by default (CleverKeys is fully offline)
+        privacyCollectSwipe = prefs.getSafeBoolean("privacy_collect_swipe", false)
+        privacyCollectPerformance = prefs.getSafeBoolean("privacy_collect_performance", false)
         privacyCollectErrors = prefs.getSafeBoolean("privacy_collect_errors", false)
-        privacyAnonymize = prefs.getSafeBoolean("privacy_anonymize", true)
-        privacyLocalOnly = prefs.getSafeBoolean("privacy_local_only", true)
-        privacyRetentionDays = Config.safeGetInt(prefs, "privacy_retention_days", 90)
-        privacyAutoDelete = prefs.getSafeBoolean("privacy_auto_delete", true)
 
         // Short gesture settings
         shortGesturesEnabled = prefs.getSafeBoolean("short_gestures_enabled", true)
@@ -3757,6 +3735,46 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
+    }
+
+    private fun exportSwipeDataJSON() {
+        lifecycleScope.launch {
+            try {
+                val dataStore = tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(this@SettingsActivity)
+                val exportFile = dataStore.exportToJSON()
+                Toast.makeText(
+                    this@SettingsActivity,
+                    "Exported to: ${exportFile.absolutePath}",
+                    Toast.LENGTH_LONG
+                ).show()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@SettingsActivity,
+                    "Export failed: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private fun exportSwipeDataNDJSON() {
+        lifecycleScope.launch {
+            try {
+                val dataStore = tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(this@SettingsActivity)
+                val exportFile = dataStore.exportToNDJSON()
+                Toast.makeText(
+                    this@SettingsActivity,
+                    "Exported to: ${exportFile.absolutePath}",
+                    Toast.LENGTH_LONG
+                ).show()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@SettingsActivity,
+                    "Export failed: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 
     /**

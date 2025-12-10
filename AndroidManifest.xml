@@ -4,7 +4,7 @@
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
   <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-  <uses-permission android:name="android.permission.INTERNET"/>
+  <!-- No INTERNET permission - CleverKeys is fully offline, no data leaves your device -->
   <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
   <!-- User dictionary access for word suggestions -->

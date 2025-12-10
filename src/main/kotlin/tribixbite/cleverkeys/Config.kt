@@ -261,7 +261,7 @@ class Config private constructor(
         clipboard_size_limit_mb = safeGetString(_prefs, "clipboard_size_limit_mb", "10").toIntOrNull() ?: 10
 
         swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", true)
-        swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", true)
+        swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", false)
         word_prediction_enabled = _prefs.getBoolean("word_prediction_enabled", true)
         suggestion_bar_opacity = safeGetInt(_prefs, "suggestion_bar_opacity", 80)
 
