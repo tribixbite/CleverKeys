@@ -1,0 +1,346 @@
+# Settings UI Audit (2025-12-10)
+
+## Executive Summary
+
+Comprehensive review of all settings in `SettingsActivity.kt` to identify:
+- Duplicate settings appearing in multiple sections
+- Settings in wrong categories
+- UX restructuring recommendations
+
+---
+
+## 1. DUPLICATE SETTINGS
+
+### 1.1 True Duplicates (Same preference key saved twice in UI)
+
+| Setting | Locations | Recommendation |
+|---------|-----------|----------------|
+| **clipboard_history_enabled** | Input section (line 1388) + Clipboard section (line 2079) | Remove from Input section - belongs only in Clipboard section |
+
+### 1.2 Intentional Duplicates (Legacy Fallback UI)
+
+These exist in both Compose UI and Legacy XML fallback UI (useLegacySettingsUI):
+- `neural_prediction_enabled` - lines 583 + 3454
+- `neural_beam_width` - lines 597 + 3478
+
+**Status**: Keep as-is - legacy UI is intentional fallback
+
+---
+
+## 2. CONFUSING SIMILAR/RELATED SETTINGS
+
+### 2.1 Swipe Distance Settings (HIGH CONFUSION)
+
+| Setting | Section | Preference Key | Current Value Range |
+|---------|---------|----------------|---------------------|
+| "Swipe Distance Threshold" | Input | `swipe_dist` | 5-30 (units) |
+| "Minimum Swipe Distance" | Gesture Tuning | `swipe_min_distance` | 20-100 (pixels) |
+| "Minimum Key Distance" | Gesture Tuning | `swipe_min_key_distance` | 15-80 (pixels) |
+| "Short Gesture Min Distance" | Input | `short_gesture_min_distance` | 10-60 (% key diagonal) |
+| "Short Gesture Max Distance" | Input | `short_gesture_max_distance` | 50-200 (% key diagonal) |
+
+**Problem**: 5 different distance settings across 2 sections with different units!
+
+**Recommendation**:
+1. Consolidate all distance settings into Gesture Tuning section
+2. Standardize units (either all pixels or all % of key size)
+3. Add clear unit labels to each setting
+
+### 2.2 Autocorrect Settings (SPLIT ACROSS SECTIONS)
+
+**In Input Section (lines 1308-1358):**
+- Enable Auto-Correction (`autocorrect_enabled`)
+- Minimum Word Length (`autocorrect_min_word_length`)
+- Character Match Threshold (`autocorrect_char_match_threshold`)
+- Minimum Frequency (`autocorrect_confidence_min_frequency`)
+
+**In Swipe Corrections Section (lines 1624-1782):**
+- Beam Autocorrect (`swipe_beam_autocorrect_enabled`)
+- Final Autocorrect (`swipe_final_autocorrect_enabled`)
+- Typo Forgiveness (`autocorrect_max_length_diff`)
+- Starting Letter Accuracy (`autocorrect_prefix_length`)
+- Correction Search Depth (`autocorrect_max_beam_candidates`)
+
+**Problem**: User must look in 2 places for autocorrect settings
+
+**Recommendation**: Merge all autocorrect settings into ONE section titled "Auto-Correction"
+
+### 2.3 Short Gesture Settings (SPLIT ACROSS SECTIONS)
+
+**In Input Section:**
+- Short Gestures toggle
+- Short Gesture Min/Max Distance
+- "Customize Short Swipes" button
+
+**In Gesture Tuning Section:**
+- Short Swipe Customization card (navigation)
+
+**Recommendation**: Move all short gesture settings to Gesture Tuning section
+
+---
+
+## 3. SETTINGS IN WRONG CATEGORIES
+
+| Setting | Current Section | Better Section | Reason |
+|---------|-----------------|----------------|--------|
+| Clipboard History toggle | Input | Clipboard | All clipboard settings should be together |
+| Terminal Mode | Neural | Advanced or Input | Not related to neural prediction |
+| Short Gestures (all) | Input | Gesture Tuning | Gesture configuration belongs together |
+| Vibration | Input | Appearance or Accessibility | User preference, not input behavior |
+| Smart Punctuation | Input | Swipe Corrections | Auto-formatting behavior |
+| Pin Entry Layout | Input | Appearance | Layout/visual setting |
+
+---
+
+## 4. SECTION REORGANIZATION PROPOSAL
+
+### Current Sections (14 sections):
+1. Neural Network Prediction
+2. Appearance
+3. Swipe Trail
+4. Word Prediction/Input
+5. Swipe Corrections
+6. Gesture Tuning
+7. Accessibility
+8. Dictionary
+9. Clipboard
+10. Backup & Restore
+11. Multi-Language
+12. Privacy & Data
+13. Advanced
+14. Info
+
+### Proposed Sections (11 sections):
+
+1. **Swipe Typing** (merged Neural + Swipe settings)
+   - Enable Swipe Typing (master)
+   - Enable Neural Prediction
+   - Beam Width, Max Length, Confidence
+   - Advanced Neural Settings (collapsible)
+
+2. **Word Predictions** (renamed from Input)
+   - Enable Word Predictions
+   - Suggestion Bar Opacity
+   - Context-Aware, Personalized Learning
+   - Advanced Settings (collapsible)
+
+3. **Auto-Correction** (NEW - consolidated)
+   - Enable Auto-Correction (master)
+   - All correction settings from Input + Swipe Corrections
+
+4. **Gestures** (merged Input gesture + Gesture Tuning)
+   - Short Gestures (all settings)
+   - Tap/Swipe thresholds
+   - Slider behavior
+   - Short Swipe Customization
+
+5. **Appearance** (keep)
+   - Theme Manager
+   - Keyboard Height
+   - Margins
+   - Opacity/Brightness
+   - Border Config
+
+6. **Swipe Trail** (keep or merge into Appearance)
+
+7. **Typing Behavior** (renamed from Input remainder)
+   - Auto Capitalization
+   - Smart Punctuation
+   - Double Tap Shift
+   - Number Row/Numpad
+
+8. **Clipboard** (keep, remove duplicate toggle)
+
+9. **Accessibility** (keep)
+
+10. **Advanced** (keep)
+    - Debug settings
+    - Terminal Mode
+    - Calibration
+
+11. **Info & Backup** (merged)
+    - Version Info
+    - Backup/Restore
+    - Dictionary Management
+
+---
+
+## 5. SPECIFIC FIXES REQUIRED
+
+### Priority 1: Remove True Duplicate
+```kotlin
+// Remove from Input Section (around line 1382-1390):
+// The clipboard_history_enabled toggle - ALREADY EXISTS in Clipboard section
+```
+
+### Priority 2: Move Terminal Mode
+```kotlin
+// Move from Neural section to Advanced section
+// Terminal Mode is about key layout, not neural prediction
+```
+
+### Priority 3: Consolidate Distance Settings
+Add clear documentation or consolidate the 5 distance-related settings:
+- Consider adding a "Swipe Sensitivity" preset (Low/Medium/High) that sets multiple values
+
+### Priority 4: Consolidate Autocorrect
+Move all autocorrect_* settings to single section
+
+---
+
+## 6. METRICS
+
+| Metric | Current | After Fixes |
+|--------|---------|-------------|
+| Total sections | 14 | 11 |
+| Duplicate settings | 1 | 0 |
+| Confusing similar settings | 5+ | 2-3 |
+| Settings in wrong category | 6 | 0 |
+| Lines of code (UI) | ~2500 | ~2300 (est.) |
+
+---
+
+## 7. IMPLEMENTATION PLAN
+
+1. **Phase 1** (Quick wins - 15 min):
+   - Remove duplicate `clipboard_history_enabled` from Input section
+   - Move Terminal Mode to Advanced section
+
+2. **Phase 2** (Moderate - 1 hour):
+   - Consolidate autocorrect settings into single section
+   - Move Short Gesture settings to Gesture Tuning
+
+3. **Phase 3** (Major - 2-3 hours):
+   - Merge sections as proposed
+   - Add sensitivity presets for distance settings
+   - Standardize units across distance settings
+
+---
+
+## Appendix: All Settings by Section
+
+### Neural Network Prediction
+- Enable Swipe Typing
+- Enable Neural Prediction
+- Beam Width
+- Max Length
+- Confidence Threshold
+- Terminal Mode ← MOVE TO ADVANCED
+- Advanced: Batch Processing, Greedy Search, Length Norm, Pruning, Score Gap, Model Version, Resampling, Max Seq Length
+
+### Appearance
+- Theme Manager (card)
+- Keyboard Height (Portrait/Landscape)
+- Bottom Margin (Portrait/Landscape)
+- Horizontal Margin (Portrait/Landscape)
+- Label Brightness
+- Keyboard Opacity
+- Key Opacity
+- Activated Key Opacity
+- Character Size
+- Key Margins (Vertical/Horizontal)
+- Border Config (toggle + radius + line width)
+
+### Swipe Trail
+- Enable Swipe Trail
+- Trail Effect
+- Trail Width
+- Glow Radius
+- Trail Color
+
+### Input (Word Prediction)
+- Manage Layouts (button)
+- Configure Extra Keys (button)
+- Enable Word Predictions
+- Suggestion Bar Opacity
+- Advanced: Context-Aware, Personalized Learning, Learning Aggression, Context Boost, Frequency Scale
+- Enable Auto-Correction ← MOVE TO AUTOCORRECT SECTION
+- Min Word Length ← MOVE
+- Char Match Threshold ← MOVE
+- Min Frequency ← MOVE
+- Auto Capitalization
+- Smart Punctuation
+- Clipboard History ← REMOVE (duplicate)
+- Vibration + Duration
+- Swipe Distance Threshold ← CONFUSING
+- Circle Gesture Sensitivity
+- Space Bar Slider Sensitivity
+- Long Press Timeout/Interval
+- Key Repeat Enabled
+- Double Tap Shift
+- Immediate Keyboard Switching
+- Number Row
+- Show Numpad
+- Numpad Layout
+- Pin Entry Layout
+- Short Gestures + Min/Max Distance ← MOVE TO GESTURE TUNING
+- Customize Short Swipes (button)
+
+### Swipe Corrections
+- Beam Autocorrect ← MOVE TO AUTOCORRECT
+- Final Autocorrect ← MOVE
+- Correction Style ← MOVE
+- Fuzzy Match Algorithm ← MOVE
+- Typo Forgiveness ← MOVE
+- Starting Letter Accuracy ← MOVE
+- Correction Search Depth ← MOVE
+- Prediction Source Balance
+- Common Words Boost
+- Frequent Words Boost
+- Rare Words Penalty
+
+### Gesture Tuning
+- Short Swipe Customization (card)
+- Tap Duration Threshold
+- Double-Space to Period
+- Minimum Swipe Distance ← CONFUSING with swipe_dist
+- Minimum Key Distance
+- Minimum Key Dwell Time
+- Movement Noise Filter
+- High Velocity Threshold
+- Speed Smoothing
+- Maximum Speed Multiplier
+
+### Accessibility
+- Sticky Keys + Timeout
+- Voice Guidance
+
+### Dictionary
+- Manage Dictionary (button)
+
+### Clipboard
+- Clipboard History (toggle) ← KEEP THIS ONE
+- Limit Type
+- History Limit / Size Limit
+- Pane Height
+- Max Item Size
+
+### Backup & Restore
+- Config Export/Import
+- Dictionary Export/Import
+- Clipboard Export/Import
+
+### Multi-Language
+- Enable Multi-Language
+- Primary Language
+- Auto-Detect Language
+- Detection Sensitivity
+
+### Privacy & Data
+- Swipe Pattern Data
+- Performance Metrics
+- Error Reports
+- Export JSON/NDJSON
+
+### Advanced
+- Debug Enabled
+- Swipe Debug Log
+- Detailed Logging
+- Show Raw Output
+- Show Beam Predictions
+- Calibration (button)
+
+### Info
+- Version Info
+- GitHub Info
+- Reset / Check Updates / Install Update
