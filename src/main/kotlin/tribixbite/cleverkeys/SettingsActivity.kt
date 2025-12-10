@@ -313,8 +313,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Error setting up Compose UI", e)
-            // Fallback to XML-based settings if Compose fails
-            useLegacySettingsUI()
+            Toast.makeText(this, "Settings UI failed to load: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
         }
     }
     
@@ -1376,16 +1376,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         saveSetting("smart_punctuation", it)
                         // Update Config immediately
                         Config.globalConfig().smart_punctuation = it
-                    }
-                )
-
-                SettingsSwitch(
-                    title = stringResource(R.string.settings_clipboard_history_title),
-                    description = stringResource(R.string.settings_clipboard_history_desc),
-                    checked = clipboardHistoryEnabled,
-                    onCheckedChange = {
-                        clipboardHistoryEnabled = it
-                        saveSetting("clipboard_history_enabled", it)
                     }
                 )
 
@@ -3411,113 +3401,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Handle direct boot mode failure
         android.util.Log.w(TAG, "Settings unavailable in direct boot mode")
         finish()
-    }
-
-    /**
-     * Fallback to legacy XML-based settings UI if Compose fails
-     */
-    private fun useLegacySettingsUI() {
-        try {
-            // Create simple scrollable settings UI with XML views
-            val scrollView = ScrollView(this).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.MATCH_PARENT
-                )
-            }
-
-            val layout = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(32, 32, 32, 32)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-            }
-
-            // Title
-            val title = TextView(this).apply {
-                text = getString(R.string.settings_legacy_title)
-                textSize = 24f
-                setPadding(0, 0, 0, 24)
-                setTextColor(android.graphics.Color.WHITE)
-            }
-            layout.addView(title)
-
-            // Neural prediction toggle
-            val neuralSwitch = Switch(this).apply {
-                text = getString(R.string.settings_legacy_neural_switch)
-                isChecked = neuralPredictionEnabled
-                setPadding(0, 16, 0, 16)
-                setOnCheckedChangeListener { _, isChecked ->
-                    neuralPredictionEnabled = isChecked
-                    saveSetting("neural_prediction_enabled", isChecked)
-                }
-            }
-            layout.addView(neuralSwitch)
-
-            // Beam width setting
-            val beamWidthLabel = TextView(this).apply {
-                text = getString(R.string.settings_legacy_beam_width, beamWidth)
-                setPadding(0, 16, 0, 8)
-                setTextColor(android.graphics.Color.WHITE)
-            }
-            layout.addView(beamWidthLabel)
-
-            val beamWidthSeekBar = SeekBar(this).apply {
-                max = 31 // 1-32 range
-                progress = beamWidth - 1
-                setPadding(0, 0, 0, 16)
-                setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                        beamWidth = progress + 1
-                        beamWidthLabel.text = getString(R.string.settings_legacy_beam_width, beamWidth)
-                    }
-                    override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                    override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                        saveSetting("neural_beam_width", beamWidth)
-                    }
-                })
-            }
-            layout.addView(beamWidthSeekBar)
-
-            // Open advanced neural settings button
-            val advancedButton = Button(this).apply {
-                text = getString(R.string.settings_legacy_advanced_button)
-                setOnClickListener {
-                    openNeuralSettings()
-                }
-            }
-            layout.addView(advancedButton)
-
-            // Calibration button
-            val calibrationButton = Button(this).apply {
-                text = getString(R.string.settings_legacy_calibration_button)
-                setOnClickListener {
-                    openCalibration()
-                }
-            }
-            layout.addView(calibrationButton)
-
-            // System info
-            val versionInfo = TextView(this).apply {
-                text = getString(R.string.settings_legacy_version)
-                setPadding(0, 32, 0, 0)
-                textSize = 12f
-                setTextColor(android.graphics.Color.GRAY)
-            }
-            layout.addView(versionInfo)
-
-            scrollView.addView(layout)
-            setContentView(scrollView)
-
-            android.util.Log.i(TAG, "Legacy settings UI initialized successfully")
-        } catch (e: Exception) {
-            android.util.Log.e(TAG, "Failed to create legacy UI", e)
-            // If even this fails, show error and close
-            Toast.makeText(this, getString(R.string.settings_legacy_error, e.message ?: ""), Toast.LENGTH_LONG).show()
-            finish()
-        }
     }
 
     // Clipboard settings now inline in main settings UI
