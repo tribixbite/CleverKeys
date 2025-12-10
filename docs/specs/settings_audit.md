@@ -7,23 +7,34 @@ Comprehensive review of all settings in `SettingsActivity.kt` to identify:
 - Settings in wrong categories
 - UX restructuring recommendations
 
+## Status: PARTIALLY FIXED
+
+**Fixed (commit 8a1315af):**
+- ✅ Removed duplicate `clipboard_history_enabled` from Input section
+- ✅ Deleted legacy XML fallback UI (~105 lines removed)
+
+**Remaining:**
+- 5+ confusing similar settings (swipe distances)
+- 6 settings in wrong categories
+- Autocorrect split across 2 sections
+
 ---
 
 ## 1. DUPLICATE SETTINGS
 
 ### 1.1 True Duplicates (Same preference key saved twice in UI)
 
-| Setting | Locations | Recommendation |
-|---------|-----------|----------------|
-| **clipboard_history_enabled** | Input section (line 1388) + Clipboard section (line 2079) | Remove from Input section - belongs only in Clipboard section |
+| Setting | Locations | Status |
+|---------|-----------|--------|
+| **clipboard_history_enabled** | ~~Input section + Clipboard section~~ | ✅ FIXED - removed from Input section |
 
-### 1.2 Intentional Duplicates (Legacy Fallback UI)
+### 1.2 Legacy Fallback UI Duplicates
 
-These exist in both Compose UI and Legacy XML fallback UI (useLegacySettingsUI):
-- `neural_prediction_enabled` - lines 583 + 3454
-- `neural_beam_width` - lines 597 + 3478
+~~These existed in both Compose UI and Legacy XML fallback UI (useLegacySettingsUI):~~
+- ~~`neural_prediction_enabled`~~
+- ~~`neural_beam_width`~~
 
-**Status**: Keep as-is - legacy UI is intentional fallback
+**Status**: ✅ FIXED - Legacy UI deleted entirely
 
 ---
 
