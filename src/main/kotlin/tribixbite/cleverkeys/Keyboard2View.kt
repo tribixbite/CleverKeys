@@ -492,24 +492,28 @@ class Keyboard2View @JvmOverloads constructor(
 
     override fun getKeyHypotenuse(key: KeyboardData.Key): Float {
         val keyboard = _keyboard ?: return 0f
+        val tc = _tc ?: return 0f  // Need theme computed for actual pixel scaling
 
-        // Find the row containing this key to get height
-        var keyHeight = 0f
+        // Find the row containing this key to get normalized height
+        var normalizedRowHeight = 0f
         for (row in keyboard.rows) {
             for (k in row.keys) {
                 if (k == key) {
-                    keyHeight = row.height
+                    normalizedRowHeight = row.height
                     break
                 }
             }
-            if (keyHeight > 0) break
+            if (normalizedRowHeight > 0) break
         }
 
-        if (keyHeight == 0f) return 0f
+        if (normalizedRowHeight == 0f) return 0f
 
-        // Calculate hypotenuse: sqrt(width^2 + height^2)
-        val keyWidth = key.width * _keyWidth
-        return kotlin.math.sqrt(keyWidth * keyWidth + keyHeight * keyHeight)
+        // Convert to actual pixels: normalized * row_height scaling factor
+        val keyHeightPx = normalizedRowHeight * tc.row_height
+        val keyWidthPx = key.width * _keyWidth
+
+        // Calculate hypotenuse in pixels: sqrt(width² + height²)
+        return kotlin.math.sqrt(keyWidthPx * keyWidthPx + keyHeightPx * keyHeightPx)
     }
 
     override fun getKeyWidth(key: KeyboardData.Key): Float {

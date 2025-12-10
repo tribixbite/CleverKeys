@@ -334,9 +334,9 @@ class BackupRestoreManager(private val context: Context) {
             "longpress_timeout" -> value in 50..2000
             "longpress_interval" -> value in 5..100
 
-            // Short gesture distance (10-95% min, 50-150% max)
+            // Short gesture distance (10-95% min, 50-200% max)
             "short_gesture_min_distance" -> value in 10..95
-            "short_gesture_max_distance" -> value in 50..150
+            "short_gesture_max_distance" -> value in 50..200
 
             // Neural network parameters
             "neural_beam_width" -> value in 1..32
