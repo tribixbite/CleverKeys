@@ -196,7 +196,7 @@ class Config private constructor(
             keyboardHeightPercent = safeGetInt(
                 _prefs,
                 if (this.foldable_unfolded) "keyboard_height_unfolded" else "keyboard_height",
-                27
+                28
             )
         }
 
@@ -209,7 +209,7 @@ class Config private constructor(
 
         val dpi_ratio = maxOf(dm.xdpi, dm.ydpi) / minOf(dm.xdpi, dm.ydpi)
         val swipe_scaling = minOf(dm.widthPixels, dm.heightPixels) / 10f * dpi_ratio
-        val swipe_dist_value = safeGetString(_prefs, "swipe_dist", "15").toFloatOrNull() ?: 15f
+        val swipe_dist_value = safeGetString(_prefs, "swipe_dist", "23").toFloatOrNull() ?: 23f
         swipe_dist_px = swipe_dist_value / 25f * swipe_scaling
 
         val slider_sensitivity = (safeGetString(_prefs, "slider_sensitivity", "30").toFloatOrNull() ?: 30f) / 100f
@@ -298,8 +298,8 @@ class Config private constructor(
         swipe_rare_words_penalty = safeGetFloat(_prefs, "swipe_rare_words_penalty", 1.0f)
 
         short_gestures_enabled = _prefs.getBoolean("short_gestures_enabled", true)
-        short_gesture_min_distance = safeGetInt(_prefs, "short_gesture_min_distance", 40)
-        short_gesture_max_distance = safeGetInt(_prefs, "short_gesture_max_distance", 200) // 200 = disabled
+        short_gesture_min_distance = safeGetInt(_prefs, "short_gesture_min_distance", 37)
+        short_gesture_max_distance = safeGetInt(_prefs, "short_gesture_max_distance", 141)
 
         // Gesture timing configuration
         tap_duration_threshold = safeGetInt(_prefs, "tap_duration_threshold", 150).toLong()
@@ -308,8 +308,8 @@ class Config private constructor(
         swipe_min_dwell_time = safeGetInt(_prefs, "swipe_min_dwell_time", 7).toLong()
         swipe_noise_threshold = safeGetFloat(_prefs, "swipe_noise_threshold", 1.26f)
         swipe_high_velocity_threshold = safeGetFloat(_prefs, "swipe_high_velocity_threshold", 1000.0f)
-        swipe_min_distance = safeGetFloat(_prefs, "swipe_min_distance", 46.4f)
-        swipe_min_key_distance = safeGetFloat(_prefs, "swipe_min_key_distance", 35.15f)
+        swipe_min_distance = safeGetFloat(_prefs, "swipe_min_distance", 72f)
+        swipe_min_key_distance = safeGetFloat(_prefs, "swipe_min_key_distance", 38f)
 
         // Slider speed configuration
         slider_speed_smoothing = safeGetFloat(_prefs, "slider_speed_smoothing", 0.54f)
@@ -323,7 +323,7 @@ class Config private constructor(
         swipe_trail_glow_radius = safeGetFloat(_prefs, "swipe_trail_glow_radius", 6.0f)
 
         neural_prediction_enabled = _prefs.getBoolean("neural_prediction_enabled", true)
-        neural_beam_width = safeGetInt(_prefs, "neural_beam_width", 4)
+        neural_beam_width = safeGetInt(_prefs, "neural_beam_width", 6)
         neural_max_length = safeGetInt(_prefs, "neural_max_length", 20)
         neural_confidence_threshold = safeGetFloat(_prefs, "neural_confidence_threshold", 0.01f)
         neural_batch_beams = _prefs.getBoolean("neural_batch_beams", false)
@@ -333,9 +333,9 @@ class Config private constructor(
         swipe_debug_show_raw_output = _prefs.getBoolean("swipe_debug_show_raw_output", true)
         swipe_show_raw_beam_predictions = _prefs.getBoolean("swipe_show_raw_beam_predictions", true)
 
-        neural_beam_alpha = safeGetFloat(_prefs, "neural_beam_alpha", 1.0f)
-        neural_beam_prune_confidence = safeGetFloat(_prefs, "neural_beam_prune_confidence", 0.17821783f)
-        neural_beam_score_gap = safeGetFloat(_prefs, "neural_beam_score_gap", 20.0f)
+        neural_beam_alpha = safeGetFloat(_prefs, "neural_beam_alpha", 1.55f)
+        neural_beam_prune_confidence = safeGetFloat(_prefs, "neural_beam_prune_confidence", 0.33f)
+        neural_beam_score_gap = safeGetFloat(_prefs, "neural_beam_score_gap", 50.0f)
 
         neural_model_version = safeGetString(_prefs, "neural_model_version", "v2")
         neural_user_max_seq_length = safeGetInt(_prefs, "neural_user_max_seq_length", 0)

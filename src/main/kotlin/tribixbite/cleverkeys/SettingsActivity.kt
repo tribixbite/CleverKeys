@@ -108,11 +108,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Settings state for reactive UI
     private var neuralPredictionEnabled by mutableStateOf(true)
-    private var beamWidth by mutableStateOf(8)
-    private var maxLength by mutableStateOf(35)
-    private var confidenceThreshold by mutableStateOf(0.1f)
-    private var currentThemeName by mutableStateOf("jewel")  // Store theme name string for full theme support
-    private var keyboardHeight by mutableStateOf(35)
+    private var beamWidth by mutableStateOf(6)
+    private var maxLength by mutableStateOf(20)
+    private var confidenceThreshold by mutableStateOf(0.01f)
+    private var currentThemeName by mutableStateOf("cleverkeysdark")
+    private var keyboardHeight by mutableStateOf(28)
     private var keyboardHeightLandscape by mutableStateOf(50)
     private var vibrationEnabled by mutableStateOf(false)
     private var debugEnabled by mutableStateOf(false)
@@ -140,7 +140,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var horizontalMarginLandscape by mutableStateOf(28)
 
     // Gesture sensitivity settings
-    private var swipeDistance by mutableStateOf(15)
+    private var swipeDistance by mutableStateOf(23)
     private var circleSensitivity by mutableStateOf(2)
     private var sliderSensitivity by mutableStateOf(30) // Phase 5: Space bar slider (0-100%)
 
@@ -175,8 +175,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Gesture tuning settings
     private var tapDurationThreshold by mutableStateOf(150) // ms
     private var doubleSpaceThreshold by mutableStateOf(500) // ms
-    private var swipeMinDistance by mutableStateOf(50f) // pixels
-    private var swipeMinKeyDistance by mutableStateOf(40f) // pixels
+    private var swipeMinDistance by mutableStateOf(72f) // pixels
+    private var swipeMinKeyDistance by mutableStateOf(38f) // pixels
     private var swipeMinDwellTime by mutableStateOf(10) // ms
     private var swipeNoiseThreshold by mutableStateOf(2.0f) // pixels
     private var swipeHighVelocityThreshold by mutableStateOf(1000f) // px/sec
@@ -200,12 +200,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var swipeCorrectionPreset by mutableStateOf("balanced")
     private var swipeFuzzyMatchMode by mutableStateOf("edit_distance")
     private var autocorrectMaxLengthDiff by mutableStateOf(2)
-    private var autocorrectPrefixLength by mutableStateOf(2)
+    private var autocorrectPrefixLength by mutableStateOf(1)
     private var autocorrectMaxBeamCandidates by mutableStateOf(3)
-    private var swipePredictionSource by mutableStateOf(60)
-    private var swipeCommonWordsBoost by mutableStateOf(1.3f)
+    private var swipePredictionSource by mutableStateOf(80)
+    private var swipeCommonWordsBoost by mutableStateOf(1.0f)
     private var swipeTop5000Boost by mutableStateOf(1.0f)
-    private var swipeRareWordsPenalty by mutableStateOf(0.75f)
+    private var swipeRareWordsPenalty by mutableStateOf(1.0f)
 
     // Swipe trail appearance settings
     private var swipeTrailEnabled by mutableStateOf(true)
@@ -229,9 +229,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Neural beam search advanced settings
     private var neuralBatchBeams by mutableStateOf(false)
     private var neuralGreedySearch by mutableStateOf(false)
-    private var neuralBeamAlpha by mutableStateOf(1.2f)
-    private var neuralBeamPruneConfidence by mutableStateOf(0.8f)
-    private var neuralBeamScoreGap by mutableStateOf(5.0f)
+    private var neuralBeamAlpha by mutableStateOf(1.55f)
+    private var neuralBeamPruneConfidence by mutableStateOf(0.33f)
+    private var neuralBeamScoreGap by mutableStateOf(50.0f)
 
     // Neural model config settings
     private var neuralModelVersion by mutableStateOf("v2")
@@ -251,8 +251,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Short gesture settings
     private var shortGesturesEnabled by mutableStateOf(true)
-    private var shortGestureMinDistance by mutableStateOf(40) // Consistent with Config.kt default
-    private var shortGestureMaxDistance by mutableStateOf(150) // 150 = disabled (rely on key boundary)
+    private var shortGestureMinDistance by mutableStateOf(37)
+    private var shortGestureMaxDistance by mutableStateOf(141)
 
     // Swipe debug advanced settings
     private var swipeDebugDetailedLogging by mutableStateOf(false)
@@ -2915,13 +2915,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
         // Neural prediction settings
         neuralPredictionEnabled = prefs.getSafeBoolean("neural_prediction_enabled", true)
-        beamWidth = prefs.getSafeInt("neural_beam_width", 8)
-        maxLength = prefs.getSafeInt("neural_max_length", 35)
-        confidenceThreshold = prefs.getSafeFloat("neural_confidence_threshold", 0.1f)
+        beamWidth = prefs.getSafeInt("neural_beam_width", 6)
+        maxLength = prefs.getSafeInt("neural_max_length", 20)
+        confidenceThreshold = prefs.getSafeFloat("neural_confidence_threshold", 0.01f)
 
         // Appearance settings
-        currentThemeName = prefs.getSafeString("theme", "jewel")
-        keyboardHeight = prefs.getSafeInt("keyboard_height_percent", 35)
+        currentThemeName = prefs.getSafeString("theme", "cleverkeysdark")
+        keyboardHeight = prefs.getSafeInt("keyboard_height_percent", 28)
         keyboardHeightLandscape = prefs.getSafeInt("keyboard_height_landscape", 50)
 
         // Adaptive layout settings
@@ -2957,7 +2957,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         autoCapitalizationEnabled = prefs.getSafeBoolean("auto_capitalization_enabled", true)
 
         // Gesture sensitivity settings
-        swipeDistance = prefs.getSafeString("swipe_dist", "15").toIntOrNull() ?: 15
+        swipeDistance = prefs.getSafeString("swipe_dist", "23").toIntOrNull() ?: 23
         circleSensitivity = prefs.getSafeString("circle_sensitivity", "2").toIntOrNull() ?: 2
         sliderSensitivity = prefs.getSafeString("slider_sensitivity", "30").toIntOrNull() ?: 30
 
@@ -2976,8 +2976,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Gesture tuning settings
         tapDurationThreshold = Config.safeGetInt(prefs, "tap_duration_threshold", 150)
         doubleSpaceThreshold = Config.safeGetInt(prefs, "double_space_threshold", 500)
-        swipeMinDistance = Config.safeGetFloat(prefs, "swipe_min_distance", 50f)
-        swipeMinKeyDistance = Config.safeGetFloat(prefs, "swipe_min_key_distance", 40f)
+        swipeMinDistance = Config.safeGetFloat(prefs, "swipe_min_distance", 72f)
+        swipeMinKeyDistance = Config.safeGetFloat(prefs, "swipe_min_key_distance", 38f)
         swipeMinDwellTime = Config.safeGetInt(prefs, "swipe_min_dwell_time", 10)
         swipeNoiseThreshold = Config.safeGetFloat(prefs, "swipe_noise_threshold", 2.0f)
         swipeHighVelocityThreshold = Config.safeGetFloat(prefs, "swipe_high_velocity_threshold", 1000f)
@@ -3012,12 +3012,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         swipeCorrectionPreset = prefs.getSafeString("swipe_correction_preset", "balanced")
         swipeFuzzyMatchMode = prefs.getSafeString("swipe_fuzzy_match_mode", "edit_distance")
         autocorrectMaxLengthDiff = Config.safeGetInt(prefs, "autocorrect_max_length_diff", 2)
-        autocorrectPrefixLength = Config.safeGetInt(prefs, "autocorrect_prefix_length", 2)
+        autocorrectPrefixLength = Config.safeGetInt(prefs, "autocorrect_prefix_length", 1)
         autocorrectMaxBeamCandidates = Config.safeGetInt(prefs, "autocorrect_max_beam_candidates", 3)
-        swipePredictionSource = Config.safeGetInt(prefs, "swipe_prediction_source", 60)
-        swipeCommonWordsBoost = Config.safeGetFloat(prefs, "swipe_common_words_boost", 1.3f)
+        swipePredictionSource = Config.safeGetInt(prefs, "swipe_prediction_source", 80)
+        swipeCommonWordsBoost = Config.safeGetFloat(prefs, "swipe_common_words_boost", 1.0f)
         swipeTop5000Boost = Config.safeGetFloat(prefs, "swipe_top5000_boost", 1.0f)
-        swipeRareWordsPenalty = Config.safeGetFloat(prefs, "swipe_rare_words_penalty", 0.75f)
+        swipeRareWordsPenalty = Config.safeGetFloat(prefs, "swipe_rare_words_penalty", 1.0f)
 
         // Swipe trail appearance settings
         swipeTrailEnabled = prefs.getSafeBoolean("swipe_trail_enabled", true)
@@ -3036,14 +3036,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Auto-correction advanced settings
         autocorrectMinWordLength = Config.safeGetInt(prefs, "autocorrect_min_word_length", 3)
         autocorrectCharMatchThreshold = Config.safeGetFloat(prefs, "autocorrect_char_match_threshold", 0.67f)
-        autocorrectMinFrequency = Config.safeGetInt(prefs, "autocorrect_confidence_min_frequency", 500)
+        autocorrectMinFrequency = Config.safeGetInt(prefs, "autocorrect_confidence_min_frequency", 100)
 
         // Neural beam search advanced settings
         neuralBatchBeams = prefs.getSafeBoolean("neural_batch_beams", false)
         neuralGreedySearch = prefs.getSafeBoolean("neural_greedy_search", false)
-        neuralBeamAlpha = Config.safeGetFloat(prefs, "neural_beam_alpha", 1.2f)
-        neuralBeamPruneConfidence = Config.safeGetFloat(prefs, "neural_beam_prune_confidence", 0.8f)
-        neuralBeamScoreGap = Config.safeGetFloat(prefs, "neural_beam_score_gap", 5.0f)
+        neuralBeamAlpha = Config.safeGetFloat(prefs, "neural_beam_alpha", 1.55f)
+        neuralBeamPruneConfidence = Config.safeGetFloat(prefs, "neural_beam_prune_confidence", 0.33f)
+        neuralBeamScoreGap = Config.safeGetFloat(prefs, "neural_beam_score_gap", 50.0f)
 
         // Neural model config settings
         neuralModelVersion = prefs.getSafeString("neural_model_version", "v2")
@@ -3063,8 +3063,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
         // Short gesture settings
         shortGesturesEnabled = prefs.getSafeBoolean("short_gestures_enabled", true)
-        shortGestureMinDistance = Config.safeGetInt(prefs, "short_gesture_min_distance", 40)
-        shortGestureMaxDistance = Config.safeGetInt(prefs, "short_gesture_max_distance", 200) // 200 = disabled
+        shortGestureMinDistance = Config.safeGetInt(prefs, "short_gesture_min_distance", 37)
+        shortGestureMaxDistance = Config.safeGetInt(prefs, "short_gesture_max_distance", 141)
 
         // Swipe debug advanced settings
         swipeDebugDetailedLogging = prefs.getSafeBoolean("swipe_debug_detailed_logging", false)
