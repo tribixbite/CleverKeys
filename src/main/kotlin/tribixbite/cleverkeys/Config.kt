@@ -146,13 +146,11 @@ class Config private constructor(
     @JvmField var neural_beam_prune_confidence = 0f
     @JvmField var neural_beam_score_gap = 0f
 
-    // Neural model versioning and resampling
+    // Neural model resampling (neural_model_version kept for UI but not used in model selection)
     @JvmField var neural_model_version: String? = null
-    @JvmField var neural_use_quantized = false
     @JvmField var neural_user_max_seq_length = 0
     @JvmField var neural_resampling_mode: String? = null
-    @JvmField var neural_custom_encoder_path: String? = null
-    @JvmField var neural_custom_decoder_path: String? = null
+    // NOTE: Custom encoder/decoder paths removed - feature not implemented
 
     // Dynamically set
     @JvmField var shouldOfferVoiceTyping = false
@@ -340,20 +338,8 @@ class Config private constructor(
         neural_beam_score_gap = safeGetFloat(_prefs, "neural_beam_score_gap", 20.0f)
 
         neural_model_version = safeGetString(_prefs, "neural_model_version", "v2")
-        neural_use_quantized = _prefs.getBoolean("neural_use_quantized", true)
         neural_user_max_seq_length = safeGetInt(_prefs, "neural_user_max_seq_length", 0)
         neural_resampling_mode = safeGetString(_prefs, "neural_resampling_mode", "discard")
-
-        // Use try-catch for optional nullable strings (custom encoder/decoder paths)
-        neural_custom_encoder_path = try {
-            _prefs.getString("neural_custom_encoder_uri", null)
-                ?: _prefs.getString("neural_custom_encoder_path", null)
-        } catch (e: ClassCastException) { null }
-
-        neural_custom_decoder_path = try {
-            _prefs.getString("neural_custom_decoder_uri", null)
-                ?: _prefs.getString("neural_custom_decoder_path", null)
-        } catch (e: ClassCastException) { null }
 
         val screen_width_dp = dm.widthPixels / dm.density
         wide_screen = screen_width_dp >= WIDE_DEVICE_THRESHOLD

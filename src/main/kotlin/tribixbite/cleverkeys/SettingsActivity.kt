@@ -235,7 +235,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Neural model config settings
     private var neuralModelVersion by mutableStateOf("v2")
-    private var neuralUseQuantized by mutableStateOf(false)
     private var neuralResamplingMode by mutableStateOf("discard")
     private var neuralUserMaxSeqLength by mutableStateOf(0)
 
@@ -746,16 +745,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                                         else -> "v2"
                                     }
                                     saveSetting("neural_model_version", neuralModelVersion)
-                                }
-                            )
-
-                            SettingsSwitch(
-                                title = "Use Quantized Models",
-                                description = "INT8 quantized (faster but less accurate: 73% vs 81%)",
-                                checked = neuralUseQuantized,
-                                onCheckedChange = {
-                                    neuralUseQuantized = it
-                                    saveSetting("neural_use_quantized", it)
                                 }
                             )
 
@@ -3087,7 +3076,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
         // Neural model config settings
         neuralModelVersion = prefs.getSafeString("neural_model_version", "v2")
-        neuralUseQuantized = prefs.getSafeBoolean("neural_use_quantized", false)
         neuralResamplingMode = prefs.getSafeString("neural_resampling_mode", "discard")
         neuralUserMaxSeqLength = Config.safeGetInt(prefs, "neural_user_max_seq_length", 0)
 
