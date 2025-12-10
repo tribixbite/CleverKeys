@@ -25,38 +25,48 @@ import androidx.compose.ui.window.Dialog
 import org.burnoutcrew.reorderable.*
 import tribixbite.cleverkeys.prefs.LayoutsPreference
 import tribixbite.cleverkeys.prefs.ListGroupPreference
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.rememberLauncherForActivityResult
+import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
+import tribixbite.cleverkeys.customization.XmlLayoutExporter
 
-/**
- * Layout Manager Activity - Manage Keyboard Layouts
- *
- * Features:
- * - View all configured layouts
- * - Add new layouts (System, Named, Custom)
- * - Remove layouts (minimum 1 layout required)
- * - Reorder layouts via drag-and-drop
- * - Edit custom layouts
- * - Persist changes to SharedPreferences
- *
- * Integrates with LayoutsPreference for backend logic
- * and uses Material 3 Compose for modern UI.
- */
+import tribixbite.cleverkeys.theme.KeyboardTheme
+
 class LayoutManagerActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-            MaterialTheme(
-                colorScheme = darkColorScheme(
-                    primary = MaterialTheme.colorScheme.primary,
-                    surface = MaterialTheme.colorScheme.surface
-                )
-            ) {
-                LayoutManagerScreen(
-                    onBack = { finish() }
-                )
+            KeyboardTheme(darkTheme = true) {
+                Surface(
+                    color = MaterialTheme.colorScheme.background,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    LayoutManagerScreen(
+                        onBack = { finish() }
+                    )
+                }
             }
         }
+    }
+}
+
+private fun getLayoutXml(context: android.content.Context, layoutName: String): String {
+    return try {
+        val res = context.resources
+        val id = LayoutsPreference.layoutIdOfName(res, layoutName)
+        if (id > 0) {
+            res.openRawResource(id).use { Utils.read_all_utf8(it) }
+        } else {
+            // Fallback for System or unknown
+            val qwertyId = res.getIdentifier("latn_qwerty_us", "raw", null)
+            if (qwertyId != 0) {
+                res.openRawResource(qwertyId).use { Utils.read_all_utf8(it) }
+            } else ""
+        }
+    } catch (e: Exception) {
+        ""
     }
 }
 
@@ -178,9 +188,13 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                             context = context,
                             elevation = elevation,
                             onEdit = {
-                                if (layout is LayoutsPreference.CustomLayout) {
-                                    showCustomLayoutDialog = Pair(index, layout.xml)
+                                val initialXml = when (layout) {
+                                    is LayoutsPreference.CustomLayout -> layout.xml
+                                    is LayoutsPreference.NamedLayout -> getLayoutXml(context, layout.name)
+                                    is LayoutsPreference.SystemLayout -> getLayoutXml(context, "latn_qwerty_us")
+                                    else -> ""
                                 }
+                                showCustomLayoutDialog = Pair(index, initialXml)
                             },
                             onDelete = {
                                 if (layouts.size > 1) {
@@ -312,7 +326,8 @@ fun LayoutItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .shadow(elevation, RoundedCornerShape(8.dp)),
+            .shadow(elevation, RoundedCornerShape(8.dp))
+            .clickable(onClick = onEdit),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -365,15 +380,13 @@ fun LayoutItem(
 
             // Action buttons
             Row {
-                // Edit button (only for custom layouts)
-                if (layout is LayoutsPreference.CustomLayout) {
-                    IconButton(onClick = onEdit) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                // Edit button (now always visible for all layouts since we support cloning)
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
                 }
 
                 // Delete button
@@ -531,6 +544,40 @@ fun CustomLayoutEditorDialog(
 ) {
     var xmlText by remember { mutableStateOf(initialXml) }
     var validationError by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+
+    // Import Launcher
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            try {
+                context.contentResolver.openInputStream(it)?.use { stream ->
+                    xmlText = Utils.read_all_utf8(stream)
+                }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    // Export Launcher
+    var pendingExportContent by remember { mutableStateOf<String?>(null) }
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/xml")
+    ) { uri ->
+        uri?.let {
+            try {
+                pendingExportContent?.let { content ->
+                    context.contentResolver.openOutputStream(it)?.use { stream ->
+                        stream.write(content.toByteArray())
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
 
     // Validate XML
     LaunchedEffect(xmlText) {
@@ -576,6 +623,32 @@ fun CustomLayoutEditorDialog(
                     isError = validationError != null,
                     supportingText = validationError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } }
                 )
+
+                // File Operations
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = { importLauncher.launch(arrayOf("text/xml", "*/*")) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Import XML")
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            val manager = ShortSwipeCustomizationManager.getInstance(context)
+                            val mappings = manager.getAllMappings()
+                            pendingExportContent = XmlLayoutExporter.injectMappings(xmlText, mappings)
+                            exportLauncher.launch("custom_layout.xml")
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Export XML")
+                    }
+                }
 
                 // Action buttons
                 Row(
