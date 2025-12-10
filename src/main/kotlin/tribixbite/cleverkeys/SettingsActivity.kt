@@ -625,17 +625,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         displayValue = "%.3f".format(confidenceThreshold)
                     )
 
-                    // Phase 1: Termux Mode Toggle
-                    SettingsSwitch(
-                        title = "Terminal Mode",
-                        description = "Show Ctrl, Meta, PageUp/Down keys. OFF for standard phone layout",
-                        checked = termuxModeEnabled,
-                        onCheckedChange = {
-                            termuxModeEnabled = it
-                            saveSetting("termux_mode_enabled", it)
-                        }
-                    )
-
                     // Neural Advanced settings (expandable)
                     Row(
                         modifier = Modifier
@@ -1306,58 +1295,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 }
 
                 SettingsSwitch(
-                    title = "Enable Auto-Correction",
-                    description = "Automatically correct misspelled words",
-                    checked = autoCorrectEnabled,
-                    onCheckedChange = {
-                        autoCorrectEnabled = it
-                        saveSetting("autocorrect_enabled", it)
-                    }
-                )
-
-                if (autoCorrectEnabled) {
-                    // Inline auto-correction settings instead of button
-                    SettingsSlider(
-                        title = "Minimum Word Length",
-                        description = "Don't correct words shorter than this (2-5 letters)",
-                        value = autocorrectMinWordLength.toFloat(),
-                        valueRange = 2f..5f,
-                        steps = 3,
-                        onValueChange = {
-                            autocorrectMinWordLength = it.toInt()
-                            saveSetting("autocorrect_min_word_length", autocorrectMinWordLength)
-                        },
-                        displayValue = "$autocorrectMinWordLength letters"
-                    )
-
-                    SettingsSlider(
-                        title = "Character Match Threshold",
-                        description = "How many characters must match (0.5-0.9)",
-                        value = autocorrectCharMatchThreshold,
-                        valueRange = 0.5f..0.9f,
-                        steps = 8,
-                        onValueChange = {
-                            autocorrectCharMatchThreshold = it
-                            saveSetting("autocorrect_char_match_threshold", autocorrectCharMatchThreshold)
-                        },
-                        displayValue = "%.0f%%".format(autocorrectCharMatchThreshold * 100)
-                    )
-
-                    SettingsSlider(
-                        title = "Minimum Frequency",
-                        description = "Only correct to words with frequency >= this",
-                        value = autocorrectMinFrequency.toFloat(),
-                        valueRange = 100f..5000f,
-                        steps = 49,
-                        onValueChange = {
-                            autocorrectMinFrequency = it.toInt()
-                            saveSetting("autocorrect_confidence_min_frequency", autocorrectMinFrequency)
-                        },
-                        displayValue = "$autocorrectMinFrequency"
-                    )
-                }
-
-                SettingsSwitch(
                     title = stringResource(R.string.settings_auto_capitalization_title),
                     description = stringResource(R.string.settings_auto_capitalization_desc),
                     checked = autoCapitalizationEnabled,
@@ -1562,157 +1499,183 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         saveSetting("pin_entry_enabled", it)
                     }
                 )
-
-                // Short gesture settings
-                SettingsSwitch(
-                    title = "Short Gestures",
-                    description = "Enable recognition of short swipes for quick words (it, is, at, etc.)",
-                    checked = shortGesturesEnabled,
-                    onCheckedChange = {
-                        shortGesturesEnabled = it
-                        saveSetting("short_gestures_enabled", it)
-                    }
-                )
-
-                if (shortGesturesEnabled) {
-                    SettingsSlider(
-                        title = "Short Gesture Min Distance",
-                        description = "Minimum swipe distance to trigger (% of key diagonal)",
-                        value = shortGestureMinDistance.toFloat(),
-                        valueRange = 10f..60f,
-                        steps = 10,
-                        onValueChange = {
-                            shortGestureMinDistance = it.toInt()
-                            saveSetting("short_gesture_min_distance", shortGestureMinDistance)
-                        },
-                        displayValue = "${shortGestureMinDistance}%"
-                    )
-
-                    SettingsSlider(
-                        title = "Short Gesture Max Distance",
-                        description = "Maximum swipe distance (% of key diagonal). 200% = disabled (use key boundary only)",
-                        value = shortGestureMaxDistance.toFloat(),
-                        valueRange = 50f..200f,
-                        steps = 30,
-                        onValueChange = {
-                            shortGestureMaxDistance = it.toInt()
-                            saveSetting("short_gesture_max_distance", shortGestureMaxDistance)
-                        },
-                        displayValue = if (shortGestureMaxDistance >= 200) "OFF" else "${shortGestureMaxDistance}%"
-                    )
-
-                    // Button to customize short swipe actions per key
-                    Button(
-                        onClick = { openShortSwipeCustomization() },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Customize Short Swipes")
-                    }
-                }
             }
 
-            // Swipe Corrections Section (NEW - migrated from XML Full settings)
+            // Auto-Correction Section (consolidated from Input + Swipe Corrections)
             CollapsibleSettingsSection(
-                title = "Swipe Corrections",
+                title = "Auto-Correction",
                 expanded = swipeCorrectionsSectionExpanded,
                 onExpandChange = { swipeCorrectionsSectionExpanded = it }
             ) {
-                // Beam search autocorrect
+                // Master toggle
                 SettingsSwitch(
-                    title = "Beam Autocorrect",
-                    description = "Apply fuzzy corrections during beam search decoding",
-                    checked = swipeBeamAutocorrectEnabled,
+                    title = "Enable Auto-Correction",
+                    description = "Automatically correct misspelled words",
+                    checked = autoCorrectEnabled,
                     onCheckedChange = {
-                        swipeBeamAutocorrectEnabled = it
-                        saveSetting("swipe_beam_autocorrect_enabled", it)
+                        autoCorrectEnabled = it
+                        saveSetting("autocorrect_enabled", it)
                     }
                 )
 
-                // Final output autocorrect
-                SettingsSwitch(
-                    title = "Final Autocorrect",
-                    description = "Apply dictionary-based corrections to final output",
-                    checked = swipeFinalAutocorrectEnabled,
-                    onCheckedChange = {
-                        swipeFinalAutocorrectEnabled = it
-                        saveSetting("swipe_final_autocorrect_enabled", it)
-                    }
-                )
+                if (autoCorrectEnabled) {
+                    // Basic Settings
+                    Text(
+                        text = "Basic Settings",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                    )
 
-                // Correction preset
-                SettingsDropdown(
-                    title = "Correction Style",
-                    description = "Overall correction aggressiveness preset",
-                    options = listOf("Strict (High Accuracy)", "Balanced (Default)", "Lenient (Flexible)"),
-                    selectedIndex = when (swipeCorrectionPreset) {
-                        "strict" -> 0
-                        "balanced" -> 1
-                        "lenient" -> 2
-                        else -> 1
-                    },
-                    onSelectionChange = { index ->
-                        swipeCorrectionPreset = when (index) {
-                            0 -> "strict"
-                            1 -> "balanced"
-                            2 -> "lenient"
-                            else -> "balanced"
+                    SettingsSlider(
+                        title = "Minimum Word Length",
+                        description = "Don't correct words shorter than this (2-5 letters)",
+                        value = autocorrectMinWordLength.toFloat(),
+                        valueRange = 2f..5f,
+                        steps = 3,
+                        onValueChange = {
+                            autocorrectMinWordLength = it.toInt()
+                            saveSetting("autocorrect_min_word_length", autocorrectMinWordLength)
+                        },
+                        displayValue = "$autocorrectMinWordLength letters"
+                    )
+
+                    SettingsSlider(
+                        title = "Character Match Threshold",
+                        description = "How many characters must match (0.5-0.9)",
+                        value = autocorrectCharMatchThreshold,
+                        valueRange = 0.5f..0.9f,
+                        steps = 8,
+                        onValueChange = {
+                            autocorrectCharMatchThreshold = it
+                            saveSetting("autocorrect_char_match_threshold", autocorrectCharMatchThreshold)
+                        },
+                        displayValue = "%.0f%%".format(autocorrectCharMatchThreshold * 100)
+                    )
+
+                    SettingsSlider(
+                        title = "Minimum Word Frequency",
+                        description = "Only correct to words with frequency >= this",
+                        value = autocorrectMinFrequency.toFloat(),
+                        valueRange = 100f..5000f,
+                        steps = 49,
+                        onValueChange = {
+                            autocorrectMinFrequency = it.toInt()
+                            saveSetting("autocorrect_confidence_min_frequency", autocorrectMinFrequency)
+                        },
+                        displayValue = "$autocorrectMinFrequency"
+                    )
+
+                    // Swipe-Specific Settings
+                    Text(
+                        text = "Swipe Correction",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                    )
+
+                    SettingsSwitch(
+                        title = "Beam Autocorrect",
+                        description = "Apply fuzzy corrections during beam search decoding",
+                        checked = swipeBeamAutocorrectEnabled,
+                        onCheckedChange = {
+                            swipeBeamAutocorrectEnabled = it
+                            saveSetting("swipe_beam_autocorrect_enabled", it)
                         }
-                        saveSetting("swipe_correction_preset", swipeCorrectionPreset)
-                    }
-                )
+                    )
 
-                // Fuzzy match mode
-                SettingsDropdown(
-                    title = "Fuzzy Match Algorithm",
-                    description = "Method for matching swipe patterns to words",
-                    options = listOf("Edit Distance (Recommended)", "Positional Matching (Legacy)"),
-                    selectedIndex = if (swipeFuzzyMatchMode == "edit_distance") 0 else 1,
-                    onSelectionChange = { index ->
-                        swipeFuzzyMatchMode = if (index == 0) "edit_distance" else "positional"
-                        saveSetting("swipe_fuzzy_match_mode", swipeFuzzyMatchMode)
-                    }
-                )
+                    SettingsSwitch(
+                        title = "Final Autocorrect",
+                        description = "Apply dictionary-based corrections to final output",
+                        checked = swipeFinalAutocorrectEnabled,
+                        onCheckedChange = {
+                            swipeFinalAutocorrectEnabled = it
+                            saveSetting("swipe_final_autocorrect_enabled", it)
+                        }
+                    )
 
-                // Typo forgiveness (max length diff)
-                SettingsSlider(
-                    title = "Typo Forgiveness",
-                    description = "Max character difference allowed (0-5)",
-                    value = autocorrectMaxLengthDiff.toFloat(),
-                    valueRange = 0f..5f,
-                    steps = 5,
-                    onValueChange = {
-                        autocorrectMaxLengthDiff = it.toInt()
-                        saveSetting("autocorrect_max_length_diff", autocorrectMaxLengthDiff)
-                    },
-                    displayValue = "$autocorrectMaxLengthDiff chars"
-                )
+                    // Advanced Correction Settings
+                    Text(
+                        text = "Advanced",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                    )
 
-                // Starting letter accuracy
-                SettingsSlider(
-                    title = "Starting Letter Accuracy",
-                    description = "Required matching prefix length (0-4)",
-                    value = autocorrectPrefixLength.toFloat(),
-                    valueRange = 0f..4f,
-                    steps = 4,
-                    onValueChange = {
-                        autocorrectPrefixLength = it.toInt()
-                        saveSetting("autocorrect_prefix_length", autocorrectPrefixLength)
-                    },
-                    displayValue = "$autocorrectPrefixLength letters"
-                )
+                    SettingsDropdown(
+                        title = "Correction Style",
+                        description = "Overall correction aggressiveness preset",
+                        options = listOf("Strict (High Accuracy)", "Balanced (Default)", "Lenient (Flexible)"),
+                        selectedIndex = when (swipeCorrectionPreset) {
+                            "strict" -> 0
+                            "balanced" -> 1
+                            "lenient" -> 2
+                            else -> 1
+                        },
+                        onSelectionChange = { index ->
+                            swipeCorrectionPreset = when (index) {
+                                0 -> "strict"
+                                1 -> "balanced"
+                                2 -> "lenient"
+                                else -> "balanced"
+                            }
+                            saveSetting("swipe_correction_preset", swipeCorrectionPreset)
+                        }
+                    )
 
-                // Correction search depth
-                SettingsSlider(
-                    title = "Correction Search Depth",
-                    description = "Number of beam candidates to consider (1-10)",
-                    value = autocorrectMaxBeamCandidates.toFloat(),
-                    valueRange = 1f..10f,
-                    steps = 9,
-                    onValueChange = {
-                        autocorrectMaxBeamCandidates = it.toInt()
-                        saveSetting("autocorrect_max_beam_candidates", autocorrectMaxBeamCandidates)
-                    },
-                    displayValue = "$autocorrectMaxBeamCandidates"
+                    SettingsDropdown(
+                        title = "Fuzzy Match Algorithm",
+                        description = "Method for matching swipe patterns to words",
+                        options = listOf("Edit Distance (Recommended)", "Positional Matching (Legacy)"),
+                        selectedIndex = if (swipeFuzzyMatchMode == "edit_distance") 0 else 1,
+                        onSelectionChange = { index ->
+                            swipeFuzzyMatchMode = if (index == 0) "edit_distance" else "positional"
+                            saveSetting("swipe_fuzzy_match_mode", swipeFuzzyMatchMode)
+                        }
+                    )
+
+                    SettingsSlider(
+                        title = "Typo Forgiveness",
+                        description = "Max character difference allowed (0-5)",
+                        value = autocorrectMaxLengthDiff.toFloat(),
+                        valueRange = 0f..5f,
+                        steps = 5,
+                        onValueChange = {
+                            autocorrectMaxLengthDiff = it.toInt()
+                            saveSetting("autocorrect_max_length_diff", autocorrectMaxLengthDiff)
+                        },
+                        displayValue = "$autocorrectMaxLengthDiff chars"
+                    )
+
+                    SettingsSlider(
+                        title = "Starting Letter Accuracy",
+                        description = "Required matching prefix length (0-4)",
+                        value = autocorrectPrefixLength.toFloat(),
+                        valueRange = 0f..4f,
+                        steps = 4,
+                        onValueChange = {
+                            autocorrectPrefixLength = it.toInt()
+                            saveSetting("autocorrect_prefix_length", autocorrectPrefixLength)
+                        },
+                        displayValue = "$autocorrectPrefixLength letters"
+                    )
+
+                    SettingsSlider(
+                        title = "Correction Search Depth",
+                        description = "Number of beam candidates to consider (1-10)",
+                        value = autocorrectMaxBeamCandidates.toFloat(),
+                        valueRange = 1f..10f,
+                        steps = 9,
+                        onValueChange = {
+                            autocorrectMaxBeamCandidates = it.toInt()
+                            saveSetting("autocorrect_max_beam_candidates", autocorrectMaxBeamCandidates)
+                        },
+                        displayValue = "$autocorrectMaxBeamCandidates"
+                    )
+                }
+
+                // Word Scoring (always visible - affects predictions regardless of autocorrect)
+                Text(
+                    text = "Word Scoring",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                 )
 
                 // Prediction source balance
@@ -1785,48 +1748,55 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                // Short Swipe Customization Navigation Card
-                val gestureContext = LocalContext.current
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp)
-                        .clickable {
-                            val intent = android.content.Intent(gestureContext, ShortSwipeCustomizationActivity::class.java)
-                            gestureContext.startActivity(intent)
+                // Short Gestures subsection (moved from Input section)
+                Text(
+                    text = "Short Gestures",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                )
+
+                SettingsSwitch(
+                    title = "Enable Short Gestures",
+                    description = "Recognize short swipes for quick words (it, is, at, etc.)",
+                    checked = shortGesturesEnabled,
+                    onCheckedChange = {
+                        shortGesturesEnabled = it
+                        saveSetting("short_gestures_enabled", it)
+                    }
+                )
+
+                if (shortGesturesEnabled) {
+                    SettingsSlider(
+                        title = "Min Distance",
+                        description = "Minimum swipe distance to trigger (% of key diagonal)",
+                        value = shortGestureMinDistance.toFloat(),
+                        valueRange = 10f..60f,
+                        steps = 10,
+                        onValueChange = {
+                            shortGestureMinDistance = it.toInt()
+                            saveSetting("short_gesture_min_distance", shortGestureMinDistance)
                         },
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        displayValue = "${shortGestureMinDistance}%"
                     )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+
+                    SettingsSlider(
+                        title = "Max Distance",
+                        description = "Maximum swipe distance (% of key diagonal). 200% = disabled",
+                        value = shortGestureMaxDistance.toFloat(),
+                        valueRange = 50f..200f,
+                        steps = 30,
+                        onValueChange = {
+                            shortGestureMaxDistance = it.toInt()
+                            saveSetting("short_gesture_max_distance", shortGestureMaxDistance)
+                        },
+                        displayValue = if (shortGestureMaxDistance >= 200) "OFF" else "${shortGestureMaxDistance}%"
+                    )
+
+                    Button(
+                        onClick = { openShortSwipeCustomization() },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = "👆",
-                            fontSize = 28.sp
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Short Swipe Customization",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            Text(
-                                text = "Customize per-key short swipe gestures",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp)
-                        )
+                        Text("Customize Per-Key Actions")
                     }
                 }
 
@@ -2428,6 +2398,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 expanded = advancedSectionExpanded,
                 onExpandChange = { advancedSectionExpanded = it }
             ) {
+                // Terminal Mode - moved from Neural section (layout setting, not prediction)
+                SettingsSwitch(
+                    title = "Terminal Mode",
+                    description = "Show Ctrl, Meta, PageUp/Down keys for terminal apps like Termux",
+                    checked = termuxModeEnabled,
+                    onCheckedChange = {
+                        termuxModeEnabled = it
+                        saveSetting("termux_mode_enabled", it)
+                    }
+                )
+
                 SettingsSwitch(
                     title = stringResource(R.string.settings_debug_title),
                     description = stringResource(R.string.settings_debug_desc),
