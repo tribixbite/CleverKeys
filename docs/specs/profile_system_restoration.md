@@ -158,5 +158,40 @@ fun toXmlValue(mapping: ShortSwipeMapping): String {
 
 ---
 
+## XML Parsing Behavior
+
+### Parsed Attributes
+
+`KeyboardData.Key.parse()` reads these attributes from `<key>` tags:
+
+| Attribute | Purpose |
+|-----------|---------|
+| `c` / `key0` | Center key value |
+| `nw`/`ne`/`sw`/`se` / `key1-4` | Corner swipe keys |
+| `n`/`s`/`w`/`e` / `key5-8` | Cardinal swipe keys |
+| `anticircle` | Anti-clockwise circle gesture key |
+| `width` | Key width (relative units) |
+| `shift` | Left padding (relative units) |
+| `indication` | Display string override |
+
+### Ignored Attributes
+
+| Attribute | Status | Notes |
+|-----------|--------|-------|
+| `slider="true"` | Ignored | Not parsed by `Key.parse()`. However, cursor keys (`cursor_left`, `cursor_right`) are inherently slider keys in `KeyValue.kt`, so slider behavior still works. |
+
+### Supported Key Names
+
+All UK key names are supported. See `KeyValue.getSpecialKeyByName()` for the full list including:
+- Modifiers: `shift`, `ctrl`, `alt`, `fn`, `meta`
+- Navigation: `up`, `down`, `left`, `right`, `home`, `end`, `page_up`, `page_down`
+- Editing: `copy`, `paste`, `cut`, `selectAll`, `undo`, `redo`, `delete_word`
+- Special: `space`, `enter`, `backspace`, `delete`, `tab`, `esc`
+- Switches: `switch_numeric`, `switch_emoji`, `switch_clipboard`, `config`, `action`
+- Cursor sliders: `cursor_left`, `cursor_right`, `cursor_up`, `cursor_down`
+- `loc ` prefix: Makes key invisible (placeholder for optional extras)
+
+---
+
 **Implemented**: Dec 10, 2025 (commit 34f3a353)
 **Last Updated**: 2025-12-11
