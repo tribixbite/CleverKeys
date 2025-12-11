@@ -5,6 +5,9 @@ import android.graphics.PointF
 import android.os.Handler
 import android.os.Message
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
 import tribixbite.cleverkeys.customization.SwipeDirection
@@ -31,6 +34,16 @@ class Pointers(
 
     /** Custom short swipe manager for user-defined gesture mappings */
     private val _customSwipeManager = ShortSwipeCustomizationManager.getInstance(context)
+
+    init {
+        // Load custom short swipe mappings on keyboard startup
+        // This ensures user-defined per-key actions work immediately without
+        // needing to open the customization activity first
+        CoroutineScope(Dispatchers.IO).launch {
+            _customSwipeManager.loadMappings()
+            Log.d("Pointers", "Custom short swipe mappings loaded on startup")
+        }
+    }
 
     /** Return the list of modifiers currently activated. */
     fun getModifiers(): Modifiers {
