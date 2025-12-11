@@ -266,7 +266,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var activitiesSectionExpanded by mutableStateOf(true)  // Activities at top, default expanded
     private var multiLangSectionExpanded by mutableStateOf(false)
     private var privacySectionExpanded by mutableStateOf(false)
-    private var neuralSectionExpanded by mutableStateOf(true)
+    private var neuralSectionExpanded by mutableStateOf(false)  // Collapsed by default, Activities is primary
     private var appearanceSectionExpanded by mutableStateOf(false)  // No longer default expanded since Theme is in Activities
     private var swipeTrailSectionExpanded by mutableStateOf(false)
     private var inputSectionExpanded by mutableStateOf(false)
