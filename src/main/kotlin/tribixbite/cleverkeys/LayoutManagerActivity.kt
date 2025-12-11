@@ -31,6 +31,13 @@ import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.XmlLayoutExporter
 
 import tribixbite.cleverkeys.theme.KeyboardTheme
+import java.util.UUID
+
+/** Wrapper to give each layout a stable unique ID for drag-reorder */
+data class LayoutWithId(
+    val id: String = UUID.randomUUID().toString(),
+    val layout: LayoutsPreference.Layout
+)
 
 class LayoutManagerActivity : ComponentActivity() {
 
@@ -76,17 +83,20 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("cleverkeys_prefs", android.content.Context.MODE_PRIVATE)
 
-    // Load layouts from preferences
-    var layouts by remember {
+    // Load layouts from preferences with stable IDs for drag-reorder
+    var layoutsWithIds by remember {
         mutableStateOf(
             (ListGroupPreference.loadFromPreferences(
                 LayoutsPreference.KEY,
                 prefs,
                 LayoutsPreference.DEFAULT,
                 LayoutsPreference.SERIALIZER
-            ) ?: LayoutsPreference.DEFAULT).toMutableList()
+            ) ?: LayoutsPreference.DEFAULT).map { LayoutWithId(layout = it) }
         )
     }
+
+    // Helper function to extract raw layouts for saving
+    fun getLayoutsForSaving(): List<LayoutsPreference.Layout> = layoutsWithIds.map { it.layout }
 
     // Get layout display names
     val layoutNames = remember { LayoutsPreference.getLayoutNames(context.resources) }
@@ -111,10 +121,14 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     // Reorderable state for drag-and-drop
     val reorderState = rememberReorderableLazyListState(
         onMove = { from, to ->
-            val item = layouts.removeAt(from.index)
-            layouts.add(to.index, item)
-            // Save immediately on reorder
-            saveLayouts(prefs, layouts)
+            // Create new list with reordered items (don't mutate)
+            layoutsWithIds = layoutsWithIds.toMutableList().apply {
+                add(to.index, removeAt(from.index))
+            }
+        },
+        onDragEnd = { _, _ ->
+            // Save after drag completes
+            saveLayouts(prefs, getLayoutsForSaving())
         }
     )
 
@@ -159,7 +173,7 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                 )
             ) {
                 Text(
-                    text = "Drag to reorder • Tap to edit • ${layouts.size} layout${if (layouts.size != 1) "s" else ""}",
+                    text = "Drag to reorder • Tap to edit • ${layoutsWithIds.size} layout${if (layoutsWithIds.size != 1) "s" else ""}",
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -173,22 +187,22 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                     .fillMaxSize()
                     .reorderable(reorderState)
             ) {
-                itemsIndexed(layouts, key = { index, _ -> index }) { index, layout ->
+                itemsIndexed(layoutsWithIds, key = { _, item -> item.id }) { index, layoutWithId ->
                     ReorderableItem(
                         reorderableState = reorderState,
-                        key = index
+                        key = layoutWithId.id
                     ) { isDragging ->
                         val elevation by animateDpAsState(if (isDragging) 8.dp else 0.dp, label = "elevation")
 
                         LayoutItem(
-                            layout = layout,
+                            layout = layoutWithId.layout,
                             index = index,
                             layoutNames = layoutNames,
                             layoutDisplayNames = layoutDisplayNames,
                             context = context,
                             elevation = elevation,
                             onEdit = {
-                                val initialXml = when (layout) {
+                                val initialXml = when (val layout = layoutWithId.layout) {
                                     is LayoutsPreference.CustomLayout -> layout.xml
                                     is LayoutsPreference.NamedLayout -> getLayoutXml(context, layout.name)
                                     is LayoutsPreference.SystemLayout -> getLayoutXml(context, "latn_qwerty_us")
@@ -197,7 +211,7 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                                 showCustomLayoutDialog = Pair(index, initialXml)
                             },
                             onDelete = {
-                                if (layouts.size > 1) {
+                                if (layoutsWithIds.size > 1) {
                                     showDeleteConfirmDialog = index
                                 }
                             },
@@ -216,13 +230,13 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
             layoutDisplayNames = layoutDisplayNames,
             onDismiss = { showAddDialog = false },
             onSelectSystem = {
-                layouts.add(LayoutsPreference.SystemLayout())
-                saveLayouts(prefs, layouts)
+                layoutsWithIds = layoutsWithIds + LayoutWithId(layout = LayoutsPreference.SystemLayout())
+                saveLayouts(prefs, getLayoutsForSaving())
                 showAddDialog = false
             },
             onSelectNamed = { name ->
-                layouts.add(LayoutsPreference.NamedLayout(name))
-                saveLayouts(prefs, layouts)
+                layoutsWithIds = layoutsWithIds + LayoutWithId(layout = LayoutsPreference.NamedLayout(name))
+                saveLayouts(prefs, getLayoutsForSaving())
                 showAddDialog = false
             },
             onSelectCustom = {
@@ -241,19 +255,21 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
             onSave = { xml ->
                 val customLayout = LayoutsPreference.CustomLayout.parse(xml)
                 if (index >= 0) {
-                    // Edit existing
-                    layouts[index] = customLayout
+                    // Edit existing - create new list with updated item
+                    layoutsWithIds = layoutsWithIds.toMutableList().apply {
+                        this[index] = LayoutWithId(id = this[index].id, layout = customLayout)
+                    }
                 } else {
                     // Add new
-                    layouts.add(customLayout)
+                    layoutsWithIds = layoutsWithIds + LayoutWithId(layout = customLayout)
                 }
-                saveLayouts(prefs, layouts)
+                saveLayouts(prefs, getLayoutsForSaving())
                 showCustomLayoutDialog = null
             },
             onRemove = {
-                if (index >= 0 && layouts.size > 1) {
-                    layouts.removeAt(index)
-                    saveLayouts(prefs, layouts)
+                if (index >= 0 && layoutsWithIds.size > 1) {
+                    layoutsWithIds = layoutsWithIds.toMutableList().apply { removeAt(index) }
+                    saveLayouts(prefs, getLayoutsForSaving())
                 }
                 showCustomLayoutDialog = null
             }
@@ -271,9 +287,9 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
             confirmButton = {
                 TextButton(
                     onClick = {
-                        if (layouts.size > 1) {
-                            layouts.removeAt(index)
-                            saveLayouts(prefs, layouts)
+                        if (layoutsWithIds.size > 1) {
+                            layoutsWithIds = layoutsWithIds.toMutableList().apply { removeAt(index) }
+                            saveLayouts(prefs, getLayoutsForSaving())
                         }
                         showDeleteConfirmDialog = null
                     }

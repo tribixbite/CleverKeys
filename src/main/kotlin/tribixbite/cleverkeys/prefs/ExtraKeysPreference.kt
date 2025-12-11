@@ -272,24 +272,88 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
 
         @JvmStatic
         fun keyTitle(keyName: String, kv: KeyValue): String {
+            // Return human-readable names for settings UI instead of glyph characters
+            // Glyphs use private use area Unicode that only renders with special_font.ttf
             return when (keyName) {
                 "f11_placeholder" -> "F11"
                 "f12_placeholder" -> "F12"
-                else -> kv.getString()
+                "alt" -> "Alt"
+                "meta" -> "Meta"
+                "compose" -> "Compose"
+                "voice_typing" -> "Voice"
+                "switch_clipboard" -> "Clipboard"
+                "change_method" -> "Switch IME"
+                "capslock" -> "Caps Lock"
+                "tab" -> "Tab"
+                "esc" -> "Esc"
+                "page_up" -> "Page Up"
+                "page_down" -> "Page Down"
+                "home" -> "Home"
+                "end" -> "End"
+                "copy" -> "Copy"
+                "paste" -> "Paste"
+                "cut" -> "Cut"
+                "selectAll" -> "Select All"
+                "shareText" -> "Share"
+                "pasteAsPlainText" -> "Paste Plain"
+                "undo" -> "Undo"
+                "redo" -> "Redo"
+                "delete_word" -> "Delete Word"
+                "forward_delete_word" -> "Fwd Delete Word"
+                "superscript" -> "Superscript"
+                "subscript" -> "Subscript"
+                "switch_greekmath" -> "Greek/Math"
+                "menu" -> "Menu"
+                "scroll_lock" -> "Scroll Lock"
+                "zwj" -> "ZWJ (Joiner)"
+                "zwnj" -> "ZWNJ (Non-Joiner)"
+                "nbsp" -> "NBSP (Space)"
+                "nnbsp" -> "NNBSP (Narrow Space)"
+                // Accents - show the accent name
+                "accent_aigu" -> "´ Acute"
+                "accent_grave" -> "` Grave"
+                "accent_double_aigu" -> "˝ Double Acute"
+                "accent_dot_above" -> "˙ Dot Above"
+                "accent_circonflexe" -> "ˆ Circumflex"
+                "accent_tilde" -> "˜ Tilde"
+                "accent_cedille" -> "¸ Cedilla"
+                "accent_trema" -> "¨ Umlaut"
+                "accent_ring" -> "˚ Ring"
+                "accent_caron" -> "ˇ Caron"
+                "accent_macron" -> "¯ Macron"
+                "accent_ogonek" -> "˛ Ogonek"
+                "accent_breve" -> "˘ Breve"
+                "accent_slash" -> "/ Slash"
+                "accent_bar" -> "— Bar"
+                "accent_dot_below" -> ". Dot Below"
+                "accent_hook_above" -> "Hook Above"
+                "accent_horn" -> "Horn"
+                "accent_double_grave" -> "Double Grave"
+                // Symbols - show the actual symbol
+                "€", "ß", "£", "§", "†", "ª", "º" -> keyName
+                // Combining characters - show name
+                else -> if (keyName.startsWith("combining_")) {
+                    keyName.removePrefix("combining_").replace("_", " ").replaceFirstChar { it.uppercase() }
+                } else {
+                    // Fallback: use key name as-is (human readable)
+                    keyName.replace("_", " ").replaceFirstChar { it.uppercase() }
+                }
             }
         }
 
-        /** Format a key combination */
+        /** Format a key combination using readable names */
         @JvmStatic
         fun formatKeyCombination(keys: Array<String>): String {
-            return keys.joinToString(" + ") { KeyValue.getKeyByName(it).getString() }
+            return keys.joinToString(" + ") { keyName ->
+                keyTitle(keyName, KeyValue.getKeyByName(keyName))
+            }
         }
 
-        /** Explain a gesture on a key */
+        /** Explain a gesture on a key using readable names */
         @JvmStatic
         fun formatKeyCombinationGesture(res: Resources, keyName: String): String {
             return res.getString(R.string.key_descr_gesture) + " + " +
-                    KeyValue.getKeyByName(keyName).getString()
+                    keyTitle(keyName, KeyValue.getKeyByName(keyName))
         }
 
         /** Place an extra key next to the key specified by the first argument, on

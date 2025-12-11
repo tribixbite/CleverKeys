@@ -36,10 +36,7 @@ class ExtraKeysConfigActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme(
-                colorScheme = darkColorScheme(
-                    primary = MaterialTheme.colorScheme.primary,
-                    surface = MaterialTheme.colorScheme.surface
-                )
+                colorScheme = darkColorScheme()
             ) {
                 ExtraKeysConfigScreen(
                     onBack = { finish() }
