@@ -51,15 +51,25 @@ CleverKeys is the only fully open-source neural network gesture keyboard for And
 
 ## What Makes CleverKeys Unique
 
-### The Only Open-Source Open-Model NN Gesture Keyboard
+### Open-Source Gesture Keyboard Comparison
 
-Every other "open-source" swipe keyboard on Android has a catch:
-- **HeliBoard** requires a closed-source gesture library for swipe typing
-- **FUTO Keyboard** has proprietary components
-- **AnySoftKeyboard** has no gesture typing at all
-- **FlorisBoard** gesture typing is experimental/incomplete
+| Feature | CleverKeys | HeliBoard | FUTO | FlorisBoard | AnySoftKeyboard |
+|---------|:----------:|:---------:|:----:|:-----------:|:---------------:|
+| **Gesture/Swipe Typing** | ✅ | ✅ | ✅ | ✅ (Beta) | ✅ (Experimental) |
+| **Gesture Engine Open Source** | ✅ | ❌¹ | ✅ | ✅ | ✅ |
+| **Training Code Available** | ✅ | N/A | ❌ | ❌ | ❌ |
+| **License** | GPL-3.0 | Apache-2.0 | Source-First² | Apache-2.0 | Apache-2.0 |
+| **100% Offline** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Works in Termux** | ✅ | ✅ | ? | ✅ | ✅ |
+| **Neural Network Model** | Transformer | N/A | Whisper (voice) | ML-based | ML-based |
+| **Clipboard History** | ✅ Unlimited | ✅ | ✅ | ✅ | ✅ |
 
-CleverKeys is different. Our gesture recognition uses a fully open-source transformer neural network trained specifically for swipe typing. The model, training code, and datasets are all publicly available at [CleverKeys-ML](https://github.com/tribixbite/CleverKeys-ML).
+<sub>¹ HeliBoard requires Google's proprietary `libjni_latinimegoogle.so` library for gesture typing ([source](https://github.com/Helium314/HeliBoard#gesture-typing))</sub><br/>
+<sub>² FUTO uses the "Source First License 1.1" which is source-available but restricts commercial use ([source](https://keyboard.futo.org/))</sub>
+
+### Why CleverKeys?
+
+CleverKeys uses a custom **transformer neural network** trained specifically for swipe typing. The model architecture, training code, and datasets are all publicly available at [CleverKeys-ML](https://github.com/tribixbite/CleverKeys-ML) — making it fully reproducible and auditable.
 
 ### Unlimited Clipboard History
 Android restricts clipboard access for security - apps can't read clipboard contents in the background. But keyboards are special. As an Input Method Editor (IME), CleverKeys has legitimate clipboard access, making it the only way to get truly unlimited clipboard history without root.

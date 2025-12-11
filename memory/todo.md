@@ -370,6 +370,18 @@ PrivacyManager defaults changed in 4 places:
 
 ---
 
+## Low Priority Future Enhancements
+
+### Settings UI Polish (from settings_audit.md)
+- [ ] Add "Swipe Sensitivity" preset (Low/Medium/High) to simplify 5 distance settings
+- [ ] Standardize units across distance settings (all pixels or all % of key size)
+- [ ] Consider further section merges (14 → 11 sections per audit proposal)
+- [ ] Move Vibration setting from Input to Appearance or Accessibility
+- [ ] Move Smart Punctuation from Input to Auto-Correction
+- [ ] Move Pin Entry Layout from Input to Appearance
+
+---
+
 ## Files Modified This Session
 - `src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeCustomization.kt` - Data models for per-key short swipe
 - `src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeCustomizationManager.kt` - Persistence and state management
