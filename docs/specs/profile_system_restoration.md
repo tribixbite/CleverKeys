@@ -2,11 +2,11 @@
 
 ## Overview
 **Feature Name**: Profile System (Unified Layout + Gesture Export)
-**Status**: Planned (Not Yet Implemented)
-**Priority**: P3 (Future Enhancement)
+**Status**: Implemented (commit 34f3a353, Dec 10 2025)
+**Priority**: P2
 
 ### Summary
-The Profile System will enable importing and exporting keyboard layouts as XML files with embedded short swipe customizations. Users will be able to share complete keyboard configurations as portable "profiles" that include both layout structure and custom gesture mappings.
+The Profile System enables importing and exporting keyboard layouts as XML files with embedded short swipe customizations. Users can share complete keyboard configurations as portable "profiles" that include both layout structure and custom gesture mappings.
 
 ### Key Design Decision
 The original design proposed a proprietary `<short_swipes>` XML extension. This was **rejected** in favor of injecting gestures as standard Unexpected Keyboard XML attributes (`nw`, `ne`, `sw`, `se`, etc.). This approach:
@@ -16,28 +16,28 @@ The original design proposed a proprietary `<short_swipes>` XML extension. This 
 
 ---
 
-## Proposed Architecture
+## Architecture
 
-### Components (To Be Created)
+### Components
 
 | Component | File | Responsibility |
 |-----------|------|----------------|
-| **XmlLayoutExporter** | `XmlLayoutExporter.kt` | Parse layout XML, inject short swipe mappings into `<key>` tags |
-| **XmlAttributeMapper** | `XmlAttributeMapper.kt` | Convert `ShortSwipeMapping` → UK XML attributes (e.g., `copy`, `keyevent:66`) |
-| **ShortSwipeCustomizationManager** | `ShortSwipeCustomizationManager.kt` | Add `importFromMappings()` method |
-| **LayoutManagerActivity** | `LayoutManagerActivity.kt` | Add Import/Export buttons using SAF |
+| **XmlLayoutExporter** | `customization/XmlLayoutExporter.kt` | Parses layout XML, injects short swipe mappings into `<key>` tags |
+| **XmlAttributeMapper** | `customization/XmlAttributeMapper.kt` | Converts `ShortSwipeMapping` → UK XML attributes (e.g., `copy`, `keyevent:66`) |
+| **ShortSwipeCustomizationManager** | `customization/ShortSwipeCustomizationManager.kt` | Stores/loads gesture mappings |
+| **LayoutManagerActivity** | `LayoutManagerActivity.kt` | UI with Import/Export buttons using SAF |
 
 ### Data Flow
 
 ```
 Export:
-  ShortSwipeCustomizationManager.getAllMappings()
-    → XmlAttributeMapper.toXmlAttribute(mapping)
+  ShortSwipeCustomizationManager.getMappings()
+    → XmlAttributeMapper.toXmlValue(mapping)
     → XmlLayoutExporter.injectMappings(layoutXml, mappings)
-    → SAF CreateDocument → File
+    → ActivityResultContracts.CreateDocument → File
 
 Import:
-  SAF OpenDocument → File
+  ActivityResultContracts.OpenDocument → File
     → KeyboardData.load_string_exn(xml) [validates]
     → Editor text updated
     → Swipes from standard attributes work automatically
@@ -55,7 +55,7 @@ Short swipe mappings are converted to standard UK XML attributes:
 |--------------|----------------------|
 | Command (copy) | `nw="copy"` |
 | Command (selectAll) | `se="selectAll"` |
-| Text insertion | `sw="my@email.com"` |
+| Text insertion | `sw="'Hello World'"` |
 | Key event | `ne="keyevent:66"` (Enter) |
 
 ### Direction → Attribute Mapping
@@ -71,41 +71,57 @@ Short swipe mappings are converted to standard UK XML attributes:
 | S | `s` (key8) |
 | SE | `se` (key4) |
 
-### XmlAttributeMapper Conversion Logic
+### XmlAttributeMapper.toXmlValue()
 
 ```kotlin
-fun toXmlAttribute(mapping: ShortSwipeMapping): String {
+fun toXmlValue(mapping: ShortSwipeMapping): String {
     return when (mapping.actionType) {
-        ActionType.COMMAND -> mapCommandToLegacy(mapping.actionValue)
-        ActionType.TEXT -> mapping.actionValue  // Direct text insertion
+        ActionType.TEXT -> "'${mapping.actionValue.replace("'", "'\'")}'"
+        ActionType.COMMAND -> mapCommandToKeyword(mapping.getCommand()) ?: mapping.actionValue
         ActionType.KEY_EVENT -> "keyevent:${mapping.actionValue}"
     }
 }
 ```
 
+### Supported Command Mappings
+
+| AvailableCommand | UK XML Keyword |
+|-----------------|----------------|
+| COPY | `copy` |
+| PASTE | `paste` |
+| CUT | `cut` |
+| SELECT_ALL | `selectAll` |
+| UNDO | `undo` |
+| REDO | `redo` |
+| CURSOR_LEFT/RIGHT/UP/DOWN | `cursor_left/right/up/down` |
+| CURSOR_HOME/END | `home`, `end` |
+| DELETE_WORD | `delete_word` |
+| SWITCH_IME | `change_method` |
+| VOICE_INPUT | `voice_typing` |
+
 ---
 
 ## UI Implementation
 
-### CustomLayoutEditorDialog (To Be Updated)
+### CustomLayoutEditorDialog (LayoutManagerActivity.kt)
 
-**Import XML Button**:
-1. Opens SAF file picker (`OpenDocument` with `text/xml`)
+**Import XML Button** (line 638):
+1. Opens SAF file picker (`ActivityResultContracts.OpenDocument` with `text/xml`)
 2. Reads XML content
 3. Validates with `KeyboardData.load_string_exn()`
 4. Populates editor text field
 5. Swipes defined via standard attributes work immediately
 
-**Export XML Button**:
+**Export XML Button** (line 649):
 1. Validates current editor XML
 2. Retrieves global mappings from `ShortSwipeCustomizationManager`
 3. Calls `XmlLayoutExporter.injectMappings()` to embed gestures
-4. Opens SAF create dialog (`CreateDocument`)
+4. Opens SAF create dialog (`ActivityResultContracts.CreateDocument`)
 5. Writes enhanced XML to file
 
 ---
 
-## Expected Usage
+## Usage
 
 1. Open **Settings** → **Keyboard Layouts**
 2. Select **Custom Layout** or edit existing
@@ -114,24 +130,33 @@ fun toXmlAttribute(mapping: ShortSwipeMapping): String {
 
 ---
 
-## Compatibility Matrix
+## Compatibility
 
-| Scenario | Expected Result |
+| Scenario | Result |
 |----------|--------|
-| Import standard UK layout | Works (no gestures) |
-| Import CleverKeys exported profile | Works (gestures included) |
-| Export to UK format | Works (gestures baked into standard attributes) |
-| Import in original UK keyboard | Works (gestures visible as sub-labels) |
+| Import standard UK layout | ✅ Works (no gestures) |
+| Import CleverKeys exported profile | ✅ Works (gestures included) |
+| Export to UK format | ✅ Works (gestures baked into standard attributes) |
+| Import in original UK keyboard | ✅ Works (gestures visible as sub-labels) |
 
 ---
 
-## Security Considerations
+## Files
 
-- **File Access**: Will use Android Storage Access Framework (SAF) - no broad storage permissions
-- **Validation**: XML must be parsed and validated before application
+- `src/main/kotlin/tribixbite/cleverkeys/customization/XmlLayoutExporter.kt` (116 lines)
+- `src/main/kotlin/tribixbite/cleverkeys/customization/XmlAttributeMapper.kt` (77 lines)
+- `src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeCustomizationManager.kt` (updated)
+- `src/main/kotlin/tribixbite/cleverkeys/LayoutManagerActivity.kt` (Import/Export UI)
+
+---
+
+## Security
+
+- **File Access**: Uses Android Storage Access Framework (SAF) - no broad storage permissions
+- **Validation**: XML parsed and validated before application
 - **No Network**: All operations are local
 
 ---
 
+**Implemented**: Dec 10, 2025 (commit 34f3a353)
 **Last Updated**: 2025-12-11
-**Note**: Implementation todos moved to `memory/todo.md`
