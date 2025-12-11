@@ -1,23 +1,15 @@
 # CleverKeys Documentation - Table of Contents
 
-**Last Updated**: 2025-11-16
+**Last Updated**: 2025-12-11
 **Review Status**: Files 251 of 251 (100% complete) ✅
 
 ## 📋 Quick Navigation
 
 ### Essential Documents
 - **Primary Instructions**: `CLAUDE.md` - Main development workflow and commands
-- **Project Status**: `migrate/project_status.md` - Current milestone and completion status
-- **Critical Fixes**: `migrate/todo/critical.md` - P0 showstopper bugs and quick wins
-- **Completed Work**: `migrate/claude_history.md` - Historical development log
-
-### Active TODO Lists (Prioritized)
-- `migrate/todo/critical.md` - P0 showstoppers requiring immediate attention
-- `migrate/todo/core.md` - Core keyboard logic bugs
-- `migrate/todo/features.md` - Missing user-facing features
-- `migrate/todo/neural.md` - ONNX prediction pipeline issues
-- `migrate/todo/settings.md` - Settings and preferences bugs
-- `migrate/todo/ui.md` - UI/UX issues
+- **Project Status**: `README.md` - Production status and overview
+- **Current Tasks**: `memory/todo.md` - Active todo list
+- **History**: `docs/history/session_log_dec_2025.md` - Recent completed work
 
 ## 🗺️ Documentation Structure
 
@@ -38,167 +30,69 @@
 | `DEPLOYMENT.md` | Deployment procedures | ✅ Active |
 | `build-on-termux.sh` | Termux build script | ✅ Active |
 
-#### Architecture & Design
-| File | Purpose | Status |
-|------|---------|--------|
-| `ARCHITECTURE_ANALYSIS.md` | System architecture analysis | 📚 Reference |
-| `KOTLIN_MIGRATION.md` | Java→Kotlin migration guide | ✅ Complete |
-| `MIGRATION_CHECKLIST.md` | Migration tracking | ✅ Complete |
-
 #### Features & Issues
 | File | Purpose | Status |
 |------|---------|--------|
-| `MISSING_FEATURES.md` | Feature parity tracking | ✅ Consolidated into TODO files |
-| `ISSUES.md` | Known issues log | ✅ Consolidated into TODO files |
+| `memory/todo.md` | **Active Task List** | ✅ Active |
+| `docs/history/` | Historical logs and archives | 📚 Reference |
 
 #### Model & Neural Pipeline
 | File | Purpose | Status |
 |------|---------|--------|
-| `MODEL_EXPORT_STATUS.md` | ONNX model status | ✅ Active |
-| `ONNX_MODEL_UPDATE_REQUIRED.md` | Model update notes | 📚 Reference |
+| `docs/specs/neural-prediction.md` | ONNX pipeline spec | ✅ Active |
 | `CLI_TEST_README.md` | CLI testing guide | ✅ Active |
 
 #### Testing
 | File | Purpose | Status |
 |------|---------|--------|
 | `MANUAL_TESTING_GUIDE.md` | Manual testing procedures | ✅ Active |
-| `TESTING_CHECKLIST.md` | Feature checklist | ✅ Active |
 | `test-keyboard-automated.sh` | ADB testing script | ✅ Active |
 
-#### Session Summaries
-| File | Purpose | Status |
-|------|---------|--------|
-| `SESSION_SUMMARY_100_PERCENT_PARITY_2025-11-16.md` | 100% settings parity achievement (3 sessions) | ✅ Complete |
-| `SESSION_SUMMARY_SETTINGS_IMPLEMENTATION_2025-11-16.md` | Initial settings implementation (Session 1) | ✅ Complete |
-| `PRODUCTION_READY_NOV_16_2025.md` | Production readiness report (95/100, Grade A+) | ✅ Complete |
-
-#### Review Files (Files 82-85)
-| File | Purpose | Status |
-|------|---------|--------|
-| `REVIEW_FILE_82_ExtraKeys.md` | ExtraKeys.java review | ✅ Implemented |
-| `REVIEW_FILE_83_FoldStateTracker.md` | FoldStateTracker review | ✅ Enhanced |
-| `REVIEW_FILE_84_Gesture.md` | Gesture.java review | ✅ Complete (Bug #267 fixed) |
-| `REVIEW_FILE_85_GestureClassifier.md` | GestureClassifier review | ✅ Complete |
-
-#### Legacy/Deprecated (All Cleaned Up ✅)
-| File | Purpose | Status |
-|------|---------|--------|
-| `CURRENT_SESSION_STATUS.md` | Old status tracker | ✅ Deleted (migrated) |
-| `REVIEW_COMPLETED.md` | Old review log | ✅ Deleted (migrated) |
-| `FINAL_STATUS.md` | Old status file | ✅ Deleted (consolidated) |
-| `TODO.md` | Legacy TODO | ✅ Deleted (consolidated) |
-| `TODONOW.md` | Legacy urgent TODO | ✅ Deleted (consolidated) |
-| `TODO_ARCHITECTURAL.md` | Architecture TODOs | ✅ Deleted (consolidated) |
-| `TODO_CRITICAL_BUGS.md` | Critical bug list | ✅ Deleted (consolidated) |
-| `TODO_HIGH_PRIORITY.md` | High priority list | ✅ Deleted (consolidated) |
-| `TODO_MEDIUM_LOW.md` | Medium/low priority | ✅ Deleted (consolidated) |
-| `REVIEW_TODO_CORE.md` | Core review TODOs | ✅ Deleted (consolidated) |
-| `REVIEW_TODO_GESTURES.md` | Gesture TODOs | ✅ Deleted (consolidated) |
-| `REVIEW_TODO_LAYOUT.md` | Layout TODOs | ✅ Deleted (consolidated) |
-| `REVIEW_TODO_ML_DATA.md` | ML data TODOs | ✅ Deleted (consolidated) |
-| `REVIEW_TODO_NEURAL.md` | Neural TODOs | ✅ Deleted (consolidated) |
-
-### `/migrate/` Migration Directory
-
-#### Organized Status
-| File | Purpose | Status |
-|------|---------|--------|
-| `README.md` | Migration overview | ✅ Active |
-| `project_status.md` | Current project status | ✅ Active - **CHECK FIRST** |
-| `claude_history.md` | Historical development log | ✅ Active |
-| `completed_reviews.md` | Completed file reviews | ✅ Active |
-
-#### Categorized TODOs (`/migrate/todo/`)
-| File | Purpose | Status |
-|------|---------|--------|
-| `critical.md` | P0 showstoppers | ✅ **ALL RESOLVED** (45 bugs: 38 fixed, 7 false) |
-| `core.md` | Core keyboard bugs | ✅ Complete |
-| `features.md` | Missing features | ✅ Complete |
-| `neural.md` | ONNX pipeline issues | ✅ Complete |
-| `settings.md` | Settings bugs | ✅ Complete |
-| `ui.md` | UI/UX issues | ✅ Complete |
-
-### `/docs/` Documentation Directory
-
-#### Specifications (`/docs/specs/`)
+### `/docs/specs/` Specifications
 *Spec-driven development - All major systems documented*
+
 | File | Purpose | Status |
 |------|---------|--------|
-| `README.md` | **Master ToC for all 10 specs** | ✅ Created 2025-11-14 |
+| `README.md` | Master ToC for specs | ✅ Active |
 | `SPEC_TEMPLATE.md` | Template for new specs | ✅ Active |
-| `core-keyboard-system.md` | Core keyboard operations (P0) | ✅ Implemented |
-| `gesture-system.md` | Gesture recognition (P0) | ✅ Implemented (Bug #267 fixed) |
-| `neural-prediction.md` | ONNX prediction pipeline (P0) | ✅ Updated 2025-11-14 |
-| `layout-system.md` | Layout & extra keys (P1) | ✅ Implemented (Bug #266 fixed) |
-| `settings-system.md` | Settings & preferences (P1) | ✅ Implemented |
-| `ui-material3-modernization.md` | Material 3 UI (P2) | ✅ Implemented |
-| `performance-optimization.md` | Performance & monitoring (P2) | ✅ Complete |
-| `test-suite.md` | Testing infrastructure (P2) | ✅ Complete |
-| `architectural-decisions.md` | 6 ADRs (Reference) | ✅ Active |
+| `core-keyboard-system.md` | Core keyboard operations | ✅ Implemented |
+| `gesture-system.md` | Gesture recognition | ✅ Implemented |
+| `neural-prediction.md` | ONNX prediction pipeline | ✅ Implemented |
+| `layout-system.md` | Layout & extra keys | ✅ Implemented |
+| `settings-system.md` | Settings & preferences | ✅ Implemented |
+| `ui-material3-modernization.md` | Material 3 UI | ✅ Implemented |
+| `performance-optimization.md` | Performance & monitoring | ✅ Complete |
+| `test-suite.md` | Testing infrastructure | ✅ Complete |
+| `short-swipe-customization.md` | **NEW** Short Swipe System | ✅ Implemented |
+| `profile_system_restoration.md` | **NEW** Profile Import/Export | ✅ Implemented |
+| `architectural-decisions.md` | Architectural Decision Records | ✅ Active |
 
-#### History (`/docs/history/`)
+### `/docs/history/` History
 | File | Purpose | Status |
 |------|---------|--------|
+| `session_log_dec_2025.md` | December 2025 Work Log | ✅ Archived |
 | `ONNX_DECODE_PIPELINE.md` | ONNX pipeline docs | ✅ Active |
-| `md_audit.txt` | MD files audit list | ✅ Active |
-| `HISTORICAL_ISSUES_MIGRATION.md` | Issues migration log | ✅ Created 2025-10-21 |
-| `issues-summary-historical-ARCHIVED-2025-10-21.md` | Original issues (archived) | 📚 Archived |
+| `PRODUCTION_READY_NOV_16_2025.md` | Production readiness report | 📚 Reference |
 
-## 📊 Review Progress
+## 🔄 Consolidation Status
 
-**Java Files Reviewed**: 251/251 (100%) ✅
-**APK Build Status**: SUCCESS (52MB)
-**Bugs Status**: All P0/P1 resolved (45 total: 38 fixed, 7 false)
-
-## 🔄 Consolidation Plan
-
-### Phase 1: Audit (Current)
-- [x] Create docs/specs and docs/history directories
-- [x] List all MD files systematically
-- [ ] Audit each file line-by-line (no tail/head)
-- [ ] Categorize: Keep, Consolidate, Archive, Delete
-
-### Phase 2: Consolidate
-- [ ] Move TODOs from all sources to `/migrate/todo/`
-- [ ] Move history to `/docs/history/`
-- [ ] Create specs for major systems
-- [ ] Archive deprecated files
-
-### Phase 3: Organize
-- [ ] Update CLAUDE.md with spec-driven workflow
-- [ ] Create TABLE_OF_CONTENTS.md (this file)
-- [ ] Establish clear file ownership
-- [ ] Document update protocols
+**Verification**:
+- Legacy `migrate/todo` directory has been cleared/consolidated ✅
+- `memory/todo.md` is the single source of truth for active tasks ✅
+- Specs are up-to-date with recent features (Short Swipes, Profiles) ✅
 
 ## 🎯 Spec-Driven Development Workflow
 
 ### Adding New Features
 1. **Define Spec**: Create `docs/specs/feature-name.md` using template
 2. **Update TOC**: Add to this TABLE_OF_CONTENTS.md
-3. **Plan Tasks**: Add tasks to spec file's TODO section
+3. **Plan Tasks**: Add tasks to spec file's TODO section or `memory/todo.md`
 4. **Implement**: Follow spec requirements
-5. **Move History**: Completed work → `docs/history/feature-name-log.md`
-6. **Update Status**: Mark complete in spec and project_status.md
-
-### Working on Existing Systems
-1. **Check Spec**: Read `docs/specs/system-name.md` first
-2. **Review TODOs**: Check spec's TODO section at top
-3. **Make Changes**: Follow spec architecture
-4. **Update Spec**: Document any architectural changes
-5. **Log Work**: Add to spec's history section or separate log
+5. **Move History**: Completed work → `docs/history/`
+6. **Update Status**: Mark complete in spec
 
 ### Session Startup Protocol
 1. `cd ~/git/swype/cleverkeys`
-2. Check: `cat migrate/project_status.md` (overall status)
-3. Check: `cat docs/TABLE_OF_CONTENTS.md` (this file - navigation)
-4. Check: `cat migrate/todo/critical.md` (P0 issues)
-5. Check relevant spec: `cat docs/specs/[feature].md`
-
----
-
-**Next Actions**:
-1. Complete line-by-line audit of all 40 MD files
-2. Create spec files for major systems (keyboard, neural, gestures, layouts, settings)
-3. Consolidate 15 TODO files into organized structure
-4. Archive or delete deprecated files
-5. Update CLAUDE.md with spec-driven workflow
+2. Check: `cat memory/todo.md` (current tasks)
+3. Check: `cat docs/TABLE_OF_CONTENTS.md` (navigation)
+4. Check relevant spec: `cat docs/specs/[feature].md`

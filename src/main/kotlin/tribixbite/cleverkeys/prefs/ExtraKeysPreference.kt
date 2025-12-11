@@ -100,6 +100,8 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "home",
             "end",
             "switch_greekmath",
+            "switch_forward",
+            "switch_backward",
             "change_method",
             "capslock",
             "copy",
@@ -228,6 +230,8 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "subscript" -> id = R.string.key_descr_subscript
                 "superscript" -> id = R.string.key_descr_superscript
                 "switch_greekmath" -> id = R.string.key_descr_switch_greekmath
+                "switch_forward" -> id = R.string.key_descr_switch_forward
+                "switch_backward" -> id = R.string.key_descr_switch_backward
                 "undo" -> id = R.string.key_descr_undo
                 "voice_typing" -> id = R.string.key_descr_voice_typing
                 "ª" -> id = R.string.key_descr_ª
@@ -303,6 +307,8 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "superscript" -> "Superscript"
                 "subscript" -> "Subscript"
                 "switch_greekmath" -> "Greek/Math"
+                "switch_forward" -> "Next Layout"
+                "switch_backward" -> "Previous Layout"
                 "menu" -> "Menu"
                 "scroll_lock" -> "Scroll Lock"
                 "zwj" -> "ZWJ (Joiner)"
@@ -393,6 +399,9 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "f12_placeholder" -> mkPreferredPos("0", 0, 9, false)
                 "delete_word" -> mkPreferredPos("backspace", -1, -1, false)
                 "forward_delete_word" -> mkPreferredPos("backspace", -1, -1, true)
+                // Layout switching keys - place near space bar on bottom row
+                "switch_forward" -> mkPreferredPos("space", 3, 3, true)
+                "switch_backward" -> mkPreferredPos("space", 3, 2, false)
                 else -> KeyboardData.PreferredPos.DEFAULT
             }
         }

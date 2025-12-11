@@ -136,6 +136,8 @@
     <string name="key_descr_capslock">Caps lock</string>
     <string name="key_descr_compose">Compose</string>
     <string name="key_descr_switch_greekmath">Greek &amp; math symbols</string>
+    <string name="key_descr_switch_forward">Switch to next keyboard layout</string>
+    <string name="key_descr_switch_backward">Switch to previous keyboard layout</string>
     <string name="key_descr_change_method">Switch keyboard</string>
     <string name="key_descr_voice_typing">Voice typing</string>
     <string name="key_descr_copy">Copy</string>

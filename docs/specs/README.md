@@ -1,7 +1,7 @@
 # CleverKeys Feature Specifications
 
-**Last Updated**: 2025-12-07
-**Total Specs**: 11 (core) + 4 (optional enhancements)
+**Last Updated**: 2025-12-11
+**Total Specs**: 12 (core) + 4 (optional enhancements)
 
 This directory contains feature specifications and architectural decision records (ADRs) for CleverKeys. All specifications follow the template in `SPEC_TEMPLATE.md`.
 
@@ -52,13 +52,21 @@ This directory contains feature specifications and architectural decision record
    - Recent Updates: ✅ Extra Keys Configuration Activity complete (2025-11-16)
    - Outstanding: None - 100% parity achieved!
 
-6. **[UI & Material 3 Modernization](./ui-material3-modernization.md)** - P2
+6. **[Settings-Layout Integration](./settings-layout-integration.md)** - P1
+   - Status: ✅ Complete (2025-12-11)
+   - Covers: GUI mapping, settings storage, layout system integration, hot-reload
+   - Components: Per-Key Actions, Extra Keys, Layout Manager
+   - Recent Updates: ✅ SharedPreferences mismatch fixed (2025-12-11)
+   - Recent Updates: ✅ switch_forward/switch_backward added to Extra Keys
+   - Outstanding: None
+
+8. **[UI & Material 3 Modernization](./ui-material3-modernization.md)** - P2
    - Status: ✅ Complete (All phases implemented - updated 2025-11-16)
    - Covers: Material 3 theming, dark mode, animations
    - Recent Updates: ✅ Material 3 integration complete across all components
    - Outstanding: Theme customization UI (optional enhancement)
 
-7. **[Performance Optimization](./performance-optimization.md)** - P2
+9. **[Performance Optimization](./performance-optimization.md)** - P2
    - Status: ✅ Verified (2025-11-16)
    - Covers: Rendering optimization, memory management, ONNX performance
    - Recent Updates: ✅ Hardware acceleration verified enabled (2025-11-16)
@@ -66,7 +74,7 @@ This directory contains feature specifications and architectural decision record
    - Recent Updates: ✅ Memory leak prevention verified (zero leak vectors, 2025-11-16)
    - Outstanding: Device testing for performance benchmarks (optional)
 
-8. **[Test Suite](./test-suite.md)** - P2
+10. **[Test Suite](./test-suite.md)** - P2
    - Status: 🟡 Partially Implemented
    - Covers: Unit tests, integration tests, UI tests, automated testing
    - Recent Updates: ✅ Automated keyboard testing script created (2025-11-14)
@@ -74,13 +82,13 @@ This directory contains feature specifications and architectural decision record
 
 ### Architectural Documents
 
-9. **[Architectural Decisions](./architectural-decisions.md)** - Reference
+11. **[Architectural Decisions](./architectural-decisions.md)** - Reference
    - Status: ✅ Complete (Living document)
    - Contains: 7 ADRs (ONNX architecture, coroutines, initialization order, etc.)
    - Last Updated: 2025-11-16
    - Outstanding: None (all documented)
 
-10. **[Short Swipe Customization](./short-swipe-customization.md)** - P1
+12. **[Short Swipe Customization](./short-swipe-customization.md)** - P1
     - Status: ✅ Complete (Updated 2025-12-07)
     - Covers: Per-key short swipe customization, 8-direction gestures, command palette
     - Recent Updates: ✅ Shift+custom swipe support (2025-12-07)
