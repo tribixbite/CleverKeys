@@ -230,6 +230,14 @@ For switch_forward/switch_backward to work:
 **Root Cause**: ExtraKeysPreference not loading from correct prefs
 **Solution**: Use DirectBootAwarePreferences consistently
 
+### Issue: switch_forward/switch_backward not visible in Extra Keys Config
+**Root Cause**: Keys added to ExtraKeysPreference but not categorized in ExtraKeysConfigActivity
+**Solution**: Added "Layout Switching" category to categorizedKeys map (2025-12-11)
+
+### Issue: Short swipe customization not triggering layout switch
+**Root Cause**: SWITCH_FORWARD/SWITCH_BACKWARD not in AvailableCommand enum or CommandRegistry
+**Solution**: Added commands to AvailableCommand enum, handling in CustomShortSwipeExecutor (returns false for service handling), and execution in Keyboard2View.onCustomShortSwipe() via CleverKeysService.triggerKeyboardEvent() (2025-12-11)
+
 ---
 
 ## 6. Testing Checklist
