@@ -732,10 +732,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 expanded = neuralSectionExpanded,
                 onExpandChange = { neuralSectionExpanded = it }
             ) {
-                // Master switch for swipe typing
+                // Master switch for swipe typing (neural prediction is always used when enabled)
                 SettingsSwitch(
                     title = "Enable Swipe Typing",
-                    description = "Swipe across keys to type words. Required for neural prediction.",
+                    description = "Swipe across keys to type words using neural prediction.",
                     checked = swipeTypingEnabled,
                     onCheckedChange = {
                         swipeTypingEnabled = it
@@ -744,18 +744,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
 
                 if (swipeTypingEnabled) {
-                    SettingsSwitch(
-                        title = stringResource(R.string.settings_neural_enable_title),
-                        description = stringResource(R.string.settings_neural_enable_desc),
-                        checked = neuralPredictionEnabled,
-                        onCheckedChange = {
-                            neuralPredictionEnabled = it
-                            saveSetting("neural_prediction_enabled", it)
-                        }
-                    )
-                }
-
-                if (swipeTypingEnabled && neuralPredictionEnabled) {
                     SettingsSlider(
                         title = stringResource(R.string.settings_neural_beam_width_title),
                         description = stringResource(R.string.settings_neural_beam_width_desc),
