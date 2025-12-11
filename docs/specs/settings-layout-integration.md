@@ -246,6 +246,10 @@ For switch_forward/switch_backward to work:
 **Root Cause**: `neural_prediction_enabled` preference was loaded from storage but never checked in prediction logic. Neural engine always initialized when `swipe_typing_enabled` was true.
 **Solution**: Removed the non-functional toggle from UI (2025-12-11). Neural settings now show directly when "Enable Swipe Typing" is enabled. All advanced neural settings (beam width, max length, confidence, beam search config, model config) remain intact.
 
+### Issue: Swipe prediction alternates don't follow shift/caps-lock state (FIXED)
+**Root Cause**: In `InputCoordinator.handlePredictionResults()`, shift/caps-lock transformation was only applied to the auto-inserted top prediction in `onSuggestionSelected()`, but alternates displayed in suggestion bar were shown lowercase.
+**Solution**: Added `applyShiftTransformation()` helper and applied it to ALL predictions before displaying in suggestion bar (2025-12-11). Now when shift is active, all alternates show capitalized first letter; when caps-lock is active, all alternates show ALL CAPS.
+
 ---
 
 ## 6. Testing Checklist
