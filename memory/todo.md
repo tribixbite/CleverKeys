@@ -372,6 +372,20 @@ PrivacyManager defaults changed in 4 places:
 
 ## Low Priority Future Enhancements
 
+### Profile System: Layout Import/Export (from profile_system_restoration.md)
+**Spec**: `docs/specs/profile_system_restoration.md`
+
+- [ ] Create `XmlAttributeMapper.kt` - convert ShortSwipeMapping → UK XML attributes
+- [ ] Create `XmlLayoutExporter.kt` - inject mappings into `<key>` tags
+- [ ] Add `importFromMappings()` to `ShortSwipeCustomizationManager.kt`
+- [ ] Add "Import XML" button to `CustomLayoutEditorDialog` in `LayoutManagerActivity.kt`
+- [ ] Add "Export XML" button to `CustomLayoutEditorDialog`
+- [ ] Implement SAF file picker for import (OpenDocument)
+- [ ] Implement SAF file creator for export (CreateDocument)
+- [ ] Test: Import standard UK layout (no gestures)
+- [ ] Test: Import/export CleverKeys profile with gestures
+- [ ] Test: Exported profile works in original UK keyboard
+
 ### Settings UI Polish (from settings_audit.md)
 - [ ] Add "Swipe Sensitivity" preset (Low/Medium/High) to simplify 5 distance settings
 - [ ] Standardize units across distance settings (all pixels or all % of key size)

@@ -1,132 +1,137 @@
-# Profile System Restoration & Intercompatibility Analysis
+# Profile System: Layout Import/Export with Short Swipe Integration
 
-## 1. Executive Summary
+## Overview
+**Feature Name**: Profile System (Unified Layout + Gesture Export)
+**Status**: Planned (Not Yet Implemented)
+**Priority**: P3 (Future Enhancement)
 
-**Objective:** Restore functionality to the "Manage Keyboard Layouts" system (effectively the "Profile System") by enabling XML import/export for individual layouts and achieving intercompatibility with the "Short Swipe Customization" system.
+### Summary
+The Profile System will enable importing and exporting keyboard layouts as XML files with embedded short swipe customizations. Users will be able to share complete keyboard configurations as portable "profiles" that include both layout structure and custom gesture mappings.
 
-**Current State:**
-*   **Layouts:** Managed via `LayoutManagerActivity`. Custom layouts are stored as raw XML strings in SharedPreferences. Users can edit the XML text but cannot import/export files directly.
-*   **Short Swipes:** Managed via `ShortSwipeCustomizationActivity`. Mappings are stored in a global `short_swipe_customizations.json` file.
-*   **Disconnect:** Layouts and Short Swipe customizations are isolated. Switching layouts does not change swipe mappings, and exporting a layout does not include swipe customizations.
-
-**Proposed Solution:**
-*   **Unified Profile Format:** Extend the standard Keyboard XML format to support a `<short_swipes>` section. This allows a single XML file to act as a portable "Profile" containing both the key layout and the custom gesture mappings.
-*   **Enhanced Editor:** Upgrade the `CustomLayoutEditorDialog` to support "Import XML" and "Export XML" file operations.
-*   **Smart Parsing:** Update `KeyboardData` parser to recognize and handle the embedded swipe definitions, automatically applying them to the `ShortSwipeCustomizationManager` upon import.
-
----
-
-## 2. Architecture Analysis
-
-### 2.1 Layout System
-*   **Core Class:** `KeyboardData` (Data Model & XML Parser).
-*   **Storage:** `LayoutsPreference` (SharedPreferences).
-*   **UI:** `LayoutManagerActivity` (List & Management), `CustomLayoutEditorDialog` (Text Editing).
-*   **Format:** Standard "Unexpected Keyboard" XML format (rows, keys, modifiers).
-
-### 2.2 Short Swipe System
-*   **Core Class:** `ShortSwipeCustomizationManager` (Singleton).
-*   **Storage:** JSON file (`short_swipe_customizations.json`).
-*   **UI:** `ShortSwipeCustomizationActivity` (Visual Editor).
-*   **Data Model:** `ShortSwipeMapping` (Key + Direction -> Action).
-
-### 2.3 The Integration Gap
-Currently, `KeyboardData` parses strict XML tags (`row`, `modmap`, `key`). It throws an exception on unknown tags. This prevents us from simply embedding swipe data into the XML without code changes. Furthermore, the `LayoutManagerActivity` lacks file I/O capabilities, forcing users to copy-paste text for sharing.
+### Key Design Decision
+The original design proposed a proprietary `<short_swipes>` XML extension. This was **rejected** in favor of injecting gestures as standard Unexpected Keyboard XML attributes (`nw`, `ne`, `sw`, `se`, etc.). This approach:
+- Maintains 100% backward compatibility with original UK layouts
+- Allows exported profiles to work in any UK-compatible keyboard
+- Avoids format fragmentation
 
 ---
 
-## 3. Technical Specification
+## Proposed Architecture
 
-### 3.1 XML Schema Extension
-We will introduce a new optional root-level tag `<short_swipes>` to the keyboard layout XML.
+### Components (To Be Created)
 
-**Example Profile XML:**
-```xml
-<keyboard name="My Custom Profile" script="latin">
-    <row>
-        <key key0="q" />
-        <key key0="w" />
-        <!-- ... -->
-    </row>
-    
-    <!-- NEW SECTION -->
-    <short_swipes>
-        <swipe key="a" dir="NW" type="COMMAND" value="SELECT_ALL" label="All" />
-        <swipe key="c" dir="S" type="TEXT" value="my@email.com" label="Mail" />
-        <swipe key="x" dir="NE" type="KEY_EVENT" value="66" label="Ent" />
-    </short_swipes>
-</keyboard>
+| Component | File | Responsibility |
+|-----------|------|----------------|
+| **XmlLayoutExporter** | `XmlLayoutExporter.kt` | Parse layout XML, inject short swipe mappings into `<key>` tags |
+| **XmlAttributeMapper** | `XmlAttributeMapper.kt` | Convert `ShortSwipeMapping` → UK XML attributes (e.g., `copy`, `keyevent:66`) |
+| **ShortSwipeCustomizationManager** | `ShortSwipeCustomizationManager.kt` | Add `importFromMappings()` method |
+| **LayoutManagerActivity** | `LayoutManagerActivity.kt` | Add Import/Export buttons using SAF |
+
+### Data Flow
+
+```
+Export:
+  ShortSwipeCustomizationManager.getAllMappings()
+    → XmlAttributeMapper.toXmlAttribute(mapping)
+    → XmlLayoutExporter.injectMappings(layoutXml, mappings)
+    → SAF CreateDocument → File
+
+Import:
+  SAF OpenDocument → File
+    → KeyboardData.load_string_exn(xml) [validates]
+    → Editor text updated
+    → Swipes from standard attributes work automatically
 ```
 
-### 3.2 Parsing Logic (`KeyboardData.kt`)
-*   The `parse_keyboard` method will be updated to handle the `short_swipes` tag.
-*   A new `parse_short_swipes` method will iterate through `swipe` tags and construct `ShortSwipeMapping` objects.
-*   These mappings will be stored in a new field `val shortSwipeCustomizations: List<ShortSwipeMapping>?` in `KeyboardData`.
+---
 
-### 3.3 Import Logic (`LayoutManagerActivity`)
-*   **User Action:** Clicks "Import XML".
-*   **System Action:**
-    1.  Reads the file content.
-    2.  Validates XML structure using `KeyboardData.load_string_exn`.
-    3.  If valid, populates the editor text field.
-    4.  **Crucial Step:** If the parsed `KeyboardData` contains `shortSwipeCustomizations`, prompt the user: "This layout contains custom swipe gestures. Import them?"
-    5.  If confirmed, call `ShortSwipeCustomizationManager.importFromMappings(...)` to merge or replace global mappings.
+## Technical Specification
 
-### 3.4 Export Logic (`LayoutManagerActivity`)
-*   **User Action:** Clicks "Export XML".
-*   **System Action:**
-    1.  Get the current XML text from the editor.
-    2.  Parse it to finding all defined keys (or just use all available global swipe mappings).
-    3.  Query `ShortSwipeCustomizationManager` for all active mappings.
-    4.  Inject the `<short_swipes>...</short_swipes>` block into the XML string (just before `</keyboard>`).
-    5.  Write the enhanced XML to the selected file destination.
+### XML Attribute Mapping
+
+Short swipe mappings are converted to standard UK XML attributes:
+
+| Mapping Type | XML Attribute Example |
+|--------------|----------------------|
+| Command (copy) | `nw="copy"` |
+| Command (selectAll) | `se="selectAll"` |
+| Text insertion | `sw="my@email.com"` |
+| Key event | `ne="keyevent:66"` (Enter) |
+
+### Direction → Attribute Mapping
+
+| SwipeDirection | XML Attribute |
+|----------------|---------------|
+| NW | `nw` (key1) |
+| N | `n` (key7) |
+| NE | `ne` (key2) |
+| W | `w` (key6) |
+| E | `e` (key5) |
+| SW | `sw` (key3) |
+| S | `s` (key8) |
+| SE | `se` (key4) |
+
+### XmlAttributeMapper Conversion Logic
+
+```kotlin
+fun toXmlAttribute(mapping: ShortSwipeMapping): String {
+    return when (mapping.actionType) {
+        ActionType.COMMAND -> mapCommandToLegacy(mapping.actionValue)
+        ActionType.TEXT -> mapping.actionValue  // Direct text insertion
+        ActionType.KEY_EVENT -> "keyevent:${mapping.actionValue}"
+    }
+}
+```
 
 ---
 
-## 4. Implementation Todo Steps
+## UI Implementation
 
-### Phase 1: Core Data & Parsing (Backend)
-- [ ] **Modify `KeyboardData.kt`**:
-    - [ ] Import `ShortSwipeMapping`, `ActionType`, `SwipeDirection`.
-    - [ ] Add `shortSwipeCustomizations` property to `KeyboardData` class.
-    - [ ] Update `parse_keyboard` loop to handle `"short_swipes"` tag.
-    - [ ] Implement `parse_short_swipes(parser)`:
-        - [ ] Iterate `swipe` child tags.
-        - [ ] Parse attributes: `key`, `dir`, `type`, `value`, `label`.
-        - [ ] Convert strings to Enums (`SwipeDirection`, `ActionType`).
-        - [ ] Return list of `ShortSwipeMapping`.
+### CustomLayoutEditorDialog (To Be Updated)
 
-### Phase 2: Manager Integration
-- [ ] **Modify `ShortSwipeCustomizationManager.kt`**:
-    - [ ] Add `importFromMappings(mappings: List<ShortSwipeMapping>, merge: Boolean): Int` function.
-    - [ ] Ensure it handles saving to disk immediately.
+**Import XML Button**:
+1. Opens SAF file picker (`OpenDocument` with `text/xml`)
+2. Reads XML content
+3. Validates with `KeyboardData.load_string_exn()`
+4. Populates editor text field
+5. Swipes defined via standard attributes work immediately
 
-### Phase 3: UI Implementation (Frontend)
-- [ ] **Modify `LayoutManagerActivity.kt`**:
-    - [ ] Update `CustomLayoutEditorDialog` composable.
-    - [ ] Add `FilePicker` launchers (`rememberLauncherForActivityResult`) for Import (Open) and Export (Create).
-    - [ ] Add **"Import XML"** button to the dialog action row.
-    - [ ] Add **"Export XML"** button to the dialog action row.
-    - [ ] Implement `onImport`:
-        - [ ] Read file.
-        - [ ] Parse with `KeyboardData`.
-        - [ ] Check for swipes.
-        - [ ] If swipes exist, show Confirmation Dialog ("Import X custom gestures?").
-        - [ ] Update Editor Text.
-    - [ ] Implement `onExport`:
-        - [ ] Parse current Editor Text to ensure validity.
-        - [ ] Retrieve all global swipe mappings from `ShortSwipeCustomizationManager`.
-        - [ ] Construct XML string with embedded `<short_swipes>` block.
-        - [ ] Write to file.
-
-### Phase 4: Verification
-- [ ] **Test Import**: Import a layout with swipes; verify swipes appear in `ShortSwipeCustomizationActivity`.
-- [ ] **Test Export**: Export a layout; verify the file contains `<short_swipes>` tag.
-- [ ] **Test Interoperability**: Verify the layout loads correctly even in older versions (older parsers *should* fail on unknown tags, so this is a breaking change for backward compatibility with *pure* Unexpected Keyboard, but acceptable for CleverKeys internal profiles).
-    - *Mitigation:* We are extending the format. If users export to standard UK format, they should manually remove the tag or we provide a "Export Strict" option (Low Priority).
+**Export XML Button**:
+1. Validates current editor XML
+2. Retrieves global mappings from `ShortSwipeCustomizationManager`
+3. Calls `XmlLayoutExporter.injectMappings()` to embed gestures
+4. Opens SAF create dialog (`CreateDocument`)
+5. Writes enhanced XML to file
 
 ---
 
-## 5. Security & Safety
-- **File Access:** Uses Android Storage Access Framework (SAF) for secure file reading/writing. No broad storage permissions required.
-- **Validation:** XML is parsed and validated before application to prevent malformed data crashes.
+## Expected Usage
+
+1. Open **Settings** → **Keyboard Layouts**
+2. Select **Custom Layout** or edit existing
+3. **Export XML**: Saves layout + all custom gesture overrides
+4. **Import XML**: Loads layout; gestures from standard attributes work immediately
+
+---
+
+## Compatibility Matrix
+
+| Scenario | Expected Result |
+|----------|--------|
+| Import standard UK layout | Works (no gestures) |
+| Import CleverKeys exported profile | Works (gestures included) |
+| Export to UK format | Works (gestures baked into standard attributes) |
+| Import in original UK keyboard | Works (gestures visible as sub-labels) |
+
+---
+
+## Security Considerations
+
+- **File Access**: Will use Android Storage Access Framework (SAF) - no broad storage permissions
+- **Validation**: XML must be parsed and validated before application
+- **No Network**: All operations are local
+
+---
+
+**Last Updated**: 2025-12-11
+**Note**: Implementation todos moved to `memory/todo.md`
