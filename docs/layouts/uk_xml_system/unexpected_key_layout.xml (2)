@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This file defines the QWERTY layout.
+
+A layout is made of keys arranged into rows. Keys can be made bigger with the
+'width' attribute and blank space can be added on the left of a key with the
+'shift' attribute.
+
+'c' assigns the symbol on the middle of the key. 'nw', 'ne', etc..
+assign symbols to the corners of a key, they are arranged like this:
+
+	nw  n  ne
+	w   c   s
+	sw  s  se
+
+Keys prefixed with 'loc ' are not visible on the keyboard. They are used to
+specify a place for a key, if it needed to be added to the layout later.
+(for example, by the "Add keys to keyboard" option)
+
+See bottom_row.xml for the definition of the bottom row and neo2.xml for a
+layout that re-defines it.
+See srcs/juloo.keyboard2/KeyValue.java for the keys that have a special meaning.
+-->
+<keyboard name="QWERTY (US) - custom" bottom_row="false" script="latin">
+	<row>
+		<key c="q" ne="1" se="loc esc" n="`"/>
+		<key c="w" nw="~" ne="2" sw="\@"/>
+		<key c="e" nw="!" ne="3" sw="\#" se="loc €"/>
+		<key c="r" ne="4" sw="$"/>
+		<key c="t" ne="5" sw="%"/>
+		<key c="y" ne="6" sw="^"/>
+		<key c="u" ne="7" sw="&amp;"/>
+		<key c="i" ne="8" sw="*"/>
+		<key c="o" ne="9" sw="(" se=")"/>
+		<key c="p" ne="0" se="shift"/>
+	</row>
+	<row>
+		<key shift="0.25" width="1.055556" c="a" nw="loc tab"/>
+		<key width="1.055556" c="s" ne="loc §" sw="loc ß"/>
+		<key width="1.055556" c="d" sw="loc superscript"/>
+		<key width="1.055556" c="f" sw="loc subscript"/>
+		<key width="1.055556" c="g" ne="-" sw="_"/>
+		<key width="1.055556" c="h" ne="=" sw="+"/>
+		<key width="1.055556" c="j" se="}" sw="{"/>
+		<key width="1.055556" c="k" sw="[" se="]"/>
+		<key width="1.055556" c="l" ne="|" sw="\\" se="ctrl"/>
+	</row>
+	<row>
+		<key width="1.5" c="shift" ne="loc capslock"/>
+		<key c="z"/>
+		<key c="x" ne="loc †"/>
+		<key c="c" ne="&lt;" sw=","/>
+		<key c="v" ne="&gt;" sw="."/>
+		<key c="b" ne="\?" sw="/"/>
+		<key c="n" ne=":" sw=";"/>
+		<key c="m" ne="&quot;" sw="'"/>
+		<key width="1.5" c="backspace" ne="delete"/>
+	</row>
+	<row height="0.95">
+		<key width="1.65" c="ctrl" nw="loc switch_greekmath" ne="loc meta" sw="loc switch_clipboard" se="switch_numeric"/>
+		<key width="1.2" c="fn" nw="loc alt" ne="loc change_method" sw="switch_emoji" se="config"/>
+		<key width="4.3" c="space" n="switch_forward" s="switch_backward" w="cursor_left" e="cursor_right" slider="true"/>
+		<key width="1.2" c="loc compose" n="up" e="right" w="left" s="down" nw="loc home" ne="loc page_up" sw="loc end" se="loc page_down"/>
+		<key width="1.65" c="enter" nw="loc menu" ne="action"/>
+	</row>
+</keyboard>
+
