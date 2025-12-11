@@ -94,6 +94,26 @@ class InputCoordinator(
     fun getCurrentSwipeData(): SwipeMLData? = currentSwipeData
 
     /**
+     * Apply shift/caps-lock transformation to a prediction.
+     * v1.33.9: Used for both top prediction and alternates in suggestion bar.
+     */
+    private fun applyShiftTransformation(word: String): String {
+        return when {
+            wasShiftLockedAtSwipeStart -> {
+                // Caps Lock: uppercase entire word
+                word.uppercase(java.util.Locale.getDefault())
+            }
+            wasShiftActiveAtSwipeStart -> {
+                // Shift: capitalize first letter only
+                word.replaceFirstChar {
+                    if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
+                }
+            }
+            else -> word
+        }
+    }
+
+    /**
      * Handle prediction results from async swipe typing prediction.
      * Called when neural network predictions are ready.
      */
@@ -113,11 +133,14 @@ class InputCoordinator(
             return
         }
 
+        // v1.33.9: Apply shift/caps-lock transformation to ALL predictions for consistent display
+        val transformedPredictions = predictions.map { applyShiftTransformation(it) }
+
         // Update suggestion bar
         suggestionBar?.let { bar ->
             val suggestionsStartTime = System.currentTimeMillis()
             bar.setShowDebugScores(config.swipe_show_debug_scores)
-            bar.setSuggestionsWithScores(predictions, scores)
+            bar.setSuggestionsWithScores(transformedPredictions, scores)
             android.util.Log.e(TAG, "⏱️ setSuggestionsWithScores: ${System.currentTimeMillis() - suggestionsStartTime}ms")
 
             // Auto-insert top prediction immediately after swipe completes
@@ -147,8 +170,8 @@ class InputCoordinator(
                 contextTracker.setLastAutoInsertedWord(cleanPrediction)
                 contextTracker.setLastCommitSource(PredictionSource.NEURAL_SWIPE)
 
-                // Re-display suggestions after auto-insertion
-                bar.setSuggestionsWithScores(predictions, scores)
+                // Re-display suggestions after auto-insertion (use transformed predictions)
+                bar.setSuggestionsWithScores(transformedPredictions, scores)
             }
         }
 
@@ -407,26 +430,9 @@ class InputCoordinator(
                     false
                 }
 
-                // v1.32.926: If shift was active when swipe started, capitalize first letter only
-                // v1.33.8: If shift was LOCKED (caps lock), uppercase ENTIRE word
-                // This applies ONLY to swipe-auto-insertions (not manual candidate selections)
-                if (isSwipeAutoInsert) {
-                    if (wasShiftLockedAtSwipeStart) {
-                        // Caps Lock + Swipe = ALL CAPS
-                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                            android.util.Log.d("CleverKeysService", "CAPS_LOCK+SWIPE: Uppercasing entire word '$processedWord'")
-                        }
-                        processedWord = processedWord.uppercase(java.util.Locale.getDefault())
-                    } else if (wasShiftActiveAtSwipeStart) {
-                        // Shift + Swipe = Capitalize first letter
-                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                            android.util.Log.d("CleverKeysService", "SHIFT+SWIPE: Capitalizing first letter of '$processedWord'")
-                        }
-                        processedWord = processedWord.replaceFirstChar {
-                            if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
-                        }
-                    }
-                }
+                // v1.33.9: Shift/caps-lock transformation is now applied in handlePredictionResults
+                // for ALL predictions (including alternates), so we don't need to transform again here.
+                // The word from suggestion bar is already capitalized/uppercased as needed.
 
                 // Commit the selected word - use Termux mode if enabled
                 val textToInsert = when {

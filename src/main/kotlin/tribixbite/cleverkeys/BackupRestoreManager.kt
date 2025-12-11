@@ -25,7 +25,7 @@ class BackupRestoreManager(private val context: Context) {
     private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
 
     /**
-     * Export all preferences to JSON file
+     * Export all preferences to JSON file, including defaults for documentation
      * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
      * @return true if successful
      */
@@ -56,11 +56,20 @@ class BackupRestoreManager(private val context: Context) {
 
             root.add("metadata", metadata)
 
-            // Export all preferences
-            val allPrefs = prefs.all
+            // Get all defaults first, then override with stored preferences
+            val allDefaults = getAllDefaultPreferences()
+            val storedPrefs = prefs.all
             val preferences = JsonObject()
 
-            for ((key, value) in allPrefs) {
+            // First add all defaults
+            for ((key, value) in allDefaults) {
+                if (!isInternalPreference(key)) {
+                    preferences.add(key, gson.toJsonTree(value))
+                }
+            }
+
+            // Then override with stored preferences (these take precedence)
+            for ((key, value) in storedPrefs) {
                 // Preserve JSON-string preferences (layouts, extra_keys, custom_extra_keys)
                 // These are already stored as JSON strings and should be preserved as-is
                 when {
@@ -94,13 +103,154 @@ class BackupRestoreManager(private val context: Context) {
                 }
             }
 
-            Log.i(TAG, "Exported ${preferences.size()} preferences (out of ${allPrefs.size} total)")
+            Log.i(TAG, "Exported ${preferences.size()} preferences (${storedPrefs.size} stored + defaults)")
             true
         } catch (e: Exception) {
             Log.e(TAG, "Export failed", e)
             throw Exception("Export failed: ${e.message}", e)
         }
     }
+
+    /**
+     * Returns a map of all default preference keys to their default values.
+     * This ensures exports include defaults for documentation purposes
+     * even if the user hasn't changed them from defaults.
+     */
+    private fun getAllDefaultPreferences(): Map<String, Any> = mapOf(
+        // Appearance
+        "theme" to Defaults.THEME,
+        "keyboard_height_percent" to Defaults.KEYBOARD_HEIGHT_PORTRAIT,
+        "keyboard_height_landscape" to Defaults.KEYBOARD_HEIGHT_LANDSCAPE,
+        "label_brightness" to Defaults.LABEL_BRIGHTNESS,
+        "keyboard_opacity" to Defaults.KEYBOARD_OPACITY,
+        "key_opacity" to Defaults.KEY_OPACITY,
+        "key_activated_opacity" to Defaults.KEY_ACTIVATED_OPACITY,
+        "character_size" to Defaults.CHARACTER_SIZE,
+        "key_vertical_margin" to Defaults.KEY_VERTICAL_MARGIN,
+        "key_horizontal_margin" to Defaults.KEY_HORIZONTAL_MARGIN,
+        "border_config" to Defaults.BORDER_CONFIG,
+        "custom_border_radius" to Defaults.CUSTOM_BORDER_RADIUS,
+        "custom_border_line_width" to Defaults.CUSTOM_BORDER_LINE_WIDTH,
+
+        // Layout
+        "show_numpad" to Defaults.SHOW_NUMPAD,
+        "numpad_layout" to Defaults.NUMPAD_LAYOUT,
+        "number_row" to Defaults.NUMBER_ROW,
+        "number_entry_layout" to Defaults.NUMBER_ENTRY_LAYOUT,
+        "margin_bottom_portrait" to Defaults.MARGIN_BOTTOM_PORTRAIT,
+        "margin_bottom_landscape" to Defaults.MARGIN_BOTTOM_LANDSCAPE,
+        "horizontal_margin_portrait" to Defaults.HORIZONTAL_MARGIN_PORTRAIT,
+        "horizontal_margin_landscape" to Defaults.HORIZONTAL_MARGIN_LANDSCAPE,
+
+        // Input behavior
+        "vibrate_custom" to Defaults.VIBRATE_CUSTOM,
+        "vibrate_duration" to Defaults.VIBRATE_DURATION,
+        "longpress_timeout" to Defaults.LONGPRESS_TIMEOUT,
+        "longpress_interval" to Defaults.LONGPRESS_INTERVAL,
+        "keyrepeat_enabled" to Defaults.KEYREPEAT_ENABLED,
+        "double_tap_lock_shift" to Defaults.DOUBLE_TAP_LOCK_SHIFT,
+        "autocapitalisation" to Defaults.AUTOCAPITALISATION,
+        "switch_input_immediate" to Defaults.SWITCH_INPUT_IMMEDIATE,
+        "smart_punctuation" to Defaults.SMART_PUNCTUATION,
+
+        // Gesture settings
+        "swipe_dist" to Defaults.SWIPE_DIST,
+        "slider_sensitivity" to Defaults.SLIDER_SENSITIVITY,
+        "circle_sensitivity" to Defaults.CIRCLE_SENSITIVITY,
+        "tap_duration_threshold" to Defaults.TAP_DURATION_THRESHOLD,
+        "double_space_threshold" to Defaults.DOUBLE_SPACE_THRESHOLD,
+        "swipe_min_distance" to Defaults.SWIPE_MIN_DISTANCE,
+        "swipe_min_key_distance" to Defaults.SWIPE_MIN_KEY_DISTANCE,
+        "swipe_min_dwell_time" to Defaults.SWIPE_MIN_DWELL_TIME,
+        "swipe_noise_threshold" to Defaults.SWIPE_NOISE_THRESHOLD,
+        "swipe_high_velocity_threshold" to Defaults.SWIPE_HIGH_VELOCITY_THRESHOLD,
+        "slider_speed_smoothing" to Defaults.SLIDER_SPEED_SMOOTHING,
+        "slider_speed_max" to Defaults.SLIDER_SPEED_MAX,
+
+        // Short gestures
+        "short_gestures_enabled" to Defaults.SHORT_GESTURES_ENABLED,
+        "short_gesture_min_distance" to Defaults.SHORT_GESTURE_MIN_DISTANCE,
+        "short_gesture_max_distance" to Defaults.SHORT_GESTURE_MAX_DISTANCE,
+
+        // Swipe trail
+        "swipe_trail_enabled" to Defaults.SWIPE_TRAIL_ENABLED,
+        "swipe_trail_effect" to Defaults.SWIPE_TRAIL_EFFECT,
+        "swipe_trail_color" to Defaults.SWIPE_TRAIL_COLOR,
+        "swipe_trail_width" to Defaults.SWIPE_TRAIL_WIDTH,
+        "swipe_trail_glow_radius" to Defaults.SWIPE_TRAIL_GLOW_RADIUS,
+
+        // Neural prediction
+        "neural_prediction_enabled" to Defaults.NEURAL_PREDICTION_ENABLED,
+        "neural_beam_width" to Defaults.NEURAL_BEAM_WIDTH,
+        "neural_max_length" to Defaults.NEURAL_MAX_LENGTH,
+        "neural_confidence_threshold" to Defaults.NEURAL_CONFIDENCE_THRESHOLD,
+        "neural_batch_beams" to Defaults.NEURAL_BATCH_BEAMS,
+        "neural_greedy_search" to Defaults.NEURAL_GREEDY_SEARCH,
+        "neural_beam_alpha" to Defaults.NEURAL_BEAM_ALPHA,
+        "neural_beam_prune_confidence" to Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE,
+        "neural_beam_score_gap" to Defaults.NEURAL_BEAM_SCORE_GAP,
+        "neural_model_version" to Defaults.NEURAL_MODEL_VERSION,
+        "neural_resampling_mode" to Defaults.NEURAL_RESAMPLING_MODE,
+        "neural_user_max_seq_length" to Defaults.NEURAL_USER_MAX_SEQ_LENGTH,
+
+        // Word prediction
+        "swipe_typing_enabled" to Defaults.SWIPE_TYPING_ENABLED,
+        "word_prediction_enabled" to Defaults.WORD_PREDICTION_ENABLED,
+        "suggestion_bar_opacity" to Defaults.SUGGESTION_BAR_OPACITY,
+        "context_aware_predictions_enabled" to Defaults.CONTEXT_AWARE_PREDICTIONS_ENABLED,
+        "personalized_learning_enabled" to Defaults.PERSONALIZED_LEARNING_ENABLED,
+        "learning_aggression" to Defaults.LEARNING_AGGRESSION,
+        "prediction_context_boost" to Defaults.PREDICTION_CONTEXT_BOOST,
+        "prediction_frequency_scale" to Defaults.PREDICTION_FREQUENCY_SCALE,
+
+        // Autocorrect
+        "autocorrect_enabled" to Defaults.AUTOCORRECT_ENABLED,
+        "autocorrect_min_word_length" to Defaults.AUTOCORRECT_MIN_WORD_LENGTH,
+        "autocorrect_char_match_threshold" to Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD,
+        "autocorrect_min_frequency" to Defaults.AUTOCORRECT_MIN_FREQUENCY,
+        "autocorrect_max_length_diff" to Defaults.AUTOCORRECT_MAX_LENGTH_DIFF,
+        "autocorrect_prefix_length" to Defaults.AUTOCORRECT_PREFIX_LENGTH,
+        "autocorrect_max_beam_candidates" to Defaults.AUTOCORRECT_MAX_BEAM_CANDIDATES,
+        "swipe_beam_autocorrect_enabled" to Defaults.SWIPE_BEAM_AUTOCORRECT_ENABLED,
+        "swipe_final_autocorrect_enabled" to Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED,
+        "swipe_fuzzy_match_mode" to Defaults.SWIPE_FUZZY_MATCH_MODE,
+        "swipe_prediction_source" to Defaults.SWIPE_PREDICTION_SOURCE,
+        "swipe_common_words_boost" to Defaults.SWIPE_COMMON_WORDS_BOOST,
+        "swipe_top5000_boost" to Defaults.SWIPE_TOP5000_BOOST,
+        "swipe_rare_words_penalty" to Defaults.SWIPE_RARE_WORDS_PENALTY,
+
+        // Clipboard
+        "clipboard_history_enabled" to Defaults.CLIPBOARD_HISTORY_ENABLED,
+        "clipboard_history_limit" to Defaults.CLIPBOARD_HISTORY_LIMIT,
+        "clipboard_pane_height_percent" to Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT,
+        "clipboard_max_item_size_kb" to Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB,
+        "clipboard_limit_type" to Defaults.CLIPBOARD_LIMIT_TYPE,
+        "clipboard_size_limit_mb" to Defaults.CLIPBOARD_SIZE_LIMIT_MB,
+
+        // Multi-language
+        "enable_multilang" to Defaults.ENABLE_MULTILANG,
+        "primary_language" to Defaults.PRIMARY_LANGUAGE,
+        "auto_detect_language" to Defaults.AUTO_DETECT_LANGUAGE,
+        "language_detection_sensitivity" to Defaults.LANGUAGE_DETECTION_SENSITIVITY,
+
+        // Debug
+        "debug_enabled" to Defaults.DEBUG_ENABLED,
+        "swipe_show_debug_scores" to Defaults.SWIPE_SHOW_DEBUG_SCORES,
+        "swipe_debug_detailed_logging" to Defaults.SWIPE_DEBUG_DETAILED_LOGGING,
+        "swipe_debug_show_raw_output" to Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT,
+        "swipe_show_raw_beam_predictions" to Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS,
+        "termux_mode_enabled" to Defaults.TERMUX_MODE_ENABLED,
+
+        // Privacy
+        "privacy_collect_swipe" to Defaults.PRIVACY_COLLECT_SWIPE,
+        "privacy_collect_performance" to Defaults.PRIVACY_COLLECT_PERFORMANCE,
+        "privacy_collect_errors" to Defaults.PRIVACY_COLLECT_ERRORS,
+
+        // Accessibility
+        "sticky_keys_enabled" to Defaults.STICKY_KEYS_ENABLED,
+        "sticky_keys_timeout" to Defaults.STICKY_KEYS_TIMEOUT,
+        "voice_guidance_enabled" to Defaults.VOICE_GUIDANCE_ENABLED
+    )
 
     /**
      * Import preferences from JSON file with version-tolerant parsing
