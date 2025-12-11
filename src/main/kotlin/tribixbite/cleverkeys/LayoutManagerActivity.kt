@@ -81,7 +81,8 @@ private fun getLayoutXml(context: android.content.Context, layoutName: String): 
 @Composable
 fun LayoutManagerScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("cleverkeys_prefs", android.content.Context.MODE_PRIVATE)
+    // CRITICAL: Use DirectBootAwarePreferences to get the SAME SharedPreferences as the keyboard service
+    val prefs = remember { DirectBootAwarePreferences.get_shared_preferences(context) }
 
     // Load layouts from preferences with stable IDs for drag-reorder
     var layoutsWithIds by remember {

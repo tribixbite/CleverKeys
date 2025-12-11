@@ -50,7 +50,8 @@ class ExtraKeysConfigActivity : ComponentActivity() {
 @Composable
 fun ExtraKeysConfigScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("cleverkeys_prefs", android.content.Context.MODE_PRIVATE)
+    // CRITICAL: Use DirectBootAwarePreferences to get the SAME SharedPreferences as the keyboard service
+    val prefs = remember { DirectBootAwarePreferences.get_shared_preferences(context) }
 
     // Load enabled keys from preferences
     val enabledKeys = remember {
