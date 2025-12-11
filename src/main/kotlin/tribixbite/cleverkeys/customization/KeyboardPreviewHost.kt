@@ -160,7 +160,9 @@ class KeyboardPreviewHost @JvmOverloads constructor(
      */
     private fun loadFallbackLayout() {
         try {
-            val layout = KeyboardData.load(resources, tribixbite.cleverkeys.R.xml.latn_qwerty_us)
+            // Default to QWERTY
+            val resources = context.resources
+            val layout = KeyboardData.load(resources, tribixbite.cleverkeys.R.raw.latn_qwerty_us)
             if (layout != null) {
                 keyboardData = layout
                 keyboardView?.setKeyboard(layout)
