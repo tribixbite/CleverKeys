@@ -153,11 +153,29 @@ class KeyboardReceiver(
             }
 
             KeyValue.Event.SWITCH_FORWARD -> {
-                keyboardView.setKeyboard(layoutManager.incrTextLayout(1))
+                val layoutCount = layoutManager.getLayoutCount()
+                val currentIndex = layoutManager.getCurrentLayoutIndex()
+                android.util.Log.d("KeyboardReceiver", "SWITCH_FORWARD: layoutCount=$layoutCount, currentIndex=$currentIndex")
+                if (layoutCount > 1) {
+                    val newLayout = layoutManager.incrTextLayout(1)
+                    android.util.Log.d("KeyboardReceiver", "SWITCH_FORWARD: switching to newIndex=${layoutManager.getCurrentLayoutIndex()}")
+                    keyboardView.setKeyboard(newLayout)
+                } else {
+                    android.util.Log.w("KeyboardReceiver", "SWITCH_FORWARD: Only $layoutCount layout(s) configured, cannot switch")
+                }
             }
 
             KeyValue.Event.SWITCH_BACKWARD -> {
-                keyboardView.setKeyboard(layoutManager.incrTextLayout(-1))
+                val layoutCount = layoutManager.getLayoutCount()
+                val currentIndex = layoutManager.getCurrentLayoutIndex()
+                android.util.Log.d("KeyboardReceiver", "SWITCH_BACKWARD: layoutCount=$layoutCount, currentIndex=$currentIndex")
+                if (layoutCount > 1) {
+                    val newLayout = layoutManager.incrTextLayout(-1)
+                    android.util.Log.d("KeyboardReceiver", "SWITCH_BACKWARD: switching to newIndex=${layoutManager.getCurrentLayoutIndex()}")
+                    keyboardView.setKeyboard(newLayout)
+                } else {
+                    android.util.Log.w("KeyboardReceiver", "SWITCH_BACKWARD: Only $layoutCount layout(s) configured, cannot switch")
+                }
             }
 
             KeyValue.Event.SWITCH_GREEKMATH -> {

@@ -82,6 +82,7 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
     // Categorize keys
     val categorizedKeys = remember(filteredKeys) {
         mapOf(
+            "Layout Switching" to filteredKeys.filter { it in listOf("switch_forward", "switch_backward", "switch_greekmath") },
             "System" to filteredKeys.filter { it in listOf("alt", "meta", "compose", "voice_typing", "switch_clipboard", "change_method", "capslock") },
             "Navigation" to filteredKeys.filter { it in listOf("tab", "esc", "page_up", "page_down", "home", "end") },
             "Editing" to filteredKeys.filter { it.startsWith("copy") || it.startsWith("paste") || it.startsWith("cut") || it.startsWith("selectAll") || it.startsWith("undo") || it.startsWith("redo") || it.contains("delete_word") || it == "shareText" },
@@ -90,7 +91,7 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
             "Symbols" to filteredKeys.filter { it in listOf("€", "ß", "£", "§", "†", "ª", "º") },
             "Special Characters" to filteredKeys.filter { it in listOf("zwj", "zwnj", "nbsp", "nnbsp") },
             "Combining Characters" to filteredKeys.filter { it.startsWith("combining_") },
-            "Functions" to filteredKeys.filter { it in listOf("switch_greekmath", "f11_placeholder", "f12_placeholder", "menu", "scroll_lock") }
+            "Functions" to filteredKeys.filter { it in listOf("f11_placeholder", "f12_placeholder", "menu", "scroll_lock") }
         ).filterValues { it.isNotEmpty() }
     }
 

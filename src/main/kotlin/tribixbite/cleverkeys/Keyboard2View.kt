@@ -540,8 +540,8 @@ class Keyboard2View @JvmOverloads constructor(
         val executed = _customSwipeExecutor.execute(mapping, inputConnection, editorInfo)
 
         if (!executed) {
-            // Some commands need special handling (SWITCH_IME, VOICE_INPUT)
-            // Handle these system commands directly via InputMethodManager
+            // Some commands need special handling (SWITCH_IME, VOICE_INPUT, layout switching)
+            // Handle these system commands directly via InputMethodManager or keyboard service
             val command = mapping.getCommand()
             when (command) {
                 AvailableCommand.SWITCH_IME -> {
@@ -552,6 +552,14 @@ class Keyboard2View @JvmOverloads constructor(
                 AvailableCommand.VOICE_INPUT -> {
                     // TODO: Implement voice input trigger when the feature is supported
                     Log.w("Keyboard2View", "VOICE_INPUT command not yet implemented")
+                }
+                AvailableCommand.SWITCH_FORWARD -> {
+                    Log.d("Keyboard2View", "Executing SWITCH_FORWARD via keyboard service")
+                    service.triggerKeyboardEvent(KeyValue.Event.SWITCH_FORWARD)
+                }
+                AvailableCommand.SWITCH_BACKWARD -> {
+                    Log.d("Keyboard2View", "Executing SWITCH_BACKWARD via keyboard service")
+                    service.triggerKeyboardEvent(KeyValue.Event.SWITCH_BACKWARD)
                 }
                 else -> {
                     if (command != null) {

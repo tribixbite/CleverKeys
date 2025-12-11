@@ -92,7 +92,11 @@ enum class AvailableCommand(
 
     // Input switching
     SWITCH_IME("Switch Keyboard", "Show input method picker", "keyboard"),
-    VOICE_INPUT("Voice Input", "Activate voice input", "mic");
+    VOICE_INPUT("Voice Input", "Activate voice input", "mic"),
+
+    // Layout switching
+    SWITCH_FORWARD("Next Layout", "Switch to next keyboard layout", "keyboard_arrow_right"),
+    SWITCH_BACKWARD("Previous Layout", "Switch to previous keyboard layout", "keyboard_arrow_left");
 
     companion object {
         /**
@@ -112,6 +116,7 @@ enum class AvailableCommand(
             "Cursor" to listOf(CURSOR_LEFT, CURSOR_RIGHT, CURSOR_UP, CURSOR_DOWN),
             "Navigation" to listOf(CURSOR_HOME, CURSOR_END, CURSOR_DOC_START, CURSOR_DOC_END),
             "Words" to listOf(WORD_LEFT, WORD_RIGHT, DELETE_WORD),
+            "Layout" to listOf(SWITCH_FORWARD, SWITCH_BACKWARD),
             "System" to listOf(SWITCH_IME, VOICE_INPUT)
         )
     }

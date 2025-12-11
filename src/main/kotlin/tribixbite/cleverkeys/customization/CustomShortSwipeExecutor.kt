@@ -283,6 +283,16 @@ class CustomShortSwipeExecutor(private val context: Context) {
                     Log.d(TAG, "VOICE_INPUT command - requires IME service handling")
                     false
                 }
+
+                // Layout switching commands - require keyboard service handling
+                AvailableCommand.SWITCH_FORWARD -> {
+                    Log.d(TAG, "SWITCH_FORWARD command - requires keyboard service handling")
+                    false // Let the caller know this needs special handling
+                }
+                AvailableCommand.SWITCH_BACKWARD -> {
+                    Log.d(TAG, "SWITCH_BACKWARD command - requires keyboard service handling")
+                    false
+                }
             }
             Log.d(TAG, "Executed COMMAND action: ${command.name}")
             true

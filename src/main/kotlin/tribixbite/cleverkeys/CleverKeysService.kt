@@ -794,6 +794,15 @@ class CleverKeysService : InputMethodService(),
         _suggestionBridge.handleDeleteLastWord()
     }
 
+    /**
+     * Trigger a keyboard event (like SWITCH_FORWARD) from external callers.
+     * Used by custom short swipe mappings for layout switching.
+     * (v1.33.x: Added for short swipe customization support)
+     */
+    fun triggerKeyboardEvent(event: KeyValue.Event) {
+        _receiver?.handle_event_key(event)
+    }
+
     // Neural Layout Methods (v1.32.407: Delegated to NeuralLayoutBridge)
     private fun calculateDynamicKeyboardHeight(): Float {
         return _neuralLayoutBridge.calculateDynamicKeyboardHeight()

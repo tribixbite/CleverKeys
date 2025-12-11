@@ -20,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
@@ -262,10 +263,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Section expanded states
     private var wordPredictionAdvancedExpanded by mutableStateOf(false)
     private var neuralAdvancedExpanded by mutableStateOf(false)
+    private var activitiesSectionExpanded by mutableStateOf(true)  // Activities at top, default expanded
     private var multiLangSectionExpanded by mutableStateOf(false)
     private var privacySectionExpanded by mutableStateOf(false)
     private var neuralSectionExpanded by mutableStateOf(true)
-    private var appearanceSectionExpanded by mutableStateOf(true)
+    private var appearanceSectionExpanded by mutableStateOf(false)  // No longer default expanded since Theme is in Activities
     private var swipeTrailSectionExpanded by mutableStateOf(false)
     private var inputSectionExpanded by mutableStateOf(false)
     private var swipeCorrectionsSectionExpanded by mutableStateOf(false)
@@ -556,6 +558,174 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 lineHeight = 20.sp
             )
 
+            // Activities Section (Special Feature Managers) - at top for quick access
+            val activityContext = LocalContext.current
+            CollapsibleSettingsSection(
+                title = "Activities",
+                expanded = activitiesSectionExpanded,
+                onExpandChange = { activitiesSectionExpanded = it }
+            ) {
+                // Theme Manager Card
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                        .clickable {
+                            val intent = Intent(activityContext, ThemeSettingsActivity::class.java)
+                            activityContext.startActivity(intent)
+                        },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "🎨", fontSize = 28.sp)
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Theme Manager",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = "Neon, Pastel, DIY themes & custom colors",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                // Short Swipe Customization Card (Per-Key Actions)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                        .clickable { openShortSwipeCustomization() },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "⌨️", fontSize = 28.sp)
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Customize Per-Key Actions",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = "Short swipes, custom commands per key direction",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                // Extra Keys Configuration Card
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                        .clickable {
+                            val intent = Intent(activityContext, ExtraKeysConfigActivity::class.java)
+                            activityContext.startActivity(intent)
+                        },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "➕", fontSize = 28.sp)
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Configure Extra Keys",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = "Add system keys, symbols & shortcuts",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                // Layout Manager Card
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val intent = Intent(activityContext, LayoutManagerActivity::class.java)
+                            activityContext.startActivity(intent)
+                        },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "🌐", fontSize = 28.sp)
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Layout Manager",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = "QWERTY, Dvorak, Colemak & more",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
+
             // Neural Prediction Section (Collapsible, default expanded)
             CollapsibleSettingsSection(
                 title = stringResource(R.string.settings_section_neural),
@@ -782,59 +952,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 }
             }
 
-            // Appearance Section (Collapsible) - default expanded to show Theme Manager
+            // Appearance Section (Collapsible) - height/visual settings
             CollapsibleSettingsSection(
                 title = stringResource(R.string.settings_section_appearance),
                 expanded = appearanceSectionExpanded,
                 onExpandChange = { appearanceSectionExpanded = it }
             ) {
-                // Theme Manager Card - prominent access to full theme UI
-                val themeContext = LocalContext.current
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp)
-                        .clickable {
-                            val intent = Intent(themeContext, ThemeSettingsActivity::class.java)
-                            themeContext.startActivity(intent)
-                        },
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "🎨",
-                            fontSize = 28.sp
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Theme Manager",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            Text(
-                                text = "Neon, Pastel, DIY themes & custom colors",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-
-                // Theme dropdown removed - all theme selection now happens in Theme Manager
-                // Use the Theme Manager card above to select themes
+                // Theme Manager moved to Activities section at top
 
                 SettingsSlider(
                     title = "Keyboard Height (Portrait)",
@@ -1791,13 +1915,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         },
                         displayValue = if (shortGestureMaxDistance >= 200) "OFF" else "${shortGestureMaxDistance}%"
                     )
-
-                    Button(
-                        onClick = { openShortSwipeCustomization() },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Customize Per-Key Actions")
-                    }
+                    // Customize Per-Key Actions button moved to Activities section at top
                 }
 
                 // Tap and Typing subsection
