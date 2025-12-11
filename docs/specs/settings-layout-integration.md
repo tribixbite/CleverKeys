@@ -242,10 +242,9 @@ For switch_forward/switch_backward to work:
 **Root Cause**: ShortSwipeCustomizationManager.loadMappings() only called in ShortSwipeCustomizationActivity
 **Solution**: Added init block in Pointers.kt to call loadMappings() via coroutine on keyboard startup (2025-12-11)
 
-### Issue: "Enable Neural Prediction" toggle does nothing (KNOWN BUG)
-**Root Cause**: `neural_prediction_enabled` preference is loaded from storage but never checked in prediction logic. Neural engine always initializes when `swipe_typing_enabled` is true.
-**Status**: Known issue - toggle is non-functional. Options: (1) Remove it, (2) Wire it to dictionary-only fallback, (3) Rename for clarity.
-**Workaround**: Use "Enable Swipe Typing" toggle to fully disable swipe-to-type functionality.
+### Issue: "Enable Neural Prediction" toggle does nothing (FIXED)
+**Root Cause**: `neural_prediction_enabled` preference was loaded from storage but never checked in prediction logic. Neural engine always initialized when `swipe_typing_enabled` was true.
+**Solution**: Removed the non-functional toggle from UI (2025-12-11). Neural settings now show directly when "Enable Swipe Typing" is enabled. All advanced neural settings (beam width, max length, confidence, beam search config, model config) remain intact.
 
 ---
 
