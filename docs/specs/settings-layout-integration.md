@@ -238,6 +238,15 @@ For switch_forward/switch_backward to work:
 **Root Cause**: SWITCH_FORWARD/SWITCH_BACKWARD not in AvailableCommand enum or CommandRegistry
 **Solution**: Added commands to AvailableCommand enum, handling in CustomShortSwipeExecutor (returns false for service handling), and execution in Keyboard2View.onCustomShortSwipe() via CleverKeysService.triggerKeyboardEvent() (2025-12-11)
 
+### Issue: Custom per-key mappings not loading on keyboard startup
+**Root Cause**: ShortSwipeCustomizationManager.loadMappings() only called in ShortSwipeCustomizationActivity
+**Solution**: Added init block in Pointers.kt to call loadMappings() via coroutine on keyboard startup (2025-12-11)
+
+### Issue: "Enable Neural Prediction" toggle does nothing (KNOWN BUG)
+**Root Cause**: `neural_prediction_enabled` preference is loaded from storage but never checked in prediction logic. Neural engine always initializes when `swipe_typing_enabled` is true.
+**Status**: Known issue - toggle is non-functional. Options: (1) Remove it, (2) Wire it to dictionary-only fallback, (3) Rename for clarity.
+**Workaround**: Use "Enable Swipe Typing" toggle to fully disable swipe-to-type functionality.
+
 ---
 
 ## 6. Testing Checklist
