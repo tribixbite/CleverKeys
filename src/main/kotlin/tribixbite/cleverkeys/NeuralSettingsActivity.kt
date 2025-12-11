@@ -41,6 +41,9 @@ class NeuralSettingsActivity : ComponentActivity() {
     private var beamPruneConfidence by mutableStateOf(0.8f)
     private var beamScoreGap by mutableStateOf(5.0f)
 
+    // Model Configuration
+    private var resamplingMode by mutableStateOf("discard")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -174,6 +177,31 @@ class NeuralSettingsActivity : ComponentActivity() {
                 )
             }
 
+            // Model Configuration Section
+            ParameterSection("Model Configuration") {
+                // Trajectory Resampling
+                ParameterDropdown(
+                    title = "Trajectory Resampling",
+                    description = "How to handle long swipe paths",
+                    options = listOf("Discard Excess", "Interpolate", "Average"),
+                    selectedIndex = when (resamplingMode) {
+                        "discard" -> 0
+                        "interpolate" -> 1
+                        "average" -> 2
+                        else -> 0
+                    },
+                    onSelectionChange = { index ->
+                        resamplingMode = when (index) {
+                            0 -> "discard"
+                            1 -> "interpolate"
+                            2 -> "average"
+                            else -> "discard"
+                        }
+                        updateNeuralParameters()
+                    }
+                )
+            }
+
             // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -269,6 +297,63 @@ class NeuralSettingsActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    private fun ParameterDropdown(
+        title: String,
+        description: String,
+        options: List<String>,
+        selectedIndex: Int,
+        onSelectionChange: (Int) -> Unit
+    ) {
+        var expanded by remember { mutableStateOf(false) }
+
+        Column {
+            Text(
+                text = title,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 16.sp
+            )
+
+            Text(
+                text = description,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                OutlinedTextField(
+                    value = options.getOrElse(selectedIndex) { options.firstOrNull() ?: "" },
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    options.forEachIndexed { index, option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                onSelectionChange(index)
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun updateNeuralParameters() {
         lifecycleScope.launch {
             try {
@@ -280,6 +365,7 @@ class NeuralSettingsActivity : ComponentActivity() {
                 config.neural_beam_alpha = beamAlpha
                 config.neural_beam_prune_confidence = beamPruneConfidence
                 config.neural_beam_score_gap = beamScoreGap
+                config.neural_resampling_mode = resamplingMode
 
                 // Save to preferences for immediate use
                 saveParametersToPrefs()
@@ -301,6 +387,7 @@ class NeuralSettingsActivity : ComponentActivity() {
         beamAlpha = 1.2f
         beamPruneConfidence = 0.8f
         beamScoreGap = 5.0f
+        resamplingMode = "discard"
 
         updateNeuralParameters()
 
@@ -331,6 +418,7 @@ class NeuralSettingsActivity : ComponentActivity() {
         beamAlpha = Config.safeGetFloat(prefs, "neural_beam_alpha", 1.2f)
         beamPruneConfidence = Config.safeGetFloat(prefs, "neural_beam_prune_confidence", 0.8f)
         beamScoreGap = Config.safeGetFloat(prefs, "neural_beam_score_gap", 5.0f)
+        resamplingMode = Config.safeGetString(prefs, "neural_resampling_mode", "discard") ?: "discard"
     }
 
     private fun saveParametersToPrefs() {
@@ -345,7 +433,8 @@ class NeuralSettingsActivity : ComponentActivity() {
         editor.putFloat("neural_beam_alpha", beamAlpha)
         editor.putFloat("neural_beam_prune_confidence", beamPruneConfidence)
         editor.putFloat("neural_beam_score_gap", beamScoreGap)
-        
+        editor.putString("neural_resampling_mode", resamplingMode)
+
         editor.apply()
     }
 }

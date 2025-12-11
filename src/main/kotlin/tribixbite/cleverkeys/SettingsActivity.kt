@@ -748,8 +748,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         title = stringResource(R.string.settings_neural_beam_width_title),
                         description = stringResource(R.string.settings_neural_beam_width_desc),
                         value = beamWidth.toFloat(),
-                        valueRange = 1f..32f,
-                        steps = 31,
+                        valueRange = 1f..20f,
+                        steps = 19,
                         onValueChange = {
                             beamWidth = it.toInt()
                             saveSetting("neural_beam_width", beamWidth)
@@ -761,8 +761,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         title = stringResource(R.string.settings_neural_max_length_title),
                         description = stringResource(R.string.settings_neural_max_length_desc),
                         value = maxLength.toFloat(),
-                        valueRange = 10f..50f,
-                        steps = 40,
+                        valueRange = 5f..35f,
+                        steps = 30,
                         onValueChange = {
                             maxLength = it.toInt()
                             saveSetting("neural_max_length", maxLength)
@@ -774,8 +774,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         title = stringResource(R.string.settings_neural_confidence_title),
                         description = stringResource(R.string.settings_neural_confidence_desc),
                         value = confidenceThreshold,
-                        valueRange = 0.0f..1.0f,
-                        steps = 100,
+                        valueRange = 0.0f..0.4f,
+                        steps = 40,
                         onValueChange = {
                             confidenceThreshold = it
                             saveSetting("neural_confidence_threshold", confidenceThreshold)
@@ -820,25 +820,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                             SettingsSwitch(
                                 title = "Greedy Search",
-                                description = "Fastest speed, but lower accuracy",
+                                description = "Single-pass decoding (fastest, single result only)",
                                 checked = neuralGreedySearch,
                                 onCheckedChange = {
                                     neuralGreedySearch = it
                                     saveSetting("neural_greedy_search", it)
                                 }
-                            )
-
-                            SettingsSlider(
-                                title = "Length Normalization",
-                                description = "Reward longer words (alpha). Higher = prefer longer words",
-                                value = neuralBeamAlpha,
-                                valueRange = 0.0f..5.0f,
-                                steps = 50,
-                                onValueChange = {
-                                    neuralBeamAlpha = it
-                                    saveSetting("neural_beam_alpha", neuralBeamAlpha)
-                                },
-                                displayValue = "%.1f".format(neuralBeamAlpha)
                             )
 
                             SettingsSlider(
@@ -858,75 +845,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                                 title = "Early Stop Gap",
                                 description = "Score difference to stop early (higher = search longer)",
                                 value = neuralBeamScoreGap,
-                                valueRange = 0.0f..20.0f,
-                                steps = 40,
+                                valueRange = 0.0f..100.0f,
+                                steps = 100,
                                 onValueChange = {
                                     neuralBeamScoreGap = it
                                     saveSetting("neural_beam_score_gap", neuralBeamScoreGap)
                                 },
                                 displayValue = "%.1f".format(neuralBeamScoreGap)
-                            )
-
-                            // Model Config
-                            Text(
-                                text = "Model Configuration",
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
-                            )
-
-                            SettingsDropdown(
-                                title = "Model Version",
-                                description = "Neural model to use for predictions",
-                                options = listOf("v1 (Legacy)", "v2 (Current)", "v3 (Experimental)"),
-                                selectedIndex = when (neuralModelVersion) {
-                                    "v1" -> 0
-                                    "v2" -> 1
-                                    "v3" -> 2
-                                    else -> 1
-                                },
-                                onSelectionChange = { index ->
-                                    neuralModelVersion = when (index) {
-                                        0 -> "v1"
-                                        1 -> "v2"
-                                        2 -> "v3"
-                                        else -> "v2"
-                                    }
-                                    saveSetting("neural_model_version", neuralModelVersion)
-                                }
-                            )
-
-                            SettingsDropdown(
-                                title = "Trajectory Resampling",
-                                description = "How to handle long swipe paths",
-                                options = listOf("Discard Excess", "Interpolate", "Average"),
-                                selectedIndex = when (neuralResamplingMode) {
-                                    "discard" -> 0
-                                    "interpolate" -> 1
-                                    "average" -> 2
-                                    else -> 0
-                                },
-                                onSelectionChange = { index ->
-                                    neuralResamplingMode = when (index) {
-                                        0 -> "discard"
-                                        1 -> "interpolate"
-                                        2 -> "average"
-                                        else -> "discard"
-                                    }
-                                    saveSetting("neural_resampling_mode", neuralResamplingMode)
-                                }
-                            )
-
-                            SettingsSlider(
-                                title = "Max Sequence Length Override",
-                                description = "Override model's max length (0 = use default)",
-                                value = neuralUserMaxSeqLength.toFloat(),
-                                valueRange = 0f..400f,
-                                steps = 40,
-                                onValueChange = {
-                                    neuralUserMaxSeqLength = it.toInt()
-                                    saveSetting("neural_user_max_seq_length", neuralUserMaxSeqLength)
-                                },
-                                displayValue = if (neuralUserMaxSeqLength == 0) "Default" else "$neuralUserMaxSeqLength"
                             )
 
                             Button(
@@ -2567,6 +2492,20 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         }
                     )
                 }
+
+                // Max Sequence Length Override (advanced neural setting)
+                SettingsSlider(
+                    title = "Max Sequence Length Override",
+                    description = "Override model's max trajectory length (0 = use default 250)",
+                    value = neuralUserMaxSeqLength.toFloat(),
+                    valueRange = 0f..400f,
+                    steps = 40,
+                    onValueChange = {
+                        neuralUserMaxSeqLength = it.toInt()
+                        saveSetting("neural_user_max_seq_length", neuralUserMaxSeqLength)
+                    },
+                    displayValue = if (neuralUserMaxSeqLength == 0) "Default" else "$neuralUserMaxSeqLength"
+                )
 
                 Button(
                     onClick = { openCalibration() },
