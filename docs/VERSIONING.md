@@ -57,16 +57,28 @@ Untagged commits produce development builds:
 
 ### 2. Creating a Release
 
+**IMPORTANT**: F-Droid's auto-update parser cannot evaluate expressions. The `versionCode` and `versionName` in `build.gradle` must be **simple literals**.
+
 ```bash
 # 1. Ensure you're on main with all changes committed
 git checkout main
 git pull origin main
 
-# 2. Create annotated tag
-git tag -a v2.1.0 -m "Release v2.1.0 - Description of changes"
+# 2. Update build.gradle with new version (REQUIRED for F-Droid auto-update)
+#    Edit these lines in defaultConfig:
+#      versionCode 10100   # MAJOR * 10000 + MINOR * 100 + PATCH
+#      versionName "1.1.0"
 
-# 3. Push tag to trigger release
-git push origin v2.1.0
+# 3. Commit the version update
+git add build.gradle
+git commit -m "chore: bump version to 1.1.0"
+
+# 4. Create annotated tag
+git tag -a v1.1.0 -m "Release v1.1.0 - Description of changes"
+
+# 5. Push commit and tag to trigger release
+git push origin main
+git push origin v1.1.0
 ```
 
 ### 3. Automated Release Pipeline

@@ -32,8 +32,8 @@
 - [x] Added static version variables in build.gradle for F-Droid checkupdates parsing
 - [x] Enabled auto-update (UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$)
 - [x] Created first official release: v1.0.0
-- [ ] GitHub Actions v1.0.0 release (in progress)
-- [ ] F-Droid pipeline validation with auto-update enabled
+- [x] GitHub Actions v1.0.0 release succeeded (3 APKs published)
+- [x] F-Droid pipeline 2212215842: ALL 8 JOBS SUCCESS with auto-update enabled!
 - [ ] Address any maintainer feedback (MR !30449)
 
 **Current Version**: 1.0.0 (versionCode 100002 for arm64-v8a)
