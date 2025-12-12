@@ -1,7 +1,23 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-11
-**Status**: Maintenance & Polish
+**Last Updated**: 2025-12-12
+**Status**: F-Droid Submission (MR !30449)
+
+---
+
+## F-Droid Submission Status
+
+### MR !30449 - In Progress
+- [x] Remove pre-built binaries (JAR, .so, .bin files)
+- [x] Add compose source files (srcs/compose/)
+- [x] Create scripts/generate_compose_bin.py for build-time generation
+- [x] Add generateComposeData gradle task
+- [x] Update .gitignore for F-Droid compliance
+- [x] Add 512x512 icon.png for fastlane metadata
+- [x] Push changes to GitHub (commit 397fb84a)
+- [x] Update fdroiddata metadata (v1.1.1581-397fb84a)
+- [ ] Wait for F-Droid CI pipeline to pass
+- [ ] Address any maintainer feedback
 
 ---
 
