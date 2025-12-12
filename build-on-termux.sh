@@ -89,10 +89,10 @@ if [ "$BUILD_TYPE_LOWER" = "release" ]; then
     export RELEASE_KEY_PASSWORD="android"
     
     GRADLE_TASK="assembleRelease"
-    APK_PATH="build/outputs/apk/release/tribixbite.cleverkeys.apk"
+    APK_PATH="build/outputs/apk/release/tribixbite.cleverkeys-universal.apk"
 else
     GRADLE_TASK="assembleDebug"
-    APK_PATH="build/outputs/apk/debug/tribixbite.cleverkeys.apk"
+    APK_PATH="build/outputs/apk/debug/tribixbite.cleverkeys-universal.apk"
     echo "Step 4: Building Debug APK..."
 fi
 

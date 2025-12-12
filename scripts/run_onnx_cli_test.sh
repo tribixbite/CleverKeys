@@ -60,7 +60,7 @@ echo ""
 
 # Compile test
 echo "🔨 Compiling test..."
-kotlinc test_onnx_cli.kt \
+kotlinc src/test/kotlin/tribixbite/cleverkeys/standalone/test_onnx_cli.kt \
     -classpath "$ONNX_JAR" \
     -include-runtime \
     -d test_onnx_cli.jar 2>&1 | grep -v "warning:" | head -20

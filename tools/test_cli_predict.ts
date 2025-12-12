@@ -235,7 +235,7 @@ async function main() {
 
     // Find models (Android models)
     const baseDir = path.dirname(import.meta.dir);
-    const modelDir = path.join(baseDir, 'cli-test', 'assets', 'models');
+    const modelDir = path.join(baseDir, 'src', 'main', 'assets', 'models');
     const encoderPath = path.join(modelDir, 'swipe_encoder_android.onnx');
     const decoderPath = path.join(modelDir, 'swipe_decoder_android.onnx');
 

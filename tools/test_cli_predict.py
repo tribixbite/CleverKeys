@@ -173,8 +173,8 @@ def main():
     print("=" * 70)
 
     # Check models exist (Android models)
-    encoder_path = Path("cli-test/assets/models/swipe_encoder_android.onnx")
-    decoder_path = Path("cli-test/assets/models/swipe_decoder_android.onnx")
+    encoder_path = Path("src/main/assets/models/swipe_encoder_android.onnx")
+    decoder_path = Path("src/main/assets/models/swipe_decoder_android.onnx")
     swipes_path = Path("swype-model-training/swipes.jsonl")
 
     if not encoder_path.exists():
