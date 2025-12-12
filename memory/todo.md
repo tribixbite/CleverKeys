@@ -24,9 +24,14 @@
 - [x] Add novcheck to bypass androguard APK version parsing issue
 - [x] F-Droid CI pipeline passed (pipeline 2212001928 - all jobs SUCCESS!)
 - [x] Fixed checkupdates: disabled auto-update for initial submission (dynamic versionCode)
+- [x] Re-enabled ABI splits with per-ABI versionCode (v1.1.1596-a1e28a16)
+  - Base versionCode * 10 + abiCode (1=armv7, 2=arm64, 3=x86_64)
+  - F-Droid metadata uses `output:` field for arm64-v8a APK
+  - APK size reduced from ~75MB to ~25MB per architecture
+- [ ] Wait for new F-Droid CI pipeline to pass
 - [ ] Address any maintainer feedback (MR !30449 ready for review)
 
-**Note**: F-Droid does support ABI splits with different versionCodes per ABI (see [issue #2115](https://gitlab.com/fdroid/fdroiddata/-/issues/2115)). Currently disabled, could re-enable with proper per-ABI versioning if needed for APK size reduction.
+**Current Version**: 1.1.1596-a1e28a16 (versionCode 15962 for arm64-v8a)
 
 ---
 
