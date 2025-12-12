@@ -52,16 +52,24 @@ dependencies {
 // =============================================================================
 // SEMANTIC VERSIONING SYSTEM
 // =============================================================================
-// Format: MAJOR.MINOR.PATCH (e.g., 1.2.0)
-// Git tag format: vMAJOR.MINOR.PATCH (e.g., v1.2.0)
+// Format: MAJOR.MINOR.PATCH (e.g., 2.0.0)
+// Git tag format: vMAJOR.MINOR.PATCH (e.g., v2.0.0)
+//
+// STATIC VERSION (for F-Droid auto-update parsing):
+// These values are read by F-Droid's checkupdates tool via regex.
+// Update these when creating a new release tag.
+def versionMajor = 2
+def versionMinor = 0
+def versionPatch = 0
+//
 // versionCode = MAJOR * 10000 + MINOR * 100 + PATCH
-//   - v1.2.0 → 10200, v1.2.1 → 10201, v2.0.0 → 20000
+//   - v2.0.0 → 20000, v2.1.0 → 20100, v2.0.1 → 20001
 // ABI versionCode = baseVersionCode * 10 + abiCode
-//   - v1.2.0 arm64-v8a → 102002
+//   - v2.0.0 arm64-v8a → 200002
 //
 // WORKFLOW:
-// 1. Development: builds use "dev-{sha}" version with code 1
-// 2. Release: tag commit with "vX.Y.Z", push tag
+// 1. Update versionMajor/Minor/Patch above
+// 2. Commit, tag with "vX.Y.Z", push tag
 // 3. GitHub Actions creates release with APKs
 // 4. F-Droid auto-detects tag and builds
 // =============================================================================
@@ -135,8 +143,9 @@ android {
     applicationId "tribixbite.cleverkeys"
     minSdk 21
     targetSdkVersion 34  // Lowered from 35 for F-Droid androguard compatibility
-    versionCode getVersionCode()
-    versionName getVersionName()
+    // Static version for F-Droid auto-update parsing (see versionMajor/Minor/Patch above)
+    versionCode versionMajor * 10000 + versionMinor * 100 + versionPatch
+    versionName "${versionMajor}.${versionMinor}.${versionPatch}"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
   }
