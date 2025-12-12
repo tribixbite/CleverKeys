@@ -50,27 +50,26 @@
 
 ## Pending Items
 
-### Web Demo Fixes (P0 - Critical)
+### Web Demo Fixes (P0 - Critical) ✅ COMPLETED
 *See full analysis: `docs/specs/web_demo_flaws.md`*
 
-**Architecture Mismatch (Model Input Broken)**:
-- [ ] Fix velocity calc: use `dx/dt` not just `dx` (time-normalized)
-- [ ] Fix acceleration calc: use `dv/dt` not just `dv`
-- [ ] Add value clipping to [-10, 10] range
-- [ ] Collect timestamps during swipe tracking
-- [ ] Change MAX_SEQUENCE_LENGTH from 150 to 250
-- [ ] Implement resampling (match SwipeResampler.kt)
+**Architecture Mismatch (Model Input) - FIXED 2025-12-12**:
+- [x] Fix velocity calc: use `dx/dt` not just `dx` (time-normalized)
+- [x] Fix acceleration calc: use `dv/dt` not just `dv`
+- [x] Add value clipping to [-10, 10] range
+- [x] Collect timestamps during swipe tracking
+- [x] Change MAX_SEQUENCE_LENGTH from 150 to 250
+- [x] Update model_config.json max_seq_length to 250
 
-**UI Bugs**:
-- [ ] Delete empty file `web_demo/niche-word-loader.js` (0 bytes duplicate)
-- [ ] Fix shift key - doesn't produce uppercase (always uses toLowerCase())
-- [ ] Fix number mode - broken selector `[data-row="X"] .key` returns empty
-- [ ] Fix emoji mode - same selector bug as number mode
+**UI Bugs - FIXED 2025-12-12**:
+- [x] Delete empty file `web_demo/niche-word-loader.js` (0 bytes duplicate)
+- [x] Fix shift key - now produces uppercase correctly
+- [x] Fix number mode - fixed CSS selector pattern
+- [x] Gate console.log behind DEBUG flag (global wrapper)
 
 ### Web Demo Improvements (P1-P2)
 - [ ] Add accessibility attributes (aria-*, role, tabindex)
 - [ ] Remove debug test functions from global scope
-- [ ] Gate console.log behind DEBUG flag
 - [ ] Consider lazy loading for 12.5MB of models
 - [ ] Add PWA/Service Worker for offline support
 
