@@ -50,14 +50,30 @@ jobs:
       run: |
         chmod +x gradlew
         ./gradlew assembleDebug --stacktrace
-        echo "apk-path=build/outputs/apk/debug/tribixbite.cleverkeys.apk" >> $GITHUB_OUTPUT
+        # Find the x86_64 APK for emulator testing
+        X86_APK=$(find build/outputs/apk/debug -name "*x86_64*.apk" | head -1)
+        if [ -z "$X86_APK" ]; then
+          # Fallback to universal if no x86_64 specific
+          X86_APK=$(find build/outputs/apk/debug -name "*universal*.apk" | head -1)
+        fi
+        echo "apk-path=$X86_APK" >> $GITHUB_OUTPUT
+        echo "Found APK for testing: $X86_APK"
 
     - name: Upload APK for testing
       uses: actions/upload-artifact@v4
       with:
         name: apks
-        path: build/outputs/apk/debug/tribixbite.cleverkeys.apk
+        path: build/outputs/apk/debug/*x86_64*.apk
         retention-days: 1
+        if-no-files-found: warn
+
+    - name: Upload universal APK as fallback
+      uses: actions/upload-artifact@v4
+      with:
+        name: apks-universal
+        path: build/outputs/apk/debug/*universal*.apk
+        retention-days: 1
+        if-no-files-found: warn
 
   ui-tests:
     name: UI Tests (API ${{ matrix.api-level }})
