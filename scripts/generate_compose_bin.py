@@ -311,11 +311,10 @@ object ComposeKeyData {{
 '''
 
     # Generate constant definitions
+    # Note: fn, shift, and compose stay lowercase to match KeyModifier.kt references
     constants = []
     for name, state in sorted(entry_states.items(), key=lambda x: x[1]):
-        const_name = name.upper() if name != "compose" else "compose"
-        if name == "fn":
-            const_name = "fn"
+        const_name = name.upper() if name not in ("compose", "fn", "shift") else name
         constants.append(f"    const val {const_name} = {state}")
 
     content = template.format(constants="\n".join(constants))

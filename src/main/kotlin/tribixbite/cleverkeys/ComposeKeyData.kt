@@ -79,5 +79,5 @@ object ComposeKeyData {
     const val NUMPAD_KANNADA = 8358
     const val NUMPAD_PERSIAN = 8379
     const val NUMPAD_TAMIL = 8400
-    const val SHIFT = 8421
+    const val shift = 8421
 }
