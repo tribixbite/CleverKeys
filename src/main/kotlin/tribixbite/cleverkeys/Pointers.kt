@@ -709,6 +709,10 @@ class Pointers(
             }
         }
         Log.d("Pointers", "clearLatched: cleared $clearedCount pointers, remaining=${_ptrs.size}")
+        // Notify handler to update keyboard view when modifiers change
+        if (clearedCount > 0) {
+            _handler.onPointerFlagsChanged(false)
+        }
     }
 
     /** Make a pointer into the locked state. */

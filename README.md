@@ -68,7 +68,7 @@ CleverKeys is the only fully open-source neural network gesture keyboard for And
 | **Clipboard History** | ✅ Unlimited | ✅ Configurable | ✅ | ✅ | ⚠️ Basic |
 | **Word Suggestions** | ✅ | ✅ | ✅ | ❌ (v0.6 planned) | ✅ |
 | **Works in Termux** | ✅ | ⚠️ Buggy⁴ | ❓ | ⚠️ Gestures disabled | ✅ |
-| **Last Release** | Active | Nov 2024 | Nov 2025 | Nov 2025 | Aug 2025 |
+| **Last Release** | Active | Aug 2025 | Dec 2025 | Aug 2025 | Dec 2025 |
 
 <details>
 <summary><b>Footnotes & Sources</b></summary>
