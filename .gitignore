@@ -1,93 +1,43 @@
-# Gradle
+# Gradle files
 .gradle/
 build/
-*.class
-.gradletasknamecache
-gradle-app.setting
+*/build/
 
-# Android
-*.apk
-*.ap_
-*.dex
-*.aab
+# Local configuration
 local.properties
-captures/
-.externalNativeBuild/
-.cxx/
-output.json
-google-services.json
+check_layout_output.txt
 
-# Kotlin
-*.kotlin_module
-*.kotlin_metadata
-
-# Generated files
-bin/
-gen/
-out/
-release/
-
-# Keystore files
-*.jks
-*.keystore
-
-# IDE
-.idea/
-*.iml
-.vscode/
-*.swp
-*.swo
-*~
-
-# OS
+# OS specific files
 .DS_Store
 Thumbs.db
-*.output
-cleverkeys-diagnostic-*.txt
 
-# Testing
+# IDE specific files
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Captures
+captures/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Log files
 *.log
-/captures
-/androidTest-results/
-/test-results/
 
-# Lint
-lint-report.html
-lint-report.xml
-lint-results.xml
+# Keystore files (never commit these!)
+*.keystore
+*.jks
 
-# NDK
-obj/
-.cxx/
-
-# Backup files
-*.bak
-*~
-*.backup
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-emoji-test.txt
-
-# Exported configs (contain device-specific data)
-uk-config.json
-*-config.json
-
-# Generated binary files (F-Droid compliance - must be built from source)
+# Assets generated during build
 src/main/assets/compose_data.bin
-src/main/assets/dictionaries/*.bin
+src/main/assets/dictionaries/en_enhanced.bin
+src/main/assets/dictionaries/contractions.bin
 
-# Build tools (not needed in source, platform-specific)
-tools/aapt2-arm64/
-
-# Test artifacts
-*.jar
-!gradle/wrapper/gradle-wrapper.jar
-
-# Legacy native libraries (unused)
-assets/libjni_latinimegoogle.so
-
-# Local ONNX libs (use Maven dependency instead)
-lib/onnx/
+# Temporary test artifacts
+test_onnx_cli.jar
+onnxruntime-1.20.0-android.jar
