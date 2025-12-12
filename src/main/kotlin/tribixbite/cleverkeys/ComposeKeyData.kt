@@ -7,12 +7,9 @@ import java.io.DataInputStream
  * Generated compose key data for CleverKeys.
  *
  * THIS FILE IS AUTO-GENERATED - DO NOT EDIT MANUALLY
- * Run: python3 generate_compose_data.py
+ * Run: python3 scripts/generate_compose_bin.py
  *
- * Source: Unexpected-Keyboard/srcs/compose/ (JSON files) and compose/ directory
- * Generator: generate_compose_data.py (modified from compile.py)
- *
- * Contains 8659 states for 33 entry points.
+ * Source: srcs/compose/ (JSON files and compose/ directory)
  * Data loaded from assets/compose_data.bin at runtime to avoid JVM 64KB method limit.
  */
 object ComposeKeyData {
@@ -20,45 +17,27 @@ object ComposeKeyData {
     private var _states: CharArray? = null
     private var _edges: IntArray? = null
 
-    /**
-     * State array representing compose sequence states and transitions.
-     * Loaded lazily from binary resource file.
-     */
     val states: CharArray
         get() = _states ?: throw IllegalStateException("ComposeKeyData not initialized. Call initialize(context) first.")
 
-    /**
-     * Edge array representing transition states and state sizes.
-     * Must have the same length as states array.
-     */
     val edges: IntArray
         get() = _edges ?: throw IllegalStateException("ComposeKeyData not initialized. Call initialize(context) first.")
 
-    /**
-     * Initialize compose data from binary resource file.
-     * Must be called before accessing states/edges arrays.
-     */
     fun initialize(context: Context) {
-        if (_states != null) return  // Already initialized
+        if (_states != null) return
 
         try {
             context.assets.open("compose_data.bin").use { inputStream ->
                 DataInputStream(inputStream).use { dis ->
-                    // Read array size
                     val size = dis.readInt()
-
-                    // Read states array (shorts → chars)
                     val statesArray = CharArray(size)
                     for (i in 0 until size) {
                         statesArray[i] = dis.readUnsignedShort().toChar()
                     }
-
-                    // Read edges array (ints)
                     val edgesArray = IntArray(size)
                     for (i in 0 until size) {
                         edgesArray[i] = dis.readInt()
                     }
-
                     _states = statesArray
                     _edges = edgesArray
                 }
@@ -68,9 +47,6 @@ object ComposeKeyData {
         }
     }
 
-    /**
-     * Entry point constants for each compose mode
-     */
     const val ACCENT_AIGU = 1
     const val ACCENT_ARROWS = 130
     const val ACCENT_BAR = 153
@@ -96,98 +72,12 @@ object ComposeKeyData {
     const val ACCENT_TREMA = 1172
     const val compose = 1270
     const val fn = 7683
-    const val NUMPAD_BENGALI = 8279
-    const val NUMPAD_DEVANAGARI = 8300
-    const val NUMPAD_GUJARATI = 8321
-    const val NUMPAD_HINDU = 8342
-    const val NUMPAD_KANNADA = 8363
-    const val NUMPAD_PERSIAN = 8384
-    const val NUMPAD_TAMIL = 8405
-    const val shift = 8426
-
-    /**
-     * Validate the integrity of the compose key data.
-     */
-    fun validateData(): Boolean {
-        try {
-            if (states.size != edges.size) return false
-
-            var i = 0
-            while (i < states.size) {
-                val header = states[i].code
-                val length = edges[i]
-
-                when {
-                    header == 0 -> {
-                        if (length < 1 || i + length > states.size) return false
-                        i += length
-                    }
-                    header == 0xFFFF -> {
-                        if (length < 2 || i + length > states.size) return false
-                        i += length
-                    }
-                    header > 0 -> {
-                        if (length != 1) return false
-                        i++
-                    }
-                    else -> return false
-                }
-            }
-            return true
-        } catch (e: Exception) {
-            return false
-        }
-    }
-
-    /**
-     * Get statistics about the compose key data.
-     */
-    fun getDataStatistics(): ComposeDataStatistics {
-        var intermediateStates = 0
-        var characterFinalStates = 0
-        var stringFinalStates = 0
-        var totalTransitions = 0
-
-        var i = 0
-        while (i < states.size) {
-            val header = states[i].code
-            val length = edges[i]
-
-            when {
-                header == 0 -> {
-                    intermediateStates++
-                    totalTransitions += length - 1
-                    i += length
-                }
-                header == 0xFFFF -> {
-                    stringFinalStates++
-                    i += length
-                }
-                header > 0 -> {
-                    characterFinalStates++
-                    i++
-                }
-                else -> i++
-            }
-        }
-
-        return ComposeDataStatistics(
-            totalStates = intermediateStates + characterFinalStates + stringFinalStates,
-            intermediateStates = intermediateStates,
-            characterFinalStates = characterFinalStates,
-            stringFinalStates = stringFinalStates,
-            totalTransitions = totalTransitions,
-            dataSize = states.size
-        )
-    }
-
-    data class ComposeDataStatistics(
-        val totalStates: Int,
-        val intermediateStates: Int,
-        val characterFinalStates: Int,
-        val stringFinalStates: Int,
-        val totalTransitions: Int,
-        val dataSize: Int
-    )
+    const val NUMPAD_BENGALI = 8274
+    const val NUMPAD_DEVANAGARI = 8295
+    const val NUMPAD_GUJARATI = 8316
+    const val NUMPAD_HINDU = 8337
+    const val NUMPAD_KANNADA = 8358
+    const val NUMPAD_PERSIAN = 8379
+    const val NUMPAD_TAMIL = 8400
+    const val SHIFT = 8421
 }
-

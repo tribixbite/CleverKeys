@@ -299,7 +299,7 @@ tasks.register('checkKeyboardLayouts') {
   println "\nChecking layouts"
   exec {
     workingDir = projectDir
-    commandLine("python", "check_layout.py")
+    commandLine("python", "tools/check_layout.py")
     ignoreExitValue = true  // Don't fail CI if check script fails
   }
 }
@@ -411,7 +411,41 @@ tasks.named("preBuild") {
   dependsOn += "copyLayoutDefinitions"
   dependsOn += "generateBinaryDictionaries"
   dependsOn += "generateBinaryContractions"
+  dependsOn += "generateComposeData"
   dependsOn += "generateVersionInfo"
+}
+
+tasks.register('generateComposeData') {
+  description 'Generate compose_data.bin from compose sequence sources'
+  doLast {
+    def composeDir = file("srcs/compose")
+    def outputBin = file("src/main/assets/compose_data.bin")
+    def outputKt = file("src/main/kotlin/tribixbite/cleverkeys/ComposeKeyData.kt")
+
+    // Skip if output exists and is newer than all sources
+    def sourceFiles = composeDir.listFiles().findAll {
+      it.name.endsWith(".json") || it.isDirectory()
+    }
+    def latestSource = sourceFiles.collect {
+      it.isDirectory() ? it.listFiles()?.collect { f -> f.lastModified() }?.max() ?: 0 : it.lastModified()
+    }.max() ?: 0
+
+    if (outputBin.exists() && outputKt.exists() &&
+        outputBin.lastModified() > latestSource &&
+        outputKt.lastModified() > latestSource) {
+      println "\nCompose data up-to-date, skipping generation"
+      return
+    }
+
+    println "\nGenerating compose_data.bin from srcs/compose/"
+    exec {
+      workingDir = projectDir
+      commandLine "python3", "scripts/generate_compose_bin.py",
+        *fileTree("srcs/compose").matching { include "*.json" }.files,
+        file("srcs/compose/compose").absolutePath
+      ignoreExitValue = false
+    }
+  }
 }
 
 tasks.register('initDebugKeystore') {

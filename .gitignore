@@ -74,3 +74,20 @@ emoji-test.txt
 # Exported configs (contain device-specific data)
 uk-config.json
 *-config.json
+
+# Generated binary files (F-Droid compliance - must be built from source)
+src/main/assets/compose_data.bin
+src/main/assets/dictionaries/*.bin
+
+# Build tools (not needed in source, platform-specific)
+tools/aapt2-arm64/
+
+# Test artifacts
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Legacy native libraries (unused)
+assets/libjni_latinimegoogle.so
+
+# Local ONNX libs (use Maven dependency instead)
+lib/onnx/

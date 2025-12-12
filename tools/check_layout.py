@@ -116,7 +116,7 @@ def check_layout(layout):
 # Fill 'known_keys', which is used for some checks
 def parse_known_keys():
     global known_keys
-    with open("src/main/kotlin/tribixbite/keyboard2/KeyValue.kt", "r") as f:
+    with open("src/main/kotlin/tribixbite/cleverkeys/KeyValue.kt", "r") as f:
         # Match both Java format (case "key":) and Kotlin format (namedKeys["key"] =)
         content = f.read()
         keys = set()
