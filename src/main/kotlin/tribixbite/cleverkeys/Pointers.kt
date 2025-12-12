@@ -254,17 +254,11 @@ class Pointers(
                 // Some gestures only collect 1 point (downX,downY) before UP fires
                 // We can still calculate direction from ptr.downX/downY to the last point
                 //
-                // CRITICAL FIX v1.32.925: Disable BUILT-IN short gestures on CHAR keys when modifiers active
-                // When shift/fn/ctrl pressed + swiping on CHAR key (e.g. 'c'), user wants modified char (e.g. 'C')
-                // NOT a built-in gesture (e.g. '.' from SW swipe on 'c' key)
-                // BUT: Allow gestures on non-CHAR keys (backspace, ctrl, fn) regardless of modifiers
-                // This allows backspace NW→delete_last_word, ctrl SW→clipboard, etc.
-                //
-                // UPDATED: Custom user-defined mappings ALWAYS work, even with modifiers.
-                // Only built-in sublabel gestures are blocked when shift is active on char keys.
-                // We check for custom mappings first (inside the distance check), then block built-in.
-                val shouldBlockBuiltInGesture = isCharKey && ptr.modifiers.size() > 0
-                
+                // v1.32.927: Short gestures now work with shift active
+                // - Sublabels trigger regardless of shift state
+                // - If sublabel is a word (letters/apostrophe only), capitalize first char when shift active
+                // - Non-word sublabels (punctuation, symbols) output as-is
+
                 // CRITICAL FIX: Allow leaving the key bounds for non-Char keys (like Backspace)
                 // This allows "Short Swipe over Backspace" (which often leaves the key) to trigger delete_last_word
                 val allowLeftKey = !isCharKey
@@ -344,34 +338,46 @@ class Pointers(
                             return
                         }
 
-                        // BLOCKING CHECK: Block built-in gestures when modifiers are active on char keys
-                        // This prevents accidental punctuation when user wants shifted character (e.g. Shift+C → C, not period)
-                        // Custom mappings (above) bypass this check intentionally
-                        if (shouldBlockBuiltInGesture) {
-                            Log.d("Pointers", "BUILT_IN_GESTURE BLOCKED: modifiers active on char key, skipping built-in gesture")
-                            // Fall through to regular tap handling below
-                        } else {
-                            // Use getNearestKeyAtDirection to search nearby if exact direction not defined
-                            val gestureValue = getNearestKeyAtDirection(ptr, direction)
+                        // Use getNearestKeyAtDirection to search nearby if exact direction not defined
+                        var gestureValue = getNearestKeyAtDirection(ptr, direction)
 
-                            Log.d(
-                                "Pointers", String.format(
-                                    "SHORT_SWIPE_RESULT: dir=%d found=%s",
-                                    direction, gestureValue?.toString() ?: "null"
-                                )
+                        Log.d(
+                            "Pointers", String.format(
+                                "SHORT_SWIPE_RESULT: dir=%d found=%s",
+                                direction, gestureValue?.toString() ?: "null"
                             )
+                        )
 
-                            if (gestureValue != null) {
-                                Log.d("Pointers", "SHORT_GESTURE SUCCESS: triggering ${gestureValue}")
-                                _handler.onPointerDown(gestureValue, false)
-                                _handler.onPointerUp(gestureValue, ptr.modifiers)
-                                clearLatched() // Clear shift after gesture completes
-                                _swipeRecognizer.reset()
-                                removePtr(ptr)
-                                return
-                            } else {
-                                Log.d("Pointers", "SHORT_GESTURE FAILED: getNearestKeyAtDirection returned null for direction $direction")
+                        if (gestureValue != null) {
+                            // v1.32.927: Apply shift capitalization to word sublabels
+                            // If shift is active and sublabel is a word (letters/apostrophe only),
+                            // capitalize the first character
+                            val hasShift = ptr.modifiers.has(KeyValue.Modifier.SHIFT)
+                            if (hasShift && gestureValue.getKind() == KeyValue.Kind.Char) {
+                                val str = gestureValue.getString()
+                                if (str.isNotEmpty() && str.all { it.isLetter() || it == '\'' }) {
+                                    // It's a word - capitalize first letter
+                                    val capitalized = str.replaceFirstChar { it.uppercaseChar() }
+                                    if (capitalized != str) {
+                                        gestureValue = if (capitalized.length == 1) {
+                                            KeyValue.makeCharKey(capitalized[0])
+                                        } else {
+                                            KeyValue.makeStringKey(capitalized)
+                                        }
+                                        Log.d("Pointers", "SHORT_GESTURE: Shift active, capitalized word '$str' -> '$capitalized'")
+                                    }
+                                }
                             }
+
+                            Log.d("Pointers", "SHORT_GESTURE SUCCESS: triggering ${gestureValue}")
+                            _handler.onPointerDown(gestureValue, false)
+                            _handler.onPointerUp(gestureValue, ptr.modifiers)
+                            clearLatched() // Clear shift after gesture completes
+                            _swipeRecognizer.reset()
+                            removePtr(ptr)
+                            return
+                        } else {
+                            Log.d("Pointers", "SHORT_GESTURE FAILED: getNearestKeyAtDirection returned null for direction $direction")
                         }
                     } else {
                         Log.d("Pointers", "SHORT_GESTURE SKIP: distance $distance < minDistance $minDistance")
@@ -379,7 +385,7 @@ class Pointers(
                 } else {
                     Log.d("Pointers", "SHORT_GESTURE BLOCKED: short_gestures_enabled=${_config.short_gestures_enabled} " +
                         "hasLeftStartingKey=${ptr.hasLeftStartingKey} allowLeftKey=$allowLeftKey " +
-                        "distance=$distance shouldBlockBuiltInGesture=$shouldBlockBuiltInGesture")
+                        "distance=$distance")
                 }
 
                 // Regular TAP - output the key character only if it was deferred
