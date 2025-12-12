@@ -22,8 +22,9 @@
 - [x] Lower SDK from 35 to 34 for androguard compatibility (v1.1.1590-6aa9b9ef)
 - [x] Downgrade androidx.core to 1.13.1 for SDK 34 compatibility (v1.1.1593-c3af5334)
 - [x] Add novcheck to bypass androguard APK version parsing issue
-- [ ] Wait for F-Droid CI pipeline to pass
-- [ ] Address any maintainer feedback
+- [x] F-Droid CI pipeline passed (pipeline 2212001928 - all jobs SUCCESS!)
+- [x] Fixed checkupdates: disabled auto-update for initial submission (dynamic versionCode)
+- [ ] Address any maintainer feedback (MR !30449 ready for review)
 
 **Note**: F-Droid does support ABI splits with different versionCodes per ABI (see [issue #2115](https://gitlab.com/fdroid/fdroiddata/-/issues/2115)). Currently disabled, could re-enable with proper per-ABI versioning if needed for APK size reduction.
 
