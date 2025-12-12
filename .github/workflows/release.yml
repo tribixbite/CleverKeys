@@ -43,24 +43,27 @@ jobs:
         echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
         echo "VERSION_CODE=$(echo $TAG_NAME | sed 's/v//' | sed 's/\.//' | head -c 8)" >> $GITHUB_ENV
 
-    - name: Build release APK
+    - name: Decode signing keystore
+      run: |
+        echo "${{ secrets.SIGNING_KEY }}" | base64 -d > ${{ github.workspace }}/release.keystore
+        echo "RELEASE_KEYSTORE=${{ github.workspace }}/release.keystore" >> $GITHUB_ENV
+
+    - name: Build signed release APK
       run: ./gradlew assembleRelease --stacktrace
-
-    - name: Sign release APKs
-      uses: r0adkll/sign-android-release@v1
-      with:
-        releaseDirectory: build/outputs/apk/release
-        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-        alias: ${{ secrets.ALIAS }}
-        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-        keyPassword: ${{ secrets.KEY_PASSWORD }}
       env:
-        BUILD_TOOLS_VERSION: "34.0.0"
+        RELEASE_KEYSTORE: ${{ github.workspace }}/release.keystore
+        RELEASE_KEYSTORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+        RELEASE_KEY_ALIAS: ${{ secrets.ALIAS }}
+        RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-    - name: Rename release APKs
+    - name: List and rename release APKs
       run: |
         cd build/outputs/apk/release
-        for apk in *-signed.apk; do
+        echo "=== APKs before rename ==="
+        ls -la *.apk || echo "No APKs found!"
+
+        # Gradle produces: tribixbite.cleverkeys-<abi>.apk
+        for apk in *.apk; do
           if [[ "$apk" == *"universal"* ]]; then
             mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-universal.apk"
           elif [[ "$apk" == *"arm64-v8a"* ]]; then
@@ -71,12 +74,14 @@ jobs:
             mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-x86_64.apk"
           fi
         done
-        ls -la *.apk
+
+        echo "=== APKs after rename ==="
+        ls -la CleverKeys-*.apk
 
     - name: Generate changelog
       run: |
         # Extract changelog from recent commits
-        echo "## 🚀 What's New in ${{ env.TAG_NAME }}" > CHANGELOG.md
+        echo "## What's New in ${{ env.TAG_NAME }}" > CHANGELOG.md
         echo "" >> CHANGELOG.md
 
         # Get commits since last tag
@@ -91,13 +96,12 @@ jobs:
         fi
 
         echo "" >> CHANGELOG.md
-        echo "## 📊 Build Information" >> CHANGELOG.md
-        echo "- **APK Size**: ~43MB (includes ONNX Runtime + neural models)" >> CHANGELOG.md
+        echo "## Build Information" >> CHANGELOG.md
         echo "- **Package**: tribixbite.cleverkeys" >> CHANGELOG.md
         echo "- **Min Android**: 5.0 (API 21)" >> CHANGELOG.md
         echo "- **Target Android**: 14 (API 34)" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "## 🧠 Neural Features" >> CHANGELOG.md
+        echo "## Neural Features" >> CHANGELOG.md
         echo "- **Transformer Models**: Encoder-decoder architecture" >> CHANGELOG.md
         echo "- **Hardware Acceleration**: XNNPACK CPU optimization" >> CHANGELOG.md
         echo "- **Real-time Calibration**: Personalized model training" >> CHANGELOG.md
@@ -127,17 +131,16 @@ jobs:
 
     - name: Release summary
       run: |
-        echo "## 🎉 Release ${{ env.TAG_NAME }} Published!" >> $GITHUB_STEP_SUMMARY
+        echo "## Release ${{ env.TAG_NAME }} Published!" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 📱 Download" >> $GITHUB_STEP_SUMMARY
-        echo "- **APK**: [CleverKeys-${{ env.TAG_NAME }}.apk](https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/tribixbite.cleverkeys.apk)" >> $GITHUB_STEP_SUMMARY
-        echo "- **Release Page**: [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ env.TAG_NAME }})" >> $GITHUB_STEP_SUMMARY
+        echo "### Download" >> $GITHUB_STEP_SUMMARY
+        echo "- [Release Page](https://github.com/${{ github.repository }}/releases/tag/${{ env.TAG_NAME }})" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 🧠 Neural Features" >> $GITHUB_STEP_SUMMARY
-        echo "- ONNX transformer models for swipe typing" >> $GITHUB_STEP_SUMMARY
-        echo "- Hardware acceleration with XNNPACK" >> $GITHUB_STEP_SUMMARY
-        echo "- 100% local processing - no cloud dependency" >> $GITHUB_STEP_SUMMARY
-        echo "- Real-time calibration and performance analytics" >> $GITHUB_STEP_SUMMARY
+        echo "### APK Variants" >> $GITHUB_STEP_SUMMARY
+        echo "- arm64 (64-bit ARM)" >> $GITHUB_STEP_SUMMARY
+        echo "- armv7 (32-bit ARM)" >> $GITHUB_STEP_SUMMARY
+        echo "- x86_64 (64-bit x86)" >> $GITHUB_STEP_SUMMARY
+        echo "- universal (all architectures)" >> $GITHUB_STEP_SUMMARY
 
   notify:
     runs-on: ubuntu-latest
@@ -147,7 +150,5 @@ jobs:
     steps:
     - name: Release notification
       run: |
-        echo "🎉 CleverKeys ${{ env.TAG_NAME }} has been successfully released!"
-        echo "📱 Users can now download the latest APK with neural swipe typing."
-        echo "🧠 Neural models included: ONNX transformer encoder-decoder architecture."
-        echo "⚡ Hardware acceleration: XNNPACK CPU optimization for modern devices."
+        echo "CleverKeys ${{ github.ref_name }} has been successfully released!"
+        echo "Users can now download the latest APK with neural swipe typing."
