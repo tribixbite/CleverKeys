@@ -438,11 +438,11 @@ tasks.register('generateComposeData') {
     }
 
     println "\nGenerating compose_data.bin from srcs/compose/"
+    def jsonFiles = fileTree("srcs/compose").matching { include "*.json" }.files.collect { it.absolutePath }
+    def composeSubdir = file("srcs/compose/compose").absolutePath
     exec {
       workingDir = projectDir
-      commandLine "python3", "scripts/generate_compose_bin.py",
-        *fileTree("srcs/compose").matching { include "*.json" }.files,
-        file("srcs/compose/compose").absolutePath
+      commandLine(["python3", "scripts/generate_compose_bin.py"] + jsonFiles + [composeSubdir])
       ignoreExitValue = false
     }
   }
