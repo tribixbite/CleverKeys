@@ -180,7 +180,6 @@ class BackupRestoreManager(private val context: Context) {
         "swipe_trail_glow_radius" to Defaults.SWIPE_TRAIL_GLOW_RADIUS,
 
         // Neural prediction
-        "neural_prediction_enabled" to Defaults.NEURAL_PREDICTION_ENABLED,
         "neural_beam_width" to Defaults.NEURAL_BEAM_WIDTH,
         "neural_max_length" to Defaults.NEURAL_MAX_LENGTH,
         "neural_confidence_threshold" to Defaults.NEURAL_CONFIDENCE_THRESHOLD,

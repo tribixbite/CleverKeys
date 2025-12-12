@@ -80,7 +80,6 @@ object Defaults {
     const val SWIPE_TRAIL_GLOW_RADIUS = 6.0f
 
     // Neural prediction
-    const val NEURAL_PREDICTION_ENABLED = true
     const val NEURAL_BEAM_WIDTH = 6
     const val NEURAL_MAX_LENGTH = 20
     const val NEURAL_CONFIDENCE_THRESHOLD = 0.01f
@@ -275,7 +274,6 @@ class Config private constructor(
     @JvmField var swipe_trail_glow_radius = 6.0f // Glow effect radius in dp (smaller = crisper)
 
     // Neural swipe prediction configuration
-    @JvmField var neural_prediction_enabled = false
     @JvmField var neural_beam_width = 0
     @JvmField var neural_max_length = 0
     @JvmField var neural_confidence_threshold = 0f
@@ -467,7 +465,6 @@ class Config private constructor(
         swipe_trail_width = safeGetFloat(_prefs, "swipe_trail_width", Defaults.SWIPE_TRAIL_WIDTH)
         swipe_trail_glow_radius = safeGetFloat(_prefs, "swipe_trail_glow_radius", Defaults.SWIPE_TRAIL_GLOW_RADIUS)
 
-        neural_prediction_enabled = _prefs.getBoolean("neural_prediction_enabled", Defaults.NEURAL_PREDICTION_ENABLED)
         neural_beam_width = safeGetInt(_prefs, "neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
         neural_max_length = safeGetInt(_prefs, "neural_max_length", Defaults.NEURAL_MAX_LENGTH)
         neural_confidence_threshold = safeGetFloat(_prefs, "neural_confidence_threshold", Defaults.NEURAL_CONFIDENCE_THRESHOLD)

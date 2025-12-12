@@ -108,7 +108,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     // Settings state for reactive UI
-    private var neuralPredictionEnabled by mutableStateOf(true)
     private var beamWidth by mutableStateOf(6)
     private var maxLength by mutableStateOf(20)
     private var confidenceThreshold by mutableStateOf(0.01f)
@@ -343,9 +342,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         when (key) {
             "swipe_typing_enabled" -> {
                 swipeTypingEnabled = prefs.getBoolean(key, Defaults.SWIPE_TYPING_ENABLED)
-            }
-            "neural_prediction_enabled" -> {
-                neuralPredictionEnabled = prefs.getBoolean(key, Defaults.NEURAL_PREDICTION_ENABLED)
             }
             "neural_beam_width" -> {
                 beamWidth = prefs.getInt(key, Defaults.NEURAL_BEAM_WIDTH)
@@ -2959,7 +2955,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         swipeTypingEnabled = prefs.getSafeBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
 
         // Neural prediction settings
-        neuralPredictionEnabled = prefs.getSafeBoolean("neural_prediction_enabled", Defaults.NEURAL_PREDICTION_ENABLED)
         beamWidth = prefs.getSafeInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
         maxLength = prefs.getSafeInt("neural_max_length", Defaults.NEURAL_MAX_LENGTH)
         confidenceThreshold = prefs.getSafeFloat("neural_confidence_threshold", Defaults.NEURAL_CONFIDENCE_THRESHOLD)
@@ -3228,7 +3223,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     editor.clear()
 
                     // Set essential defaults to prevent crashes
-                    editor.putBoolean("neural_prediction_enabled", true)
                     editor.putInt("neural_beam_width", 8)
                     editor.putInt("neural_max_length", 35)
                     editor.putFloat("neural_confidence_threshold", 0.1f)
