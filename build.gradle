@@ -73,12 +73,12 @@ def getVersionName() {
 
 android {
   namespace 'tribixbite.cleverkeys'
-  compileSdk 35
+  compileSdk 34  // Lowered from 35 for F-Droid androguard compatibility
 
   defaultConfig {
     applicationId "tribixbite.cleverkeys"
     minSdk 21
-    targetSdkVersion 35
+    targetSdkVersion 34  // Lowered from 35 for F-Droid androguard compatibility
     versionCode getVersionCode()
     versionName getVersionName()
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
