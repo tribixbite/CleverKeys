@@ -41,11 +41,11 @@ Each architecture gets a unique versionCode to allow F-Droid to serve the correc
 abiCode = baseCode * 10 + offset
 ```
 
-| ABI | Offset | v2.0.0 Code |
+| ABI | Offset | v1.0.0 Code |
 |-----|--------|-------------|
-| armeabi-v7a | +1 | 200001 |
-| arm64-v8a | +2 | 200002 |
-| x86_64 | +3 | 200003 |
+| armeabi-v7a | +1 | 100001 |
+| arm64-v8a | +2 | 100002 |
+| x86_64 | +3 | 100003 |
 
 ## Release Workflow
 
@@ -117,11 +117,11 @@ git describe --tags --match "v[0-9]*"
 # List all versions
 git tag -l "v*" --sort=-version:refname
 
-# Create patch release (e.g., v2.0.0 -> v2.0.1)
-git tag -a v2.0.1 -m "v2.0.1 - Bug fixes"
-git push origin v2.0.1
+# Create patch release (e.g., v1.0.0 -> v1.0.1)
+git tag -a v1.0.1 -m "v1.0.1 - Bug fixes"
+git push origin v1.0.1
 
-# Create minor release (e.g., v2.0.1 -> v2.1.0)
-git tag -a v2.1.0 -m "v2.1.0 - New features"
-git push origin v2.1.0
+# Create minor release (e.g., v1.0.1 -> v1.1.0)
+git tag -a v1.1.0 -m "v1.1.0 - New features"
+git push origin v1.1.0
 ```

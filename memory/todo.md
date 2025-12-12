@@ -17,33 +17,27 @@
 - [x] Fix python → python3 for F-Droid build environment
 - [x] Fix Groovy spread operator incompatibility
 - [x] Remove duplicate compileComposeSequences task
-- [x] Fix shift constant case mismatch (v1.1.1586-747b7082)
-- [x] Disable ABI splits for F-Droid compatibility (v1.1.1588-9ac39331)
-- [x] Lower SDK from 35 to 34 for androguard compatibility (v1.1.1590-6aa9b9ef)
-- [x] Downgrade androidx.core to 1.13.1 for SDK 34 compatibility (v1.1.1593-c3af5334)
+- [x] Fix shift constant case mismatch
+- [x] Lower SDK from 35 to 34 for androguard compatibility
+- [x] Downgrade androidx.core to 1.13.1 for SDK 34 compatibility
 - [x] Add novcheck to bypass androguard APK version parsing issue
-- [x] F-Droid CI pipeline passed (pipeline 2212001928 - all jobs SUCCESS!)
-- [x] Fixed checkupdates: disabled auto-update for initial submission (dynamic versionCode)
-- [x] Re-enabled ABI splits with per-ABI versionCode
 - [x] Implemented semantic versioning system (vMAJOR.MINOR.PATCH)
   - versionCode = MAJOR * 10000 + MINOR * 100 + PATCH
   - ABI versionCode = base * 10 + abiCode (1=armv7, 2=arm64, 3=x86_64)
 - [x] Updated GitHub Actions release workflow for semantic versions
-- [x] F-Droid auto-update enabled (UpdateCheckMode: Tags)
-- [x] Created first semantic release: v2.0.0
-- [x] GitHub Actions release v2.0.0 succeeded (3 APKs published)
 - [x] Created docs/VERSIONING.md documentation
 - [x] Fixed F-Droid schema validation (AutoUpdateMode, VercodeOperation array format)
 - [x] Fixed APK output pattern (wildcard for arm64-v8a)
-- [x] F-Droid build job: SUCCESS (pipeline 2212098641)
-- [x] Cleaned metadata format (removed comments, fixed field order)
-- [x] Pipeline 2212114543: 7/8 jobs SUCCESS (all except checkupdates)
-- [x] Disabled auto-update for initial submission (UpdateCheckMode: None)
-- [x] **Pipeline 2212144772: ALL 8 JOBS SUCCESS! ✅**
+- [x] Clean start: deleted old releases (v1.0.0, v1.1.0, v2.0.0) for fresh submission
+- [x] Added static version variables in build.gradle for F-Droid checkupdates parsing
+- [x] Enabled auto-update (UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$)
+- [x] Created first official release: v1.0.0
+- [ ] GitHub Actions v1.0.0 release (in progress)
+- [ ] F-Droid pipeline validation with auto-update enabled
 - [ ] Address any maintainer feedback (MR !30449)
 
-**Current Version**: 2.0.0 (versionCode 200002 for arm64-v8a)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v2.0.0
+**Current Version**: 1.0.0 (versionCode 100002 for arm64-v8a)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.0
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 
 ### Versioning Workflow
