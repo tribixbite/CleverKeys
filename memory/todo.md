@@ -19,6 +19,7 @@
 - [x] Remove duplicate compileComposeSequences task
 - [x] Fix shift constant case mismatch (v1.1.1586-747b7082)
 - [x] Disable ABI splits for F-Droid compatibility (v1.1.1588-9ac39331)
+- [x] Lower SDK from 35 to 34 for androguard compatibility (v1.1.1590-6aa9b9ef)
 - [ ] Wait for F-Droid CI pipeline to pass
 - [ ] Address any maintainer feedback
 
