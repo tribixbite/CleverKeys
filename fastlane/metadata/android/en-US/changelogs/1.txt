@@ -1,0 +1,9 @@
+v1.0.0 - Initial Release
+
+• Neural network swipe/gesture typing
+• Unlimited clipboard history
+• 18+ themes with DIY theme creator
+• 100+ keyboard layouts
+• 208 short-swipe gesture actions
+• Per-ABI APKs for smaller downloads
+• Complete privacy (no network access)

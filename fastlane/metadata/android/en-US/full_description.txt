@@ -1,0 +1,40 @@
+CleverKeys is the only fully open-source neural network gesture keyboard for Android.
+
+🧠 AI-POWERED SWIPE TYPING
+• Custom transformer neural network trained for gesture recognition
+• Sub-200ms predictions with hardware acceleration (XNNPACK)
+• 100% local processing — works in airplane mode
+• Full inference control (beam width, length normalization, pruning)
+
+📋 UNLIMITED CLIPBOARD HISTORY
+• Truly unlimited history (configurable by count or size)
+• Pin important items
+• Search through history
+• Persistent across reboots
+• Export/Import for backup
+
+🔒 PRIVACY FIRST
+• Zero network permissions — literally cannot phone home
+• No analytics or telemetry
+• No cloud sync
+• All processing on-device
+• Open source = auditable
+
+⌨️ 100+ KEYBOARD LAYOUTS
+• QWERTY, AZERTY, QWERTZ, Dvorak, Colemak
+• Programming layouts with special characters
+• International layouts for 30+ languages
+• Customizable bottom row and modifiers
+
+🎨 EXTENSIVE THEME ENGINE
+• 18+ built-in themes including Material You
+• DIY theme creator with full color control
+• Key colors, labels, borders, swipe trails
+
+🛠️ POWER USER FEATURES
+• Terminal mode with Ctrl/Meta/Fn keys for Termux
+• 208 short-swipe gestures (8 directions × 26 keys)
+• Navigation, editing, function keys via gestures
+• Backup & Restore all settings
+
+CleverKeys is a complete Kotlin rewrite of Unexpected Keyboard with neural gesture typing added. The ML model, training code, and datasets are all publicly available.
