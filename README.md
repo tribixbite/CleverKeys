@@ -55,21 +55,19 @@ CleverKeys is the only fully open-source neural network gesture keyboard for And
 
 | Feature | CleverKeys | HeliBoard | FUTO | FlorisBoard | AnySoftKeyboard |
 |---------|:----------:|:---------:|:----:|:-----------:|:---------------:|
+| **Gesture Typing in Termux** | ✅ | ⚠️ Corrupted⁴ | ❌ Broken | ⚠️ Disabled | ⚠️ Experimental |
 | **Gesture/Swipe Typing** | ✅ Stable | ✅ Stable | ⚠️ Alpha | ⚠️ Disabled⁵ | ⚠️ Experimental |
 | **Gesture Engine Open Source** | ✅ | ❌¹ | ✅² | ✅ | ✅ |
 | **ML Training Code Public** | ✅ | N/A | ✅⁶ | N/A³ | N/A³ |
-| **License** | GPL-3.0 | GPL-3.0 | Source-First² | Apache-2.0 | Apache-2.0 |
-| **Internet Permissions** | ❌ None | ❌ None | ❌ None | ❌ None | ❌ None |
-| **Gesture Model Type** | Transformer NN | Google Proprietary | Transformer | Algorithmic | Algorithmic |
-| **Model Size** | 13MB ONNX | Proprietary Blob | 62MB GGUF | N/A | N/A |
-| **Avg. Dict Size** | ~1.2MB (Optimized) | ~3MB | ~1.1MB | N/A | ~1MB |
-| **Custom Layouts** | ✅ XML (8 sublabels) | ✅ JSON (flexible) | ✅ YAML (flexible) | ⚠️ JSON (no editor) | ⚠️ Addon packs only |
-| **Subkeys Per Key** | 8 (208 total) | ~9/row (popup grid) | 4 corners + hold | 2-5 typical | 5 max popup |
-| **DIY Theme Creator** | ✅ | ✅ | ❌ (16 built-in) | ✅ Snygg v2 | ✅ |
+| **Model Size** | 13MB | Proprietary | 62MB | N/A | N/A |
+| **APK Size** | ~52MB | ~45MB | ~200MB | ~15MB | ~25MB |
 | **Clipboard History** | ✅ Unlimited | ⚠️ 10min default⁷ | ✅ 25 items | ✅ 20 items | ❌ 15s hint only |
+| **Short-Swipe Actions**⁸ | ✅ 208 gestures | ⚠️ Limited | ❌ | ⚠️ Limited | ⚠️ Limited |
+| **Custom Layouts** | ✅ XML (8 sublabels) | ✅ JSON | ✅ YAML | ⚠️ JSON (no editor) | ⚠️ Addon packs only |
+| **DIY Theme Creator** | ✅ | ✅ | ❌ (16 built-in) | ✅ Snygg v2 | ✅ |
 | **Word Suggestions** | ✅ | ✅ | ✅ | ❌ (v0.6 planned) | ✅ |
-| **Gesture Typing in Termux** | ✅ | ⚠️ Corrupted⁴ | ❌ Broken | ⚠️ Disabled | ⚠️ Experimental |
-| **Last Release** | Active | Aug 2025 | Dec 2025 | Aug 2025 | Dec 2025 |
+| **No Internet Access** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **License** | GPL-3.0 | GPL-3.0 | Source-First² | Apache-2.0 | Apache-2.0 |
 
 <details>
 <summary><b>Footnotes & Sources</b></summary>
@@ -87,6 +85,8 @@ CleverKeys is the only fully open-source neural network gesture keyboard for And
 ⁶ FUTO swipe training dataset is public on [HuggingFace](https://huggingface.co/datasets/futo-org/swipe.futo.org) with training code in their repo
 
 ⁷ HeliBoard clipboard retention defaults to 10 minutes but is configurable; items are not persisted across restarts by default
+
+⁸ Short-swipe actions: 8 directions × 26 keys = 208 one-touch gestures for navigation (arrows, home/end), editing (select all, undo, cut/copy/paste), function keys (F1-F12), and more — no long-press menus needed
 
 </details>
 
