@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
   implementation "androidx.window:window-java:1.3.0"
-  implementation "androidx.core:core:1.15.0"  // Downgraded from 1.16.0 (requires SDK 35)
+  implementation "androidx.core:core:1.13.1"  // Downgraded from 1.16.0 - last version supporting SDK 34
   implementation "androidx.appcompat:appcompat:1.6.1"
   implementation "androidx.multidex:multidex:2.0.1"
   implementation "com.google.android.material:material:1.11.0"
