@@ -150,7 +150,10 @@ class LayoutManager(
     fun loadLayout(layoutId: Int): KeyboardData? {
         return keyboardDataCache.get(layoutId) ?: run {
             val keyboardData = KeyboardData.load(context.resources, layoutId)
-            keyboardDataCache.put(layoutId, keyboardData)
+            // LruCache.put() throws NPE if value is null, so only cache successful loads
+            if (keyboardData != null) {
+                keyboardDataCache.put(layoutId, keyboardData)
+            }
             keyboardData
         }
     }
