@@ -71,6 +71,10 @@ def getVersionName() {
     }
 }
 
+// Per-ABI versionCode mapping for F-Droid split APKs
+// Must be at project level for applicationVariants access
+ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2, 'x86_64': 3]
+
 android {
   namespace 'tribixbite.cleverkeys'
   compileSdk 34  // Lowered from 35 for F-Droid androguard compatibility
@@ -85,16 +89,16 @@ android {
     multiDexEnabled true
   }
 
-  // ABI splits disabled for F-Droid compatibility
-  // The universal APK (~75MB) includes ONNX runtime for all architectures
-  // splits {
-  //   abi {
-  //     enable true
-  //     reset()
-  //     include 'x86_64', 'armeabi-v7a', 'arm64-v8a'
-  //     universalApk true
-  //   }
-  // }
+  // ABI splits for smaller APKs (~25MB each vs ~75MB universal)
+  // F-Droid uses separate build entries with output: field to pick specific ABI
+  splits {
+    abi {
+      enable true
+      reset()
+      include 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+      universalApk false  // F-Droid builds each ABI separately
+    }
+  }
 
   compileOptions {
     sourceCompatibility JavaVersion.VERSION_1_8
@@ -177,10 +181,19 @@ android {
     }
   }
 
-  // Name outputs with application ID (no ABI suffix since splits are disabled)
+  // Name outputs with ABI and apply per-ABI versionCode for F-Droid
   android.applicationVariants.all { variant ->
-    variant.outputs.all { output ->
-      outputFileName = "${applicationId}-release.apk"
+    variant.outputs.each { output ->
+      def abi = output.getFilter(com.android.build.OutputFile.ABI)
+      if (abi != null) {
+        // Per-ABI versionCode: base * 10 + abiCode
+        def abiCode = rootProject.ext.abiCodes.get(abi, 0)
+        output.versionCodeOverride = variant.versionCode * 10 + abiCode
+        // Name: tribixbite.cleverkeys_1593_arm64-v8a.apk
+        output.outputFileName = "${applicationId}_${variant.versionCode}_${abi}.apk"
+      } else {
+        output.outputFileName = "${applicationId}_${variant.versionCode}_universal.apk"
+      }
     }
   }
 
