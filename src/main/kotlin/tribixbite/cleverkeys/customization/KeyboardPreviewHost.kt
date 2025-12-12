@@ -162,7 +162,8 @@ class KeyboardPreviewHost @JvmOverloads constructor(
         try {
             // Default to QWERTY
             val resources = context.resources
-            val layout = KeyboardData.load(resources, tribixbite.cleverkeys.R.raw.latn_qwerty_us)
+            val resId = resources.getIdentifier("latn_qwerty_us", "raw", context.packageName)
+            val layout = KeyboardData.load(resources, resId)
             if (layout != null) {
                 keyboardData = layout
                 keyboardView?.setKeyboard(layout)

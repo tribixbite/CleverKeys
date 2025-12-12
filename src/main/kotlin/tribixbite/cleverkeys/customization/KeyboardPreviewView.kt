@@ -105,7 +105,8 @@ class KeyboardPreviewView @JvmOverloads constructor(
     private fun loadKeyboardLayout() {
         try {
             // Try to load the main QWERTY layout
-            _keyboard = KeyboardData.load(resources, R.raw.latn_qwerty_us)
+            val resId = resources.getIdentifier("latn_qwerty_us", "raw", context.packageName)
+            _keyboard = KeyboardData.load(resources, resId)
         } catch (e: Exception) {
             // Will fall back to QWERTY_ROWS
         }

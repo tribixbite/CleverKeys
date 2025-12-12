@@ -75,7 +75,8 @@ class KeyboardReceiver(
             }
 
             KeyValue.Event.SWITCH_NUMERIC -> {
-                val numpad = layoutManager.loadNumpad(R.raw.numeric)
+                val resId = keyboard2.resources.getIdentifier("numeric", "raw", keyboard2.packageName)
+                val numpad = layoutManager.loadNumpad(resId)
                 if (numpad != null) {
                     keyboardView.setKeyboard(numpad)
                 }

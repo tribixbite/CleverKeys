@@ -198,8 +198,14 @@ class LayoutManager(
             InputType.TYPE_CLASS_PHONE,
             InputType.TYPE_CLASS_DATETIME -> {
                 return when (config.selected_number_layout) {
-                    NumberLayout.PIN -> loadPinentry(R.xml.pin)
-                    NumberLayout.NUMBER -> loadNumpad(R.xml.numeric)
+                    NumberLayout.PIN -> {
+                        val pinId = context.resources.getIdentifier("pin", "raw", context.packageName)
+                        loadPinentry(pinId)
+                    }
+                    NumberLayout.NUMBER -> {
+                        val numId = context.resources.getIdentifier("numeric", "raw", context.packageName)
+                        loadNumpad(numId)
+                    }
                     else -> null
                 }
             }
