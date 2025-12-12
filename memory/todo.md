@@ -24,14 +24,23 @@
 - [x] Add novcheck to bypass androguard APK version parsing issue
 - [x] F-Droid CI pipeline passed (pipeline 2212001928 - all jobs SUCCESS!)
 - [x] Fixed checkupdates: disabled auto-update for initial submission (dynamic versionCode)
-- [x] Re-enabled ABI splits with per-ABI versionCode (v1.1.1596-a1e28a16)
-  - Base versionCode * 10 + abiCode (1=armv7, 2=arm64, 3=x86_64)
-  - F-Droid metadata uses `output:` field for arm64-v8a APK
-  - APK size reduced from ~75MB to ~25MB per architecture
-- [ ] Wait for new F-Droid CI pipeline to pass
-- [ ] Address any maintainer feedback (MR !30449 ready for review)
+- [x] Re-enabled ABI splits with per-ABI versionCode
+- [x] Implemented semantic versioning system (vMAJOR.MINOR.PATCH)
+  - versionCode = MAJOR * 10000 + MINOR * 100 + PATCH
+  - ABI versionCode = base * 10 + abiCode (1=armv7, 2=arm64, 3=x86_64)
+- [x] Updated GitHub Actions release workflow for semantic versions
+- [x] F-Droid auto-update enabled (UpdateCheckMode: Tags)
+- [x] Created first semantic release: v2.0.0
+- [ ] Wait for F-Droid CI pipeline to pass
+- [ ] Address any maintainer feedback (MR !30449)
 
-**Current Version**: 1.1.1596-a1e28a16 (versionCode 15962 for arm64-v8a)
+**Current Version**: 2.0.0 (versionCode 200002 for arm64-v8a)
+
+### Versioning Workflow
+1. Development: `dev-{sha}` with versionCode 1
+2. Release: Tag with `vX.Y.Z` and push
+3. GitHub Actions automatically creates release with APKs
+4. F-Droid automatically detects new tags and builds
 
 ---
 
