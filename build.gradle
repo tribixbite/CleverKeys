@@ -263,7 +263,7 @@ tasks.register('genEmojis') {
   println "\nGenerating res/raw/emojis.txt"
   exec {
     workingDir = projectDir
-    commandLine "python", "gen_emoji.py"
+    commandLine "python3", "gen_emoji.py"
     ignoreExitValue = true  // Don't fail CI if python script unavailable
   }
 }
@@ -284,7 +284,7 @@ tasks.register('genLayoutsList') {
   println "\nGenerating res/values/layouts.xml"
   exec {
     workingDir = projectDir
-    commandLine "python", "gen_layouts.py"
+    commandLine "python3", "gen_layouts.py"
     ignoreExitValue = true  // Don't fail CI if python script unavailable
   }
 }
@@ -299,7 +299,7 @@ tasks.register('checkKeyboardLayouts') {
   println "\nChecking layouts"
   exec {
     workingDir = projectDir
-    commandLine("python", "tools/check_layout.py")
+    commandLine("python3", "tools/check_layout.py")
     ignoreExitValue = true  // Don't fail CI if check script fails
   }
 }
@@ -347,7 +347,7 @@ tasks.register('generateBinaryDictionaries') {
         println "Generating binary dictionary: ${binFile.name}"
         exec {
           workingDir = projectDir
-          commandLine "python", "scripts/generate_binary_dict.py", jsonFile.absolutePath, binFile.absolutePath
+          commandLine "python3", "scripts/generate_binary_dict.py", jsonFile.absolutePath, binFile.absolutePath
         }
       } else {
         println "Binary dictionary up-to-date: ${binFile.name}"
@@ -373,7 +373,7 @@ tasks.register('generateBinaryContractions') {
       println "Generating binary contractions: ${binFile.name}"
       exec {
         workingDir = projectDir
-        commandLine "python", "scripts/generate_binary_contractions.py",
+        commandLine "python3", "scripts/generate_binary_contractions.py",
                     nonPairedFile.absolutePath,
                     pairedFile.absolutePath,
                     binFile.absolutePath
