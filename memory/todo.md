@@ -38,7 +38,8 @@
 - [x] F-Droid build job: SUCCESS (pipeline 2212098641)
 - [x] Cleaned metadata format (removed comments, fixed field order)
 - [x] Pipeline 2212114543: 7/8 jobs SUCCESS (all except checkupdates)
-- [ ] checkupdates fails due to dynamic versioning (expected - awaiting maintainer guidance)
+- [x] Disabled auto-update for initial submission (UpdateCheckMode: None)
+- [x] **Pipeline 2212144772: ALL 8 JOBS SUCCESS! ✅**
 - [ ] Address any maintainer feedback (MR !30449)
 
 **Current Version**: 2.0.0 (versionCode 200002 for arm64-v8a)
