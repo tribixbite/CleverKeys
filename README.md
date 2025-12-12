@@ -61,7 +61,7 @@ CleverKeys is the only fully open-source neural network gesture keyboard for And
 | **License** | GPL-3.0 | GPL-3.0 | Source-First² | Apache-2.0 | Apache-2.0 |
 | **Internet Permissions** | ❌ None | ❌ None | ❌ None | ❌ None | ❌ None |
 | **Gesture Model Type** | Transformer NN | Google Proprietary | Transformer | Algorithmic | Algorithmic |
-| **Model Size** | 13MB ONNX | Proprietary Blob | ~10MB | N/A | N/A |
+| **Model Size** | 13MB ONNX | Proprietary Blob | 62MB GGUF | N/A | N/A |
 | **Avg. Dict Size** | ~1.2MB (Optimized) | ~3MB | ~1.1MB | N/A | ~1MB |
 | **Custom Layouts** | ✅ XML (8 sublabels) | ✅ JSON (flexible) | ✅ YAML (flexible) | ⚠️ JSON (no editor) | ⚠️ Addon packs only |
 | **Subkeys Per Key** | 8 (208 total) | ~9/row (popup grid) | 4 corners + hold | 2-5 typical | 5 max popup |
