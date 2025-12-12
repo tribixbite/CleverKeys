@@ -55,19 +55,20 @@ CleverKeys is the only fully open-source neural network gesture keyboard for And
 
 | Feature | CleverKeys | HeliBoard | FUTO | FlorisBoard | AnySoftKeyboard |
 |---------|:----------:|:---------:|:----:|:-----------:|:---------------:|
-| **Gesture/Swipe Typing** | ✅ Stable | ✅ | ✅ Alpha | ✅ Beta | ✅ Experimental |
+| **Gesture/Swipe Typing** | ✅ Stable | ✅ Stable | ⚠️ Alpha | ⚠️ Disabled⁵ | ⚠️ Experimental |
 | **Gesture Engine Open Source** | ✅ | ❌¹ | ✅² | ✅ | ✅ |
-| **ML Training Code Public** | ✅ | N/A | ❌ | N/A³ | N/A³ |
+| **ML Training Code Public** | ✅ | N/A | ✅⁶ | N/A³ | N/A³ |
 | **License** | GPL-3.0 | GPL-3.0 | Source-First² | Apache-2.0 | Apache-2.0 |
 | **Internet Permissions** | ❌ None | ❌ None | ❌ None | ❌ None | ❌ None |
 | **Gesture Model Type** | Transformer NN | Google Proprietary | Transformer | Algorithmic | Algorithmic |
-| **Model Size** | 13MB ONNX | Unknown | Unknown | N/A | N/A |
-| **Per-Key Customization** | ✅ 8 directions | ⚠️ Space/Del only | ✅ YAML | ⚠️ Presets | ✅ |
-| **Subkeys Per Key** | 8 (208 total) | Unlimited popups | Unlimited | Unknown | Unknown |
-| **DIY Theme Creator** | ✅ | ✅ | ❌ (6 built-in) | ✅ Snygg v2 | ✅ |
-| **Clipboard History** | ✅ Unlimited | ✅ Configurable | ✅ | ✅ | ⚠️ Basic |
+| **Model Size** | 13MB ONNX | Proprietary Blob | ~10MB | N/A | N/A |
+| **Avg. Dict Size** | ~1.2MB (Optimized) | ~3MB | ~1.1MB | N/A | ~1MB |
+| **Custom Layouts** | ✅ XML (8 sublabels) | ✅ JSON (flexible) | ✅ YAML (flexible) | ⚠️ JSON (no editor) | ⚠️ Addon packs only |
+| **Subkeys Per Key** | 8 (208 total) | ~9/row (popup grid) | 4 corners + hold | 2-5 typical | 5 max popup |
+| **DIY Theme Creator** | ✅ | ✅ | ❌ (16 built-in) | ✅ Snygg v2 | ✅ |
+| **Clipboard History** | ✅ Unlimited | ⚠️ 10min default⁷ | ✅ 25 items | ✅ 20 items | ❌ 15s hint only |
 | **Word Suggestions** | ✅ | ✅ | ✅ | ❌ (v0.6 planned) | ✅ |
-| **Works in Termux** | ✅ | ⚠️ Buggy⁴ | ❓ | ⚠️ Gestures disabled | ✅ |
+| **Gesture Typing in Termux** | ✅ | ⚠️ Corrupted⁴ | ❌ Broken | ⚠️ Disabled | ⚠️ Experimental |
 | **Last Release** | Active | Aug 2025 | Dec 2025 | Aug 2025 | Dec 2025 |
 
 <details>
@@ -75,11 +76,17 @@ CleverKeys is the only fully open-source neural network gesture keyboard for And
 
 ¹ HeliBoard requires Google's proprietary `libjni_latinimegoogle.so` library for gesture typing ([source](https://github.com/Helium314/HeliBoard#gesture-typing))
 
-² FUTO uses "Source First License 1.1" — source-available but restricts commercial use ([source](https://keyboard.futo.org/)); swipe training dataset is public on [HuggingFace](https://huggingface.co/datasets/futo-org/swipe.futo.org)
+² FUTO uses "Source First License 1.1" — source-available but restricts commercial use ([source](https://keyboard.futo.org/))
 
 ³ FlorisBoard and AnySoftKeyboard use algorithmic approaches (corner matching, template matching) — no ML training involved
 
 ⁴ HeliBoard has a [known bug](https://github.com/termux/termux-app/issues/3941) where swipe typing in Termux produces duplicated/corrupted output
+
+⁵ FlorisBoard glide typing is disabled by default and labeled "alpha quality" — must be enabled manually in advanced settings
+
+⁶ FUTO swipe training dataset is public on [HuggingFace](https://huggingface.co/datasets/futo-org/swipe.futo.org) with training code in their repo
+
+⁷ HeliBoard clipboard retention defaults to 10 minutes but is configurable; items are not persisted across restarts by default
 
 </details>
 
@@ -97,7 +104,7 @@ CleverKeys uses a custom **transformer neural network** (encoder-decoder archite
 Android restricts clipboard access for security - apps can't read clipboard contents in the background. But keyboards are special. As an Input Method Editor (IME), CleverKeys has legitimate clipboard access, making it the only way to get truly unlimited clipboard history without root.
 
 ### 📱 Reliable Swipe Typing in Termux
-CleverKeys is the **only open-source keyboard with reliable swipe/gesture typing in Termux**. Other keyboards either disable gestures in terminals (FlorisBoard), produce corrupted output (HeliBoard), or have unknown compatibility (FUTO). Commercial keyboards like Gboard and SwiftKey also disable swipe in Termux. CleverKeys works everywhere — including terminal emulators, SSH sessions, and developer tools.
+CleverKeys is the **only open-source keyboard with reliable swipe/gesture typing in Termux**. Other keyboards either disable gestures in terminals (FlorisBoard), produce corrupted output (HeliBoard), or simply don't work (FUTO). Commercial keyboards like Gboard and SwiftKey also disable swipe in Termux. CleverKeys works everywhere — including terminal emulators, SSH sessions, and developer tools.
 
 <div align="center">
 
