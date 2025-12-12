@@ -31,10 +31,17 @@
 - [x] Updated GitHub Actions release workflow for semantic versions
 - [x] F-Droid auto-update enabled (UpdateCheckMode: Tags)
 - [x] Created first semantic release: v2.0.0
-- [ ] Wait for F-Droid CI pipeline to pass
+- [x] GitHub Actions release v2.0.0 succeeded (3 APKs published)
+- [x] Created docs/VERSIONING.md documentation
+- [x] Fixed F-Droid schema validation (AutoUpdateMode, VercodeOperation array format)
+- [x] Fixed APK output pattern (wildcard for arm64-v8a)
+- [x] F-Droid build job: SUCCESS (pipeline 2212098641)
+- [ ] checkupdates job fails (dynamic versioning - expected)
 - [ ] Address any maintainer feedback (MR !30449)
 
 **Current Version**: 2.0.0 (versionCode 200002 for arm64-v8a)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v2.0.0
+**F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 
 ### Versioning Workflow
 1. Development: `dev-{sha}` with versionCode 1
