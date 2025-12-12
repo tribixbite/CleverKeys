@@ -51,38 +51,24 @@ dependencies {
 
 // Version management functions
 def getVersionCode() {
-    def versionFile = file("version.properties")
-    def versionCode = 51
-
-    if (versionFile.exists()) {
-        def props = new Properties()
-        props.load(new FileInputStream(versionFile))
-        versionCode = props.getProperty("VERSION_CODE", "51").toInteger()
+    try {
+        def code = 'git rev-list --count HEAD'.execute().text.trim().toInteger()
+        println "🚀 CleverKeys version code (git): ${code}"
+        return code
+    } catch (ignored) {
+        println "⚠️ Git not found, using default version code"
+        return 1
     }
-
-    // Increment version code
-    versionCode++
-
-    // Save back to file
-    versionFile.parentFile.mkdirs()
-    def props = new Properties()
-    props.setProperty("VERSION_CODE", versionCode.toString())
-    props.setProperty("VERSION_NAME", "1.1.${versionCode - 50}")
-    props.setProperty("BUILD_TIME", new Date().toString())
-    props.store(new FileOutputStream(versionFile), "CleverKeys Version")
-
-    println "🚀 CleverKeys version incremented to: ${versionCode}"
-    return versionCode
 }
 
 def getVersionName() {
-    def versionFile = file("version.properties")
-    if (versionFile.exists()) {
-        def props = new Properties()
-        props.load(new FileInputStream(versionFile))
-        return props.getProperty("VERSION_NAME", "1.1.1")
+    try {
+        def count = 'git rev-list --count HEAD'.execute().text.trim()
+        def shortSha = 'git rev-parse --short HEAD'.execute().text.trim()
+        return "1.1.${count}-${shortSha}"
+    } catch (ignored) {
+        return "1.1.0-dev"
     }
-    return "1.1.1"
 }
 
 android {
