@@ -36,7 +36,9 @@
 - [x] Fixed F-Droid schema validation (AutoUpdateMode, VercodeOperation array format)
 - [x] Fixed APK output pattern (wildcard for arm64-v8a)
 - [x] F-Droid build job: SUCCESS (pipeline 2212098641)
-- [ ] checkupdates job fails (dynamic versioning - expected)
+- [x] Cleaned metadata format (removed comments, fixed field order)
+- [x] Pipeline 2212114543: 7/8 jobs SUCCESS (all except checkupdates)
+- [ ] checkupdates fails due to dynamic versioning (expected - awaiting maintainer guidance)
 - [ ] Address any maintainer feedback (MR !30449)
 
 **Current Version**: 2.0.0 (versionCode 200002 for arm64-v8a)
