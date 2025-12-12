@@ -1,7 +1,7 @@
 # Gesture Recognition System Specification
 
 **Status**: Implemented
-**Last Updated**: 2025-12-09
+**Last Updated**: 2025-12-12
 
 ---
 
@@ -154,7 +154,101 @@ class GestureClassifier(private val context: Context) {
 
 ## 5. Short Gesture Detection
 
-When classified as TAP, short gesture detection checks if the movement qualifies as a directional swipe within the key:
+When classified as TAP, short gesture detection checks if the movement qualifies as a directional swipe within the key.
+
+### 5.1 Dual Threshold System: SHORT_GESTURE_MIN_DISTANCE vs SWIPE_DIST
+
+CleverKeys uses **two complementary thresholds** to determine the minimum distance required for a short gesture. This dual system ensures wide keys (like Backspace, Space) don't require massive swipes while small keys don't trigger accidentally.
+
+#### The Two Threshold Types
+
+| Setting | Type | Default | Storage | Purpose |
+|---------|------|---------|---------|---------|
+| `short_gesture_min_distance` | **Relative** (% of key diagonal) | 37% | Int in prefs | Scales with key size |
+| `swipe_dist` → `swipe_dist_px` | **Absolute** (screen-scaled pixels) | 23 | String in prefs | Fixed pixel cap |
+
+#### How They Work Together (Pointers.kt:287-299)
+
+```kotlin
+// 1. PERCENTAGE-BASED threshold: % of key's diagonal (hypotenuse)
+val percentMinThreshold = keyHypotenuse * (_config.short_gesture_min_distance / 100.0f)
+
+// 2. ABSOLUTE threshold: swipe_dist converted to device-specific pixels
+val absoluteThreshold = _config.swipe_dist_px.toFloat()
+
+// 3. Relaxation factor (0.8x) for Manhattan→Euclidean conversion
+// Manhattan distance is ~1.4x Euclidean for diagonals
+val effectiveAbsolute = if (absoluteThreshold > 0) absoluteThreshold * 0.8f else Float.MAX_VALUE
+
+// 4. USE THE SMALLER (easier to trigger) THRESHOLD
+val minDistance = min(percentMinThreshold, effectiveAbsolute)
+```
+
+#### Why MIN() Instead of MAX()?
+
+**Problem**: Different key sizes need different thresholds.
+
+| Key Type | Typical Width | Hypotenuse | 37% of Hypotenuse |
+|----------|---------------|------------|-------------------|
+| Letter (Q,W,E...) | ~90px | ~127px | **~47px** |
+| Backspace | ~180px | ~254px | **~94px** |
+| Space bar | ~400px | ~410px | **~152px** |
+
+Without the absolute threshold cap, you'd need to swipe **152 pixels** on the space bar just to trigger a short gesture — far too much!
+
+**Solution**: Take the **minimum** of:
+1. **Percentage-based** (prevents accidental triggers on small keys)
+2. **Absolute** (caps the maximum for wide keys)
+
+#### Practical Examples
+
+**Backspace key** (180px wide, ~254px diagonal):
+- Percentage threshold: 254 × 0.37 = **94px**
+- Absolute threshold: ~70px (after DPI scaling and 0.8 factor)
+- **Effective threshold**: `min(94, 70)` = **70px** ← absolute wins
+
+**Small letter key** (90px wide, ~127px diagonal):
+- Percentage threshold: 127 × 0.37 = **47px**
+- Absolute threshold: ~70px
+- **Effective threshold**: `min(47, 70)` = **47px** ← percentage wins
+
+#### swipe_dist_px Calculation (Config.kt:353-356)
+
+The raw `swipe_dist` preference value (stored as string "23") is converted to device-specific pixels:
+
+```kotlin
+// DPI ratio accounts for non-square pixels
+val dpi_ratio = maxOf(dm.xdpi, dm.ydpi) / minOf(dm.xdpi, dm.ydpi)
+
+// Base scaling from screen dimensions
+val swipe_scaling = minOf(dm.widthPixels, dm.heightPixels) / 10f * dpi_ratio
+
+// Convert preference value (0-100 scale) to pixels
+val swipe_dist_value = safeGetString(_prefs, "swipe_dist", "23").toFloatOrNull() ?: 23f
+swipe_dist_px = swipe_dist_value / 25f * swipe_scaling
+```
+
+This normalization produces approximately:
+- ~70-100px on a 1080p phone (5-6" screen)
+- ~100-140px on a 1440p phone/tablet
+
+#### Tuning Guidelines
+
+| Symptom | Adjust |
+|---------|--------|
+| Accidental triggers on small letter keys | **Increase** `short_gesture_min_distance` (e.g., 37 → 45%) |
+| Hard to trigger on small keys | **Decrease** `short_gesture_min_distance` (e.g., 37 → 30%) |
+| Accidental triggers on wide keys (Space, Backspace) | **Increase** `swipe_dist` (e.g., 23 → 30) |
+| Hard to trigger on wide keys | **Decrease** `swipe_dist` (e.g., 23 → 18) |
+
+#### Related Settings
+
+| Setting | Default | Effect |
+|---------|---------|--------|
+| `short_gesture_max_distance` | 141% | Maximum travel before becoming a long swipe (exits key boundary) |
+| `short_gestures_enabled` | true | Master toggle for short gesture detection |
+
+### 5.2 Short Gesture Detection Flow
 
 ```kotlin
 // Pointers.kt, onTouchUp handler
@@ -163,8 +257,12 @@ if (_config.short_gestures_enabled && !ptr.hasLeftStartingKey) {
     val dy = ptr.lastY - ptr.downY
     val distance = sqrt(dx * dx + dy * dy)
 
+    // Calculate dual threshold (see Section 5.1)
     val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
-    val minDistance = keyHypotenuse * (_config.short_gesture_min_distance / 100.0f)
+    val percentMinThreshold = keyHypotenuse * (_config.short_gesture_min_distance / 100.0f)
+    val absoluteThreshold = _config.swipe_dist_px.toFloat()
+    val effectiveAbsolute = if (absoluteThreshold > 0) absoluteThreshold * 0.8f else Float.MAX_VALUE
+    val minDistance = min(percentMinThreshold, effectiveAbsolute)
 
     if (distance >= minDistance) {
         // Calculate 16-direction (0-15)
@@ -298,12 +396,13 @@ Roundtrip    Swipe/Circle/Anticircle
 | Setting | Type | Default | Range | Description |
 |---------|------|---------|-------|-------------|
 | `short_gestures_enabled` | Boolean | true | — | Enable short gesture detection |
-| `short_gesture_min_distance` | Int | 40 | 10-95% | Minimum travel to trigger (% of key diagonal) |
-| `short_gesture_max_distance` | Int | 200 | 50-200% | Maximum travel before becoming long swipe |
+| `short_gesture_min_distance` | Int | 37 | 10-95% | Minimum travel to trigger (% of key diagonal) |
+| `short_gesture_max_distance` | Int | 141 | 50-200% | Maximum travel before becoming long swipe |
+| `swipe_dist` | String | "23" | 0-100 | Absolute threshold base (see Section 5.1) |
+| `swipe_dist_px` | Float | varies | — | Computed from swipe_dist + screen DPI |
 | `tap_duration_threshold` | Long | 150 | 50-500ms | Maximum duration for TAP classification |
 | `swipe_typing_enabled` | Boolean | true | — | Enable neural swipe prediction |
 | `circle_sensitivity` | Int | 2 | 1-8 | Minimum direction change for rotation detection |
-| `swipe_dist_px` | Float | varies | — | Minimum distance for Slider activation |
 
 ### Threshold Behavior
 
