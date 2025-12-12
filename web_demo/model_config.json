@@ -8,7 +8,7 @@
     "num_decoder_layers": 4,
     "dim_feedforward": 1024,
     "vocab_size": 30,
-    "max_seq_length": 150,
+    "max_seq_length": 250,
     "max_word_length": 20
   },
   "feature_extraction": {

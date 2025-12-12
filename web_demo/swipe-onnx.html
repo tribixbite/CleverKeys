@@ -363,9 +363,15 @@
     <script>        // Configuration
         const NORMALIZED_WIDTH = 360;
         const NORMALIZED_HEIGHT = 215;
-        const MAX_SEQUENCE_LENGTH = 150;  // Fixed sequence length from training - cannot change without retraining model
+        const MAX_SEQUENCE_LENGTH = 250;  // Must match Android app - model trained with 250
         const DEBUG = { enabled: false };
-        
+        const VELOCITY_CLIP = 10.0;  // Clip velocities and accelerations to [-10, 10]
+
+        // Gate console.log behind DEBUG flag (console.error/warn unaffected)
+        const _originalConsoleLog = console.log;
+        console.log = (...args) => { if (DEBUG.enabled) _originalConsoleLog(...args); };
+        // Enable debug logging: DEBUG.enabled = true in console
+
         // Model variables
         let encoderSession = null;
         let decoderSession = null;
@@ -373,18 +379,18 @@
         let isModelReady = false;
         let swipeVocabulary = null;  // Using new SwipeVocabulary class
         let commonTwoCharWords = null;
-        
+
         // Expose for debugging
         window.isModelReady = false;
-        
+
         // Canvas setup
         const canvas = document.getElementById('swipeCanvas');
         const ctx = canvas.getContext('2d');
-        
-        // Swipe tracking
+
+        // Swipe tracking - now includes timestamps for proper velocity calculation
         let isDrawing = false;
         let isPotentialSwipe = false; // Track if this might actually be a swipe
-        let swipePath = [];
+        let swipePath = [];  // Array of {x, y, timestamp, key}
         let keySequence = [];
         let currentKey = null;
         let keyboardBounds = null;
@@ -980,13 +986,29 @@
             }
         }
         
+        // Helper to check if shift is active
+        function isShiftActive() {
+            return document.querySelector('.key[data-key="shift"]')?.classList.contains('key-active');
+        }
+
+        // Helper to disable shift after typing
+        function disableShiftAfterTyping() {
+            const shiftKey = document.querySelector('.key[data-key="shift"]');
+            if (shiftKey?.classList.contains('key-active')) {
+                shiftKey.classList.remove('key-active');
+                console.log('🔤 Shift auto-disabled after character');
+            }
+        }
+
         // Handle pure single character input (no predictions)
         function handleSingleCharacterInput(keyValue) {
             if (keyValue && keyValue.length === 1) {
                 // Handle different character types
                 if (keyValue.match(/[a-z]/i)) {
-                    // Letters - lowercase for consistency
-                    inputText += keyValue.toLowerCase();
+                    // Letters - check shift state for case
+                    const char = isShiftActive() ? keyValue.toUpperCase() : keyValue.toLowerCase();
+                    inputText += char;
+                    disableShiftAfterTyping();
                 } else if (keyValue.match(/[0-9-/();$&@"'.,?!+*]/)) {
                     // Numbers and symbols - add as-is
                     inputText += keyValue;
@@ -1024,24 +1046,19 @@
             }
         }
         
-        // Handle shift key functionality
+        // Handle shift key functionality - toggles shift state
+        // Shift auto-disables after typing a character via disableShiftAfterTyping()
         function handleShift() {
-            // Toggle shift state
-            const isShiftActive = document.querySelector('.key[data-key="shift"]')?.classList.contains('key-active');
-            
-            if (isShiftActive) {
-                // Turn off shift
-                document.querySelector('.key[data-key="shift"]')?.classList.remove('key-active');
+            const shiftKey = document.querySelector('.key[data-key="shift"]');
+            if (!shiftKey) return;
+
+            const wasActive = shiftKey.classList.contains('key-active');
+            if (wasActive) {
+                shiftKey.classList.remove('key-active');
                 console.log('🔤 Shift OFF');
             } else {
-                // Turn on shift
-                document.querySelector('.key[data-key="shift"]')?.classList.add('key-active');
+                shiftKey.classList.add('key-active');
                 console.log('🔤 Shift ON');
-                
-                // Auto turn off after next character
-                setTimeout(() => {
-                    document.querySelector('.key[data-key="shift"]')?.classList.remove('key-active');
-                }, 3000); // Auto-off after 3 seconds
             }
         }
         
@@ -1159,27 +1176,28 @@
         }
         
         function prepareSwipeFeatures(swipeData) {
-            // Normalize swipe path to fixed length
+            // Normalize swipe path to fixed length, preserving timestamps
             const path = swipeData.path;
             const normalizedPath = [];
             const originalLength = Math.min(path.length, MAX_SEQUENCE_LENGTH);
-            
-            // Take up to MAX_SEQUENCE_LENGTH points
+
+            // Take up to MAX_SEQUENCE_LENGTH points, preserving timestamps
             for (let i = 0; i < Math.min(path.length, MAX_SEQUENCE_LENGTH); i++) {
                 const point = path[i];
                 normalizedPath.push({
                     x: point.x / NORMALIZED_WIDTH,
                     y: point.y / NORMALIZED_HEIGHT,
-                    key: point.key || null
+                    key: point.key || null,
+                    timestamp: point.timestamp || 0  // Preserve timestamp for velocity calc
                 });
             }
-            
-            // Pad with last point if too short
-            const lastPoint = normalizedPath[normalizedPath.length - 1] || { x: 0, y: 0, key: null };
+
+            // Pad with last point if too short (use same timestamp for padded points)
+            const lastPoint = normalizedPath[normalizedPath.length - 1] || { x: 0, y: 0, key: null, timestamp: 0 };
             while (normalizedPath.length < MAX_SEQUENCE_LENGTH) {
                 normalizedPath.push({ ...lastPoint });
             }
-            
+
             return {
                 path: normalizedPath,
                 originalLength: originalLength,  // Track actual swipe length for masking
@@ -1208,31 +1226,55 @@
             
             // Track actual swipe length for masking
             const actualLength = features.originalLength || MAX_SEQUENCE_LENGTH;
-            
+
+            // Helper function to clip values to [-VELOCITY_CLIP, VELOCITY_CLIP]
+            const clip = (val) => Math.max(-VELOCITY_CLIP, Math.min(VELOCITY_CLIP, val));
+
+            // First pass: calculate positions and time deltas
+            // Matches Python training: dt = np.diff(ts, prepend=ts[0]); dt = np.maximum(dt, 1e-6)
+            const dt = new Float32Array(MAX_SEQUENCE_LENGTH);
+            dt[0] = 1e-6;  // First dt is 0, but we use minimum to avoid division by zero
+            for (let i = 1; i < actualLength; i++) {
+                const timeDiff = (features.path[i].timestamp - features.path[i-1].timestamp);
+                dt[i] = Math.max(timeDiff, 1e-6);  // Minimum 1e-6 to avoid division by zero
+            }
+            // Padded points get same dt as last real point
+            for (let i = actualLength; i < MAX_SEQUENCE_LENGTH; i++) {
+                dt[i] = dt[actualLength - 1] || 1e-6;
+            }
+
+            // Arrays for velocity (needed for acceleration calculation)
+            const vxArr = new Float32Array(MAX_SEQUENCE_LENGTH);
+            const vyArr = new Float32Array(MAX_SEQUENCE_LENGTH);
+
             for (let i = 0; i < MAX_SEQUENCE_LENGTH; i++) {
                 const point = features.path[i];
                 const baseIdx = i * 6;
-                
+
                 // Position (normalized 0-1)
                 trajectoryData[baseIdx + 0] = point.x;
                 trajectoryData[baseIdx + 1] = point.y;
-                
-                // Velocity (difference from previous point)
-                if (i > 0) {
+
+                // Velocity: v = dx / dt (time-normalized, matching Python training)
+                if (i > 0 && i < actualLength) {
                     const prevPoint = features.path[i - 1];
-                    trajectoryData[baseIdx + 2] = point.x - prevPoint.x; // vx
-                    trajectoryData[baseIdx + 3] = point.y - prevPoint.y; // vy
+                    const dx = point.x - prevPoint.x;
+                    const dy = point.y - prevPoint.y;
+                    vxArr[i] = clip(dx / dt[i]);
+                    vyArr[i] = clip(dy / dt[i]);
                 } else {
-                    trajectoryData[baseIdx + 2] = 0;
-                    trajectoryData[baseIdx + 3] = 0;
+                    vxArr[i] = 0;
+                    vyArr[i] = 0;
                 }
-                
-                // Acceleration (difference of velocities)
-                if (i > 1) {
-                    const prevVx = trajectoryData[(i-1) * 6 + 2];
-                    const prevVy = trajectoryData[(i-1) * 6 + 3];
-                    trajectoryData[baseIdx + 4] = trajectoryData[baseIdx + 2] - prevVx; // ax
-                    trajectoryData[baseIdx + 5] = trajectoryData[baseIdx + 3] - prevVy; // ay
+                trajectoryData[baseIdx + 2] = vxArr[i];
+                trajectoryData[baseIdx + 3] = vyArr[i];
+
+                // Acceleration: a = dv / dt (time-normalized, matching Python training)
+                if (i > 1 && i < actualLength) {
+                    const dvx = vxArr[i] - vxArr[i - 1];
+                    const dvy = vyArr[i] - vyArr[i - 1];
+                    trajectoryData[baseIdx + 4] = clip(dvx / dt[i]);
+                    trajectoryData[baseIdx + 5] = clip(dvy / dt[i]);
                 } else {
                     trajectoryData[baseIdx + 4] = 0;
                     trajectoryData[baseIdx + 5] = 0;
@@ -2038,15 +2080,17 @@
             }
             
             if (keyValue && keyValue.length === 1 && keyValue.match(/[a-z]/i)) {
-                // Add character to current typed word
-                currentTypedWord += keyValue.toLowerCase();
-                
+                // Add character to current typed word - check shift state
+                const char = isShiftActive() ? keyValue.toUpperCase() : keyValue.toLowerCase();
+                currentTypedWord += char;
+                disableShiftAfterTyping();
+
                 // Update input display to show what's being typed
                 const currentInput = document.getElementById('inputText').textContent;
                 const words = currentInput.split(' ');
                 words[words.length - 1] = currentTypedWord;
                 document.getElementById('inputText').textContent = words.join(' ');
-                
+
                 console.log(`Typing: "${currentTypedWord}"`);
                 
                 // Generate predictions for the current typed word
@@ -2811,21 +2855,21 @@
                 ['-', '/', ':', ';', '(', ')', '$', '&', '@', '"'],
                 ['shift', '.', ',', '?', '!', "'", '"', '+', '*', 'backspace']
             ];
-            
-            // Update each row
+
+            // Update each row - find first key with data-row, then get parent div to find all keys
             numberLayouts.forEach((row, rowIndex) => {
-                const keys = document.querySelectorAll(`[data-row="${rowIndex}"] .key`);
-                row.forEach((char, keyIndex) => {
-                    if (keys[keyIndex]) {
-                        keys[keyIndex].textContent = char;
-                        keys[keyIndex].dataset.key = char;
-                        // Update data attributes for numbers
-                        if (char.match(/[0-9-/();$&@"'.,?!+*]/)) {
+                const rowDiv = document.querySelector(`[data-row="${rowIndex}"]`)?.parentElement;
+                if (rowDiv) {
+                    const keys = rowDiv.querySelectorAll('.key');
+                    row.forEach((char, keyIndex) => {
+                        if (keys[keyIndex]) {
+                            keys[keyIndex].textContent = char;
+                            keys[keyIndex].dataset.key = char;
                             keys[keyIndex].dataset.row = rowIndex;
                             keys[keyIndex].dataset.col = keyIndex;
                         }
-                    }
-                });
+                    });
+                }
             });
         }
         
