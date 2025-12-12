@@ -47,10 +47,31 @@ jobs:
         echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
         echo "sha_short=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
 
-    - name: Rename APK with version
+    - name: List and rename APKs
+      id: apks
       run: |
-        mv build/outputs/apk/debug/tribixbite.cleverkeys.apk \
-           build/outputs/apk/debug/CleverKeys-nightly-${{ steps.version.outputs.sha_short }}.apk
+        cd build/outputs/apk/debug
+        echo "APKs built:"
+        ls -la *.apk
+
+        # Rename all APKs with version info
+        for apk in *.apk; do
+          # Extract ABI from filename (e.g., tribixbite.cleverkeys-arm64-v8a-debug.apk)
+          if [[ "$apk" == *"universal"* ]]; then
+            newname="CleverKeys-${{ steps.version.outputs.sha_short }}-universal.apk"
+          elif [[ "$apk" == *"arm64-v8a"* ]]; then
+            newname="CleverKeys-${{ steps.version.outputs.sha_short }}-arm64.apk"
+          elif [[ "$apk" == *"armeabi-v7a"* ]]; then
+            newname="CleverKeys-${{ steps.version.outputs.sha_short }}-armv7.apk"
+          elif [[ "$apk" == *"x86_64"* ]]; then
+            newname="CleverKeys-${{ steps.version.outputs.sha_short }}-x86_64.apk"
+          else
+            newname="CleverKeys-${{ steps.version.outputs.sha_short }}.apk"
+          fi
+          mv "$apk" "$newname"
+          echo "Renamed: $apk -> $newname"
+        done
+        ls -la *.apk
 
     - name: Update nightly release
       uses: softprops/action-gh-release@v2
@@ -64,15 +85,20 @@ jobs:
 
           ⚠️ **This is an automated development build.** It may contain bugs or incomplete features.
 
-          ### Download
-          - **[CleverKeys-nightly.apk](https://github.com/${{ github.repository }}/releases/download/nightly/CleverKeys-nightly-${{ steps.version.outputs.sha_short }}.apk)** - Latest debug build
+          ### Downloads (per-ABI for smaller size)
+          | ABI | Size | Device |
+          |-----|------|--------|
+          | **arm64** | ~35MB | Most modern phones (2017+) |
+          | **armv7** | ~30MB | Older 32-bit phones |
+          | **x86_64** | ~35MB | Emulators, Chromebooks |
+          | **universal** | ~52MB | All devices (larger) |
 
           ### For Stable Releases
           See [Releases](https://github.com/${{ github.repository }}/releases) for stable versions.
 
           ---
           🦝✨ *Built automatically from main branch*
-        files: build/outputs/apk/debug/CleverKeys-nightly-${{ steps.version.outputs.sha_short }}.apk
+        files: build/outputs/apk/debug/*.apk
         prerelease: true
         make_latest: false
       env:

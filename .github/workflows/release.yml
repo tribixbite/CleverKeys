@@ -46,7 +46,7 @@ jobs:
     - name: Build release APK
       run: ./gradlew assembleRelease --stacktrace
 
-    - name: Sign release APK
+    - name: Sign release APKs
       uses: r0adkll/sign-android-release@v1
       with:
         releaseDirectory: build/outputs/apk/release
@@ -56,6 +56,22 @@ jobs:
         keyPassword: ${{ secrets.KEY_PASSWORD }}
       env:
         BUILD_TOOLS_VERSION: "34.0.0"
+
+    - name: Rename release APKs
+      run: |
+        cd build/outputs/apk/release
+        for apk in *-signed.apk; do
+          if [[ "$apk" == *"universal"* ]]; then
+            mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-universal.apk"
+          elif [[ "$apk" == *"arm64-v8a"* ]]; then
+            mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-arm64.apk"
+          elif [[ "$apk" == *"armeabi-v7a"* ]]; then
+            mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-armv7.apk"
+          elif [[ "$apk" == *"x86_64"* ]]; then
+            mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-x86_64.apk"
+          fi
+        done
+        ls -la *.apk
 
     - name: Generate changelog
       run: |
@@ -90,8 +106,7 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        files: |
-          build/outputs/apk/release/tribixbite.cleverkeys.apk
+        files: build/outputs/apk/release/CleverKeys-*.apk
         name: CleverKeys ${{ env.TAG_NAME }}
         tag_name: ${{ env.TAG_NAME }}
         body_path: CHANGELOG.md
@@ -106,7 +121,7 @@ jobs:
       with:
         name: cleverkeys-release-${{ env.TAG_NAME }}
         path: |
-          build/outputs/apk/release/tribixbite.cleverkeys.apk
+          build/outputs/apk/release/CleverKeys-*.apk
           CHANGELOG.md
         retention-days: 365
 

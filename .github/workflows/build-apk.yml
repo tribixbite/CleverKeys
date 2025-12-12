@@ -60,21 +60,33 @@ jobs:
         DEBUG_KEY_ALIAS: debug
         DEBUG_KEY_PASSWORD: debug0
 
-    - name: Artifact naming
-      run: |
-        artifact="${{github.repository_owner}} ${{github.ref_name}}"
-        artifact="${artifact//\//-}"
-        echo "artifact=${artifact}" >> $GITHUB_ENV
-
-    - name: Upload debug APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: "${{env.artifact}} debug_apk"
-        path: build/outputs/apk/debug/*.apk
-
     - name: Get short SHA
       id: sha
       run: echo "short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Rename APKs with version
+      run: |
+        cd build/outputs/apk/debug
+        for apk in *.apk; do
+          if [[ "$apk" == *"universal"* ]]; then
+            mv "$apk" "CleverKeys-${{ steps.sha.outputs.short }}-universal.apk"
+          elif [[ "$apk" == *"arm64-v8a"* ]]; then
+            mv "$apk" "CleverKeys-${{ steps.sha.outputs.short }}-arm64.apk"
+          elif [[ "$apk" == *"armeabi-v7a"* ]]; then
+            mv "$apk" "CleverKeys-${{ steps.sha.outputs.short }}-armv7.apk"
+          elif [[ "$apk" == *"x86_64"* ]]; then
+            mv "$apk" "CleverKeys-${{ steps.sha.outputs.short }}-x86_64.apk"
+          else
+            mv "$apk" "CleverKeys-${{ steps.sha.outputs.short }}.apk"
+          fi
+        done
+        ls -la *.apk
+
+    - name: Upload debug APKs
+      uses: actions/upload-artifact@v4
+      with:
+        name: "cleverkeys-debug-${{ steps.sha.outputs.short }}"
+        path: build/outputs/apk/debug/*.apk
 
     - name: Upload to releases (on every push to main)
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -91,13 +103,16 @@ jobs:
           **Branch:** ${{ github.ref_name }}
           **Date:** ${{ github.event.head_commit.timestamp }}
 
-          ## Features
-          - Neural swipe prediction with local processing
-          - Enhanced gesture support from Unexpected Keyboard
-          - Complete customization and transparency
+          ## Downloads (per-ABI)
+          | APK | Device |
+          |-----|--------|
+          | **arm64** | Most modern phones (2017+) |
+          | **armv7** | Older 32-bit phones |
+          | **x86_64** | Emulators, Chromebooks |
+          | **universal** | All devices |
 
           ## Installation
-          1. Download APK
+          1. Download the APK matching your device
           2. Enable "Unknown sources" in Android settings
           3. Install and activate in Language & Input settings
 
