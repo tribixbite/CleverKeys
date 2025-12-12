@@ -239,11 +239,11 @@
     <string name="neural_settings_description">Configure ONNX neural network parameters for swipe prediction.\nChanges apply immediately to the prediction engine.</string>
     <string name="neural_section_core">Core Prediction Parameters</string>
     <string name="neural_beam_width_title">Beam Width</string>
-    <string name="neural_beam_width_desc">Number of prediction candidates to consider (1-32). Higher = more accurate but slower.</string>
+    <string name="neural_beam_width_desc">Number of prediction candidates to consider (1-20). Higher = more accurate but slower.</string>
     <string name="neural_max_length_title">Maximum Word Length</string>
-    <string name="neural_max_length_desc">Maximum characters in predicted words (10-50). Affects memory usage.</string>
+    <string name="neural_max_length_desc">Maximum characters in predicted words (5-35). Affects memory usage.</string>
     <string name="neural_confidence_title">Confidence Threshold</string>
-    <string name="neural_confidence_desc">Minimum confidence for predictions (0.0-1.0). Lower = more suggestions.</string>
+    <string name="neural_confidence_desc">Minimum confidence for predictions (0.0-0.4). Lower = more suggestions.</string>
     <string name="neural_section_advanced">Advanced Parameters</string>
     <string name="neural_temperature_title">Temperature Scaling</string>
     <string name="neural_temperature_desc">Controls prediction diversity (0.1-2.0). Lower = focused, higher = diverse.</string>
@@ -278,11 +278,11 @@
     <string name="settings_neural_enable_title">Enable Neural Network Swipe Prediction</string>
     <string name="settings_neural_enable_desc">Use ONNX neural networks for accurate swipe prediction</string>
     <string name="settings_neural_beam_width_title">Beam Width</string>
-    <string name="settings_neural_beam_width_desc">Number of prediction candidates (1-32). Higher = more accurate.</string>
+    <string name="settings_neural_beam_width_desc">Number of prediction candidates (1-20). Higher = more accurate.</string>
     <string name="settings_neural_max_length_title">Maximum Word Length</string>
-    <string name="settings_neural_max_length_desc">Maximum characters in predicted words (10-50).</string>
+    <string name="settings_neural_max_length_desc">Maximum characters in predicted words (5-35).</string>
     <string name="settings_neural_confidence_title">Confidence Threshold</string>
-    <string name="settings_neural_confidence_desc">Minimum confidence for predictions (0.0-1.0).</string>
+    <string name="settings_neural_confidence_desc">Minimum confidence for predictions (0.0-0.4).</string>
     <string name="settings_neural_advanced_button">🔧 Advanced Neural Network Settings</string>
 
     <!-- Appearance Section -->
