@@ -271,7 +271,7 @@ tasks.register('genEmojis') {
 tasks.withType(Test).configureEach {
   dependsOn 'genLayoutsList'
   dependsOn 'checkKeyboardLayouts'
-  dependsOn 'compileComposeSequences'
+  dependsOn 'generateComposeData'
 }
 
 tasks.register('genLayoutsList') {
@@ -304,34 +304,7 @@ tasks.register('checkKeyboardLayouts') {
   }
 }
 
-tasks.register('compileComposeSequences') {
-  def out = "src/main/kotlin/tribixbite/cleverkeys/ComposeKeyData.kt"
-  def outFile = file(out)
-
-  // Skip if output already exists (CI builds use pre-generated file)
-  if (outFile.exists() && outFile.length() > 1000) {
-    println "\nComposeKeyData.kt already exists (${outFile.length()} bytes), skipping generation"
-    return
-  }
-
-  // Only attempt generation in development environment
-  def composeSourceDir = file("/data/data/com.termux/files/home/git/swype/Unexpected-Keyboard/srcs/compose")
-  if (!composeSourceDir.exists()) {
-    println "\n⚠️ Compose source directory not found, using pre-generated ComposeKeyData.kt"
-    if (!outFile.exists()) {
-      throw new GradleException("ComposeKeyData.kt not found and cannot be generated without compose sources")
-    }
-    return
-  }
-
-  println "\nGenerating ${out} (4050 compose sequences → 8659 states)"
-  exec {
-    workingDir = projectDir
-    commandLine("python3", "generate_compose_data.py")
-    standardOutput = new FileOutputStream("${projectDir}/${out}")
-    errorOutput = System.err  // Keep warnings/errors in console, not in generated file
-  }
-}
+// compileComposeSequences removed - use generateComposeData instead
 
 tasks.register('generateBinaryDictionaries') {
   description 'Generate optimized binary dictionaries from JSON sources'
