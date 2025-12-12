@@ -44,7 +44,17 @@ jobs:
       run: |
         TAG_NAME=${GITHUB_REF#refs/tags/}
         echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
-        echo "VERSION_CODE=$(echo $TAG_NAME | sed 's/v//' | sed 's/\.//' | head -c 8)" >> $GITHUB_ENV
+
+        # Parse semantic version: vMAJOR.MINOR.PATCH -> code = MAJOR*10000 + MINOR*100 + PATCH
+        VERSION=${TAG_NAME#v}
+        MAJOR=$(echo $VERSION | cut -d. -f1)
+        MINOR=$(echo $VERSION | cut -d. -f2)
+        PATCH=$(echo $VERSION | cut -d. -f3 | sed 's/[^0-9].*//')
+        VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+        echo "📦 Version: $VERSION (code: $VERSION_CODE)"
 
     - name: Decode signing keystore
       run: |
@@ -65,11 +75,10 @@ jobs:
         echo "=== APKs before rename ==="
         ls -la *.apk || echo "No APKs found!"
 
-        # Gradle produces: tribixbite.cleverkeys-<abi>.apk
+        # ABI split APKs: tribixbite.cleverkeys_<code>_<abi>.apk
+        # Rename to user-friendly format: CleverKeys-vX.Y.Z-<abi>.apk
         for apk in *.apk; do
-          if [[ "$apk" == *"universal"* ]]; then
-            mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-universal.apk"
-          elif [[ "$apk" == *"arm64-v8a"* ]]; then
+          if [[ "$apk" == *"arm64-v8a"* ]]; then
             mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-arm64.apk"
           elif [[ "$apk" == *"armeabi-v7a"* ]]; then
             mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-armv7.apk"
@@ -80,6 +89,14 @@ jobs:
 
         echo "=== APKs after rename ==="
         ls -la CleverKeys-*.apk
+
+        # Show APK info
+        echo ""
+        echo "📦 Version: ${{ env.VERSION }} (code: ${{ env.VERSION_CODE }})"
+        echo "📱 ABI versionCodes:"
+        echo "   - arm64: $((${{ env.VERSION_CODE }} * 10 + 2))"
+        echo "   - armv7: $((${{ env.VERSION_CODE }} * 10 + 1))"
+        echo "   - x86_64: $((${{ env.VERSION_CODE }} * 10 + 3))"
 
     - name: Generate changelog
       run: |
@@ -100,15 +117,24 @@ jobs:
 
         echo "" >> CHANGELOG.md
         echo "## Build Information" >> CHANGELOG.md
+        echo "- **Version**: ${{ env.VERSION }}" >> CHANGELOG.md
+        echo "- **VersionCode**: ${{ env.VERSION_CODE }} (base)" >> CHANGELOG.md
         echo "- **Package**: tribixbite.cleverkeys" >> CHANGELOG.md
         echo "- **Min Android**: 5.0 (API 21)" >> CHANGELOG.md
         echo "- **Target Android**: 14 (API 34)" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "## Neural Features" >> CHANGELOG.md
-        echo "- **Transformer Models**: Encoder-decoder architecture" >> CHANGELOG.md
-        echo "- **Hardware Acceleration**: XNNPACK CPU optimization" >> CHANGELOG.md
-        echo "- **Real-time Calibration**: Personalized model training" >> CHANGELOG.md
-        echo "- **Performance Analytics**: Detailed prediction metrics" >> CHANGELOG.md
+        echo "## Install Options" >> CHANGELOG.md
+        echo "| Source | Link |" >> CHANGELOG.md
+        echo "|--------|------|" >> CHANGELOG.md
+        echo "| GitHub | Download APK below for your device |" >> CHANGELOG.md
+        echo "| F-Droid | Coming soon (auto-update enabled) |" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "## APK Variants" >> CHANGELOG.md
+        echo "| ABI | Devices | VersionCode |" >> CHANGELOG.md
+        echo "|-----|---------|-------------|" >> CHANGELOG.md
+        echo "| arm64 | Most modern phones (2016+) | $((${{ env.VERSION_CODE }} * 10 + 2)) |" >> CHANGELOG.md
+        echo "| armv7 | Older 32-bit devices | $((${{ env.VERSION_CODE }} * 10 + 1)) |" >> CHANGELOG.md
+        echo "| x86_64 | Emulators, Chromebooks | $((${{ env.VERSION_CODE }} * 10 + 3)) |" >> CHANGELOG.md
 
     - name: Create Release
       uses: softprops/action-gh-release@v2
@@ -135,14 +161,23 @@ jobs:
       run: |
         echo "## Release ${{ env.TAG_NAME }} Published!" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Version Info" >> $GITHUB_STEP_SUMMARY
+        echo "- **Version**: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Base VersionCode**: ${{ env.VERSION_CODE }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
         echo "### Download" >> $GITHUB_STEP_SUMMARY
         echo "- [Release Page](https://github.com/${{ github.repository }}/releases/tag/${{ env.TAG_NAME }})" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### APK Variants" >> $GITHUB_STEP_SUMMARY
-        echo "- arm64 (64-bit ARM)" >> $GITHUB_STEP_SUMMARY
-        echo "- armv7 (32-bit ARM)" >> $GITHUB_STEP_SUMMARY
-        echo "- x86_64 (64-bit x86)" >> $GITHUB_STEP_SUMMARY
-        echo "- universal (all architectures)" >> $GITHUB_STEP_SUMMARY
+        echo "| ABI | VersionCode | Use For |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----|-------------|---------|" >> $GITHUB_STEP_SUMMARY
+        echo "| arm64 | $((${{ env.VERSION_CODE }} * 10 + 2)) | Most modern phones |" >> $GITHUB_STEP_SUMMARY
+        echo "| armv7 | $((${{ env.VERSION_CODE }} * 10 + 1)) | Older 32-bit devices |" >> $GITHUB_STEP_SUMMARY
+        echo "| x86_64 | $((${{ env.VERSION_CODE }} * 10 + 3)) | Emulators, Chromebooks |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Distribution" >> $GITHUB_STEP_SUMMARY
+        echo "- GitHub Release: ✅ Available now" >> $GITHUB_STEP_SUMMARY
+        echo "- F-Droid: Auto-update will pick up this version" >> $GITHUB_STEP_SUMMARY
 
   notify:
     runs-on: ubuntu-latest

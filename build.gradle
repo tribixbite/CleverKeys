@@ -49,26 +49,78 @@ dependencies {
   androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
 }
 
-// Version management functions
-def getVersionCode() {
+// =============================================================================
+// SEMANTIC VERSIONING SYSTEM
+// =============================================================================
+// Format: MAJOR.MINOR.PATCH (e.g., 1.2.0)
+// Git tag format: vMAJOR.MINOR.PATCH (e.g., v1.2.0)
+// versionCode = MAJOR * 10000 + MINOR * 100 + PATCH
+//   - v1.2.0 → 10200, v1.2.1 → 10201, v2.0.0 → 20000
+// ABI versionCode = baseVersionCode * 10 + abiCode
+//   - v1.2.0 arm64-v8a → 102002
+//
+// WORKFLOW:
+// 1. Development: builds use "dev-{sha}" version with code 1
+// 2. Release: tag commit with "vX.Y.Z", push tag
+// 3. GitHub Actions creates release with APKs
+// 4. F-Droid auto-detects tag and builds
+// =============================================================================
+
+def getVersionFromTag() {
     try {
-        def code = 'git rev-list --count HEAD'.execute().text.trim().toInteger()
-        println "🚀 CleverKeys version code (git): ${code}"
-        return code
+        // Get the most recent tag matching vX.Y.Z pattern
+        def tag = 'git describe --tags --match "v[0-9]*.[0-9]*.[0-9]*" --abbrev=0'.execute().text.trim()
+        if (tag && tag.startsWith('v')) {
+            return tag.substring(1) // Remove 'v' prefix
+        }
+    } catch (ignored) {}
+    return null
+}
+
+def getVersionInfo() {
+    def tagVersion = getVersionFromTag()
+
+    if (tagVersion) {
+        // Parse semantic version from tag
+        def parts = tagVersion.split('\\.')
+        if (parts.length >= 3) {
+            def major = parts[0].toInteger()
+            def minor = parts[1].toInteger()
+            def patch = parts[2].replaceAll('[^0-9]', '').toInteger()
+
+            // Check if current commit is exactly on the tag
+            def tagCommit = "git rev-list -n 1 v${tagVersion}".execute().text.trim()
+            def headCommit = 'git rev-parse HEAD'.execute().text.trim()
+            def isRelease = tagCommit == headCommit
+
+            def versionCode = major * 10000 + minor * 100 + patch
+            def versionName = isRelease ? tagVersion : "${tagVersion}-dev"
+
+            println "📦 CleverKeys version: ${versionName} (code: ${versionCode}, release: ${isRelease})"
+            return [code: versionCode, name: versionName, isRelease: isRelease]
+        }
+    }
+
+    // Fallback for untagged/development builds
+    try {
+        def shortSha = 'git rev-parse --short HEAD'.execute().text.trim()
+        println "🔧 CleverKeys development build: dev-${shortSha}"
+        return [code: 1, name: "dev-${shortSha}", isRelease: false]
     } catch (ignored) {
-        println "⚠️ Git not found, using default version code"
-        return 1
+        println "⚠️ Git not available, using fallback version"
+        return [code: 1, name: "dev-unknown", isRelease: false]
     }
 }
 
+// Cache version info to avoid multiple git calls
+ext.versionInfo = getVersionInfo()
+
+def getVersionCode() {
+    return ext.versionInfo.code
+}
+
 def getVersionName() {
-    try {
-        def count = 'git rev-list --count HEAD'.execute().text.trim()
-        def shortSha = 'git rev-parse --short HEAD'.execute().text.trim()
-        return "1.1.${count}-${shortSha}"
-    } catch (ignored) {
-        return "1.1.0-dev"
-    }
+    return ext.versionInfo.name
 }
 
 // Per-ABI versionCode mapping for F-Droid split APKs
