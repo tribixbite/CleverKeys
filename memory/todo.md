@@ -18,6 +18,7 @@
 - [x] Fix Groovy spread operator incompatibility
 - [x] Remove duplicate compileComposeSequences task
 - [x] Fix shift constant case mismatch (v1.1.1586-747b7082)
+- [x] Disable ABI splits for F-Droid compatibility (v1.1.1588-9ac39331)
 - [ ] Wait for F-Droid CI pipeline to pass
 - [ ] Address any maintainer feedback
 
