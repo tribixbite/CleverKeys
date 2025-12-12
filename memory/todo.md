@@ -50,6 +50,30 @@
 
 ## Pending Items
 
+### Web Demo Fixes (P0 - Critical)
+*See full analysis: `docs/specs/web_demo_flaws.md`*
+
+**Architecture Mismatch (Model Input Broken)**:
+- [ ] Fix velocity calc: use `dx/dt` not just `dx` (time-normalized)
+- [ ] Fix acceleration calc: use `dv/dt` not just `dv`
+- [ ] Add value clipping to [-10, 10] range
+- [ ] Collect timestamps during swipe tracking
+- [ ] Change MAX_SEQUENCE_LENGTH from 150 to 250
+- [ ] Implement resampling (match SwipeResampler.kt)
+
+**UI Bugs**:
+- [ ] Delete empty file `web_demo/niche-word-loader.js` (0 bytes duplicate)
+- [ ] Fix shift key - doesn't produce uppercase (always uses toLowerCase())
+- [ ] Fix number mode - broken selector `[data-row="X"] .key` returns empty
+- [ ] Fix emoji mode - same selector bug as number mode
+
+### Web Demo Improvements (P1-P2)
+- [ ] Add accessibility attributes (aria-*, role, tabindex)
+- [ ] Remove debug test functions from global scope
+- [ ] Gate console.log behind DEBUG flag
+- [ ] Consider lazy loading for 12.5MB of models
+- [ ] Add PWA/Service Worker for offline support
+
 ### Settings UI Polish (from settings_audit.md)
 - [ ] Add "Swipe Sensitivity" preset (Low/Medium/High) to simplify 5 distance settings
 - [ ] Standardize units across distance settings (all pixels or all % of key size)
