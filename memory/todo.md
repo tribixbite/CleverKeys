@@ -14,8 +14,10 @@
 - [x] Add generateComposeData gradle task
 - [x] Update .gitignore for F-Droid compliance
 - [x] Add 512x512 icon.png for fastlane metadata
-- [x] Push changes to GitHub (commit 397fb84a)
-- [x] Update fdroiddata metadata (v1.1.1581-397fb84a)
+- [x] Fix python → python3 for F-Droid build environment
+- [x] Fix Groovy spread operator incompatibility
+- [x] Remove duplicate compileComposeSequences task
+- [x] Fix shift constant case mismatch (v1.1.1586-747b7082)
 - [ ] Wait for F-Droid CI pipeline to pass
 - [ ] Address any maintainer feedback
 
