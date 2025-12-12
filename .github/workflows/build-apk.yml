@@ -116,24 +116,5 @@ jobs:
           2. Enable "Unknown sources" in Android settings
           3. Install and activate in Language & Input settings
 
-    - name: Upload to releases (on tag)
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v1
-      with:
-        files: build/outputs/apk/debug/*.apk
-        name: "CleverKeys ${{ github.ref_name }}"
-        prerelease: true
-        body: |
-          CleverKeys Android APK - Privacy-first neural keyboard (Pre-release)
-
-          ## Features
-          - Neural swipe prediction with local processing
-          - Enhanced gesture support from Unexpected Keyboard
-          - Complete customization and transparency
-
-          ## Installation
-          1. Download APK
-          2. Enable "Unknown sources" in Android settings
-          3. Install and activate in Language & Input settings
-
-          Built on [Unexpected Keyboard](https://github.com/Julow/Unexpected-Keyboard) foundation.
+    # Tag releases are handled by release.yml workflow (not this one)
+    # This workflow only creates dev releases for main branch pushes
