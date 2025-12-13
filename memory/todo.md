@@ -83,6 +83,12 @@
 - [x] Number mode row count (was 10 items, fixed to 9)
 - [x] resizeCanvas updates keyboardBounds (orientation changes)
 
+### Custom Dictionary Fixes ✅ COMPLETED (2025-12-13)
+- [x] Fix constructor not calling mergeIntoVocabulary on page load
+- [x] Fix removeWord not unboosting from vocabulary (added originalFrequencies tracking)
+- [x] Allow boosting existing vocabulary words (removed rejection)
+- [x] Fix clearAll to properly reset vocabulary state
+
 ### Web Demo Improvements (P2)
 - [ ] Add accessibility attributes (aria-*, role, tabindex)
 - [ ] Remove debug test functions from global scope
