@@ -3,14 +3,12 @@ name: Build APK
 on:
   push:
     branches: [ main, develop ]
+    tags-ignore:
+      - 'v*'  # Don't run on version tags - release.yml handles those
   pull_request:
     branches: [ main ]
-  release:
-    types: [ published ]
 
-# Permissions for releases
-permissions:
-  contents: write
+# No special permissions needed - just build and test
 
 jobs:
   build:
@@ -53,42 +51,12 @@ jobs:
     - name: Build debug APK
       run: ./gradlew assembleDebug --stacktrace
 
-    - name: Build release APK
-      if: github.event_name == 'release'
-      run: ./gradlew assembleRelease --stacktrace
-
-    - name: Sign release APK
-      if: github.event_name == 'release'
-      uses: r0adkll/sign-android-release@v1
-      with:
-        releaseDirectory: build/outputs/apk/release
-        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-        alias: ${{ secrets.ALIAS }}
-        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-        keyPassword: ${{ secrets.KEY_PASSWORD }}
-
     - name: Upload debug APKs
       uses: actions/upload-artifact@v4
       with:
         name: cleverkeys-debug-${{ steps.vars.outputs.sha_short }}
         path: build/outputs/apk/debug/*.apk
-        retention-days: 30
-
-    - name: Upload release APKs
-      if: github.event_name == 'release'
-      uses: actions/upload-artifact@v4
-      with:
-        name: cleverkeys-release-${{ github.event.release.tag_name }}
-        path: build/outputs/apk/release/*-signed.apk
-        retention-days: 90
-
-    - name: Upload release APKs to GitHub Release
-      if: github.event_name == 'release'
-      uses: softprops/action-gh-release@v1
-      with:
-        files: build/outputs/apk/release/*-signed.apk
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        retention-days: 14
 
     - name: Run tests
       run: ./gradlew test --stacktrace
