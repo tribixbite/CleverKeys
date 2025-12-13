@@ -205,11 +205,18 @@ android {
     }
 
     release {
+      // Use release keystore if available, otherwise fall back to debug for local testing
       if (System.env.RELEASE_KEYSTORE) {
         storeFile file(System.env.RELEASE_KEYSTORE)
         storePassword "$System.env.RELEASE_KEYSTORE_PASSWORD"
         keyAlias "$System.env.RELEASE_KEY_ALIAS"
         keyPassword "$System.env.RELEASE_KEY_PASSWORD"
+      } else {
+        // Fallback to debug keystore for local release builds (F-Droid signs with their own key)
+        storeFile file("debug.keystore")
+        storePassword "debug0"
+        keyAlias "debug"
+        keyPassword "debug0"
       }
     }
   }

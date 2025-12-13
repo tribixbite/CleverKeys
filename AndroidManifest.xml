@@ -1,22 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Hardware acceleration enabled for better rendering performance -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:hardwareAccelerated="true">
+  <!-- Core keyboard permissions -->
   <uses-permission android:name="android.permission.VIBRATE"/>
-  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-  <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-  <!-- No INTERNET permission - CleverKeys is fully offline, no data leaves your device -->
-  <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
-  <!-- User dictionary access for word suggestions -->
+  <!-- PRIVACY: No INTERNET permission - CleverKeys is fully offline, no data leaves your device -->
+
+  <!-- Optional: Voice input support (not required for core keyboard functionality) -->
+  <!-- Uncomment if you want voice typing: -->
+  <!-- <uses-permission android:name="android.permission.RECORD_AUDIO"/> -->
+
+  <!-- User dictionary access for word suggestions (system dictionary only) -->
   <uses-permission android:name="android.permission.READ_USER_DICTIONARY"/>
-
-  <!-- In-app update installation -->
-  <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
-
-  <!-- Storage permissions - deprecated on Android 11+ (API 30+), use scoped storage instead -->
-  <!-- These are only needed for Android 10 and below -->
-  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
-  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
 
   <!-- For Android 11+ (API 30+), use scoped storage via MediaStore or SAF (Storage Access Framework) -->
   <!-- No explicit permission needed for app-specific directories (getExternalFilesDir()) -->
