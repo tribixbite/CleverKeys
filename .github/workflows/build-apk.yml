@@ -95,7 +95,7 @@ jobs:
         files: build/outputs/apk/debug/*.apk
         tag_name: "dev-${{ steps.sha.outputs.short }}"
         name: "CleverKeys Dev Build (${{ steps.sha.outputs.short }})"
-        prerelease: false
+        prerelease: true  # Mark as prerelease so Obtainium ignores dev builds
         body: |
           CleverKeys Android APK - Development Build
 
