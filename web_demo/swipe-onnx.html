@@ -2791,16 +2791,21 @@
             clearInput();
         }
         
-        // Expose test functions globally for debugging
-        window.testCustomDictionary = testCustomDictionary;
-        window.testTapFunctionality = testTapFunctionality;
-        window.testAutoPrediction = testAutoPrediction;
-        window.testLongWordSupport = testLongWordSupport;
-        window.testSelectionFunctionality = testSelectionFunctionality;
-        window.testGestureDetection = testGestureDetection;
-        window.testMobileTapFunctionality = testMobileTapFunctionality;
-        window.testFourthRowButtonIsolation = testFourthRowButtonIsolation;
-        window.testFourthRowFunctionality = testFourthRowFunctionality;
+        // Expose test functions globally only when DEBUG is enabled
+        // To enable: set DEBUG.enabled = true in browser console
+        if (DEBUG.enabled) {
+            window.testCustomDictionary = testCustomDictionary;
+            window.testTapFunctionality = testTapFunctionality;
+            window.testAutoPrediction = testAutoPrediction;
+            window.testLongWordSupport = testLongWordSupport;
+            window.testSelectionFunctionality = testSelectionFunctionality;
+            window.testGestureDetection = testGestureDetection;
+            window.testMobileTapFunctionality = testMobileTapFunctionality;
+            window.testFourthRowButtonIsolation = testFourthRowButtonIsolation;
+            window.testFourthRowFunctionality = testFourthRowFunctionality;
+        }
+        // Always expose DEBUG for manual enabling: DEBUG.enabled = true
+        window.DEBUG = DEBUG;
         
         // 4th Row Button Functions
         let isNumberMode = false;
@@ -2982,11 +2987,68 @@
             
             console.log('✓ Special button handlers configured');
         }
-        
+
+        // Setup accessibility attributes for keyboard
+        function setupAccessibility() {
+            const keyboard = document.getElementById('keyboard');
+            if (!keyboard) return;
+
+            // Set keyboard role and label
+            keyboard.setAttribute('role', 'application');
+            keyboard.setAttribute('aria-label', 'Virtual keyboard');
+
+            // Add aria-labels to all keys
+            document.querySelectorAll('.key').forEach(key => {
+                const keyValue = key.dataset.key;
+                if (keyValue) {
+                    if (keyValue === 'shift') {
+                        key.setAttribute('aria-label', 'Shift');
+                        key.setAttribute('aria-pressed', 'false');
+                    } else if (keyValue === 'backspace') {
+                        key.setAttribute('aria-label', 'Backspace');
+                    } else {
+                        key.setAttribute('aria-label', `Letter ${keyValue.toUpperCase()}`);
+                    }
+                }
+            });
+
+            // Add aria-labels to special buttons
+            const specialButtons = {
+                'number-toggle': 'Toggle numbers mode',
+                'emoji-toggle': 'Toggle emoji mode',
+                'space': 'Space',
+                'return': 'Return'
+            };
+
+            for (const [dataAttr, label] of Object.entries(specialButtons)) {
+                const btn = document.querySelector(`[data-special="${dataAttr}"]`);
+                if (btn) btn.setAttribute('aria-label', label);
+            }
+
+            // Add aria-label to input display
+            const inputText = document.getElementById('inputText');
+            if (inputText) {
+                inputText.setAttribute('role', 'textbox');
+                inputText.setAttribute('aria-label', 'Text input');
+                inputText.setAttribute('aria-live', 'polite');
+            }
+
+            // Add aria-label to predictions
+            const predictionsContainer = document.querySelector('.predictions-container') ||
+                                         document.getElementById('predictions');
+            if (predictionsContainer) {
+                predictionsContainer.setAttribute('role', 'listbox');
+                predictionsContainer.setAttribute('aria-label', 'Word suggestions');
+            }
+
+            console.log('✓ Accessibility attributes configured');
+        }
+
         // Initialize on load
         window.addEventListener('load', () => {
             init();
             setupSpecialButtonHandlers();
+            setupAccessibility();
         });
     </script>
 </body>
