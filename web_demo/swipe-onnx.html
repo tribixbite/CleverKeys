@@ -455,18 +455,40 @@
                 console.error('Error details:', {
                     message: error.message,
                     stack: error.stack,
-                    name: error.name
+                    name: error.name,
+                    ortAvailable: typeof ort !== 'undefined',
+                    ortVersion: typeof ort !== 'undefined' ? ort.env?.versions?.onnxruntime : 'N/A'
                 });
-                updateStatus('Model loading failed - check console', 'error');
+
+                // Determine error type for user-friendly message
+                let errorMsg = error.message || 'Unknown error';
+                let suggestion = '';
+
+                if (errorMsg.includes('fetch') || errorMsg.includes('network')) {
+                    suggestion = 'Check your internet connection and try refreshing.';
+                } else if (errorMsg.includes('WASM') || errorMsg.includes('wasm')) {
+                    suggestion = 'Your browser may not support WebAssembly. Try Chrome or Firefox.';
+                } else if (errorMsg.includes('memory') || errorMsg.includes('Memory')) {
+                    suggestion = 'Not enough memory. Try closing other tabs.';
+                } else {
+                    suggestion = 'Try hard refresh (Ctrl+Shift+R) or clear browser cache.';
+                }
+
+                updateStatus('Model loading failed', 'error');
                 hideLoadingOverlay();
-                
-                // More detailed error message
-                updateLoadingStatus(`Error: ${error.message || 'Unknown error'}`);
-                
-                // Display error in UI
+
+                // Display detailed error in UI with retry button
                 const suggestionsDiv = document.getElementById('suggestions');
                 if (suggestionsDiv) {
-                    suggestionsDiv.innerHTML = `<div class="text-red-500 p-2">Error loading models: ${error.message}</div>`;
+                    suggestionsDiv.innerHTML = `
+                        <div class="text-red-400 p-3 text-center">
+                            <p class="font-semibold">Failed to load models</p>
+                            <p class="text-sm text-gray-400 mt-1">${errorMsg}</p>
+                            <p class="text-sm text-gray-500 mt-2">${suggestion}</p>
+                            <button onclick="location.reload()" class="mt-3 px-4 py-2 bg-neon-blue/20 text-neon-blue rounded-lg hover:bg-neon-blue/30 transition-colors">
+                                Retry
+                            </button>
+                        </div>`;
                 }
             }
         }
