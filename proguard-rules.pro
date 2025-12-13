@@ -22,6 +22,25 @@
 -keep class tribixbite.cleverkeys.Vocabulary { *; }
 -keep class tribixbite.cleverkeys.CharacterTokenizer { *; }
 
+# Keep KeyValue class and ALL its enums - critical for swipe prediction
+# Without these rules, enum ordinals get obfuscated and kind checking fails
+-keep class tribixbite.cleverkeys.KeyValue { *; }
+-keep class tribixbite.cleverkeys.KeyValue$Kind { *; }
+-keep class tribixbite.cleverkeys.KeyValue$Event { *; }
+-keep class tribixbite.cleverkeys.KeyValue$Modifier { *; }
+-keep class tribixbite.cleverkeys.KeyValue$Editing { *; }
+-keep class tribixbite.cleverkeys.KeyValue$Placeholder { *; }
+-keep class tribixbite.cleverkeys.KeyValue$Slider { *; }
+-keep class tribixbite.cleverkeys.KeyValue$Macro { *; }
+-keep class tribixbite.cleverkeys.KeyValue$Companion { *; }
+
+# Keep SwipeInput class for prediction input handling
+-keep class tribixbite.cleverkeys.SwipeInput { *; }
+
+# Keep KeyboardData and Key class for swipe detection
+-keep class tribixbite.cleverkeys.KeyboardData { *; }
+-keep class tribixbite.cleverkeys.KeyboardData$Key { *; }
+
 # Keep AndroidX Lifecycle components
 -keep class androidx.lifecycle.** { *; }
 -keep interface androidx.lifecycle.** { *; }

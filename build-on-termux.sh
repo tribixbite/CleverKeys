@@ -96,10 +96,10 @@ if [ "$BUILD_TYPE_LOWER" = "release" ]; then
     fi
 
     GRADLE_TASK="assembleRelease"
-    APK_PATH="build/outputs/apk/release/tribixbite.cleverkeys-universal.apk"
+    APK_DIR="build/outputs/apk/release"
 else
     GRADLE_TASK="assembleDebug"
-    APK_PATH="build/outputs/apk/debug/tribixbite.cleverkeys-universal.apk"
+    APK_DIR="build/outputs/apk/debug"
     echo "Step 4: Building Debug APK..."
 fi
 
@@ -108,15 +108,23 @@ echo "This may take a few minutes on first run..."
 # Build with Termux-specific configuration (optimized for speed)
 ./gradlew $GRADLE_TASK     -Dorg.gradle.jvmargs="-Xmx2048m -XX:MaxMetaspaceSize=512m"     -Pandroid.aapt2FromMavenOverride="/data/data/com.termux/files/home/git/swype/Unexpected-Keyboard/tools/aapt2-arm64/aapt2"     --no-daemon     --warning-mode=none     --console=plain     --parallel     --build-cache     2>&1 | tee build-${BUILD_TYPE_LOWER}.log
 
-# Check build result
-if [ -f "$APK_PATH" ]; then
+# Check build result - look for APK files in the output directory
+APK_FILES=$(find "$APK_DIR" -name "*.apk" 2>/dev/null | head -1)
+if [ -n "$APK_FILES" ]; then
     echo
     echo "=== BUILD SUCCESSFUL! ==="
-    echo "APK created at: $APK_PATH"
+    echo "APKs created in: $APK_DIR"
     echo
-    ls -lh "$APK_PATH"
+    ls -lh "$APK_DIR"/*.apk
     echo
-    
+
+    # Pick arm64 APK for installation (preferred for modern devices)
+    APK_PATH=$(find "$APK_DIR" -name "*arm64*.apk" 2>/dev/null | head -1)
+    if [ -z "$APK_PATH" ]; then
+        # Fallback to any APK
+        APK_PATH="$APK_FILES"
+    fi
+
     # Copy to /sdcard/unexpected/ for easy updates
     if [ "$BUILD_TYPE_LOWER" = "debug" ]; then
         echo "Copying APK to /sdcard/unexpected/ for updates..."
