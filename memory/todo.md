@@ -89,9 +89,9 @@
 - [x] Allow boosting existing vocabulary words (removed rejection)
 - [x] Fix clearAll to properly reset vocabulary state
 
-### Web Demo Improvements (P2)
-- [ ] Add accessibility attributes (aria-*, role, tabindex)
-- [ ] Remove debug test functions from global scope
+### Web Demo Improvements (P2) - PARTIALLY COMPLETED
+- [x] Add accessibility attributes (aria-*, role, tabindex) - 2025-12-13
+- [x] Remove debug test functions from global scope - 2025-12-13
 - [ ] Consider lazy loading for 12.5MB of models
 - [ ] Add PWA/Service Worker for offline support
 
