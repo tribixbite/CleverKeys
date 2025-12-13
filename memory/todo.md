@@ -77,11 +77,19 @@
   - Added output/novcheck for proper ABI-specific APK handling
   - All 3 APKs (armv7, arm64, x86_64) built successfully
   - Pipeline 2213182520: ALL JOBS PASSED
+- [x] Fix neural prediction not working in release builds (2025-12-13)
+  - Root cause: proguard-rules.pro had wrong package name (tribixbite.keyboard2 → tribixbite.cleverkeys)
+  - R8 was stripping ONNX/neural classes in release APKs
+  - Added comprehensive keep rules for all neural prediction classes
+- [x] Fix APK naming for Obtainium (2025-12-13)
+  - Changed arm64.apk → arm64-v8a.apk, armv7.apk → armeabi-v7a.apk
+  - Proper ABI names for app store compatibility
+- [x] Released v1.0.4 (2025-12-13)
 - [ ] Address any maintainer feedback (MR !30449)
 - [ ] Wait for F-Droid maintainer merge approval
 
-**Current Version**: 1.0.3 (versionCode 100033 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.3
+**Current Version**: 1.0.4 (versionCode 100043 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.4
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 
 ### Versioning Workflow
