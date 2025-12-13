@@ -1741,10 +1741,10 @@
             // Initialize the custom dictionary manager
             if (typeof CustomDictionaryManager !== 'undefined') {
                 dictionaryManager = new CustomDictionaryManager(swipeVocabulary);
-                
-                // The CustomDictionaryManager constructor automatically loads from localStorage
-                // and calls mergeIntoVocabulary(), so custom words are already integrated
-                
+
+                // CustomDictionaryManager constructor loads from localStorage AND merges into vocabulary
+                // Custom words are immediately available for predictions after page refresh
+
                 console.log('Custom dictionary integration initialized');
                 console.log('Custom dictionary stats:', dictionaryManager.getStats());
             } else {
@@ -1920,27 +1920,29 @@
             if (!dictionaryManager) {
                 initializeCustomDictionaryIntegration();
             }
-            
+
             const input = document.getElementById('newWord');
             const word = input.value.toLowerCase().trim();
-            
+
             if (word && word.match(/^[a-z]+$/)) {
-                // Add to custom dictionary manager (this now checks for duplicates)
-                const added = dictionaryManager.addPersonalWord(word);
-                
-                if (added) {
-                    // Immediately update the main vocabulary for reactive behavior
-                    updateVocabularyWithCustomWord(word, 8e-6); // Higher frequency for personal words
-                    
-                    updateDictionaryStats();
-                    updatePersonalWordsList();
+                // Check if already in personal words to avoid duplicate entries
+                if (dictionaryManager.personalWords.has(word)) {
+                    alert(`"${word}" is already in your personal dictionary`);
                     input.value = '';
-                    
-                    console.log(`Added personal word "${word}" - ready for predictions!`);
-                } else {
-                    alert(`The word "${word}" already exists in the main vocabulary`);
-                    input.value = '';
+                    return;
                 }
+
+                // Add to custom dictionary manager (now also boosts existing vocab words)
+                dictionaryManager.addPersonalWord(word);
+
+                // Immediately update the main vocabulary for reactive behavior
+                updateVocabularyWithCustomWord(word, 8e-6); // Higher frequency for personal words
+
+                updateDictionaryStats();
+                updatePersonalWordsList();
+                input.value = '';
+
+                console.log(`Added personal word "${word}" - ready for predictions!`);
             } else {
                 alert('Please enter a valid word (letters only)');
             }

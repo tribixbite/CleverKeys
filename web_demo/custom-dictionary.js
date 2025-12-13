@@ -9,7 +9,14 @@ class CustomDictionaryManager {
         this.customWords = new Map();
         this.personalWords = new Set();
         this.androidDictionary = new Map();
+        this.originalFrequencies = new Map(); // Track original frequencies for unboosting
         this.loadFromLocalStorage();
+
+        // CRITICAL: Merge loaded words into vocabulary immediately
+        // This ensures custom words are available for predictions after page refresh
+        if (this.vocab && this.vocab.isLoaded) {
+            this.mergeIntoVocabulary();
+        }
     }
 
     /**
@@ -153,16 +160,17 @@ class CustomDictionaryManager {
 
     /**
      * Add a single word manually
+     * Now allows boosting existing vocabulary words for personalization
      */
     addWord(word, frequency = 1e-5) {
         const clean = word.toLowerCase().trim();
         if (clean && clean.match(/^[a-z]+$/)) {
-            // Check if word already exists in main vocabulary
-            if (this.vocab && this.vocab.isLoaded && this.vocab.hasWord(clean)) {
-                console.log(`Word "${clean}" already exists in main vocabulary, skipping custom addition`);
-                return false;
+            // Allow adding even if word exists - this provides a boost for personal words
+            const existsInVocab = this.vocab && this.vocab.isLoaded && this.vocab.hasWord(clean);
+            if (existsInVocab) {
+                console.log(`Boosting existing word "${clean}" as personal word`);
             }
-            
+
             this.customWords.set(clean, frequency);
             this.personalWords.add(clean);
             this.saveToLocalStorage();
@@ -180,13 +188,33 @@ class CustomDictionaryManager {
         const removed = this.customWords.delete(clean);
         this.personalWords.delete(clean);
         this.androidDictionary.delete(clean);
-        
+
         if (removed) {
+            // Restore original frequency or remove from vocabulary
+            this.unboostWord(clean);
             this.saveToLocalStorage();
-            this.mergeIntoVocabulary();
         }
-        
+
         return removed;
+    }
+
+    /**
+     * Remove boost from a word, restoring original frequency
+     */
+    unboostWord(word) {
+        if (!this.vocab || !this.vocab.isLoaded) return;
+
+        const originalFreq = this.originalFrequencies.get(word);
+        if (originalFreq === null) {
+            // Word was added by us and didn't exist before - remove it
+            this.vocab.wordFreq.delete(word);
+            this.vocab.commonWords.delete(word);
+            this.vocab.top5000.delete(word);
+        } else if (originalFreq !== undefined) {
+            // Restore original frequency
+            this.vocab.wordFreq.set(word, originalFreq);
+        }
+        this.originalFrequencies.delete(word);
     }
 
     /**
@@ -197,25 +225,33 @@ class CustomDictionaryManager {
             console.warn('Main vocabulary not loaded, cannot merge');
             return;
         }
-        
+
         // Add all custom words with boost
         let merged = 0;
         const boostFactor = 1.5; // Boost personal words
-        
+
         // Merge Android dictionary
         for (const [word, freq] of this.androidDictionary) {
+            // Track original frequency before boosting
+            if (!this.originalFrequencies.has(word)) {
+                this.originalFrequencies.set(word, this.vocab.wordFreq.get(word) || null);
+            }
             this.vocab.wordFreq.set(word, freq * boostFactor);
             merged++;
         }
-        
+
         // Merge custom words
         for (const [word, freq] of this.customWords) {
+            // Track original frequency before boosting
+            if (!this.originalFrequencies.has(word)) {
+                this.originalFrequencies.set(word, this.vocab.wordFreq.get(word) || null);
+            }
             // Use higher frequency if word exists
             const existingFreq = this.vocab.wordFreq.get(word) || 0;
             this.vocab.wordFreq.set(word, Math.max(existingFreq, freq * boostFactor));
             merged++;
         }
-        
+
         // Update common words set if needed
         for (const word of this.personalWords) {
             const freq = this.vocab.wordFreq.get(word);
@@ -223,22 +259,23 @@ class CustomDictionaryManager {
                 this.vocab.commonWords.add(word);
             }
         }
-        
+
         console.log(`Merged ${merged} custom words into vocabulary`);
     }
 
     /**
      * Add a single word to personal dictionary
+     * Now allows boosting existing vocabulary words for personalization
      */
     addPersonalWord(word) {
         const clean = word.toLowerCase().trim();
         if (clean && clean.match(/^[a-z]+$/)) {
-            // Check if word already exists in main vocabulary
-            if (this.vocab && this.vocab.isLoaded && this.vocab.hasWord(clean)) {
-                console.log(`Word "${clean}" already exists in main vocabulary, not adding to personal dictionary`);
-                return false;
+            // Allow adding even if word exists - this provides a boost for personal words
+            const existsInVocab = this.vocab && this.vocab.isLoaded && this.vocab.hasWord(clean);
+            if (existsInVocab) {
+                console.log(`Boosting existing word "${clean}" as personal word`);
             }
-            
+
             this.personalWords.add(clean);
             this.customWords.set(clean, 8e-6); // Higher frequency for personal words
             this.saveToLocalStorage();
@@ -255,8 +292,9 @@ class CustomDictionaryManager {
         const clean = word.toLowerCase().trim();
         this.personalWords.delete(clean);
         this.customWords.delete(clean);
+        // Properly unboost the word in vocabulary
+        this.unboostWord(clean);
         this.saveToLocalStorage();
-        // Note: We don't remove from main vocabulary as it might be a base word
         return true;
     }
 
@@ -321,9 +359,18 @@ class CustomDictionaryManager {
      * Clear all custom dictionaries
      */
     clearAll() {
+        // Unboost all words before clearing
+        for (const word of this.customWords.keys()) {
+            this.unboostWord(word);
+        }
+        for (const word of this.androidDictionary.keys()) {
+            this.unboostWord(word);
+        }
+
         this.customWords.clear();
         this.personalWords.clear();
         this.androidDictionary.clear();
+        this.originalFrequencies.clear();
         localStorage.removeItem('customDictionaries');
         console.log('All custom dictionaries cleared');
     }
