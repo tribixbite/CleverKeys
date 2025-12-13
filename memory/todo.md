@@ -92,6 +92,10 @@
 ### Web Demo Improvements (P2) - PARTIALLY COMPLETED
 - [x] Add accessibility attributes (aria-*, role, tabindex) - 2025-12-13
 - [x] Remove debug test functions from global scope - 2025-12-13
+- [x] Improve model loading error handling - 2025-12-13
+  - Pre-flight validation with size checks (catches incomplete LFS downloads)
+  - Better error categorization (404, incomplete, network, WASM, memory)
+  - Retry button in error UI
 - [ ] Consider lazy loading for 12.5MB of models
 - [ ] Add PWA/Service Worker for offline support
 
