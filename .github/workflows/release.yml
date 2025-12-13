@@ -76,12 +76,12 @@ jobs:
         ls -la *.apk || echo "No APKs found!"
 
         # ABI split APKs: tribixbite.cleverkeys_<code>_<abi>.apk
-        # Rename to user-friendly format: CleverKeys-vX.Y.Z-<abi>.apk
+        # Rename to user-friendly format with proper ABI names for Obtainium compatibility
         for apk in *.apk; do
           if [[ "$apk" == *"arm64-v8a"* ]]; then
-            mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-arm64.apk"
+            mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-arm64-v8a.apk"
           elif [[ "$apk" == *"armeabi-v7a"* ]]; then
-            mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-armv7.apk"
+            mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-armeabi-v7a.apk"
           elif [[ "$apk" == *"x86_64"* ]]; then
             mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-x86_64.apk"
           fi

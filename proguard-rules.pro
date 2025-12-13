@@ -7,9 +7,20 @@
     protected *;
 }
 
-# Keep our specific services
--keep class tribixbite.keyboard2.CleverKeysService { *; }
--keep class tribixbite.keyboard2.MinimalTestService { *; }
+# Keep our specific services (FIXED: was tribixbite.keyboard2)
+-keep class tribixbite.cleverkeys.CleverKeysService { *; }
+-keep class tribixbite.cleverkeys.MinimalTestService { *; }
+
+# Keep all CleverKeys ONNX/neural classes
+-keep class tribixbite.cleverkeys.onnx.** { *; }
+-dontwarn tribixbite.cleverkeys.onnx.**
+
+# Keep all neural prediction related classes
+-keep class tribixbite.cleverkeys.SwipeTrajectoryProcessor { *; }
+-keep class tribixbite.cleverkeys.SwipeTrajectoryProcessor$** { *; }
+-keep class tribixbite.cleverkeys.SwipePredictionCandidate { *; }
+-keep class tribixbite.cleverkeys.Vocabulary { *; }
+-keep class tribixbite.cleverkeys.CharacterTokenizer { *; }
 
 # Keep AndroidX Lifecycle components
 -keep class androidx.lifecycle.** { *; }
