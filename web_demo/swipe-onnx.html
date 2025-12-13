@@ -403,7 +403,8 @@
         // Helper to validate a file is accessible and has expected minimum size
         async function validateFile(url, minSizeKB = 0, description = 'file') {
             try {
-                const response = await fetch(url, { method: 'HEAD' });
+                // Use cache: 'no-store' to bypass potentially corrupted cached files
+                const response = await fetch(url, { method: 'HEAD', cache: 'no-store' });
                 if (!response.ok) {
                     throw new Error(`${description} not found (HTTP ${response.status})`);
                 }
@@ -413,7 +414,7 @@
 
                 // Check minimum expected size (catches LFS pointer files served instead of actual content)
                 if (minSizeKB > 0 && sizeKB < minSizeKB) {
-                    throw new Error(`${description} appears incomplete (${sizeKB.toFixed(0)}KB < ${minSizeKB}KB expected)`);
+                    throw new Error(`${description} appears incomplete (${sizeKB.toFixed(0)}KB < ${minSizeKB}KB expected). Try hard refresh.`);
                 }
                 return true;
             } catch (error) {
@@ -438,9 +439,9 @@
                 updateLoadingStatus('Validating model files...');
                 await Promise.all([
                     validateFile('tokenizer_config.json', 0.5, 'Tokenizer config'),
-                    validateFile('swipe_model_character_quant.onnx', 4000, 'Encoder model'),  // ~5.2MB
-                    validateFile('swipe_decoder_character_quant.onnx', 6000, 'Decoder model'),  // ~7.2MB
-                    validateFile('swipe_vocabulary.json', 4000, 'Vocabulary')  // ~5.2MB
+                    validateFile('swipe_model_character_quant.onnx', 4000, 'Encoder model'),  // 5.2MB actual
+                    validateFile('swipe_decoder_character_quant.onnx', 5000, 'Decoder model'),  // 7.1MB actual
+                    validateFile('swipe_vocabulary.json', 4000, 'Vocabulary')  // 5.1MB actual
                 ]);
                 console.log('All model files validated successfully');
 
@@ -461,7 +462,11 @@
                     graphOptimizationLevel: 'all'
                 };
 
-                encoderSession = await ort.InferenceSession.create('swipe_model_character_quant.onnx', sessionOptions);
+                // Fetch models with cache bypass to avoid corrupted cached files
+                const encoderResponse = await fetch('swipe_model_character_quant.onnx', { cache: 'no-store' });
+                if (!encoderResponse.ok) throw new Error(`Encoder fetch failed: HTTP ${encoderResponse.status}`);
+                const encoderBuffer = await encoderResponse.arrayBuffer();
+                encoderSession = await ort.InferenceSession.create(encoderBuffer, sessionOptions);
                 console.log('Encoder model loaded');
 
                 // Log input/output names for debugging
@@ -469,8 +474,11 @@
                 console.log('Model outputs:', encoderSession.outputNames);
 
                 // Load decoder model - required for beam search decoding
-                updateLoadingStatus('Loading decoder model (7.2MB)...');
-                decoderSession = await ort.InferenceSession.create('swipe_decoder_character_quant.onnx', sessionOptions);
+                updateLoadingStatus('Loading decoder model (7.1MB)...');
+                const decoderResponse = await fetch('swipe_decoder_character_quant.onnx', { cache: 'no-store' });
+                if (!decoderResponse.ok) throw new Error(`Decoder fetch failed: HTTP ${decoderResponse.status}`);
+                const decoderBuffer = await decoderResponse.arrayBuffer();
+                decoderSession = await ort.InferenceSession.create(decoderBuffer, sessionOptions);
                 console.log('Decoder model loaded');
                 console.log('Decoder inputs:', decoderSession.inputNames);
                 console.log('Decoder outputs:', decoderSession.outputNames);
