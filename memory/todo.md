@@ -67,7 +67,23 @@
 - [x] Fix number mode - fixed CSS selector pattern
 - [x] Gate console.log behind DEBUG flag (global wrapper)
 
-### Web Demo Improvements (P1-P2)
+### Web Demo P1 Fixes ✅ COMPLETED
+*See full analysis: `docs/specs/web_demo_flaws_v2.md`*
+
+**State Management - FIXED 2025-12-12**:
+- [x] handleBackspace state sync (inputText vs currentTypedWord)
+- [x] handleSpace commits currentTypedWord properly, prevents double spaces
+- [x] handleReturn commits pending typed word before newline
+
+**Mode Toggle Conflicts - FIXED 2025-12-12**:
+- [x] toggleNumberMode/toggleEmojiMode mutual exclusion
+- [x] resetModeButtons() helper for consistent styling
+
+**Keyboard Layout - FIXED 2025-12-12**:
+- [x] Number mode row count (was 10 items, fixed to 9)
+- [x] resizeCanvas updates keyboardBounds (orientation changes)
+
+### Web Demo Improvements (P2)
 - [ ] Add accessibility attributes (aria-*, role, tabindex)
 - [ ] Remove debug test functions from global scope
 - [ ] Consider lazy loading for 12.5MB of models
