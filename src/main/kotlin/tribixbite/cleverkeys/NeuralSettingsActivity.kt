@@ -381,13 +381,14 @@ class NeuralSettingsActivity : ComponentActivity() {
     }
 
     private fun resetToDefaults() {
-        beamWidth = 4
-        maxLength = 35
-        confidenceThreshold = 0.1f
-        beamAlpha = 1.2f
-        beamPruneConfidence = 0.8f
-        beamScoreGap = 5.0f
-        resamplingMode = "discard"
+        // Use Defaults.* constants for consistency across all settings
+        beamWidth = Defaults.NEURAL_BEAM_WIDTH
+        maxLength = Defaults.NEURAL_MAX_LENGTH
+        confidenceThreshold = Defaults.NEURAL_CONFIDENCE_THRESHOLD
+        beamAlpha = Defaults.NEURAL_BEAM_ALPHA
+        beamPruneConfidence = Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE
+        beamScoreGap = Defaults.NEURAL_BEAM_SCORE_GAP
+        resamplingMode = Defaults.NEURAL_RESAMPLING_MODE
 
         updateNeuralParameters()
 
