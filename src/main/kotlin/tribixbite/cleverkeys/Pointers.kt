@@ -898,7 +898,7 @@ class Pointers(
         var d = 0f
 
         /** The slider speed changes depending on the pointer speed. */
-        var speed = 0.5f
+        var speed = 1.0f  // Start at full speed for responsive cursor movement
 
         /** Coordinate of the last move. */
         var last_x = x
@@ -911,12 +911,12 @@ class Pointers(
         var last_move_ms: Long = -1
 
         internal fun onTouchMove(ptr: Pointer, x: Float, y: Float) {
-            // Start sliding only after the pointer has travelled an other distance.
-            // This allows to trigger the slider movements only once with a short
-            // swipe.
+            // Start sliding after minimal travel distance for responsive cursor control.
+            // Using just slide_step_px (not swipe_dist_px + slide_step_px) makes it
+            // much easier to initiate cursor movement.
             val travelled = abs(x - last_x) + abs(y - last_y)
             if (last_move_ms == -1L) {
-                if (travelled < (_config.swipe_dist_px + _config.slide_step_px)) {
+                if (travelled < _config.slide_step_px) {
                     return
                 }
                 last_move_ms = System.currentTimeMillis()

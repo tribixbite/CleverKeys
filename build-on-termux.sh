@@ -73,21 +73,28 @@ cp src/main/layouts/*.xml build/generated-resources/xml/ 2>/dev/null || true
 if [ "$BUILD_TYPE_LOWER" = "release" ]; then
     echo "Step 4: Building Release APK..."
     echo "Note: Release builds require signing configuration."
-    echo "Creating a test signing key for release build..."
-    
-    # Create a test keystore for release builds if not present
-    if [ ! -f "release.keystore" ]; then
-        keytool -genkey -v -keystore release.keystore -alias release             -keyalg RSA -keysize 2048 -validity 10000             -storepass android -keypass android             -dname "CN=Test, OU=Test, O=Test, L=Test, S=Test, C=US" 2>/dev/null || {
-            echo "Warning: Could not create release keystore"
-        }
+
+    # Use env vars if set (from ~/.bashrc), otherwise create test keystore
+    if [ -n "$RELEASE_KEYSTORE" ] && [ -f "$RELEASE_KEYSTORE" ]; then
+        echo "Using release keystore from environment: $RELEASE_KEYSTORE"
+    else
+        echo "No release keystore in environment, creating test signing key..."
+        # Create a test keystore for release builds if not present
+        if [ ! -f "release.keystore" ]; then
+            keytool -genkey -v -keystore release.keystore -alias release \
+                -keyalg RSA -keysize 2048 -validity 10000 \
+                -storepass android -keypass android \
+                -dname "CN=Test, OU=Test, O=Test, L=Test, S=Test, C=US" 2>/dev/null || {
+                echo "Warning: Could not create release keystore"
+            }
+        fi
+        # Set environment variables for test signing
+        export RELEASE_KEYSTORE="release.keystore"
+        export RELEASE_KEYSTORE_PASSWORD="android"
+        export RELEASE_KEY_ALIAS="release"
+        export RELEASE_KEY_PASSWORD="android"
     fi
-    
-    # Set environment variables for release signing
-    export RELEASE_KEYSTORE="release.keystore"
-    export RELEASE_KEYSTORE_PASSWORD="android"
-    export RELEASE_KEY_ALIAS="release"
-    export RELEASE_KEY_PASSWORD="android"
-    
+
     GRADLE_TASK="assembleRelease"
     APK_PATH="build/outputs/apk/release/tribixbite.cleverkeys-universal.apk"
 else

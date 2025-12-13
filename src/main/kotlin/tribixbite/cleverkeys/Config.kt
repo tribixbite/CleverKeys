@@ -64,8 +64,8 @@ object Defaults {
     const val SWIPE_MIN_DWELL_TIME = 7
     const val SWIPE_NOISE_THRESHOLD = 1.26f
     const val SWIPE_HIGH_VELOCITY_THRESHOLD = 1000f
-    const val SLIDER_SPEED_SMOOTHING = 0.54f
-    const val SLIDER_SPEED_MAX = 4.0f
+    const val SLIDER_SPEED_SMOOTHING = 0.6f  // Slightly more responsive smoothing
+    const val SLIDER_SPEED_MAX = 6.0f  // Higher max for faster long-distance cursor movement
 
     // Short gestures
     const val SHORT_GESTURES_ENABLED = true
