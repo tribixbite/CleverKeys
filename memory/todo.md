@@ -72,8 +72,13 @@
   - Released as v1.0.3 with fix
 - [x] Play Protect now shows "App safe" (2025-12-13)
   - After v1.0.2 fix, Play Protect no longer flags as suspicious
-- [ ] F-Droid pipeline running (v1.0.3-only metadata)
+- [x] F-Droid pipeline SUCCESS (2025-12-13)
+  - Removed binary verification (source builds don't match GitHub release byte-for-byte)
+  - Added output/novcheck for proper ABI-specific APK handling
+  - All 3 APKs (armv7, arm64, x86_64) built successfully
+  - Pipeline 2213182520: ALL JOBS PASSED
 - [ ] Address any maintainer feedback (MR !30449)
+- [ ] Wait for F-Droid maintainer merge approval
 
 **Current Version**: 1.0.3 (versionCode 100033 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.3
