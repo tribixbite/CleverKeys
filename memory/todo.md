@@ -48,6 +48,10 @@
   - NeuralSettingsActivity had hardcoded defaults (4, 35) instead of Defaults.* (6, 20)
   - SwipePredictorOrchestrator had hardcoded fallbacks instead of Defaults.*
   - All neural parameter defaults now use Defaults.* constants for consistency
+- [x] Add short swipe customizations to backup system (2025-12-13)
+  - Short swipe customizations stored in separate JSON file were NOT backed up
+  - Now exported as `short_swipe_customizations` in config backup JSON
+  - Import restores customizations automatically
 - [ ] Address any maintainer feedback (MR !30449)
 
 **Current Version**: 1.0.0 (versionCode 100002 for arm64-v8a)

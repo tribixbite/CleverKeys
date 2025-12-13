@@ -16,12 +16,18 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.abs
 import android.provider.UserDictionary
+import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
+import kotlinx.coroutines.runBlocking
 
 /**
  * Manages backup and restore of keyboard configuration
  * Uses Storage Access Framework (SAF) for Android 15+ compatibility
  */
 class BackupRestoreManager(private val context: Context) {
+    // Lazy init to avoid circular dependency issues
+    private val shortSwipeManager: ShortSwipeCustomizationManager by lazy {
+        ShortSwipeCustomizationManager.getInstance(context)
+    }
     private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
 
     /**
@@ -94,6 +100,18 @@ class BackupRestoreManager(private val context: Context) {
             }
 
             root.add("preferences", preferences)
+
+            // Export short swipe customizations (stored in separate file, not SharedPreferences)
+            try {
+                runBlocking { shortSwipeManager.loadMappings() }
+                val shortSwipeJson = shortSwipeManager.exportToJson()
+                if (shortSwipeJson.isNotBlank() && shortSwipeJson != "{}") {
+                    root.add("short_swipe_customizations", JsonParser.parseString(shortSwipeJson))
+                    Log.i(TAG, "Exported short swipe customizations")
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to export short swipe customizations (non-fatal)", e)
+            }
 
             // Write to file
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
@@ -314,6 +332,20 @@ class BackupRestoreManager(private val context: Context) {
             }
 
             editor.apply()
+
+            // Import short swipe customizations if present
+            if (root.has("short_swipe_customizations")) {
+                try {
+                    val shortSwipeJson = root.getAsJsonObject("short_swipe_customizations").toString()
+                    val shortSwipeImported = runBlocking {
+                        shortSwipeManager.importFromJson(shortSwipeJson, merge = false)
+                    }
+                    Log.i(TAG, "Imported $shortSwipeImported short swipe customizations")
+                    result.shortSwipeCustomizationsImported = shortSwipeImported
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to import short swipe customizations (non-fatal)", e)
+                }
+            }
 
             result.importedCount = imported
             result.skippedCount = skipped
@@ -676,7 +708,8 @@ class BackupRestoreManager(private val context: Context) {
         @JvmField var currentScreenWidth: Int = 0,
         @JvmField var currentScreenHeight: Int = 0,
         @JvmField val importedKeys: MutableSet<String> = mutableSetOf(),
-        @JvmField val skippedKeys: MutableSet<String> = mutableSetOf()
+        @JvmField val skippedKeys: MutableSet<String> = mutableSetOf(),
+        @JvmField var shortSwipeCustomizationsImported: Int = 0
     ) {
         fun hasScreenSizeMismatch(): Boolean {
             if (sourceScreenWidth == 0 || sourceScreenHeight == 0)
