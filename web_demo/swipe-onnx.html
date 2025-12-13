@@ -400,50 +400,85 @@
         let tapTimeout = null;
         
         // Initialize ONNX Runtime and load models
+        // Helper to validate a file is accessible and has expected minimum size
+        async function validateFile(url, minSizeKB = 0, description = 'file') {
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                if (!response.ok) {
+                    throw new Error(`${description} not found (HTTP ${response.status})`);
+                }
+                const contentLength = response.headers.get('content-length');
+                const sizeKB = contentLength ? parseInt(contentLength) / 1024 : 0;
+                console.log(`${description}: ${sizeKB.toFixed(0)}KB`);
+
+                // Check minimum expected size (catches LFS pointer files served instead of actual content)
+                if (minSizeKB > 0 && sizeKB < minSizeKB) {
+                    throw new Error(`${description} appears incomplete (${sizeKB.toFixed(0)}KB < ${minSizeKB}KB expected)`);
+                }
+                return true;
+            } catch (error) {
+                console.error(`Failed to validate ${description}:`, error);
+                throw error;
+            }
+        }
+
         async function loadModels() {
             try {
                 updateLoadingStatus('Initializing ONNX Runtime...');
-                
+
                 // Configure ONNX Runtime Web WASM paths
                 if (typeof ort !== 'undefined') {
                     ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/';
                     console.log('ONNX Runtime initialized, version:', ort.env.versions?.onnxruntime);
                 } else {
-                    throw new Error('ONNX Runtime not loaded');
+                    throw new Error('ONNX Runtime library not loaded. Try refreshing.');
                 }
-                
+
+                // Pre-flight validation: check all required files are accessible
+                updateLoadingStatus('Validating model files...');
+                await Promise.all([
+                    validateFile('tokenizer_config.json', 0.5, 'Tokenizer config'),
+                    validateFile('swipe_model_character_quant.onnx', 4000, 'Encoder model'),  // ~5.2MB
+                    validateFile('swipe_decoder_character_quant.onnx', 6000, 'Decoder model'),  // ~7.2MB
+                    validateFile('swipe_vocabulary.json', 4000, 'Vocabulary')  // ~5.2MB
+                ]);
+                console.log('All model files validated successfully');
+
                 // Load tokenizer config first
                 updateLoadingStatus('Loading tokenizer...');
                 const tokenizerResponse = await fetch('tokenizer_config.json');
+                if (!tokenizerResponse.ok) {
+                    throw new Error(`Failed to load tokenizer (HTTP ${tokenizerResponse.status})`);
+                }
                 tokenizer = await tokenizerResponse.json();
                 console.log('Tokenizer loaded:', tokenizer);
-                
-                updateLoadingStatus('Loading encoder model...');
-                
+
+                updateLoadingStatus('Loading encoder model (5.2MB)...');
+
                 // Load ONNX models with proper options
                 const sessionOptions = {
                     executionProviders: ['wasm'],
                     graphOptimizationLevel: 'all'
                 };
-                
+
                 encoderSession = await ort.InferenceSession.create('swipe_model_character_quant.onnx', sessionOptions);
                 console.log('Encoder model loaded');
-                
+
                 // Log input/output names for debugging
                 console.log('Model inputs:', encoderSession.inputNames);
                 console.log('Model outputs:', encoderSession.outputNames);
-                
+
                 // Load decoder model - required for beam search decoding
-                updateLoadingStatus('Loading decoder model...');
+                updateLoadingStatus('Loading decoder model (7.2MB)...');
                 decoderSession = await ort.InferenceSession.create('swipe_decoder_character_quant.onnx', sessionOptions);
                 console.log('Decoder model loaded');
                 console.log('Decoder inputs:', decoderSession.inputNames);
                 console.log('Decoder outputs:', decoderSession.outputNames);
-                
+
                 // Load vocabulary dictionary
-                updateLoadingStatus('Loading vocabulary...');
+                updateLoadingStatus('Loading vocabulary (5.2MB)...');
                 await loadVocabulary();
-                
+
                 isModelReady = true;
                 window.isModelReady = true;  // Expose for debugging
                 hideLoadingOverlay();
@@ -464,12 +499,18 @@
                 let errorMsg = error.message || 'Unknown error';
                 let suggestion = '';
 
-                if (errorMsg.includes('fetch') || errorMsg.includes('network')) {
-                    suggestion = 'Check your internet connection and try refreshing.';
-                } else if (errorMsg.includes('WASM') || errorMsg.includes('wasm')) {
-                    suggestion = 'Your browser may not support WebAssembly. Try Chrome or Firefox.';
-                } else if (errorMsg.includes('memory') || errorMsg.includes('Memory')) {
-                    suggestion = 'Not enough memory. Try closing other tabs.';
+                if (errorMsg.includes('not found') || errorMsg.includes('HTTP 404')) {
+                    suggestion = 'Model files not found. The demo may be loading from an incomplete deployment.';
+                } else if (errorMsg.includes('appears incomplete')) {
+                    suggestion = 'Model files are corrupted or incomplete. Git LFS files may not have downloaded properly.';
+                } else if (errorMsg.includes('fetch') || errorMsg.includes('network') || errorMsg.includes('Failed to fetch')) {
+                    suggestion = 'Network error. Check your internet connection and try refreshing.';
+                } else if (errorMsg.includes('WASM') || errorMsg.includes('wasm') || errorMsg.includes('WebAssembly')) {
+                    suggestion = 'Your browser may not support WebAssembly. Try Chrome, Firefox, or Edge.';
+                } else if (errorMsg.includes('memory') || errorMsg.includes('Memory') || errorMsg.includes('OOM')) {
+                    suggestion = 'Not enough memory for models (~18MB). Try closing other tabs or restart browser.';
+                } else if (errorMsg.includes('ONNX') || errorMsg.includes('session')) {
+                    suggestion = 'Model parsing failed. Try hard refresh (Ctrl+Shift+R) to clear cache.';
                 } else {
                     suggestion = 'Try hard refresh (Ctrl+Shift+R) or clear browser cache.';
                 }
