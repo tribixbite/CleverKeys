@@ -52,10 +52,14 @@
   - Short swipe customizations stored in separate JSON file were NOT backed up
   - Now exported as `short_swipe_customizations` in config backup JSON
   - Import restores customizations automatically
+- [x] Fix resetToDefaults() in NeuralSettingsActivity (2025-12-13)
+  - resetToDefaults() had hardcoded values (4, 35, 0.1f, etc.)
+  - Now uses Defaults.* constants for consistency with all settings screens
 - [ ] Address any maintainer feedback (MR !30449)
+- [ ] Rebase F-Droid MR (needs_rebase status)
 
-**Current Version**: 1.0.0 (versionCode 100002 for arm64-v8a)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.0
+**Current Version**: 1.0.1 (versionCode 100012 for arm64-v8a)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.1
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 
 ### Versioning Workflow
