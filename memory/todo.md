@@ -55,8 +55,11 @@
 - [x] Fix resetToDefaults() in NeuralSettingsActivity (2025-12-13)
   - resetToDefaults() had hardcoded values (4, 35, 0.1f, etc.)
   - Now uses Defaults.* constants for consistency with all settings screens
+- [x] Rebase F-Droid MR (2025-12-13)
+  - Rebased cleverkeys branch against upstream/master
+  - Added v1.0.1 build entry to metadata
+  - Pipeline passed successfully
 - [ ] Address any maintainer feedback (MR !30449)
-- [ ] Rebase F-Droid MR (needs_rebase status)
 
 **Current Version**: 1.0.1 (versionCode 100012 for arm64-v8a)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.1
