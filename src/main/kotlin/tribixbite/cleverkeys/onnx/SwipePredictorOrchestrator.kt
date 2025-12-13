@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.PointF
 import android.util.Log
 import tribixbite.cleverkeys.Config
+import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.KeyboardGrid
 import tribixbite.cleverkeys.ModelVersionManager
 import tribixbite.cleverkeys.NeuralModelMetadata
@@ -56,14 +57,14 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     private var encoderSession: OrtSession? = null
     private var decoderSession: OrtSession? = null
     
-    // Configuration
+    // Configuration - defaults MUST match Defaults in Config.kt
     private var config: Config? = null
-    private var beamWidth = 4
-    private var maxLength = 20
-    private var confidenceThreshold = 0.05f
-    private var beamAlpha = 1.2f
-    private var beamPruneConfidence = 0.8f
-    private var beamScoreGap = 5.0f
+    private var beamWidth = Defaults.NEURAL_BEAM_WIDTH
+    private var maxLength = Defaults.NEURAL_MAX_LENGTH
+    private var confidenceThreshold = Defaults.NEURAL_CONFIDENCE_THRESHOLD
+    private var beamAlpha = Defaults.NEURAL_BEAM_ALPHA
+    private var beamPruneConfidence = Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE
+    private var beamScoreGap = Defaults.NEURAL_BEAM_SCORE_GAP
     private var maxSequenceLength = 250
     private var enableVerboseLogging = false
     private var showRawOutput = false
@@ -77,9 +78,10 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     fun setConfig(newConfig: Config?) {
         this.config = newConfig
         newConfig?.let {
-            beamWidth = if (it.neural_beam_width != 0) it.neural_beam_width else 4
-            maxLength = if (it.neural_max_length != 0) it.neural_max_length else 20
-            confidenceThreshold = if (it.neural_confidence_threshold != 0f) it.neural_confidence_threshold else 0.01f  // Lowered from 0.05 to keep more candidates
+            // Use Defaults.* for fallbacks to ensure consistency across all settings screens
+            beamWidth = if (it.neural_beam_width != 0) it.neural_beam_width else Defaults.NEURAL_BEAM_WIDTH
+            maxLength = if (it.neural_max_length != 0) it.neural_max_length else Defaults.NEURAL_MAX_LENGTH
+            confidenceThreshold = if (it.neural_confidence_threshold != 0f) it.neural_confidence_threshold else Defaults.NEURAL_CONFIDENCE_THRESHOLD
             beamAlpha = it.neural_beam_alpha
             beamPruneConfidence = it.neural_beam_prune_confidence
             beamScoreGap = it.neural_beam_score_gap

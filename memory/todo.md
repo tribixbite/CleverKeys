@@ -39,6 +39,15 @@
   - Removed REQUEST_INSTALL_PACKAGES (F-Droid handles updates)
   - Removed RECEIVE_BOOT_COMPLETED, WAKE_LOCK, storage permissions
   - Only VIBRATE and READ_USER_DICTIONARY remain
+- [x] Remove self-update feature (2025-12-13)
+  - Removed legacy external storage APIs (Environment.getExternalStorageDirectory)
+  - Removed checkForUpdates, installUpdateFromDefault, APK picker functions
+  - F-Droid handles updates - no need for in-app update mechanism
+  - Storage usage now fully scoped storage compliant
+- [x] Fix neural settings defaults mismatch (2025-12-13)
+  - NeuralSettingsActivity had hardcoded defaults (4, 35) instead of Defaults.* (6, 20)
+  - SwipePredictorOrchestrator had hardcoded fallbacks instead of Defaults.*
+  - All neural parameter defaults now use Defaults.* constants for consistency
 - [ ] Address any maintainer feedback (MR !30449)
 
 **Current Version**: 1.0.0 (versionCode 100002 for arm64-v8a)

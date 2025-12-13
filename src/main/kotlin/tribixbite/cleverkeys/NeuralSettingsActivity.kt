@@ -31,18 +31,18 @@ import tribixbite.cleverkeys.theme.KeyboardTheme
  */
 class NeuralSettingsActivity : ComponentActivity() {
 
-    // Current parameter values with reactive state
-    private var beamWidth by mutableStateOf(4)
-    private var maxLength by mutableStateOf(35)
-    private var confidenceThreshold by mutableStateOf(0.1f)
-    
-    // Advanced Beam Search Parameters
-    private var beamAlpha by mutableStateOf(1.2f)
-    private var beamPruneConfidence by mutableStateOf(0.8f)
-    private var beamScoreGap by mutableStateOf(5.0f)
+    // Current parameter values with reactive state - MUST match Defaults in Config.kt
+    private var beamWidth by mutableStateOf(Defaults.NEURAL_BEAM_WIDTH)
+    private var maxLength by mutableStateOf(Defaults.NEURAL_MAX_LENGTH)
+    private var confidenceThreshold by mutableStateOf(Defaults.NEURAL_CONFIDENCE_THRESHOLD)
 
-    // Model Configuration
-    private var resamplingMode by mutableStateOf("discard")
+    // Advanced Beam Search Parameters - MUST match Defaults in Config.kt
+    private var beamAlpha by mutableStateOf(Defaults.NEURAL_BEAM_ALPHA)
+    private var beamPruneConfidence by mutableStateOf(Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE)
+    private var beamScoreGap by mutableStateOf(Defaults.NEURAL_BEAM_SCORE_GAP)
+
+    // Model Configuration - MUST match Defaults in Config.kt
+    private var resamplingMode by mutableStateOf(Defaults.NEURAL_RESAMPLING_MODE)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -409,16 +409,17 @@ class NeuralSettingsActivity : ComponentActivity() {
 
     private fun loadSavedParameters() {
         // CRITICAL FIX: Use default shared preferences to match Config.kt
+        // All defaults MUST use Defaults.* constants for consistency
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        
-        beamWidth = Config.safeGetInt(prefs, "neural_beam_width", 4)
-        maxLength = Config.safeGetInt(prefs, "neural_max_length", 35)
-        confidenceThreshold = Config.safeGetFloat(prefs, "neural_confidence_threshold", 0.1f)
-        
-        beamAlpha = Config.safeGetFloat(prefs, "neural_beam_alpha", 1.2f)
-        beamPruneConfidence = Config.safeGetFloat(prefs, "neural_beam_prune_confidence", 0.8f)
-        beamScoreGap = Config.safeGetFloat(prefs, "neural_beam_score_gap", 5.0f)
-        resamplingMode = Config.safeGetString(prefs, "neural_resampling_mode", "discard") ?: "discard"
+
+        beamWidth = Config.safeGetInt(prefs, "neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
+        maxLength = Config.safeGetInt(prefs, "neural_max_length", Defaults.NEURAL_MAX_LENGTH)
+        confidenceThreshold = Config.safeGetFloat(prefs, "neural_confidence_threshold", Defaults.NEURAL_CONFIDENCE_THRESHOLD)
+
+        beamAlpha = Config.safeGetFloat(prefs, "neural_beam_alpha", Defaults.NEURAL_BEAM_ALPHA)
+        beamPruneConfidence = Config.safeGetFloat(prefs, "neural_beam_prune_confidence", Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE)
+        beamScoreGap = Config.safeGetFloat(prefs, "neural_beam_score_gap", Defaults.NEURAL_BEAM_SCORE_GAP)
+        resamplingMode = Config.safeGetString(prefs, "neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE) ?: Defaults.NEURAL_RESAMPLING_MODE
     }
 
     private fun saveParametersToPrefs() {

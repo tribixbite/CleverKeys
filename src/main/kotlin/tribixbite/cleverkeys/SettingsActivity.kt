@@ -63,13 +63,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private lateinit var config: Config
     private lateinit var prefs: SharedPreferences
 
-    // APK file picker launcher
-    private val apkPickerLauncher = registerForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let { handleSelectedApk(it) }
-    }
-
     // SAF file pickers for backup/restore
     private val configExportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -2522,53 +2515,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 // GitHub release info
                 GitHubInfoCard()
 
-                Row(
+                // Reset settings button
+                Button(
+                    onClick = { resetAllSettings() },
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 ) {
-                    Button(
-                        onClick = { resetAllSettings() },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Text(stringResource(R.string.settings_reset_button))
-                    }
-
-                    Button(
-                        onClick = { checkForUpdates() },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(stringResource(R.string.settings_updates_button))
-                    }
+                    Text(stringResource(R.string.settings_reset_button))
                 }
 
-                // Second row: Install Update with file picker
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = { installUpdateFromDefault() },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Text("Install Update")
-                    }
-
-                    Button(
-                        onClick = { showUpdateFilePicker() },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiary
-                        )
-                    ) {
-                        Text("Browse APK...")
-                    }
-                }
+                // Note: Self-update feature removed for F-Droid compliance
+                // F-Droid handles updates automatically
 
             }
         }
@@ -3258,164 +3217,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun checkForUpdates() {
-        lifecycleScope.launch {
-            try {
-                // Use proper Android storage APIs instead of hardcoded paths
-                val downloadDir = android.os.Environment.getExternalStoragePublicDirectory(
-                    android.os.Environment.DIRECTORY_DOWNLOADS
-                )
-                val externalStorage = android.os.Environment.getExternalStorageDirectory()
-
-                // Check for APK updates in common locations using proper APIs
-                val possibleLocations = arrayOf(
-                    File(downloadDir, "cleverkeys-debug.apk").absolutePath,
-                    File(downloadDir, "tribixbite.cleverkeys.debug.apk").absolutePath,
-                    File(externalStorage, "unexpected/debug-kb.apk").absolutePath,
-                    File(externalStorage, "Download/cleverkeys-debug.apk").absolutePath,
-                    "${getExternalFilesDir(null)?.absolutePath}/cleverkeys-debug.apk"
-                )
-
-                var updateApk: File? = null
-                for (location in possibleLocations) {
-                    val file = File(location)
-                    if (file.exists() && file.canRead()) {
-                        updateApk = file
-                        android.util.Log.d(TAG, "Found update APK at: $location")
-                        break
-                    }
-                }
-
-                if (updateApk != null) {
-                    showUpdateDialog(updateApk)
-                } else {
-                    showNoUpdateDialog()
-                }
-
-            } catch (e: Exception) {
-                android.util.Log.e(TAG, "Error checking for updates", e)
-                Toast.makeText(this@SettingsActivity,
-                    getString(R.string.settings_toast_error_update, e.message ?: ""),
-                    Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    /**
-     * Install update from default location without prompting.
-     * Uses proper Android storage APIs to check common update locations.
-     */
-    private fun installUpdateFromDefault() {
-        val externalStorage = android.os.Environment.getExternalStorageDirectory()
-        val downloadDir = android.os.Environment.getExternalStoragePublicDirectory(
-            android.os.Environment.DIRECTORY_DOWNLOADS
-        )
-
-        // Primary location (Unexpected-Keyboard compatible)
-        val defaultPath = File(externalStorage, "unexpected/debug-kb.apk")
-        if (defaultPath.exists() && defaultPath.canRead()) {
-            installUpdate(defaultPath)
-            return
-        }
-
-        // Fallback to other locations using proper APIs
-        val possibleLocations = arrayOf(
-            File(downloadDir, "cleverkeys-debug.apk").absolutePath,
-            File(downloadDir, "tribixbite.cleverkeys.debug.apk").absolutePath,
-            File(externalStorage, "Download/cleverkeys-debug.apk").absolutePath
-        )
-
-        for (location in possibleLocations) {
-            val file = File(location)
-            if (file.exists() && file.canRead()) {
-                installUpdate(file)
-                return
-            }
-        }
-
-        // No update found - use proper path in message
-        val expectedPath = File(externalStorage, "unexpected/debug-kb.apk").absolutePath
-        Toast.makeText(
-            this,
-            "No update APK found at $expectedPath",
-            Toast.LENGTH_LONG
-        ).show()
-    }
-
-    private fun showUpdateDialog(apkFile: File) {
-        android.app.AlertDialog.Builder(this)
-            .setTitle(getString(R.string.settings_update_dialog_title))
-            .setMessage(getString(R.string.settings_update_dialog_message, apkFile.name, apkFile.length() / 1024))
-            .setPositiveButton(getString(R.string.settings_update_dialog_install)) { _, _ ->
-                installUpdate(apkFile)
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
-    }
-
-    private fun showNoUpdateDialog() {
-        android.app.AlertDialog.Builder(this)
-            .setTitle(getString(R.string.settings_no_update_dialog_title))
-            .setMessage(getString(R.string.settings_no_update_dialog_message))
-            .setPositiveButton(android.R.string.ok, null)
-            .show()
-    }
-
-    private fun installUpdate(apkFile: File) {
-        try {
-            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                // Use FileProvider for Android 7.0+
-                androidx.core.content.FileProvider.getUriForFile(
-                    this,
-                    "${packageName}.fileprovider",
-                    apkFile
-                )
-            } else {
-                android.net.Uri.fromFile(apkFile)
-            }
-
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, "application/vnd.android.package-archive")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-            }
-
-            startActivity(intent)
-            android.util.Log.d(TAG, "Launched installer for: ${apkFile.absolutePath}")
-
-        } catch (e: Exception) {
-            android.util.Log.e(TAG, "Error installing update", e)
-
-            // Fallback: try to copy to accessible location
-            try {
-                val downloadDir = android.os.Environment.getExternalStoragePublicDirectory(
-                    android.os.Environment.DIRECTORY_DOWNLOADS
-                )
-                val publicApk = File(downloadDir, "cleverkeys-update.apk")
-                apkFile.copyTo(publicApk, overwrite = true)
-
-                val fallbackIntent = Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(
-                        android.net.Uri.fromFile(publicApk),
-                        "application/vnd.android.package-archive"
-                    )
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                startActivity(fallbackIntent)
-
-                Toast.makeText(this,
-                    getString(R.string.settings_toast_install_copied),
-                    Toast.LENGTH_SHORT).show()
-
-            } catch (fallbackError: Exception) {
-                Toast.makeText(this,
-                    getString(R.string.settings_toast_install_failed, e.message ?: ""),
-                    Toast.LENGTH_LONG).show()
-            }
-        }
-    }
+    // Self-update feature removed for F-Droid compliance
+    // F-Droid handles updates automatically - no storage permissions needed
 
     private fun fallbackEncrypted() {
         // Handle direct boot mode failure
@@ -3666,99 +3469,5 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 ).show()
             }
         }
-    }
-
-    /**
-     * Show Android system file picker to select APK files.
-     * Uses Storage Access Framework (SAF) for proper file browsing.
-     */
-    private fun showUpdateFilePicker() {
-        try {
-            // Launch system file picker for APK files
-            apkPickerLauncher.launch("application/vnd.android.package-archive")
-        } catch (e: Exception) {
-            // Fallback: show message if file picker not available
-            android.app.AlertDialog.Builder(this)
-                .setTitle("File Picker Unavailable")
-                .setMessage("Could not open file picker. You can:\n\n" +
-                    "1. Download APK from GitHub releases\n" +
-                    "2. Use a file manager to install manually")
-                .setPositiveButton("Open GitHub") { _, _ -> openGitHubReleases() }
-                .setNegativeButton(android.R.string.cancel, null)
-                .show()
-        }
-    }
-
-    /**
-     * Handle APK selected from file picker.
-     */
-    private fun handleSelectedApk(uri: Uri) {
-        try {
-            // Get file info from URI
-            val cursor = contentResolver.query(uri, null, null, null, null)
-            var fileName = "Unknown"
-            var fileSize = 0L
-
-            cursor?.use {
-                if (it.moveToFirst()) {
-                    val nameIndex = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                    val sizeIndex = it.getColumnIndex(android.provider.OpenableColumns.SIZE)
-                    if (nameIndex >= 0) fileName = it.getString(nameIndex) ?: "Unknown"
-                    if (sizeIndex >= 0) fileSize = it.getLong(sizeIndex)
-                }
-            }
-
-            val sizeKb = fileSize / 1024
-
-            android.app.AlertDialog.Builder(this)
-                .setTitle("Install Update")
-                .setMessage(
-                    "File: $fileName\n" +
-                    "Size: ${sizeKb}KB\n\n" +
-                    "Install this APK?"
-                )
-                .setPositiveButton("Install") { _, _ -> installUpdateFromUri(uri) }
-                .setNegativeButton(android.R.string.cancel, null)
-                .show()
-        } catch (e: Exception) {
-            Toast.makeText(this, "Error reading file: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    /**
-     * Install APK from content URI.
-     */
-    private fun installUpdateFromUri(uri: Uri) {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, "application/vnd.android.package-archive")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Could not install: ${e.message}", Toast.LENGTH_LONG).show()
-        }
-    }
-
-    private fun showInstallConfirmation(apkFile: File) {
-        val sizeKb = apkFile.length() / 1024
-        android.app.AlertDialog.Builder(this)
-            .setTitle("Install Update")
-            .setMessage(
-                "File: ${apkFile.name}\n" +
-                "Size: ${sizeKb}KB\n" +
-                "Path: ${apkFile.parent}\n\n" +
-                "Install this APK?"
-            )
-            .setPositiveButton("Install") { _, _ -> installUpdate(apkFile) }
-            .setNeutralButton("Copy Path") { _, _ ->
-                val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                val clip = android.content.ClipData.newPlainText("APK Path", apkFile.absolutePath)
-                clipboard.setPrimaryClip(clip)
-                Toast.makeText(this, "Path copied to clipboard", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
     }
 }
