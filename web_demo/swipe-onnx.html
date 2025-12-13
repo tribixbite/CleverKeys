@@ -731,6 +731,8 @@
             const rect = canvas.parentElement.getBoundingClientRect();
             canvas.width = rect.width;
             canvas.height = rect.height;
+            // Recalculate keyboard bounds on resize (orientation change, etc.)
+            updateKeyboardBounds();
         }
         
         function updateKeyboardBounds() {
@@ -1645,46 +1647,50 @@
             if (currentTypedWord.length > 0) {
                 // Remove character from current typed word
                 currentTypedWord = currentTypedWord.slice(0, -1);
-                
-                // Update display
-                const words = inputText.split(' ');
+
+                // Update display: inputText is committed text, append currentTypedWord for display
                 if (currentTypedWord.length > 0) {
-                    words[words.length - 1] = currentTypedWord;
-                    document.getElementById('inputText').textContent = words.join(' ');
+                    document.getElementById('inputText').textContent = inputText + currentTypedWord;
                     generateTapPredictions(currentTypedWord);
                 } else {
-                    // If no more characters in current word, remove the word
-                    words.pop();
-                    inputText = words.join(' ') + (words.length > 0 ? ' ' : '');
+                    // Deleted entire current word, just show inputText
                     document.getElementById('inputText').textContent = inputText;
                     clearTapPredictions();
                 }
             } else if (inputText.length > 0) {
-                // Remove character from inputText
-                inputText = inputText.slice(0, -1);
+                // Remove character from committed inputText
+                // Check if last char is space - if so, we might want to delete a whole word
+                if (inputText.endsWith(' ')) {
+                    // Remove trailing space
+                    inputText = inputText.slice(0, -1);
+                } else {
+                    // Remove last character
+                    inputText = inputText.slice(0, -1);
+                }
                 document.getElementById('inputText').textContent = inputText;
                 clearTapPredictions();
             }
         }
-        
+
         function handleSpace() {
             // Auto-select top prediction if available and not manually selected
             if (hasPendingPredictions && !userMadeManualSelection && currentPredictions.length > 0) {
                 autoSelectTopPrediction();
                 return; // Space is consumed by auto-selection
             }
-            
+
             if (currentTypedWord.length > 0) {
-                // Finalize current typed word
-                inputText = document.getElementById('inputText').textContent + ' ';
+                // Finalize current typed word - commit it to inputText with trailing space
+                inputText += currentTypedWord + ' ';
                 document.getElementById('inputText').textContent = inputText;
                 currentTypedWord = '';
                 clearTapPredictions();
-            } else {
-                // Add space to existing text
+            } else if (!inputText.endsWith(' ') && inputText.length > 0) {
+                // Add space only if there isn't already a trailing space
                 inputText += ' ';
                 document.getElementById('inputText').textContent = inputText;
             }
+            // If inputText already ends with space, ignore (prevent double spaces)
         }
         
         function clearInput() {
@@ -2797,13 +2803,35 @@
         // 4th Row Button Functions
         let isNumberMode = false;
         let isEmojiMode = false;
-        
+
+        // Helper to reset mode button styling
+        function resetModeButtons() {
+            const numButton = document.querySelector('button[onclick="toggleNumberMode()"]');
+            const emojiButton = document.querySelector('button[onclick="toggleEmojiMode()"]');
+
+            if (numButton) {
+                numButton.textContent = '123';
+                numButton.classList.remove('bg-neon-blue/20', 'text-neon-blue');
+                numButton.classList.add('bg-gray-800', 'text-gray-400');
+            }
+            if (emojiButton) {
+                emojiButton.classList.remove('bg-neon-purple/20', 'text-neon-purple');
+                emojiButton.classList.add('bg-gray-800', 'text-gray-400');
+            }
+        }
+
         function toggleNumberMode() {
+            // If emoji mode is active, deactivate it first
+            if (isEmojiMode) {
+                isEmojiMode = false;
+            }
+
             isNumberMode = !isNumberMode;
             const button = document.querySelector('button[onclick="toggleNumberMode()"]');
-            
+
             if (isNumberMode) {
                 // Change to numbers layout
+                resetModeButtons();
                 updateKeyboardToNumbers();
                 button.textContent = 'ABC';
                 button.classList.add('bg-neon-blue/20', 'text-neon-blue');
@@ -2812,19 +2840,23 @@
             } else {
                 // Change back to letters
                 updateKeyboardToLetters();
-                button.textContent = '123';
-                button.classList.remove('bg-neon-blue/20', 'text-neon-blue');
-                button.classList.add('bg-gray-800', 'text-gray-400');
+                resetModeButtons();
                 console.log('🔤 Letter mode enabled');
             }
         }
-        
+
         function toggleEmojiMode() {
+            // If number mode is active, deactivate it first
+            if (isNumberMode) {
+                isNumberMode = false;
+            }
+
             isEmojiMode = !isEmojiMode;
             const button = document.querySelector('button[onclick="toggleEmojiMode()"]');
-            
+
             if (isEmojiMode) {
                 // Show emoji picker or common emojis
+                resetModeButtons();
                 showEmojiKeyboard();
                 button.classList.add('bg-neon-purple/20', 'text-neon-purple');
                 button.classList.remove('bg-gray-800', 'text-gray-400');
@@ -2832,28 +2864,34 @@
             } else {
                 // Return to normal keyboard
                 updateKeyboardToLetters();
-                button.classList.remove('bg-neon-purple/20', 'text-neon-purple');
-                button.classList.add('bg-gray-800', 'text-gray-400');
+                resetModeButtons();
                 console.log('🔤 Letter mode enabled');
             }
         }
-        
+
         function handleReturn() {
+            // Commit any pending typed word first
+            if (currentTypedWord.length > 0) {
+                inputText += currentTypedWord;
+                currentTypedWord = '';
+            }
+
             // Add newline to text
             inputText += '\n';
             document.getElementById('inputText').textContent = inputText;
             console.log('📝 Added newline');
-            
+
             // Clear any pending predictions since we're starting a new line
             clearPredictionState();
         }
         
         // Update keyboard layout to numbers
         function updateKeyboardToNumbers() {
+            // Row counts must match original: row0=10, row1=9, row2=9
             const numberLayouts = [
-                ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-                ['-', '/', ':', ';', '(', ')', '$', '&', '@', '"'],
-                ['shift', '.', ',', '?', '!', "'", '"', '+', '*', 'backspace']
+                ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],   // 10 keys
+                ['-', '/', ':', ';', '(', ')', '$', '&', '@'],         // 9 keys
+                ['#', '.', ',', '?', '!', "'", '+', '*', '⌫']          // 9 keys (shift=# for symbols)
             ];
 
             // Update each row - find first key with data-row, then get parent div to find all keys
