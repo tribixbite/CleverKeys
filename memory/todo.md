@@ -34,6 +34,11 @@
 - [x] Created first official release: v1.0.0
 - [x] GitHub Actions v1.0.0 release succeeded (3 APKs published)
 - [x] F-Droid pipeline 2212215842: ALL 8 JOBS SUCCESS with auto-update enabled!
+- [x] Fix permission warnings for clean install experience (2025-12-13)
+  - Removed RECORD_AUDIO (voice typing uses external IME)
+  - Removed REQUEST_INSTALL_PACKAGES (F-Droid handles updates)
+  - Removed RECEIVE_BOOT_COMPLETED, WAKE_LOCK, storage permissions
+  - Only VIBRATE and READ_USER_DICTIONARY remain
 - [ ] Address any maintainer feedback (MR !30449)
 
 **Current Version**: 1.0.0 (versionCode 100002 for arm64-v8a)
