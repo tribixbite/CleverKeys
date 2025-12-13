@@ -59,10 +59,24 @@
   - Rebased cleverkeys branch against upstream/master
   - Added v1.0.1 build entry to metadata
   - Pipeline passed successfully
+- [x] Fix app name bug in release builds (2025-12-13)
+  - resValue was using "@string/app_name_release" literal (doesn't resolve)
+  - Fixed to use literal strings: "CleverKeys" for release, "CleverKeys (Debug)" for debug
+  - Released as v1.0.2
+- [x] Fix version mismatch bug in build.gradle (2025-12-13)
+  - defaultConfig had hardcoded versionCode 10000/versionName "1.0.0"
+  - ext.versionCode was updated to newer versions
+  - APKs were built with wrong versionCode, breaking F-Droid reproducibility
+  - Fixed by syncing both defaultConfig and ext values
+  - Removed v1.0.2 from F-Droid metadata (had the bug)
+  - Released as v1.0.3 with fix
+- [x] Play Protect now shows "App safe" (2025-12-13)
+  - After v1.0.2 fix, Play Protect no longer flags as suspicious
+- [ ] F-Droid pipeline running (v1.0.3-only metadata)
 - [ ] Address any maintainer feedback (MR !30449)
 
-**Current Version**: 1.0.1 (versionCode 100012 for arm64-v8a)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.1
+**Current Version**: 1.0.3 (versionCode 100033 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.3
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 
 ### Versioning Workflow
