@@ -151,14 +151,37 @@ class PredictionCoordinator(
      * Ensures neural engine is initialized before use.
      * OPTIMIZATION v1.32.529: Double-checked locking to prevent Main Thread blocking
      * This allows check to be fast if already initialized, without acquiring lock.
+     * FIX v1.32.530: Wait for background initialization if in progress, with timeout
      */
     fun ensureNeuralEngineReady() {
-        if (config.swipe_typing_enabled && neuralEngine == null && !isInitializingNeuralEngine) {
-            synchronized(this) {
-                if (neuralEngine == null && !isInitializingNeuralEngine) {
-                    Log.d(TAG, "Lazy-loading neural engine on first swipe...")
-                    initializeNeuralEngine()
+        if (!config.swipe_typing_enabled) return
+
+        // Fast path: already initialized
+        if (neuralEngine != null) return
+
+        // If background thread is initializing, wait for it (up to 5 seconds)
+        if (isInitializingNeuralEngine) {
+            Log.d(TAG, "Waiting for background ONNX initialization to complete...")
+            val startTime = System.currentTimeMillis()
+            val maxWaitMs = 5000L
+            while (isInitializingNeuralEngine && neuralEngine == null) {
+                if (System.currentTimeMillis() - startTime > maxWaitMs) {
+                    Log.w(TAG, "Timeout waiting for ONNX initialization (${maxWaitMs}ms)")
+                    break
                 }
+                Thread.sleep(50)
+            }
+            if (neuralEngine != null) {
+                Log.d(TAG, "ONNX initialization completed after waiting")
+                return
+            }
+        }
+
+        // Fallback: synchronous initialization if not started or timed out
+        synchronized(this) {
+            if (neuralEngine == null && !isInitializingNeuralEngine) {
+                Log.d(TAG, "Lazy-loading neural engine on first swipe...")
+                initializeNeuralEngine()
             }
         }
     }
