@@ -122,6 +122,7 @@ class LauncherActivity : AppCompatActivity() {
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun LauncherScreen(
     onEnableKeyboard: () -> Unit,
@@ -132,15 +133,22 @@ fun LauncherScreen(
     val context = LocalContext.current
     var testText by remember { mutableStateOf("") }
 
-    // Track keyboard visibility to hide logo when keyboard is shown
-    var isKeyboardVisible by remember { mutableStateOf(false) }
+    // Track keyboard visibility using WindowInsets IME bottom inset
+    val density = LocalDensity.current
+    val imeBottom = androidx.compose.foundation.layout.WindowInsets.ime.getBottom(density)
+    val isKeyboardVisible = imeBottom > 0
 
     // Check if CleverKeys is enabled and selected
-    val isKeyboardEnabled = remember {
-        mutableStateOf(isCleverKeysEnabled(context))
-    }
-    val isKeyboardSelected = remember {
-        mutableStateOf(isCleverKeysSelected(context))
+    var isKeyboardEnabled by remember { mutableStateOf(isCleverKeysEnabled(context)) }
+    var isKeyboardSelected by remember { mutableStateOf(isCleverKeysSelected(context)) }
+
+    // Auto-refresh completion status every 500ms when screen is visible
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(500)
+            isKeyboardEnabled = isCleverKeysEnabled(context)
+            isKeyboardSelected = isCleverKeysSelected(context)
+        }
     }
 
     // Load raccoon logo from assets
@@ -270,12 +278,8 @@ fun LauncherScreen(
                     title = "Enable Keyboard",
                     description = "Turn on CleverKeys in system settings",
                     icon = Icons.Default.Settings,
-                    isCompleted = isKeyboardEnabled.value,
-                    onClick = {
-                        onEnableKeyboard()
-                        // Refresh status after returning
-                        isKeyboardEnabled.value = isCleverKeysEnabled(context)
-                    }
+                    isCompleted = isKeyboardEnabled,
+                    onClick = onEnableKeyboard
                 )
 
                 SetupCard(
@@ -283,29 +287,17 @@ fun LauncherScreen(
                     title = "Select Keyboard",
                     description = "Switch your default input method",
                     icon = Icons.Default.CheckCircle,
-                    isCompleted = isKeyboardSelected.value,
-                    onClick = {
-                        onSelectKeyboard()
-                        // Refresh status after returning
-                        isKeyboardSelected.value = isCleverKeysSelected(context)
-                    }
+                    isCompleted = isKeyboardSelected,
+                    onClick = onSelectKeyboard
                 )
             }
 
             // Test Field
             OutlinedTextField(
                 value = testText,
-                onValueChange = {
-                    testText = it
-                    // Refresh keyboard status when typing
-                    isKeyboardSelected.value = isCleverKeysSelected(context)
-                },
+                onValueChange = { testText = it },
                 label = { Text("Test your new keyboard here") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onFocusChanged { focusState ->
-                        isKeyboardVisible = focusState.isFocused
-                    },
+                modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
@@ -368,17 +360,21 @@ fun SetupCard(
     isCompleted: Boolean = false,
     onClick: () -> Unit
 ) {
+    // Brand purple for completed state
+    val brandPurple = Color(0xFF9B59B6)
+    val brandPurpleLight = Color(0xFFBB8FCE)
+
     val borderColor = if (isCompleted) {
         Brush.horizontalGradient(
             colors = listOf(
-                Color(0xFF4CAF50).copy(alpha = 0.7f), // Green for completed
-                Color(0xFF81C784).copy(alpha = 0.7f)
+                brandPurple.copy(alpha = 0.8f),
+                brandPurpleLight.copy(alpha = 0.8f)
             )
         )
     } else {
         Brush.horizontalGradient(
             colors = listOf(
-                Color(0xFF9B59B6).copy(alpha = 0.5f),
+                brandPurple.copy(alpha = 0.5f),
                 Color(0xFF64B5F6).copy(alpha = 0.5f)
             )
         )
@@ -405,7 +401,7 @@ fun SetupCard(
                 modifier = Modifier
                     .size(32.dp)
                     .background(
-                        if (isCompleted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary,
+                        if (isCompleted) brandPurple else MaterialTheme.colorScheme.primary,
                         RoundedCornerShape(8.dp)
                     ),
                 contentAlignment = Alignment.Center
@@ -431,25 +427,25 @@ fun SetupCard(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (isCompleted) Color(0xFF81C784) else Color.White
+                    color = if (isCompleted) brandPurpleLight else Color.White
                 )
                 Text(
                     text = if (isCompleted) "✓ Done" else description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (isCompleted) Color(0xFF81C784).copy(alpha = 0.8f) else Color.White.copy(alpha = 0.7f)
+                    color = if (isCompleted) brandPurpleLight.copy(alpha = 0.8f) else Color.White.copy(alpha = 0.7f)
                 )
             }
 
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (isCompleted) Color(0xFF4CAF50) else Color.White.copy(alpha = 0.8f)
+                tint = if (isCompleted) brandPurple else Color.White.copy(alpha = 0.8f)
             )
         }
     }
 }
 
-// --- GitHub Icon Composable ---
+// --- GitHub Icon Composable (Official GitHub Mark) ---
 
 @Composable
 fun GitHubIcon(
@@ -458,40 +454,40 @@ fun GitHubIcon(
 ) {
     Canvas(modifier = modifier) {
         val size = this.size.minDimension
-        val center = Offset(size / 2, size / 2)
-        val radius = size * 0.45f
+        val scale = size / 24f // GitHub mark is designed on 24x24 grid
 
-        // Draw the GitHub octocat-inspired circle
-        drawCircle(
-            color = tint,
-            radius = radius,
-            center = center,
-            style = Stroke(width = size * 0.08f)
-        )
+        val path = androidx.compose.ui.graphics.Path().apply {
+            // GitHub Invertocat mark path (scaled from official SVG)
+            moveTo(12f * scale, 0.297f * scale)
+            cubicTo(5.37f * scale, 0.297f * scale, 0f * scale, 5.67f * scale, 0f * scale, 12.297f * scale)
+            cubicTo(0f * scale, 17.6f * scale, 3.438f * scale, 22.097f * scale, 8.205f * scale, 23.682f * scale)
+            cubicTo(8.805f * scale, 23.795f * scale, 9.025f * scale, 23.424f * scale, 9.025f * scale, 23.105f * scale)
+            cubicTo(9.025f * scale, 22.82f * scale, 9.015f * scale, 22.065f * scale, 9.01f * scale, 21.065f * scale)
+            cubicTo(5.672f * scale, 21.79f * scale, 4.968f * scale, 19.455f * scale, 4.968f * scale, 19.455f * scale)
+            cubicTo(4.422f * scale, 18.07f * scale, 3.633f * scale, 17.7f * scale, 3.633f * scale, 17.7f * scale)
+            cubicTo(2.546f * scale, 16.956f * scale, 3.717f * scale, 16.971f * scale, 3.717f * scale, 16.971f * scale)
+            cubicTo(4.922f * scale, 17.055f * scale, 5.555f * scale, 18.207f * scale, 5.555f * scale, 18.207f * scale)
+            cubicTo(6.625f * scale, 20.042f * scale, 8.364f * scale, 19.512f * scale, 9.05f * scale, 19.205f * scale)
+            cubicTo(9.158f * scale, 18.429f * scale, 9.467f * scale, 17.9f * scale, 9.81f * scale, 17.6f * scale)
+            cubicTo(7.145f * scale, 17.3f * scale, 4.344f * scale, 16.268f * scale, 4.344f * scale, 11.67f * scale)
+            cubicTo(4.344f * scale, 10.36f * scale, 4.809f * scale, 9.29f * scale, 5.579f * scale, 8.45f * scale)
+            cubicTo(5.444f * scale, 8.147f * scale, 5.039f * scale, 6.927f * scale, 5.684f * scale, 5.274f * scale)
+            cubicTo(5.684f * scale, 5.274f * scale, 6.689f * scale, 4.952f * scale, 8.984f * scale, 6.504f * scale)
+            cubicTo(9.944f * scale, 6.237f * scale, 10.964f * scale, 6.105f * scale, 11.984f * scale, 6.099f * scale)
+            cubicTo(13.004f * scale, 6.105f * scale, 14.024f * scale, 6.237f * scale, 14.984f * scale, 6.504f * scale)
+            cubicTo(17.264f * scale, 4.952f * scale, 18.269f * scale, 5.274f * scale, 18.269f * scale, 5.274f * scale)
+            cubicTo(18.914f * scale, 6.927f * scale, 18.509f * scale, 8.147f * scale, 18.389f * scale, 8.45f * scale)
+            cubicTo(19.154f * scale, 9.29f * scale, 19.619f * scale, 10.36f * scale, 19.619f * scale, 11.67f * scale)
+            cubicTo(19.619f * scale, 16.28f * scale, 16.814f * scale, 17.295f * scale, 14.144f * scale, 17.59f * scale)
+            cubicTo(14.564f * scale, 17.95f * scale, 14.954f * scale, 18.686f * scale, 14.954f * scale, 19.81f * scale)
+            cubicTo(14.954f * scale, 21.416f * scale, 14.939f * scale, 22.706f * scale, 14.939f * scale, 23.096f * scale)
+            cubicTo(14.939f * scale, 23.411f * scale, 15.149f * scale, 23.786f * scale, 15.764f * scale, 23.666f * scale)
+            cubicTo(20.565f * scale, 22.092f * scale, 24f * scale, 17.592f * scale, 24f * scale, 12.297f * scale)
+            cubicTo(24f * scale, 5.67f * scale, 18.627f * scale, 0.297f * scale, 12f * scale, 0.297f * scale)
+            close()
+        }
 
-        // Draw simplified octocat face features
-        // Two eyes
-        val eyeRadius = size * 0.06f
-        val eyeY = center.y - size * 0.08f
-        val eyeSpacing = size * 0.15f
-
-        drawCircle(
-            color = tint,
-            radius = eyeRadius,
-            center = Offset(center.x - eyeSpacing, eyeY)
-        )
-        drawCircle(
-            color = tint,
-            radius = eyeRadius,
-            center = Offset(center.x + eyeSpacing, eyeY)
-        )
-
-        // Small body/tentacle hint at bottom
-        drawCircle(
-            color = tint,
-            radius = size * 0.12f,
-            center = Offset(center.x, center.y + size * 0.18f)
-        )
+        drawPath(path = path, color = tint)
     }
 }
 
