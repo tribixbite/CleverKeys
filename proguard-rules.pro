@@ -22,6 +22,64 @@
 -keep class tribixbite.cleverkeys.Vocabulary { *; }
 -keep class tribixbite.cleverkeys.CharacterTokenizer { *; }
 
+# CRITICAL: Keep beam search data models - required for prediction pipeline
+-keep class tribixbite.cleverkeys.BeamSearchState { *; }
+-keep class tribixbite.cleverkeys.IndexValue { *; }
+-keep class tribixbite.cleverkeys.BeamSearchCandidate { *; }
+
+# CRITICAL: Keep vocabulary types - prediction results use these
+-keep class tribixbite.cleverkeys.WordInfo { *; }
+-keep class tribixbite.cleverkeys.CandidateWord { *; }
+-keep class tribixbite.cleverkeys.FilteredPrediction { *; }
+-keep class tribixbite.cleverkeys.SwipeStats { *; }
+-keep class tribixbite.cleverkeys.VocabularyStats { *; }
+
+# CRITICAL: Keep gesture recognizer types
+-keep class tribixbite.cleverkeys.SwipeResult { *; }
+
+# Keep neural engine and prediction coordinator
+-keep class tribixbite.cleverkeys.NeuralSwipeTypingEngine { *; }
+-keep class tribixbite.cleverkeys.NeuralSwipeTypingEngine$** { *; }
+-keep class tribixbite.cleverkeys.AsyncPredictionHandler { *; }
+-keep class tribixbite.cleverkeys.AsyncPredictionHandler$** { *; }
+-keep class tribixbite.cleverkeys.PredictionCoordinator { *; }
+-keep class tribixbite.cleverkeys.WordPredictor { *; }
+-keep class tribixbite.cleverkeys.WordPredictor$** { *; }
+
+# Keep coordinate normalizer and its data classes
+-keep class tribixbite.cleverkeys.CoordinateNormalizer { *; }
+-keep class tribixbite.cleverkeys.CoordinateNormalizer$** { *; }
+
+# Keep vocabulary classes
+-keep class tribixbite.cleverkeys.NeuralVocabulary { *; }
+-keep class tribixbite.cleverkeys.OptimizedVocabulary { *; }
+
+# Keep swipe processing classes
+-keep class tribixbite.cleverkeys.SwipeResampler { *; }
+-keep class tribixbite.cleverkeys.TrajectoryFeatureCalculator { *; }
+-keep class tribixbite.cleverkeys.NeuralLayoutBridge { *; }
+-keep class tribixbite.cleverkeys.NeuralLayoutHelper { *; }
+
+# Keep ML data classes and store
+-keep class tribixbite.cleverkeys.ml.** { *; }
+-dontwarn tribixbite.cleverkeys.ml.**
+
+# Keep gesture recognizer classes
+-keep class tribixbite.cleverkeys.SwipeGestureRecognizer { *; }
+-keep class tribixbite.cleverkeys.EnhancedSwipeGestureRecognizer { *; }
+-keep class tribixbite.cleverkeys.ImprovedSwipeGestureRecognizer { *; }
+-keep class tribixbite.cleverkeys.ContinuousSwipeGestureRecognizer { *; }
+-keep class tribixbite.cleverkeys.SwipeDetector { *; }
+-keep class tribixbite.cleverkeys.SwipeDetector$** { *; }
+
+# Keep Pointers class and nested classes (critical for touch handling)
+-keep class tribixbite.cleverkeys.Pointers { *; }
+-keep class tribixbite.cleverkeys.Pointers$** { *; }
+
+# Keep Gesture class and enums
+-keep class tribixbite.cleverkeys.Gesture { *; }
+-keep class tribixbite.cleverkeys.Gesture$** { *; }
+
 # Keep KeyValue class and ALL its enums - critical for swipe prediction
 # Without these rules, enum ordinals get obfuscated and kind checking fails
 -keep class tribixbite.cleverkeys.KeyValue { *; }
