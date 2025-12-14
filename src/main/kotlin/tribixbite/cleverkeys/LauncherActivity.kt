@@ -25,6 +25,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -46,6 +47,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -130,6 +132,17 @@ fun LauncherScreen(
     val context = LocalContext.current
     var testText by remember { mutableStateOf("") }
 
+    // Track keyboard visibility to hide logo when keyboard is shown
+    var isKeyboardVisible by remember { mutableStateOf(false) }
+
+    // Check if CleverKeys is enabled and selected
+    val isKeyboardEnabled = remember {
+        mutableStateOf(isCleverKeysEnabled(context))
+    }
+    val isKeyboardSelected = remember {
+        mutableStateOf(isCleverKeysSelected(context))
+    }
+
     // Load raccoon logo from assets
     val raccoonBitmap = remember {
         try {
@@ -145,85 +158,124 @@ fun LauncherScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF050510)) // Deep dark background
+            .statusBarsPadding() // Properly handle status bar
     ) {
         // 1. Background Animation layer
         MatrixSwipeRainBackground()
 
-        // 2. Content Layer
+        // 2. Top Bar with GitHub (left) and Settings (right)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // GitHub icon - top left
+            IconButton(
+                onClick = onOpenGitHub,
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color.White.copy(alpha = 0.1f), CircleShape)
+            ) {
+                GitHubIcon(
+                    modifier = Modifier.size(22.dp),
+                    tint = Color.White.copy(alpha = 0.8f)
+                )
+            }
+
+            // Settings gear icon - top right
+            IconButton(
+                onClick = onOpenSettings,
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color.White.copy(alpha = 0.1f), CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    tint = Color.White.copy(alpha = 0.8f),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        // 3. Content Layer
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
-                .navigationBarsPadding(), // Avoid overlapping with nav bar
+                .padding(horizontal = 24.dp)
+                .padding(top = 72.dp) // Account for top bar
+                .navigationBarsPadding()
+                .imePadding(), // Adjust for keyboard
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Logo / Header Section
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
-                // Glow behind logo
+            // Logo / Header Section - Hide when keyboard visible
+            if (!isKeyboardVisible) {
                 Box(
-                    modifier = Modifier
-                        .size(160.dp)
-                        .background(
-                            Brush.radialGradient(
-                                colors = listOf(
-                                    Color(0xFF9B59B6).copy(alpha = 0.3f),
-                                    Color.Transparent
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Glow behind logo
+                    Box(
+                        modifier = Modifier
+                            .size(160.dp)
+                            .background(
+                                Brush.radialGradient(
+                                    colors = listOf(
+                                        Color(0xFF9B59B6).copy(alpha = 0.3f),
+                                        Color.Transparent
+                                    )
                                 )
                             )
-                        )
-                        .blur(32.dp)
-                )
-
-                if (raccoonBitmap != null) {
-                    Image(
-                        bitmap = raccoonBitmap.asImageBitmap(),
-                        contentDescription = "CleverKeys Logo",
-                        modifier = Modifier.size(120.dp)
+                            .blur(32.dp)
                     )
-                } else {
-                    RaccoonMascot(modifier = Modifier.size(120.dp))
+
+                    if (raccoonBitmap != null) {
+                        Image(
+                            bitmap = raccoonBitmap.asImageBitmap(),
+                            contentDescription = "CleverKeys Logo",
+                            modifier = Modifier.size(120.dp)
+                        )
+                    } else {
+                        RaccoonMascot(modifier = Modifier.size(120.dp))
+                    }
+                }
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "CleverKeys",
+                        style = MaterialTheme.typography.displayMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp
+                        ),
+                        color = Color.White
+                    )
+                    Text(
+                        text = "Privacy, power, and control— with a brain.",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color(0xFFB0B0E0),
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "CleverKeys",
-                    style = MaterialTheme.typography.displayMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
-                    ),
-                    color = Color.White
-                )
-                Text(
-                    text = "Privacy, power, and control— with a brain. Take back your keys.",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color(0xFFB0B0E0), // Soft purple-grey
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    text = "An uncompromising open source keyboard app.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFB0B0E0).copy(alpha = 0.7f),
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            // Setup Cards
+            // Setup Cards with completion indicators
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 SetupCard(
                     number = "1",
                     title = "Enable Keyboard",
                     description = "Turn on CleverKeys in system settings",
                     icon = Icons.Default.Settings,
-                    onClick = onEnableKeyboard
+                    isCompleted = isKeyboardEnabled.value,
+                    onClick = {
+                        onEnableKeyboard()
+                        // Refresh status after returning
+                        isKeyboardEnabled.value = isCleverKeysEnabled(context)
+                    }
                 )
 
                 SetupCard(
@@ -231,16 +283,29 @@ fun LauncherScreen(
                     title = "Select Keyboard",
                     description = "Switch your default input method",
                     icon = Icons.Default.CheckCircle,
-                    onClick = onSelectKeyboard
+                    isCompleted = isKeyboardSelected.value,
+                    onClick = {
+                        onSelectKeyboard()
+                        // Refresh status after returning
+                        isKeyboardSelected.value = isCleverKeysSelected(context)
+                    }
                 )
             }
 
             // Test Field
             OutlinedTextField(
                 value = testText,
-                onValueChange = { testText = it },
+                onValueChange = {
+                    testText = it
+                    // Refresh keyboard status when typing
+                    isKeyboardSelected.value = isCleverKeysSelected(context)
+                },
                 label = { Text("Test your new keyboard here") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { focusState ->
+                        isKeyboardVisible = focusState.isFocused
+                    },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
@@ -255,21 +320,41 @@ fun LauncherScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Bottom Actions
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = onOpenSettings) {
-                    Text("Settings", color = Color.White.copy(alpha = 0.7f))
-                }
-
-                TextButton(onClick = onOpenGitHub) {
-                    Text("GitHub", color = Color.White.copy(alpha = 0.5f))
-                }
+            // Footer text
+            if (!isKeyboardVisible) {
+                Text(
+                    text = "An uncompromising open source keyboard.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFB0B0E0).copy(alpha = 0.5f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
             }
         }
+    }
+}
+
+// Helper function to check if CleverKeys is enabled
+private fun isCleverKeysEnabled(context: Context): Boolean {
+    return try {
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        val enabledInputMethods = imm.enabledInputMethodList
+        enabledInputMethods.any { it.packageName == context.packageName }
+    } catch (e: Exception) {
+        false
+    }
+}
+
+// Helper function to check if CleverKeys is the selected keyboard
+private fun isCleverKeysSelected(context: Context): Boolean {
+    return try {
+        val currentIme = Settings.Secure.getString(
+            context.contentResolver,
+            Settings.Secure.DEFAULT_INPUT_METHOD
+        )
+        currentIme?.contains(context.packageName) == true
+    } catch (e: Exception) {
+        false
     }
 }
 
@@ -280,23 +365,32 @@ fun SetupCard(
     title: String,
     description: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+    isCompleted: Boolean = false,
     onClick: () -> Unit
 ) {
+    val borderColor = if (isCompleted) {
+        Brush.horizontalGradient(
+            colors = listOf(
+                Color(0xFF4CAF50).copy(alpha = 0.7f), // Green for completed
+                Color(0xFF81C784).copy(alpha = 0.7f)
+            )
+        )
+    } else {
+        Brush.horizontalGradient(
+            colors = listOf(
+                Color(0xFF9B59B6).copy(alpha = 0.5f),
+                Color(0xFF64B5F6).copy(alpha = 0.5f)
+            )
+        )
+    }
+
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF151525).copy(alpha = 0.8f) // Semi-transparent dark
+            containerColor = Color(0xFF151525).copy(alpha = 0.8f)
         ),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            Brush.horizontalGradient(
-                colors = listOf(
-                    Color(0xFF9B59B6).copy(alpha = 0.5f),
-                    Color(0xFF64B5F6).copy(alpha = 0.5f)
-                )
-            )
-        ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
@@ -306,18 +400,30 @@ fun SetupCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Number Badge
+            // Number Badge or Checkmark
             Box(
                 modifier = Modifier
                     .size(32.dp)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp)),
+                    .background(
+                        if (isCompleted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary,
+                        RoundedCornerShape(8.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = number,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
+                if (isCompleted) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "Completed",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text(
+                        text = number,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             Column(modifier = Modifier.weight(1f)) {
@@ -325,21 +431,67 @@ fun SetupCard(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = if (isCompleted) Color(0xFF81C784) else Color.White
                 )
                 Text(
-                    text = description,
+                    text = if (isCompleted) "✓ Done" else description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.7f)
+                    color = if (isCompleted) Color(0xFF81C784).copy(alpha = 0.8f) else Color.White.copy(alpha = 0.7f)
                 )
             }
 
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = Color.White.copy(alpha = 0.8f)
+                tint = if (isCompleted) Color(0xFF4CAF50) else Color.White.copy(alpha = 0.8f)
             )
         }
+    }
+}
+
+// --- GitHub Icon Composable ---
+
+@Composable
+fun GitHubIcon(
+    modifier: Modifier = Modifier,
+    tint: Color = Color.White
+) {
+    Canvas(modifier = modifier) {
+        val size = this.size.minDimension
+        val center = Offset(size / 2, size / 2)
+        val radius = size * 0.45f
+
+        // Draw the GitHub octocat-inspired circle
+        drawCircle(
+            color = tint,
+            radius = radius,
+            center = center,
+            style = Stroke(width = size * 0.08f)
+        )
+
+        // Draw simplified octocat face features
+        // Two eyes
+        val eyeRadius = size * 0.06f
+        val eyeY = center.y - size * 0.08f
+        val eyeSpacing = size * 0.15f
+
+        drawCircle(
+            color = tint,
+            radius = eyeRadius,
+            center = Offset(center.x - eyeSpacing, eyeY)
+        )
+        drawCircle(
+            color = tint,
+            radius = eyeRadius,
+            center = Offset(center.x + eyeSpacing, eyeY)
+        )
+
+        // Small body/tentacle hint at bottom
+        drawCircle(
+            color = tint,
+            radius = size * 0.12f,
+            center = Offset(center.x, center.y + size * 0.18f)
+        )
     }
 }
 

@@ -66,8 +66,8 @@ dependencies {
 //   ABI versionCode = baseVersionCode * 10 + abiCode (1=armv7, 2=arm64, 3=x86_64)
 //   Example: v1.0.0 arm64-v8a → 10000 * 10 + 2 = 100002
 // =============================================================================
-ext.versionCode = 10005
-ext.versionNameStr = "1.0.5"
+ext.versionCode = 10006
+ext.versionNameStr = "1.0.6"
 
 def getVersionFromTag() {
     try {
