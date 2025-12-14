@@ -85,11 +85,23 @@
   - Changed arm64.apk → arm64-v8a.apk, armv7.apk → armeabi-v7a.apk
   - Proper ABI names for app store compatibility
 - [x] Released v1.0.4 (2025-12-13)
+- [x] Fix swipe prediction accuracy regression in release builds (2025-12-13)
+  - Root cause: R8 stripping ONNX inner classes (PredictionPostProcessor.Result, BeamSearchEngine.BeamState)
+  - Added `$**` pattern to keep all inner classes in onnx package
+  - Added Keyboard2View field preservation for NeuralLayoutHelper reflection access
+  - Added comprehensive rules for dictionary, vocabulary, customization, theme classes
+  - Added JNI-specific rules and Kotlin metadata attributes
+  - 128 new proguard rules total
+- [x] Verified ONNX execution provider configuration (2025-12-13)
+  - ModelLoader tries XNNPACK first (FP32, most stable), then NNAPI as fallback
+  - NNAPI's potential FP16 precision issues are avoided
+  - SessionConfigurator.kt is dead code (not used by prediction pipeline)
+- [x] Released v1.0.5 (2025-12-13)
 - [ ] Address any maintainer feedback (MR !30449)
 - [ ] Wait for F-Droid maintainer merge approval
 
-**Current Version**: 1.0.4 (versionCode 100043 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.4
+**Current Version**: 1.0.5 (versionCode 100053 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.5
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 
 ### Versioning Workflow
