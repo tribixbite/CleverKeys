@@ -1,0 +1,5 @@
+v1.0.5 - Stability Release
+
+• Additional proguard rules for ONNX inner classes
+• Fixed reflection-based class loading
+• Improved neural provider stability

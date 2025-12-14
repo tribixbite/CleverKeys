@@ -1,0 +1,5 @@
+v1.0.3 - Proguard Fixes
+
+• Fixed neural prediction pipeline obfuscation
+• Improved ONNX runtime compatibility
+• Better gesture recognition stability

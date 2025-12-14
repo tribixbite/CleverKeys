@@ -1,0 +1,5 @@
+v1.0.4 - UI Improvements
+
+• Enhanced launcher activity with setup steps
+• Improved theme consistency
+• Better keyboard visibility detection
