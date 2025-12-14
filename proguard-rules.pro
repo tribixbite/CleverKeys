@@ -63,6 +63,20 @@
 -keep class ai.onnxruntime.** { *; }
 -dontwarn ai.onnxruntime.**
 
+# Keep Gson for tokenizer JSON parsing (CRITICAL for neural predictions)
+# Without these rules, tokenizer_config.json parsing fails silently in release builds
+-keep class com.google.gson.** { *; }
+-dontwarn com.google.gson.**
+
+# Keep SwipeTokenizer inner classes used for Gson deserialization
+-keep class tribixbite.cleverkeys.SwipeTokenizer { *; }
+-keep class tribixbite.cleverkeys.SwipeTokenizer$TokenizerConfig { *; }
+-keep class tribixbite.cleverkeys.SwipeTokenizer$Companion { *; }
+-keepclassmembers class tribixbite.cleverkeys.SwipeTokenizer$TokenizerConfig {
+    <fields>;
+    <init>(...);
+}
+
 # Keep all native methods (JNI)
 -keepclasseswithmembernames class * {
     native <methods>;
