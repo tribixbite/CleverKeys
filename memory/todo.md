@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-13
-**Status**: F-Droid Submission (MR !30449)
+**Last Updated**: 2025-12-14
+**Status**: F-Droid Submission (MR !30449) - Awaiting ONNX resolution
 
 ---
 
@@ -97,7 +97,12 @@
   - NNAPI's potential FP16 precision issues are avoided
   - SessionConfigurator.kt is dead code (not used by prediction pipeline)
 - [x] Released v1.0.5 (2025-12-13)
-- [ ] Address any maintainer feedback (MR !30449)
+- [x] Added fastlane changelogs for v1.0.3-1.0.5 (2025-12-14)
+- [x] Rebased fdroiddata fork onto upstream/master (2025-12-14)
+- [x] Replied to reviewer @licaon-kter regarding ONNX dependency (2025-12-14)
+- [ ] **BLOCKER**: ONNX Runtime from Maven Central - reviewer wants built from source
+  - Options: (1) Build ONNX from source as submodule, (2) Clarify Maven Central is acceptable
+  - Awaiting reviewer response on https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 - [ ] Wait for F-Droid maintainer merge approval
 
 **Current Version**: 1.0.5 (versionCode 100053 for x86_64)
