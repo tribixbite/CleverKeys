@@ -140,8 +140,8 @@ android {
     targetSdkVersion 34  // Lowered from 35 for F-Droid androguard compatibility
     // IMPORTANT: Keep these in sync with ext.versionCode/versionNameStr above!
     // F-Droid checkupdates parses ext values, but gradle uses these for APK
-    versionCode 10004
-    versionName "1.0.4"
+    versionCode 10006
+    versionName "1.0.6"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
   }
