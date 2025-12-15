@@ -1,0 +1,4 @@
+v1.0.6 - Version Sync Fix
+
+• Fixed defaultConfig version mismatch with ext values
+• All APK versions now correctly report 1.0.6
