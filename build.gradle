@@ -21,6 +21,10 @@ dependencies {
   implementation "androidx.activity:activity-compose:1.8.2"
   implementation "androidx.compose.ui:ui:1.5.4"
   implementation "androidx.compose.ui:ui-tooling-preview:1.5.4"
+  // CRITICAL: ui-tooling must be debugImplementation only!
+  // As implementation, it embeds compose_data.bin with machine-specific paths,
+  // breaking F-Droid reproducible builds (diffoscope shows 51958 vs 51928 bytes)
+  debugImplementation "androidx.compose.ui:ui-tooling:1.5.4"
   implementation "androidx.compose.material3:material3:1.1.2"
   implementation "androidx.compose.foundation:foundation:1.5.4"
 
