@@ -56,6 +56,27 @@ jobs:
         echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
         echo "📦 Version: $VERSION (code: $VERSION_CODE)"
 
+    - name: Verify tag matches build.gradle version
+      run: |
+        TAG_VERSION=${GITHUB_REF_NAME#v}
+
+        # Extract VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH from build.gradle
+        GRADLE_MAJOR=$(grep "VERSION_MAJOR" build.gradle | head -1 | sed 's/.*= *//' | tr -d ' ')
+        GRADLE_MINOR=$(grep "VERSION_MINOR" build.gradle | head -1 | sed 's/.*= *//' | tr -d ' ')
+        GRADLE_PATCH=$(grep "VERSION_PATCH" build.gradle | head -1 | sed 's/.*= *//' | tr -d ' ')
+        GRADLE_VERSION="${GRADLE_MAJOR}.${GRADLE_MINOR}.${GRADLE_PATCH}"
+
+        echo "🏷️  Git Tag Version: $TAG_VERSION"
+        echo "📦 Gradle Version:  $GRADLE_VERSION"
+
+        if [ "$TAG_VERSION" != "$GRADLE_VERSION" ]; then
+          echo "::error::VERSION MISMATCH! Git tag ($TAG_VERSION) does not match build.gradle ($GRADLE_VERSION)"
+          echo "Please update VERSION_MAJOR/MINOR/PATCH in build.gradle to match the tag."
+          exit 1
+        fi
+
+        echo "✅ Version match confirmed!"
+
     - name: Decode signing keystore
       run: |
         echo "${{ secrets.SIGNING_KEY }}" | base64 -d > ${{ github.workspace }}/release.keystore

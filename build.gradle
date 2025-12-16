@@ -50,24 +50,26 @@ dependencies {
 }
 
 // =============================================================================
-// SEMANTIC VERSIONING - F-DROID AUTO-UPDATE COMPATIBLE
+// SINGLE SOURCE OF TRUTH - VERSIONING
 // =============================================================================
-// F-Droid's checkupdates tool uses regex to parse version info.
-// It CANNOT evaluate expressions - only simple literals are supported.
+// UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
+ext.VERSION_MAJOR = 1
+ext.VERSION_MINOR = 0
+ext.VERSION_PATCH = 6
+// =============================================================================
+// DERIVED VALUES (auto-calculated, do not edit):
+// - versionCode = MAJOR*10000 + MINOR*100 + PATCH
+// - versionNameStr = "MAJOR.MINOR.PATCH"
+// - ABI versionCode = base*10 + abiCode (1=armv7, 2=arm64, 3=x86_64)
 //
 // WORKFLOW:
-// 1. Update ext.versionCode and ext.versionNameStr below
-// 2. Commit, tag with "vX.Y.Z" matching versionNameStr, push tag
-// 3. GitHub Actions creates release with APKs
+// 1. Update VERSION_MAJOR/MINOR/PATCH above
+// 2. Commit, tag with "vX.Y.Z", push tag
+// 3. GitHub Actions verifies tag matches version, builds, releases
 // 4. F-Droid auto-detects tag and builds
-//
-// VERSION FORMULA:
-//   versionCode = MAJOR * 10000 + MINOR * 100 + PATCH
-//   ABI versionCode = baseVersionCode * 10 + abiCode (1=armv7, 2=arm64, 3=x86_64)
-//   Example: v1.0.0 arm64-v8a → 10000 * 10 + 2 = 100002
 // =============================================================================
-ext.versionCode = 10006
-ext.versionNameStr = "1.0.6"
+ext.versionCode = ext.VERSION_MAJOR * 10000 + ext.VERSION_MINOR * 100 + ext.VERSION_PATCH
+ext.versionNameStr = "${ext.VERSION_MAJOR}.${ext.VERSION_MINOR}.${ext.VERSION_PATCH}"
 
 def getVersionFromTag() {
     try {
@@ -138,10 +140,9 @@ android {
     applicationId "tribixbite.cleverkeys"
     minSdk 21
     targetSdkVersion 34  // Lowered from 35 for F-Droid androguard compatibility
-    // IMPORTANT: Keep these in sync with ext.versionCode/versionNameStr above!
-    // F-Droid checkupdates parses ext values, but gradle uses these for APK
-    versionCode 10006
-    versionName "1.0.6"
+    // References the single source of truth from ext block - NO DUPLICATION
+    versionCode rootProject.ext.versionCode
+    versionName rootProject.ext.versionNameStr
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
   }
