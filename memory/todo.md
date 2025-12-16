@@ -128,8 +128,8 @@
 - [ ] Wait for pipeline to pass and reviewers to resolve discussions
 - [ ] Wait for F-Droid maintainer merge approval
 
-**Current Version**: 1.0.6 (versionCode 100063 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.6
+**Current Version**: 1.0.7 (versionCode 100073 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.7
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 
 ### Versioning Workflow

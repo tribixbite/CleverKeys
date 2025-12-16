@@ -1,0 +1,4 @@
+• Fixed status/navigation bar overlay on OEM devices (Samsung, Xiaomi)
+• Fixed keyboard navigation bar transparency
+• Fixed suggestion bar collapse when empty
+• Improved build reproducibility for F-Droid
