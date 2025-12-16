@@ -72,11 +72,13 @@
     <item name="android:orientation">horizontal</item>
   </style>
   <style name="appTheme" parent="Theme.AppCompat.DayNight.DarkActionBar"/>
-  <!-- Launcher activity theme with dark status bar -->
+  <!-- Launcher activity theme with edge-to-edge support -->
+  <!-- System bar colors are set programmatically via enableEdgeToEdge() in LauncherActivity -->
+  <!-- This ensures consistent behavior across OEMs (Samsung, Xiaomi, etc.) -->
   <style name="launcherTheme" parent="Theme.AppCompat.NoActionBar">
     <item name="android:windowBackground">@android:color/black</item>
-    <item name="android:statusBarColor">#050510</item>
-    <item name="android:navigationBarColor">#050510</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
     <item name="android:windowLightStatusBar">false</item>
     <item name="android:windowDrawsSystemBarBackgrounds">true</item>
   </style>

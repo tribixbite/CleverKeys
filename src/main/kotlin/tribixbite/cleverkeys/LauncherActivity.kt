@@ -17,7 +17,9 @@ import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.BounceInterpolator
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -69,6 +71,13 @@ class LauncherActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Enable edge-to-edge display with transparent system bars
+        // This fixes OEM-specific overlays (Samsung, Xiaomi, etc.) that ignore theme settings
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+        )
+
         super.onCreate(savedInstanceState)
 
         try {
@@ -165,16 +174,17 @@ fun LauncherScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF050510)) // Deep dark background
-            .statusBarsPadding() // Properly handle status bar
+            .background(Color(0xFF050510)) // Deep dark background extends under system bars
     ) {
-        // 1. Background Animation layer
+        // 1. Background Animation layer - extends edge-to-edge including under system bars
         MatrixSwipeRainBackground()
 
         // 2. Top Bar with GitHub (left) and Settings (right)
+        // Padded to avoid system bar overlap
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .statusBarsPadding()
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -212,8 +222,9 @@ fun LauncherScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
                 .padding(horizontal = 24.dp)
-                .padding(top = 72.dp) // Account for top bar
+                .padding(top = 56.dp) // Account for top bar (16dp padding + ~40dp icon height)
                 .navigationBarsPadding()
                 .imePadding(), // Adjust for keyboard
             horizontalAlignment = Alignment.CenterHorizontally,
