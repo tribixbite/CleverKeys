@@ -122,6 +122,9 @@
 - [x] Fixed suggestion bar collapse when empty (2025-12-16)
   - Added minimum width (200dp) to SuggestionBar
   - Enabled fillViewport on suggestion scroll view
+- [x] Moved ui-tooling to debugImplementation for reproducible builds (2025-12-16)
+  - Jetpack Compose ui-tooling can embed machine-specific paths
+  - Now excluded from release APKs, only included in debug builds
 - [ ] Wait for pipeline to pass and reviewers to resolve discussions
 - [ ] Wait for F-Droid maintainer merge approval
 
