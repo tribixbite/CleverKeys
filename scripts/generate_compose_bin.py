@@ -160,7 +160,7 @@ def parse_sequences_dir(dname):
             compose_files.append(fname)
 
     sequences = []
-    for fname in compose_files:
+    for fname in sorted(compose_files):  # Sort for deterministic output
         sequences.extend(parse_sequences_file(fname, xkb_char_extra_names))
     return sequences
 
