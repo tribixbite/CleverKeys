@@ -86,7 +86,7 @@ object SuggestionBarInitializer {
         // Wrap suggestion bar in horizontal scroll view
         val scrollView = HorizontalScrollView(context)
         scrollView.isHorizontalScrollBarEnabled = false // Hide scrollbar
-        scrollView.isFillViewport = false // Don't stretch content
+        scrollView.isFillViewport = true // Stretch content to fill viewport when smaller
 
         // Set scroll view layout params (40dp height)
         val scrollParams = LinearLayout.LayoutParams(

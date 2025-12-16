@@ -55,6 +55,10 @@ class SuggestionBar : LinearLayout {
         val padding = dpToPx(context, 8)
         setPadding(padding, padding, padding, padding)
 
+        // Ensure minimum width to prevent UI collapse when empty
+        // Without this, the bar appears as just a few pixels when there are no suggestions
+        minimumWidth = dpToPx(context, 200)
+
         // Don't create fixed TextViews - they'll be created dynamically in setSuggestionsWithScores()
     }
 

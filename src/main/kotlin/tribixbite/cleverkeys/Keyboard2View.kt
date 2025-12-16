@@ -218,9 +218,12 @@ class Keyboard2View @JvmOverloads constructor(
             return
         // The intermediate Window is a [Dialog].
         val w = getParentWindow(context)
-        w?.navigationBarColor = _theme.colorNavBar
+        // Use transparent navigation bar for edge-to-edge keyboard experience
+        // This allows the keyboard to extend behind the nav bar area on gesture nav devices
+        w?.navigationBarColor = android.graphics.Color.TRANSPARENT
         if (VERSION.SDK_INT < 26)
             return
+        // Keep light/dark nav bar icons based on theme for button nav devices
         var uiFlags = systemUiVisibility
         uiFlags = if (_theme.isLightNavBar)
             uiFlags or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
