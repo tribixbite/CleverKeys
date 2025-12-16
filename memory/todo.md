@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-14
-**Status**: F-Droid Submission (MR !30449) - Awaiting ONNX resolution
+**Last Updated**: 2025-12-16
+**Status**: F-Droid Submission (MR !30449) - Addressing review feedback
 
 ---
 
@@ -104,6 +104,18 @@
 - [x] Released v1.0.6 with correct versions (2025-12-14)
 - [x] Added v1.0.6 builds to fdroiddata metadata (2025-12-14)
 - [x] Rebased fdroiddata fork onto upstream/master (2025-12-14)
+- [x] Implemented single source of truth versioning system (2025-12-16)
+  - VERSION_MAJOR/MINOR/PATCH as single source in build.gradle ext block
+  - defaultConfig references ext values (no duplication)
+  - CI verification step in release.yml to fail if tag doesn't match version
+- [x] Fixed compose_data.bin determinism issue (2025-12-16)
+  - Added sorted() to compose_files iteration in generate_compose_bin.py
+  - os.listdir() returned arbitrary filesystem-dependent order
+- [x] Removed novcheck from all fdroiddata metadata entries (2025-12-16)
+- [x] Fixed status/navigation bar color overlay on OEM devices (2025-12-16)
+  - Added enableEdgeToEdge() API in LauncherActivity
+  - Updated launcherTheme to use transparent system bars
+  - Restructured Compose layout for proper edge-to-edge display
 - [ ] Wait for pipeline to pass and reviewers to resolve discussions
 - [ ] Wait for F-Droid maintainer merge approval
 
