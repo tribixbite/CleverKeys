@@ -116,6 +116,12 @@
   - Added enableEdgeToEdge() API in LauncherActivity
   - Updated launcherTheme to use transparent system bars
   - Restructured Compose layout for proper edge-to-edge display
+- [x] Fixed keyboard navigation bar showing background color (2025-12-16)
+  - Set keyboard navigation bar to transparent in Keyboard2View
+  - Allows keyboard to extend behind nav bar on gesture nav devices
+- [x] Fixed suggestion bar collapse when empty (2025-12-16)
+  - Added minimum width (200dp) to SuggestionBar
+  - Enabled fillViewport on suggestion scroll view
 - [ ] Wait for pipeline to pass and reviewers to resolve discussions
 - [ ] Wait for F-Droid maintainer merge approval
 
