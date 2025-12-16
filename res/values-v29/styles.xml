@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Launcher activity theme with edge-to-edge support (API 29+) -->
+  <!-- Disables system contrast enforcement for truly transparent bars -->
+  <style name="launcherTheme" parent="Theme.AppCompat.NoActionBar">
+    <item name="android:windowBackground">@android:color/transparent</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
+    <item name="android:windowLightStatusBar">false</item>
+    <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    <item name="android:windowTranslucentStatus">false</item>
+    <item name="android:windowTranslucentNavigation">false</item>
+    <item name="android:enforceStatusBarContrast">false</item>
+    <item name="android:enforceNavigationBarContrast">false</item>
+  </style>
+</resources>

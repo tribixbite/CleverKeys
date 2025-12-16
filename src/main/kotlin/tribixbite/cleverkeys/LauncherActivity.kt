@@ -80,6 +80,17 @@ class LauncherActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
+        // Programmatically enforce transparent system bars for stubborn OEMs
+        window?.apply {
+            statusBarColor = android.graphics.Color.TRANSPARENT
+            navigationBarColor = android.graphics.Color.TRANSPARENT
+            // Disable contrast enforcement on API 29+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                isStatusBarContrastEnforced = false
+                isNavigationBarContrastEnforced = false
+            }
+        }
+
         try {
             setContent {
                 KeyboardTheme(darkTheme = true) { // Force dark theme for the matrix look
@@ -225,17 +236,17 @@ fun LauncherScreen(
                 .statusBarsPadding()
                 .padding(horizontal = 24.dp)
                 .padding(top = 56.dp) // Account for top bar (16dp padding + ~40dp icon height)
-                .navigationBarsPadding()
-                .imePadding(), // Adjust for keyboard
+                .imePadding(), // Adjust for keyboard - NO navigationBarsPadding to extend edge-to-edge
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Logo / Header Section - Hide when keyboard visible
-            if (!isKeyboardVisible) {
-                Box(
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Glow behind logo
+            // Logo - ALWAYS visible, fixed size (doesn't move when keyboard appears)
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.height(if (isKeyboardVisible) 80.dp else 160.dp) // Smaller when keyboard visible
+            ) {
+                // Glow behind logo (only when keyboard not visible)
+                if (!isKeyboardVisible) {
                     Box(
                         modifier = Modifier
                             .size(160.dp)
@@ -249,18 +260,21 @@ fun LauncherScreen(
                             )
                             .blur(32.dp)
                     )
-
-                    if (raccoonBitmap != null) {
-                        Image(
-                            bitmap = raccoonBitmap.asImageBitmap(),
-                            contentDescription = "CleverKeys Logo",
-                            modifier = Modifier.size(120.dp)
-                        )
-                    } else {
-                        RaccoonMascot(modifier = Modifier.size(120.dp))
-                    }
                 }
 
+                if (raccoonBitmap != null) {
+                    Image(
+                        bitmap = raccoonBitmap.asImageBitmap(),
+                        contentDescription = "CleverKeys Logo",
+                        modifier = Modifier.size(if (isKeyboardVisible) 60.dp else 120.dp)
+                    )
+                } else {
+                    RaccoonMascot(modifier = Modifier.size(if (isKeyboardVisible) 60.dp else 120.dp))
+                }
+            }
+
+            // Text - Hide when keyboard visible
+            if (!isKeyboardVisible) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "CleverKeys",
@@ -323,14 +337,16 @@ fun LauncherScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Footer text
+            // Footer text - with nav bar padding when keyboard not visible
             if (!isKeyboardVisible) {
                 Text(
                     text = "An uncompromising open source keyboard.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFFB0B0E0).copy(alpha = 0.5f),
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .navigationBarsPadding()
+                        .padding(bottom = 16.dp)
                 )
             }
         }
