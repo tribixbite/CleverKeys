@@ -216,20 +216,23 @@ class Keyboard2View @JvmOverloads constructor(
     fun refresh_navigation_bar(context: Context) {
         if (VERSION.SDK_INT < 21)
             return
-        // The intermediate Window is a [Dialog].
-        val w = getParentWindow(context)
-        // Use transparent navigation bar for edge-to-edge keyboard experience
-        // This allows the keyboard to extend behind the nav bar area on gesture nav devices
-        w?.navigationBarColor = android.graphics.Color.TRANSPARENT
-        if (VERSION.SDK_INT < 26)
-            return
-        // Keep light/dark nav bar icons based on theme for button nav devices
-        var uiFlags = systemUiVisibility
-        uiFlags = if (_theme.isLightNavBar)
-            uiFlags or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-        else
-            uiFlags and View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
-        systemUiVisibility = uiFlags
+        val w = getParentWindow(context) ?: return
+
+        // KEY FIX: Allow IME window to draw behind system bars
+        // This is required for truly transparent nav bar in InputMethodService
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(w, false)
+
+        // Set transparent navigation bar color
+        w.navigationBarColor = android.graphics.Color.TRANSPARENT
+
+        // Disable navigation bar contrast enforcement on API 29+
+        if (VERSION.SDK_INT >= 29) {
+            w.isNavigationBarContrastEnforced = false
+        }
+
+        // Use modern WindowInsetsController to handle light/dark nav bar icons
+        val controller = androidx.core.view.ViewCompat.getWindowInsetsController(w.decorView)
+        controller?.isAppearanceLightNavigationBars = _theme.isLightNavBar
     }
 
     fun setKeyboard(kw: KeyboardData) {

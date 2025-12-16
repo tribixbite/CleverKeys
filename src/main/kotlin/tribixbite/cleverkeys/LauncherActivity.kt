@@ -27,6 +27,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -229,21 +231,22 @@ fun LauncherScreen(
             }
         }
 
-        // 3. Content Layer
+        // 3. Content Layer - scrollable to handle keyboard overlap on small screens
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
                 .padding(horizontal = 24.dp)
                 .padding(top = 56.dp) // Account for top bar (16dp padding + ~40dp icon height)
-                .imePadding(), // Adjust for keyboard - NO navigationBarsPadding to extend edge-to-edge
+                .imePadding() // Adjust for keyboard - NO navigationBarsPadding to extend edge-to-edge
+                .verticalScroll(rememberScrollState()), // Allow scrolling when keyboard visible
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Logo - ALWAYS visible, fixed size (doesn't move when keyboard appears)
+            // Logo - ALWAYS visible at fixed 120dp size (no change when keyboard appears)
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.height(if (isKeyboardVisible) 80.dp else 160.dp) // Smaller when keyboard visible
+                modifier = Modifier.height(160.dp) // Fixed height container
             ) {
                 // Glow behind logo (only when keyboard not visible)
                 if (!isKeyboardVisible) {
@@ -266,10 +269,10 @@ fun LauncherScreen(
                     Image(
                         bitmap = raccoonBitmap.asImageBitmap(),
                         contentDescription = "CleverKeys Logo",
-                        modifier = Modifier.size(if (isKeyboardVisible) 60.dp else 120.dp)
+                        modifier = Modifier.size(120.dp) // Fixed size
                     )
                 } else {
-                    RaccoonMascot(modifier = Modifier.size(if (isKeyboardVisible) 60.dp else 120.dp))
+                    RaccoonMascot(modifier = Modifier.size(120.dp)) // Fixed size
                 }
             }
 
