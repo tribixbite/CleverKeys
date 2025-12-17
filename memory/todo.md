@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-16
-**Status**: F-Droid Submission (MR !30449) - Addressing review feedback
+**Last Updated**: 2025-12-17
+**Status**: F-Droid Submission (MR !30449) - Pipeline testing v1.0.7
 
 ---
 
@@ -125,12 +125,38 @@
 - [x] Moved ui-tooling to debugImplementation for reproducible builds (2025-12-16)
   - Jetpack Compose ui-tooling can embed machine-specific paths
   - Now excluded from release APKs, only included in debug builds
-- [ ] Wait for pipeline to pass and reviewers to resolve discussions
+- [ ] **PIPELINE FAILED** (2025-12-17) - investigate and fix
+  - Failed jobs: `checkupdates`, `fdroid build`
+  - Pipeline: https://gitlab.com/tribixbite/fdroiddata/-/pipelines/2219934534
+  - Job logs require auth - check web UI for details
 - [ ] Wait for F-Droid maintainer merge approval
 
 **Current Version**: 1.0.7 (versionCode 100073 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.7
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
+
+### Legacy Code Audit (2025-12-17)
+Technical debt identified but not blocking F-Droid submission:
+
+**Activities using legacy base classes:**
+- [ ] `DictionaryManagerActivity` → `AppCompatActivity` (should migrate to ComponentActivity)
+- [ ] `SwipeCalibrationActivity` → `Activity` (very old base class)
+- [ ] `SwipeDebugActivity` → `Activity`
+- [ ] `TemplateBrowserActivity` → `Activity`
+
+**Ghost Activities in AndroidManifest (no source files):**
+- [ ] `tribixbite.cleverkeys.NeuralBrowserActivity` - declared but doesn't exist
+- [ ] `tribixbite.cleverkeys.neural.NeuralBrowserActivityM3` - declared but doesn't exist
+- [ ] `tribixbite.cleverkeys.TestActivity` - declared but doesn't exist
+
+**Legacy Themes:**
+- [ ] `appTheme` uses `Theme.AppCompat.DayNight.DarkActionBar` (used by settingsTheme)
+- [x] Fixed `launcherTheme` to use `Theme.Material3.Dark.NoActionBar` (2025-12-17)
+- [x] Fixed `windowDrawsSystemBarBackgrounds=true` for proper edge-to-edge (2025-12-17)
+
+**Deprecated APIs in prefs package:**
+- Multiple `android.preference.*` deprecation warnings (ListGroupPreference, LayoutsPreference)
+- Should migrate to `androidx.preference.*` eventually
 
 ### Versioning Workflow
 1. Development: `dev-{sha}` with versionCode 1
