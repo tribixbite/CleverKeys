@@ -17,9 +17,7 @@ import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.BounceInterpolator
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -73,23 +71,27 @@ class LauncherActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Enable edge-to-edge display with transparent system bars
-        // This fixes OEM-specific overlays (Samsung, Xiaomi, etc.) that ignore theme settings
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
-        )
-
         super.onCreate(savedInstanceState)
 
-        // Programmatically enforce transparent system bars for stubborn OEMs
-        window?.apply {
-            statusBarColor = android.graphics.Color.TRANSPARENT
-            navigationBarColor = android.graphics.Color.TRANSPARENT
+        // Manual edge-to-edge setup - more reliable than enableEdgeToEdge() on some OEMs
+        window?.let { w ->
+            // Tell the system we'll handle insets ourselves - prevents window resize on keyboard
+            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(w, false)
+
+            // Set transparent system bars
+            w.statusBarColor = android.graphics.Color.TRANSPARENT
+            w.navigationBarColor = android.graphics.Color.TRANSPARENT
+
             // Disable contrast enforcement on API 29+
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                isStatusBarContrastEnforced = false
-                isNavigationBarContrastEnforced = false
+                w.isStatusBarContrastEnforced = false
+                w.isNavigationBarContrastEnforced = false
+            }
+
+            // Force light icons (white) on dark background - no scrim
+            androidx.core.view.WindowCompat.getInsetsController(w, w.decorView)?.apply {
+                isAppearanceLightStatusBars = false
+                isAppearanceLightNavigationBars = false
             }
         }
 
@@ -193,10 +195,11 @@ fun LauncherScreen(
         MatrixSwipeRainBackground()
 
         // 2. Top Bar with GitHub (left) and Settings (right)
-        // Padded to avoid system bar overlap
+        // Fixed position at top - not affected by keyboard or scroll
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .align(Alignment.TopStart) // Explicit fixed position at top
                 .statusBarsPadding()
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -232,13 +235,13 @@ fun LauncherScreen(
         }
 
         // 3. Content Layer - scrollable to handle keyboard overlap on small screens
+        // NOTE: NO statusBarsPadding here - only the Row has it. This Column uses padding(top) instead.
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
                 .padding(horizontal = 24.dp)
-                .padding(top = 56.dp) // Account for top bar (16dp padding + ~40dp icon height)
-                .imePadding() // Adjust for keyboard - NO navigationBarsPadding to extend edge-to-edge
+                .padding(top = 80.dp) // Account for status bar + top bar (statusbar ~24dp + 16dp padding + 40dp icon)
+                .imePadding() // Adjust for keyboard - isolates IME padding to this Column only
                 .verticalScroll(rememberScrollState()), // Allow scrolling when keyboard visible
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
