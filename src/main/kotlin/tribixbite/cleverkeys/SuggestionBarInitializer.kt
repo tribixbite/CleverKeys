@@ -74,6 +74,8 @@ object SuggestionBarInitializer {
         // Create root container
         val inputViewContainer = LinearLayout(context)
         inputViewContainer.orientation = LinearLayout.VERTICAL
+        // Ensure transparent background to avoid white bar issues on OEM devices
+        inputViewContainer.setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
         // Create suggestion bar with theme
         val suggestionBar = if (theme != null) {
@@ -87,6 +89,7 @@ object SuggestionBarInitializer {
         val scrollView = HorizontalScrollView(context)
         scrollView.isHorizontalScrollBarEnabled = false // Hide scrollbar
         scrollView.isFillViewport = true // Stretch content to fill viewport when smaller
+        scrollView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
         // Set scroll view layout params (40dp height)
         val scrollParams = LinearLayout.LayoutParams(
@@ -119,6 +122,7 @@ object SuggestionBarInitializer {
             paneHeight
         )
         contentPaneContainer.visibility = android.view.View.GONE // Hidden by default
+        contentPaneContainer.setBackgroundColor(android.graphics.Color.TRANSPARENT)
         inputViewContainer.addView(contentPaneContainer)
 
         // Note: Keyboard view is added by caller after this method returns

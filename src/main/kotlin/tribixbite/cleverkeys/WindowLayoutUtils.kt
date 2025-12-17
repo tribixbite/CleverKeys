@@ -93,16 +93,19 @@ object WindowLayoutUtils {
     }
 
     /**
-     * Configures window for edge-to-edge display on Android 35+.
+     * Configures window for edge-to-edge display.
      * Sets display cutout mode and allows drawing behind system bars.
      *
-     * Note: Only applies configuration on API 35+. APIs 30-34 have visual artifacts
-     * with edge-to-edge enabled, so we skip configuration on those versions.
+     * Extended to support API 29+ to fix white bar issues on OEM devices.
+     * Previously only applied on API 35+, but this caused visual artifacts
+     * on some OEM devices with API 29-34.
      *
      * @param window The window to configure
      */
     @JvmStatic
+    @Suppress("DEPRECATION")
     fun configureEdgeToEdge(window: Window) {
+        // API 35+: Full edge-to-edge support
         if (Build.VERSION.SDK_INT >= 35) {
             val wattrs = window.attributes
             wattrs.layoutInDisplayCutoutMode =
@@ -111,6 +114,22 @@ object WindowLayoutUtils {
             wattrs.setFitInsetsTypes(0)
             window.setDecorFitsSystemWindows(false)
         }
+        // API 30-34: Basic edge-to-edge support to avoid OEM scrim issues
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val wattrs = window.attributes
+            wattrs.layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            window.setDecorFitsSystemWindows(false)
+        }
+        // API 29: Limited edge-to-edge support
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val wattrs = window.attributes
+            wattrs.layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+
+        // Clear any background on the decor view that might cause white bar
+        window.decorView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
     }
 
     /**
@@ -144,6 +163,11 @@ object WindowLayoutUtils {
             }
             updateLayoutHeightOf(it, height)
             updateLayoutGravityOf(it, Gravity.BOTTOM)
+            // Clear any background that might cause white bar on OEM devices
+            it.setBackgroundColor(android.graphics.Color.TRANSPARENT)
         }
+
+        // Also clear inputArea background
+        inputArea.setBackgroundColor(android.graphics.Color.TRANSPARENT)
     }
 }
