@@ -274,6 +274,21 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Edge-to-edge setup for consistent dark theme appearance
+        window?.let { w ->
+            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(w, false)
+            w.statusBarColor = android.graphics.Color.TRANSPARENT
+            w.navigationBarColor = android.graphics.Color.TRANSPARENT
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                w.isStatusBarContrastEnforced = false
+                w.isNavigationBarContrastEnforced = false
+            }
+            androidx.core.view.WindowCompat.getInsetsController(w, w.decorView)?.apply {
+                isAppearanceLightStatusBars = false
+                isAppearanceLightNavigationBars = false
+            }
+        }
+
         // Initialize configuration
         try {
             prefs = DirectBootAwarePreferences.get_shared_preferences(this)
@@ -528,6 +543,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
+                .statusBarsPadding()
+                .navigationBarsPadding()
                 .padding(16.dp)
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
