@@ -287,6 +287,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 isAppearanceLightStatusBars = false
                 isAppearanceLightNavigationBars = false
             }
+            // Clear backgrounds on all window views to prevent white bar
+            w.decorView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            w.findViewById<android.view.View>(android.R.id.content)?.setBackgroundColor(android.graphics.Color.TRANSPARENT)
         }
 
         // Initialize configuration

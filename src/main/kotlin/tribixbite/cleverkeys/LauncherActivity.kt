@@ -18,7 +18,6 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.BounceInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -63,7 +62,7 @@ import kotlin.random.Random
 /**
  * Refactored Launcher Activity with "Matrix Swipe Rain" aesthetic.
  */
-class LauncherActivity : AppCompatActivity() {
+class LauncherActivity : ComponentActivity() {
 
     companion object {
         private const val TAG = "LauncherActivity"
@@ -73,12 +72,12 @@ class LauncherActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Manual edge-to-edge setup - more reliable than enableEdgeToEdge() on some OEMs
+        // Edge-to-edge setup for Compose with Material3 theme
         window?.let { w ->
-            // Tell the system we'll handle insets ourselves - prevents window resize on keyboard
+            // Tell the system we'll handle insets ourselves
             androidx.core.view.WindowCompat.setDecorFitsSystemWindows(w, false)
 
-            // Set transparent system bars
+            // Set transparent system bars (background handled by Compose Box)
             w.statusBarColor = android.graphics.Color.TRANSPARENT
             w.navigationBarColor = android.graphics.Color.TRANSPARENT
 
@@ -88,11 +87,17 @@ class LauncherActivity : AppCompatActivity() {
                 w.isNavigationBarContrastEnforced = false
             }
 
-            // Force light icons (white) on dark background - no scrim
+            // Force light icons (white) on dark background
             androidx.core.view.WindowCompat.getInsetsController(w, w.decorView)?.apply {
                 isAppearanceLightStatusBars = false
                 isAppearanceLightNavigationBars = false
             }
+
+            // CRITICAL: Clear backgrounds on all window views to prevent white bar
+            // The decorView and android.R.id.content can have default white backgrounds
+            // that show through during keyboard animation (adjustResize)
+            w.decorView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            w.findViewById<android.view.View>(android.R.id.content)?.setBackgroundColor(android.graphics.Color.TRANSPARENT)
         }
 
         try {
