@@ -167,6 +167,21 @@
 -keep class kotlinx.coroutines.** { *; }
 -dontwarn kotlinx.coroutines.**
 
+# =============================================================================
+# REPRODUCIBILITY: Disable R8 ServiceLoader optimization for deterministic builds
+# R8's ServiceLoader optimization creates non-deterministic class ordering
+# which breaks F-Droid reproducible builds. These rules disable the optimization.
+# See: https://f-droid.org/docs/Reproducible_Builds/
+# =============================================================================
+-keep class kotlinx.coroutines.CoroutineExceptionHandler { *; }
+-keep class kotlinx.coroutines.internal.MainDispatcherFactory { *; }
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+# Force deterministic ServiceLoader behavior
+-assumenosideeffects class kotlinx.coroutines.internal.MainDispatcherLoader {
+    boolean FAST_SERVICE_LOADER_ENABLED return false;
+}
+
 # Keep Compose runtime
 -keep class androidx.compose.** { *; }
 -dontwarn androidx.compose.**
