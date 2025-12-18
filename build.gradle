@@ -48,21 +48,18 @@ dependencies {
   // Android instrumentation test dependencies
   androidTestImplementation "androidx.test.ext:junit:1.1.5"
   androidTestImplementation "androidx.test:runner:1.5.2"
-  androidTestImplementation "androidx.test:rules:1.5.0"
+  androidTestImplementation "androidx.test.rules:1.5.0"
   androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
 }
 
 // =============================================================================
 // VERSIONING - F-Droid compatible (checkupdates does not parse ext values)
 // =============================================================================
-// =============================================================================
-// VERSIONING - F-Droid compatible (checkupdates does not parse ext values)
-// =============================================================================
 def VERSION_MAJOR = 1
 def VERSION_MINOR = 1
-def VERSION_PATCH = 5
-def BASE_VERSION_CODE = 10105
-def VERSION_NAME = "1.1.5"
+def VERSION_PATCH = 6
+def BASE_VERSION_CODE = 10106
+def VERSION_NAME = "1.1.6"
 
 // Per-ABI versionCode mapping for F-Droid split APKs
 // Must be at project level for applicationVariants access
@@ -83,8 +80,8 @@ android {
     targetSdkVersion 34  // Lowered from 35 for F-Droid androguard compatibility
     
     // CRITICAL: Must use literal values here for F-Droid checkupdates parser
-    versionCode 10105
-    versionName "1.1.5"
+    versionCode 10106
+    versionName "1.1.6"
     
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
@@ -126,10 +123,6 @@ android {
     targetCompatibility JavaVersion.VERSION_1_8
   }
 
-  kotlinOptions {
-    jvmTarget = "1.8"
-  }
-
   buildFeatures {
     compose true
   }
@@ -158,10 +151,6 @@ android {
   }
 
   signingConfigs {
-    // Debug builds will always be signed. If no environment variables are set, a default
-    // keystore will be initialized by the task initDebugKeystore and used. This keystore
-    // can be uploaded to GitHub secrets by following instructions in CONTRIBUTING.md
-    // in order to always receive correctly signed debug APKs from the CI.
     debug {
       storeFile(System.env.DEBUG_KEYSTORE ? file(System.env.DEBUG_KEYSTORE) : file("debug.keystore"))
       storePassword(System.env.DEBUG_KEYSTORE_PASSWORD ? "$System.env.DEBUG_KEYSTORE_PASSWORD" : "debug0")
@@ -170,14 +159,12 @@ android {
     }
 
     release {
-      // Use release keystore if available, otherwise fall back to debug for local testing
       if (System.env.RELEASE_KEYSTORE) {
         storeFile file(System.env.RELEASE_KEYSTORE)
         storePassword "$System.env.RELEASE_KEYSTORE_PASSWORD"
         keyAlias "$System.env.RELEASE_KEY_ALIAS"
         keyPassword "$System.env.RELEASE_KEY_PASSWORD"
       } else {
-        // Fallback to debug keystore for local release builds (F-Droid signs with their own key)
         storeFile file("debug.keystore")
         storePassword "debug0"
         keyAlias "debug"
@@ -197,12 +184,9 @@ android {
     }
 
     debug {
-      // FIX: Removed applicationIdSuffix ".debug" to fix keyboard service crash
-      // The .debug suffix prevented Android from properly binding InputMethodService
       minifyEnabled false
       shrinkResources false
       debuggable true
-      // applicationIdSuffix ".debug"  // DO NOT ADD THIS BACK - it breaks IME binding!
       resValue "string", "app_name", "CleverKeys (Debug)"
       resValue "bool", "debug_logs", "true"
       signingConfig signingConfigs.debug
@@ -214,20 +198,13 @@ android {
     variant.outputs.each { output ->
       def abi = output.getFilter(com.android.build.OutputFile.ABI)
       if (abi != null) {
-        // Per-ABI versionCode: base * 10 + abiCode
         def abiCode = rootProject.ext.abiCodes.get(abi, 0)
         output.versionCodeOverride = variant.versionCode * 10 + abiCode
-        // Name: tribixbite.cleverkeys_1593_arm64-v8a.apk
         output.outputFileName = "${applicationId}_${variant.versionCode}_${abi}.apk"
       } else {
         output.outputFileName = "${applicationId}_${variant.versionCode}_universal.apk"
       }
     }
-  }
-
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
   }
 
   lint {
@@ -254,7 +231,6 @@ if (isArm64) {
 }
 
 tasks.register('buildKeyboardFont') {
-  // Skip font building if font already exists
   def fontFile = file("assets/special_font.ttf")
   if (fontFile.exists()) {
     println "\nSpecial font already exists, skipping build"
@@ -278,7 +254,6 @@ tasks.register('buildKeyboardFont') {
 
 tasks.register('genEmojis') {
   def outFile = file("res/raw/emojis.txt")
-  // Skip if output already exists
   if (outFile.exists() && outFile.length() > 1000) {
     println "\nEmojis.txt already exists, skipping generation"
     return
@@ -287,7 +262,7 @@ tasks.register('genEmojis') {
   exec {
     workingDir = projectDir
     commandLine "python3", "gen_emoji.py"
-    ignoreExitValue = true  // Don't fail CI if python script unavailable
+    ignoreExitValue = true
   }
 }
 
@@ -299,7 +274,6 @@ tasks.withType(Test).configureEach {
 
 tasks.register('genLayoutsList') {
   def outFile = file("res/values/layouts.xml")
-  // Skip if output already exists
   if (outFile.exists() && outFile.length() > 100) {
     println "\nLayouts.xml already exists, skipping generation"
     return
@@ -308,12 +282,11 @@ tasks.register('genLayoutsList') {
   exec {
     workingDir = projectDir
     commandLine "python3", "gen_layouts.py"
-    ignoreExitValue = true  // Don't fail CI if python script unavailable
+    ignoreExitValue = true
   }
 }
 
 tasks.register('checkKeyboardLayouts') {
-  // Skip layout check on CI (python dependencies may not be available)
   def genLayoutsFile = file("res/values/layouts.xml")
   if (!genLayoutsFile.exists()) {
     println "\n⚠️ Skipping layout check - layouts.xml not found"
@@ -323,11 +296,9 @@ tasks.register('checkKeyboardLayouts') {
   exec {
     workingDir = projectDir
     commandLine("python3", "tools/check_layout.py")
-    ignoreExitValue = true  // Don't fail CI if check script fails
+    ignoreExitValue = true
   }
 }
-
-// compileComposeSequences removed - use generateComposeData instead
 
 tasks.register('generateBinaryDictionaries') {
   description 'Generate optimized binary dictionaries from JSON sources'
@@ -337,8 +308,6 @@ tasks.register('generateBinaryDictionaries') {
 
     jsonFiles.each { jsonFile ->
       def binFile = new File(dictDir, jsonFile.name.replace(".json", ".bin"))
-
-      // Only regenerate if JSON is newer than binary, or binary doesn't exist
       if (!binFile.exists() || jsonFile.lastModified() > binFile.lastModified()) {
         println "Generating binary dictionary: ${binFile.name}"
         exec {
@@ -359,8 +328,6 @@ tasks.register('generateBinaryContractions') {
     def nonPairedFile = new File(dictDir, "contractions_non_paired.json")
     def pairedFile = new File(dictDir, "contraction_pairings.json")
     def binFile = new File(dictDir, "contractions.bin")
-
-    // Only regenerate if either JSON is newer than binary, or binary doesn't exist
     def needsRegenerate = !binFile.exists() ||
                           nonPairedFile.lastModified() > binFile.lastModified() ||
                           pairedFile.lastModified() > binFile.lastModified()
@@ -385,14 +352,12 @@ tasks.register('generateVersionInfo') {
     def gitCommit = 'git rev-parse --short HEAD'.execute().text.trim()
     def gitCommitFull = 'git rev-parse HEAD'.execute().text.trim()
     def gitDate = 'git log -1 --format=%cd --date=short'.execute().text.trim()
-
     def versionFile = file("build/generated-resources/raw/version_info.txt")
     versionFile.parentFile.mkdirs()
     versionFile.text = """commit=$gitCommit
 commit_full=$gitCommitFull
 commit_date=$gitDate
 """
-
     println "Generated version info: $gitCommit ($gitDate)"
   }
 }
@@ -413,8 +378,6 @@ tasks.register('generateComposeData') {
     def composeDir = file("srcs/compose")
     def outputBin = file("src/main/assets/compose_data.bin")
     def outputKt = file("src/main/kotlin/tribixbite/cleverkeys/ComposeKeyData.kt")
-
-    // Skip if output exists and is newer than all sources
     def sourceFiles = composeDir.listFiles().findAll {
       it.name.endsWith(".json") || it.isDirectory()
     }
@@ -444,13 +407,11 @@ tasks.register('initDebugKeystore') {
   if (!file("debug.keystore").exists()) {
     println "Initializing default debug keystore"
     exec {
-      // A shell script might be needed if this line requires input from the user
       commandLine "keytool", "-genkeypair", "-dname", "cn=d, ou=e, o=b, c=ug", "-alias", "debug", "-keypass", "debug0", "-keystore", "debug.keystore", "-keyalg", "rsa", "-storepass", "debug0", "-validity", "10000"
     }
   }
 }
 
-// latn_qwerty_us is used as a raw resource by the custom layout option.
 tasks.register('copyRawQwertyUS', Copy)
 {
   from "srcs/layouts/latn_qwerty_us.xml"
