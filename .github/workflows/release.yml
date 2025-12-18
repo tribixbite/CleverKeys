@@ -108,13 +108,47 @@ jobs:
     - name: Print R8 Version
       run: ./gradlew printR8Version
 
-    - name: Build signed release APK
+    - name: Clone reproducible-apk-tools
+      run: git clone https://github.com/obfusk/reproducible-apk-tools.git
+
+    - name: Build unsigned release APK
       run: ./gradlew clean assembleRelease --stacktrace --no-build-cache
       env:
-        RELEASE_KEYSTORE: ${{ github.workspace }}/release.keystore
-        RELEASE_KEYSTORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
-        RELEASE_KEY_ALIAS: ${{ secrets.ALIAS }}
-        RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        # Build without release signing - we'll sign after fix-pg-map-id
+        RELEASE_KEYSTORE: ""
+
+    # REPRODUCIBILITY: Fix non-deterministic R8 pg-map-id in DEX files
+    # This ensures byte-identical APKs between GitHub and F-Droid builds
+    - name: Fix pg-map-id for reproducibility
+      run: |
+        cd build/outputs/apk/release
+        for apk in *.apk; do
+          echo "Fixing pg-map-id in $apk..."
+          python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
+            --page-size 16 fix-pg-map-id "$apk"
+        done
+        echo "APKs after pg-map-id fix:"
+        ls -la *.apk
+
+    # Sign the APKs with our release key after pg-map-id fix
+    - name: Sign release APKs
+      run: |
+        cd build/outputs/apk/release
+        for apk in *.apk; do
+          echo "Signing $apk..."
+          # Zipalign first
+          $BUILD_TOOLS_DIR/zipalign -f 4 "$apk" "${apk%.apk}_aligned.apk"
+          mv "${apk%.apk}_aligned.apk" "$apk"
+          # Sign with apksigner
+          $BUILD_TOOLS_DIR/apksigner sign \
+            --ks ${{ github.workspace }}/release.keystore \
+            --ks-pass pass:${{ secrets.KEY_STORE_PASSWORD }} \
+            --ks-key-alias ${{ secrets.ALIAS }} \
+            --key-pass pass:${{ secrets.KEY_PASSWORD }} \
+            "$apk"
+          # Verify signature
+          $BUILD_TOOLS_DIR/apksigner verify "$apk" && echo "✅ $apk verified"
+        done
 
     - name: List and rename release APKs
       run: |
