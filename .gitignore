@@ -42,3 +42,20 @@ src/main/assets/dictionaries/contractions.bin
 test_onnx_cli.jar
 onnxruntime-1.20.0-android.jar
 res/raw/*.xml
+
+# Build comparison artifacts (never commit)
+local_apk/
+check_apks/
+github_apk/
+debug_apk/
+*.dex
+diff*.txt
+diff*.html
+local_*.txt
+remote_*.txt
+github_*.txt
+lint_results.txt
+check_layout.output
+*.part1
+*.part2
+fdroiddata_temp/

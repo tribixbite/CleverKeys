@@ -1,3 +1,0 @@
-commit=
-commit_full=
-commit_date=

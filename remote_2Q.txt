@@ -1,3 +1,0 @@
-commit=863b91f7
-commit_full=863b91f742b747ca9ea83721c2f882eb2f5d1b70
-commit_date=2025-12-18
