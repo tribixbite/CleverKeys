@@ -23,11 +23,12 @@ jobs:
       with:
         fetch-depth: 0
 
-    # REPRODUCIBILITY: Pin exact Java version for deterministic DEX output
-    - name: Setup Java 21
+    # REPRODUCIBILITY: Pin Java 17 to match F-Droid build server
+    # Different Java versions can produce different R8/DEX output
+    - name: Setup Java 17
       uses: actions/setup-java@v4
       with:
-        java-version: '21'
+        java-version: '17'
         distribution: 'temurin'
 
     - name: Setup Android SDK
