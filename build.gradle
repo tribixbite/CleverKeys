@@ -47,7 +47,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 12
+ext.VERSION_PATCH = 13
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
@@ -74,8 +74,8 @@ android {
     targetSdkVersion 34
     
     // CRITICAL: Must use literal values here for F-Droid checkupdates parser
-    versionCode 10112
-    versionName "1.1.12"
+    versionCode 10113
+    versionName "1.1.13"
     
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
@@ -90,6 +90,7 @@ android {
       // Forcefully strip non-deterministic files using broad patterns
       excludes += "assets/dexopt/**"
       excludes += "**/baseline.prof*"
+      excludes += "**/baseline.profm*"
       excludes += "META-INF/*.version"
       excludes += "META-INF/*.textproto"
       excludes += "META-INF/com/android/build/gradle/app-metadata.properties"
@@ -313,8 +314,6 @@ tasks.register('generateVersionInfo') {
     def versionFile = file("build/generated-resources/raw/version_info.txt")
     versionFile.parentFile.mkdirs()
     versionFile.text = "commit=$gitCommit\ncommit_full=$gitCommitFull\ncommit_date=$gitDate\n"
-    println "Generated version info: ${versionFile.text.replace('
-', ' ')}"
   }
 }
 
