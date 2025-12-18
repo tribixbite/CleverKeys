@@ -47,24 +47,16 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 11
+ext.VERSION_PATCH = 12
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
 // - versionNameStr = "MAJOR.MINOR.PATCH"
 // - ABI versionCode = base*10 + abiCode (1=armv7, 2=arm64, 3=x86_64)
-//
-// WORKFLOW:
-// 1. Update VERSION_MAJOR/MINOR/PATCH above
-// 2. Commit, tag with "vX.Y.Z", push tag
-// 3. GitHub Actions verifies tag matches version, builds, releases
-// 4. F-Droid auto-detects tag and builds
 // =============================================================================
 ext.versionCode = ext.VERSION_MAJOR * 10000 + ext.VERSION_MINOR * 100 + ext.VERSION_PATCH
 ext.versionNameStr = "${ext.VERSION_MAJOR}.${ext.VERSION_MINOR}.${ext.VERSION_PATCH}"
 
-// Per-ABI versionCode mapping for F-Droid split APKs
-// Must be at project level for applicationVariants access
 ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2, 'x86_64': 3]
 
 // Force reproducibility by excluding profile-guided optimization tools
@@ -82,8 +74,8 @@ android {
     targetSdkVersion 34
     
     // CRITICAL: Must use literal values here for F-Droid checkupdates parser
-    versionCode 10111
-    versionName "1.1.11"
+    versionCode 10112
+    versionName "1.1.12"
     
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
@@ -91,8 +83,6 @@ android {
 
   kotlinOptions {
     jvmTarget = "1.8"
-    // sourceInformation flag removed from here to prevent duplicate plugin option errors.
-    // It is applied globally in the tasks.withType block at the end of the file.
   }
 
   packagingOptions {
@@ -302,12 +292,29 @@ tasks.register('generateBinaryContractions') {
 
 tasks.register('generateVersionInfo') {
   doLast {
-    def gitCommit = 'git rev-parse --short HEAD'.execute().text.trim()
-    def gitCommitFull = 'git rev-parse HEAD'.execute().text.trim()
-    def gitDate = 'git log -1 --format=%cd --date=short'.execute().text.trim()
+    def getGitInfo = { command ->
+        try {
+            def stdout = new ByteArrayOutputStream()
+            exec {
+                commandLine command.split()
+                standardOutput = stdout
+                ignoreExitValue = true
+            }
+            return stdout.toString().trim()
+        } catch (Exception e) {
+            return ""
+        }
+    }
+    
+    def gitCommit = getGitInfo('git rev-parse --short HEAD')
+    def gitCommitFull = getGitInfo('git rev-parse HEAD')
+    def gitDate = getGitInfo('git log -1 --format=%cd --date=short')
+    
     def versionFile = file("build/generated-resources/raw/version_info.txt")
     versionFile.parentFile.mkdirs()
     versionFile.text = "commit=$gitCommit\ncommit_full=$gitCommitFull\ncommit_date=$gitDate\n"
+    println "Generated version info: ${versionFile.text.replace('
+', ' ')}"
   }
 }
 
