@@ -57,7 +57,7 @@ dependencies {
 // =============================================================================
 def VERSION_MAJOR = 1
 def VERSION_MINOR = 1
-def VERSION_PATCH = 0
+def VERSION_PATCH = 1
 def BASE_VERSION_CODE = VERSION_MAJOR * 10000 + VERSION_MINOR * 100 + VERSION_PATCH
 def VERSION_NAME = "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
 
@@ -356,16 +356,12 @@ tasks.register('generateVersionInfo') {
     def gitCommit = 'git rev-parse --short HEAD'.execute().text.trim()
     def gitCommitFull = 'git rev-parse HEAD'.execute().text.trim()
     def gitDate = 'git log -1 --format=%cd --date=short'.execute().text.trim()
-    def buildDate = new Date().format('yyyy-MM-dd HH:mm:ss')
-    def buildNumber = System.currentTimeMillis().toString()
 
     def versionFile = file("build/generated-resources/raw/version_info.txt")
     versionFile.parentFile.mkdirs()
     versionFile.text = """commit=$gitCommit
 commit_full=$gitCommitFull
 commit_date=$gitDate
-build_date=$buildDate
-build_number=$buildNumber
 """
 
     println "Generated version info: $gitCommit ($gitDate)"
