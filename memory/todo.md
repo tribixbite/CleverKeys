@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-17
-**Status**: F-Droid Submission (MR !30449) - Pipeline testing v1.0.7
+**Last Updated**: 2025-12-18
+**Status**: F-Droid Reproducibility - v1.1.27 with Temurin JDK pinning
 
 ---
 
@@ -125,14 +125,22 @@
 - [x] Moved ui-tooling to debugImplementation for reproducible builds (2025-12-16)
   - Jetpack Compose ui-tooling can embed machine-specific paths
   - Now excluded from release APKs, only included in debug builds
-- [ ] **PIPELINE FAILED** (2025-12-17) - investigate and fix
-  - Failed jobs: `checkupdates`, `fdroid build`
-  - Pipeline: https://gitlab.com/tribixbite/fdroiddata/-/pipelines/2219934534
-  - Job logs require auth - check web UI for details
+- [x] **REPRODUCIBILITY SPRINT** (2025-12-18)
+  - Identified build-tools 35.0.0 breaks apksigcopier (F-Droid issue #3299)
+  - Downgraded to build-tools 34.0.0 in all environments
+  - Released v1.1.27 with fixed toolchain
+  - Got Gemini second opinion via zen-mcp on reproducibility config
+  - Implemented Gemini recommendations:
+    - [x] Exact Temurin 21.0.9+10 JDK download in F-Droid metadata
+    - [x] TZ=UTC, LANG=en_US.UTF-8, LC_ALL=en_US.UTF-8 env vars
+    - [x] Updated GitHub workflow with same locale/timezone settings
+    - [x] Updated build-on-termux.sh for local consistency
+  - F-Droid metadata ready in fdroiddata_temp/ (not tracked in git)
+- [ ] Submit updated F-Droid metadata MR
 - [ ] Wait for F-Droid maintainer merge approval
 
-**Current Version**: 1.0.7 (versionCode 100073 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.0.7
+**Current Version**: 1.1.27 (versionCode 101273 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.27
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 
 ### Legacy Code Audit (2025-12-17)
