@@ -20,10 +20,9 @@ dependencies {
   // Jetpack Compose dependencies (for settings UI)
   implementation "androidx.activity:activity-compose:1.8.2"
   implementation "androidx.compose.ui:ui:1.5.4"
-  implementation "androidx.compose.ui:ui-tooling-preview:1.5.4"
-  // CRITICAL: ui-tooling must be debugImplementation only!
-  // As implementation, it embeds compose_data.bin with machine-specific paths,
-  // breaking F-Droid reproducible builds (diffoscope shows 51958 vs 51928 bytes)
+  // CRITICAL: ui-tooling and ui-tooling-preview must be debugImplementation only!
+  // These embed machine-specific paths that break F-Droid reproducible builds.
+  debugImplementation "androidx.compose.ui:ui-tooling-preview:1.5.4"
   debugImplementation "androidx.compose.ui:ui-tooling:1.5.4"
   implementation "androidx.compose.material3:material3:1.1.2"
   implementation "androidx.compose.foundation:foundation:1.5.4"
@@ -54,83 +53,13 @@ dependencies {
 }
 
 // =============================================================================
-// SINGLE SOURCE OF TRUTH - VERSIONING
+// VERSIONING - F-Droid compatible (checkupdates does not parse ext values)
 // =============================================================================
-// UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
-ext.VERSION_MAJOR = 1
-ext.VERSION_MINOR = 0
-ext.VERSION_PATCH = 9
-// =============================================================================
-// DERIVED VALUES (auto-calculated, do not edit):
-// - versionCode = MAJOR*10000 + MINOR*100 + PATCH
-// - versionNameStr = "MAJOR.MINOR.PATCH"
-// - ABI versionCode = base*10 + abiCode (1=armv7, 2=arm64, 3=x86_64)
-//
-// WORKFLOW:
-// 1. Update VERSION_MAJOR/MINOR/PATCH above
-// 2. Commit, tag with "vX.Y.Z", push tag
-// 3. GitHub Actions verifies tag matches version, builds, releases
-// 4. F-Droid auto-detects tag and builds
-// =============================================================================
-ext.versionCode = ext.VERSION_MAJOR * 10000 + ext.VERSION_MINOR * 100 + ext.VERSION_PATCH
-ext.versionNameStr = "${ext.VERSION_MAJOR}.${ext.VERSION_MINOR}.${ext.VERSION_PATCH}"
-
-def getVersionFromTag() {
-    try {
-        // Get the most recent tag matching vX.Y.Z pattern
-        def tag = 'git describe --tags --match "v[0-9]*.[0-9]*.[0-9]*" --abbrev=0'.execute().text.trim()
-        if (tag && tag.startsWith('v')) {
-            return tag.substring(1) // Remove 'v' prefix
-        }
-    } catch (ignored) {}
-    return null
-}
-
-def getVersionInfo() {
-    def tagVersion = getVersionFromTag()
-
-    if (tagVersion) {
-        // Parse semantic version from tag
-        def parts = tagVersion.split('\\.')
-        if (parts.length >= 3) {
-            def major = parts[0].toInteger()
-            def minor = parts[1].toInteger()
-            def patch = parts[2].replaceAll('[^0-9]', '').toInteger()
-
-            // Check if current commit is exactly on the tag
-            def tagCommit = "git rev-list -n 1 v${tagVersion}".execute().text.trim()
-            def headCommit = 'git rev-parse HEAD'.execute().text.trim()
-            def isRelease = tagCommit == headCommit
-
-            def versionCode = major * 10000 + minor * 100 + patch
-            def versionName = isRelease ? tagVersion : "${tagVersion}-dev"
-
-            println "📦 CleverKeys version: ${versionName} (code: ${versionCode}, release: ${isRelease})"
-            return [code: versionCode, name: versionName, isRelease: isRelease]
-        }
-    }
-
-    // Fallback for untagged/development builds
-    try {
-        def shortSha = 'git rev-parse --short HEAD'.execute().text.trim()
-        println "🔧 CleverKeys development build: dev-${shortSha}"
-        return [code: 1, name: "dev-${shortSha}", isRelease: false]
-    } catch (ignored) {
-        println "⚠️ Git not available, using fallback version"
-        return [code: 1, name: "dev-unknown", isRelease: false]
-    }
-}
-
-// Cache version info to avoid multiple git calls
-ext.versionInfo = getVersionInfo()
-
-def getVersionCode() {
-    return ext.versionInfo.code
-}
-
-def getVersionName() {
-    return ext.versionInfo.name
-}
+def VERSION_MAJOR = 1
+def VERSION_MINOR = 1
+def VERSION_PATCH = 0
+def BASE_VERSION_CODE = VERSION_MAJOR * 10000 + VERSION_MINOR * 100 + VERSION_PATCH
+def VERSION_NAME = "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
 
 // Per-ABI versionCode mapping for F-Droid split APKs
 // Must be at project level for applicationVariants access
@@ -144,9 +73,10 @@ android {
     applicationId "tribixbite.cleverkeys"
     minSdk 21
     targetSdkVersion 34  // Lowered from 35 for F-Droid androguard compatibility
-    // References the single source of truth from ext block - NO DUPLICATION
-    versionCode rootProject.ext.versionCode
-    versionName rootProject.ext.versionNameStr
+    
+    versionCode BASE_VERSION_CODE
+    versionName VERSION_NAME
+    
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
   }
