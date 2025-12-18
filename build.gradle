@@ -81,9 +81,9 @@ android {
     minSdk 21
     targetSdkVersion 34
     
-    // CRITICAL: Must use literal values here for F-Droid checkupdates parser
-    versionCode 10128
-    versionName "1.1.28"
+    // References ext values - see VERSION_MAJOR/MINOR/PATCH at top of file
+    versionCode ext.versionCode
+    versionName ext.versionNameStr
     
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
