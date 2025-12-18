@@ -1,4 +1,6 @@
 # CleverKeys ProGuard Rules
+# NOTE: R8 in AGP 8.x is deterministic by default. No special flags needed.
+
 # Theory #3: Ensure InputMethodService subclasses aren't stripped
 
 # Keep all InputMethodService implementations
