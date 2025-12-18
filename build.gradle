@@ -82,8 +82,8 @@ android {
     targetSdkVersion 34
     
     // References ext values - see VERSION_MAJOR/MINOR/PATCH at top of file
-    versionCode ext.versionCode
-    versionName ext.versionNameStr
+    versionCode rootProject.ext.versionCode
+    versionName rootProject.ext.versionNameStr
     
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
