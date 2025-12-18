@@ -109,7 +109,7 @@ jobs:
       run: ./gradlew printR8Version
 
     - name: Build signed release APK
-      run: ./gradlew assembleRelease --stacktrace
+      run: ./gradlew clean assembleRelease --stacktrace --no-build-cache
       env:
         RELEASE_KEYSTORE: ${{ github.workspace }}/release.keystore
         RELEASE_KEYSTORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}

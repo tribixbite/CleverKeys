@@ -3,6 +3,11 @@ name: Build CleverKeys APK
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
+      - develop
+    tags-ignore:
+      - 'v*'
   pull_request:
 
 permissions:
