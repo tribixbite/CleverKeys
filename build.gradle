@@ -47,7 +47,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 17
+ext.VERSION_PATCH = 18
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
@@ -82,8 +82,8 @@ android {
     targetSdkVersion 34
     
     // CRITICAL: Must use literal values here for F-Droid checkupdates parser
-    versionCode 10117
-    versionName "1.1.17"
+    versionCode 10118
+    versionName "1.1.18"
     
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
@@ -237,7 +237,10 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
         freeCompilerArgs += [
             "-P", "plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=false",
             "-Xrelative-path-base=${projectDir.absolutePath}",
-            "-Xbackend-threads=1"
+            "-Xbackend-threads=1",
+            "-Xno-call-assertions",
+            "-Xno-receiver-assertions",
+            "-Xno-param-assertions"
         ]
     }
 }
