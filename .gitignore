@@ -41,3 +41,4 @@ src/main/assets/dictionaries/contractions.bin
 # Temporary test artifacts
 test_onnx_cli.jar
 onnxruntime-1.20.0-android.jar
+res/raw/*.xml

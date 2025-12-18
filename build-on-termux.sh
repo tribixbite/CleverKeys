@@ -54,11 +54,7 @@ fi
 echo "Step 2: Preparing layout resources..."
 
 # Ensure layout files are copied (gradle task sometimes doesn't run)
-if [ ! -d "build/generated-resources/xml" ] || [ -z "$(ls -A build/generated-resources/xml 2>/dev/null)" ]; then
-    echo "Copying layout definitions..."
-    mkdir -p build/generated-resources/xml
-    cp src/main/layouts/*.xml build/generated-resources/xml/ 2>/dev/null || true
-fi
+# Fixed in build.gradle - logic removed
 
 echo "Step 3: Cleaning previous builds..."
 ./gradlew clean || {
@@ -66,8 +62,7 @@ echo "Step 3: Cleaning previous builds..."
 }
 
 # Re-copy layouts after clean
-mkdir -p build/generated-resources/xml
-cp src/main/layouts/*.xml build/generated-resources/xml/ 2>/dev/null || true
+# Fixed in build.gradle - logic removed
 
 # Determine gradle task and output path
 if [ "$BUILD_TYPE_LOWER" = "release" ]; then

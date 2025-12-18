@@ -496,19 +496,15 @@ tasks.register('initDebugKeystore') {
 }
 
 // latn_qwerty_us is used as a raw resource by the custom layout option.
-tasks.register('copyRawQwertyUS')
+tasks.register('copyRawQwertyUS', Copy)
 {
-  copy {
-    from "srcs/layouts/latn_qwerty_us.xml"
-    into "build/generated-resources/raw"
-  }
+  from "srcs/layouts/latn_qwerty_us.xml"
+  into "build/generated-resources/raw"
 }
 
-tasks.register('copyLayoutDefinitions')
+tasks.register('copyLayoutDefinitions', Copy)
 {
-  copy {
-    from "src/main/layouts"
-    include "*.xml"
-    into "build/generated-resources/raw"
-  }
+  from "src/main/layouts"
+  include "*.xml"
+  into "build/generated-resources/raw"
 }
