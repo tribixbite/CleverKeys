@@ -46,9 +46,9 @@ dependencies {
 // =============================================================================
 def VERSION_MAJOR = 1
 def VERSION_MINOR = 1
-def VERSION_PATCH = 8
-def BASE_VERSION_CODE = 10108
-def VERSION_NAME = "1.1.8"
+def VERSION_PATCH = 9
+def BASE_VERSION_CODE = 10109
+def VERSION_NAME = "1.1.9"
 
 ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2, 'x86_64': 3]
 
@@ -65,18 +65,15 @@ android {
     applicationId "tribixbite.cleverkeys"
     minSdk 21
     targetSdkVersion 34
-    versionCode 10108
-    versionName "1.1.8"
+    versionCode 10109
+    versionName "1.1.9"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
   }
 
-  // Ensure deterministic Compose group hashes across different build paths
   kotlinOptions {
     jvmTarget = "1.8"
-    freeCompilerArgs += [
-        "-P", "plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=false"
-    ]
+    // sourceInformation flag removed here to avoid duplication with global block below
   }
 
   packagingOptions {
@@ -89,6 +86,15 @@ android {
       excludes += "META-INF/com/android/build/gradle/app-metadata.properties"
       excludes += "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory"
       excludes += "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler"
+      
+      // Silence apksigner warnings and improve reproducibility
+      excludes += "META-INF/DEPENDENCIES"
+      excludes += "META-INF/LICENSE*"
+      excludes += "META-INF/NOTICE*"
+      excludes += "META-INF/AL2.0"
+      excludes += "META-INF/LGPL2.1"
+      excludes += "META-INF/*.kotlin_module"
+      excludes += "META-INF/com.android.tools/**"
     }
   }
 
@@ -156,7 +162,6 @@ android {
   buildTypes {
     release {
       minifyEnabled true
-      // Disable resource shrinking to fix non-deterministic resource renaming
       shrinkResources false
       debuggable false
       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -200,7 +205,7 @@ android {
   }
 }
 
-// Apply Compose determinism fix to all Kotlin compilation tasks
+// Apply Compose determinism fix to all Kotlin compilation tasks exactly once
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     kotlinOptions {
         freeCompilerArgs += [
