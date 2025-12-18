@@ -47,7 +47,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 15
+ext.VERSION_PATCH = 16
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
@@ -82,8 +82,8 @@ android {
     targetSdkVersion 34
     
     // CRITICAL: Must use literal values here for F-Droid checkupdates parser
-    versionCode 10115
-    versionName "1.1.15"
+    versionCode 10116
+    versionName "1.1.16"
     
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
@@ -151,7 +151,7 @@ android {
       manifest.srcFile 'AndroidManifest.xml'
       kotlin.srcDirs = ['src/main/kotlin']
       java.srcDirs = ['src/main/java']
-      res.srcDirs = ['res', 'build/generated/res', 'build/generated/version']
+      res.srcDirs = ['res', 'build/generated/layouts/res', 'build/generated/version/res']
       assets.srcDirs = ['assets', 'src/main/assets']
     }
     test {
@@ -319,7 +319,7 @@ tasks.register('generateBinaryContractions') {
 // REPRODUCIBILITY: Generate version info with deterministic fallbacks
 // Ensures identical output even when git is unavailable
 tasks.register('generateVersionInfo') {
-  def outDir = file("${buildDir}/generated/version/raw")
+  def outDir = file("${buildDir}/generated/version/res/raw")
   outputs.dir(outDir)
   
   doLast {
@@ -377,5 +377,5 @@ tasks.register('initDebugKeystore') {
   }
 }
 
-tasks.register('copyRawQwertyUS', Copy) { from "srcs/layouts/latn_qwerty_us.xml"; into "build/generated/res/raw" }
-tasks.register('copyLayoutDefinitions', Copy) { from "src/main/layouts"; include "*.xml"; into "build/generated/res/raw" }
+tasks.register('copyRawQwertyUS', Copy) { from "srcs/layouts/latn_qwerty_us.xml"; into "build/generated/layouts/res/raw" }
+tasks.register('copyLayoutDefinitions', Copy) { from "src/main/layouts"; include "*.xml"; into "build/generated/layouts/res/raw" }
