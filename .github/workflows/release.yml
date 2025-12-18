@@ -119,13 +119,14 @@ jobs:
 
     # REPRODUCIBILITY: Fix non-deterministic R8 pg-map-id in DEX files
     # This ensures byte-identical APKs between GitHub and F-Droid builds
+    # Using fixed pg-map-id "0000000" - must match F-Droid postbuild
     - name: Fix pg-map-id for reproducibility
       run: |
         cd build/outputs/apk/release
         for apk in *.apk; do
           echo "Fixing pg-map-id in $apk..."
           python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
-            --page-size 16 fix-pg-map-id "$apk"
+            --page-size 16 fix-pg-map-id "$apk" 0000000
         done
         echo "APKs after pg-map-id fix:"
         ls -la *.apk
