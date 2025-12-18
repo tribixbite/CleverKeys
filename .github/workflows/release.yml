@@ -27,6 +27,15 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
+    - name: Add Android SDK tools to PATH
+      run: |
+        # Add build-tools to PATH for zipalign and apksigner
+        BUILD_TOOLS_DIR=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+        echo "$BUILD_TOOLS_DIR" >> $GITHUB_PATH
+        echo "BUILD_TOOLS_DIR=$BUILD_TOOLS_DIR" >> $GITHUB_ENV
+        echo "📦 Build tools: $BUILD_TOOLS_DIR"
+        ls -la $BUILD_TOOLS_DIR/zipalign $BUILD_TOOLS_DIR/apksigner 2>/dev/null || echo "Tools check"
+
     - name: Cache Gradle packages
       uses: actions/cache@v4
       with:
