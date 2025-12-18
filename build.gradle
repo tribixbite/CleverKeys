@@ -47,7 +47,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 36
+ext.VERSION_PATCH = 37
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
@@ -90,7 +90,8 @@ android {
   }
 
   kotlinOptions {
-    jvmTarget = "1.8"
+    // REPRODUCIBILITY: Use Java 11 target for deterministic bytecode
+    jvmTarget = "11"
   }
 
   aaptOptions {
@@ -139,8 +140,9 @@ android {
   }
 
   compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
+    // REPRODUCIBILITY: Use Java 11 target for deterministic bytecode
+    sourceCompatibility JavaVersion.VERSION_11
+    targetCompatibility JavaVersion.VERSION_11
   }
 
   buildFeatures {
