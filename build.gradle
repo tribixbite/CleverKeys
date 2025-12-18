@@ -46,12 +46,13 @@ dependencies {
 // =============================================================================
 def VERSION_MAJOR = 1
 def VERSION_MINOR = 1
-def VERSION_PATCH = 7
-def BASE_VERSION_CODE = 10107
-def VERSION_NAME = "1.1.7"
+def VERSION_PATCH = 8
+def BASE_VERSION_CODE = 10108
+def VERSION_NAME = "1.1.8"
 
 ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2, 'x86_64': 3]
 
+// Force reproducibility by excluding profile-guided optimization tools
 configurations.all {
     exclude group: 'androidx.profileinstaller', module: 'profileinstaller'
 }
@@ -64,12 +65,13 @@ android {
     applicationId "tribixbite.cleverkeys"
     minSdk 21
     targetSdkVersion 34
-    versionCode 10107
-    versionName "1.1.7"
+    versionCode 10108
+    versionName "1.1.8"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
   }
 
+  // Ensure deterministic Compose group hashes across different build paths
   kotlinOptions {
     jvmTarget = "1.8"
     freeCompilerArgs += [
@@ -77,8 +79,10 @@ android {
     ]
   }
 
-  packaging {
+  packagingOptions {
     resources {
+      // Forcefully strip non-deterministic files using broad patterns
+      excludes += "assets/dexopt/**"
       excludes += "**/baseline.prof*"
       excludes += "META-INF/*.version"
       excludes += "META-INF/*.textproto"
@@ -152,7 +156,8 @@ android {
   buildTypes {
     release {
       minifyEnabled true
-      shrinkResources true
+      // Disable resource shrinking to fix non-deterministic resource renaming
+      shrinkResources false
       debuggable false
       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
       resValue "string", "app_name", "CleverKeys"
@@ -193,6 +198,15 @@ android {
       returnDefaultValues = true
     }
   }
+}
+
+// Apply Compose determinism fix to all Kotlin compilation tasks
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        freeCompilerArgs += [
+            "-P", "plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=false"
+        ]
+    }
 }
 
 def isArm64 = System.getProperty("os.arch") in ["aarch64", "arm64"]
