@@ -22,7 +22,8 @@ fi
 export ANDROID_HOME="$HOME/android-sdk"
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
 export JAVA_HOME="/data/data/com.termux/files/usr/lib/jvm/java-21-openjdk"
-export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/35.0.0:$PATH"
+# REPRODUCIBILITY: Use build-tools 34.0.0 - F-Droid requires apksigner from v34 (v35+ breaks apksigcopier)
+export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/34.0.0:$PATH"
 
 echo "Step 1: Checking prerequisites..."
 
