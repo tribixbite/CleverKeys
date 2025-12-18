@@ -221,8 +221,8 @@ class KeyboardReceiver(
         keyboardView.set_compose_pending(pending)
     }
 
-    override fun selection_state_changed(selection_is_ongoing: Boolean) {
-        keyboardView.set_selection_state(selection_is_ongoing)
+    override fun selection_state_changed(selectionIsOngoing: Boolean) {
+        keyboardView.set_selection_state(selectionIsOngoing)
     }
 
     override fun getCurrentInputConnection(): InputConnection? {

@@ -51,8 +51,8 @@ class KeyEventReceiverBridge(
         receiver?.set_compose_pending(pending)
     }
 
-    override fun selection_state_changed(selection_is_ongoing: Boolean) {
-        receiver?.selection_state_changed(selection_is_ongoing)
+    override fun selection_state_changed(selectionIsOngoing: Boolean) {
+        receiver?.selection_state_changed(selectionIsOngoing)
     }
 
     override fun getCurrentInputConnection(): InputConnection? {

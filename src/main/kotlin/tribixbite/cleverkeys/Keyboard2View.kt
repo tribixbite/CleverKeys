@@ -165,7 +165,7 @@ class Keyboard2View @JvmOverloads constructor(
                 "glow" -> {
                     // GPU-efficient glow using blur mask filter
                     // Use SOLID blur type for crisp center with soft edges
-                    val glowRadius = (config?.swipe_trail_glow_radius ?: 8.0f) * density * 0.5f
+                    val glowRadius = (config.swipe_trail_glow_radius ?: 8.0f) * density * 0.5f
                     maskFilter = android.graphics.BlurMaskFilter(
                         glowRadius.coerceAtLeast(1f),
                         android.graphics.BlurMaskFilter.Blur.SOLID // SOLID gives crisp center
@@ -174,7 +174,7 @@ class Keyboard2View @JvmOverloads constructor(
                 }
                 "sparkle" -> {
                     // Sparkle effect uses glow base + particles
-                    val glowRadius = (config?.swipe_trail_glow_radius ?: 8.0f) * density * 0.5f
+                    val glowRadius = (config.swipe_trail_glow_radius ?: 8.0f) * density * 0.5f
                     maskFilter = android.graphics.BlurMaskFilter(
                         glowRadius.coerceAtLeast(1f),
                         android.graphics.BlurMaskFilter.Blur.SOLID

@@ -44,7 +44,6 @@ fun ThemeSelector(
 ) {
     val context = LocalContext.current
     val themeManager = remember { MaterialThemeManager(context) }
-    val customThemeManager = remember { themeManager.getCustomThemeManager() }
 
     val selectedThemeId by themeManager.selectedThemeId.collectAsState()
     val allThemes = remember { themeManager.getAllThemes() }

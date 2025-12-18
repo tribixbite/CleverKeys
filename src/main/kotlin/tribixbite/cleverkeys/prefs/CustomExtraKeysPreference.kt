@@ -26,9 +26,9 @@ class CustomExtraKeysPreference(
 
     override fun labelOfValue(value: String, i: Int): String = value
 
-    override fun select(callback: SelectionCallback<String>, old_value: String?) {
+    override fun select(callback: SelectionCallback<String>, oldValue: String?) {
         val content = View.inflate(context, R.layout.dialog_edit_text, null)
-        (content.findViewById<View>(R.id.text) as TextView).text = old_value
+        (content.findViewById<View>(R.id.text) as TextView).text = oldValue
 
         AlertDialog.Builder(context)
             .setView(content)
