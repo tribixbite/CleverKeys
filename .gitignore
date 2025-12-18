@@ -45,6 +45,7 @@ res/raw/*.xml
 
 # Build comparison artifacts (never commit)
 local_apk/
+local_apk_content/
 check_apks/
 github_apk/
 debug_apk/
@@ -59,3 +60,6 @@ check_layout.output
 *.part1
 *.part2
 fdroiddata_temp/
+
+# Binary tools (F-Droid scanner rejects these)
+tools/aapt2_official/
