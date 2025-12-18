@@ -59,9 +59,27 @@ ext.versionNameStr = "${ext.VERSION_MAJOR}.${ext.VERSION_MINOR}.${ext.VERSION_PA
 
 ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2, 'x86_64': 3]
 
-// Force reproducibility by excluding profile-guided optimization tools
+// =============================================================================
+// REPRODUCIBILITY CONFIGURATION
+// =============================================================================
+// These settings ensure builds are deterministic and reproducible across
+// different machines and environments.
+
+// Exclude profile-guided optimization tools that generate non-deterministic files
 configurations.all {
     exclude group: 'androidx.profileinstaller', module: 'profileinstaller'
+    // NOTE: Do NOT exclude androidx.startup - it's required for app initialization
+}
+
+// Set SOURCE_DATE_EPOCH for reproducible timestamps if not already set
+// Usage: SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) ./gradlew assembleRelease
+if (!System.getenv('SOURCE_DATE_EPOCH')) {
+    try {
+        def gitTimestamp = 'git log -1 --format=%ct'.execute().text.trim()
+        if (gitTimestamp) {
+            System.setProperty('SOURCE_DATE_EPOCH', gitTimestamp)
+        }
+    } catch (Exception ignored) {}
 }
 
 android {
@@ -87,17 +105,25 @@ android {
 
   packagingOptions {
     resources {
-      // Forcefully strip non-deterministic files using broad patterns
-      excludes += "assets/dexopt/**"
-      excludes += "**/baseline.prof*"
-      excludes += "**/baseline.profm*"
-      excludes += "META-INF/*.version"
-      excludes += "META-INF/*.textproto"
+      // REPRODUCIBILITY: Exclude non-deterministic ART baseline profiles
+      // These are generated during build and vary between environments
+      excludes += "/assets/dexopt/baseline.prof"
+      excludes += "/assets/dexopt/baseline.profm"
+      excludes += "assets/dexopt/baseline.prof"
+      excludes += "assets/dexopt/baseline.profm"
+
+      // REPRODUCIBILITY: Exclude build metadata that varies between builds
+      excludes += "/META-INF/version-control-info.textproto"
+      excludes += "/META-INF/com/android/build/gradle/app-metadata.properties"
+      excludes += "META-INF/version-control-info.textproto"
       excludes += "META-INF/com/android/build/gradle/app-metadata.properties"
+      excludes += "META-INF/*.version"
+
+      // Kotlin coroutines service files (non-deterministic order)
       excludes += "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory"
       excludes += "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler"
-      
-      // Silence apksigner warnings and improve reproducibility
+
+      // License files and kotlin modules (reduce APK noise)
       excludes += "META-INF/DEPENDENCIES"
       excludes += "META-INF/LICENSE*"
       excludes += "META-INF/NOTICE*"
@@ -106,6 +132,12 @@ android {
       excludes += "META-INF/*.kotlin_module"
       excludes += "META-INF/com.android.tools/**"
     }
+  }
+
+  // REPRODUCIBILITY: Disable baseline profile generation entirely
+  dependenciesInfo {
+    includeInApk = false
+    includeInBundle = false
   }
 
   splits {
@@ -291,29 +323,40 @@ tasks.register('generateBinaryContractions') {
   }
 }
 
+// REPRODUCIBILITY: Generate version info with deterministic fallbacks
+// Ensures identical output even when git is unavailable
 tasks.register('generateVersionInfo') {
   doLast {
     def getGitInfo = { command ->
         try {
             def stdout = new ByteArrayOutputStream()
-            exec {
+            def result = exec {
                 commandLine command.split()
                 standardOutput = stdout
+                errorOutput = new ByteArrayOutputStream()
                 ignoreExitValue = true
             }
-            return stdout.toString().trim()
+            def output = stdout.toString().trim()
+            return (result.exitValue == 0 && output) ? output : null
         } catch (Exception e) {
-            return ""
+            return null
         }
     }
-    
-    def gitCommit = getGitInfo('git rev-parse --short HEAD')
-    def gitCommitFull = getGitInfo('git rev-parse HEAD')
-    def gitDate = getGitInfo('git log -1 --format=%cd --date=short')
-    
+
+    // Use git info if available, otherwise use deterministic fallbacks
+    def gitCommit = getGitInfo('git rev-parse --short HEAD') ?: "release"
+    def gitCommitFull = getGitInfo('git rev-parse HEAD') ?: "release-${project.ext.versionNameStr}"
+    def gitDate = getGitInfo('git log -1 --format=%cd --date=short') ?: "unknown"
+
     def versionFile = file("build/generated-resources/raw/version_info.txt")
     versionFile.parentFile.mkdirs()
-    versionFile.text = "commit=$gitCommit\ncommit_full=$gitCommitFull\ncommit_date=$gitDate\n"
+    versionFile.text = """\
+commit=${gitCommit}
+commit_full=${gitCommitFull}
+commit_date=${gitDate}
+version=${project.ext.versionNameStr}
+"""
+    println "Generated version_info.txt: commit=${gitCommit}, date=${gitDate}"
   }
 }
 
