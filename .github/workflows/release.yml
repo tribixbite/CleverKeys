@@ -28,16 +28,17 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    # REPRODUCIBILITY: Pin build-tools version for deterministic AAPT2 output
+    # REPRODUCIBILITY: Pin build-tools 34.0.0 - F-Droid requires apksigner from v34
+    # Version 35+ produces APKs that fail apksigcopier verification (F-Droid issue #3299)
     - name: Install pinned build-tools
       run: |
-        sdkmanager "build-tools;35.0.0"
-        echo "BUILD_TOOLS_VERSION=35.0.0" >> $GITHUB_ENV
+        sdkmanager "build-tools;34.0.0"
+        echo "BUILD_TOOLS_VERSION=34.0.0" >> $GITHUB_ENV
 
     - name: Add Android SDK tools to PATH
       run: |
-        # Use pinned build-tools version for reproducibility
-        BUILD_TOOLS_DIR="$ANDROID_HOME/build-tools/35.0.0"
+        # Use build-tools 34.0.0 for F-Droid reproducibility (v35+ breaks apksigcopier)
+        BUILD_TOOLS_DIR="$ANDROID_HOME/build-tools/34.0.0"
         echo "$BUILD_TOOLS_DIR" >> $GITHUB_PATH
         echo "BUILD_TOOLS_DIR=$BUILD_TOOLS_DIR" >> $GITHUB_ENV
         echo "📦 Build tools: $BUILD_TOOLS_DIR"
