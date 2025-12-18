@@ -8,6 +8,8 @@ import android.view.Window
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.graphics.drawable.ColorDrawable
+import android.graphics.Color
 
 /**
  * Utility functions for managing IME window and view layout parameters.
@@ -128,8 +130,9 @@ object WindowLayoutUtils {
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
 
-        // Clear any background on the decor view that might cause white bar
-        window.decorView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        // Clear any background on the decor view and window that might cause white bar
+        window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        window.decorView.setBackgroundColor(Color.TRANSPARENT)
     }
 
     /**
@@ -150,8 +153,9 @@ object WindowLayoutUtils {
         // Configure edge-to-edge for API 35+
         configureEdgeToEdge(window)
 
-        // Set window to match parent height
-        updateLayoutHeightOf(window, ViewGroup.LayoutParams.MATCH_PARENT)
+        // Set window to WRAP_CONTENT to avoid white bar artifacts during animation
+        // MATCH_PARENT causes the window to be full screen, exposing empty space
+        updateLayoutHeightOf(window, ViewGroup.LayoutParams.WRAP_CONTENT)
 
         // Set input area parent height based on fullscreen mode
         val inputAreaParent = inputArea.parent as? View
@@ -164,10 +168,10 @@ object WindowLayoutUtils {
             updateLayoutHeightOf(it, height)
             updateLayoutGravityOf(it, Gravity.BOTTOM)
             // Clear any background that might cause white bar on OEM devices
-            it.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            it.setBackgroundColor(Color.TRANSPARENT)
         }
 
         // Also clear inputArea background
-        inputArea.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        inputArea.setBackgroundColor(Color.TRANSPARENT)
     }
 }

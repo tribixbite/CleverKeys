@@ -88,4 +88,15 @@
          preference screens. -->
     <item name="android:fitsSystemWindows">true</item>
   </style>
+
+  <!-- Transparent IME Theme to prevent white bar during animation -->
+  <style name="CleverKeysIMETheme" parent="android:Theme.DeviceDefault.InputMethod">
+    <item name="android:windowBackground">@android:color/transparent</item>
+    <item name="android:colorBackground">@android:color/transparent</item>
+    <item name="android:windowContentOverlay">@null</item>
+    <item name="android:windowIsTranslucent">true</item>
+    <item name="android:backgroundDimEnabled">false</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
+  </style>
 </resources>

@@ -23,6 +23,7 @@
              android:label="CleverKeys Keyboard"
              android:permission="android.permission.BIND_INPUT_METHOD"
              android:exported="true"
+             android:theme="@style/CleverKeysIMETheme"
              android:directBootAware="true">
       <intent-filter>
         <action android:name="android.view.InputMethod"/>
@@ -36,7 +37,7 @@
       </intent-filter>
     </activity>
 
-    <activity android:name="tribixbite.cleverkeys.LauncherActivity" android:icon="@mipmap/ic_launcher" android:theme="@style/launcherTheme" android:exported="true" android:directBootAware="true">
+    <activity android:name="tribixbite.cleverkeys.LauncherActivity" android:icon="@mipmap/ic_launcher" android:theme="@style/launcherTheme" android:exported="true" android:directBootAware="true" android:windowSoftInputMode="adjustResize">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>
