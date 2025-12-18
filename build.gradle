@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
   implementation "androidx.window:window-java:1.3.0"
-  implementation "androidx.core:core:1.13.1"  // Downgraded from 1.16.0 - last version supporting SDK 34
+  implementation "androidx.core:core:1.13.1"
   implementation "androidx.appcompat:appcompat:1.6.1"
   implementation "androidx.multidex:multidex:2.0.1"
   implementation "com.google.android.material:material:1.11.0"
@@ -13,31 +13,21 @@ dependencies {
   implementation "androidx.recyclerview:recyclerview:1.3.2"
   implementation "androidx.preference:preference-ktx:1.2.1"
 
-  // Kotlin dependencies
   implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.20"
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
 
-  // Jetpack Compose dependencies (for settings UI)
   implementation "androidx.activity:activity-compose:1.8.2"
   implementation "androidx.compose.ui:ui:1.5.4"
-  // CRITICAL: ui-tooling and ui-tooling-preview must be debugImplementation only!
-  // These embed machine-specific paths that break F-Droid reproducible builds.
   debugImplementation "androidx.compose.ui:ui-tooling-preview:1.5.4"
   debugImplementation "androidx.compose.ui:ui-tooling:1.5.4"
   implementation "androidx.compose.material3:material3:1.1.2"
   implementation "androidx.compose.foundation:foundation:1.5.4"
 
-  // Lifecycle dependencies for Compose in InputMethodService (Fix ViewTreeLifecycleOwner crash)
   implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
   implementation "androidx.savedstate:savedstate-ktx:1.2.1"
 
-  // Reorderable for drag-and-drop in Layout Manager
   implementation "org.burnoutcrew.composereorderable:reorderable:0.9.6"
-
-  // ONNX Runtime for neural swipe prediction (upgraded for boolean tensor support)
   implementation "com.microsoft.onnxruntime:onnxruntime-android:1.20.0"
-
-  // Gson for JSON serialization/deserialization (backup/restore functionality)
   implementation "com.google.code.gson:gson:2.10.1"
 
   testImplementation "junit:junit:4.13.2"
@@ -45,9 +35,8 @@ dependencies {
   testImplementation "org.robolectric:robolectric:4.11.1"
   testImplementation "androidx.test:core:1.5.0"
 
-  // Android instrumentation test dependencies
   androidTestImplementation "androidx.test.ext:junit:1.1.5"
-  androidTestImplementation "androidx.test:runner:1.5.2"
+  androidTestImplementation "androidx.test.runner:1.5.2"
   androidTestImplementation "androidx.test.rules:1.5.0"
   androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
 }
@@ -57,39 +46,32 @@ dependencies {
 // =============================================================================
 def VERSION_MAJOR = 1
 def VERSION_MINOR = 1
-def VERSION_PATCH = 6
-def BASE_VERSION_CODE = 10106
-def VERSION_NAME = "1.1.6"
+def VERSION_PATCH = 7
+def BASE_VERSION_CODE = 10107
+def VERSION_NAME = "1.1.7"
 
-// Per-ABI versionCode mapping for F-Droid split APKs
-// Must be at project level for applicationVariants access
 ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2, 'x86_64': 3]
 
-// Force reproducibility by excluding profile-guided optimization tools
 configurations.all {
     exclude group: 'androidx.profileinstaller', module: 'profileinstaller'
 }
 
 android {
   namespace 'tribixbite.cleverkeys'
-  compileSdk 34  // Lowered from 35 for F-Droid androguard compatibility
+  compileSdk 34
 
   defaultConfig {
     applicationId "tribixbite.cleverkeys"
     minSdk 21
-    targetSdkVersion 34  // Lowered from 35 for F-Droid androguard compatibility
-    
-    // CRITICAL: Must use literal values here for F-Droid checkupdates parser
-    versionCode 10106
-    versionName "1.1.6"
-    
+    targetSdkVersion 34
+    versionCode 10107
+    versionName "1.1.7"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
   }
 
   kotlinOptions {
     jvmTarget = "1.8"
-    // Fix Compose non-determinism by disabling source information hashes
     freeCompilerArgs += [
         "-P", "plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=false"
     ]
@@ -97,8 +79,7 @@ android {
 
   packaging {
     resources {
-      // Robust exclusions for reproducibility
-      excludes += "assets/dexopt/**"
+      excludes += "**/baseline.prof*"
       excludes += "META-INF/*.version"
       excludes += "META-INF/*.textproto"
       excludes += "META-INF/com/android/build/gradle/app-metadata.properties"
@@ -107,14 +88,12 @@ android {
     }
   }
 
-  // ABI splits for smaller APKs (~25MB each vs ~75MB universal)
-  // F-Droid uses separate build entries with output: field to pick specific ABI
   splits {
     abi {
       enable true
       reset()
       include 'armeabi-v7a', 'arm64-v8a', 'x86_64'
-      universalApk false  // F-Droid builds each ABI separately
+      universalApk false
     }
   }
 
@@ -139,12 +118,10 @@ android {
       res.srcDirs = ['res', 'build/generated-resources']
       assets.srcDirs = ['assets', 'src/main/assets']
     }
-
     test {
       kotlin.srcDirs = ['src/test/kotlin']
       java.srcDirs = ['src/test/java']
     }
-
     androidTest {
       kotlin.srcDirs = ['src/androidTest/kotlin']
     }
@@ -157,7 +134,6 @@ android {
       keyAlias(System.env.DEBUG_KEY_ALIAS ? "$System.env.DEBUG_KEY_ALIAS" : "debug")
       keyPassword(System.env.DEBUG_KEY_PASSWORD ? "$System.env.DEBUG_KEY_PASSWORD" : "debug0")
     }
-
     release {
       if (System.env.RELEASE_KEYSTORE) {
         storeFile file(System.env.RELEASE_KEYSTORE)
@@ -182,7 +158,6 @@ android {
       resValue "string", "app_name", "CleverKeys"
       signingConfig signingConfigs.release
     }
-
     debug {
       minifyEnabled false
       shrinkResources false
@@ -193,7 +168,6 @@ android {
     }
   }
 
-  // Name outputs with ABI and apply per-ABI versionCode for F-Droid
   android.applicationVariants.all { variant ->
     variant.outputs.each { output ->
       def abi = output.getFilter(com.android.build.OutputFile.ABI)
@@ -221,128 +195,69 @@ android {
   }
 }
 
-// Skip Robolectric tests on ARM64 (no Conscrypt native libraries available)
 def isArm64 = System.getProperty("os.arch") in ["aarch64", "arm64"]
 if (isArm64) {
   tasks.withType(Test).configureEach {
     enabled = false
-    println "⚠️ Skipping unit tests on ARM64 architecture (Robolectric requires x86_64)"
   }
 }
 
 tasks.register('buildKeyboardFont') {
   def fontFile = file("assets/special_font.ttf")
-  if (fontFile.exists()) {
-    println "\nSpecial font already exists, skipping build"
-    return
-  }
-
-  println "\nBuilding assets/special_font.ttf"
-  mkdir "$buildDir"
+  if (fontFile.exists()) return
   exec {
     workingDir "$projectDir/srcs/special_font"
-    def svgFiles = workingDir.listFiles().findAll {
-      it.isFile() && it.name.endsWith(".svg")
-    }
+    def svgFiles = workingDir.listFiles().findAll { it.isFile() && it.name.endsWith(".svg") }
     commandLine("fontforge", "-lang=ff", "-script", "build.pe", "$buildDir/special_font.ttf", *svgFiles)
   }
-  copy {
-    from "$buildDir/special_font.ttf"
-    into "assets"
-  }
+  copy { from "$buildDir/special_font.ttf" into "assets" }
 }
 
 tasks.register('genEmojis') {
   def outFile = file("res/raw/emojis.txt")
-  if (outFile.exists() && outFile.length() > 1000) {
-    println "\nEmojis.txt already exists, skipping generation"
-    return
-  }
-  println "\nGenerating res/raw/emojis.txt"
-  exec {
-    workingDir = projectDir
-    commandLine "python3", "gen_emoji.py"
-    ignoreExitValue = true
-  }
+  if (outFile.exists() && outFile.length() > 1000) return
+  exec { workingDir = projectDir; commandLine "python3", "gen_emoji.py"; ignoreExitValue = true }
 }
 
 tasks.withType(Test).configureEach {
-  dependsOn 'genLayoutsList'
-  dependsOn 'checkKeyboardLayouts'
-  dependsOn 'generateComposeData'
+  dependsOn 'genLayoutsList', 'checkKeyboardLayouts', 'generateComposeData'
 }
 
 tasks.register('genLayoutsList') {
   def outFile = file("res/values/layouts.xml")
-  if (outFile.exists() && outFile.length() > 100) {
-    println "\nLayouts.xml already exists, skipping generation"
-    return
-  }
-  println "\nGenerating res/values/layouts.xml"
-  exec {
-    workingDir = projectDir
-    commandLine "python3", "gen_layouts.py"
-    ignoreExitValue = true
-  }
+  if (outFile.exists() && outFile.length() > 100) return
+  exec { workingDir = projectDir; commandLine "python3", "gen_layouts.py"; ignoreExitValue = true }
 }
 
 tasks.register('checkKeyboardLayouts') {
-  def genLayoutsFile = file("res/values/layouts.xml")
-  if (!genLayoutsFile.exists()) {
-    println "\n⚠️ Skipping layout check - layouts.xml not found"
-    return
-  }
-  println "\nChecking layouts"
-  exec {
-    workingDir = projectDir
-    commandLine("python3", "tools/check_layout.py")
-    ignoreExitValue = true
-  }
+  if (!file("res/values/layouts.xml").exists()) return
+  exec { workingDir = projectDir; commandLine "python3", "tools/check_layout.py"; ignoreExitValue = true }
 }
 
 tasks.register('generateBinaryDictionaries') {
-  description 'Generate optimized binary dictionaries from JSON sources'
   doLast {
     def dictDir = file("src/main/assets/dictionaries")
-    def jsonFiles = dictDir.listFiles().findAll { it.name.endsWith(".json") && !it.name.contains("contraction") }
-
-    jsonFiles.each { jsonFile ->
+    dictDir.listFiles().findAll { it.name.endsWith(".json") && !it.name.contains("contraction") }.each { jsonFile ->
       def binFile = new File(dictDir, jsonFile.name.replace(".json", ".bin"))
       if (!binFile.exists() || jsonFile.lastModified() > binFile.lastModified()) {
-        println "Generating binary dictionary: ${binFile.name}"
-        exec {
-          workingDir = projectDir
-          commandLine "python3", "scripts/generate_binary_dict.py", jsonFile.absolutePath, binFile.absolutePath
-        }
-      } else {
-        println "Binary dictionary up-to-date: ${binFile.name}"
+        exec { workingDir = projectDir; commandLine "python3", "scripts/generate_binary_dict.py", jsonFile.absolutePath, binFile.absolutePath }
       }
     }
   }
 }
 
 tasks.register('generateBinaryContractions') {
-  description 'Generate optimized binary contractions from JSON sources'
   doLast {
     def dictDir = file("src/main/assets/dictionaries")
-    def nonPairedFile = new File(dictDir, "contractions_non_paired.json")
-    def pairedFile = new File(dictDir, "contraction_pairings.json")
     def binFile = new File(dictDir, "contractions.bin")
-    def needsRegenerate = !binFile.exists() ||
-                          nonPairedFile.lastModified() > binFile.lastModified() ||
-                          pairedFile.lastModified() > binFile.lastModified()
-
-    if (needsRegenerate) {
-      println "Generating binary contractions: ${binFile.name}"
+    if (!binFile.exists()) {
       exec {
         workingDir = projectDir
         commandLine "python3", "scripts/generate_binary_contractions.py",
-                    nonPairedFile.absolutePath,
-                    pairedFile.absolutePath,
+                    new File(dictDir, "contractions_non_paired.json").absolutePath,
+                    new File(dictDir, "contraction_pairings.json").absolutePath,
                     binFile.absolutePath
       }
-    } else {
-      println "Binary contractions up-to-date: ${binFile.name}"
     }
   }
 }
@@ -354,73 +269,30 @@ tasks.register('generateVersionInfo') {
     def gitDate = 'git log -1 --format=%cd --date=short'.execute().text.trim()
     def versionFile = file("build/generated-resources/raw/version_info.txt")
     versionFile.parentFile.mkdirs()
-    versionFile.text = """commit=$gitCommit
-commit_full=$gitCommitFull
-commit_date=$gitDate
-"""
-    println "Generated version info: $gitCommit ($gitDate)"
+    versionFile.text = "commit=$gitCommit\ncommit_full=$gitCommitFull\ncommit_date=$gitDate\n"
   }
 }
 
 tasks.named("preBuild") {
-  dependsOn += "initDebugKeystore"
-  dependsOn += "copyRawQwertyUS"
-  dependsOn += "copyLayoutDefinitions"
-  dependsOn += "generateBinaryDictionaries"
-  dependsOn += "generateBinaryContractions"
-  dependsOn += "generateComposeData"
-  dependsOn += "generateVersionInfo"
+  dependsOn "initDebugKeystore", "copyRawQwertyUS", "copyLayoutDefinitions", "generateBinaryDictionaries", "generateBinaryContractions", "generateComposeData", "generateVersionInfo"
 }
 
 tasks.register('generateComposeData') {
-  description 'Generate compose_data.bin from compose sequence sources'
   doLast {
     def composeDir = file("srcs/compose")
     def outputBin = file("src/main/assets/compose_data.bin")
     def outputKt = file("src/main/kotlin/tribixbite/cleverkeys/ComposeKeyData.kt")
-    def sourceFiles = composeDir.listFiles().findAll {
-      it.name.endsWith(".json") || it.isDirectory()
-    }
-    def latestSource = sourceFiles.collect {
-      it.isDirectory() ? it.listFiles()?.collect { f -> f.lastModified() }?.max() ?: 0 : it.lastModified()
-    }.max() ?: 0
-
-    if (outputBin.exists() && outputKt.exists() &&
-        outputBin.lastModified() > latestSource &&
-        outputKt.lastModified() > latestSource) {
-      println "\nCompose data up-to-date, skipping generation"
-      return
-    }
-
-    println "\nGenerating compose_data.bin from srcs/compose/"
+    if (outputBin.exists() && outputKt.exists()) return
     def jsonFiles = fileTree("srcs/compose").matching { include "*.json" }.files.collect { it.absolutePath }
-    def composeSubdir = file("srcs/compose/compose").absolutePath
-    exec {
-      workingDir = projectDir
-      commandLine(["python3", "scripts/generate_compose_bin.py"] + jsonFiles + [composeSubdir])
-      ignoreExitValue = false
-    }
+    exec { workingDir = projectDir; commandLine(["python3", "scripts/generate_compose_bin.py"] + jsonFiles + [file("srcs/compose/compose").absolutePath]) }
   }
 }
 
 tasks.register('initDebugKeystore') {
   if (!file("debug.keystore").exists()) {
-    println "Initializing default debug keystore"
-    exec {
-      commandLine "keytool", "-genkeypair", "-dname", "cn=d, ou=e, o=b, c=ug", "-alias", "debug", "-keypass", "debug0", "-keystore", "debug.keystore", "-keyalg", "rsa", "-storepass", "debug0", "-validity", "10000"
-    }
+    exec { commandLine "keytool", "-genkeypair", "-dname", "cn=d, ou=e, o=b, c=ug", "-alias", "debug", "-keypass", "debug0", "-keystore", "debug.keystore", "-keyalg", "rsa", "-storepass", "debug0", "-validity", "10000" }
   }
 }
 
-tasks.register('copyRawQwertyUS', Copy)
-{
-  from "srcs/layouts/latn_qwerty_us.xml"
-  into "build/generated-resources/raw"
-}
-
-tasks.register('copyLayoutDefinitions', Copy)
-{
-  from "src/main/layouts"
-  include "*.xml"
-  into "build/generated-resources/raw"
-}
+tasks.register('copyRawQwertyUS', Copy) { from "srcs/layouts/latn_qwerty_us.xml"; into "build/generated-resources/raw" }
+tasks.register('copyLayoutDefinitions', Copy) { from "src/main/layouts"; include "*.xml"; into "build/generated-resources/raw" }
