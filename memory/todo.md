@@ -139,8 +139,8 @@
 - [ ] Submit updated F-Droid metadata MR
 - [ ] Wait for F-Droid maintainer merge approval
 
-**Current Version**: 1.1.27 (versionCode 101273 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.27
+**Current Version**: 1.1.28 (versionCode 101283 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.28
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 
 ### Legacy Code Audit (2025-12-17)
