@@ -57,9 +57,9 @@ dependencies {
 // =============================================================================
 def VERSION_MAJOR = 1
 def VERSION_MINOR = 1
-def VERSION_PATCH = 1
-def BASE_VERSION_CODE = VERSION_MAJOR * 10000 + VERSION_MINOR * 100 + VERSION_PATCH
-def VERSION_NAME = "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
+def VERSION_PATCH = 2
+def BASE_VERSION_CODE = 10102
+def VERSION_NAME = "1.1.2"
 
 // Per-ABI versionCode mapping for F-Droid split APKs
 // Must be at project level for applicationVariants access
@@ -74,11 +74,20 @@ android {
     minSdk 21
     targetSdkVersion 34  // Lowered from 35 for F-Droid androguard compatibility
     
-    versionCode BASE_VERSION_CODE
-    versionName VERSION_NAME
+    // CRITICAL: Must use literal values here for F-Droid checkupdates parser
+    versionCode 10102
+    versionName "1.1.2"
     
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
+  }
+
+  packaging {
+    resources {
+      // Disable baseline profile generation for reproducibility on F-Droid
+      excludes += "/assets/dexopt/baseline.prof"
+      excludes += "/assets/dexopt/baseline.profm"
+    }
   }
 
   // ABI splits for smaller APKs (~25MB each vs ~75MB universal)
