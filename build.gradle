@@ -36,20 +36,35 @@ dependencies {
   testImplementation "androidx.test:core:1.5.0"
 
   androidTestImplementation "androidx.test.ext:junit:1.1.5"
-  androidTestImplementation "androidx.test.runner:1.5.2"
-  androidTestImplementation "androidx.test.rules:1.5.0"
+  androidTestImplementation "androidx.test:runner:1.5.2"
+  androidTestImplementation "androidx.test:rules:1.5.0"
   androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
 }
 
 // =============================================================================
 // VERSIONING - F-Droid compatible (checkupdates does not parse ext values)
 // =============================================================================
-def VERSION_MAJOR = 1
-def VERSION_MINOR = 1
-def VERSION_PATCH = 9
-def BASE_VERSION_CODE = 10109
-def VERSION_NAME = "1.1.9"
+// UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
+ext.VERSION_MAJOR = 1
+ext.VERSION_MINOR = 1
+ext.VERSION_PATCH = 9
+// =============================================================================
+// DERIVED VALUES (auto-calculated, do not edit):
+// - versionCode = MAJOR*10000 + MINOR*100 + PATCH
+// - versionNameStr = "MAJOR.MINOR.PATCH"
+// - ABI versionCode = base*10 + abiCode (1=armv7, 2=arm64, 3=x86_64)
+//
+// WORKFLOW:
+// 1. Update VERSION_MAJOR/MINOR/PATCH above
+// 2. Commit, tag with "vX.Y.Z", push tag
+// 3. GitHub Actions verifies tag matches version, builds, releases
+// 4. F-Droid auto-detects tag and builds
+// =============================================================================
+ext.versionCode = ext.VERSION_MAJOR * 10000 + ext.VERSION_MINOR * 100 + ext.VERSION_PATCH
+ext.versionNameStr = "${ext.VERSION_MAJOR}.${ext.VERSION_MINOR}.${ext.VERSION_PATCH}"
 
+// Per-ABI versionCode mapping for F-Droid split APKs
+// Must be at project level for applicationVariants access
 ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2, 'x86_64': 3]
 
 // Force reproducibility by excluding profile-guided optimization tools
@@ -65,15 +80,21 @@ android {
     applicationId "tribixbite.cleverkeys"
     minSdk 21
     targetSdkVersion 34
+    
+    // CRITICAL: Must use literal values here for F-Droid checkupdates parser
     versionCode 10109
     versionName "1.1.9"
+    
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
   }
 
   kotlinOptions {
     jvmTarget = "1.8"
-    // sourceInformation flag removed here to avoid duplication with global block below
+    // Fix Compose non-determinism by disabling source information hashes
+    freeCompilerArgs += [
+        "-P", "plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=false"
+    ]
   }
 
   packagingOptions {
@@ -86,15 +107,6 @@ android {
       excludes += "META-INF/com/android/build/gradle/app-metadata.properties"
       excludes += "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory"
       excludes += "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler"
-      
-      // Silence apksigner warnings and improve reproducibility
-      excludes += "META-INF/DEPENDENCIES"
-      excludes += "META-INF/LICENSE*"
-      excludes += "META-INF/NOTICE*"
-      excludes += "META-INF/AL2.0"
-      excludes += "META-INF/LGPL2.1"
-      excludes += "META-INF/*.kotlin_module"
-      excludes += "META-INF/com.android.tools/**"
     }
   }
 
