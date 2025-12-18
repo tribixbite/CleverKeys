@@ -47,7 +47,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 22
+ext.VERSION_PATCH = 23
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
@@ -82,8 +82,8 @@ android {
     targetSdkVersion 34
     
     // CRITICAL: Must use literal values here for F-Droid checkupdates parser
-    versionCode 10122
-    versionName "1.1.22"
+    versionCode 10123
+    versionName "1.1.23"
     
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
@@ -397,5 +397,69 @@ tasks.register("printR8Version") {
         } catch (Exception e) {
             println "R8 Version not found in classpath"
         }
+    }
+}
+
+// REPRODUCIBILITY: Normalize APK resource paths by removing -v4 suffixes
+// This fixes AAPT2 adding non-deterministic version qualifiers to resource paths
+tasks.register("normalizeApkPaths") {
+    description = "Normalize APK resource paths for reproducibility"
+    group = "build"
+
+    // Only run after release builds
+    mustRunAfter tasks.matching { it.name.startsWith("assemble") && it.name.contains("Release") }
+
+    doLast {
+        def apkDir = file("${buildDir}/outputs/apk/release")
+        if (!apkDir.exists()) {
+            println "No release APKs found to normalize"
+            return
+        }
+
+        def scriptPath = file("${projectDir}/scripts/normalize_apk.py")
+        if (!scriptPath.exists()) {
+            println "Warning: normalize_apk.py not found at ${scriptPath}"
+            return
+        }
+
+        // Get signing config
+        def keystorePath = System.env.RELEASE_KEYSTORE ?: file("debug.keystore").absolutePath
+        def keyAlias = System.env.RELEASE_KEY_ALIAS ?: "debug"
+        def storePass = System.env.RELEASE_KEYSTORE_PASSWORD ?: "debug0"
+        def keyPass = System.env.RELEASE_KEY_PASSWORD ?: "debug0"
+
+        apkDir.listFiles()?.findAll { it.name.endsWith(".apk") }?.each { apkFile ->
+            println "Normalizing: ${apkFile.name}"
+            def normalizedApk = new File(apkFile.parentFile, apkFile.name.replace(".apk", "_normalized.apk"))
+
+            try {
+                exec {
+                    commandLine "python3", scriptPath.absolutePath,
+                        apkFile.absolutePath,
+                        normalizedApk.absolutePath,
+                        "--sign",
+                        "--keystore", keystorePath,
+                        "--key-alias", keyAlias,
+                        "--store-pass", storePass,
+                        "--key-pass", keyPass
+                }
+
+                // Replace original with normalized
+                if (normalizedApk.exists()) {
+                    apkFile.delete()
+                    normalizedApk.renameTo(apkFile)
+                    println "Normalized: ${apkFile.name}"
+                }
+            } catch (Exception e) {
+                println "Warning: Failed to normalize ${apkFile.name}: ${e.message}"
+            }
+        }
+    }
+}
+
+// Hook normalization into release builds
+tasks.configureEach { task ->
+    if (task.name == "assembleRelease") {
+        task.finalizedBy("normalizeApkPaths")
     }
 }
