@@ -60,9 +60,9 @@ dependencies {
 // =============================================================================
 def VERSION_MAJOR = 1
 def VERSION_MINOR = 1
-def VERSION_PATCH = 4
-def BASE_VERSION_CODE = 10104
-def VERSION_NAME = "1.1.4"
+def VERSION_PATCH = 5
+def BASE_VERSION_CODE = 10105
+def VERSION_NAME = "1.1.5"
 
 // Per-ABI versionCode mapping for F-Droid split APKs
 // Must be at project level for applicationVariants access
@@ -83,11 +83,19 @@ android {
     targetSdkVersion 34  // Lowered from 35 for F-Droid androguard compatibility
     
     // CRITICAL: Must use literal values here for F-Droid checkupdates parser
-    versionCode 10104
-    versionName "1.1.4"
+    versionCode 10105
+    versionName "1.1.5"
     
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
+  }
+
+  kotlinOptions {
+    jvmTarget = "1.8"
+    // Fix Compose non-determinism by disabling source information hashes
+    freeCompilerArgs += [
+        "-P", "plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=false"
+    ]
   }
 
   packaging {
