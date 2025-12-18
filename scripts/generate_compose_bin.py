@@ -64,7 +64,7 @@ def strip_cstyle_comments(inp):
 def parse_sequences_file_json(fname):
     """Parse compose sequences from a JSON file."""
     def tree_to_seqs(tree, prefix):
-        for c, r in tree.items():
+        for c, r in sorted(tree.items()):
             if isinstance(r, str):
                 yield prefix + [c], r
             else:
@@ -229,7 +229,7 @@ def make_automata(tries):
             return add_tree(n)
 
     states.append((1, 1))  # Empty state at beginning
-    entry_states = {n: add_tree(root) for n, root in tries.items()}
+    entry_states = {n: add_tree(root) for n, root in sorted(tries.items())}
     return entry_states, states
 
 
