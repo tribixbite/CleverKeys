@@ -18,22 +18,30 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Setup Java 17
+    # REPRODUCIBILITY: Pin exact Java version for deterministic DEX output
+    - name: Setup Java 21
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
+        java-version: '21'
         distribution: 'temurin'
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
+    # REPRODUCIBILITY: Pin build-tools version for deterministic AAPT2 output
+    - name: Install pinned build-tools
+      run: |
+        sdkmanager "build-tools;35.0.0"
+        echo "BUILD_TOOLS_VERSION=35.0.0" >> $GITHUB_ENV
+
     - name: Add Android SDK tools to PATH
       run: |
-        # Add build-tools to PATH for zipalign and apksigner
-        BUILD_TOOLS_DIR=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+        # Use pinned build-tools version for reproducibility
+        BUILD_TOOLS_DIR="$ANDROID_HOME/build-tools/35.0.0"
         echo "$BUILD_TOOLS_DIR" >> $GITHUB_PATH
         echo "BUILD_TOOLS_DIR=$BUILD_TOOLS_DIR" >> $GITHUB_ENV
         echo "📦 Build tools: $BUILD_TOOLS_DIR"
+        echo "📦 Java: $(java -version 2>&1 | head -1)"
         ls -la $BUILD_TOOLS_DIR/zipalign $BUILD_TOOLS_DIR/apksigner 2>/dev/null || echo "Tools check"
 
     - name: Cache Gradle packages
