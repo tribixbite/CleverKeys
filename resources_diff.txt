@@ -1,0 +1,200 @@
+│ --rw----     0.0 fat  1694292 b- stor 81-Jan-01 01:01 resources.arsc
+│ +-rw----     0.0 fat  1694340 b- stor 81-Jan-01 01:01 resources.arsc
+│  -rw----     2.0 fat     1738 b- defN 81-Jan-01 01:01 DebugProbesKt.bin
+│  -rw----     2.0 fat       54 b- defN 81-Jan-01 01:01 META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler
+│  -rw----     2.0 fat       52 b- defN 81-Jan-01 01:01 META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory
+│  -rw----     2.0 fat       53 b- defN 81-Jan-01 01:01 androidsupportmultidexversion.txt
+│  -rw----     2.0 fat      626 b- defN 81-Jan-01 01:01 kotlin-tooling-metadata.json
+│  -rw----     2.0 fat      928 b- defN 81-Jan-01 01:01 kotlin/annotation/annotation.kotlin_builtins
+│  -rw----     2.0 fat     3685 b- defN 81-Jan-01 01:01 kotlin/collections/collections.kotlin_builtins
+│  -rw----     2.0 fat      200 b- defN 81-Jan-01 01:01 kotlin/coroutines/coroutines.kotlin_builtins
+│  -rw----     2.0 fat      646 b- defN 81-Jan-01 01:01 kotlin/internal/internal.kotlin_builtins
+│  -rw----     2.0 fat    18640 b- defN 81-Jan-01 01:01 kotlin/kotlin.kotlin_builtins
+│  -rw----     2.0 fat     3399 b- defN 81-Jan-01 01:01 kotlin/ranges/ranges.kotlin_builtins
+│  -rw----     2.0 fat     2426 b- defN 81-Jan-01 01:01 kotlin/reflect/reflect.kotlin_builtins
+│ --rw-r--r--  0.0 unx   124345 b- defN 81-Jan-01 01:01 META-INF/CERT.SF
+│ +-rw-r--r--  0.0 unx   124390 b- defN 81-Jan-01 01:01 META-INF/CERT.SF
+│  -rw-r--r--  0.0 unx     2148 b- defN 81-Jan-01 01:01 META-INF/CERT.RSA
+│ --rw-r--r--  0.0 unx   124271 b- defN 81-Jan-01 01:01 META-INF/MANIFEST.MF
+│ -1068 files, 64582741 bytes uncompressed, 43659065 bytes compressed:  32.4%
+│ +-rw-r--r--  0.0 unx   124316 b- defN 81-Jan-01 01:01 META-INF/MANIFEST.MF
+│ +1068 files, 64582879 bytes uncompressed, 43659121 bytes compressed:  32.4%
+├── resources.arsc
+│ ├── aapt2 dump resources {}
+│ │ @@ -7237,25 +7237,25 @@
+│ │        () (file) res/drawable/ic_delete.xml type=XML
+│ │      resource 0x7f0800a0 drawable/ic_expand_more
+│ │        () (file) res/drawable/ic_expand_more.xml type=XML
+│ │      resource 0x7f0800a1 drawable/ic_keyboard_black_24dp
+│ │        () (file) res/drawable/ic_keyboard_black_24dp.xml type=XML
+│ │      resource 0x7f0800a2 drawable/ic_launcher_background
+│ │        () (file) res/drawable/ic_launcher_background.xml type=XML
+│ │ -      (mdpi) (file) res/drawable-mdpi/ic_launcher_background.png type=PNG
+│ │ -      (hdpi) (file) res/drawable-hdpi/ic_launcher_background.png type=PNG
+│ │ -      (xhdpi) (file) res/drawable-xhdpi/ic_launcher_background.png type=PNG
+│ │ -      (xxhdpi) (file) res/drawable-xxhdpi/ic_launcher_background.png type=PNG
+│ │ -      (xxxhdpi) (file) res/drawable-xxxhdpi/ic_launcher_background.png type=PNG
+│ │ +      (mdpi) (file) res/drawable-mdpi-v4/ic_launcher_background.png type=PNG
+│ │ +      (hdpi) (file) res/drawable-hdpi-v4/ic_launcher_background.png type=PNG
+│ │ +      (xhdpi) (file) res/drawable-xhdpi-v4/ic_launcher_background.png type=PNG
+│ │ +      (xxhdpi) (file) res/drawable-xxhdpi-v4/ic_launcher_background.png type=PNG
+│ │ +      (xxxhdpi) (file) res/drawable-xxxhdpi-v4/ic_launcher_background.png type=PNG
+│ │      resource 0x7f0800a3 drawable/ic_launcher_foreground
+│ │ -      (mdpi) (file) res/drawable-mdpi/ic_launcher_foreground.png type=PNG
+│ │ -      (hdpi) (file) res/drawable-hdpi/ic_launcher_foreground.png type=PNG
+│ │ -      (xhdpi) (file) res/drawable-xhdpi/ic_launcher_foreground.png type=PNG
+│ │ -      (xxhdpi) (file) res/drawable-xxhdpi/ic_launcher_foreground.png type=PNG
+│ │ -      (xxxhdpi) (file) res/drawable-xxxhdpi/ic_launcher_foreground.png type=PNG
+│ │ +      (mdpi) (file) res/drawable-mdpi-v4/ic_launcher_foreground.png type=PNG
+│ │ +      (hdpi) (file) res/drawable-hdpi-v4/ic_launcher_foreground.png type=PNG
+│ │ +      (xhdpi) (file) res/drawable-xhdpi-v4/ic_launcher_foreground.png type=PNG
+│ │ +      (xxhdpi) (file) res/drawable-xxhdpi-v4/ic_launcher_foreground.png type=PNG
+│ │ +      (xxxhdpi) (file) res/drawable-xxxhdpi-v4/ic_launcher_foreground.png type=PNG
+│ │      resource 0x7f0800a4 drawable/ic_m3_chip_check
+│ │        () (file) res/drawable/ic_m3_chip_check.xml type=XML
+│ │      resource 0x7f0800a5 drawable/ic_m3_chip_checked_circle
+│ │        () (file) res/drawable/ic_m3_chip_checked_circle.xml type=XML
+│ │      resource 0x7f0800a6 drawable/ic_m3_chip_close
+│ │        () (file) res/drawable/ic_m3_chip_close.xml type=XML
+│ │      resource 0x7f0800a7 drawable/ic_mtrl_checked_circle
+│ │ @@ -8990,19 +8990,19 @@
+│ │      resource 0x7f0c0091 layout/swipe_debug_activity
+│ │        () (file) res/layout/swipe_debug_activity.xml type=XML
+│ │    type menu id=0e entryCount=1
+│ │      resource 0x7f0e0000 menu/launcher_menu
+│ │        () (file) res/menu/launcher_menu.xml type=XML
+│ │    type mipmap id=0f entryCount=1
+│ │      resource 0x7f0f0000 mipmap/ic_launcher
+│ │ -      (mdpi) (file) res/mipmap-mdpi/ic_launcher.png type=PNG
+│ │ -      (hdpi) (file) res/mipmap-hdpi/ic_launcher.png type=PNG
+│ │ -      (xhdpi) (file) res/mipmap-xhdpi/ic_launcher.png type=PNG
+│ │ -      (xxhdpi) (file) res/mipmap-xxhdpi/ic_launcher.png type=PNG
+│ │ -      (xxxhdpi) (file) res/mipmap-xxxhdpi/ic_launcher.png type=PNG
+│ │ +      (mdpi) (file) res/mipmap-mdpi-v4/ic_launcher.png type=PNG
+│ │ +      (hdpi) (file) res/mipmap-hdpi-v4/ic_launcher.png type=PNG
+│ │ +      (xhdpi) (file) res/mipmap-xhdpi-v4/ic_launcher.png type=PNG
+│ │ +      (xxhdpi) (file) res/mipmap-xxhdpi-v4/ic_launcher.png type=PNG
+│ │ +      (xxxhdpi) (file) res/mipmap-xxxhdpi-v4/ic_launcher.png type=PNG
+│ │        (anydpi-v26) (file) res/mipmap-anydpi-v26/ic_launcher.xml type=XML
+│ │    type plurals id=10 entryCount=1
+│ │      resource 0x7f100000 plurals/mtrl_badge_content_description
+│ │        () (plurals) size=2
+│ │          one="%d new notification"
+│ │          other="%d new notifications"
+│ │        (ca) (plurals) size=2
+├── classes2.dex
+│┄ xxd not available in path. Falling back to Python hexlify.
+│┄ 'enjarify' not available in path. Falling back to binary comparison.
+│┄ 'dexdump' command not installed; cannot compare format-specific details.
+│ @@ -1,8 +1,8 @@
+│ -6465780a30333500971e5711f850bd126cb7846235d6e9d364121e38209b279f
+│ +6465780a30333500ba2604c5792f585e9a450b8bd9a4ee911926610fd2cd82df
+│  28e413007000000078563412000000000000000058e313006b2e000070000000
+│  390700001cba0000b107000000d700005c0f00004c330100f41700002cae0100
+│  e6030000cc6d02009cf910008cea0200b2460e00b4460e00b7460e00ba460e00
+│  c5460e0069470e00ed470e0026480e0069480e00ad480e00be480e00fd480e00
+│  08490e0054490e0058490e007a490e00bb490e00fa490e00044a0e00114a0e00
+│  3d4a0e00664a0e004c4b0e00724b0e00da4b0e00c94c0e00cc4c0e00d04c0e00
+│  d54c0e00fe4c0e000c4d0e00224d0e00314d0e00394d0e00424d0e00624d0e00
+│ @@ -11605,15 +11605,15 @@
+│  01000100010000000ebc0d00040000007010a10900000e000500050001000000
+│  d2bc0d000c0000007010f80400005b01bc005b02bd005b03be005b04bf000e00
+│  02000100010000000ebc0d00080000005410eb006e10c10000006200a1001100
+│  020002000200000000000000070000005b01eb0012017020210610000e000000
+│  0600030004000000a0c00d005e0000001f048e011f058f026e10f60405000a05
+│  dd00050b122133100d0072104b0304000a0039000300280572104d0304002844
+│  7100540300000a0038000b001a00a428140183e889b812f27140560351021405
+│ -3f720e8272204f0354005435570172203e0354000a0072104c0304000c013900
+│ +3c5a498d72204f0354005435570172203e0354000a0072104c0304000c013900
+│  0a00620072006e103a0300000c0033010a00220132037020b306510072205203
+│  14001f01ec0672104503040012057130130941057100540300000a0438040500
+│  7100550300006204a1001104020002000200000000000000070000005b015701
+│  12217020210610000e000000440003003c000000a0c00d009500000008044200
+│  1f048e01080043001f008f026e10f60400000a00dd01000b122233210f007210
+│  4b0304000a0139010300280772104d0304000807410028757100540300000a01
+│  38010b001a01a3281402d7cdf23812f3714056030213163b0000163d00001605
+│ @@ -11689,15 +11689,15 @@
+│  5410a20372205f0320006202a100110202000200020000000000000007000000
+│  5b01a20312117020210610000e00000003000100020000000ebc0d000a000000
+│  5420b1031a01000072205f0310006200a1001100020002000200000000000000
+│  070000005b01b10312017020210610000e0000000c00030009000000a0c00d00
+│  7400000007a61f068e011f0b8f026e10f6040b000a0add0b0a0b1220330b0d00
+│  72104b0306000a0b390b0300280572104d03060028597100540300000a0b380b
+--
+│  Name: resources.arsc
+│ -SHA-256-Digest: QEFGYSnFLc0x0Ps4qykjbGO19dBhJ7hLbpSZcldEWxE=
+│ +SHA-256-Digest: ypsn5cYyIT/3WGE01CzxtZTC1nypg27ntOjn3zKLp7U=
+├── original/META-INF/CERT.RSA
+│┄ xxd not available in path. Falling back to Python hexlify.
+│ @@ -45,24 +45,24 @@
+│  9df996272fdd21936d275bea7dc0be7de57a357fe763b8b879611f8c014ba43a
+│  15e8b9f61e97c61ce7c215ec3c3a4d99932d507dba9fef39694981ad18318202
+│  a33082029f0201013078306c310b3009060355040613025553310e300c060355
+│  040813055374617465310d300b06035504071304436974793113301106035504
+│  0a130a7472696269786269746531143012060355040b130b446576656c6f706d
+│  656e74311330110603550403130a436c657665724b657973020834d845cfc599
+│  ffa3300d06096086480165030402010500300d06092a864886f70d0101010500
+│ -0482020073465d2038c9145a787004b3a047784a29068985189bac5ebd10d21c
+│ -e747d8db2d79abe4a826b29692562d735a8ebbce63368945db7bedb439489816
+│ -42f8ff4b130a1a95206cbdd80ebe9b5944b265aa4fa69beaac33222b8e49e128
+│ -610461be25994c9c5ce891ec4ceae922cc3c04b30eda5c33e16bc640bc649a70
+│ -fb40163eca44b24557d83c3771b9ec82c801a695d0848a782bd705bf54c8619e
+│ -5010acb5998a22be17fe74acbe53df55eac48f2163b9b55a8cbd0b757181d461
+│ -975a33899395c5e360bbb84e72ed061ae6393626edc8819ba591fad441cee8f6
+│ -6294283210246eb6e926ed2e45c39a960ecbe53c4ab6161daa725546cc1e96cd
+│ -893b124f140c30939437107e3aa5643dc0f5a39f014c05568f954d9cf775f629
+│ -d48817419e6ac7cd811fc89179bcd72b5587d3d8a2098c13dcb60dfb9bebdc3b
+│ -38e919e6cc5fef444cb062130ff8373216f26110dc550e0d692ad967e27ba61b
+│ -2d9e70ba34914b92b199417e93f3d3a2edcf3b3f540a76823269edac2ac3463f
+│ -104720cad8b61ce90972f6eb4b87da9447bf235d8f694a506a77aa4b704fb1c6
+│ -c5a9f50020b2513b69484353264a9173f8a169ed5d198e0881f436d16c79e334
+│ -93213dc5243a302bd81f10db848c7b6f5be63396e48d72318cc4ed35e7e102fb
+│ -078efb43327fab2e5b0c6979c0394a72de6141312894e6ce23bbe800b5529a30
+│ -985e86a7
+│ +0482020065508236951c2f3d907d09928928c6455b2c0e7a4cae70e48899a306
+│ +d4ebf076e7372eea68cea321329b34d754786288f31faae16b49779bfcb92480
+│ +ea2520f53c32c23950d455f810685c1561508d8c834f564d0dd8a624fd34b31b
+│ +8fe52347ddbe71279a735d8fabddeadabf09743decb7e0c88a9a4f4f865d677b
+│ +09ada7856904a40785e0b01b1e8bc03460934de272f87b4b293747ba688c341e
+│ +0b7f68cb0504e33349454856350ab346df7d3403958b1ab43b1982e9b1283969
+│ +d0b054dc9df8435b4899ed35856a573aa6f7af4c021fc890a9c061d9498bfc9f
+│ +d0966f214e572ecc3be72eb5f4e184e9e8871508f98f18817da5221b1ab1b795
+│ +199ebe27e31b4bde5cf097c45134ab32f14afd61ac421f1ebd0c8a7153d976a6
+│ +ec03050d7f2c688e2b07e6374da614d816daa5263e24c555469898c1c1acef54
+│ +c9a4f09f952d1656a40050934bbcd800163edd7f0b1a844d531e77d687f5fc68
+│ +a9c4985b74bfda43cd758e3a74163bbf73ff4c5f4e7ab4c7e6968d3bd677d2f2
+│ +418fbec8e553ac33b78d1345cf1917483799319fc6e23470a6e4c17be50c9a2e
+│ +84a931ed22569a980e6f7115ac1f3e76dddc1a3d91f7a0af8659f95d6e652fa6
+│ +1950ad58b2f656919685fff974ed9688e37a6f340973f21fe3a07e4b342bed8e
+│ +cf965f270b4933b28ebef7e5b658804e39714e78155fb7352cbe2858baadb2b4
+│ +7da8fd8c
+├── original/META-INF/MANIFEST.MF
+│ @@ -141,15 +141,15 @@
+│  Name: assets/test_swipes.jsonl
+│  SHA-256-Digest: iecwQVYZJshqFxOhVqOSNPPTL5tw4xlHv9hxTl6l2co=
+│  
+│  Name: classes.dex
+│  SHA-256-Digest: EJCBwNs0gruZjOO/19NUUFBOn7fUctU2YBaDgq8/uM4=
+│  
+│  Name: classes2.dex
+│ -SHA-256-Digest: l3qlXLU03SxAIXZ0EzMTwdukmWCNFww937r9IqGEVVU=
+│ +SHA-256-Digest: DDIQMSKImf9Jw76G5MJDz32jsebEhxeIq/oQjMLZU4c=
+│  
+│  Name: kotlin-tooling-metadata.json
+│  SHA-256-Digest: tZ07UZHvSNxD9Oqg88i7CE7TIiy1c0jq8XIb0xLgdCM=
+│  
+│  Name: kotlin/annotation/annotation.kotlin_builtins
+│  SHA-256-Digest: 5e7KY/TFY1Zg0wZXek4wkmgzUTy0fiDs6prmu8MSWZU=
+│  
+│ @@ -1254,14 +1254,20 @@
+│  
+│  Name: res/drawable-hdpi-v4/ic_call_decline.png
+│  SHA-256-Digest: EuyfmtX6PX2JcRSvbCKXtm8xywVuQ9r/voDSP29mOW0=
+│  
+│  Name: res/drawable-hdpi-v4/ic_call_decline_low.png
+│  SHA-256-Digest: EuyfmtX6PX2JcRSvbCKXtm8xywVuQ9r/voDSP29mOW0=
+│  
+│ +Name: res/drawable-hdpi-v4/ic_launcher_background.png
+│ +SHA-256-Digest: ojZK7+WRt7AR+ETMhV/hJvza7uYtjd0PeXD8kqy+qFA=
+│ +
+│ +Name: res/drawable-hdpi-v4/ic_launcher_foreground.png

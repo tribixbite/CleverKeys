@@ -47,7 +47,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 37
+ext.VERSION_PATCH = 38
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
@@ -194,7 +194,8 @@ android {
 
   buildTypes {
     release {
-      minifyEnabled true
+      // REPRODUCIBILITY TEST: Disable R8 to isolate if it causes non-deterministic DEX
+      minifyEnabled false
       shrinkResources false
       debuggable false
       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

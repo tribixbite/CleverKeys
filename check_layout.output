@@ -1,0 +1,107 @@
+arab_alt: Layout includes some ASCII punctuation but not all, missing: !, ", ', +, -, /, :, ;, <, =, >, ?, [, \, ], _, |, ~
+arab_alt: Layout contains unknown keys: backspace, delete
+arab_hamvaj_tly: Layout includes some ASCII punctuation but not all, missing: ", %, ', ,, /, ;, <, =, >, ?, [, \, ], _, `, {, |, }
+arab_hamvaj_tly: Layout contains unknown keys: backspace, delete
+arab_pc: Layout includes some ASCII punctuation but not all, missing: !, ', +, ;, ?, \, |
+arab_pc: Layout contains unknown keys: backspace, delete
+arab_pc_ckb: Layout includes some ASCII punctuation but not all, missing: ", %, ', +, ,, ;, <, =, >, ?, `, |, ~
+arab_pc_ckb: Layout contains unknown keys: backspace, delete, halfspace
+arab_pc_ckb_fa: Layout includes some ASCII punctuation but not all, missing: ", #, $, %, &, ', ,, /, ;, ?, @, \, ^, `, |, ~
+arab_pc_ckb_fa: Layout contains unknown keys: backspace, delete, halfspace
+arab_pc_hindu: Layout includes some ASCII punctuation but not all, missing: !, ', +, ;, ?, \, |
+arab_pc_hindu: Layout contains unknown keys: backspace, delete
+arab_pc_ir: Layout includes some ASCII punctuation but not all, missing: ", %, ', ,, /, ;, <, =, >, ?, [, \, ], `, {, |, }
+arab_pc_ir: Layout contains unknown keys: backspace, delete, halfspace
+armenian_ph_am: Layout contains unknown keys: backspace, capslock, delete, shift
+beng_national: Layout includes some ASCII punctuation but not all, missing: $
+beng_national: Layout contains unknown keys: backspace, capslock, delete, shift
+beng_provat: Layout includes some ASCII punctuation but not all, missing: $, &, *, ., /, <, >, [, \, ], `, {, |, }
+beng_provat: Layout contains unknown keys: backspace, delete, halfspace, shift
+cyrl_fcuzhen_mn: Layout contains unknown keys: backspace, capslock, delete, shift
+cyrl_jcuken_as: Layout contains unknown keys: backspace, capslock, combining_aigu, combining_breve, combining_circonflexe, combining_grave, combining_kavyka, combining_palatalization, combining_payerok, combining_pokrytie, combining_slavonic_dasia, combining_slavonic_psili, combining_titlo, combining_trema, combining_vertical_tilde, combining_vzmet, delete, shift
+cyrl_jcuken_kk: Layout contains unknown keys: backspace, capslock, delete, shift
+cyrl_jcuken_ru: Layout contains unknown keys: backspace, capslock, delete, shift
+cyrl_jcuken_uk: Layout contains unknown keys: backspace, capslock, delete, shift
+cyrl_lynyertdz_mk: Layout includes some ASCII punctuation but not all, missing: "
+cyrl_lynyertdz_mk: Layout contains unknown keys: backspace, capslock, delete, shift
+cyrl_lynyertz_sr: Layout contains unknown keys: accent_circonflexe, backspace, capslock, copy, delete, paste, pasteAsPlainText, redo, selectAll, shareText, shift, subscript, superscript, undo
+cyrl_ueishsht: Layout contains unknown keys: accent_cedille, backspace, capslock, delete, shift
+cyrl_yaverti: Layout includes some ASCII punctuation but not all, missing: ~
+cyrl_yaverti: Layout contains unknown keys: backspace, capslock, delete, shift
+cyrl_yqukeng_tj: Layout contains unknown keys: backspace, capslock, delete, shift
+cyrl_yxukeng_os: Layout includes some ASCII punctuation but not all, missing: ", #, $, &, ', @, [, ], ~
+cyrl_yxukeng_os: Layout contains unknown keys: backspace, combining_aigu, combining_breve, combining_grave, combining_inverted_breve, combining_payerok, combining_pokrytie, combining_slavonic_dasia, combining_slavonic_psili, combining_titlo, combining_trema, combining_vertical_tilde, combining_vzmet, delete, shift
+deva_alt: Layout includes some ASCII punctuation but not all, missing: #, $, %, &, ', (, ), *, +, ., /, :, <, =, >, [, \, ], ^, _, `, {, |, }, ~
+deva_alt: Layout contains unknown keys: backspace, delete
+deva_inscript: Layout includes some ASCII punctuation but not all, missing: ", $, ', ^, _, `, |
+deva_inscript: Layout contains unknown keys: backspace, capslock, delete, shift
+deva_phonetic_in: Layout contains unknown keys: backspace, capslock, delete, shift
+georgian_mes: Layout contains unknown keys: backspace, capslock, delete, shift
+georgian_qwerty: Layout contains unknown keys: backspace, capslock, delete, shift
+grek_qwerty: Layout contains unknown keys: accent_aigu, accent_grave, accent_trema, backspace, capslock, delete, shift
+guj_phonetic_in: Layout contains unknown keys: backspace, capslock, delete, shift
+hang_dubeolsik_kr: Layout contains unknown keys: backspace, capslock, delete, shift
+hebr_1_il: Layout includes some ASCII punctuation but not all, missing: (, ), <, >, [, ], {, }
+hebr_1_il: Layout contains unknown keys: backspace, capslock, delete, geresh, gershayim, maqaf, meteg_placeholder, ole_placeholder, shift, shindot_placeholder, sindot_placeholder
+hebr_2_il: Layout includes some ASCII punctuation but not all, missing: (, ), <, >, [, ], {, }
+hebr_2_il: Layout contains unknown keys: backspace, capslock, delete, geresh, gershayim, maqaf, meteg_placeholder, ole_placeholder, shift, shindot_placeholder, sindot_placeholder
+kann_kannada: Layout includes some ASCII punctuation but not all, missing: #, $, %, (, ), *, +, /, <, =, >, [, \, ], ^, `, {, |, }, ~
+kann_kannada: Layout contains unknown keys: backspace, delete, zwnj
+latn_azerty_be: Layout contains unknown keys: accent_circonflexe, accent_trema, backspace, capslock, delete, shift
+latn_azerty_fr: Layout contains unknown keys: accent_aigu, accent_cedille, accent_circonflexe, accent_grave, accent_tilde, accent_trema, backspace, capslock, delete, shift
+latn_bepo_fr: Layout contains unknown keys: accent_circonflexe, accent_trema, backspace, capslock, delete, shift
+latn_bone: Layout contains unknown keys: accent_aigu, accent_bar, accent_breve, accent_caron, accent_cedille, accent_circonflexe, accent_dot_above, accent_dot_below, accent_double_aigu, accent_grave, accent_hook_above, accent_horn, accent_macron, accent_ogonek, accent_ring, accent_slash, accent_tilde, accent_trema, backspace, capslock, delete, shift, subscript, superscript
+latn_colemak: Some keys contain whitespaces, unexpected:  ́
+latn_colemak: Layout contains unknown keys: accent_aigu, accent_caron, accent_cedille, accent_circonflexe, accent_dot_above, accent_double_aigu, accent_grave, accent_macron, accent_ogonek, accent_ring, accent_tilde, accent_trema, backspace, capslock, delete, shift
+latn_dvorak: Missing important key, missing: loc capslock
+latn_dvorak: Layout contains unknown keys: accent_aigu, accent_caron, accent_cedille, accent_circonflexe, accent_dot_above, accent_double_aigu, accent_grave, accent_macron, accent_ogonek, accent_ring, accent_tilde, accent_trema, backspace, delete, shift
+latn_neo2: Layout redefines the bottom row but some important keys are missing, missing: doc_end, doc_home, loc switch_clipboard, switch_back_clipboard
+latn_neo2: Layout contains unknown keys: action, backspace, capslock, change_method, compose, config, ctrl, cursor_left, cursor_right, delete, down, enter, home, left, meta, page_down, page_up, right, shift, space, switch_backward, switch_emoji, switch_forward, switch_greekmath, switch_numeric, voice_typing
+latn_qwerty_apl: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwerty_az: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwerty_bqn: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwerty_br: Layout contains unknown keys: accent_aigu, accent_cedille, accent_circonflexe, accent_grave, accent_tilde, accent_trema, backspace, capslock, delete, shift
+latn_qwerty_cy: Layout contains unknown keys: accent_aigu, accent_circonflexe, accent_grave, accent_trema, backspace, capslock, delete, shift
+latn_qwerty_cz: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwerty_da: Layout contains unknown keys: accent_aigu, accent_ring, accent_trema, backspace, capslock, delete, shift
+latn_qwerty_es: Layout contains unknown keys: accent_aigu, accent_cedille, accent_grave, accent_tilde, accent_trema, backspace, capslock, delete, shift
+latn_qwerty_et: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwerty_ga: Layout contains unknown keys: accent_aigu, accent_dot_above, backspace, capslock, delete, shift
+latn_qwerty_gb: Layout contains unknown keys: accent_aigu, accent_caron, accent_cedille, accent_circonflexe, accent_dot_above, accent_double_aigu, accent_grave, accent_macron, accent_ogonek, accent_ring, accent_tilde, accent_trema, backspace, capslock, delete, shift
+latn_qwerty_haw: Layout contains unknown keys: accent_macron, backspace, capslock, delete, shift
+latn_qwerty_hu: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwerty_is: Layout contains unknown keys: accent_aigu, accent_circonflexe, accent_grave, accent_ring, accent_trema, backspace, capslock, delete, shift
+latn_qwerty_jp: Layout contains unknown keys: accent_macron, backspace, capslock, delete, shift
+latn_qwerty_kk: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwerty_lt: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwerty_lv: Layout contains unknown keys: accent_caron, accent_cedille, accent_dot_above, accent_macron, accent_ogonek, backspace, capslock, delete, shift
+latn_qwerty_mt: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwerty_no: Layout contains unknown keys: accent_aigu, accent_caron, accent_cedille, accent_circonflexe, accent_dot_above, accent_double_aigu, accent_grave, accent_ogonek, accent_ring, accent_tilde, accent_trema, backspace, capslock, delete, shift
+latn_qwerty_pl: Layout contains unknown keys: accent_aigu, accent_caron, accent_cedille, accent_circonflexe, accent_dot_above, accent_double_aigu, accent_grave, accent_macron, accent_ogonek, accent_ring, accent_tilde, accent_trema, backspace, capslock, delete, shift
+latn_qwerty_ro: Layout contains unknown keys: accent_aigu, accent_caron, accent_cedille, accent_circonflexe, accent_dot_above, accent_double_aigu, accent_grave, accent_macron, accent_ogonek, accent_tilde, accent_trema, backspace, capslock, delete, shift
+latn_qwerty_se: Layout contains unknown keys: accent_aigu, accent_ring, accent_trema, backspace, capslock, delete, shift
+latn_qwerty_sk: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwerty_sr: Layout contains unknown keys: accent_circonflexe, backspace, capslock, copy, delete, paste, selectAll, shift, subscript, superscript, undo
+latn_qwerty_tly: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwerty_tr: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwerty_us: Some keys contain whitespaces, unexpected: I'd , I'm , do , go , it , me , no , of , on , so , up , we 
+latn_qwerty_us: Layout contains unknown keys: I'd , I'm , backspace, capslock, delete, delete_last_word, shift
+latn_qwerty_uz: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwerty_vi: Layout contains unknown keys: accent_aigu, accent_bar, accent_dot_below, accent_grave, accent_hook_above, accent_horn, accent_tilde, backspace, capslock, delete, shift
+latn_qwertz: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwertz_cz: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwertz_cz_diacritics: Layout contains unknown keys: accent_aigu, accent_caron, accent_circonflexe, accent_trema, backspace, capslock, delete, shift
+latn_qwertz_cz_multifunctional: Layout includes some ASCII punctuation but not all, missing: `
+latn_qwertz_cz_multifunctional: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwertz_de: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwertz_fr_ch: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwertz_hu: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwertz_sk: Layout includes some ASCII punctuation but not all, missing: `
+latn_qwertz_sk: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_qwertz_sq: Layout contains unknown keys: backspace, capslock, delete, shift
+latn_workman_us: Layout contains unknown keys: backspace, capslock, delete, shift
+shaw_imperial_en: Layout contains unknown keys: backspace, delete
+sinhala_phonetic: Layout contains unknown keys: backspace, capslock, delete, shift
+tamil_default: Layout contains unknown keys: backspace, capslock, delete, shift
+urdu_phonetic_ur: Layout includes some ASCII punctuation but not all, missing: <, >, ?, `, |, ~
+urdu_phonetic_ur: Layout contains unknown keys: backspace, capslock, delete, shift
