@@ -24,6 +24,10 @@ export ANDROID_SDK_ROOT="$ANDROID_HOME"
 export JAVA_HOME="/data/data/com.termux/files/usr/lib/jvm/java-21-openjdk"
 # REPRODUCIBILITY: Use build-tools 34.0.0 - F-Droid requires apksigner from v34 (v35+ breaks apksigcopier)
 export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/34.0.0:$PATH"
+# REPRODUCIBILITY: Set deterministic locale and timezone for consistent builds
+export TZ=UTC
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 
 echo "Step 1: Checking prerequisites..."
 

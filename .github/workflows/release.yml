@@ -11,6 +11,11 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # REPRODUCIBILITY: Set deterministic locale and timezone for consistent builds
+    env:
+      TZ: UTC
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
 
     steps:
     - name: Checkout code
