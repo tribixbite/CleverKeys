@@ -133,6 +133,19 @@ jobs:
         echo "APKs after pg-map-id fix:"
         ls -la *.apk
 
+    # REPRODUCIBILITY: Fix META-INF/services newline variations
+    # Must match F-Droid postbuild step
+    - name: Fix newlines for reproducibility
+      run: |
+        cd build/outputs/apk/release
+        for apk in *.apk; do
+          echo "Fixing newlines in $apk..."
+          python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
+            --page-size 16 --internal fix-newlines "$apk" 'META-INF/services/*'
+        done
+        echo "APKs after newlines fix:"
+        ls -la *.apk
+
     # Sign the APKs with our release key after pg-map-id fix
     - name: Sign release APKs
       run: |

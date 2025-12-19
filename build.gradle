@@ -1,6 +1,7 @@
 plugins {
   id 'com.android.application' version '8.8.2'
-  id 'org.jetbrains.kotlin.android' version '1.9.20'
+  id 'org.jetbrains.kotlin.android' version '2.0.0'
+  id 'org.jetbrains.kotlin.plugin.compose' version '2.0.0'
 }
 
 dependencies {
@@ -13,15 +14,17 @@ dependencies {
   implementation "androidx.recyclerview:recyclerview:1.3.2"
   implementation "androidx.preference:preference-ktx:1.2.1"
 
-  implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.20"
-  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:2.0.0"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1"
 
-  implementation "androidx.activity:activity-compose:1.8.2"
-  implementation "androidx.compose.ui:ui:1.5.4"
-  debugImplementation "androidx.compose.ui:ui-tooling-preview:1.5.4"
-  debugImplementation "androidx.compose.ui:ui-tooling:1.5.4"
-  implementation "androidx.compose.material3:material3:1.1.2"
-  implementation "androidx.compose.foundation:foundation:1.5.4"
+  // REPRODUCIBILITY: Use Compose BOM for deterministic version resolution
+  implementation platform("androidx.compose:compose-bom:2024.06.00")
+  implementation "androidx.activity:activity-compose:1.9.0"
+  implementation "androidx.compose.ui:ui"
+  debugImplementation "androidx.compose.ui:ui-tooling-preview"
+  debugImplementation "androidx.compose.ui:ui-tooling"
+  implementation "androidx.compose.material3:material3"
+  implementation "androidx.compose.foundation:foundation"
 
   implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
   implementation "androidx.savedstate:savedstate-ktx:1.2.1"
@@ -47,7 +50,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 40
+ext.VERSION_PATCH = 41
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
@@ -149,8 +152,11 @@ android {
     compose true
   }
 
-  composeOptions {
-    kotlinCompilerExtensionVersion = '1.5.4'
+  // REPRODUCIBILITY: Compose compiler configuration via native Kotlin 2.0 plugin
+  // (replaces composeOptions.kotlinCompilerExtensionVersion)
+  composeCompiler {
+    enableIntrinsicRemember = true
+    includeSourceInformation = false
   }
 
   sourceSets {
@@ -239,17 +245,16 @@ android {
   }
 }
 
-// Apply Compose determinism fix to all Kotlin compilation tasks exactly once
+// REPRODUCIBILITY: Apply deterministic compilation settings
+// Note: sourceInformation is now set via composeCompiler {} block for Kotlin 2.0+
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-    kotlinOptions {
-        freeCompilerArgs += [
-            "-P", "plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=false",
-            "-Xrelative-path-base=${projectDir.absolutePath}",
+    compilerOptions {
+        freeCompilerArgs.addAll([
             "-Xbackend-threads=1",
             "-Xno-call-assertions",
             "-Xno-receiver-assertions",
             "-Xno-param-assertions"
-        ]
+        ])
     }
 }
 
