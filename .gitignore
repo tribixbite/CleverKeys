@@ -63,3 +63,8 @@ fdroiddata_temp/
 
 # Binary tools (F-Droid scanner rejects these)
 tools/aapt2_official/
+
+# APK files (never commit - F-Droid rejects pre-built binaries)
+*.apk
+release_apks/
+*debug_apk/
