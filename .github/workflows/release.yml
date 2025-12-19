@@ -122,14 +122,14 @@ jobs:
     # REPRODUCIBILITY: Fix non-deterministic R8 pg-map-id in DEX files
     # This ensures byte-identical APKs between GitHub and F-Droid builds
     # Using fixed pg-map-id "0000000" - must match F-Droid postbuild
-    # Using --internal for Python zipalign (build-tools 34 doesn't have -P option)
+    # No --internal flag - use external zipalign like F-Droid does
     - name: Fix pg-map-id for reproducibility
       run: |
         cd build/outputs/apk/release
         for apk in *.apk; do
           echo "Fixing pg-map-id in $apk..."
           python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
-            --page-size 16 --internal fix-pg-map-id "$apk" 0000000
+            --page-size 16 fix-pg-map-id "$apk" 0000000
         done
         echo "APKs after pg-map-id fix:"
         ls -la *.apk
@@ -142,21 +142,19 @@ jobs:
         for apk in *.apk; do
           echo "Fixing newlines in $apk..."
           python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
-            --page-size 16 --internal fix-newlines "$apk" 'META-INF/services/*'
+            --page-size 16 fix-newlines "$apk" 'META-INF/services/*'
         done
         echo "APKs after newlines fix:"
         ls -la *.apk
 
-    # Sign the APKs with our release key after pg-map-id fix
+    # Sign the APKs with our release key after fixes
+    # inplace-fix.py already did zipalign with -P 16
     - name: Sign release APKs
       run: |
         cd build/outputs/apk/release
         for apk in *.apk; do
           echo "Signing $apk..."
-          # Zipalign first
-          $BUILD_TOOLS_DIR/zipalign -f 4 "$apk" "${apk%.apk}_aligned.apk"
-          mv "${apk%.apk}_aligned.apk" "$apk"
-          # Sign with apksigner
+          # Sign with apksigner (APK already zipaligned by inplace-fix.py)
           $BUILD_TOOLS_DIR/apksigner sign \
             --ks ${{ github.workspace }}/release.keystore \
             --ks-pass pass:${{ secrets.KEY_STORE_PASSWORD }} \
