@@ -167,34 +167,13 @@ jobs:
           $BUILD_TOOLS_DIR/apksigner verify "$apk" && echo "✅ $apk verified"
         done
 
-    - name: List and rename release APKs
+    - name: List release APKs
       run: |
         cd build/outputs/apk/release
-        echo "=== APKs before rename ==="
-        ls -la *.apk || echo "No APKs found!"
-
-        # ABI split APKs: tribixbite.cleverkeys_<code>_<abi>.apk
-        # Rename to user-friendly format with proper ABI names for Obtainium compatibility
-        for apk in *.apk; do
-          if [[ "$apk" == *"arm64-v8a"* ]]; then
-            mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-arm64-v8a.apk"
-          elif [[ "$apk" == *"armeabi-v7a"* ]]; then
-            mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-armeabi-v7a.apk"
-          elif [[ "$apk" == *"x86_64"* ]]; then
-            mv "$apk" "CleverKeys-${{ env.TAG_NAME }}-x86_64.apk"
-          fi
-        done
-
-        echo "=== APKs after rename ==="
-        ls -la CleverKeys-*.apk
-
-        # Show APK info
+        echo "=== Release APKs ==="
+        ls -la CleverKeys-*.apk || echo "No APKs found!"
         echo ""
         echo "📦 Version: ${{ env.VERSION }} (code: ${{ env.VERSION_CODE }})"
-        echo "📱 ABI versionCodes:"
-        echo "   - arm64: $((${{ env.VERSION_CODE }} * 10 + 2))"
-        echo "   - armv7: $((${{ env.VERSION_CODE }} * 10 + 1))"
-        echo "   - x86_64: $((${{ env.VERSION_CODE }} * 10 + 3))"
 
     - name: Generate changelog
       run: |
