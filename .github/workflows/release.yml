@@ -167,17 +167,7 @@ jobs:
         cd build/outputs/apk/release
         for apk in *.apk; do
           echo "Removing metadata from $apk..."
-          python3 -c "
-import zipfile, sys, tempfile, shutil
-apk = sys.argv[1]
-tmp = tempfile.mktemp('.apk')
-with zipfile.ZipFile(apk) as z:
-    with zipfile.ZipFile(tmp, 'w') as o:
-        for i in z.infolist():
-            if not (i.filename.startswith('META-INF/com/') or i.filename.startswith('META-INF/services/')):
-                o.writestr(i, z.read(i.filename))
-shutil.move(tmp, apk)
-" "$apk"
+          python3 -c "import zipfile,sys,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)" "$apk"
         done
 
     # Sign the APKs with our release key after fixes
