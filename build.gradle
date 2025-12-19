@@ -50,7 +50,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 44
+ext.VERSION_PATCH = 45
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
@@ -217,12 +217,13 @@ android {
     }
   }
 
-  // REPRODUCIBILITY: No versionCodeOverride - let F-Droid handle ABI versionCodes
-  // APK manifest has base versionCode, metadata + VercodeOperation add ABI suffix
+  // ABI split versionCodes - must match F-Droid metadata exactly
   android.applicationVariants.all { variant ->
     variant.outputs.each { output ->
       def abi = output.getFilter(com.android.build.OutputFile.ABI)
       if (abi != null) {
+        def abiCode = rootProject.ext.abiCodes.get(abi, 0)
+        output.versionCodeOverride = variant.versionCode * 10 + abiCode
         output.outputFileName = "CleverKeys-v${variant.versionName}-${abi}.apk"
       } else {
         output.outputFileName = "CleverKeys-v${variant.versionName}-universal.apk"
