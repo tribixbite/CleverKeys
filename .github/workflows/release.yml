@@ -168,8 +168,11 @@ jobs:
             python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
               --page-size 16 --internal fix-pg-map-id "$BUILT_APK" 0000000
 
-            # Move to final location with correct name
-            mv "$BUILT_APK" "build/outputs/apk/release/$FINAL_NAME"
+            # Rename if needed (Gradle may already use correct name)
+            FINAL_PATH="build/outputs/apk/release/$FINAL_NAME"
+            if [ "$BUILT_APK" != "$FINAL_PATH" ]; then
+              mv "$BUILT_APK" "$FINAL_PATH"
+            fi
             echo "✅ Built: $FINAL_NAME"
           else
             echo "❌ ERROR: No APK found for $ABI"
