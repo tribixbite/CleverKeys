@@ -50,7 +50,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 56
+ext.VERSION_PATCH = 57
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
@@ -200,12 +200,15 @@ android {
       keyPassword(System.env.DEBUG_KEY_PASSWORD ? "$System.env.DEBUG_KEY_PASSWORD" : "debug0")
     }
     release {
-      if (System.env.RELEASE_KEYSTORE) {
-        storeFile file(System.env.RELEASE_KEYSTORE)
+      // REPRODUCIBILITY: Check for non-empty keystore path (empty string is truthy in Groovy)
+      def keystorePath = System.env.RELEASE_KEYSTORE
+      if (keystorePath != null && keystorePath.trim().length() > 0) {
+        storeFile file(keystorePath)
         storePassword "$System.env.RELEASE_KEYSTORE_PASSWORD"
         keyAlias "$System.env.RELEASE_KEY_ALIAS"
         keyPassword "$System.env.RELEASE_KEY_PASSWORD"
       } else {
+        // No release keystore - use debug for local builds, CI will sign separately
         storeFile file("debug.keystore")
         storePassword "debug0"
         keyAlias "debug"
@@ -224,11 +227,13 @@ android {
       debuggable false
       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
       resValue "string", "app_name", "CleverKeys"
-      // REPRODUCIBILITY: Only sign during build if keystore provided
-      // When empty, build unsigned APK for post-processing and manual signing
-      if (System.env.RELEASE_KEYSTORE) {
+      // REPRODUCIBILITY: Only sign during build if non-empty keystore provided
+      // When unset/empty, build unsigned APK for post-processing and manual signing
+      def keystorePath = System.env.RELEASE_KEYSTORE
+      if (keystorePath != null && keystorePath.trim().length() > 0) {
         signingConfig signingConfigs.release
       }
+      // Note: If no signingConfig, APK is unsigned (requires manual signing)
     }
     debug {
       minifyEnabled false

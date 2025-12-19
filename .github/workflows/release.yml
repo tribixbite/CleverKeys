@@ -117,11 +117,10 @@ jobs:
     - name: Clone reproducible-apk-tools
       run: git clone https://github.com/obfusk/reproducible-apk-tools.git
 
+    # REPRODUCIBILITY: Build unsigned APK for post-processing
+    # RELEASE_KEYSTORE is not set, so build.gradle will not apply signing config
     - name: Build unsigned release APK
       run: ./gradlew clean assembleRelease --stacktrace --no-build-cache
-      env:
-        # Build without release signing - we'll sign after fix-pg-map-id
-        RELEASE_KEYSTORE: ""
 
     # REPRODUCIBILITY: Fix non-deterministic R8 pg-map-id in DEX files
     # This ensures byte-identical APKs between GitHub and F-Droid builds
@@ -167,7 +166,11 @@ jobs:
         cd build/outputs/apk/release
         for apk in *.apk; do
           echo "Removing metadata from $apk..."
+          # Remove AGP build metadata
           zip -d "$apk" 'META-INF/com/android/build/gradle/*' 2>/dev/null || true
+          # Remove kotlinx.coroutines service files (not covered by v2/v3 signature)
+          zip -d "$apk" 'META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory' 2>/dev/null || true
+          zip -d "$apk" 'META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler' 2>/dev/null || true
         done
 
     # Sign the APKs with our release key after fixes
