@@ -1,7 +1,7 @@
 # CleverKeys Feature Specifications
 
-**Last Updated**: 2025-12-11
-**Total Specs**: 12 (core) + 4 (optional enhancements)
+**Last Updated**: 2025-12-19
+**Total Specs**: 13 (core) + 4 (optional enhancements)
 
 This directory contains feature specifications and architectural decision records (ADRs) for CleverKeys. All specifications follow the template in `SPEC_TEMPLATE.md`.
 
@@ -95,7 +95,14 @@ This directory contains feature specifications and architectural decision record
     - Recent Updates: ✅ Colored direction zones with labels (2025-12-07)
     - Outstanding: Manual device testing
 
-11. **[SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md)** - Template
+13. **[Cursor Navigation System](./cursor-navigation-system.md)** - P1
+    - Status: ✅ Complete (Created 2025-12-19)
+    - Covers: Spacebar slider-based cursor, dedicated nav key arrows, swipe_scaling
+    - Components: `Pointers.kt` (Sliding class), `KeyValue.kt` (Slider enum), `KeyEventHandler.kt`
+    - Key Concepts: swipe_scaling calculation, speed smoothing, distance accumulation
+    - Outstanding: None
+
+14. **[SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md)** - Template
     - Template for creating new feature specifications
     - Use this when creating new specs
 
