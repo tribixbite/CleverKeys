@@ -50,7 +50,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 55
+ext.VERSION_PATCH = 56
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
@@ -224,7 +224,11 @@ android {
       debuggable false
       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
       resValue "string", "app_name", "CleverKeys"
-      signingConfig signingConfigs.release
+      // REPRODUCIBILITY: Only sign during build if keystore provided
+      // When empty, build unsigned APK for post-processing and manual signing
+      if (System.env.RELEASE_KEYSTORE) {
+        signingConfig signingConfigs.release
+      }
     }
     debug {
       minifyEnabled false

@@ -151,6 +151,25 @@ jobs:
         echo "APKs after newlines fix:"
         ls -la *.apk
 
+    # REPRODUCIBILITY: Strip any residual signatures before re-signing
+    # Ensures clean signature without interference from build-time debug signing
+    - name: Strip old signatures
+      run: |
+        cd build/outputs/apk/release
+        for apk in *.apk; do
+          echo "Stripping signatures from $apk..."
+          zip -d "$apk" 'META-INF/*.SF' 'META-INF/*.RSA' 'META-INF/*.DSA' 'META-INF/*.EC' 'META-INF/CERT*' 'META-INF/MANIFEST.MF' 2>/dev/null || true
+        done
+
+    # REPRODUCIBILITY: Delete non-deterministic files that excludes didn't catch
+    - name: Remove non-deterministic metadata
+      run: |
+        cd build/outputs/apk/release
+        for apk in *.apk; do
+          echo "Removing metadata from $apk..."
+          zip -d "$apk" 'META-INF/com/android/build/gradle/*' 2>/dev/null || true
+        done
+
     # Sign the APKs with our release key after fixes
     # inplace-fix.py already did zipalign with -P 16
     - name: Sign release APKs
