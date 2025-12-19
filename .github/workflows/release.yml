@@ -162,8 +162,9 @@ jobs:
               rm-files "$BUILT_APK" 'META-INF/*'
 
             # POSTBUILD STEP 2: Fix pg-map-id and zipalign
+            # Use --internal to handle zipalign internally (avoids external tool compatibility)
             python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
-              --page-size 16 fix-pg-map-id "$BUILT_APK" 0000000
+              --page-size 16 --internal fix-pg-map-id "$BUILT_APK" 0000000
 
             # Move to final directory (survives clean)
             mv "$BUILT_APK" "$FINAL_PATH"
