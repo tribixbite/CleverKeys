@@ -50,7 +50,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 50
+ext.VERSION_PATCH = 51
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
@@ -102,7 +102,11 @@ android {
     noCompress 'onnx', 'tflite'
     // REPRODUCIBILITY: Disable PNG crunching for deterministic output
     cruncherEnabled = false
-    additionalParameters "--no-auto-version"
+    // REPRODUCIBILITY: Force consistent platformBuildVersionCode/Name across environments
+    // This ensures GitHub Actions and F-Droid produce identical AndroidManifest.xml
+    additionalParameters "--no-auto-version",
+      "--compile-sdk-version-code", "34",
+      "--compile-sdk-version-name", "14"
   }
 
   packagingOptions {
