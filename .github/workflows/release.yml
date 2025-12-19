@@ -161,16 +161,23 @@ jobs:
         done
 
     # REPRODUCIBILITY: Delete non-deterministic files that excludes didn't catch
+    # Uses Python zipfile to match F-Droid postbuild (which doesn't have zip command)
     - name: Remove non-deterministic metadata
       run: |
         cd build/outputs/apk/release
         for apk in *.apk; do
           echo "Removing metadata from $apk..."
-          # Remove AGP build metadata
-          zip -d "$apk" 'META-INF/com/android/build/gradle/*' 2>/dev/null || true
-          # Remove kotlinx.coroutines service files (not covered by v2/v3 signature)
-          zip -d "$apk" 'META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory' 2>/dev/null || true
-          zip -d "$apk" 'META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler' 2>/dev/null || true
+          python3 -c "
+import zipfile, sys, tempfile, shutil
+apk = sys.argv[1]
+tmp = tempfile.mktemp('.apk')
+with zipfile.ZipFile(apk) as z:
+    with zipfile.ZipFile(tmp, 'w') as o:
+        for i in z.infolist():
+            if not (i.filename.startswith('META-INF/com/') or i.filename.startswith('META-INF/services/')):
+                o.writestr(i, z.read(i.filename))
+shutil.move(tmp, apk)
+" "$apk"
         done
 
     # Sign the APKs with our release key after fixes
