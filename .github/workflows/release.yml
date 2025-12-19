@@ -122,10 +122,20 @@ jobs:
     - name: Build unsigned release APK
       run: ./gradlew clean assembleRelease --stacktrace --no-build-cache
 
-    # REPRODUCIBILITY: Fix non-deterministic R8 pg-map-id in DEX files
-    # This ensures byte-identical APKs between GitHub and F-Droid builds
+    # REPRODUCIBILITY STEP 1: Remove non-deterministic META-INF files
+    # ORDER MATTERS: This must run BEFORE fix-pg-map-id to match F-Droid postbuild order
+    # Uses Python zipfile (no zip command in F-Droid build env)
+    - name: Remove non-deterministic metadata
+      run: |
+        cd build/outputs/apk/release
+        for apk in *.apk; do
+          echo "Removing metadata from $apk..."
+          python3 -c "import zipfile,sys,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)" "$apk"
+        done
+
+    # REPRODUCIBILITY STEP 2: Fix pg-map-id and zipalign
+    # ORDER MATTERS: This must run AFTER removing files, as it also does zipalign
     # Using fixed pg-map-id "0000000" - must match F-Droid postbuild
-    # Using --internal for Python-based alignment (build-tools 34.0.0 lacks -P flag)
     - name: Fix pg-map-id for reproducibility
       run: |
         cd build/outputs/apk/release
@@ -134,41 +144,8 @@ jobs:
           python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
             --page-size 16 --internal fix-pg-map-id "$apk" 0000000
         done
-        echo "APKs after pg-map-id fix:"
+        echo "APKs after reproducibility fixes:"
         ls -la *.apk
-
-    # REPRODUCIBILITY: Fix META-INF/services newline variations
-    # Must match F-Droid postbuild step
-    - name: Fix newlines for reproducibility
-      run: |
-        cd build/outputs/apk/release
-        for apk in *.apk; do
-          echo "Fixing newlines in $apk..."
-          python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
-            --page-size 16 --internal fix-newlines "$apk" 'META-INF/services/*'
-        done
-        echo "APKs after newlines fix:"
-        ls -la *.apk
-
-    # REPRODUCIBILITY: Strip any residual signatures before re-signing
-    # Ensures clean signature without interference from build-time debug signing
-    - name: Strip old signatures
-      run: |
-        cd build/outputs/apk/release
-        for apk in *.apk; do
-          echo "Stripping signatures from $apk..."
-          zip -d "$apk" 'META-INF/*.SF' 'META-INF/*.RSA' 'META-INF/*.DSA' 'META-INF/*.EC' 'META-INF/CERT*' 'META-INF/MANIFEST.MF' 2>/dev/null || true
-        done
-
-    # REPRODUCIBILITY: Delete non-deterministic files that excludes didn't catch
-    # Uses Python zipfile to match F-Droid postbuild (which doesn't have zip command)
-    - name: Remove non-deterministic metadata
-      run: |
-        cd build/outputs/apk/release
-        for apk in *.apk; do
-          echo "Removing metadata from $apk..."
-          python3 -c "import zipfile,sys,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)" "$apk"
-        done
 
     # Sign the APKs with our release key after fixes
     # inplace-fix.py already did zipalign with -P 16
