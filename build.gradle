@@ -50,7 +50,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 49
+ext.VERSION_PATCH = 50
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
@@ -100,6 +100,8 @@ android {
 
   aaptOptions {
     noCompress 'onnx', 'tflite'
+    // REPRODUCIBILITY: Disable PNG crunching for deterministic output
+    cruncherEnabled = false
     additionalParameters "--no-auto-version"
   }
 
