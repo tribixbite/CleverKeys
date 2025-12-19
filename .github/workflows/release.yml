@@ -117,35 +117,75 @@ jobs:
     - name: Clone reproducible-apk-tools
       run: git clone https://github.com/obfusk/reproducible-apk-tools.git
 
-    # REPRODUCIBILITY: Build unsigned APK for post-processing
-    # RELEASE_KEYSTORE is not set, so build.gradle will not apply signing config
-    - name: Build unsigned release APK
-      run: ./gradlew clean assembleRelease --stacktrace --no-build-cache
-
-    # REPRODUCIBILITY STEP 1: Remove non-deterministic META-INF files
-    # ORDER MATTERS: This must run BEFORE fix-pg-map-id to match F-Droid postbuild order
-    # Uses Python zipfile (no zip command in F-Droid build env)
-    - name: Remove non-deterministic metadata
+    # REPRODUCIBILITY: Build EACH ABI separately to match F-Droid
+    # F-Droid builds each ABI as a separate job with sed to modify build.gradle
+    # Building all ABIs together causes different AAPT2 resource compilation
+    - name: Build APKs per-ABI (matching F-Droid)
       run: |
-        cd build/outputs/apk/release
-        for apk in *.apk; do
-          echo "Removing metadata from $apk..."
-          python3 -c "import zipfile,sys,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)" "$apk"
+        mkdir -p build/outputs/apk/release
+
+        # Array of ABIs to build (matching F-Droid metadata order)
+        declare -A ABI_MAP=(
+          ["armeabi-v7a"]="armeabi-v7a"
+          ["arm64-v8a"]="arm64-v8a"
+          ["x86_64"]="x86_64"
+        )
+
+        for ABI in armeabi-v7a arm64-v8a x86_64; do
+          echo "========================================="
+          echo "🔨 Building $ABI APK..."
+          echo "========================================="
+
+          # Reset build.gradle to original state
+          git checkout build.gradle
+
+          # Apply same sed command as F-Droid prebuild
+          # This changes: include 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+          # To:          include '$ABI'
+          sed -i -e "s/include 'armeabi-v7a'.*/include '$ABI'/" build.gradle
+
+          # Verify the change
+          echo "Modified splits.abi.include:"
+          grep "include '" build.gradle | grep -v "//"
+
+          # Clean and build this single ABI
+          ./gradlew clean assembleRelease --stacktrace --no-build-cache
+
+          # Find and rename the output APK
+          BUILT_APK=$(find build/outputs/apk/release -name "*.apk" -type f | head -1)
+          if [ -n "$BUILT_APK" ]; then
+            # Extract version from filename
+            VERSION_NAME=$(echo "$BUILT_APK" | grep -oP 'v\d+\.\d+\.\d+' || echo "v${{ env.VERSION }}")
+            FINAL_NAME="CleverKeys-${VERSION_NAME}-${ABI}.apk"
+
+            # Apply F-Droid postbuild steps to this APK
+            echo "📦 Applying reproducibility fixes to $FINAL_NAME..."
+
+            # POSTBUILD STEP 1: Remove non-deterministic META-INF files
+            python3 -c "import zipfile,sys,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)" "$BUILT_APK"
+
+            # POSTBUILD STEP 2: Fix pg-map-id and zipalign
+            python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
+              --page-size 16 --internal fix-pg-map-id "$BUILT_APK" 0000000
+
+            # Move to final location with correct name
+            mv "$BUILT_APK" "build/outputs/apk/release/$FINAL_NAME"
+            echo "✅ Built: $FINAL_NAME"
+          else
+            echo "❌ ERROR: No APK found for $ABI"
+            exit 1
+          fi
+
+          echo ""
         done
 
-    # REPRODUCIBILITY STEP 2: Fix pg-map-id and zipalign
-    # ORDER MATTERS: This must run AFTER removing files, as it also does zipalign
-    # Using fixed pg-map-id "0000000" - must match F-Droid postbuild
-    - name: Fix pg-map-id for reproducibility
-      run: |
-        cd build/outputs/apk/release
-        for apk in *.apk; do
-          echo "Fixing pg-map-id in $apk..."
-          python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
-            --page-size 16 --internal fix-pg-map-id "$apk" 0000000
-        done
-        echo "APKs after reproducibility fixes:"
-        ls -la *.apk
+        # Restore original build.gradle
+        git checkout build.gradle
+
+        echo "========================================="
+        echo "📦 All APKs built:"
+        ls -la build/outputs/apk/release/*.apk
+        echo "========================================="
 
     # Sign the APKs with our release key after fixes
     # inplace-fix.py already did zipalign with -P 16
