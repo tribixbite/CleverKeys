@@ -34,11 +34,12 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    # REPRODUCIBILITY: Pin build-tools 34.0.0 - F-Droid requires apksigner from v34
-    # Version 35+ produces APKs that fail apksigcopier verification (F-Droid issue #3299)
-    - name: Install pinned build-tools
+    # REPRODUCIBILITY: Pin SDK components to match F-Droid build environment exactly
+    # - platforms;android-34: Same platform revision for identical AndroidManifest.xml binary
+    # - build-tools;34.0.0: Required for apksigner compatibility (v35+ breaks apksigcopier)
+    - name: Install pinned SDK components
       run: |
-        sdkmanager "build-tools;34.0.0"
+        sdkmanager "platforms;android-34" "build-tools;34.0.0"
         echo "BUILD_TOOLS_VERSION=34.0.0" >> $GITHUB_ENV
 
     - name: Add Android SDK tools to PATH
