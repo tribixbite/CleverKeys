@@ -50,7 +50,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 51
+ext.VERSION_PATCH = 52
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
@@ -110,14 +110,19 @@ android {
   }
 
   packagingOptions {
-    // REPRODUCIBILITY: Exclude non-deterministic files using top-level exclude
-    // (More effective than resources.excludes for assets)
-    exclude "assets/dexopt/baseline.prof"
-    exclude "assets/dexopt/baseline.profm"
-    exclude "META-INF/version-control-info.textproto"
-    exclude "META-INF/com/android/build/gradle/app-metadata.properties"
-
     resources {
+      // REPRODUCIBILITY: Exclude non-deterministic files
+      // Baseline profiles vary between build environments
+      excludes += "assets/dexopt/baseline.prof"
+      excludes += "assets/dexopt/baseline.profm"
+
+      // Build metadata that changes between environments
+      excludes += "META-INF/version-control-info.textproto"
+      excludes += "META-INF/com/android/build/gradle/app-metadata.properties"
+
+      // Kotlin coroutines debug probes (non-deterministic)
+      excludes += "DebugProbesKt.bin"
+
       // Kotlin coroutines service files (non-deterministic order)
       excludes += "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory"
       excludes += "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler"
@@ -164,6 +169,10 @@ android {
   composeCompiler {
     enableIntrinsicRemember = true
     includeSourceInformation = false
+    // REPRODUCIBILITY: Disable strong skipping mode to avoid non-deterministic lambda generation
+    enableStrongSkippingMode = false
+    // REPRODUCIBILITY: Disable non-skippable group optimization
+    enableNonSkippingGroupOptimization = false
   }
 
   sourceSets {
@@ -341,43 +350,21 @@ tasks.register('generateBinaryContractions') {
   }
 }
 
-// REPRODUCIBILITY: Generate version info with deterministic fallbacks
-// Ensures identical output even when git is unavailable
+// REPRODUCIBILITY: Generate version info with deterministic values only
+// Removes commit_date as it changes with each commit and breaks reproducibility
 tasks.register('generateVersionInfo') {
   def outDir = file("${buildDir}/generated/version/res/raw")
   outputs.dir(outDir)
-  
+
   doLast {
-    def getGitInfo = { command ->
-        try {
-            def stdout = new ByteArrayOutputStream()
-            def result = exec {
-                commandLine command.split()
-                standardOutput = stdout
-                errorOutput = new ByteArrayOutputStream()
-                ignoreExitValue = true
-            }
-            def output = stdout.toString().trim()
-            return (result.exitValue == 0 && output) ? output : null
-        } catch (Exception e) {
-            return null
-        }
-    }
-
-    // Use git info if available, otherwise use deterministic fallbacks
-    def gitCommit = getGitInfo('git rev-parse --short HEAD') ?: "release"
-    def gitCommitFull = getGitInfo('git rev-parse HEAD') ?: "release-${project.ext.versionNameStr}"
-    def gitDate = getGitInfo('git log -1 --format=%cd --date=short') ?: "2025-01-01"
-
+    // Use only the version string - no git info that could vary between builds
+    // Commit info is removed entirely to ensure byte-identical APKs
     outDir.mkdirs()
     def versionFile = new File(outDir, "version_info.txt")
     versionFile.text = """\
-commit=${gitCommit}
-commit_full=${gitCommitFull}
-commit_date=${gitDate}
 version=${project.ext.versionNameStr}
 """
-    println "Generated version_info.txt in ${versionFile.absolutePath}: commit=${gitCommit}, date=${gitDate}"
+    println "Generated version_info.txt in ${versionFile.absolutePath}: version=${project.ext.versionNameStr}"
   }
 }
 

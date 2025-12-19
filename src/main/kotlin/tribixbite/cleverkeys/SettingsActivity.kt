@@ -2798,9 +2798,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                 val versionInfo = loadVersionInfo()
                 Text(
-                    text = stringResource(R.string.settings_version_build, versionInfo.getProperty("build_number", "unknown")) + "\n" +
-                           stringResource(R.string.settings_version_commit, versionInfo.getProperty("commit", "unknown")) + "\n" +
-                           stringResource(R.string.settings_version_date, versionInfo.getProperty("build_date", "unknown")),
+                    text = stringResource(R.string.settings_version_build, versionInfo.getProperty("version", "unknown")),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     lineHeight = 16.sp
@@ -3154,10 +3152,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             reader.close()
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Failed to load version info", e)
-            // Set default values
-            props.setProperty("build_number", "dev")
-            props.setProperty("commit", "unknown")
-            props.setProperty("build_date", "unknown")
+            // Set default version
+            props.setProperty("version", "unknown")
         }
         return props
     }
