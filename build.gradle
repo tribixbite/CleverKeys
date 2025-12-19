@@ -50,7 +50,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 1
-ext.VERSION_PATCH = 54
+ext.VERSION_PATCH = 55
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
@@ -109,23 +109,22 @@ android {
       "--compile-sdk-version-name", "14"
   }
 
-  packagingOptions {
+  packaging {
     resources {
       // REPRODUCIBILITY: Exclude non-deterministic files
       // Baseline profiles vary between build environments
       excludes += "assets/dexopt/baseline.prof"
       excludes += "assets/dexopt/baseline.profm"
 
-      // Build metadata that changes between environments
-      excludes += "META-INF/version-control-info.textproto"
-      excludes += "META-INF/com/android/build/gradle/app-metadata.properties"
+      // Build metadata that changes between environments (use wildcards for robustness)
+      excludes += "**/version-control-info.textproto"
+      excludes += "**/app-metadata.properties"
 
       // Kotlin coroutines debug probes (non-deterministic)
       excludes += "DebugProbesKt.bin"
 
-      // Kotlin coroutines service files (non-deterministic order)
-      excludes += "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory"
-      excludes += "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler"
+      // Kotlin coroutines service files (non-deterministic order) - use wildcard
+      excludes += "META-INF/services/*"
 
       // License files and kotlin modules (reduce APK noise)
       excludes += "META-INF/DEPENDENCIES"
@@ -162,6 +161,7 @@ android {
 
   buildFeatures {
     compose true
+    buildConfig = true
   }
 
   // REPRODUCIBILITY: Compose compiler configuration via native Kotlin 2.0 plugin

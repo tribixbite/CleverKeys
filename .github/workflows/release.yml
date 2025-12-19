@@ -138,18 +138,8 @@ jobs:
         echo "APKs after pg-map-id fix:"
         ls -la *.apk
 
-    # REPRODUCIBILITY: Fix META-INF/services newline variations
-    # Must match F-Droid postbuild step
-    - name: Fix newlines for reproducibility
-      run: |
-        cd build/outputs/apk/release
-        for apk in *.apk; do
-          echo "Fixing newlines in $apk..."
-          python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
-            --page-size 16 --internal fix-newlines "$apk" 'META-INF/services/*'
-        done
-        echo "APKs after newlines fix:"
-        ls -la *.apk
+    # Note: META-INF/services/* files are now excluded via packaging.resources.excludes
+    # in build.gradle, so fix-newlines step is no longer needed
 
     # Sign the APKs with our release key after fixes
     # inplace-fix.py already did zipalign with -P 16
