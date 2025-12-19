@@ -114,9 +114,6 @@ jobs:
     - name: Print R8 Version
       run: ./gradlew printR8Version
 
-    - name: Clone reproducible-apk-tools
-      run: git clone https://github.com/obfusk/reproducible-apk-tools.git
-
     # REPRODUCIBILITY: Build EACH ABI separately to match F-Droid
     # F-Droid builds each ABI as a separate job with sed to modify build.gradle
     # Building all ABIs together causes different AAPT2 resource compilation
@@ -152,11 +149,6 @@ jobs:
             VERSION_NAME=$(echo "$BUILT_APK" | grep -oP 'v\d+\.\d+\.\d+' || echo "v${{ env.VERSION }}")
             FINAL_NAME="CleverKeys-${VERSION_NAME}-${ABI}.apk"
             FINAL_PATH="final_apks/$FINAL_NAME"
-
-            # POSTBUILD: Fix pg-map-id (ProGuard mapping file ID)
-            # Use --internal to handle zipalign internally (avoids external tool compatibility)
-            python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
-              --page-size 16 --internal fix-pg-map-id "$BUILT_APK" 0000000
 
             # Move to final directory (survives clean)
             mv "$BUILT_APK" "$FINAL_PATH"
