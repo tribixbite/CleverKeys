@@ -157,11 +157,13 @@ jobs:
             echo "📦 Applying reproducibility fixes to $FINAL_NAME..."
 
             # POSTBUILD STEP 1: Remove non-deterministic META-INF files
-            python3 -c "import zipfile,sys,tempfile,shutil;a=sys.argv[1];t=tempfile.mktemp('.apk');z=zipfile.ZipFile(a);o=zipfile.ZipFile(t,'w');[o.writestr(i,z.read(i.filename))for i in z.infolist()if not(i.filename.startswith('META-INF/com/')or i.filename.startswith('META-INF/services/'))];z.close();o.close();shutil.move(t,a)" "$BUILT_APK"
+            # Use reproducible-apk-tools instead of inline python (preserves file permissions)
+            python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
+              rm-files "$BUILT_APK" 'META-INF/*'
 
             # POSTBUILD STEP 2: Fix pg-map-id and zipalign
             python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
-              --page-size 16 --internal fix-pg-map-id "$BUILT_APK" 0000000
+              --page-size 16 fix-pg-map-id "$BUILT_APK" 0000000
 
             # Move to final directory (survives clean)
             mv "$BUILT_APK" "$FINAL_PATH"
@@ -231,8 +233,10 @@ jobs:
 
         echo "" >> CHANGELOG.md
         echo "## Build Information" >> CHANGELOG.md
-        echo "- **Version**: ${{ env.VERSION }}" >> CHANGELOG.md
-        echo "- **VersionCode**: ${{ env.VERSION_CODE }} (base)" >> CHANGELOG.md
+        # Plain text format for F-Droid UpdateCheckData regex parsing
+        echo "Version: ${{ env.VERSION }}" >> CHANGELOG.md
+        echo "VersionCode: ${{ env.VERSION_CODE }}" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
         echo "- **Package**: tribixbite.cleverkeys" >> CHANGELOG.md
         echo "- **Min Android**: 5.0 (API 21)" >> CHANGELOG.md
         echo "- **Target Android**: 14 (API 34)" >> CHANGELOG.md
