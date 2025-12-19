@@ -34,13 +34,17 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    # REPRODUCIBILITY: Pin SDK components to match F-Droid build environment exactly
-    # - platforms;android-34: Same platform revision for identical AndroidManifest.xml binary
-    # - build-tools;34.0.0: Required for apksigner compatibility (v35+ breaks apksigcopier)
+    # REPRODUCIBILITY: Install FRESH SDK components to match F-Droid exactly
+    # GitHub may have outdated cached versions - remove and reinstall to get latest revision
+    # F-Droid downloads platform-34-ext7_r03.zip - we need the same
     - name: Install pinned SDK components
       run: |
+        # Remove pre-installed platform to ensure we get latest revision
+        rm -rf $ANDROID_HOME/platforms/android-34
         sdkmanager "platforms;android-34" "build-tools;34.0.0"
         echo "BUILD_TOOLS_VERSION=34.0.0" >> $GITHUB_ENV
+        # Show what revision was installed
+        ls -la $ANDROID_HOME/platforms/android-34/
 
     - name: Add Android SDK tools to PATH
       run: |
