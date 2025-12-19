@@ -15,6 +15,7 @@ import tribixbite.cleverkeys.Utils
 import org.json.JSONException
 import org.json.JSONObject
 
+@Suppress("DEPRECATION")
 class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreference<LayoutsPreference.Layout>(ctx, attrs) {
     /** Text displayed for each layout in the dialog list. */
     private val layoutDisplayNames: Array<String>

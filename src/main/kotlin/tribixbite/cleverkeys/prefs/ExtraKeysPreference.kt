@@ -13,6 +13,7 @@ import tribixbite.cleverkeys.*
 
 /** This class implements the "extra keys" preference but also defines the
     possible extra keys. */
+@Suppress("DEPRECATION")
 class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCategory(context, attrs) {
     private var attached = false /** Whether it has already been attached. */
 

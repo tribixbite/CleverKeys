@@ -218,6 +218,7 @@ class MaterialThemeManager(private val context: Context) {
     /**
      * Load theme configuration from SharedPreferences.
      */
+    @Suppress("DEPRECATION")
     private fun loadThemeConfig(): ThemeConfig {
         return ThemeConfig(
             darkMode = prefs.getBoolean(KEY_DARK_MODE, false),
@@ -343,6 +344,7 @@ class MaterialThemeManager(private val context: Context) {
  *
  * Holds all user-customizable theme settings.
  */
+@Suppress("DEPRECATION")
 data class ThemeConfig(
     val darkMode: Boolean = false,
     val useDynamicColor: Boolean = true,

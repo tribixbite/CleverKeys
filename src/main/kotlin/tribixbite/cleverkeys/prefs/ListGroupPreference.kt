@@ -17,6 +17,7 @@ import org.json.JSONException
  * and remove items. Backed by a string list. Implement user selection in
  * [select].
  */
+@Suppress("DEPRECATION")
 abstract class ListGroupPreference<E>(context: Context, attrs: AttributeSet?) : PreferenceGroup(context, attrs) {
     private var attached = false
     protected var values: MutableList<E> = mutableListOf()
