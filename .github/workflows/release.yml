@@ -156,12 +156,7 @@ jobs:
             # Apply F-Droid postbuild steps to this APK
             echo "📦 Applying reproducibility fixes to $FINAL_NAME..."
 
-            # POSTBUILD STEP 1: Remove non-deterministic META-INF files
-            # Use reproducible-apk-tools instead of inline python (preserves file permissions)
-            python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
-              rm-files "$BUILT_APK" 'META-INF/*'
-
-            # POSTBUILD STEP 2: Fix pg-map-id and zipalign
+            # POSTBUILD: Fix pg-map-id (ProGuard mapping file ID)
             # Use --internal to handle zipalign internally (avoids external tool compatibility)
             python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
               --page-size 16 --internal fix-pg-map-id "$BUILT_APK" 0000000
