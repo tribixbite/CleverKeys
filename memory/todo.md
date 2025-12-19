@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-18
-**Status**: F-Droid Reproducibility - v1.1.27 with Temurin JDK pinning
+**Last Updated**: 2025-12-19
+**Status**: F-Droid Reproducibility - v1.1.67 (postbuild simplified)
 
 ---
 
@@ -136,11 +136,17 @@
     - [x] Updated GitHub workflow with same locale/timezone settings
     - [x] Updated build-on-termux.sh for local consistency
   - F-Droid metadata ready in fdroiddata_temp/ (not tracked in git)
-- [ ] Submit updated F-Droid metadata MR
+- [x] Submit updated F-Droid metadata MR
+- [x] Multiple reproducibility fixes (v1.1.56-v1.1.67)
+  - v1.1.65: Removed inline python script per linsui feedback
+  - v1.1.66: Added `--internal` flag to fix zipalign compatibility
+  - v1.1.67: Removed META-INF rm-files step (not needed for reproducibility)
+  - Reformatted postbuild to match F-Droid conventions (scalar, quoted args)
 - [ ] Wait for F-Droid maintainer merge approval
+- [ ] If v1.1.67 passes, test removing fix-pg-map-id entirely in v1.1.68
 
-**Current Version**: 1.1.28 (versionCode 101283 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.28
+**Current Version**: 1.1.67 (versionCode 101673 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.67
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 
 ### Legacy Code Audit (2025-12-17)
