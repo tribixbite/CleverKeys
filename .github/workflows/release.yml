@@ -122,14 +122,8 @@ jobs:
     # Building all ABIs together causes different AAPT2 resource compilation
     - name: Build APKs per-ABI (matching F-Droid)
       run: |
-        mkdir -p build/outputs/apk/release
-
-        # Array of ABIs to build (matching F-Droid metadata order)
-        declare -A ABI_MAP=(
-          ["armeabi-v7a"]="armeabi-v7a"
-          ["arm64-v8a"]="arm64-v8a"
-          ["x86_64"]="x86_64"
-        )
+        # Create final output directory (separate from build/outputs to survive clean)
+        mkdir -p final_apks
 
         for ABI in armeabi-v7a arm64-v8a x86_64; do
           echo "========================================="
@@ -151,12 +145,13 @@ jobs:
           # Clean and build this single ABI
           ./gradlew clean assembleRelease --stacktrace --no-build-cache
 
-          # Find and rename the output APK
+          # Find the output APK
           BUILT_APK=$(find build/outputs/apk/release -name "*.apk" -type f | head -1)
           if [ -n "$BUILT_APK" ]; then
             # Extract version from filename
             VERSION_NAME=$(echo "$BUILT_APK" | grep -oP 'v\d+\.\d+\.\d+' || echo "v${{ env.VERSION }}")
             FINAL_NAME="CleverKeys-${VERSION_NAME}-${ABI}.apk"
+            FINAL_PATH="final_apks/$FINAL_NAME"
 
             # Apply F-Droid postbuild steps to this APK
             echo "📦 Applying reproducibility fixes to $FINAL_NAME..."
@@ -168,12 +163,9 @@ jobs:
             python3 ${{ github.workspace }}/reproducible-apk-tools/inplace-fix.py \
               --page-size 16 --internal fix-pg-map-id "$BUILT_APK" 0000000
 
-            # Rename if needed (Gradle may already use correct name)
-            FINAL_PATH="build/outputs/apk/release/$FINAL_NAME"
-            if [ "$BUILT_APK" != "$FINAL_PATH" ]; then
-              mv "$BUILT_APK" "$FINAL_PATH"
-            fi
-            echo "✅ Built: $FINAL_NAME"
+            # Move to final directory (survives clean)
+            mv "$BUILT_APK" "$FINAL_PATH"
+            echo "✅ Built: $FINAL_NAME → saved to $FINAL_PATH"
           else
             echo "❌ ERROR: No APK found for $ABI"
             exit 1
@@ -184,6 +176,10 @@ jobs:
 
         # Restore original build.gradle
         git checkout build.gradle
+
+        # Copy all APKs to expected location for release step
+        mkdir -p build/outputs/apk/release
+        cp final_apks/*.apk build/outputs/apk/release/
 
         echo "========================================="
         echo "📦 All APKs built:"
