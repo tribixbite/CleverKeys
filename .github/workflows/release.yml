@@ -106,10 +106,10 @@ jobs:
 
         echo "✅ Version match confirmed!"
 
+    # Decode keystore for later signing (do NOT set RELEASE_KEYSTORE env var here
+    # to ensure build.gradle builds unsigned APK)
     - name: Decode signing keystore
-      run: |
-        echo "${{ secrets.SIGNING_KEY }}" | base64 -d > ${{ github.workspace }}/release.keystore
-        echo "RELEASE_KEYSTORE=${{ github.workspace }}/release.keystore" >> $GITHUB_ENV
+      run: echo "${{ secrets.SIGNING_KEY }}" | base64 -d > ${{ github.workspace }}/release.keystore
 
     - name: Print R8 Version
       run: ./gradlew printR8Version
