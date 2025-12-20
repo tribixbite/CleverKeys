@@ -36,10 +36,14 @@ import java.util.Date
  */
 class PrivacyManager(private val context: Context) {
 
+    // Privacy-specific settings (consent, anonymization, etc.)
     private val prefs: SharedPreferences = context.getSharedPreferences(
         "privacy_settings",
         Context.MODE_PRIVATE
     )
+
+    // Main app preferences (where SettingsActivity stores collection toggles)
+    private val mainPrefs: SharedPreferences = DirectBootAwarePreferences.get_shared_preferences(context)
 
     companion object {
         private const val TAG = "PrivacyManager"
@@ -173,18 +177,20 @@ class PrivacyManager(private val context: Context) {
     }
 
     /**
-     * Check if specific data collection type is allowed
+     * Check if specific data collection type is allowed.
+     * Reads from main app preferences where SettingsActivity stores the toggles.
      */
     fun canCollectSwipeData(): Boolean {
-        return hasConsent() && prefs.getBoolean(KEY_COLLECT_SWIPE_DATA, false)
+        // Read from main prefs using the key that SettingsActivity uses
+        return hasConsent() && mainPrefs.getBoolean("privacy_collect_swipe", Defaults.PRIVACY_COLLECT_SWIPE)
     }
 
     fun canCollectPerformanceData(): Boolean {
-        return hasConsent() && prefs.getBoolean(KEY_COLLECT_PERFORMANCE_DATA, false)
+        return hasConsent() && mainPrefs.getBoolean("privacy_collect_performance", Defaults.PRIVACY_COLLECT_PERFORMANCE)
     }
 
     fun canCollectErrorLogs(): Boolean {
-        return hasConsent() && prefs.getBoolean(KEY_COLLECT_ERROR_LOGS, false)
+        return hasConsent() && mainPrefs.getBoolean("privacy_collect_errors", Defaults.PRIVACY_COLLECT_ERRORS)
     }
 
     /**

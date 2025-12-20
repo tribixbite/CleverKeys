@@ -1,0 +1,4 @@
+• SAF file picker for swipe data export (saves anywhere)
+• Added "cleverkeys" and "tribixbite" to dictionary
+• Fixed swipe data collection toggle not working
+• Default max word length reduced to 15 characters
