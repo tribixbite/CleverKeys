@@ -150,6 +150,9 @@
   - Added featureGraphic.jpg for F-Droid Latest tab
   - Reorganized screenshots (Termux first, clean numbered names)
   - Added v1.1.70 changelogs
+  - Added video.txt with per-key customization demo
+  - Added Spanish (es) translation for F-Droid Latest tab visibility
+  - Fixed "Sub-200ms" → "Sub-100ms" for accurate latency claim
 - [ ] Wait for F-Droid maintainer merge approval
 - [x] Cron monitoring: checks MR status every 5 min, notifies on merge
 
