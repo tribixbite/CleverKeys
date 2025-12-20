@@ -137,13 +137,14 @@ class KeyboardPreviewHost @JvmOverloads constructor(
             val config = Config.globalConfig()
             Log.d(TAG, "loadUserLayout: config=$config")
 
-            // Get the first layout from user's configuration
+            // Get the first non-null layout from user's configuration
             val layouts = config.layouts
             Log.d(TAG, "loadUserLayout: layouts.size=${layouts.size}")
-            if (layouts.isNotEmpty()) {
-                keyboardData = layouts[0]
-                keyboardView?.setKeyboard(layouts[0])
-                Log.d(TAG, "Loaded user layout: ${layouts[0].name}, rows=${layouts[0].rows.size}, keysWidth=${layouts[0].keysWidth}")
+            val firstLayout = layouts.firstOrNull { it != null }
+            if (firstLayout != null) {
+                keyboardData = firstLayout
+                keyboardView?.setKeyboard(firstLayout)
+                Log.d(TAG, "Loaded user layout: ${firstLayout.name}, rows=${firstLayout.rows.size}, keysWidth=${firstLayout.keysWidth}")
             } else {
                 // Fallback to QWERTY if no layouts configured
                 Log.d(TAG, "No layouts in config, loading fallback")

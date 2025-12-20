@@ -167,7 +167,8 @@ class Config private constructor(
     @JvmField val sublabelTextSize: Float = 0.22f
 
     // From preferences
-    @JvmField var layouts: List<KeyboardData> = emptyList()
+    // Nullable list preserves indices - null entries represent SystemLayout (use localeTextLayout)
+    @JvmField var layouts: List<KeyboardData?> = emptyList()
     @JvmField var show_numpad = false
     @JvmField var inverse_numpad = false
     @JvmField var add_number_row = false
@@ -343,7 +344,8 @@ class Config private constructor(
             )
         }
 
-        layouts = LayoutsPreference.load_from_preferences(res, _prefs).filterNotNull()
+        // Keep nulls - they represent SystemLayout entries (resolved to localeTextLayout at runtime)
+        layouts = LayoutsPreference.load_from_preferences(res, _prefs)
         inverse_numpad = safeGetString(_prefs, "numpad_layout", Defaults.NUMPAD_LAYOUT) == "low_first"
 
         val number_row = safeGetString(_prefs, "number_row", Defaults.NUMBER_ROW)
