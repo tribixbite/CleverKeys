@@ -5,7 +5,7 @@ CleverKeys is the only open-source keyboard with stable, production-ready gestur
 
 <b>NEURAL NETWORK SWIPE ENGINE</b>
 • Custom transformer neural network trained for gesture recognition
-• Sub-200ms predictions with XNNPACK hardware acceleration
+• Sub-100ms predictions with XNNPACK hardware acceleration
 • 100% local processing — works offline, no cloud dependency
 • Tunable beam search (width, length normalization, pruning, early stopping)
 • Open training code and datasets at github.com/tribixbite/CleverKeys-ML
