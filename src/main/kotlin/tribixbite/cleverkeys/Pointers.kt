@@ -591,6 +591,34 @@ class Pointers(
             }
         }
 
+        // SLIDER CHECK: Must happen BEFORE swipe typing path collection
+        // If user is swiping toward a slider key (e.g., cursor_left/cursor_right on spacebar),
+        // enter sliding mode instead of swipe typing mode.
+        // The position in IME windows is clamped to view - adjust for edge swipes
+        var adjustedY = y
+        if (y == 0.0f) adjustedY = -400f
+        val dx = x - ptr.downX
+        val dy = adjustedY - ptr.downY
+        val dist = abs(dx) + abs(dy)
+
+        if (dist >= _config.swipe_dist_px && ptr.gesture == null) {
+            // Pointer moved significantly - check for Slider activation FIRST
+            val a = atan2(dy, dx) + Math.PI
+            val direction = ((a * 8 / Math.PI).toInt() + 12) % 16
+
+            val sliderValue = getNearestKeyAtDirection(ptr, direction)
+            if (sliderValue != null && sliderValue.getKind() == KeyValue.Kind.Slider) {
+                // Slider key detected - enter sliding mode instead of swipe typing
+                Log.d("Pointers", "Slider detected at direction $direction, starting sliding mode")
+                ptr.gesture = Gesture(direction)
+                ptr.value = sliderValue
+                ptr.flags = pointer_flags_of_kv(sliderValue)
+                startSliding(ptr, x, adjustedY, dx, dy, sliderValue)
+                _handler.onPointerDown(sliderValue, true)
+                return
+            }
+        }
+
         // CRITICAL: For potential swipe typing, ALWAYS track path during movement
         // Short gesture detection should only happen on touch UP, not during MOVE
         // Also collect path for short gestures on non-Char keys (backspace, ctrl, etc.)
