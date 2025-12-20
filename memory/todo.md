@@ -277,4 +277,21 @@ Technical debt identified but not blocking F-Droid submission:
 
 ---
 
+## Session Notes (Dec 20, 2025)
+
+### Fixed: Spacebar Subkey Gestures Blocked by Swipe Typing
+**Commits**: `17b0d301`, `c6c89705`
+
+**Problem**: Horizontal and vertical swipes on spacebar (cursor_left/right, switch_forward/backward) only produced 2-3 actions instead of the expected range (15-88 for cursor, layout switch for vertical).
+
+**Root Cause**: Spacebar's `key0="space"` is `Char` kind, so `shouldCollectPath=true` for swipe typing. This caused an early return in `onTouchMove()` before Slider or Event key activation could occur.
+
+**Fix**: Added pre-swipe-typing check in `Pointers.kt` that detects Slider and Event keys BEFORE swipe typing path collection:
+- Slider keys (cursor_left/right): Enter sliding mode immediately
+- Event keys (switch_forward/backward): Trigger event immediately
+
+**Layout Switching Note**: `switch_forward`/`switch_backward` require 2+ named layouts configured in Settings → Layouts. The default `SystemLayout` returns null and doesn't count as switchable.
+
+---
+
 *See `docs/history/session_log_dec_2025.md` for completed items from recent sprints.*
