@@ -100,6 +100,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         uri?.let { performClipboardImport(it) }
     }
 
+    // SAF file pickers for swipe ML data export
+    private val swipeDataJsonExportLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri: Uri? ->
+        uri?.let { performSwipeDataJsonExport(it) }
+    }
+
+    private val swipeDataNdjsonExportLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/x-ndjson")
+    ) { uri: Uri? ->
+        uri?.let { performSwipeDataNdjsonExport(it) }
+    }
+
     // Settings state for reactive UI
     private var beamWidth by mutableStateOf(6)
     private var maxLength by mutableStateOf(20)
@@ -3448,15 +3461,37 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     private fun exportSwipeDataJSON() {
+        try {
+            val sdf = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US)
+            val filename = "swipe_data_${sdf.format(java.util.Date())}.json"
+            swipeDataJsonExportLauncher.launch(filename)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun exportSwipeDataNDJSON() {
+        try {
+            val sdf = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US)
+            val filename = "swipe_data_${sdf.format(java.util.Date())}.ndjson"
+            swipeDataNdjsonExportLauncher.launch(filename)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun performSwipeDataJsonExport(uri: Uri) {
         lifecycleScope.launch {
             try {
-                val dataStore = tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(this@SettingsActivity)
-                val exportFile = dataStore.exportToJSON()
-                Toast.makeText(
-                    this@SettingsActivity,
-                    "Exported to: ${exportFile.absolutePath}",
-                    Toast.LENGTH_LONG
-                ).show()
+                contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    val dataStore = tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(this@SettingsActivity)
+                    val count = dataStore.exportToJSON(outputStream)
+                    Toast.makeText(
+                        this@SettingsActivity,
+                        "Exported $count swipe entries to JSON",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } ?: throw Exception("Could not open file for writing")
             } catch (e: Exception) {
                 Toast.makeText(
                     this@SettingsActivity,
@@ -3467,16 +3502,18 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    private fun exportSwipeDataNDJSON() {
+    private fun performSwipeDataNdjsonExport(uri: Uri) {
         lifecycleScope.launch {
             try {
-                val dataStore = tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(this@SettingsActivity)
-                val exportFile = dataStore.exportToNDJSON()
-                Toast.makeText(
-                    this@SettingsActivity,
-                    "Exported to: ${exportFile.absolutePath}",
-                    Toast.LENGTH_LONG
-                ).show()
+                contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    val dataStore = tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(this@SettingsActivity)
+                    val count = dataStore.exportToNDJSON(outputStream)
+                    Toast.makeText(
+                        this@SettingsActivity,
+                        "Exported $count swipe entries to NDJSON",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } ?: throw Exception("Could not open file for writing")
             } catch (e: Exception) {
                 Toast.makeText(
                     this@SettingsActivity,

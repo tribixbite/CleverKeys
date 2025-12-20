@@ -11,6 +11,8 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
+import java.io.OutputStream
+import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -318,6 +320,65 @@ class SwipeMLDataStore private constructor(context: Context) :
 
         Log.i(TAG, "Exported ${allData.size} entries to NDJSON: ${exportFile.absolutePath}")
         return exportFile
+    }
+
+    /**
+     * Export all data to JSON via OutputStream (for SAF file picker)
+     */
+    fun exportToJSON(outputStream: OutputStream): Int {
+        val allData = loadAllData()
+
+        // Build JSON array
+        val jsonArray = JSONArray()
+        for (data in allData) {
+            jsonArray.put(data.toJSON())
+        }
+
+        // Add metadata
+        val root = JSONObject().apply {
+            put("export_version", "1.0")
+            put("export_timestamp", System.currentTimeMillis())
+            put("total_samples", allData.size)
+            put("database_version", DATABASE_VERSION)
+            put("data", jsonArray)
+        }
+
+        // Add statistics
+        val prefs = _context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val stats = JSONObject().apply {
+            put("total_swipes", prefs.getInt(PREF_TOTAL_COUNT, 0))
+            put("calibration_swipes", prefs.getInt(PREF_CALIBRATION_COUNT, 0))
+            put("user_swipes", prefs.getInt(PREF_USER_COUNT, 0))
+        }
+        root.put("statistics", stats)
+
+        // Write to stream
+        OutputStreamWriter(outputStream, Charsets.UTF_8).use { writer ->
+            writer.write(root.toString(2)) // Pretty print with 2-space indent
+        }
+
+        // Mark all as exported
+        markAllAsExported()
+
+        Log.i(TAG, "Exported ${allData.size} entries to JSON stream")
+        return allData.size
+    }
+
+    /**
+     * Export to NDJSON via OutputStream (for SAF file picker)
+     */
+    fun exportToNDJSON(outputStream: OutputStream): Int {
+        val allData = loadAllData()
+
+        OutputStreamWriter(outputStream, Charsets.UTF_8).use { writer ->
+            for (data in allData) {
+                writer.write(data.toJSON().toString())
+                writer.write("\n")
+            }
+        }
+
+        Log.i(TAG, "Exported ${allData.size} entries to NDJSON stream")
+        return allData.size
     }
 
     /**
