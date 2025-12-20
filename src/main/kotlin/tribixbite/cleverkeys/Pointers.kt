@@ -657,31 +657,7 @@ class Pointers(
 
         // SIMPLIFIED: Legacy curved gesture system removed.
         // Swipe-to-corner gestures now handled in onTouchUp for unified logic.
-        // Only Slider mode still handled during move events.
-
-        // The position in a IME windows is clampled to view.
-        // For a better up swipe behaviour, set the y position to a negative value when clamped.
-        var adjustedY = y
-        if (y == 0.0f) adjustedY = -400f
-        val dx = x - ptr.downX
-        val dy = adjustedY - ptr.downY
-
-        val dist = abs(dx) + abs(dy)
-        if (dist >= _config.swipe_dist_px && ptr.gesture == null) {
-            // Pointer moved significantly - check for Slider activation
-            val a = atan2(dy, dx) + Math.PI
-            val direction = ((a * 8 / Math.PI).toInt() + 12) % 16
-
-            ptr.gesture = Gesture(direction) // Keep for Slider compatibility
-            val new_value = getNearestKeyAtDirection(ptr, direction)
-            if (new_value != null && new_value.getKind() == KeyValue.Kind.Slider) {
-                // Slider keys still activate during move
-                ptr.value = new_value
-                ptr.flags = pointer_flags_of_kv(new_value)
-                startSliding(ptr, x, adjustedY, dx, dy, new_value)
-                _handler.onPointerDown(new_value, true)
-            }
-        }
+        // Slider mode handled earlier (before swipe typing path collection).
     }
 
     // Pointers management
