@@ -1,1 +1,1 @@
-Neural network gesture keyboard with unlimited clipboard history
+Open-source gesture keyboard with Termux support

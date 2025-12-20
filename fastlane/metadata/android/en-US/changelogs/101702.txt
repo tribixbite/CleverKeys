@@ -1,0 +1,3 @@
+• Reproducibility improvements for F-Droid verification
+• Simplified build process - no postbuild fixes needed
+• Updated metadata with improved descriptions

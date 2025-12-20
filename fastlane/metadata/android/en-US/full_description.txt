@@ -1,40 +1,53 @@
-CleverKeys is the only fully open-source neural network gesture keyboard for Android.
+CleverKeys is an open-source gesture keyboard featuring a custom neural network engine, unlimited clipboard history, and extensive customization. Unlike other open-source keyboards, gesture typing works reliably everywhere — including Termux and terminal emulators.
 
-🧠 AI-POWERED SWIPE TYPING
+<b>RELIABLE GESTURE TYPING IN TERMUX</b>
+CleverKeys is the only open-source keyboard with stable, production-ready gesture typing that works in Termux. Other keyboards either disable gestures in terminals, produce corrupted output, or remain in alpha/experimental state. CleverKeys works everywhere — terminal emulators, SSH sessions, and developer tools.
+
+<b>NEURAL NETWORK SWIPE ENGINE</b>
 • Custom transformer neural network trained for gesture recognition
-• Sub-200ms predictions with hardware acceleration (XNNPACK)
-• 100% local processing — works in airplane mode
-• Full inference control (beam width, length normalization, pruning)
+• Sub-200ms predictions with XNNPACK hardware acceleration
+• 100% local processing — works offline, no cloud dependency
+• Tunable beam search (width, length normalization, pruning, early stopping)
+• Open training code and datasets at github.com/tribixbite/CleverKeys-ML
 
-📋 UNLIMITED CLIPBOARD HISTORY
-• Truly unlimited history (configurable by count or size)
-• Pin important items
-• Search through history
+<b>208 CUSTOMIZABLE SHORT-SWIPE GESTURES</b>
+• 8 directions × 26 letter keys = 208 one-touch gestures
+• Per-key customization — assign any action to any direction on any key
+• Navigation: arrow keys, home/end, page up/down
+• Editing: select all, undo/redo, cut/copy/paste
+• Function keys: F1-F12, Escape, Insert, Delete
+• No long-press menus needed
+
+<b>UNLIMITED CLIPBOARD HISTORY</b>
+As an Input Method Editor, CleverKeys has legitimate clipboard access that other apps lack:
+• Truly unlimited history (configurable by count or storage size)
+• Pin important items for quick access
+• Full-text search through history
 • Persistent across reboots
 • Export/Import for backup
 
-🔒 PRIVACY FIRST
+<b>PRIVACY FIRST</b>
 • Zero network permissions — literally cannot phone home
-• No analytics or telemetry
-• No cloud sync
+• No analytics, telemetry, or tracking
+• No cloud sync or data collection
 • All processing on-device
-• Open source = auditable
+• Open source = fully auditable
 
-⌨️ 100+ KEYBOARD LAYOUTS
+<b>EXTENSIVE THEME ENGINE</b>
+• 18+ built-in themes including Material You (Monet)
+• DIY theme creator with full control over colors
+• Key colors, label colors, border colors, swipe trail effects
+• ePaper, Neon, Everforest, and more styles
+
+<b>100+ KEYBOARD LAYOUTS</b>
 • QWERTY, AZERTY, QWERTZ, Dvorak, Colemak
 • Programming layouts with special characters
 • International layouts for 30+ languages
 • Customizable bottom row and modifiers
 
-🎨 EXTENSIVE THEME ENGINE
-• 18+ built-in themes including Material You
-• DIY theme creator with full color control
-• Key colors, labels, borders, swipe trails
+<b>POWER USER FEATURES</b>
+• Terminal mode with Ctrl/Meta/Fn keys
+• Backup & Restore all settings and custom data
+• Layout profile import/export with gestures included
 
-🛠️ POWER USER FEATURES
-• Terminal mode with Ctrl/Meta/Fn keys for Termux
-• 208 short-swipe gestures (8 directions × 26 keys)
-• Navigation, editing, function keys via gestures
-• Backup & Restore all settings
-
-CleverKeys is a complete Kotlin rewrite of Unexpected Keyboard with neural gesture typing added. The ML model, training code, and datasets are all publicly available.
+CleverKeys is a complete Kotlin rewrite of Unexpected Keyboard with neural network gesture typing, clipboard history, and per-key gesture customization added. The ML model architecture, training code, and datasets are all publicly available.
