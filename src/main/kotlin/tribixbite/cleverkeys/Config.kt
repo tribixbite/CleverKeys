@@ -81,7 +81,7 @@ object Defaults {
 
     // Neural prediction
     const val NEURAL_BEAM_WIDTH = 6
-    const val NEURAL_MAX_LENGTH = 20
+    const val NEURAL_MAX_LENGTH = 15
     const val NEURAL_CONFIDENCE_THRESHOLD = 0.01f
     const val NEURAL_BATCH_BEAMS = false
     const val NEURAL_GREEDY_SEARCH = false
