@@ -591,9 +591,9 @@ class Pointers(
             }
         }
 
-        // SLIDER CHECK: Must happen BEFORE swipe typing path collection
-        // If user is swiping toward a slider key (e.g., cursor_left/cursor_right on spacebar),
-        // enter sliding mode instead of swipe typing mode.
+        // SUBKEY CHECK: Must happen BEFORE swipe typing path collection
+        // If user is swiping toward a slider or event key (e.g., cursor_left/right, switch_forward/backward),
+        // handle it immediately instead of entering swipe typing mode.
         // The position in IME windows is clamped to view - adjust for edge swipes
         var adjustedY = y
         if (y == 0.0f) adjustedY = -400f
@@ -602,20 +602,37 @@ class Pointers(
         val dist = abs(dx) + abs(dy)
 
         if (dist >= _config.swipe_dist_px && ptr.gesture == null) {
-            // Pointer moved significantly - check for Slider activation FIRST
+            // Pointer moved significantly - check for special key activation FIRST
             val a = atan2(dy, dx) + Math.PI
             val direction = ((a * 8 / Math.PI).toInt() + 12) % 16
 
-            val sliderValue = getNearestKeyAtDirection(ptr, direction)
-            if (sliderValue != null && sliderValue.getKind() == KeyValue.Kind.Slider) {
-                // Slider key detected - enter sliding mode instead of swipe typing
-                Log.d("Pointers", "Slider detected at direction $direction, starting sliding mode")
-                ptr.gesture = Gesture(direction)
-                ptr.value = sliderValue
-                ptr.flags = pointer_flags_of_kv(sliderValue)
-                startSliding(ptr, x, adjustedY, dx, dy, sliderValue)
-                _handler.onPointerDown(sliderValue, true)
-                return
+            val subkeyValue = getNearestKeyAtDirection(ptr, direction)
+            if (subkeyValue != null) {
+                when (subkeyValue.getKind()) {
+                    KeyValue.Kind.Slider -> {
+                        // Slider key detected - enter sliding mode instead of swipe typing
+                        Log.d("Pointers", "Slider detected at direction $direction, starting sliding mode")
+                        ptr.gesture = Gesture(direction)
+                        ptr.value = subkeyValue
+                        ptr.flags = pointer_flags_of_kv(subkeyValue)
+                        startSliding(ptr, x, adjustedY, dx, dy, subkeyValue)
+                        _handler.onPointerDown(subkeyValue, true)
+                        return
+                    }
+                    KeyValue.Kind.Event -> {
+                        // Event key detected (e.g., switch_forward, switch_backward)
+                        // Trigger immediately and prevent swipe typing from intercepting
+                        Log.d("Pointers", "Event key detected at direction $direction: ${subkeyValue.getEvent()}")
+                        ptr.gesture = Gesture(direction)
+                        ptr.value = subkeyValue
+                        ptr.flags = pointer_flags_of_kv(subkeyValue)
+                        _handler.onPointerDown(subkeyValue, true)
+                        return
+                    }
+                    else -> {
+                        // Other key types - let normal processing handle them
+                    }
+                }
             }
         }
 
