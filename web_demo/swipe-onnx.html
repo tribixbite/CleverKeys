@@ -1410,8 +1410,7 @@
             console.log('Encoder output:', encoderOutput);
             
             // Pass encoder output to decoder for beam search
-            // Include actualLength so decoder can create matching src_mask
-            const actualLength = features.originalLength || MAX_SEQUENCE_LENGTH;
+            // actualLength already defined above - pass to decoder for matching src_mask
             const predictions = await decodeLogits(encoderOutput, actualLength);
 
             console.log('Predictions:', predictions);
