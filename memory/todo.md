@@ -158,6 +158,10 @@
 - [x] Fix web demo model loading on CDN edge cases (2025-12-21)
   - validateFile() now falls back to range request when HEAD lacks content-length
   - Fixes "Tokenizer config appears incomplete (0KB < 0.5KB)" error on some CDNs
+- [x] Fix decoder src_mask mismatch (2025-12-21)
+  - Decoder was using all-zeros src_mask (attending to padded garbage)
+  - Now passes actualSrcLength from encoder to decoder
+  - Decoder creates matching mask: 1 for padded positions, 0 for real data
 
 **Current Version**: 1.1.71 (versionCode 101713 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.71
