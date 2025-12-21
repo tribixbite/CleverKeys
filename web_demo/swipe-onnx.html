@@ -1410,17 +1410,20 @@
             console.log('Encoder output:', encoderOutput);
             
             // Pass encoder output to decoder for beam search
-            const predictions = await decodeLogits(encoderOutput);
-            
+            // Include actualLength so decoder can create matching src_mask
+            const actualLength = features.originalLength || MAX_SEQUENCE_LENGTH;
+            const predictions = await decodeLogits(encoderOutput, actualLength);
+
             console.log('Predictions:', predictions);
-            
+
             return predictions;
         }
         
-        async function decodeLogits(encoderOutput) {
+        async function decodeLogits(encoderOutput, actualSrcLength) {
             // The encoder output contains memory states that need to be decoded
             // We need to run the decoder with proper beam search
-            
+            // actualSrcLength tells us which encoder positions are real vs padded
+
             if (!decoderSession) {
                 console.error('Decoder not loaded, cannot decode');
                 return [];
@@ -1491,9 +1494,11 @@
                         tgtMask[i] = 1;  // Mark padded positions
                     }
                     
-                    // Create source mask (0 for all positions - all encoder positions are valid)
+                    // Create source mask matching encoder: 1 for padded, 0 for real data
                     const srcMaskArray = new Uint8Array(memory.dims[1]);
-                    srcMaskArray.fill(0);
+                    for (let i = 0; i < memory.dims[1]; i++) {
+                        srcMaskArray[i] = i >= actualSrcLength ? 1 : 0;
+                    }
                     
                     // Run decoder
                     try {
