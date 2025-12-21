@@ -24,7 +24,8 @@ object LayoutModifier {
      */
     @JvmStatic
     fun modify_layout(kw: KeyboardData): KeyboardData {
-        val cacheKey = "${kw.name ?: ""}_${globalConfig.version}"
+        // Include layout count in cache key so switch keys update when layouts added/removed
+        val cacheKey = "${kw.name ?: ""}_${globalConfig.version}_${globalConfig.layouts.size}"
         layoutCache.get(cacheKey)?.let { return it }
 
         // Extra keys are removed from the set as they are encountered during the
@@ -182,11 +183,10 @@ object LayoutModifier {
                         }
                         return KeyValue.makeActionKey(label)
                     }
-                    KeyValue.Event.SWITCH_FORWARD -> {
-                        return if (globalConfig.layouts.size > 1) orig else null
-                    }
+                    KeyValue.Event.SWITCH_FORWARD,
                     KeyValue.Event.SWITCH_BACKWARD -> {
-                        return if (globalConfig.layouts.size > 2) orig else null
+                        // Show both switch keys when 2+ layouts, hide when only 1 layout
+                        return if (globalConfig.layouts.size > 1) orig else null
                     }
                     KeyValue.Event.SWITCH_VOICE_TYPING,
                     KeyValue.Event.SWITCH_VOICE_TYPING_CHOOSER -> {
