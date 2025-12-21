@@ -446,6 +446,11 @@ private fun CategoryHeader(category: CommandRegistry.Category, commandCount: Int
             CommandRegistry.Category.SPECIAL_KEYS -> Icons.Filled.Star     // Special keys
             CommandRegistry.Category.SPACES -> Icons.Filled.KeyboardArrowDown // Spaces
             CommandRegistry.Category.DIACRITICS -> Icons.Filled.Favorite   // Diacritics
+            CommandRegistry.Category.DIACRITICS_SLAVONIC -> Icons.Filled.Favorite // Slavonic diacritics
+            CommandRegistry.Category.DIACRITICS_ARABIC -> Icons.Filled.Favorite   // Arabic diacritics
+            CommandRegistry.Category.HEBREW -> Icons.Filled.Favorite       // Hebrew marks
+            CommandRegistry.Category.MEDIA -> Icons.Filled.PlayArrow       // Media controls
+            CommandRegistry.Category.SYSTEM -> Icons.Filled.Build          // System/app keys
             CommandRegistry.Category.TEXT -> Icons.Filled.Create           // Text
         }
 

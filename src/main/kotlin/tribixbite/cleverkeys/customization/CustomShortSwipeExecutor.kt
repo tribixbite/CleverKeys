@@ -144,9 +144,71 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 "selectToLineStart" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_MOVE_HOME, KeyEvent.META_SHIFT_ON)
                 "selectToLineEnd" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_MOVE_END, KeyEvent.META_SHIFT_ON)
 
+                // Document navigation
+                "doc_home" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_MOVE_HOME, KeyEvent.META_CTRL_ON)
+                "doc_end" -> sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_MOVE_END, KeyEvent.META_CTRL_ON)
+
+                // Media controls
+                "media_play_pause" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
+                "media_play" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MEDIA_PLAY)
+                "media_pause" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MEDIA_PAUSE)
+                "media_stop" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MEDIA_STOP)
+                "media_next" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MEDIA_NEXT)
+                "media_previous" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MEDIA_PREVIOUS)
+                "media_rewind" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MEDIA_REWIND)
+                "media_fast_forward" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MEDIA_FAST_FORWARD)
+                "media_record" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MEDIA_RECORD)
+
+                // Volume controls
+                "volume_up" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_VOLUME_UP)
+                "volume_down" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_VOLUME_DOWN)
+                "volume_mute" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_VOLUME_MUTE)
+
+                // Brightness
+                "brightness_up" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_BRIGHTNESS_UP)
+                "brightness_down" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_BRIGHTNESS_DOWN)
+
+                // Zoom
+                "zoom_in" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_ZOOM_IN)
+                "zoom_out" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_ZOOM_OUT)
+
+                // System/app keys
+                "search" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_SEARCH)
+                "calculator" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_CALCULATOR)
+                "calendar" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_CALENDAR)
+                "contacts" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_CONTACTS)
+                "explorer" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_EXPLORER)
+                "notification" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_NOTIFICATION)
+
+                // Menu key
+                "menu" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_MENU)
+                "insert" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_INSERT)
+                "scroll_lock" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_SCROLL_LOCK)
+
+                // Fallback: try to get KeyValue for character-based commands
+                // (Hebrew niqqud, Arabic vowels, combining diacritics, etc.)
                 else -> {
-                    Log.w(TAG, "Unimplemented CommandRegistry command: ${command.name}")
-                    false
+                    val keyValue = KeyValue.getKeyByName(command.name)
+                    if (keyValue != null) {
+                        when (keyValue.getKind()) {
+                            KeyValue.Kind.Char -> {
+                                inputConnection.commitText(keyValue.getChar().toString(), 1)
+                            }
+                            KeyValue.Kind.String -> {
+                                inputConnection.commitText(keyValue.getString(), 1)
+                            }
+                            KeyValue.Kind.Keyevent -> {
+                                sendKeyEvent(inputConnection, keyValue.getKeyevent())
+                            }
+                            else -> {
+                                Log.w(TAG, "Unsupported KeyValue kind for command: ${command.name}")
+                                false
+                            }
+                        }
+                    } else {
+                        Log.w(TAG, "Unimplemented CommandRegistry command: ${command.name}")
+                        false
+                    }
                 }
             }
             Log.d(TAG, "Executed registry command: ${command.name} -> $success")

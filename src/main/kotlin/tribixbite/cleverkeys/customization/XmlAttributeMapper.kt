@@ -1,13 +1,21 @@
 package tribixbite.cleverkeys.customization
 
+import tribixbite.cleverkeys.KeyValue
+
 /**
  * Maps ShortSwipeMapping actions to Unexpected Keyboard XML attribute values.
+ *
+ * Command names from CommandRegistry match KeyValue.getSpecialKeyByName() and can be
+ * used directly as XML attribute values. This enables full round-trip compatibility:
+ * - User customizes key via UI → stored in JSON
+ * - Export to XML → command name used as attribute value
+ * - Import XML → KeyValue.getKeyByName() parses it correctly
  */
 object XmlAttributeMapper {
 
     /**
      * Convert a ShortSwipeMapping to an XML attribute value string.
-     * 
+     *
      * @param mapping The mapping to convert
      * @return The string value for the XML attribute (e.g., "'Hello'", "copy", "keyevent:66")
      */
@@ -18,9 +26,18 @@ object XmlAttributeMapper {
                 "'${mapping.actionValue.replace("'", "'\'")}'"
             }
             ActionType.COMMAND -> {
-                // Map AvailableCommand to UK keywords
-                val command = mapping.getCommand()
-                mapCommandToKeyword(command) ?: mapping.actionValue
+                // Command names from CommandRegistry match KeyValue.getSpecialKeyByName()
+                // so they can be used directly as XML attribute values
+                val commandName = mapping.actionValue
+
+                // Verify it's a valid KeyValue name (optional but helpful for debugging)
+                if (KeyValue.getKeyByName(commandName) != null) {
+                    commandName
+                } else {
+                    // Try legacy AvailableCommand mapping as fallback
+                    val legacyCommand = mapping.getCommand()
+                    mapLegacyCommandToKeyword(legacyCommand) ?: commandName
+                }
             }
             ActionType.KEY_EVENT -> {
                 // Use keyevent syntax
@@ -30,9 +47,9 @@ object XmlAttributeMapper {
     }
 
     /**
-     * Map AvailableCommand enum to UK XML keyword.
+     * Map legacy AvailableCommand enum to XML keyword (for backwards compatibility).
      */
-    private fun mapCommandToKeyword(command: AvailableCommand?): String? {
+    private fun mapLegacyCommandToKeyword(command: AvailableCommand?): String? {
         return when (command) {
             AvailableCommand.COPY -> "copy"
             AvailableCommand.PASTE -> "paste"
@@ -40,36 +57,21 @@ object XmlAttributeMapper {
             AvailableCommand.SELECT_ALL -> "selectAll"
             AvailableCommand.UNDO -> "undo"
             AvailableCommand.REDO -> "redo"
-            
             AvailableCommand.CURSOR_LEFT -> "cursor_left"
             AvailableCommand.CURSOR_RIGHT -> "cursor_right"
             AvailableCommand.CURSOR_UP -> "cursor_up"
             AvailableCommand.CURSOR_DOWN -> "cursor_down"
-            
-            AvailableCommand.CURSOR_HOME -> "home" // KeyValue.java: "home" -> MOVE_HOME
-            AvailableCommand.CURSOR_END -> "end"   // KeyValue.java: "end" -> MOVE_END
-            AvailableCommand.CURSOR_DOC_START -> "keyevent:122" // MOVE_HOME (ctrl+home usually, but raw code might be needed if no keyword)
-            AvailableCommand.CURSOR_DOC_END -> "keyevent:123"   // MOVE_END
-            
-            AvailableCommand.WORD_LEFT -> "keyevent:92" // KEYCODE_PAGE_UP? No. 
-            // UK doesn't have explicit "word_left" keyword in the simple list, 
-            // but it has "ctrl" modifier logic. 
-            // Let's stick to known keywords or keyevents.
-            // AvailableCommand.WORD_LEFT maps to ctrl+left normally. 
-            // UK XML doesn't support "ctrl+left" as a single attribute value easily 
-            // unless we use a macro which KeyValueParser supports: "ctrl,left" ?
-            // KeyValueParser supports macros: "Cmd1,Cmd2".
-            // So we can try "ctrl,left". 
-            
-            // Re-reading KeyValue.java:
-            // case "cursor_left": return sliderKey(Slider.Cursor_left, 1);
-            // This is a slider key, not a simple event.
-            
+            AvailableCommand.CURSOR_HOME -> "home"
+            AvailableCommand.CURSOR_END -> "end"
+            AvailableCommand.CURSOR_DOC_START -> "doc_home"
+            AvailableCommand.CURSOR_DOC_END -> "doc_end"
+            AvailableCommand.WORD_LEFT -> "cursor_left" // Slider handles word movement via repeat
+            AvailableCommand.WORD_RIGHT -> "cursor_right"
             AvailableCommand.DELETE_WORD -> "delete_word"
-            
             AvailableCommand.SWITCH_IME -> "change_method"
             AvailableCommand.VOICE_INPUT -> "voice_typing"
-            
+            AvailableCommand.SWITCH_FORWARD -> "switch_forward"
+            AvailableCommand.SWITCH_BACKWARD -> "switch_backward"
             else -> null
         }
     }

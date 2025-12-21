@@ -589,6 +589,38 @@ class KeyValue private constructor(
             "menu" -> keyeventKey("Menu", KeyEvent.KEYCODE_MENU, FLAG_SMALLER_FONT)
             "scroll_lock" -> keyeventKey("Scrl", KeyEvent.KEYCODE_SCROLL_LOCK, FLAG_SMALLER_FONT)
 
+            /* Media keys */
+            "media_play_pause" -> keyeventKey("⏯", KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0)
+            "media_play" -> keyeventKey("▶", KeyEvent.KEYCODE_MEDIA_PLAY, 0)
+            "media_pause" -> keyeventKey("⏸", KeyEvent.KEYCODE_MEDIA_PAUSE, 0)
+            "media_stop" -> keyeventKey("⏹", KeyEvent.KEYCODE_MEDIA_STOP, 0)
+            "media_next" -> keyeventKey("⏭", KeyEvent.KEYCODE_MEDIA_NEXT, 0)
+            "media_previous" -> keyeventKey("⏮", KeyEvent.KEYCODE_MEDIA_PREVIOUS, 0)
+            "media_rewind" -> keyeventKey("⏪", KeyEvent.KEYCODE_MEDIA_REWIND, 0)
+            "media_fast_forward" -> keyeventKey("⏩", KeyEvent.KEYCODE_MEDIA_FAST_FORWARD, 0)
+            "media_record" -> keyeventKey("⏺", KeyEvent.KEYCODE_MEDIA_RECORD, 0)
+
+            /* Volume keys */
+            "volume_up" -> keyeventKey("🔊", KeyEvent.KEYCODE_VOLUME_UP, 0)
+            "volume_down" -> keyeventKey("🔉", KeyEvent.KEYCODE_VOLUME_DOWN, 0)
+            "volume_mute" -> keyeventKey("🔇", KeyEvent.KEYCODE_VOLUME_MUTE, 0)
+
+            /* Brightness keys */
+            "brightness_up" -> keyeventKey("🔆", KeyEvent.KEYCODE_BRIGHTNESS_UP, 0)
+            "brightness_down" -> keyeventKey("🔅", KeyEvent.KEYCODE_BRIGHTNESS_DOWN, 0)
+
+            /* Zoom keys */
+            "zoom_in" -> keyeventKey("🔍+", KeyEvent.KEYCODE_ZOOM_IN, FLAG_SMALLER_FONT)
+            "zoom_out" -> keyeventKey("🔍-", KeyEvent.KEYCODE_ZOOM_OUT, FLAG_SMALLER_FONT)
+
+            /* System/app launcher keys */
+            "search" -> keyeventKey("🔍", KeyEvent.KEYCODE_SEARCH, 0)
+            "calculator" -> keyeventKey("🔢", KeyEvent.KEYCODE_CALCULATOR, 0)
+            "calendar" -> keyeventKey("📅", KeyEvent.KEYCODE_CALENDAR, 0)
+            "contacts" -> keyeventKey("👤", KeyEvent.KEYCODE_CONTACTS, 0)
+            "explorer" -> keyeventKey("📁", KeyEvent.KEYCODE_EXPLORER, 0)
+            "notification" -> keyeventKey("🔔", KeyEvent.KEYCODE_NOTIFICATION, 0)
+
             /* Spaces */
             "\\t" -> charKey("\\t", '\t', 0) // Send the tab character
             "\\n" -> charKey("\\n", '\n', 0) // Send the newline character
