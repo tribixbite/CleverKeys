@@ -67,11 +67,23 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
     override fun getSerializer(): ListGroupPreference.Serializer<Layout> = SERIALIZER
 
     private fun selectDialog(callback: SelectionCallback<Layout>) {
-        val layouts = ArrayAdapter(context, android.R.layout.simple_list_item_1, layoutDisplayNames)
+        // Check if SystemLayout already exists - only allow one
+        val hasSystemLayout = values.any { it is SystemLayout }
+        val allNames = getLayoutNames(context.resources)
+        val allDisplayNames = layoutDisplayNames.toList()
+
+        // Filter out "system" if already present
+        val filteredIndices = allNames.indices.filter { i ->
+            !(allNames[i] == "system" && hasSystemLayout)
+        }
+        val filteredDisplayNames = filteredIndices.map { allDisplayNames[it] }
+
+        val layouts = ArrayAdapter(context, android.R.layout.simple_list_item_1, filteredDisplayNames)
         AlertDialog.Builder(context)
             .setView(View.inflate(context, R.layout.dialog_edit_text, null))
             .setAdapter(layouts) { _, which ->
-                val name = getLayoutNames(context.resources)[which]
+                val originalIndex = filteredIndices[which]
+                val name = allNames[originalIndex]
                 when (name) {
                     "system" -> callback.select(SystemLayout())
                     "custom" -> selectCustom(callback, readInitialCustomLayout())
