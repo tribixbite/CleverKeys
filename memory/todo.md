@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-20
-**Status**: F-Droid Reproducibility - v1.1.70 SUCCESS (no postbuild needed!)
+**Last Updated**: 2025-12-21
+**Status**: v1.1.71 released - F-Droid MR pipeline SUCCESS
 
 ---
 
@@ -156,10 +156,73 @@
 - [ ] Wait for F-Droid maintainer merge approval
 - [x] Cron monitoring: checks MR status every 5 min, notifies on merge
 
-**Current Version**: 1.1.70 (versionCode 101703 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.70
+**Current Version**: 1.1.71 (versionCode 101713 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.71
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 **Final Config**: No srclibs, no postbuild - just gradle + prebuild sed!
+
+---
+
+## Release Process Quick Reference
+
+### Version Locations (Single Source of Truth)
+```
+build.gradle (lines 8-10):
+  ext.VERSION_MAJOR = 1
+  ext.VERSION_MINOR = 1
+  ext.VERSION_PATCH = 71
+```
+
+### VersionCode Formula
+```
+ABI versionCodes (per-APK for F-Droid):
+  armeabi-v7a: MAJOR * 100000 + MINOR * 1000 + PATCH * 10 + 1  (e.g., 101711)
+  arm64-v8a:   MAJOR * 100000 + MINOR * 1000 + PATCH * 10 + 2  (e.g., 101712)
+  x86_64:      MAJOR * 100000 + MINOR * 1000 + PATCH * 10 + 3  (e.g., 101713)
+```
+
+### New Release Workflow
+```bash
+# 1. Bump VERSION_PATCH in build.gradle
+# 2. Add changelogs: fastlane/metadata/android/en-US/changelogs/{versionCode}.txt
+
+# 3. Commit and tag
+git add -A && git commit -m "v1.1.XX: description"
+git tag v1.1.XX && git push && git push origin v1.1.XX
+
+# 4. Wait for GitHub Actions Release workflow to complete
+
+# 5. Update F-Droid metadata
+cd ~/git/fdroiddata-fork
+git fetch origin cleverkeys && git reset --hard FETCH_HEAD
+# Edit metadata/tribixbite.cleverkeys.yml - add new version build entries
+git add . && git commit -m "Update CleverKeys to vX.X.XX" && git push origin cleverkeys
+
+# 6. Monitor F-Droid pipeline
+curl -s "https://gitlab.com/api/v4/projects/fdroid%2Ffdroiddata/merge_requests/30449/pipelines" | jq '.[0]'
+```
+
+### F-Droid Metadata Location
+```
+~/git/fdroiddata-fork/metadata/tribixbite.cleverkeys.yml
+```
+
+### F-Droid Build Entry Format
+```yaml
+  - versionName: 1.1.71
+    versionCode: 101711  # or 101712, 101713 for other ABIs
+    commit: {full-commit-hash}
+    gradle:
+      - yes
+    binary: https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-{abi}.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include '{abi}'/" build.gradle
+```
+
+### Fastlane Changelogs
+```
+fastlane/metadata/android/en-US/changelogs/{versionCode}.txt
+```
+One changelog file per ABI versionCode (101711.txt, 101712.txt, 101713.txt)
 
 ### Legacy Code Audit (2025-12-17)
 Technical debt identified but not blocking F-Droid submission:
