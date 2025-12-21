@@ -403,19 +403,44 @@
         // Helper to validate a file is accessible and has expected minimum size
         async function validateFile(url, minSizeKB = 0, description = 'file') {
             try {
-                // Use cache: 'no-store' to bypass potentially corrupted cached files
-                const response = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+                // Try HEAD first for performance, with cache bypass
+                let response = await fetch(url, { method: 'HEAD', cache: 'no-store' });
                 if (!response.ok) {
                     throw new Error(`${description} not found (HTTP ${response.status})`);
                 }
-                const contentLength = response.headers.get('content-length');
-                const sizeKB = contentLength ? parseInt(contentLength) / 1024 : 0;
-                console.log(`${description}: ${sizeKB.toFixed(0)}KB`);
 
-                // Check minimum expected size (catches LFS pointer files served instead of actual content)
-                if (minSizeKB > 0 && sizeKB < minSizeKB) {
-                    throw new Error(`${description} appears incomplete (${sizeKB.toFixed(0)}KB < ${minSizeKB}KB expected). Try hard refresh.`);
+                let contentLength = response.headers.get('content-length');
+
+                // Some CDNs don't return content-length for HEAD requests
+                // Fall back to range request to verify file accessibility and get size
+                if (!contentLength && minSizeKB > 0) {
+                    console.log(`${description}: No content-length from HEAD, trying range request...`);
+                    const rangeResponse = await fetch(url, {
+                        method: 'GET',
+                        headers: { 'Range': 'bytes=0-0' },
+                        cache: 'no-store'
+                    });
+                    // Range responses include content-range header with total size
+                    const contentRange = rangeResponse.headers.get('content-range');
+                    if (contentRange) {
+                        const match = contentRange.match(/\/(\d+)$/);
+                        if (match) contentLength = match[1];
+                    }
                 }
+
+                const sizeKB = contentLength ? parseInt(contentLength) / 1024 : -1;
+
+                if (sizeKB >= 0) {
+                    console.log(`${description}: ${sizeKB.toFixed(0)}KB`);
+                    // Check minimum expected size (catches LFS pointer files)
+                    if (minSizeKB > 0 && sizeKB < minSizeKB) {
+                        throw new Error(`${description} appears incomplete (${sizeKB.toFixed(0)}KB < ${minSizeKB}KB expected). Try hard refresh.`);
+                    }
+                } else {
+                    // Can't determine size, but file is accessible - proceed with caution
+                    console.log(`${description}: accessible (size unknown)`);
+                }
+
                 return true;
             } catch (error) {
                 console.error(`Failed to validate ${description}:`, error);
