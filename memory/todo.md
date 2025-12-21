@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2025-12-21
-**Status**: v1.1.71 released - F-Droid MR pipeline SUCCESS
+**Status**: v1.1.71 released - F-Droid MR #30449 MERGED! 🎉
 
 ---
 
@@ -153,7 +153,7 @@
   - Added video.txt with per-key customization demo
   - Added Spanish (es) translation for F-Droid Latest tab visibility
   - Fixed "Sub-200ms" → "Sub-100ms" for accurate latency claim
-- [ ] Wait for F-Droid maintainer merge approval
+- [x] F-Droid MR #30449 merged (2025-12-21) - CleverKeys now on F-Droid!
 - [x] Cron monitoring: checks MR status every 5 min, notifies on merge
 
 **Current Version**: 1.1.71 (versionCode 101713 for x86_64)

@@ -200,8 +200,9 @@ curl -s "https://gitlab.com/api/v4/projects/fdroid%2Ffdroiddata/merge_requests/3
 
 ### Notes
 - F-Droid builds APKs from source and verifies against GitHub release binaries
-- Only one version needs to be in the metadata (latest) for new app submissions
-- After MR is merged, F-Droid auto-updates via `UpdateCheckMode: HTTP`
+- **MR #30449 merged 2025-12-21** - CleverKeys is now officially on F-Droid!
+- Future updates auto-detected via `UpdateCheckMode: HTTP` - no more MR updates needed
+- F-Droid will automatically pick up new GitHub releases tagged `vX.Y.Z`
 
 ## Quick Reference
 
