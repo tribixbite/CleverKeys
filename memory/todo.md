@@ -162,6 +162,13 @@
   - Decoder was using all-zeros src_mask (attending to padded garbage)
   - Now passes actualSrcLength from encoder to decoder
   - Decoder creates matching mask: 1 for padded positions, 0 for real data
+- [x] Expand CommandRegistry with 75+ new commands (2025-12-21)
+  - Added 32 new Android KeyEvent codes (media, volume, brightness, zoom, system/app keys)
+  - Added 5 new categories: MEDIA, SYSTEM, DIACRITICS_SLAVONIC, DIACRITICS_ARABIC, HEBREW
+  - Added 10 Slavonic, 14 Arabic, 20 Hebrew diacritical marks
+  - Updated CustomShortSwipeExecutor with fallback for character-based commands
+  - Updated XmlAttributeMapper for XML export compatibility
+  - Total commands now 200+ (up from 137)
 
 **Current Version**: 1.1.71 (versionCode 101713 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.71
