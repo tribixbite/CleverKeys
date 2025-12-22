@@ -8,13 +8,15 @@ package tribixbite.cleverkeys.customization
  * @property displayText The text shown on the key's sub-label (max 4 characters for display)
  * @property actionType The type of action to execute
  * @property actionValue The action data (text content, command name, or key event code)
+ * @property useKeyFont Whether to render displayText with the special keyboard icon font
  */
 data class ShortSwipeMapping(
     val keyCode: String,
     val direction: SwipeDirection,
     val displayText: String,
     val actionType: ActionType,
-    val actionValue: String
+    val actionValue: String,
+    val useKeyFont: Boolean = false
 ) {
     init {
         require(keyCode.isNotEmpty()) { "keyCode cannot be empty" }
@@ -44,13 +46,15 @@ data class ShortSwipeMapping(
             keyCode: String,
             direction: SwipeDirection,
             displayText: String,
-            text: String
+            text: String,
+            useKeyFont: Boolean = false
         ): ShortSwipeMapping = ShortSwipeMapping(
             keyCode = keyCode.lowercase(),
             direction = direction,
             displayText = displayText.take(MAX_DISPLAY_LENGTH),
             actionType = ActionType.TEXT,
-            actionValue = text.take(MAX_ACTION_LENGTH)
+            actionValue = text.take(MAX_ACTION_LENGTH),
+            useKeyFont = useKeyFont
         )
 
         /**
@@ -60,13 +64,15 @@ data class ShortSwipeMapping(
             keyCode: String,
             direction: SwipeDirection,
             displayText: String,
-            command: AvailableCommand
+            command: AvailableCommand,
+            useKeyFont: Boolean = false
         ): ShortSwipeMapping = ShortSwipeMapping(
             keyCode = keyCode.lowercase(),
             direction = direction,
             displayText = displayText.take(MAX_DISPLAY_LENGTH),
             actionType = ActionType.COMMAND,
-            actionValue = command.name
+            actionValue = command.name,
+            useKeyFont = useKeyFont
         )
 
         /**
@@ -76,13 +82,15 @@ data class ShortSwipeMapping(
             keyCode: String,
             direction: SwipeDirection,
             displayText: String,
-            keyEventCode: Int
+            keyEventCode: Int,
+            useKeyFont: Boolean = false
         ): ShortSwipeMapping = ShortSwipeMapping(
             keyCode = keyCode.lowercase(),
             direction = direction,
             displayText = displayText.take(MAX_DISPLAY_LENGTH),
             actionType = ActionType.KEY_EVENT,
-            actionValue = keyEventCode.toString()
+            actionValue = keyEventCode.toString(),
+            useKeyFont = useKeyFont
         )
     }
 
@@ -132,7 +140,8 @@ data class ShortSwipeCustomizations(
                         direction = it,
                         displayText = mapping.displayText,
                         actionType = ActionType.fromString(mapping.actionType),
-                        actionValue = mapping.actionValue
+                        actionValue = mapping.actionValue,
+                        useKeyFont = mapping.useKeyFont
                     )
                 }
             }
@@ -140,7 +149,7 @@ data class ShortSwipeCustomizations(
     }
 
     companion object {
-        const val CURRENT_VERSION = 1
+        const val CURRENT_VERSION = 2
 
         /**
          * Convert from flat list to storage format.
@@ -152,7 +161,8 @@ data class ShortSwipeCustomizations(
                         mapping.direction.name to DirectionMapping(
                             displayText = mapping.displayText,
                             actionType = mapping.actionType.name,
-                            actionValue = mapping.actionValue
+                            actionValue = mapping.actionValue,
+                            useKeyFont = mapping.useKeyFont
                         )
                     }
                 }
@@ -163,9 +173,14 @@ data class ShortSwipeCustomizations(
 
 /**
  * JSON-friendly model for a single direction mapping.
+ * @property displayText The text/icon to display
+ * @property actionType The action type (TEXT, COMMAND, KEY_EVENT)
+ * @property actionValue The action value
+ * @property useKeyFont Whether to use the special keyboard icon font for displayText
  */
 data class DirectionMapping(
     val displayText: String,
     val actionType: String,
-    val actionValue: String
+    val actionValue: String,
+    val useKeyFont: Boolean = false
 )

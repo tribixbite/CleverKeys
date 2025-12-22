@@ -464,7 +464,7 @@ class KeyMagnifierView @JvmOverloads constructor(
             // Check for custom mapping first
             val customMapping = customMappings[direction]
             if (customMapping != null) {
-                drawSubLabelForDirection(canvas, keyRect, direction, customMapping.displayText, true, false)
+                drawSubLabelForDirection(canvas, keyRect, direction, customMapping.displayText, true, customMapping.useKeyFont)
                 continue
             }
 
@@ -485,9 +485,10 @@ class KeyMagnifierView @JvmOverloads constructor(
      */
     private fun drawSubLabelsFromMappings(canvas: Canvas, keyRect: RectF) {
         subLabelPaint.textSize = keyRect.height() * 0.14f
+        specialSubLabelPaint.textSize = keyRect.height() * 0.14f
 
         for ((direction, mapping) in customMappings) {
-            drawSubLabelForDirection(canvas, keyRect, direction, mapping.displayText, true)
+            drawSubLabelForDirection(canvas, keyRect, direction, mapping.displayText, true, mapping.useKeyFont)
         }
     }
 

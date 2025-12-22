@@ -27,7 +27,8 @@ import androidx.compose.ui.window.DialogProperties
 data class MappingSelection(
     val displayLabel: String,  // What shows on the key (user-customizable)
     val actionType: ActionType,
-    val actionValue: String    // The actual command name or text to insert
+    val actionValue: String,   // The actual command name or text to insert
+    val useKeyFont: Boolean = false  // Whether to use the special keyboard icon font
 )
 
 /**
@@ -69,9 +70,14 @@ fun CommandPaletteDialog(
 
     // Show label confirmation dialog when pending selection exists
     if (pendingCommand != null || pendingText != null) {
+        // Get display info for commands (includes icon and font flag)
+        val commandDisplayInfo = pendingCommand?.let {
+            CommandRegistry.getDisplayInfo(it.name)
+        }
+
         LabelConfirmationDialog(
             defaultLabel = when {
-                pendingCommand != null -> pendingCommand!!.displayName.take(4)
+                pendingCommand != null -> commandDisplayInfo?.displayText ?: pendingCommand!!.displayName.take(4)
                 pendingText != null -> pendingText!!.take(4)
                 else -> ""
             },
@@ -85,11 +91,16 @@ fun CommandPaletteDialog(
             onConfirm = {
                 val label = customLabel.ifBlank {
                     when {
-                        pendingCommand != null -> pendingCommand!!.displayName.take(4)
+                        pendingCommand != null -> commandDisplayInfo?.displayText ?: pendingCommand!!.displayName.take(4)
                         pendingText != null -> pendingText!!.take(4)
                         else -> "?"
                     }
                 }
+
+                // Determine if we should use the icon font:
+                // - If user customized the label, don't use icon font (they typed text)
+                // - If using default label from command, use the command's font setting
+                val useIconFont = customLabel.isBlank() && commandDisplayInfo?.useKeyFont == true
 
                 if (onMappingSelected != null) {
                     // Use the new callback with full mapping data
@@ -97,12 +108,14 @@ fun CommandPaletteDialog(
                         pendingCommand != null -> MappingSelection(
                             displayLabel = label,
                             actionType = ActionType.COMMAND,
-                            actionValue = pendingCommand!!.name
+                            actionValue = pendingCommand!!.name,
+                            useKeyFont = useIconFont
                         )
                         pendingText != null -> MappingSelection(
                             displayLabel = label,
                             actionType = ActionType.TEXT,
-                            actionValue = pendingText!!
+                            actionValue = pendingText!!,
+                            useKeyFont = false  // Text input never uses icon font
                         )
                         else -> null
                     }

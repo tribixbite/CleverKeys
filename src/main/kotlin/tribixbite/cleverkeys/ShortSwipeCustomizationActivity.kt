@@ -316,7 +316,8 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                             direction = direction,
                             displayText = selection.displayLabel,  // User-customized label
                             actionType = selection.actionType,
-                            actionValue = selection.actionValue    // Actual action/command
+                            actionValue = selection.actionValue,   // Actual action/command
+                            useKeyFont = selection.useKeyFont      // Use icon font if applicable
                         )
                         manager.setMapping(mapping)
                         showCommandPalette = false

@@ -1079,7 +1079,8 @@ class Keyboard2View @JvmOverloads constructor(
                 x, y, keyW, keyH,
                 subIndex,
                 accentColor,
-                tc.key
+                tc.key,
+                mapping.useKeyFont
             )
         }
     }
@@ -1103,6 +1104,7 @@ class Keyboard2View @JvmOverloads constructor(
 
     /**
      * Draw a custom sublabel with specific color (for custom short swipe mappings).
+     * @param useKeyFont Whether to use the special keyboard icon font
      */
     private fun drawCustomSubLabel(
         canvas: Canvas,
@@ -1113,19 +1115,16 @@ class Keyboard2View @JvmOverloads constructor(
         keyH: Float,
         sub_index: Int,
         color: Int,
-        tc_key: Theme.Computed.Key
+        tc_key: Theme.Computed.Key,
+        useKeyFont: Boolean = false
     ) {
         val a = LABEL_POSITION_H[sub_index]
         val v = LABEL_POSITION_V[sub_index]
-        val textSize = _subLabelSize * 0.9f // Slightly smaller for custom labels
+        // Match the size of built-in sublabels for consistency
+        val textSize = _subLabelSize
 
-        // Create paint with accent color
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            this.color = color
-            this.textSize = textSize
-            this.textAlign = a
-            this.typeface = tc_key.label_paint(false, color, textSize).typeface
-        }
+        // Use the theme's sublabel_paint for consistent font selection
+        val paint = tc_key.sublabel_paint(useKeyFont, color, textSize, a)
 
         val subPadding = _config.keyPadding
         var yPos = y

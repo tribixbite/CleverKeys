@@ -613,6 +613,40 @@ object CommandRegistry {
     }
 
     /**
+     * Display info for a command, including the symbol and font flag.
+     */
+    data class CommandDisplayInfo(
+        /** The display text/symbol for the command */
+        val displayText: String,
+        /** Whether the special keyboard icon font is needed to render this */
+        val useKeyFont: Boolean
+    )
+
+    /**
+     * Get the display info (symbol and font flag) for a command.
+     * This extracts the proper icon from KeyValue if available.
+     *
+     * @param commandName The command name (e.g., "cursor_left", "tab")
+     * @return DisplayInfo with the symbol and font flag, or a fallback based on command name
+     */
+    fun getDisplayInfo(commandName: String): CommandDisplayInfo {
+        val keyValue = getKeyValue(commandName)
+        return if (keyValue != null) {
+            CommandDisplayInfo(
+                displayText = keyValue.getString().take(4),
+                useKeyFont = keyValue.hasFlagsAny(KeyValue.FLAG_KEY_FONT)
+            )
+        } else {
+            // Fallback: use the command's display name or first 4 chars of name
+            val command = getByName(commandName)
+            CommandDisplayInfo(
+                displayText = command?.symbol ?: commandName.take(4),
+                useKeyFont = false
+            )
+        }
+    }
+
+    /**
      * Get all commands in a specific category.
      */
     fun getByCategory(category: Category): List<Command> {
