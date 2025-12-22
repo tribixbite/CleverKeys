@@ -169,6 +169,14 @@
   - Updated CustomShortSwipeExecutor with fallback for character-based commands
   - Updated XmlAttributeMapper for XML export compatibility
   - Total commands now 200+ (up from 137)
+- [x] Add icon font support for custom swipe mappings (2025-12-22)
+  - ShortSwipeMapping now has useKeyFont field for icon rendering
+  - DirectionMapping storage updated to v2 schema with useKeyFont
+  - CommandRegistry.getDisplayInfo() extracts icon + font flag from KeyValue
+  - KeyMagnifierView renders custom mappings with proper special_font.ttf
+  - Keyboard2View uses theme's sublabel_paint for consistent sizing
+  - CommandPaletteDialog auto-detects icon mode from command's KeyValue
+  - Custom mappings now match font size/style of layout's default subkeys
 
 **Current Version**: 1.1.71 (versionCode 101713 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.71

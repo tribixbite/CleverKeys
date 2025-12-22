@@ -3,7 +3,7 @@
 **Status**: Complete ✅
 **Branch**: `main` (merged)
 **Created**: 2025-12-05
-**Updated**: 2025-12-21
+**Updated**: 2025-12-22
 
 ## Overview
 
@@ -89,9 +89,10 @@ enum class ActionType {
 data class ShortSwipeMapping(
     val keyCode: String,           // Key identifier
     val direction: SwipeDirection,
-    val displayText: String,       // Max 4 chars for display
+    val displayText: String,       // Max 4 chars for display (icon or text)
     val actionType: ActionType,
-    val actionValue: String        // Text or command name
+    val actionValue: String,       // Text or command name
+    val useKeyFont: Boolean = false // Use special_font.ttf for icons
 )
 ```
 
@@ -277,6 +278,17 @@ src/main/kotlin/tribixbite/cleverkeys/
 - [x] Updated XmlAttributeMapper to support CommandRegistry names directly for XML export
 - [x] Updated CommandPaletteDialog with icons for new categories
 - [x] Total commands now: 200+ (up from 137)
+
+### Phase 9: Icon Font Support ✅ (2025-12-22)
+- [x] Added `useKeyFont` field to ShortSwipeMapping data model
+- [x] Updated DirectionMapping storage to v2 schema with useKeyFont field
+- [x] Added CommandRegistry.getDisplayInfo() to extract icon + font flag from KeyValue
+- [x] Updated KeyMagnifierView to render custom mappings with special_font.ttf
+- [x] Updated Keyboard2View.drawCustomSubLabel() to use theme's sublabel_paint
+- [x] Updated CommandPaletteDialog to auto-detect icon mode:
+  - If command has KeyValue with FLAG_KEY_FONT, use icon mode by default
+  - If user customizes label text, switch to text mode
+- [x] Custom mappings now match font size/style of layout's default subkeys
 
 ## Performance Requirements
 
