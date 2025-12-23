@@ -925,8 +925,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     title = "Bottom Margin (Portrait)",
                     description = "Vertical margin from bottom edge (portrait)",
                     value = marginBottomPortrait.toFloat(),
-                    valueRange = 0f..30f,
-                    steps = 30,
+                    valueRange = 0f..80f,
+                    steps = 80,
                     onValueChange = {
                         marginBottomPortrait = it.toInt()
                         saveSetting("margin_bottom_portrait", marginBottomPortrait)

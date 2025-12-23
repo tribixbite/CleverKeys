@@ -1,0 +1,3 @@
+• Increase portrait bottom margin max from 30dp to 80dp
+• Fix custom sublabel color to match default sublabels
+• Improve icon preview in customization dialog
