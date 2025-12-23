@@ -3,7 +3,7 @@
 **Status**: Complete ✅
 **Branch**: `main` (merged)
 **Created**: 2025-12-05
-**Updated**: 2025-12-22
+**Updated**: 2025-12-23
 
 ## Overview
 
@@ -289,6 +289,16 @@ src/main/kotlin/tribixbite/cleverkeys/
   - If command has KeyValue with FLAG_KEY_FONT, use icon mode by default
   - If user customizes label text, switch to text mode
 - [x] Custom mappings now match font size/style of layout's default subkeys
+
+### Phase 10: Color & Preview Fixes ✅ (2025-12-23)
+- [x] Fixed custom sublabel color: use `subLabelColor` instead of `activatedColor`
+  - Keyboard2View.drawCustomMappings() now uses theme's subLabelColor
+  - KeyMagnifierView.drawSubLabelForDirection() uses consistent subLabelColor
+- [x] Improved icon preview in LabelConfirmationDialog:
+  - PUA characters (Private Use Area) can't render in Compose UI
+  - Now shows readable description like [Tab], [Home] instead of boxes
+  - Clear UX: "Leave blank to use default icon. Type text for a custom label."
+- [x] Added isIconMode and iconPreviewText parameters to LabelConfirmationDialog
 
 ## Performance Requirements
 

@@ -1,6 +1,6 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-21
+**Last Updated**: 2025-12-23
 **Status**: v1.1.71 released - F-Droid MR #30449 MERGED! 🎉
 
 ---
@@ -177,6 +177,11 @@
   - Keyboard2View uses theme's sublabel_paint for consistent sizing
   - CommandPaletteDialog auto-detects icon mode from command's KeyValue
   - Custom mappings now match font size/style of layout's default subkeys
+- [x] Fix custom sublabel color and icon preview (2025-12-23)
+  - Keyboard2View: use subLabelColor instead of activatedColor for custom mappings
+  - KeyMagnifierView: use consistent subLabelColor for both custom and built-in sublabels
+  - CommandPaletteDialog: show readable description [Tab], [Home] for PUA icons
+  - Clear UX guidance in label dialog for icon vs text mode
 
 **Current Version**: 1.1.71 (versionCode 101713 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.71
