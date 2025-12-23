@@ -743,27 +743,15 @@ class BackupRestoreManager(private val context: Context) {
             metadata.addProperty("type", "dictionaries")
             root.add("metadata", metadata)
 
-            // Export user words from Android system UserDictionary
-            val words = mutableListOf<DictionaryWord>()
-            val cursor = context.contentResolver.query(
-                UserDictionary.Words.CONTENT_URI,
-                arrayOf(UserDictionary.Words.WORD, UserDictionary.Words.FREQUENCY),
-                null, null, null
-            )
-            cursor?.use {
-                val wordIndex = it.getColumnIndex(UserDictionary.Words.WORD)
-                val freqIndex = it.getColumnIndex(UserDictionary.Words.FREQUENCY)
-                while (it.moveToNext()) {
-                    val word = it.getString(wordIndex)
-                    val freq = if (freqIndex >= 0) it.getInt(freqIndex) else DEFAULT_USER_WORD_FREQ
-                    words.add(DictionaryWord(word, freq, WordSource.USER, true))
-                }
-            }
+            // Export user words from internal 'user_dictionary' SharedPreferences (Custom Words)
+            val userDictPrefs = context.getSharedPreferences("user_dictionary", Context.MODE_PRIVATE)
+            val userWordsSet = userDictPrefs.getStringSet("user_words", emptySet()) ?: emptySet()
+            
             val userWords = JsonArray()
-            for (word in words) {
+            for (word in userWordsSet) {
                 val wordObj = JsonObject()
-                wordObj.addProperty("word", word.word)
-                wordObj.addProperty("frequency", word.frequency)
+                wordObj.addProperty("word", word)
+                wordObj.addProperty("frequency", DEFAULT_USER_WORD_FREQ)
                 userWords.add(wordObj)
             }
             root.add("user_words", userWords)
