@@ -183,8 +183,8 @@
   - CommandPaletteDialog: show readable description [Tab], [Home] for PUA icons
   - Clear UX guidance in label dialog for icon vs text mode
 
-**Current Version**: 1.1.71 (versionCode 101713 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.71
+**Current Version**: 1.1.72 (versionCode 101723 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.72
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 **Final Config**: No srclibs, no postbuild - just gradle + prebuild sed!
 
@@ -194,18 +194,18 @@
 
 ### Version Locations (Single Source of Truth)
 ```
-build.gradle (lines 8-10):
+build.gradle (lines 51-53):
   ext.VERSION_MAJOR = 1
   ext.VERSION_MINOR = 1
-  ext.VERSION_PATCH = 71
+  ext.VERSION_PATCH = 72
 ```
 
 ### VersionCode Formula
 ```
 ABI versionCodes (per-APK for F-Droid):
-  armeabi-v7a: MAJOR * 100000 + MINOR * 1000 + PATCH * 10 + 1  (e.g., 101711)
-  arm64-v8a:   MAJOR * 100000 + MINOR * 1000 + PATCH * 10 + 2  (e.g., 101712)
-  x86_64:      MAJOR * 100000 + MINOR * 1000 + PATCH * 10 + 3  (e.g., 101713)
+  armeabi-v7a: MAJOR * 100000 + MINOR * 1000 + PATCH * 10 + 1  (e.g., 101721)
+  arm64-v8a:   MAJOR * 100000 + MINOR * 1000 + PATCH * 10 + 2  (e.g., 101722)
+  x86_64:      MAJOR * 100000 + MINOR * 1000 + PATCH * 10 + 3  (e.g., 101723)
 ```
 
 ### New Release Workflow
@@ -236,8 +236,8 @@ curl -s "https://gitlab.com/api/v4/projects/fdroid%2Ffdroiddata/merge_requests/3
 
 ### F-Droid Build Entry Format
 ```yaml
-  - versionName: 1.1.71
-    versionCode: 101711  # or 101712, 101713 for other ABIs
+  - versionName: 1.1.72
+    versionCode: 101721  # or 101722, 101723 for other ABIs
     commit: {full-commit-hash}
     gradle:
       - yes
