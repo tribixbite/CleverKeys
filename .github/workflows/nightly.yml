@@ -3,6 +3,8 @@ name: Nightly Build
 on:
   push:
     branches: [ main ]
+    tags-ignore:
+      - '**'  # Don't run on tag pushes - release.yml handles those
   workflow_dispatch:
 
 permissions:

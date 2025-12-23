@@ -10,6 +10,8 @@ on:
     types: [opened, closed, merged]
   push:
     branches: [main]
+    tags-ignore:
+      - '**'  # Don't run on tag pushes - release.yml handles those
 
 # Required permissions for issue/PR management
 permissions:

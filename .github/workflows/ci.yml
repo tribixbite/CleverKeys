@@ -3,6 +3,8 @@ name: CI
 on:
   push:
     branches: [ main, develop ]
+    tags-ignore:
+      - '**'  # Don't run on tag pushes - release.yml handles those
   pull_request:
     branches: [ main, develop ]
 
