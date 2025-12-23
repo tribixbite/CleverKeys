@@ -515,12 +515,8 @@ class KeyMagnifierView @JvmOverloads constructor(
         // Select the appropriate paint (special font for private use area characters)
         val paint = if (useKeyFont) specialSubLabelPaint else subLabelPaint
 
-        // Use different color for custom mappings
-        paint.color = if (isCustom) {
-            theme?.activatedColor ?: Color.parseColor("#9B59B6")
-        } else {
-            theme?.subLabelColor ?: Color.parseColor("#BBBBBB")
-        }
+        // Use same color as default sublabels for visual consistency
+        paint.color = theme?.subLabelColor ?: Color.parseColor("#BBBBBB")
 
         // Set text alignment based on position
         when (direction) {

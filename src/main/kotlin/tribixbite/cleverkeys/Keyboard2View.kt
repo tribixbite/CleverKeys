@@ -1065,20 +1065,20 @@ class Keyboard2View @JvmOverloads constructor(
         val customMappings = _shortSwipeManager.getMappingsForKey(keyCode)
         if (customMappings.isEmpty()) return
 
-        // Use activated/locked color for custom mappings (stands out from normal sublabels)
-        val accentColor = _theme.activatedColor
+        // Use same color as default sublabels for visual consistency
+        val sublabelColor = _theme.subLabelColor
 
         for ((direction, mapping) in customMappings) {
             val subIndex = directionToSubIndex(direction)
             if (subIndex < 1 || subIndex > 8) continue
 
-            // Draw the custom mapping label
+            // Draw the custom mapping label (matches default sublabel font size and color)
             drawCustomSubLabel(
                 canvas,
                 mapping.displayText,
                 x, y, keyW, keyH,
                 subIndex,
-                accentColor,
+                sublabelColor,
                 tc.key,
                 mapping.useKeyFont
             )

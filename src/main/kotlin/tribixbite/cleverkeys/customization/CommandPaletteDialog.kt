@@ -75,6 +75,9 @@ fun CommandPaletteDialog(
             CommandRegistry.getDisplayInfo(it.name)
         }
 
+        // Determine if this is an icon-based command
+        val isIconMode = commandDisplayInfo?.useKeyFont == true
+
         LabelConfirmationDialog(
             defaultLabel = when {
                 pendingCommand != null -> commandDisplayInfo?.displayText ?: pendingCommand!!.displayName.take(4)
@@ -87,6 +90,8 @@ fun CommandPaletteDialog(
                 else -> ""
             },
             currentLabel = customLabel,
+            isIconMode = isIconMode,
+            iconPreviewText = if (isIconMode) pendingCommand?.displayName else null,
             onLabelChange = { customLabel = it },
             onConfirm = {
                 val label = customLabel.ifBlank {
@@ -222,6 +227,8 @@ private fun LabelConfirmationDialog(
     defaultLabel: String,
     actionDescription: String,
     currentLabel: String,
+    isIconMode: Boolean,  // Whether the default uses icon font (PUA chars)
+    iconPreviewText: String?,  // Readable description to show instead of PUA char
     onLabelChange: (String) -> Unit,
     onConfirm: () -> Unit,
     onCancel: () -> Unit
@@ -256,14 +263,31 @@ private fun LabelConfirmationDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Determine what to show in the supportingText
+                val defaultDescription = if (isIconMode && iconPreviewText != null) {
+                    "[${iconPreviewText}]"  // Show readable description for icon
+                } else {
+                    "\"$defaultLabel\""
+                }
+
                 OutlinedTextField(
                     value = currentLabel,
                     onValueChange = { if (it.length <= 8) onLabelChange(it) },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text("Display Label") },
-                    placeholder = { Text(defaultLabel) },
+                    placeholder = {
+                        if (isIconMode && iconPreviewText != null) {
+                            Text("[Icon: $iconPreviewText]")
+                        } else {
+                            Text(defaultLabel)
+                        }
+                    },
                     supportingText = {
-                        Text("What shows on the key (max 8 chars). Leave blank for default: \"$defaultLabel\"")
+                        if (isIconMode) {
+                            Text("Leave blank to use default icon. Type text for a custom label.")
+                        } else {
+                            Text("What shows on the key (max 8 chars). Leave blank for default: $defaultDescription")
+                        }
                     },
                     singleLine = true
                 )
@@ -285,8 +309,14 @@ private fun LabelConfirmationDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text("Preview: ", color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        // Show readable description for icons, actual text for custom labels
+                        val previewText = when {
+                            currentLabel.isNotBlank() -> currentLabel
+                            isIconMode && iconPreviewText != null -> "[${iconPreviewText}]"
+                            else -> defaultLabel
+                        }
                         Text(
-                            currentLabel.ifBlank { defaultLabel },
+                            previewText,
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
