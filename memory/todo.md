@@ -210,6 +210,10 @@
     - ClipboardHistoryService (uses SQLite, needs CE storage)
   - Privacy: PII data stays in secure CE storage, only deferred until unlock
   - Added cleanup in CleverKeysService.onDestroy()
+- [x] Block clipboard pane access on lock screen (2025-12-24)
+  - Security fix: clipboard history contains PII, was accessible before unlock
+  - Added DirectBootManager.isUserUnlocked check in KeyboardReceiver SWITCH_CLIPBOARD
+  - Logs warning and returns early if device is locked
 
 **Current Version**: 1.1.75 (versionCode 101753 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.74
