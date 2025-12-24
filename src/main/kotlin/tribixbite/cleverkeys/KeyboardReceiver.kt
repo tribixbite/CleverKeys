@@ -104,6 +104,12 @@ class KeyboardReceiver(
             }
 
             KeyValue.Event.SWITCH_CLIPBOARD -> {
+                // SECURITY: Block clipboard access on lock screen (contains PII)
+                if (!DirectBootManager.getInstance(context).isUserUnlocked) {
+                    android.util.Log.w("KeyboardReceiver", "Clipboard blocked: device is locked")
+                    return
+                }
+
                 // Get clipboard pane from manager (lazy initialization)
                 val clipboardPane = clipboardManager.getClipboardPane(keyboard2.layoutInflater)
 
