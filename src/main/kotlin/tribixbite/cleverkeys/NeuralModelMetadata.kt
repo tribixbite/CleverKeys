@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -16,10 +17,14 @@ import java.util.Locale
  */
 class NeuralModelMetadata(context: Context) {
 
-    private val prefs: SharedPreferences = context.getSharedPreferences(
-        "neural_model_metadata",
-        Context.MODE_PRIVATE
-    )
+    // Use Device Encrypted storage for Direct Boot compatibility
+    // Model metadata is non-sensitive technical info
+    private val prefs: SharedPreferences = if (Build.VERSION.SDK_INT >= 24) {
+        context.createDeviceProtectedStorageContext()
+            .getSharedPreferences("neural_model_metadata", Context.MODE_PRIVATE)
+    } else {
+        context.getSharedPreferences("neural_model_metadata", Context.MODE_PRIVATE)
+    }
 
     companion object {
         private const val KEY_MODEL_TYPE = "model_type"

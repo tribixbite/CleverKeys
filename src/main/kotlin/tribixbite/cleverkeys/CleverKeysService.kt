@@ -448,6 +448,9 @@ class CleverKeysService : InputMethodService(),
             _predictionCoordinator,
             _debugLoggingManager
         ).cleanup()
+
+        // Cleanup DirectBootManager (v1.1.75: Direct Boot compatibility)
+        DirectBootManager.getInstance(this).cleanup()
     }
 
     /**

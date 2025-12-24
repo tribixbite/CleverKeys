@@ -3,7 +3,9 @@ package tribixbite.cleverkeys
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.os.Build
 import android.os.Build.VERSION
+import android.os.UserManager
 import android.widget.Toast
 
 class ClipboardHistoryService private constructor(ctx: Context) {
@@ -280,11 +282,55 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     }
 
     companion object {
+        // Stored callback for deferred initialization
+        private var _pendingCallback: ClipboardPasteCallback? = null
+        private var _pendingContext: Context? = null
+
+        /**
+         * Check if user has unlocked the device (Direct Boot compatibility).
+         */
+        private fun isUserUnlocked(ctx: Context): Boolean {
+            return if (Build.VERSION.SDK_INT >= 24) {
+                val userManager = ctx.getSystemService(Context.USER_SERVICE) as? UserManager
+                userManager?.isUserUnlocked ?: true
+            } else {
+                true // Pre-N doesn't have Direct Boot
+            }
+        }
+
         /** Start the service on startup and start listening to clipboard changes.
          *  IMPORTANT: This should be called from InputMethodService.onCreate() to ensure
-         *  system-wide clipboard monitoring for the entire service lifetime. */
+         *  system-wide clipboard monitoring for the entire service lifetime.
+         *
+         *  DIRECT BOOT: Clipboard history uses SQLite which requires Credential Encrypted
+         *  storage. If the device is locked, initialization is deferred until user unlocks. */
         @JvmStatic
         fun on_startup(ctx: Context, cb: ClipboardPasteCallback) {
+            if (isUserUnlocked(ctx)) {
+                // Device is unlocked, initialize immediately
+                initializeService(ctx, cb)
+            } else {
+                // Device is locked, defer initialization
+                android.util.Log.i("ClipboardHistory", "Device locked - deferring clipboard initialization")
+                _pendingCallback = cb
+                _pendingContext = ctx.applicationContext
+                DirectBootManager.getInstance(ctx).registerUnlockCallback {
+                    android.util.Log.i("ClipboardHistory", "Device unlocked - initializing clipboard service")
+                    _pendingContext?.let { context ->
+                        _pendingCallback?.let { callback ->
+                            initializeService(context, callback)
+                        }
+                    }
+                    _pendingCallback = null
+                    _pendingContext = null
+                }
+            }
+        }
+
+        /**
+         * Actually initialize the clipboard service (called when user is unlocked).
+         */
+        private fun initializeService(ctx: Context, cb: ClipboardPasteCallback) {
             val service = get_service(ctx)
             if (service != null) {
                 service._pasteCallback = cb

@@ -1,6 +1,8 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
+import android.os.Build
+import android.os.UserManager
 import android.util.Log
 import tribixbite.cleverkeys.ml.SwipeMLDataStore
 import kotlin.concurrent.thread
@@ -52,26 +54,78 @@ class PredictionCoordinator(
     // Debug logging
     private var debugLogger: NeuralSwipeTypingEngine.DebugLogger? = null
 
+    // Track if PII components have been initialized (Direct Boot compatibility)
+    @Volatile
+    private var piiComponentsInitialized = false
+
+    /**
+     * Check if user has unlocked the device (Direct Boot compatibility).
+     */
+    private fun isUserUnlocked(): Boolean {
+        return if (Build.VERSION.SDK_INT >= 24) {
+            val userManager = context.getSystemService(Context.USER_SERVICE) as? UserManager
+            userManager?.isUserUnlocked ?: true
+        } else {
+            true // Pre-N doesn't have Direct Boot
+        }
+    }
+
     /**
      * Initializes prediction engines based on configuration.
      * Should be called during keyboard startup.
+     *
+     * DIRECT BOOT: PII components (DictionaryManager, UserAdaptationManager,
+     * WordPredictor with personalization) are deferred until user unlock to
+     * avoid crash when accessing Credential Encrypted storage at lock screen.
      */
     fun initialize() {
-        // Initialize ML data store
-        mlDataStore = SwipeMLDataStore.getInstance(context)
-
-        // Initialize user adaptation manager
-        adaptationManager = UserAdaptationManager.getInstance(context)
-
-        // Initialize dictionary manager and word predictor
-        initializeWordPredictor()
+        // Check if user is unlocked
+        if (isUserUnlocked()) {
+            // User is unlocked, initialize everything
+            initializePiiComponents()
+        } else {
+            // Device is locked, defer PII component initialization
+            Log.i(TAG, "Device locked - deferring PII component initialization until unlock")
+            DirectBootManager.getInstance(context).registerUnlockCallback {
+                Log.i(TAG, "Device unlocked - initializing PII components")
+                initializePiiComponents()
+            }
+        }
 
         // Initialize neural engine if swipe typing is enabled
+        // This uses DE storage so it's safe before unlock
         if (config.swipe_typing_enabled) {
             // FIX: Initialize neural engine on background thread to avoid blocking startup
             thread {
                 initializeNeuralEngine()
             }
+        }
+    }
+
+    /**
+     * Initialize PII components that require Credential Encrypted storage.
+     * Called after user unlocks the device.
+     */
+    private fun initializePiiComponents() {
+        if (piiComponentsInitialized) {
+            Log.d(TAG, "PII components already initialized")
+            return
+        }
+
+        try {
+            // Initialize ML data store (uses SQLite, needs CE storage)
+            mlDataStore = SwipeMLDataStore.getInstance(context)
+
+            // Initialize user adaptation manager (uses SharedPreferences, needs CE storage)
+            adaptationManager = UserAdaptationManager.getInstance(context)
+
+            // Initialize dictionary manager and word predictor
+            initializeWordPredictor()
+
+            piiComponentsInitialized = true
+            Log.i(TAG, "PII components initialized successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to initialize PII components", e)
         }
     }
 
@@ -205,10 +259,14 @@ class PredictionCoordinator(
     /**
      * Ensures word predictor is initialized (lazy initialization).
      * Called when predictions are first requested.
+     *
+     * Note: If device is still locked, PII components won't be available
+     * and predictions will be limited.
      */
     fun ensureInitialized() {
-        if (wordPredictor == null) {
-            initializeWordPredictor()
+        // Only initialize PII components if user is unlocked
+        if (wordPredictor == null && isUserUnlocked()) {
+            initializePiiComponents()
         }
 
         if (config.swipe_typing_enabled && neuralEngine == null) {

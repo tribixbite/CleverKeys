@@ -2,6 +2,7 @@ package tribixbite.cleverkeys.theme
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,10 +44,14 @@ import java.util.UUID
  */
 class CustomThemeManager(private val context: Context) {
 
-    private val prefs: SharedPreferences = context.getSharedPreferences(
-        PREFS_NAME,
-        Context.MODE_PRIVATE
-    )
+    // Use Device Encrypted storage for Direct Boot compatibility
+    // Theme preferences are non-sensitive and needed at lock screen
+    private val prefs: SharedPreferences = if (Build.VERSION.SDK_INT >= 24) {
+        context.createDeviceProtectedStorageContext()
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    } else {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
 
     // Reactive list of custom themes
     private val _customThemes = MutableStateFlow<List<CustomTheme>>(loadCustomThemes())

@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import kotlin.math.roundToInt
 
 /**
@@ -25,10 +26,14 @@ import kotlin.math.roundToInt
  */
 class NeuralPerformanceStats(context: Context) {
 
-    private val prefs: SharedPreferences = context.getSharedPreferences(
-        "neural_performance_stats",
-        Context.MODE_PRIVATE
-    )
+    // Use Device Encrypted storage for Direct Boot compatibility
+    // Performance stats are non-sensitive aggregate metrics
+    private val prefs: SharedPreferences = if (Build.VERSION.SDK_INT >= 24) {
+        context.createDeviceProtectedStorageContext()
+            .getSharedPreferences("neural_performance_stats", Context.MODE_PRIVATE)
+    } else {
+        context.getSharedPreferences("neural_performance_stats", Context.MODE_PRIVATE)
+    }
 
     private val privacyManager = PrivacyManager.getInstance(context)
 

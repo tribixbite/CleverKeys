@@ -31,10 +31,14 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 class MaterialThemeManager(private val context: Context) {
 
-    private val prefs: SharedPreferences = context.getSharedPreferences(
-        PREFS_NAME,
-        Context.MODE_PRIVATE
-    )
+    // Use Device Encrypted storage for Direct Boot compatibility
+    // Theme preferences are non-sensitive and needed at lock screen
+    private val prefs: SharedPreferences = if (Build.VERSION.SDK_INT >= 24) {
+        context.createDeviceProtectedStorageContext()
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    } else {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
 
     // Custom theme manager integration
     private val customThemeManager = CustomThemeManager(context)

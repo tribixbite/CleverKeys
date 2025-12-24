@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
@@ -24,10 +25,14 @@ import java.io.File
  */
 class ModelVersionManager(private val context: Context) {
 
-    private val prefs: SharedPreferences = context.getSharedPreferences(
-        "model_version_history",
-        Context.MODE_PRIVATE
-    )
+    // Use Device Encrypted storage for Direct Boot compatibility
+    // Model version info is non-sensitive metadata
+    private val prefs: SharedPreferences = if (Build.VERSION.SDK_INT >= 24) {
+        context.createDeviceProtectedStorageContext()
+            .getSharedPreferences("model_version_history", Context.MODE_PRIVATE)
+    } else {
+        context.getSharedPreferences("model_version_history", Context.MODE_PRIVATE)
+    }
 
     companion object {
         private const val TAG = "ModelVersionManager"
