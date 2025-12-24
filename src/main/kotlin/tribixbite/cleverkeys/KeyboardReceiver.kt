@@ -105,8 +105,8 @@ class KeyboardReceiver(
 
             KeyValue.Event.SWITCH_CLIPBOARD -> {
                 // SECURITY: Block clipboard access on lock screen (contains PII)
-                if (!DirectBootManager.getInstance(context).isUserUnlocked) {
-                    android.util.Log.w("KeyboardReceiver", "Clipboard blocked: device is locked")
+                if (DirectBootManager.getInstance(context).isDeviceLocked) {
+                    android.util.Log.w("KeyboardReceiver", "Clipboard blocked: screen is locked")
                     return
                 }
 

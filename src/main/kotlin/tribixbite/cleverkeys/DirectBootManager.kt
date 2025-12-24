@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.app.KeyguardManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -74,6 +75,20 @@ class DirectBootManager private constructor(private val context: Context) {
      */
     val isUserUnlocked: Boolean
         get() = _isUserUnlocked
+
+    /**
+     * Whether the device screen is currently locked (keyguard showing).
+     * Use this to block access to sensitive UI like clipboard history.
+     *
+     * Note: This is different from isUserUnlocked:
+     * - isUserUnlocked: false only before FIRST unlock after boot (Direct Boot)
+     * - isDeviceLocked: true whenever screen is locked (keyguard showing)
+     */
+    val isDeviceLocked: Boolean
+        get() {
+            val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+            return keyguardManager?.isKeyguardLocked ?: false
+        }
 
     /**
      * Check if the user is currently unlocked.
