@@ -827,13 +827,25 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     override fun onApplyWindowInsets(wi: WindowInsets?): WindowInsets? {
-        if (wi == null || VERSION.SDK_INT < 35)
-            return wi
-        val insets_types = WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
-        val insets = wi.getInsets(insets_types)
-        _insets_left = insets.left
-        _insets_right = insets.right
-        _insets_bottom = insets.bottom
+        if (wi == null) return wi
+
+        // API 30+: Use modern WindowInsets.Type API
+        if (VERSION.SDK_INT >= 30) {
+            val insets_types = WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
+            val insets = wi.getInsets(insets_types)
+            _insets_left = insets.left
+            _insets_right = insets.right
+            _insets_bottom = insets.bottom
+        }
+        // API 21-29: Use deprecated systemWindowInsets for nav bar offset
+        else if (VERSION.SDK_INT >= 21) {
+            @Suppress("DEPRECATION")
+            val insets = wi.systemWindowInsets
+            _insets_left = insets.left
+            _insets_right = insets.right
+            _insets_bottom = insets.bottom
+        }
+
         return WindowInsets.CONSUMED
     }
 

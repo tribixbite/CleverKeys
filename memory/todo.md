@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-23
-**Status**: v1.1.71 released - F-Droid MR #30449 MERGED! 🎉
+**Last Updated**: 2025-12-24
+**Status**: v1.1.73 releasing - Nav bar overlap fix
 
 ---
 
@@ -182,9 +182,14 @@
   - KeyMagnifierView: use consistent subLabelColor for both custom and built-in sublabels
   - CommandPaletteDialog: show readable description [Tab], [Home] for PUA icons
   - Clear UX guidance in label dialog for icon vs text mode
+- [x] Fix keyboard overlapping navigation bar on API 30-34 (2025-12-24)
+  - onApplyWindowInsets() only processed insets on API 35+, but edge-to-edge was enabled on API 29+
+  - API 30+: Use modern WindowInsets.Type.systemBars() API
+  - API 21-29: Fall back to deprecated systemWindowInsets
+  - Keyboard now properly accounts for nav bar height on all supported API levels
 
-**Current Version**: 1.1.72 (versionCode 101723 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.72
+**Current Version**: 1.1.73 (versionCode 101733 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.73
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 **Final Config**: No srclibs, no postbuild - just gradle + prebuild sed!
 
@@ -197,7 +202,7 @@
 build.gradle (lines 51-53):
   ext.VERSION_MAJOR = 1
   ext.VERSION_MINOR = 1
-  ext.VERSION_PATCH = 72
+  ext.VERSION_PATCH = 73
 ```
 
 ### VersionCode Formula
