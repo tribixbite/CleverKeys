@@ -199,6 +199,17 @@
   - Caused keyboard crash before device unlock, locking users out
   - Now uses createDeviceProtectedStorageContext() on API 24+
   - Matches DirectBootAwarePreferences pattern used elsewhere
+- [x] Comprehensive Direct Boot compatibility fix (2025-12-24)
+  - Bug present since v1.0.0 - multiple SharedPreferences classes crashed at lock screen
+  - Created DirectBootManager utility for deferred PII initialization
+  - Moved non-PII managers to Device Encrypted storage:
+    - CustomThemeManager, MaterialThemeManager
+    - ModelVersionManager, NeuralModelMetadata, NeuralPerformanceStats
+  - Deferred PII components until user unlock via ACTION_USER_UNLOCKED:
+    - DictionaryManager, UserAdaptationManager, WordPredictor
+    - ClipboardHistoryService (uses SQLite, needs CE storage)
+  - Privacy: PII data stays in secure CE storage, only deferred until unlock
+  - Added cleanup in CleverKeysService.onDestroy()
 
 **Current Version**: 1.1.75 (versionCode 101753 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.74
