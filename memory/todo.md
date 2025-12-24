@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2025-12-24
-**Status**: v1.1.74 released - Percentage-based margins with left/right split
+**Status**: v1.1.75 - Direct Boot crash fix for PrivacyManager
 
 ---
 
@@ -194,8 +194,13 @@
   - Keyboard2View uses Config.margin_left/margin_right instead of horizontal_margin
   - BackupRestoreManager migrates legacy dp-based configs to percentages
   - Migration converts old horizontal_margin to symmetric left/right percentages
+- [x] Fix Direct Boot crash in PrivacyManager (2025-12-24)
+  - SharedPreferences in credential-encrypted storage unavailable at lock screen
+  - Caused keyboard crash before device unlock, locking users out
+  - Now uses createDeviceProtectedStorageContext() on API 24+
+  - Matches DirectBootAwarePreferences pattern used elsewhere
 
-**Current Version**: 1.1.74 (versionCode 101743 for x86_64)
+**Current Version**: 1.1.75 (versionCode 101753 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.74
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 **Final Config**: No srclibs, no postbuild - just gradle + prebuild sed!
