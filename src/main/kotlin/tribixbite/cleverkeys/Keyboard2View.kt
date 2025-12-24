@@ -254,8 +254,8 @@ class Keyboard2View @JvmOverloads constructor(
         run {
             val dm = resources.displayMetrics
             val screenWidth = dm.widthPixels
-            val marginLeft = maxOf(_config.horizontal_margin.toFloat(), _insets_left.toFloat())
-            val marginRight = maxOf(_config.horizontal_margin.toFloat(), _insets_right.toFloat())
+            val marginLeft = maxOf(_config.margin_left, _insets_left.toFloat())
+            val marginRight = maxOf(_config.margin_right, _insets_right.toFloat())
             _keyWidth = (screenWidth - marginLeft - marginRight) / kw.keysWidth
 
             // Ensure theme cache is initialized for key detection
@@ -687,7 +687,7 @@ class Keyboard2View @JvmOverloads constructor(
     private fun getKeyAtPosition(tx: Float, ty: Float): KeyboardData.Key? {
         val row = getRowAtPosition(ty)
         // CRITICAL FIX: Calculate margin dynamically to avoid stale _marginLeft from delayed onMeasure
-        val currentMarginLeft = maxOf(_config.horizontal_margin.toFloat(), _insets_left.toFloat())
+        val currentMarginLeft = maxOf(_config.margin_left, _insets_left.toFloat())
         var x = currentMarginLeft
 
         if (row == null) {
@@ -781,8 +781,8 @@ class Keyboard2View @JvmOverloads constructor(
             width = (_keyWidth * keyboard.keysWidth + _marginLeft + _marginRight).toInt()
         }
 
-        _marginLeft = maxOf(_config.horizontal_margin.toFloat(), _insets_left.toFloat())
-        _marginRight = maxOf(_config.horizontal_margin.toFloat(), _insets_right.toFloat())
+        _marginLeft = maxOf(_config.margin_left, _insets_left.toFloat())
+        _marginRight = maxOf(_config.margin_right, _insets_right.toFloat())
         _marginBottom = _config.margin_bottom + _insets_bottom.toFloat()
 
         // Only recalculate keyWidth if we have a valid new width

@@ -35,9 +35,22 @@ object Defaults {
     const val NUMPAD_LAYOUT = "default"
     const val NUMBER_ROW = "no_number_row"
     const val NUMBER_ENTRY_LAYOUT = "pin"
-    const val MARGIN_BOTTOM_PORTRAIT = 7
-    const val MARGIN_BOTTOM_LANDSCAPE = 3
+
+    // Margin settings (percentages of screen dimension)
+    // Bottom margin as % of screen height
+    const val MARGIN_BOTTOM_PORTRAIT = 2      // ~2% of screen height
+    const val MARGIN_BOTTOM_LANDSCAPE = 2     // ~2% of screen height
+    // Left/Right margins as % of screen width
+    const val MARGIN_LEFT_PORTRAIT = 1        // ~1% of screen width
+    const val MARGIN_LEFT_LANDSCAPE = 5       // ~5% of screen width
+    const val MARGIN_RIGHT_PORTRAIT = 1       // ~1% of screen width
+    const val MARGIN_RIGHT_LANDSCAPE = 5      // ~5% of screen width
+
+    // Legacy compatibility: old dp-based settings used these names
+    // HORIZONTAL_MARGIN_PORTRAIT = 3dp, HORIZONTAL_MARGIN_LANDSCAPE = 28dp
+    @Deprecated("Use MARGIN_LEFT_* and MARGIN_RIGHT_* instead")
     const val HORIZONTAL_MARGIN_PORTRAIT = 3
+    @Deprecated("Use MARGIN_LEFT_* and MARGIN_RIGHT_* instead")
     const val HORIZONTAL_MARGIN_LANDSCAPE = 28
 
     // Input behavior
@@ -180,9 +193,13 @@ class Config private constructor(
     @JvmField var longPressTimeout = 0L
     @JvmField var longPressInterval = 0L
     @JvmField var keyrepeat_enabled = false
-    @JvmField var margin_bottom = 0f
+    @JvmField var margin_bottom = 0f  // In pixels (calculated from % of screen height)
+    @JvmField var margin_left = 0f    // In pixels (calculated from % of screen width)
+    @JvmField var margin_right = 0f   // In pixels (calculated from % of screen width)
     @JvmField var keyboardHeightPercent = 0
     @JvmField var screenHeightPixels = 0
+    @JvmField var screenWidthPixels = 0
+    @Deprecated("Use margin_left and margin_right instead")
     @JvmField var horizontal_margin = 0f
     @JvmField var key_vertical_margin = 0f
     @JvmField var key_horizontal_margin = 0f
@@ -365,7 +382,31 @@ class Config private constructor(
         longPressTimeout = safeGetInt(_prefs, "longpress_timeout", Defaults.LONGPRESS_TIMEOUT).toLong()
         longPressInterval = safeGetInt(_prefs, "longpress_interval", Defaults.LONGPRESS_INTERVAL).toLong()
         keyrepeat_enabled = _prefs.getBoolean("keyrepeat_enabled", Defaults.KEYREPEAT_ENABLED)
-        margin_bottom = get_dip_pref_oriented(dm, "margin_bottom", Defaults.MARGIN_BOTTOM_PORTRAIT.toFloat(), Defaults.MARGIN_BOTTOM_LANDSCAPE.toFloat())
+
+        // Screen dimensions for percentage calculations
+        screenHeightPixels = dm.heightPixels
+        screenWidthPixels = dm.widthPixels
+
+        // Margin settings (percentage of screen dimensions)
+        margin_bottom = get_percent_pref_oriented_height(
+            "margin_bottom",
+            Defaults.MARGIN_BOTTOM_PORTRAIT,
+            Defaults.MARGIN_BOTTOM_LANDSCAPE
+        )
+        margin_left = get_percent_pref_oriented_width(
+            "margin_left",
+            Defaults.MARGIN_LEFT_PORTRAIT,
+            Defaults.MARGIN_LEFT_LANDSCAPE
+        )
+        margin_right = get_percent_pref_oriented_width(
+            "margin_right",
+            Defaults.MARGIN_RIGHT_PORTRAIT,
+            Defaults.MARGIN_RIGHT_LANDSCAPE
+        )
+        // Legacy fallback for horizontal_margin (used by Theme.kt)
+        @Suppress("DEPRECATION")
+        horizontal_margin = (margin_left + margin_right) / 2
+
         key_vertical_margin = get_dip_pref(dm, "key_vertical_margin", Defaults.KEY_VERTICAL_MARGIN) / 100
         key_horizontal_margin = get_dip_pref(dm, "key_horizontal_margin", Defaults.KEY_HORIZONTAL_MARGIN) / 100
 
@@ -377,8 +418,6 @@ class Config private constructor(
         borderConfig = _prefs.getBoolean("border_config", Defaults.BORDER_CONFIG)
         customBorderRadius = _prefs.getInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS) / 100f
         customBorderLineWidth = get_dip_pref(dm, "custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH.toFloat())
-        screenHeightPixels = dm.heightPixels
-        horizontal_margin = get_dip_pref_oriented(dm, "horizontal_margin", Defaults.HORIZONTAL_MARGIN_PORTRAIT.toFloat(), Defaults.HORIZONTAL_MARGIN_LANDSCAPE.toFloat())
         double_tap_lock_shift = _prefs.getBoolean("lock_double_tap", Defaults.DOUBLE_TAP_LOCK_SHIFT)
         characterSize = safeGetFloat(_prefs, "character_size", Defaults.CHARACTER_SIZE) * characterSizeScale
         themeName = safeGetString(_prefs, "theme", Defaults.THEME)
@@ -553,6 +592,46 @@ class Config private constructor(
         }
         val def = if (orientation_landscape) def_land else def_port
         return get_dip_pref(dm, pref_base_name + suffix, def)
+    }
+
+    /**
+     * Get a percentage preference and convert to pixels based on screen width.
+     * Used for horizontal margins (left/right).
+     */
+    private fun get_percent_pref_oriented_width(
+        pref_base_name: String,
+        def_port: Int,
+        def_land: Int
+    ): Float {
+        val suffix = when {
+            foldable_unfolded && orientation_landscape -> "_landscape_unfolded"
+            foldable_unfolded -> "_portrait_unfolded"
+            orientation_landscape -> "_landscape"
+            else -> "_portrait"
+        }
+        val def = if (orientation_landscape) def_land else def_port
+        val percent = safeGetInt(_prefs, pref_base_name + suffix, def).coerceIn(0, 45)
+        return screenWidthPixels * percent / 100f
+    }
+
+    /**
+     * Get a percentage preference and convert to pixels based on screen height.
+     * Used for vertical margins (bottom).
+     */
+    private fun get_percent_pref_oriented_height(
+        pref_base_name: String,
+        def_port: Int,
+        def_land: Int
+    ): Float {
+        val suffix = when {
+            foldable_unfolded && orientation_landscape -> "_landscape_unfolded"
+            foldable_unfolded -> "_portrait_unfolded"
+            orientation_landscape -> "_landscape"
+            else -> "_portrait"
+        }
+        val def = if (orientation_landscape) def_land else def_port
+        val percent = safeGetInt(_prefs, pref_base_name + suffix, def).coerceIn(0, 30)
+        return screenHeightPixels * percent / 100f
     }
 
     private fun getThemeId(res: Resources, theme_name: String): Int {

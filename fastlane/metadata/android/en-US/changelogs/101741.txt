@@ -1,0 +1,7 @@
+v1.1.74 - Percentage-Based Margins
+- Margin settings now use % instead of dp for device independence
+- Bottom margin: % of screen height (0-30%)
+- Split horizontal margin into separate left/right controls
+- Left/right margins: % of screen width (0-45% each)
+- 90% total horizontal cap prevents unusable keyboard
+- Old config imports automatically migrated to new format

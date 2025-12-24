@@ -139,11 +139,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var vibrationDuration by mutableStateOf(20)
     private var swipeDebugEnabled by mutableStateOf(false)
 
-    // Adaptive layout settings (for feature parity)
-    private var marginBottomPortrait by mutableStateOf(7)
-    private var marginBottomLandscape by mutableStateOf(3)
-    private var horizontalMarginPortrait by mutableStateOf(3)
-    private var horizontalMarginLandscape by mutableStateOf(28)
+    // Adaptive layout settings (percentages of screen dimensions)
+    private var marginBottomPortrait by mutableStateOf(Defaults.MARGIN_BOTTOM_PORTRAIT)
+    private var marginBottomLandscape by mutableStateOf(Defaults.MARGIN_BOTTOM_LANDSCAPE)
+    private var marginLeftPortrait by mutableStateOf(Defaults.MARGIN_LEFT_PORTRAIT)
+    private var marginLeftLandscape by mutableStateOf(Defaults.MARGIN_LEFT_LANDSCAPE)
+    private var marginRightPortrait by mutableStateOf(Defaults.MARGIN_RIGHT_PORTRAIT)
+    private var marginRightLandscape by mutableStateOf(Defaults.MARGIN_RIGHT_LANDSCAPE)
 
     // Gesture sensitivity settings
     private var swipeDistance by mutableStateOf(23)
@@ -414,11 +416,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             "margin_bottom_landscape" -> {
                 marginBottomLandscape = prefs.getInt(key, Defaults.MARGIN_BOTTOM_LANDSCAPE)
             }
-            "horizontal_margin_portrait" -> {
-                horizontalMarginPortrait = prefs.getInt(key, Defaults.HORIZONTAL_MARGIN_PORTRAIT)
+            "margin_left_portrait" -> {
+                marginLeftPortrait = prefs.getInt(key, Defaults.MARGIN_LEFT_PORTRAIT)
             }
-            "horizontal_margin_landscape" -> {
-                horizontalMarginLandscape = prefs.getInt(key, Defaults.HORIZONTAL_MARGIN_LANDSCAPE)
+            "margin_left_landscape" -> {
+                marginLeftLandscape = prefs.getInt(key, Defaults.MARGIN_LEFT_LANDSCAPE)
+            }
+            "margin_right_portrait" -> {
+                marginRightPortrait = prefs.getInt(key, Defaults.MARGIN_RIGHT_PORTRAIT)
+            }
+            "margin_right_landscape" -> {
+                marginRightLandscape = prefs.getInt(key, Defaults.MARGIN_RIGHT_LANDSCAPE)
             }
             // Gesture sensitivity settings
             "swipe_dist" -> {
@@ -923,20 +931,20 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                 SettingsSlider(
                     title = "Bottom Margin (Portrait)",
-                    description = "Vertical margin from bottom edge (portrait)",
+                    description = "Vertical margin as % of screen height",
                     value = marginBottomPortrait.toFloat(),
-                    valueRange = 0f..80f,
-                    steps = 80,
+                    valueRange = 0f..30f,
+                    steps = 30,
                     onValueChange = {
                         marginBottomPortrait = it.toInt()
                         saveSetting("margin_bottom_portrait", marginBottomPortrait)
                     },
-                    displayValue = "${marginBottomPortrait}dp"
+                    displayValue = "$marginBottomPortrait%"
                 )
 
                 SettingsSlider(
                     title = "Bottom Margin (Landscape)",
-                    description = "Vertical margin from bottom edge (landscape)",
+                    description = "Vertical margin as % of screen height",
                     value = marginBottomLandscape.toFloat(),
                     valueRange = 0f..30f,
                     steps = 30,
@@ -944,33 +952,65 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         marginBottomLandscape = it.toInt()
                         saveSetting("margin_bottom_landscape", marginBottomLandscape)
                     },
-                    displayValue = "${marginBottomLandscape}dp"
+                    displayValue = "$marginBottomLandscape%"
                 )
 
+                // Portrait left/right margins with 90% total cap
+                val maxLeftPortrait = (90 - marginRightPortrait).coerceAtLeast(0)
                 SettingsSlider(
-                    title = "Horizontal Margin (Portrait)",
-                    description = "Side margins in portrait mode",
-                    value = horizontalMarginPortrait.toFloat(),
-                    valueRange = 0f..50f,
-                    steps = 50,
+                    title = "Left Margin (Portrait)",
+                    description = "Left margin as % of screen width",
+                    value = marginLeftPortrait.toFloat(),
+                    valueRange = 0f..maxLeftPortrait.toFloat(),
+                    steps = maxLeftPortrait.coerceAtLeast(1),
                     onValueChange = {
-                        horizontalMarginPortrait = it.toInt()
-                        saveSetting("horizontal_margin_portrait", horizontalMarginPortrait)
+                        marginLeftPortrait = it.toInt()
+                        saveSetting("margin_left_portrait", marginLeftPortrait)
                     },
-                    displayValue = "${horizontalMarginPortrait}dp"
+                    displayValue = "$marginLeftPortrait%"
                 )
 
+                val maxRightPortrait = (90 - marginLeftPortrait).coerceAtLeast(0)
                 SettingsSlider(
-                    title = "Horizontal Margin (Landscape)",
-                    description = "Side margins in landscape mode",
-                    value = horizontalMarginLandscape.toFloat(),
-                    valueRange = 0f..50f,
-                    steps = 50,
+                    title = "Right Margin (Portrait)",
+                    description = "Right margin as % of screen width",
+                    value = marginRightPortrait.toFloat(),
+                    valueRange = 0f..maxRightPortrait.toFloat(),
+                    steps = maxRightPortrait.coerceAtLeast(1),
                     onValueChange = {
-                        horizontalMarginLandscape = it.toInt()
-                        saveSetting("horizontal_margin_landscape", horizontalMarginLandscape)
+                        marginRightPortrait = it.toInt()
+                        saveSetting("margin_right_portrait", marginRightPortrait)
                     },
-                    displayValue = "${horizontalMarginLandscape}dp"
+                    displayValue = "$marginRightPortrait%"
+                )
+
+                // Landscape left/right margins with 90% total cap
+                val maxLeftLandscape = (90 - marginRightLandscape).coerceAtLeast(0)
+                SettingsSlider(
+                    title = "Left Margin (Landscape)",
+                    description = "Left margin as % of screen width",
+                    value = marginLeftLandscape.toFloat(),
+                    valueRange = 0f..maxLeftLandscape.toFloat(),
+                    steps = maxLeftLandscape.coerceAtLeast(1),
+                    onValueChange = {
+                        marginLeftLandscape = it.toInt()
+                        saveSetting("margin_left_landscape", marginLeftLandscape)
+                    },
+                    displayValue = "$marginLeftLandscape%"
+                )
+
+                val maxRightLandscape = (90 - marginLeftLandscape).coerceAtLeast(0)
+                SettingsSlider(
+                    title = "Right Margin (Landscape)",
+                    description = "Right margin as % of screen width",
+                    value = marginRightLandscape.toFloat(),
+                    valueRange = 0f..maxRightLandscape.toFloat(),
+                    steps = maxRightLandscape.coerceAtLeast(1),
+                    onValueChange = {
+                        marginRightLandscape = it.toInt()
+                        saveSetting("margin_right_landscape", marginRightLandscape)
+                    },
+                    displayValue = "$marginRightLandscape%"
                 )
 
                 SettingsSlider(
@@ -2954,11 +2994,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         keyboardHeight = prefs.getSafeInt("keyboard_height_percent", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
         keyboardHeightLandscape = prefs.getSafeInt("keyboard_height_landscape", Defaults.KEYBOARD_HEIGHT_LANDSCAPE)
 
-        // Adaptive layout settings
+        // Adaptive layout settings (percentages)
         marginBottomPortrait = prefs.getSafeInt("margin_bottom_portrait", Defaults.MARGIN_BOTTOM_PORTRAIT)
         marginBottomLandscape = prefs.getSafeInt("margin_bottom_landscape", Defaults.MARGIN_BOTTOM_LANDSCAPE)
-        horizontalMarginPortrait = prefs.getSafeInt("horizontal_margin_portrait", Defaults.HORIZONTAL_MARGIN_PORTRAIT)
-        horizontalMarginLandscape = prefs.getSafeInt("horizontal_margin_landscape", Defaults.HORIZONTAL_MARGIN_LANDSCAPE)
+        marginLeftPortrait = prefs.getSafeInt("margin_left_portrait", Defaults.MARGIN_LEFT_PORTRAIT)
+        marginLeftLandscape = prefs.getSafeInt("margin_left_landscape", Defaults.MARGIN_LEFT_LANDSCAPE)
+        marginRightPortrait = prefs.getSafeInt("margin_right_portrait", Defaults.MARGIN_RIGHT_PORTRAIT)
+        marginRightLandscape = prefs.getSafeInt("margin_right_landscape", Defaults.MARGIN_RIGHT_LANDSCAPE)
 
         // Visual customization settings
         labelBrightness = prefs.getSafeInt("label_brightness", Defaults.LABEL_BRIGHTNESS)

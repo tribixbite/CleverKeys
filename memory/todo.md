@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2025-12-24
-**Status**: v1.1.73 releasing - Nav bar overlap fix
+**Status**: v1.1.74 released - Percentage-based margins with left/right split
 
 ---
 
@@ -187,9 +187,16 @@
   - API 30+: Use modern WindowInsets.Type.systemBars() API
   - API 21-29: Fall back to deprecated systemWindowInsets
   - Keyboard now properly accounts for nav bar height on all supported API levels
+- [x] Switch margin settings from dp to percentages (2025-12-24)
+  - Changed margin_bottom to % of screen height (0-30%)
+  - Split horizontal_margin into margin_left and margin_right (0-45% each)
+  - Added 90% total horizontal margin cap with dynamic slider ranges
+  - Keyboard2View uses Config.margin_left/margin_right instead of horizontal_margin
+  - BackupRestoreManager migrates legacy dp-based configs to percentages
+  - Migration converts old horizontal_margin to symmetric left/right percentages
 
-**Current Version**: 1.1.73 (versionCode 101733 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.73
+**Current Version**: 1.1.74 (versionCode 101743 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.74
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 **Final Config**: No srclibs, no postbuild - just gradle + prebuild sed!
 
@@ -202,7 +209,7 @@
 build.gradle (lines 51-53):
   ext.VERSION_MAJOR = 1
   ext.VERSION_MINOR = 1
-  ext.VERSION_PATCH = 73
+  ext.VERSION_PATCH = 74
 ```
 
 ### VersionCode Formula

@@ -157,8 +157,10 @@ class BackupRestoreManager(private val context: Context) {
         "number_entry_layout" to Defaults.NUMBER_ENTRY_LAYOUT,
         "margin_bottom_portrait" to Defaults.MARGIN_BOTTOM_PORTRAIT,
         "margin_bottom_landscape" to Defaults.MARGIN_BOTTOM_LANDSCAPE,
-        "horizontal_margin_portrait" to Defaults.HORIZONTAL_MARGIN_PORTRAIT,
-        "horizontal_margin_landscape" to Defaults.HORIZONTAL_MARGIN_LANDSCAPE,
+        "margin_left_portrait" to Defaults.MARGIN_LEFT_PORTRAIT,
+        "margin_left_landscape" to Defaults.MARGIN_LEFT_LANDSCAPE,
+        "margin_right_portrait" to Defaults.MARGIN_RIGHT_PORTRAIT,
+        "margin_right_landscape" to Defaults.MARGIN_RIGHT_LANDSCAPE,
 
         // Input behavior
         "vibrate_custom" to Defaults.VIBRATE_CUSTOM,
@@ -310,10 +312,13 @@ class BackupRestoreManager(private val context: Context) {
             val preferences = root.getAsJsonObject("preferences")
             val editor = prefs.edit()
 
+            // Migrate legacy margin settings before import (uses dm from above)
+            val migratedPrefs = migrateLegacyMargins(preferences, dm.widthPixels, dm.heightPixels)
+
             var imported = 0
             var skipped = 0
 
-            for ((key, value) in preferences.entrySet()) {
+            for ((key, value) in migratedPrefs.entrySet()) {
                 try {
                     if (importPreference(editor, key, value)) {
                         imported++
@@ -501,9 +506,17 @@ class BackupRestoreManager(private val context: Context) {
             "keyboard_height", "keyboard_height_unfolded" -> value in 10..100
             "keyboard_height_landscape", "keyboard_height_landscape_unfolded" -> value in 20..65
 
-            // Margins and spacing (0-200 dp max)
+            // Bottom margins (0-30% of screen height)
             "margin_bottom_portrait", "margin_bottom_landscape",
-            "margin_bottom_portrait_unfolded", "margin_bottom_landscape_unfolded",
+            "margin_bottom_portrait_unfolded", "margin_bottom_landscape_unfolded" -> value in 0..30
+
+            // Left/right margins (0-45% of screen width each, capped at 90% total)
+            "margin_left_portrait", "margin_left_landscape",
+            "margin_left_portrait_unfolded", "margin_left_landscape_unfolded",
+            "margin_right_portrait", "margin_right_landscape",
+            "margin_right_portrait_unfolded", "margin_right_landscape_unfolded" -> value in 0..45
+
+            // Legacy horizontal_margin (kept for backward compatibility, 0-200 dp)
             "horizontal_margin_portrait", "horizontal_margin_landscape",
             "horizontal_margin_portrait_unfolded", "horizontal_margin_landscape_unfolded" -> value in 0..200
 
@@ -574,6 +587,87 @@ class BackupRestoreManager(private val context: Context) {
             // Unknown float preference - allow it (version-tolerant)
             else -> true
         }
+    }
+
+    /**
+     * Migrate legacy margin settings to new percentage-based format.
+     *
+     * Old format:
+     * - margin_bottom_portrait/landscape: dp values (e.g., 7dp, 3dp)
+     * - horizontal_margin_portrait/landscape: dp values applied to both sides
+     *
+     * New format:
+     * - margin_bottom_portrait/landscape: % of screen height (e.g., 2%)
+     * - margin_left_portrait/landscape: % of screen width
+     * - margin_right_portrait/landscape: % of screen width
+     *
+     * This function detects old dp values and converts them to percentages.
+     * Detection: old dp values were typically 0-80, new % values are 0-30 for bottom, 0-45 for left/right
+     * Old horizontal_margin values >10 are almost certainly dp values.
+     */
+    private fun migrateLegacyMargins(prefs: JsonObject, screenWidth: Int, screenHeight: Int): JsonObject {
+        val result = prefs.deepCopy()
+        val displayDensity = context.resources.displayMetrics.density
+
+        // Migrate horizontal_margin_* to margin_left_* and margin_right_* (symmetric)
+        val horizontalKeys = listOf(
+            "horizontal_margin_portrait" to listOf("margin_left_portrait", "margin_right_portrait"),
+            "horizontal_margin_landscape" to listOf("margin_left_landscape", "margin_right_landscape"),
+            "horizontal_margin_portrait_unfolded" to listOf("margin_left_portrait_unfolded", "margin_right_portrait_unfolded"),
+            "horizontal_margin_landscape_unfolded" to listOf("margin_left_landscape_unfolded", "margin_right_landscape_unfolded")
+        )
+
+        for ((oldKey, newKeys) in horizontalKeys) {
+            if (result.has(oldKey) && !result.has(newKeys[0])) {
+                try {
+                    val dpValue = result.get(oldKey).asInt
+                    // Convert dp to pixels, then to percentage of screen width
+                    val pixelValue = dpValue * displayDensity
+                    val percentValue = ((pixelValue / screenWidth) * 100).toInt().coerceIn(0, 45)
+
+                    // Set both left and right to the same value (symmetric)
+                    for (newKey in newKeys) {
+                        result.addProperty(newKey, percentValue)
+                    }
+                    result.remove(oldKey)
+                    Log.i(TAG, "Migrated $oldKey (${dpValue}dp) -> ${newKeys[0]}, ${newKeys[1]} ($percentValue%)")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to migrate $oldKey", e)
+                }
+            }
+        }
+
+        // Migrate old dp-based margin_bottom_* to percentage-based
+        // Detection: if value > 30 it's likely an old dp value (new max is 30%)
+        val bottomKeys = listOf(
+            "margin_bottom_portrait",
+            "margin_bottom_landscape",
+            "margin_bottom_portrait_unfolded",
+            "margin_bottom_landscape_unfolded"
+        )
+
+        for (key in bottomKeys) {
+            if (result.has(key)) {
+                try {
+                    val value = result.get(key).asInt
+                    // If value > 30, it's definitely an old dp value
+                    // Old defaults were 7dp portrait, 3dp landscape
+                    if (value > 30) {
+                        val dpValue = value
+                        val pixelValue = dpValue * displayDensity
+                        val percentValue = ((pixelValue / screenHeight) * 100).toInt().coerceIn(0, 30)
+                        result.addProperty(key, percentValue)
+                        Log.i(TAG, "Migrated $key from ${dpValue}dp to $percentValue%")
+                    }
+                    // Values 0-30 could be either old small dp values or new percentages
+                    // For safety, leave them as-is since they're in valid range
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to migrate $key", e)
+                }
+            }
+        }
+
+        return result
     }
 
     /**
