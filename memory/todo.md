@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2025-12-24
-**Status**: v1.1.75 - Direct Boot crash fix for PrivacyManager
+**Status**: v1.1.76 - Comprehensive Direct Boot & Security
 
 ---
 
@@ -218,8 +218,8 @@
   - isDeviceLocked: true whenever screen is currently locked (keyguard showing)
   - KeyboardReceiver now uses isDeviceLocked to block clipboard on lock screen
 
-**Current Version**: 1.1.75 (versionCode 101753 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.74
+**Current Version**: 1.1.76 (versionCode 101763 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.76
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 **Final Config**: No srclibs, no postbuild - just gradle + prebuild sed!
 
@@ -232,7 +232,7 @@
 build.gradle (lines 51-53):
   ext.VERSION_MAJOR = 1
   ext.VERSION_MINOR = 1
-  ext.VERSION_PATCH = 74
+  ext.VERSION_PATCH = 76
 ```
 
 ### VersionCode Formula
