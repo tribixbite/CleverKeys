@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
@@ -37,10 +38,13 @@ import java.util.Date
 class PrivacyManager(private val context: Context) {
 
     // Privacy-specific settings (consent, anonymization, etc.)
-    private val prefs: SharedPreferences = context.getSharedPreferences(
-        "privacy_settings",
-        Context.MODE_PRIVATE
-    )
+    // Use device-protected storage for Direct Boot compatibility - keyboard must work at lock screen
+    private val prefs: SharedPreferences = if (Build.VERSION.SDK_INT >= 24) {
+        context.createDeviceProtectedStorageContext()
+            .getSharedPreferences("privacy_settings", Context.MODE_PRIVATE)
+    } else {
+        context.getSharedPreferences("privacy_settings", Context.MODE_PRIVATE)
+    }
 
     // Main app preferences (where SettingsActivity stores collection toggles)
     private val mainPrefs: SharedPreferences = DirectBootAwarePreferences.get_shared_preferences(context)
