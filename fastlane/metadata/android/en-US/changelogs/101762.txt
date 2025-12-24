@@ -1,0 +1,6 @@
+v1.1.76 - Direct Boot & Security
+- Comprehensive Direct Boot support for lock screen use
+- DirectBootManager defers PII until device unlock
+- Clipboard pane blocked while device is locked
+- Non-sensitive managers use device-encrypted storage
+- PII stays secure in credential-encrypted storage
