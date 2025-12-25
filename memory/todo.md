@@ -224,6 +224,13 @@
   - Added `migrateMarginPrefs()` that runs on every startup
   - If flag missing, ALL margin values converted from dp to percentages
   - No threshold guessing needed - flag distinguishes old vs new installs
+- [x] Touch typing suggestion bar improvements (2025-12-25)
+  - Added trailing space after tapping suggestion (better touch typing flow)
+  - Only skip trailing space when actually IN Termux app, not just mode enabled
+  - Applied shift/capitalization to touch typing predictions in suggestion bar
+  - First letter capitalized if user started typing with Shift
+  - Fixed potential word deletion bug: clear lastAutoInsertedWord when starting new typed word
+  - Prevents incorrectly deleting swiped word when user types then taps prediction
 
 **Current Version**: 1.1.76 (versionCode 101763 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.76

@@ -386,17 +386,29 @@ class SuggestionHandler(
                     false
                 }
 
-                // Commit the selected word - use Termux mode if enabled
-                val textToInsert = if (config.termux_mode_enabled && !isSwipeAutoInsert) {
-                    // Termux mode (non-swipe): Insert word without automatic space for better terminal compatibility
-                    if (needsSpaceBefore) " $processedWord" else processedWord.also {
-                        Log.d(TAG, "TERMUX MODE (non-swipe): textToInsert = '$it'")
+                // Apply capitalization if user was typing with shift (first letter uppercase)
+                val currentWord = contextTracker.getCurrentWord()
+                val shouldCapitalize = currentWord.isNotEmpty() && currentWord[0].isUpperCase()
+                val capitalizedWord = if (shouldCapitalize && processedWord.isNotEmpty()) {
+                    processedWord.replaceFirstChar {
+                        if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
                     }
                 } else {
-                    // Normal mode OR swipe in Termux: Insert word with space after (and before if needed)
-                    // For swipe typing, we always add trailing spaces even in Termux mode for better UX
-                    if (needsSpaceBefore) " $processedWord " else "$processedWord ".also {
-                        Log.d(TAG, "NORMAL/SWIPE MODE: textToInsert = '$it' (needsSpaceBefore=$needsSpaceBefore, isSwipe=$isSwipeAutoInsert)")
+                    processedWord
+                }
+
+                // Commit the selected word
+                // Only skip trailing space if actually IN Termux app (not just termux_mode_enabled)
+                val textToInsert = if (config.termux_mode_enabled && !isSwipeAutoInsert && inTermuxApp) {
+                    // Termux app: Insert word without automatic space for terminal compatibility
+                    if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord.also {
+                        Log.d(TAG, "TERMUX APP (non-swipe): textToInsert = '$it'")
+                    }
+                } else {
+                    // Normal apps (even with Termux mode) or swipe: Insert word with space after
+                    // This provides better touch typing experience
+                    if (needsSpaceBefore) " $capitalizedWord " else "$capitalizedWord ".also {
+                        Log.d(TAG, "NORMAL/SWIPE MODE: textToInsert = '$it' (needsSpaceBefore=$needsSpaceBefore, isSwipe=$isSwipeAutoInsert, capitalize=$shouldCapitalize)")
                     }
                 }
 
@@ -459,6 +471,13 @@ class SuggestionHandler(
         when {
             text.length == 1 && text[0].isLetter() -> {
                 contextTracker.appendToCurrentWord(text)
+                // If just started a new word (first letter), clear auto-insert tracking
+                // This prevents incorrectly deleting a previously swiped word when
+                // user types a new word then taps a prediction
+                if (contextTracker.getCurrentWordLength() == 1) {
+                    contextTracker.clearLastAutoInsertedWord()
+                    contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
+                }
                 updatePredictionsForCurrentWord()
             }
             text.length == 1 && !text[0].isLetter() -> {
@@ -554,6 +573,9 @@ class SuggestionHandler(
         if (contextTracker.getCurrentWordLength() > 0) {
             val partial = contextTracker.getCurrentWord()
 
+            // Check if first letter is uppercase (user typed with Shift)
+            val shouldCapitalize = partial.isNotEmpty() && partial[0].isUpperCase()
+
             // Copy context to be thread-safe
             val contextWords = contextTracker.getContextWords().toList()
 
@@ -569,13 +591,24 @@ class SuggestionHandler(
 
                 if (Thread.currentThread().isInterrupted || result == null) return@submit
 
+                // Apply capitalization transformation if user started with uppercase
+                val transformedWords = if (shouldCapitalize) {
+                    result.words.map { word ->
+                        word.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
+                        }
+                    }
+                } else {
+                    result.words
+                }
+
                 // Post result to UI thread
-                if (result.words.isNotEmpty() && suggestionBar != null) {
+                if (transformedWords.isNotEmpty() && suggestionBar != null) {
                     suggestionBar?.post {
                         // Verify context hasn't changed drastically (optional, but good practice)
                         suggestionBar?.let { bar ->
                             bar.setShowDebugScores(config.swipe_show_debug_scores)
-                            bar.setSuggestionsWithScores(result.words, result.scores)
+                            bar.setSuggestionsWithScores(transformedWords, result.scores)
                         }
                     }
                 }
