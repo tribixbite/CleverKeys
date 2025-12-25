@@ -12,7 +12,8 @@ import kotlin.math.sqrt
 class ProbabilisticKeyDetector(
     private val keyboard: KeyboardData?,
     private val keyboardWidth: Float,
-    private val keyboardHeight: Float
+    private val keyboardHeight: Float,
+    private val marginLeft: Float = 0f  // Left margin offset for touch coordinate mapping
 ) {
     /**
      * Detect keys along a swipe path using probabilistic weighting
@@ -73,9 +74,10 @@ class ProbabilisticKeyDetector(
         }
 
         // Check all keys (could be optimized with spatial indexing)
+        // Key positions start at marginLeft to match screen-relative touch coordinates
         var y = 0f
         for (row in keyboard.rows) {
-            var x = 0f
+            var x = marginLeft
             val rowHeight = row.height * scaleY
 
             for (key in row.keys) {
@@ -139,12 +141,13 @@ class ProbabilisticKeyDetector(
         val scaleX = keyboardWidth / keyboard.keysWidth
         val scaleY = keyboardHeight / keyboard.keysHeight
 
+        // Key positions start at marginLeft to match screen-relative touch coordinates
         var currentY = 0f
         for (row in keyboard.rows) {
             val rowHeight = row.height * scaleY
-            
+
             if (y >= currentY && y < currentY + rowHeight) {
-                var currentX = 0f
+                var currentX = marginLeft
                 for (key in row.keys) {
                     val keyWidth = key.width * scaleX
                     

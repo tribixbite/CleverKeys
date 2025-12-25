@@ -53,11 +53,12 @@ open class ImprovedSwipeGestureRecognizer {
     
     /**
      * Set the current keyboard for probabilistic detection
+     * @param marginLeft Left margin offset for touch coordinate mapping (screen-relative to keyboard-relative)
      */
-    fun setKeyboard(keyboard: KeyboardData?, width: Float, height: Float) {
+    fun setKeyboard(keyboard: KeyboardData?, width: Float, height: Float, marginLeft: Float = 0f) {
         _currentKeyboard = keyboard
         if (keyboard != null) {
-            _probabilisticDetector = ProbabilisticKeyDetector(keyboard, width, height)
+            _probabilisticDetector = ProbabilisticKeyDetector(keyboard, width, height, marginLeft)
         }
     }
     

@@ -283,10 +283,11 @@ class Keyboard2View @JvmOverloads constructor(
         // ENABLE PROBABILISTIC DETECTION:
         // Pass the keyboard layout to the recognizer so it can find "nearest keys"
         // instead of failing on gaps/misalignment (crucial for startup race condition)
+        // NOTE: width is just the key area (excluding margins), marginLeft offsets key positions
         _swipeRecognizer?.let { recognizer ->
-            val estimatedWidth = _keyWidth * kw.keysWidth + _marginLeft + _marginRight
+            val keyAreaWidth = _keyWidth * kw.keysWidth
             val estimatedHeight = _tc?.row_height?.times(kw.keysHeight) ?: 0f
-            recognizer.setKeyboard(kw, estimatedWidth, estimatedHeight)
+            recognizer.setKeyboard(kw, keyAreaWidth, estimatedHeight, _marginLeft)
         }
 
         reset()
