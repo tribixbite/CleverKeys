@@ -20,10 +20,14 @@ class SwipeTrajectoryProcessor {
     private var keyPositions: Map<Char, PointF>? = null
 
     @JvmField
-    var keyboardWidth = 1.0f
+    var keyboardWidth = 1.0f  // Key area width only (excluding margins)
 
     @JvmField
     var keyboardHeight = 1.0f
+
+    // Margin offsets for coordinate normalization (touch coords include margin offsets)
+    private var marginLeft = 0.0f
+    private var marginRight = 0.0f
 
     // QWERTY area bounds for proper normalization (v1.32.463)
     // The model expects normalized coords over QWERTY keys only, not full view
@@ -58,6 +62,20 @@ class SwipeTrajectoryProcessor {
         this.keyPositions = keyPositions
         this.keyboardWidth = width
         this.keyboardHeight = height
+    }
+
+    /**
+     * Set margin offsets for X coordinate normalization.
+     * Touch coordinates include margin offsets; left margin is subtracted and
+     * the result is divided by key area width (total - left - right).
+     *
+     * @param left Left margin in pixels
+     * @param right Right margin in pixels
+     */
+    fun setMargins(left: Float, right: Float) {
+        this.marginLeft = left
+        this.marginRight = right
+        Log.d(TAG, "📐 Margins set: left=$left px, right=$right px")
     }
 
     /**
@@ -278,8 +296,13 @@ class SwipeTrajectoryProcessor {
         val yHeight = if (qwertyAreaHeight > 0) qwertyAreaHeight else keyboardHeight
         val usingQwertyBounds = qwertyAreaHeight > 0
 
+        // Calculate key area width (excluding margins) for X normalization
+        val keyAreaWidth = keyboardWidth - marginLeft - marginRight
+        val effectiveKeyAreaWidth = if (keyAreaWidth > 0) keyAreaWidth else keyboardWidth
+
         coordinates.forEach { point ->
-            var x = point.x / keyboardWidth
+            // Subtract left margin and divide by key area width (not total width)
+            var x = (point.x - marginLeft) / effectiveKeyAreaWidth
 
             // Apply touch Y-offset compensation (fat finger effect)
             // Users typically touch ~74 pixels above key centers

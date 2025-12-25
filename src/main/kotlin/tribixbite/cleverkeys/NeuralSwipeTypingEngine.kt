@@ -169,6 +169,19 @@ class NeuralSwipeTypingEngine(
     }
 
     /**
+     * Set margin offsets for X coordinate normalization.
+     * Touch coordinates include margin offsets; left margin is subtracted and
+     * the result is divided by key area width (total - left - right).
+     *
+     * @param left Left margin in pixels
+     * @param right Right margin in pixels
+     */
+    fun setMargins(left: Float, right: Float) {
+        neuralPredictor.setMargins(left, right)
+        Log.d(TAG, "Set margins: left=${"%.0f".format(left)}, right=${"%.0f".format(right)} pixels")
+    }
+
+    /**
      * Set real key positions for accurate coordinate mapping
      */
     fun setRealKeyPositions(realPositions: Map<Char, PointF>?) {

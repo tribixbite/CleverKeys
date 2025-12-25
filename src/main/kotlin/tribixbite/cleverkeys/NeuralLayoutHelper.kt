@@ -283,6 +283,16 @@ class NeuralLayoutHelper(
                     )
                 )
 
+                // Set margins for X coordinate normalization
+                // Touch coordinates include margin offsets which must be accounted for in normalization
+                val marginLeft = _config.margin_left
+                val marginRight = _config.margin_right
+                _predictionCoordinator.getNeuralEngine()!!.setMargins(marginLeft, marginRight)
+                Log.d(
+                    TAG,
+                    String.format("Margins: left=%.0f, right=%.0f pixels", marginLeft, marginRight)
+                )
+
                 // Debug output only when debug mode is active
                 if (_debugMode) {
                     sendDebugLog(String.format(">>> Neural engine: %d key positions set\n", keyPositions.size))

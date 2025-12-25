@@ -258,6 +258,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     }
     fun setQwertyAreaBounds(top: Float, height: Float) = trajectoryProcessor.setQwertyAreaBounds(top, height)
     fun setTouchYOffset(offset: Float) = trajectoryProcessor.setTouchYOffset(offset)
+    fun setMargins(left: Float, right: Float) = trajectoryProcessor.setMargins(left, right)
     fun reloadVocabulary() = vocabulary.reloadCustomAndDisabledWords()
     
     fun setDebugLogger(logger: Any?) {
