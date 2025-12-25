@@ -217,6 +217,13 @@
   - isUserUnlocked: false only before FIRST unlock since boot (Direct Boot)
   - isDeviceLocked: true whenever screen is currently locked (keyguard showing)
   - KeyboardReceiver now uses isDeviceLocked to block clipboard on lock screen
+- [x] Fix margin prefs restored by Android Auto-Backup (2025-12-24)
+  - Bug: Old dp-based margin values restored from Google Drive backup
+  - Interpreted as percentages (14dp → 14%, way too large)
+  - Added `margin_prefs_version` flag to track if migration occurred
+  - Added `migrateMarginPrefs()` that runs on every startup
+  - If flag missing, ALL margin values converted from dp to percentages
+  - No threshold guessing needed - flag distinguishes old vs new installs
 
 **Current Version**: 1.1.76 (versionCode 101763 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.76

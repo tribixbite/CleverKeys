@@ -696,6 +696,7 @@ class Config private constructor(
     companion object {
         const val WIDE_DEVICE_THRESHOLD = 600
         private const val CONFIG_VERSION = 3
+        private const val MARGIN_PREFS_VERSION = 1  // For dp→percentage migration
 
         @Volatile
         private var _globalConfig: Config? = null
@@ -708,6 +709,7 @@ class Config private constructor(
             foldableUnfolded: Boolean?
         ) {
             migrate(prefs)
+            migrateMarginPrefs(prefs, res.displayMetrics)
             val config = Config(prefs, res, handler, foldableUnfolded)
             _globalConfig = config
             LayoutModifier.init(config, res)
@@ -1002,6 +1004,110 @@ class Config private constructor(
                 LayoutsPreference.SystemLayout()
             else
                 LayoutsPreference.NamedLayout(name)
+        }
+
+        /**
+         * Migrate margin preferences from old dp-based values to percentage-based.
+         * This runs on every startup but only performs migration once (tracked by margin_prefs_version).
+         *
+         * Old system: values in dp (e.g., 14dp for bottom margin)
+         * New system: values as % of screen dimension (e.g., 2% for bottom margin)
+         *
+         * Without this, Android Auto-Backup restores old dp values which get
+         * interpreted as percentages (14dp becomes 14%, way too large).
+         */
+        @JvmStatic
+        private fun migrateMarginPrefs(prefs: SharedPreferences, dm: DisplayMetrics) {
+            val savedVersion = prefs.getInt("margin_prefs_version", 0)
+            if (savedVersion >= MARGIN_PREFS_VERSION) return
+
+            Log.i("Config", "Migrating margin preferences from dp to percentage (version $savedVersion → $MARGIN_PREFS_VERSION)")
+
+            val editor = prefs.edit()
+            val density = dm.density
+            val screenWidth = dm.widthPixels
+            val screenHeight = dm.heightPixels
+
+            // Migrate horizontal margins (old: horizontal_margin_*, new: margin_left_* + margin_right_*)
+            val horizontalKeys = listOf(
+                "horizontal_margin_portrait" to listOf("margin_left_portrait", "margin_right_portrait"),
+                "horizontal_margin_landscape" to listOf("margin_left_landscape", "margin_right_landscape"),
+                "horizontal_margin_portrait_unfolded" to listOf("margin_left_portrait_unfolded", "margin_right_portrait_unfolded"),
+                "horizontal_margin_landscape_unfolded" to listOf("margin_left_landscape_unfolded", "margin_right_landscape_unfolded")
+            )
+
+            for ((oldKey, newKeys) in horizontalKeys) {
+                if (prefs.contains(oldKey)) {
+                    try {
+                        val dpValue = safeGetInt(prefs, oldKey, 0)
+                        val pixelValue = dpValue * density
+                        val percentValue = ((pixelValue / screenWidth) * 100).toInt().coerceIn(0, 45)
+                        for (newKey in newKeys) {
+                            editor.putInt(newKey, percentValue)
+                        }
+                        editor.remove(oldKey)
+                        Log.i("Config", "Migrated $oldKey: ${dpValue}dp → $percentValue%")
+                    } catch (e: Exception) {
+                        Log.w("Config", "Failed to migrate $oldKey", e)
+                    }
+                }
+            }
+
+            // Migrate bottom margins - ALL existing values are assumed to be dp
+            // (no threshold check - prefs_version flag tells us if migration happened)
+            val bottomKeys = listOf(
+                "margin_bottom_portrait" to Defaults.MARGIN_BOTTOM_PORTRAIT,
+                "margin_bottom_landscape" to Defaults.MARGIN_BOTTOM_LANDSCAPE,
+                "margin_bottom_portrait_unfolded" to Defaults.MARGIN_BOTTOM_PORTRAIT,
+                "margin_bottom_landscape_unfolded" to Defaults.MARGIN_BOTTOM_LANDSCAPE
+            )
+
+            for ((key, defaultPercent) in bottomKeys) {
+                if (prefs.contains(key)) {
+                    try {
+                        val oldValue = safeGetInt(prefs, key, defaultPercent)
+                        // Convert dp to percentage of screen height
+                        val pixelValue = oldValue * density
+                        val percentValue = ((pixelValue / screenHeight) * 100).toInt().coerceIn(0, 80)
+                        editor.putInt(key, percentValue)
+                        Log.i("Config", "Migrated $key: ${oldValue}dp → $percentValue%")
+                    } catch (e: Exception) {
+                        Log.w("Config", "Failed to migrate $key", e)
+                    }
+                }
+            }
+
+            // Migrate left/right margins if they exist with dp values
+            val leftRightKeys = listOf(
+                "margin_left_portrait" to Defaults.MARGIN_LEFT_PORTRAIT,
+                "margin_left_landscape" to Defaults.MARGIN_LEFT_LANDSCAPE,
+                "margin_left_portrait_unfolded" to Defaults.MARGIN_LEFT_PORTRAIT,
+                "margin_left_landscape_unfolded" to Defaults.MARGIN_LEFT_LANDSCAPE,
+                "margin_right_portrait" to Defaults.MARGIN_RIGHT_PORTRAIT,
+                "margin_right_landscape" to Defaults.MARGIN_RIGHT_LANDSCAPE,
+                "margin_right_portrait_unfolded" to Defaults.MARGIN_RIGHT_PORTRAIT,
+                "margin_right_landscape_unfolded" to Defaults.MARGIN_RIGHT_LANDSCAPE
+            )
+
+            for ((key, defaultPercent) in leftRightKeys) {
+                if (prefs.contains(key)) {
+                    try {
+                        val oldValue = safeGetInt(prefs, key, defaultPercent)
+                        // Convert dp to percentage of screen width
+                        val pixelValue = oldValue * density
+                        val percentValue = ((pixelValue / screenWidth) * 100).toInt().coerceIn(0, 45)
+                        editor.putInt(key, percentValue)
+                        Log.i("Config", "Migrated $key: ${oldValue}dp → $percentValue%")
+                    } catch (e: Exception) {
+                        Log.w("Config", "Failed to migrate $key", e)
+                    }
+                }
+            }
+
+            // Mark migration complete
+            editor.putInt("margin_prefs_version", MARGIN_PREFS_VERSION)
+            editor.apply()
+            Log.i("Config", "Margin preference migration complete")
         }
     }
 }
