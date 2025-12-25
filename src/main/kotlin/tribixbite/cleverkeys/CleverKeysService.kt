@@ -690,6 +690,14 @@ class CleverKeysService : InputMethodService(),
         // This eliminates double initialization and input lag on app switches
     }
 
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // CRITICAL: Refresh config when orientation changes to update landscape/portrait margins
+        // Without this, landscape margins are never applied because Config.orientation_landscape
+        // isn't updated when the device rotates
+        refresh_config()
+    }
+
     override fun onUpdateSelection(
         oldSelStart: Int,
         oldSelEnd: Int,
