@@ -148,6 +148,13 @@ class Keyboard2View @JvmOverloads constructor(
         }
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        // Request insets immediately on attach to ensure proper nav bar positioning
+        // Without this, keyboard may appear below nav bar on first load
+        requestApplyInsets()
+    }
+
     private fun initSwipeTrailPaint() {
         val config = _config
         val density = resources.displayMetrics.density

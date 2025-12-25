@@ -381,7 +381,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             "theme" -> {
                 currentThemeName = prefs.getSafeString(key, Defaults.THEME)
             }
-            "keyboard_height_percent" -> {
+            "keyboard_height" -> {
                 keyboardHeight = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_PORTRAIT)
             }
             "vibration_enabled" -> {
@@ -911,7 +911,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     steps = 40,
                     onValueChange = {
                         keyboardHeight = it.toInt()
-                        saveSetting("keyboard_height_percent", keyboardHeight)
+                        saveSetting("keyboard_height", keyboardHeight)
                     },
                     displayValue = "$keyboardHeight%"
                 )
@@ -2991,7 +2991,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
         // Appearance settings
         currentThemeName = prefs.getSafeString("theme", Defaults.THEME)
-        keyboardHeight = prefs.getSafeInt("keyboard_height_percent", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
+        keyboardHeight = prefs.getSafeInt("keyboard_height", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
         keyboardHeightLandscape = prefs.getSafeInt("keyboard_height_landscape", Defaults.KEYBOARD_HEIGHT_LANDSCAPE)
 
         // Adaptive layout settings (percentages)
@@ -3257,7 +3257,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     editor.putInt("neural_max_length", 35)
                     editor.putFloat("neural_confidence_threshold", 0.1f)
                     editor.putString("theme", "jewel")  // Default theme
-                    editor.putInt("keyboard_height_percent", 35)
+                    editor.putInt("keyboard_height", 35)
                     editor.putBoolean("vibration_enabled", false)
                     editor.putBoolean("debug_enabled", false)
                     editor.putBoolean("clipboard_history_enabled", true)

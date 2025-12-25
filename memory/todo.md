@@ -234,10 +234,12 @@
 - [x] Fix keyboard below nav bar on first load (2025-12-25)
   - onApplyWindowInsets wasn't triggering re-layout after insets changed
   - Added requestLayout() call when insets change
+  - Added onAttachedToWindow() override that calls requestApplyInsets()
   - Keyboard now correctly positions above nav bar immediately
 - [x] Fix keyboard height setting not applying (2025-12-25)
-  - Theme cache key didn't include config.version
-  - When height percent changed, stale cached Theme.Computed was returned
+  - ROOT CAUSE: Settings saved to "keyboard_height_percent" but Config read from "keyboard_height"
+  - Fixed key name mismatch in SettingsActivity.kt (3 locations)
+  - Also: Theme cache key didn't include config.version
   - Added config.version to cache key to invalidate on any config change
 
 **Current Version**: 1.1.76 (versionCode 101763 for x86_64)
