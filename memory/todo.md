@@ -258,8 +258,8 @@
     - NeuralLayoutHelper now passes config.margin_left/margin_right to neural engine
   - Both fixes required for correct swipe typing with non-uniform margins
 
-**Current Version**: 1.1.76 (versionCode 101763 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.76
+**Current Version**: 1.1.77 (versionCode 101773 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.77
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 **Final Config**: No srclibs, no postbuild - just gradle + prebuild sed!
 
