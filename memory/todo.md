@@ -1,6 +1,6 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-24
+**Last Updated**: 2025-12-25
 **Status**: v1.1.76 - Comprehensive Direct Boot & Security
 
 ---
@@ -245,6 +245,13 @@
   - ROOT CAUSE: Missing onConfigurationChanged() override in CleverKeysService
   - Config.refresh() was never called on orientation change
   - Added override that calls refresh_config() to update landscape margin values
+- [x] Fix swipe NN key coordinate mapping for non-uniform margins (2025-12-25)
+  - ROOT CAUSE: ProbabilisticKeyDetector calculated key positions starting at x=0
+  - Touch coordinates from swipe events are screen-relative (include left margin offset)
+  - Added marginLeft parameter to ProbabilisticKeyDetector constructor
+  - Key position calculations now start at marginLeft instead of 0
+  - Also fixed width calculation: pass key area width only (excluding margins)
+  - Tested with 30% left / 0% right margin in landscape mode
 
 **Current Version**: 1.1.76 (versionCode 101763 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.76
