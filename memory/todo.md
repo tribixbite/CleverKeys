@@ -231,6 +231,14 @@
   - First letter capitalized if user started typing with Shift
   - Fixed potential word deletion bug: clear lastAutoInsertedWord when starting new typed word
   - Prevents incorrectly deleting swiped word when user types then taps prediction
+- [x] Fix keyboard below nav bar on first load (2025-12-25)
+  - onApplyWindowInsets wasn't triggering re-layout after insets changed
+  - Added requestLayout() call when insets change
+  - Keyboard now correctly positions above nav bar immediately
+- [x] Fix keyboard height setting not applying (2025-12-25)
+  - Theme cache key didn't include config.version
+  - When height percent changed, stale cached Theme.Computed was returned
+  - Added config.version to cache key to invalidate on any config change
 
 **Current Version**: 1.1.76 (versionCode 101763 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.76

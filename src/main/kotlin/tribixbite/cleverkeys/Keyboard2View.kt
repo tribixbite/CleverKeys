@@ -259,7 +259,8 @@ class Keyboard2View @JvmOverloads constructor(
             _keyWidth = (screenWidth - marginLeft - marginRight) / kw.keysWidth
 
             // Ensure theme cache is initialized for key detection
-            val cacheKey = "${kw.name ?: ""}_$_keyWidth"
+            // Include config.version to invalidate cache when any config changes (e.g., keyboard height)
+            val cacheKey = "${kw.name ?: ""}_${_keyWidth}_${_config.version}"
             _tc = _themeCache.get(cacheKey) ?: run {
                 val computed = Theme.Computed(_theme, _config, _keyWidth, kw)
                 _themeCache.put(cacheKey, computed)
@@ -790,7 +791,8 @@ class Keyboard2View @JvmOverloads constructor(
             _keyWidth = (width - _marginLeft - _marginRight) / keyboard.keysWidth
         }
 
-        val cacheKey = "${keyboard.name ?: ""}_$_keyWidth"
+        // Include config.version to invalidate cache when any config changes (e.g., keyboard height)
+        val cacheKey = "${keyboard.name ?: ""}_${_keyWidth}_${_config.version}"
         _tc = _themeCache.get(cacheKey) ?: run {
             val computed = Theme.Computed(_theme, _config, _keyWidth, keyboard)
             _themeCache.put(cacheKey, computed)
@@ -829,6 +831,10 @@ class Keyboard2View @JvmOverloads constructor(
     override fun onApplyWindowInsets(wi: WindowInsets?): WindowInsets? {
         if (wi == null) return wi
 
+        val prevBottom = _insets_bottom
+        val prevLeft = _insets_left
+        val prevRight = _insets_right
+
         // API 30+: Use modern WindowInsets.Type API
         if (VERSION.SDK_INT >= 30) {
             val insets_types = WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
@@ -844,6 +850,12 @@ class Keyboard2View @JvmOverloads constructor(
             _insets_left = insets.left
             _insets_right = insets.right
             _insets_bottom = insets.bottom
+        }
+
+        // CRITICAL: If insets changed, request re-layout to recalculate keyboard position
+        // Without this, keyboard may appear below nav bar on first load
+        if (_insets_bottom != prevBottom || _insets_left != prevLeft || _insets_right != prevRight) {
+            requestLayout()
         }
 
         return WindowInsets.CONSUMED
