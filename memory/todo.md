@@ -246,12 +246,17 @@
   - Config.refresh() was never called on orientation change
   - Added override that calls refresh_config() to update landscape margin values
 - [x] Fix swipe NN key coordinate mapping for non-uniform margins (2025-12-25)
-  - ROOT CAUSE: ProbabilisticKeyDetector calculated key positions starting at x=0
-  - Touch coordinates from swipe events are screen-relative (include left margin offset)
-  - Added marginLeft parameter to ProbabilisticKeyDetector constructor
-  - Key position calculations now start at marginLeft instead of 0
-  - Also fixed width calculation: pass key area width only (excluding margins)
-  - Tested with 30% left / 0% right margin in landscape mode
+  - **Part 1: ProbabilisticKeyDetector (nearest key detection during swipe)**
+    - ROOT CAUSE: Key positions calculated starting at x=0 instead of marginLeft
+    - Added marginLeft parameter to constructor and key position calculations
+    - Fixed width calculation: pass key area width only (excluding margins)
+  - **Part 2: SwipeTrajectoryProcessor (neural network input normalization)**
+    - ROOT CAUSE: X normalization divided by total width, not key area width
+    - Before: `x = rawX / keyboardWidth` (wrong when margins present)
+    - After: `x = (rawX - marginLeft) / keyAreaWidth`
+    - Added setMargins(left, right) method threaded through orchestrator chain
+    - NeuralLayoutHelper now passes config.margin_left/margin_right to neural engine
+  - Both fixes required for correct swipe typing with non-uniform margins
 
 **Current Version**: 1.1.76 (versionCode 101763 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.76
