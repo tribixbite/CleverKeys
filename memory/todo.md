@@ -241,6 +241,10 @@
   - Fixed key name mismatch in SettingsActivity.kt (3 locations)
   - Also: Theme cache key didn't include config.version
   - Added config.version to cache key to invalidate on any config change
+- [x] Fix landscape margins not applying on rotation (2025-12-25)
+  - ROOT CAUSE: Missing onConfigurationChanged() override in CleverKeysService
+  - Config.refresh() was never called on orientation change
+  - Added override that calls refresh_config() to update landscape margin values
 
 **Current Version**: 1.1.76 (versionCode 101763 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.76
