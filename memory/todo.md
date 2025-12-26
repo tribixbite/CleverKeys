@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-25
-**Status**: v1.1.76 - Comprehensive Direct Boot & Security
+**Last Updated**: 2025-12-26
+**Status**: v1.1.78 - ONNX Init Retry Fix
 
 ---
 
@@ -257,9 +257,16 @@
     - Added setMargins(left, right) method threaded through orchestrator chain
     - NeuralLayoutHelper now passes config.margin_left/margin_right to neural engine
   - Both fixes required for correct swipe typing with non-uniform margins
+- [x] Fix ONNX init not retrying after Direct Boot failure (2025-12-26)
+  - ROOT CAUSE: SwipePredictorOrchestrator set isInitialized=true in finally block
+  - Even when model loading failed (e.g., during lock screen), flag prevented retry
+  - After device unlock, subsequent keyboard opens returned cached failure result
+  - FIX: Only set isInitialized=true when isModelLoaded is true
+  - Also reset isInitialized in cleanup() to allow re-initialization
+  - Symptoms: swipe typing not working until manually toggled off/on in settings
 
-**Current Version**: 1.1.77 (versionCode 101773 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.77
+**Current Version**: 1.1.78 (versionCode 101783 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.78
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 **Final Config**: No srclibs, no postbuild - just gradle + prebuild sed!
 
@@ -272,7 +279,7 @@
 build.gradle (lines 51-53):
   ext.VERSION_MAJOR = 1
   ext.VERSION_MINOR = 1
-  ext.VERSION_PATCH = 76
+  ext.VERSION_PATCH = 78
 ```
 
 ### VersionCode Formula
