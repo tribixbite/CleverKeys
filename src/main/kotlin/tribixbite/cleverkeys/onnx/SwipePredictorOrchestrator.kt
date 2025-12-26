@@ -109,8 +109,12 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
 
     @Synchronized
     fun initialize(): Boolean {
-        if (isInitialized) return isModelLoaded
+        if (isInitialized) {
+            Log.d(TAG, "Already initialized, returning isModelLoaded=$isModelLoaded")
+            return isModelLoaded
+        }
 
+        Log.d(TAG, "Starting ONNX model initialization...")
         val startTime = System.currentTimeMillis()
         val versionId = "builtin_v2_android" // Unique ID for builtin models
 
@@ -197,9 +201,12 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                 // In a production system, this would attempt to reload with the previous version
                 // For now, we just log the recommendation
             }
-        } finally {
-            isInitialized = true
         }
+
+        // FIX: Only mark as initialized if loading succeeded
+        // This allows retry on subsequent calls if initialization failed
+        // (e.g., during Direct Boot when storage may be restricted)
+        isInitialized = isModelLoaded
 
         return isModelLoaded
     }
@@ -270,5 +277,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
         encoderSession?.close()
         decoderSession?.close()
         isModelLoaded = false
+        isInitialized = false // Allow re-initialization after cleanup
+        Log.d(TAG, "Cleanup complete - ready for re-initialization")
     }
 }
