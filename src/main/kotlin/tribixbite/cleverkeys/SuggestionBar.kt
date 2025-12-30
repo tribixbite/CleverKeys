@@ -1,10 +1,7 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
-import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Path
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.text.InputType
@@ -16,10 +13,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
+import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.round
@@ -42,9 +41,9 @@ class SuggestionBar : LinearLayout {
     private var isPasswordMode = false
     private var isPasswordVisible = false
     private var currentPasswordText = StringBuilder()
+    private var passwordContainer: FrameLayout? = null
     private var passwordTextView: TextView? = null
-    private var passwordScrollView: HorizontalScrollView? = null
-    private var eyeToggleView: View? = null
+    private var eyeToggleView: ImageView? = null
     private var inputConnectionProvider: InputConnectionProvider? = null
 
     /**
@@ -446,60 +445,62 @@ class SuggestionBar : LinearLayout {
     }
 
     /**
-     * Setup the password mode views (eye toggle fixed on right, scrollable password text).
-     * Layout order: [ScrollView with text] [Fixed eye icon]
-     * The eye icon is added LAST but uses fixed width, scroll view uses weight=1
+     * Setup the password mode views using FrameLayout for true fixed positioning.
+     * The eye icon is absolutely positioned on the right and never moves.
+     * Password text is centered and scrolls independently.
      */
     private fun setupPasswordModeViews() {
         // Clear any existing suggestion views
         removeAllViews()
         suggestionViews.clear()
 
-        // Create scrollable container for password text (takes remaining space)
-        // Added FIRST so it's on the left
-        passwordScrollView = HorizontalScrollView(context).apply {
-            layoutParams = LayoutParams(0, LayoutParams.MATCH_PARENT, 1f).apply {
-                // Ensure scroll view doesn't push eye icon off screen
-                marginEnd = 0
-            }
-            isHorizontalScrollBarEnabled = false
-            isFillViewport = false  // Don't fill - let text be natural width for scrolling
-            setBackgroundColor(Color.TRANSPARENT)
-        }
+        val iconSize = dpToPx(context, 36)
+        val iconMargin = dpToPx(context, 8)
 
-        // Create password text view inside scroll view
-        passwordTextView = TextView(context).apply {
+        // Create FrameLayout container for overlay positioning
+        passwordContainer = FrameLayout(context).apply {
             layoutParams = LayoutParams(
-                LayoutParams.WRAP_CONTENT,
+                LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT
             )
-            gravity = Gravity.CENTER  // Center text vertically and horizontally
-            setPadding(dpToPx(context, 12), 0, dpToPx(context, 12), 0)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)  // Slightly larger for dots
+        }
+
+        // Create centered password text view
+        // Uses padding on right to avoid overlapping with fixed eye icon
+        passwordTextView = TextView(context).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            gravity = Gravity.CENTER  // True center alignment
+            // Right padding ensures text doesn't go under the eye icon
+            setPadding(dpToPx(context, 16), 0, iconSize + iconMargin * 2, 0)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
-            typeface = Typeface.MONOSPACE  // Monospace for password display
+            typeface = Typeface.MONOSPACE
             text = ""
             isSingleLine = true
-            // Use letter spacing for dots to make them more readable
-            letterSpacing = 0.1f
+            ellipsize = android.text.TextUtils.TruncateAt.MIDDLE  // Truncate middle if too long
+            letterSpacing = 0.15f  // Spacing for dots readability
         }
-        passwordScrollView?.addView(passwordTextView)
-        addView(passwordScrollView)
+        passwordContainer?.addView(passwordTextView)
 
-        // Create eye toggle button (fixed on right, never scrolls)
-        // Added LAST so it's on the right, with fixed width (no weight)
-        eyeToggleView = EyeIconView(context, theme).apply {
-            layoutParams = LayoutParams(
-                dpToPx(context, 40),  // Fixed width
-                dpToPx(context, 40)   // Fixed height for square icon
-            ).apply {
-                gravity = Gravity.CENTER_VERTICAL
-                marginStart = dpToPx(context, 4)
-                marginEnd = dpToPx(context, 8)
+        // Create eye toggle ImageView using Material Design vector drawable
+        // Positioned absolutely on the right, never affected by text content
+        eyeToggleView = ImageView(context).apply {
+            layoutParams = FrameLayout.LayoutParams(iconSize, iconSize).apply {
+                gravity = Gravity.CENTER_VERTICAL or Gravity.END
+                marginEnd = iconMargin
             }
+            scaleType = ImageView.ScaleType.FIT_CENTER
             isClickable = true
             isFocusable = true
-            setEyeOpen(false)  // Start with eye closed (password hidden)
+            contentDescription = "Toggle password visibility"
+
+            // Set initial icon (visibility off = hidden)
+            setImageDrawable(getVisibilityDrawable(false))
+            // Apply theme color
+            setColorFilter(theme?.subLabelColor?.takeIf { it != 0 } ?: Color.GRAY)
 
             setOnClickListener {
                 togglePasswordVisibility()
@@ -510,111 +511,18 @@ class SuggestionBar : LinearLayout {
             context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true)
             setBackgroundResource(outValue.resourceId)
         }
-        addView(eyeToggleView)
+        passwordContainer?.addView(eyeToggleView)
 
+        addView(passwordContainer)
         updatePasswordDisplay()
     }
 
     /**
-     * Custom view that draws an eye icon with optional diagonal line (slash).
-     * Uses balanced proportions for a natural-looking eye shape.
+     * Get the appropriate visibility drawable based on state.
      */
-    private class EyeIconView(context: Context, private val theme: Theme?) : View(context) {
-        private var isEyeOpen = false
-        private val eyePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE
-            strokeWidth = 2.5f
-            strokeCap = Paint.Cap.ROUND
-            strokeJoin = Paint.Join.ROUND
-        }
-        private val slashPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE
-            strokeWidth = 2.5f
-            strokeCap = Paint.Cap.ROUND
-        }
-        private val pupilPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.FILL
-        }
-        private val irisPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE
-            strokeWidth = 1.5f
-        }
-
-        fun setEyeOpen(open: Boolean) {
-            isEyeOpen = open
-            updateColors()
-            invalidate()
-        }
-
-        private fun updateColors() {
-            val color = if (isEyeOpen) {
-                theme?.activatedColor?.takeIf { it != 0 } ?: Color.CYAN
-            } else {
-                theme?.subLabelColor?.takeIf { it != 0 } ?: Color.GRAY
-            }
-            eyePaint.color = color
-            slashPaint.color = color
-            pupilPaint.color = color
-            irisPaint.color = color
-        }
-
-        init {
-            updateColors()
-        }
-
-        override fun onDraw(canvas: Canvas) {
-            super.onDraw(canvas)
-
-            val w = width.toFloat()
-            val h = height.toFloat()
-            val size = minOf(w, h)  // Use smaller dimension for square aspect
-            val cx = w / 2
-            val cy = h / 2
-
-            // More balanced proportions - eye is ~60% of size, height ~45% of width
-            val eyeWidth = size * 0.65f
-            val eyeHeight = size * 0.30f
-
-            // Draw eye outline (almond shape using bezier curves)
-            val path = Path()
-            path.moveTo(cx - eyeWidth / 2, cy)
-            // Top curve - more pronounced arc
-            path.cubicTo(
-                cx - eyeWidth / 3, cy - eyeHeight * 1.2f,
-                cx + eyeWidth / 3, cy - eyeHeight * 1.2f,
-                cx + eyeWidth / 2, cy
-            )
-            // Bottom curve - symmetric
-            path.cubicTo(
-                cx + eyeWidth / 3, cy + eyeHeight * 1.2f,
-                cx - eyeWidth / 3, cy + eyeHeight * 1.2f,
-                cx - eyeWidth / 2, cy
-            )
-            canvas.drawPath(path, eyePaint)
-
-            // Draw iris (outer circle)
-            val irisRadius = eyeHeight * 0.85f
-            canvas.drawCircle(cx, cy, irisRadius, irisPaint)
-
-            // Draw pupil (filled inner circle)
-            val pupilRadius = eyeHeight * 0.5f
-            canvas.drawCircle(cx, cy, pupilRadius, pupilPaint)
-
-            // Draw highlight (small white dot for realism)
-            pupilPaint.color = Color.argb(180, 255, 255, 255)
-            canvas.drawCircle(cx - pupilRadius * 0.35f, cy - pupilRadius * 0.35f, pupilRadius * 0.3f, pupilPaint)
-            updateColors()  // Reset pupil color
-
-            // Draw diagonal slash when eye is closed (password hidden)
-            if (!isEyeOpen) {
-                val slashPadding = size * 0.12f
-                canvas.drawLine(
-                    cx - eyeWidth / 2 + slashPadding, cy + eyeHeight,
-                    cx + eyeWidth / 2 - slashPadding, cy - eyeHeight,
-                    slashPaint
-                )
-            }
-        }
+    private fun getVisibilityDrawable(visible: Boolean): Drawable? {
+        val resId = if (visible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
+        return ContextCompat.getDrawable(context, resId)
     }
 
     /**
@@ -629,8 +537,16 @@ class SuggestionBar : LinearLayout {
 
         updatePasswordDisplay()
 
-        // Update eye icon state
-        (eyeToggleView as? EyeIconView)?.setEyeOpen(isPasswordVisible)
+        // Update eye icon drawable and color
+        eyeToggleView?.apply {
+            setImageDrawable(getVisibilityDrawable(isPasswordVisible))
+            val color = if (isPasswordVisible) {
+                theme?.activatedColor?.takeIf { it != 0 } ?: Color.CYAN
+            } else {
+                theme?.subLabelColor?.takeIf { it != 0 } ?: Color.GRAY
+            }
+            setColorFilter(color)
+        }
 
         Log.d(TAG, "Password visibility toggled: ${if (isPasswordVisible) "visible" else "hidden"}, ${currentPasswordText.length} chars")
     }
@@ -690,6 +606,7 @@ class SuggestionBar : LinearLayout {
      * Clear password mode views and restore normal suggestion bar behavior.
      */
     private fun clearPasswordModeViews() {
+        passwordContainer = null
         passwordTextView = null
         eyeToggleView = null
         currentPasswordText.clear()
