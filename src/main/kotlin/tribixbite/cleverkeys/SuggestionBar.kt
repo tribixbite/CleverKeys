@@ -526,12 +526,13 @@ class SuggestionBar : LinearLayout {
 
         // Create password text view inside scroll view
         passwordTextView = TextView(context).apply {
+            // LayoutGravity CENTER centers the view vertically and horizontally when content is smaller than viewport
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                Gravity.CENTER
             )
-            // CENTER: when fillViewport stretches TextView, text is centered within
-            // When content overflows, WRAP_CONTENT makes it scrollable
+            // Gravity CENTER centers text within this view
             gravity = Gravity.CENTER
             setPadding(dpToPx(context, 16), 0, dpToPx(context, 16), 0)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
@@ -539,10 +540,10 @@ class SuggestionBar : LinearLayout {
             typeface = Typeface.MONOSPACE
             text = ""
             
-            // Use isSingleLine=true for reliable single-line scrolling behavior
-            isSingleLine = true
-            // Explicitly allow horizontal scrolling
+            // Configuration for proper scrolling of single line text
+            maxLines = 1
             setHorizontallyScrolling(true)
+            movementMethod = null // Disable internal cursor movement/scrolling
             
             letterSpacing = 0.15f  // Spacing for dots readability
         }

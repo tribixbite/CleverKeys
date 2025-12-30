@@ -102,18 +102,20 @@ SuggestionBar (LinearLayout)
         ├── fillViewport=true (enables centering)
         └── TextView
             ├── WRAP_CONTENT width
+            ├── layout_gravity=CENTER (Centers in ScrollView)
             ├── gravity=CENTER
-            ├── isSingleLine=true (Ensures correct scrolling behavior)
-            └── horizontallyScrolling=true (Explicitly allow expansion)
+            ├── maxLines=1 (NOT singleLine=true)
+            ├── horizontallyScrolling=true (Explicitly allow expansion)
+            └── movementMethod=null (Pass touches to parent ScrollView)
 ```
 
 **Key Insight** (from Gemini):
 - `START_OF` constraint creates fixed boundary for scroll view
 - `fillViewport=true` stretches the TextView to fill the width if content is short.
 - `WRAP_CONTENT` on TextView allows it to exceed viewport (enables scrolling) if content is long.
-- `gravity=CENTER` on TextView centers the text *within* the TextView (which matches parent width when short, or exceeds it when long).
-- **`isSingleLine=true`** is the most reliable way to configure a single-line scrolling TextView, despite deprecation warnings. It sets up internal flags correctly.
-- **`horizontallyScrolling=true` is REQUIRED** to allow the TextView to grow wider than the screen.
+- `layout_gravity=CENTER` on TextView ensures it stays centered in the ScrollView when text is short.
+- **Do NOT use `singleLine=true`** - it forces internal scrolling behavior that conflicts with parent ScrollView. Use `maxLines=1` with `setHorizontallyScrolling(true)`.
+- **`movementMethod=null`** ensures the TextView doesn't consume touch events, allowing the parent ScrollView to handle swiping.
 - Do NOT use `clipChildren=false` - it breaks scrolling!
 
 ## Files Modified
