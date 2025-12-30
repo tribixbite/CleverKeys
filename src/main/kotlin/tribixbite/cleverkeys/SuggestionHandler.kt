@@ -70,6 +70,9 @@ class SuggestionHandler(
     private val predictionExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private var currentPredictionTask: Future<*>? = null
 
+    // Password mode tracking
+    private var isPasswordMode = false
+
     /**
      * Updates configuration.
      *
@@ -100,6 +103,59 @@ class SuggestionHandler(
     }
 
     /**
+     * Sets password mode.
+     * When enabled, predictions are disabled and password text is tracked.
+     *
+     * @param enabled Whether password mode is enabled
+     */
+    fun setPasswordMode(enabled: Boolean) {
+        isPasswordMode = enabled
+        if (enabled) {
+            // Clear predictions when entering password mode
+            suggestionBar?.clearSuggestions()
+        }
+        Log.d(TAG, "Password mode ${if (enabled) "enabled" else "disabled"}")
+    }
+
+    /**
+     * Check if currently in password mode.
+     */
+    fun isInPasswordMode(): Boolean = isPasswordMode
+
+    /**
+     * Handle a character typed in password field.
+     * Updates the password display in the suggestion bar.
+     *
+     * @param char The character that was typed
+     */
+    fun handlePasswordChar(char: Char) {
+        if (!isPasswordMode) return
+        suggestionBar?.appendPasswordChar(char)
+    }
+
+    /**
+     * Handle a string typed in password field.
+     * Updates the password display in the suggestion bar.
+     *
+     * @param text The text that was typed
+     */
+    fun handlePasswordText(text: String) {
+        if (!isPasswordMode) return
+        text.forEach { char ->
+            suggestionBar?.appendPasswordChar(char)
+        }
+    }
+
+    /**
+     * Handle backspace in password field.
+     * Updates the password display in the suggestion bar.
+     */
+    fun handlePasswordBackspace() {
+        if (!isPasswordMode) return
+        suggestionBar?.deletePasswordChar()
+    }
+
+    /**
      * Sends a debug log message if debug mode is enabled.
      */
     private fun sendDebugLog(message: String) {
@@ -125,6 +181,11 @@ class SuggestionHandler(
         editorInfo: EditorInfo?,
         resources: Resources
     ) {
+        // Skip predictions in password mode
+        if (isPasswordMode) {
+            return
+        }
+
         // DEBUG: Log predictions received
         sendDebugLog("Predictions received: ${predictions.size}\n")
         if (predictions.isNotEmpty()) {
@@ -463,6 +524,12 @@ class SuggestionHandler(
      * @param editorInfo Editor info for app detection
      */
     fun handleRegularTyping(text: String, ic: InputConnection?, editorInfo: EditorInfo?) {
+        // Handle password mode: update password display, skip predictions
+        if (isPasswordMode) {
+            handlePasswordText(text)
+            return
+        }
+
         if (!config.word_prediction_enabled || predictionCoordinator.getWordPredictor() == null || suggestionBar == null) {
             return
         }
@@ -556,6 +623,12 @@ class SuggestionHandler(
      * Updates predictions as user deletes characters.
      */
     fun handleBackspace() {
+        // Handle password mode: update password display
+        if (isPasswordMode) {
+            handlePasswordBackspace()
+            return
+        }
+
         if (contextTracker.getCurrentWordLength() > 0) {
             contextTracker.deleteLastChar()
             if (contextTracker.getCurrentWordLength() > 0) {

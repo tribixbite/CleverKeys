@@ -648,6 +648,14 @@ class CleverKeysService : InputMethodService(),
             _inputViewContainer = predictionSetup.inputViewContainer
             _contentPaneContainer = predictionSetup.contentPaneContainer
             setInputView(predictionSetup.inputView)
+
+            // Password field detection: disable predictions and show eye toggle
+            val isPasswordField = SuggestionBar.isPasswordField(info)
+            _suggestionBar?.setPasswordMode(isPasswordField)
+            _suggestionHandler?.setPasswordMode(isPasswordField)
+            // Wire up InputConnectionProvider for accurate password text reading
+            // This enables the eye toggle to show actual field content even after cursor moves
+            _suggestionBar?.setInputConnectionProvider { currentInputConnection }
         }
 
         // Neural key positions are now set by PredictionViewSetup's GlobalLayoutListener
