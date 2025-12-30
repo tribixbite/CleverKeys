@@ -536,7 +536,8 @@ class SuggestionBar : LinearLayout {
             setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
             typeface = Typeface.MONOSPACE
             text = ""
-            isSingleLine = true
+            maxLines = 1
+            setHorizontallyScrolling(false) // Allow expanding beyond parent width
             letterSpacing = 0.15f  // Spacing for dots readability
         }
 

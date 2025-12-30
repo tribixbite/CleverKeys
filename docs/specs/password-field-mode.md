@@ -103,13 +103,15 @@ SuggestionBar (LinearLayout)
         └── TextView
             ├── WRAP_CONTENT width
             ├── gravity=CENTER
-            └── singleLine=true
+            ├── maxLines=1 (NOT singleLine=true)
+            └── horizontallyScrolling=false
 ```
 
 **Key Insight** (from Gemini):
 - `START_OF` constraint creates fixed boundary for scroll view
 - `fillViewport=true` stretches child when content is short (enables centering)
 - `WRAP_CONTENT` on TextView allows it to exceed viewport (enables scrolling)
+- **Do NOT use `singleLine=true`** - it forces internal scrolling which breaks the parent `HorizontalScrollView`. Use `maxLines=1` instead.
 - Do NOT use `clipChildren=false` - it breaks scrolling!
 
 ## Files Modified
