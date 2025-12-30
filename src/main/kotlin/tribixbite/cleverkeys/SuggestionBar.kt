@@ -447,7 +447,7 @@ class SuggestionBar : LinearLayout {
     /**
      * Setup the password mode views using FrameLayout for true fixed positioning.
      * The eye icon is absolutely positioned on the right and never moves.
-     * Password text is centered and scrolls independently.
+     * Password text is in a HorizontalScrollView for overflow scrolling.
      */
     private fun setupPasswordModeViews() {
         // Clear any existing suggestion views
@@ -456,6 +456,7 @@ class SuggestionBar : LinearLayout {
 
         val iconSize = dpToPx(context, 36)
         val iconMargin = dpToPx(context, 8)
+        val iconTotalWidth = iconSize + iconMargin * 2
 
         // Create FrameLayout container for overlay positioning
         passwordContainer = FrameLayout(context).apply {
@@ -465,25 +466,37 @@ class SuggestionBar : LinearLayout {
             )
         }
 
-        // Create centered password text view
-        // Uses padding on right to avoid overlapping with fixed eye icon
-        passwordTextView = TextView(context).apply {
+        // Create HorizontalScrollView for scrollable password text
+        val scrollView = HorizontalScrollView(context).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
+            ).apply {
+                // Right margin ensures scroll area doesn't go under the fixed icon
+                marginEnd = iconTotalWidth
+            }
+            isHorizontalScrollBarEnabled = false
+            isFillViewport = true  // Center content when smaller than viewport
+            setBackgroundColor(Color.TRANSPARENT)
+        }
+
+        // Create password text view inside scroll view
+        passwordTextView = TextView(context).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
             )
-            gravity = Gravity.CENTER  // True center alignment
-            // Right padding ensures text doesn't go under the eye icon
-            setPadding(dpToPx(context, 16), 0, iconSize + iconMargin * 2, 0)
+            gravity = Gravity.CENTER  // Center vertically
+            setPadding(dpToPx(context, 16), 0, dpToPx(context, 16), 0)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
             typeface = Typeface.MONOSPACE
             text = ""
             isSingleLine = true
-            ellipsize = android.text.TextUtils.TruncateAt.MIDDLE  // Truncate middle if too long
             letterSpacing = 0.15f  // Spacing for dots readability
         }
-        passwordContainer?.addView(passwordTextView)
+        scrollView.addView(passwordTextView)
+        passwordContainer?.addView(scrollView)
 
         // Create eye toggle ImageView using Material Design vector drawable
         // Positioned absolutely on the right, never affected by text content
