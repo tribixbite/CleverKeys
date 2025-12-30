@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-26
-**Status**: v1.1.78 - ONNX Init Retry Fix
+**Last Updated**: 2025-12-30
+**Status**: v1.1.79 - Password Field Eye Toggle (pending test)
 
 ---
 
@@ -264,6 +264,15 @@
   - FIX: Only set isInitialized=true when isModelLoaded is true
   - Also reset isInitialized in cleanup() to allow re-initialization
   - Symptoms: swipe typing not working until manually toggled off/on in settings
+- [ ] Password field eye toggle feature (2025-12-30) **PENDING MANUAL TEST**
+  - Detect password/PIN input fields (all Android InputType variations)
+  - Disable predictions and autocorrect in password fields
+  - Show eye toggle icon in suggestion bar (custom EyeIconView with bezier curves)
+  - Toggle shows/hides password text in suggestion bar
+  - HorizontalScrollView for password text with fixed eye icon position
+  - InputConnectionProvider reads actual field content on toggle
+  - Handles cursor movement before backspace correctly
+  - Files modified: SuggestionBar.kt, SuggestionHandler.kt, CleverKeysService.kt
 
 **Current Version**: 1.1.78 (versionCode 101783 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.78
