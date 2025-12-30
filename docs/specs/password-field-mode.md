@@ -100,25 +100,20 @@ SuggestionBar (LinearLayout)
         ├── ALIGN_PARENT_START
         ├── START_OF(icon) ← Key constraint!
         ├── fillViewport=true (enables centering)
-        └── FrameLayout (Intermediate container)
+        └── TextView
             ├── WRAP_CONTENT width
-            └── TextView
-                ├── WRAP_CONTENT width
-                ├── layout_gravity=CENTER (Centers in FrameLayout)
-                ├── gravity=CENTER
-                ├── maxLines=1 (NOT singleLine=true)
-                ├── horizontallyScrolling=true (Explicitly allow expansion)
-                └── movementMethod=null (Pass touches to parent ScrollView)
+            ├── gravity=CENTER
+            ├── isSingleLine=true (Ensures correct scrolling behavior)
+            └── horizontallyScrolling=true (Explicitly allow expansion)
 ```
 
 **Key Insight** (from Gemini):
 - `START_OF` constraint creates fixed boundary for scroll view
-- `fillViewport=true` stretches the **first child** (FrameLayout) to fill the width.
-- `FrameLayout` with `WRAP_CONTENT` expands to fit the TextView when text is long, but is stretched by ScrollView when text is short.
-- `layout_gravity=CENTER` on TextView ensures it stays centered in the FrameLayout when text is short.
-- **Do NOT use `singleLine=true`** - it forces internal scrolling which breaks the parent `HorizontalScrollView`. Use `maxLines=1` instead.
+- `fillViewport=true` stretches the TextView to fill the width if content is short.
+- `WRAP_CONTENT` on TextView allows it to exceed viewport (enables scrolling) if content is long.
+- `gravity=CENTER` on TextView centers the text *within* the TextView (which matches parent width when short, or exceeds it when long).
+- **`isSingleLine=true`** is the most reliable way to configure a single-line scrolling TextView, despite deprecation warnings. It sets up internal flags correctly.
 - **`horizontallyScrolling=true` is REQUIRED** to allow the TextView to grow wider than the screen.
-- **`movementMethod=null`** ensures the TextView doesn't consume touch events, allowing the parent ScrollView to handle swiping.
 - Do NOT use `clipChildren=false` - it breaks scrolling!
 
 ## Files Modified

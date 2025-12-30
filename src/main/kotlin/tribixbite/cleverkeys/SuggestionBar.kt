@@ -514,46 +514,41 @@ class SuggestionBar : LinearLayout {
             }
             layoutParams = params
 
-            isHorizontalScrollBarEnabled = false
+            isHorizontalScrollBarEnabled = true // Enable scrollbar
+            isClickable = true // Ensure touch events are caught
+            isFocusable = true
+
             // fillViewport = true: stretches child to fill width when content is short (enables centering)
             // When content is long, child exceeds width and becomes scrollable
             isFillViewport = true
             setBackgroundColor(Color.TRANSPARENT)
-            // NOTE: Do NOT set clipChildren=false - it breaks scrolling!
         }
 
-        // Create FrameLayout container for proper centering + scrolling
-        val textContainer = FrameLayout(context).apply {
+        // Create password text view inside scroll view
+        passwordTextView = TextView(context).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
-        }
-
-        // Create password text view inside container
-        passwordTextView = TextView(context).apply {
-            // LayoutGravity CENTER centers this view within the expanded FrameLayout
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                Gravity.CENTER
-            )
-            // Gravity CENTER centers text within this view (if it happens to be wider than text)
+            // CENTER: when fillViewport stretches TextView, text is centered within
+            // When content overflows, WRAP_CONTENT makes it scrollable
             gravity = Gravity.CENTER
             setPadding(dpToPx(context, 16), 0, dpToPx(context, 16), 0)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
             typeface = Typeface.MONOSPACE
             text = ""
-            maxLines = 1
-            setHorizontallyScrolling(true) // Allow expanding beyond parent width
-            movementMethod = null // Ensure TextView doesn't handle scrolling (let parent ScrollView handle it)
+            
+            // Use isSingleLine=true for reliable single-line scrolling behavior
+            isSingleLine = true
+            // Explicitly allow horizontal scrolling
+            setHorizontallyScrolling(true)
+            
             letterSpacing = 0.15f  // Spacing for dots readability
         }
 
-        // Assemble hierarchy: TextView -> FrameLayout -> ScrollView -> RelativeLayout
-        textContainer.addView(passwordTextView)
-        scrollView.addView(textContainer)
+        // Assemble hierarchy: TextView -> ScrollView -> RelativeLayout
+        scrollView.addView(passwordTextView)
         passwordContainer?.addView(eyeToggleView)   // Add icon first
         passwordContainer?.addView(scrollView)       // Add scroll view second
 
