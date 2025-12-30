@@ -13,10 +13,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
-import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import kotlin.math.max
@@ -41,7 +41,7 @@ class SuggestionBar : LinearLayout {
     private var isPasswordMode = false
     private var isPasswordVisible = false
     private var currentPasswordText = StringBuilder()
-    private var passwordContainer: FrameLayout? = null
+    private var passwordContainer: RelativeLayout? = null
     private var passwordTextView: TextView? = null
     private var eyeToggleView: ImageView? = null
     private var inputConnectionProvider: InputConnectionProvider? = null
@@ -445,9 +445,9 @@ class SuggestionBar : LinearLayout {
     }
 
     /**
-     * Setup the password mode views using FrameLayout for true fixed positioning.
-     * The eye icon is absolutely positioned on the right and never moves.
-     * Password text is in a HorizontalScrollView for overflow scrolling.
+     * Setup the password mode views using RelativeLayout for true fixed positioning.
+     * Key insight: Use START_OF constraint to make scroll view end where icon begins.
+     * This prevents the scroll view content from pushing the icon off screen.
      */
     private fun setupPasswordModeViews() {
         // Clear any existing suggestion views
@@ -456,55 +456,28 @@ class SuggestionBar : LinearLayout {
 
         val iconSize = dpToPx(context, 36)
         val iconMargin = dpToPx(context, 8)
-        val iconTotalWidth = iconSize + iconMargin * 2
 
-        // Create FrameLayout container for overlay positioning
-        passwordContainer = FrameLayout(context).apply {
+        // Create RelativeLayout container - this is key for proper constraint-based positioning
+        passwordContainer = RelativeLayout(context).apply {
             layoutParams = LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT
             )
         }
 
-        // Create HorizontalScrollView for scrollable password text
-        val scrollView = HorizontalScrollView(context).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            ).apply {
-                // Right margin ensures scroll area doesn't go under the fixed icon
-                marginEnd = iconTotalWidth
-            }
-            isHorizontalScrollBarEnabled = false
-            isFillViewport = true  // Center content when smaller than viewport
-            setBackgroundColor(Color.TRANSPARENT)
-        }
-
-        // Create password text view inside scroll view
-        passwordTextView = TextView(context).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            gravity = Gravity.CENTER  // Center vertically
-            setPadding(dpToPx(context, 16), 0, dpToPx(context, 16), 0)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
-            setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
-            typeface = Typeface.MONOSPACE
-            text = ""
-            isSingleLine = true
-            letterSpacing = 0.15f  // Spacing for dots readability
-        }
-        scrollView.addView(passwordTextView)
-        passwordContainer?.addView(scrollView)
-
-        // Create eye toggle ImageView using Material Design vector drawable
-        // Positioned absolutely on the right, never affected by text content
+        // Create eye toggle FIRST and assign ID (needed for START_OF constraint)
+        // Anchored to ALIGN_PARENT_END so it NEVER moves
         eyeToggleView = ImageView(context).apply {
-            layoutParams = FrameLayout.LayoutParams(iconSize, iconSize).apply {
-                gravity = Gravity.CENTER_VERTICAL or Gravity.END
+            id = View.generateViewId()  // ID required for RelativeLayout rules
+
+            val params = RelativeLayout.LayoutParams(iconSize, iconSize).apply {
+                addRule(RelativeLayout.ALIGN_PARENT_END)  // Fixed to right edge
+                addRule(RelativeLayout.CENTER_VERTICAL)   // Centered vertically
                 marginEnd = iconMargin
+                marginStart = iconMargin
             }
+            layoutParams = params
+
             scaleType = ImageView.ScaleType.FIT_CENTER
             isClickable = true
             isFocusable = true
@@ -524,7 +497,47 @@ class SuggestionBar : LinearLayout {
             context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true)
             setBackgroundResource(outValue.resourceId)
         }
-        passwordContainer?.addView(eyeToggleView)
+
+        // Create HorizontalScrollView constrained to START_OF the icon
+        // This creates a fixed boundary - content scrolls within, icon stays put
+        val scrollView = HorizontalScrollView(context).apply {
+            id = View.generateViewId()
+
+            val params = RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.MATCH_PARENT
+            ).apply {
+                addRule(RelativeLayout.ALIGN_PARENT_START)  // Start at left edge
+                addRule(RelativeLayout.START_OF, eyeToggleView!!.id)  // End where icon begins
+                addRule(RelativeLayout.CENTER_VERTICAL)
+            }
+            layoutParams = params
+
+            isHorizontalScrollBarEnabled = false
+            isFillViewport = true  // Center content when smaller than viewport
+            setBackgroundColor(Color.TRANSPARENT)
+        }
+
+        // Create password text view inside scroll view
+        passwordTextView = TextView(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            gravity = Gravity.CENTER  // Center vertically and horizontally
+            setPadding(dpToPx(context, 16), 0, dpToPx(context, 16), 0)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+            setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
+            typeface = Typeface.MONOSPACE
+            text = ""
+            isSingleLine = true
+            letterSpacing = 0.15f  // Spacing for dots readability
+        }
+
+        // Assemble hierarchy: TextView -> ScrollView -> RelativeLayout -> this
+        scrollView.addView(passwordTextView)
+        passwordContainer?.addView(eyeToggleView)   // Add icon first
+        passwordContainer?.addView(scrollView)       // Add scroll view second
 
         addView(passwordContainer)
         updatePasswordDisplay()
