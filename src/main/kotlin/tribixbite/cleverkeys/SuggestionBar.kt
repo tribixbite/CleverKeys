@@ -515,21 +515,22 @@ class SuggestionBar : LinearLayout {
             layoutParams = params
 
             isHorizontalScrollBarEnabled = false
-            isFillViewport = false  // Don't fill - allow content to be wider and scroll
+            // fillViewport = true: stretches child to fill width when content is short (enables centering)
+            // When content is long, child exceeds width and becomes scrollable
+            isFillViewport = true
             setBackgroundColor(Color.TRANSPARENT)
-            // Ensure scroll view clips to its bounds but allows child to be wider
-            clipChildren = false
-            clipToPadding = false
+            // NOTE: Do NOT set clipChildren=false - it breaks scrolling!
         }
 
         // Create password text view inside scroll view
-        // Use FrameLayout.LayoutParams for proper scroll view child sizing
         passwordTextView = TextView(context).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
-            gravity = Gravity.CENTER_VERTICAL  // Center vertically only
+            // CENTER: when fillViewport stretches TextView, text is centered within
+            // When content overflows, WRAP_CONTENT makes it scrollable
+            gravity = Gravity.CENTER
             setPadding(dpToPx(context, 16), 0, dpToPx(context, 16), 0)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
