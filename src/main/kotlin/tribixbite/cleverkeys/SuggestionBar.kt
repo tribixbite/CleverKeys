@@ -522,14 +522,23 @@ class SuggestionBar : LinearLayout {
             // NOTE: Do NOT set clipChildren=false - it breaks scrolling!
         }
 
-        // Create password text view inside scroll view
-        passwordTextView = TextView(context).apply {
+        // Create FrameLayout container for proper centering + scrolling
+        val textContainer = FrameLayout(context).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
-            // CENTER: when fillViewport stretches TextView, text is centered within
-            // When content overflows, WRAP_CONTENT makes it scrollable
+        }
+
+        // Create password text view inside container
+        passwordTextView = TextView(context).apply {
+            // LayoutGravity CENTER centers this view within the expanded FrameLayout
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                Gravity.CENTER
+            )
+            // Gravity CENTER centers text within this view (if it happens to be wider than text)
             gravity = Gravity.CENTER
             setPadding(dpToPx(context, 16), 0, dpToPx(context, 16), 0)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
@@ -542,8 +551,9 @@ class SuggestionBar : LinearLayout {
             letterSpacing = 0.15f  // Spacing for dots readability
         }
 
-        // Assemble hierarchy: TextView -> ScrollView -> RelativeLayout -> this
-        scrollView.addView(passwordTextView)
+        // Assemble hierarchy: TextView -> FrameLayout -> ScrollView -> RelativeLayout
+        textContainer.addView(passwordTextView)
+        scrollView.addView(textContainer)
         passwordContainer?.addView(eyeToggleView)   // Add icon first
         passwordContainer?.addView(scrollView)       // Add scroll view second
 

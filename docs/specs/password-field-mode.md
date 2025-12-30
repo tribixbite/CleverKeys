@@ -100,18 +100,22 @@ SuggestionBar (LinearLayout)
         ├── ALIGN_PARENT_START
         ├── START_OF(icon) ← Key constraint!
         ├── fillViewport=true (enables centering)
-        └── TextView
+        └── FrameLayout (Intermediate container)
             ├── WRAP_CONTENT width
-            ├── gravity=CENTER
-            ├── maxLines=1 (NOT singleLine=true)
-            ├── horizontallyScrolling=true (Explicitly allow expansion)
-            └── movementMethod=null (Pass touches to parent ScrollView)
+            └── TextView
+                ├── WRAP_CONTENT width
+                ├── layout_gravity=CENTER (Centers in FrameLayout)
+                ├── gravity=CENTER
+                ├── maxLines=1 (NOT singleLine=true)
+                ├── horizontallyScrolling=true (Explicitly allow expansion)
+                └── movementMethod=null (Pass touches to parent ScrollView)
 ```
 
 **Key Insight** (from Gemini):
 - `START_OF` constraint creates fixed boundary for scroll view
-- `fillViewport=true` stretches child when content is short (enables centering)
-- `WRAP_CONTENT` on TextView allows it to exceed viewport (enables scrolling)
+- `fillViewport=true` stretches the **first child** (FrameLayout) to fill the width.
+- `FrameLayout` with `WRAP_CONTENT` expands to fit the TextView when text is long, but is stretched by ScrollView when text is short.
+- `layout_gravity=CENTER` on TextView ensures it stays centered in the FrameLayout when text is short.
 - **Do NOT use `singleLine=true`** - it forces internal scrolling which breaks the parent `HorizontalScrollView`. Use `maxLines=1` instead.
 - **`horizontallyScrolling=true` is REQUIRED** to allow the TextView to grow wider than the screen.
 - **`movementMethod=null`** ensures the TextView doesn't consume touch events, allowing the parent ScrollView to handle swiping.
