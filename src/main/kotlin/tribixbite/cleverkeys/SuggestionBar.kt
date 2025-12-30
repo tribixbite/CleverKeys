@@ -524,16 +524,22 @@ class SuggestionBar : LinearLayout {
             setBackgroundColor(Color.TRANSPARENT)
         }
 
-        // Create password text view inside scroll view
-        passwordTextView = TextView(context).apply {
-            // LayoutGravity CENTER centers the view vertically and horizontally when content is smaller than viewport
+        // Wrapper to ensure proper measurement and centering in ScrollView
+        val contentWrapper = LinearLayout(context).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                Gravity.CENTER
+                FrameLayout.LayoutParams.MATCH_PARENT
             )
-            // Gravity CENTER centers text within this view
-            gravity = Gravity.CENTER
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER // Center the TextView inside this wrapper
+        }
+
+        // Create password text view inside wrapper
+        passwordTextView = TextView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
             setPadding(dpToPx(context, 16), 0, dpToPx(context, 16), 0)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
@@ -544,12 +550,14 @@ class SuggestionBar : LinearLayout {
             maxLines = 1
             setHorizontallyScrolling(true)
             movementMethod = null // Disable internal cursor movement/scrolling
+            inputType = InputType.TYPE_NULL // Pure display view
             
             letterSpacing = 0.15f  // Spacing for dots readability
         }
 
-        // Assemble hierarchy: TextView -> ScrollView -> RelativeLayout
-        scrollView.addView(passwordTextView)
+        // Assemble hierarchy: TextView -> LinearLayout -> ScrollView -> RelativeLayout
+        contentWrapper.addView(passwordTextView)
+        scrollView.addView(contentWrapper)
         passwordContainer?.addView(eyeToggleView)   // Add icon first
         passwordContainer?.addView(scrollView)       // Add scroll view second
 
