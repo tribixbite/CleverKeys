@@ -412,35 +412,29 @@ class SuggestionBar : LinearLayout {
 
     /**
      * Update the password text being typed.
-     * Called when user types or deletes characters in a password field.
+     * Now syncs with InputConnection for accuracy.
      */
     fun updatePasswordText(text: String) {
         if (!isPasswordMode) return
-
-        currentPasswordText.clear()
-        currentPasswordText.append(text)
-
-        updatePasswordDisplay()
+        syncPasswordWithField()
     }
 
     /**
      * Append a character to the password text.
+     * Now syncs with InputConnection for accuracy.
      */
     fun appendPasswordChar(char: Char) {
         if (!isPasswordMode) return
-
-        currentPasswordText.append(char)
-        updatePasswordDisplay()
+        syncPasswordWithField()
     }
 
     /**
      * Delete the last character from password text.
+     * Now syncs with InputConnection for accuracy.
      */
     fun deletePasswordChar() {
-        if (!isPasswordMode || currentPasswordText.isEmpty()) return
-
-        currentPasswordText.deleteCharAt(currentPasswordText.length - 1)
-        updatePasswordDisplay()
+        if (!isPasswordMode) return
+        syncPasswordWithField()
     }
 
     /**
@@ -453,6 +447,8 @@ class SuggestionBar : LinearLayout {
 
     /**
      * Setup the password mode views (eye toggle fixed on right, scrollable password text).
+     * Layout order: [ScrollView with text] [Fixed eye icon]
+     * The eye icon is added LAST but uses fixed width, scroll view uses weight=1
      */
     private fun setupPasswordModeViews() {
         // Clear any existing suggestion views
@@ -460,10 +456,14 @@ class SuggestionBar : LinearLayout {
         suggestionViews.clear()
 
         // Create scrollable container for password text (takes remaining space)
+        // Added FIRST so it's on the left
         passwordScrollView = HorizontalScrollView(context).apply {
-            layoutParams = LayoutParams(0, LayoutParams.MATCH_PARENT, 1f)
+            layoutParams = LayoutParams(0, LayoutParams.MATCH_PARENT, 1f).apply {
+                // Ensure scroll view doesn't push eye icon off screen
+                marginEnd = 0
+            }
             isHorizontalScrollBarEnabled = false
-            isFillViewport = true
+            isFillViewport = false  // Don't fill - let text be natural width for scrolling
             setBackgroundColor(Color.TRANSPARENT)
         }
 
@@ -473,25 +473,30 @@ class SuggestionBar : LinearLayout {
                 LayoutParams.WRAP_CONTENT,
                 LayoutParams.MATCH_PARENT
             )
-            gravity = Gravity.CENTER_VERTICAL or Gravity.START
-            setPadding(dpToPx(context, 12), 0, dpToPx(context, 8), 0)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            gravity = Gravity.CENTER  // Center text vertically and horizontally
+            setPadding(dpToPx(context, 12), 0, dpToPx(context, 12), 0)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)  // Slightly larger for dots
             setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
             typeface = Typeface.MONOSPACE  // Monospace for password display
-            text = ""  // Empty initially
-            visibility = View.GONE  // Hidden until eye toggle is pressed
-            isSingleLine = true  // Ensure single line for horizontal scroll
+            text = ""
+            isSingleLine = true
+            // Use letter spacing for dots to make them more readable
+            letterSpacing = 0.1f
         }
         passwordScrollView?.addView(passwordTextView)
         addView(passwordScrollView)
 
         // Create eye toggle button (fixed on right, never scrolls)
+        // Added LAST so it's on the right, with fixed width (no weight)
         eyeToggleView = EyeIconView(context, theme).apply {
             layoutParams = LayoutParams(
-                dpToPx(context, 44),
-                LayoutParams.MATCH_PARENT
-            )
-            setPadding(dpToPx(context, 8), dpToPx(context, 6), dpToPx(context, 10), dpToPx(context, 6))
+                dpToPx(context, 40),  // Fixed width
+                dpToPx(context, 40)   // Fixed height for square icon
+            ).apply {
+                gravity = Gravity.CENTER_VERTICAL
+                marginStart = dpToPx(context, 4)
+                marginEnd = dpToPx(context, 8)
+            }
             isClickable = true
             isFocusable = true
             setEyeOpen(false)  // Start with eye closed (password hidden)
@@ -512,22 +517,27 @@ class SuggestionBar : LinearLayout {
 
     /**
      * Custom view that draws an eye icon with optional diagonal line (slash).
+     * Uses balanced proportions for a natural-looking eye shape.
      */
     private class EyeIconView(context: Context, private val theme: Theme?) : View(context) {
         private var isEyeOpen = false
         private val eyePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
-            strokeWidth = 3f
+            strokeWidth = 2.5f
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
         }
         private val slashPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
-            strokeWidth = 3f
+            strokeWidth = 2.5f
             strokeCap = Paint.Cap.ROUND
         }
         private val pupilPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.FILL
+        }
+        private val irisPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 1.5f
         }
 
         fun setEyeOpen(open: Boolean) {
@@ -545,6 +555,7 @@ class SuggestionBar : LinearLayout {
             eyePaint.color = color
             slashPaint.color = color
             pupilPaint.color = color
+            irisPaint.color = color
         }
 
         init {
@@ -556,43 +567,50 @@ class SuggestionBar : LinearLayout {
 
             val w = width.toFloat()
             val h = height.toFloat()
+            val size = minOf(w, h)  // Use smaller dimension for square aspect
             val cx = w / 2
             val cy = h / 2
-            val eyeWidth = w * 0.7f
-            val eyeHeight = h * 0.35f
+
+            // More balanced proportions - eye is ~60% of size, height ~45% of width
+            val eyeWidth = size * 0.65f
+            val eyeHeight = size * 0.30f
 
             // Draw eye outline (almond shape using bezier curves)
             val path = Path()
             path.moveTo(cx - eyeWidth / 2, cy)
-            // Top curve
+            // Top curve - more pronounced arc
             path.cubicTo(
-                cx - eyeWidth / 4, cy - eyeHeight,
-                cx + eyeWidth / 4, cy - eyeHeight,
+                cx - eyeWidth / 3, cy - eyeHeight * 1.2f,
+                cx + eyeWidth / 3, cy - eyeHeight * 1.2f,
                 cx + eyeWidth / 2, cy
             )
-            // Bottom curve
+            // Bottom curve - symmetric
             path.cubicTo(
-                cx + eyeWidth / 4, cy + eyeHeight,
-                cx - eyeWidth / 4, cy + eyeHeight,
+                cx + eyeWidth / 3, cy + eyeHeight * 1.2f,
+                cx - eyeWidth / 3, cy + eyeHeight * 1.2f,
                 cx - eyeWidth / 2, cy
             )
             canvas.drawPath(path, eyePaint)
 
-            // Draw pupil (circle in center)
+            // Draw iris (outer circle)
+            val irisRadius = eyeHeight * 0.85f
+            canvas.drawCircle(cx, cy, irisRadius, irisPaint)
+
+            // Draw pupil (filled inner circle)
             val pupilRadius = eyeHeight * 0.5f
             canvas.drawCircle(cx, cy, pupilRadius, pupilPaint)
 
-            // Draw inner highlight (small circle offset)
-            pupilPaint.color = Color.argb(100, 255, 255, 255)
-            canvas.drawCircle(cx - pupilRadius * 0.3f, cy - pupilRadius * 0.3f, pupilRadius * 0.25f, pupilPaint)
+            // Draw highlight (small white dot for realism)
+            pupilPaint.color = Color.argb(180, 255, 255, 255)
+            canvas.drawCircle(cx - pupilRadius * 0.35f, cy - pupilRadius * 0.35f, pupilRadius * 0.3f, pupilPaint)
             updateColors()  // Reset pupil color
 
             // Draw diagonal slash when eye is closed (password hidden)
             if (!isEyeOpen) {
-                val slashMargin = w * 0.15f
+                val slashPadding = size * 0.12f
                 canvas.drawLine(
-                    slashMargin, h - slashMargin,
-                    w - slashMargin, slashMargin,
+                    cx - eyeWidth / 2 + slashPadding, cy + eyeHeight,
+                    cx + eyeWidth / 2 - slashPadding, cy - eyeHeight,
                     slashPaint
                 )
             }
@@ -601,28 +619,25 @@ class SuggestionBar : LinearLayout {
 
     /**
      * Toggle password visibility and update the display.
-     * When making visible, reads actual text from InputConnection for accuracy.
+     * Always reads actual text from InputConnection for accuracy.
      */
     private fun togglePasswordVisibility() {
         isPasswordVisible = !isPasswordVisible
 
-        // When making password visible, read actual content from field
-        // This handles cases where cursor was moved before backspace
-        if (isPasswordVisible) {
-            refreshPasswordFromField()
-        }
+        // Always sync with actual field content when toggling
+        refreshPasswordFromField()
 
         updatePasswordDisplay()
 
         // Update eye icon state
         (eyeToggleView as? EyeIconView)?.setEyeOpen(isPasswordVisible)
 
-        Log.d(TAG, "Password visibility toggled: ${if (isPasswordVisible) "visible" else "hidden"}")
+        Log.d(TAG, "Password visibility toggled: ${if (isPasswordVisible) "visible" else "hidden"}, ${currentPasswordText.length} chars")
     }
 
     /**
      * Read the actual password text from the input field via InputConnection.
-     * This ensures accuracy even when user moves cursor before deleting.
+     * This ensures accuracy for select-all+delete, cursor movement, etc.
      */
     private fun refreshPasswordFromField() {
         val ic = inputConnectionProvider?.getInputConnection() ?: return
@@ -635,24 +650,38 @@ class SuggestionBar : LinearLayout {
 
             currentPasswordText.clear()
             currentPasswordText.append(fullText)
-
-            Log.d(TAG, "Refreshed password from field: ${fullText.length} chars")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to read password from field", e)
         }
     }
 
     /**
+     * Sync password display with actual field content.
+     * Called after any input operation to handle select-all+delete, etc.
+     */
+    fun syncPasswordWithField() {
+        if (!isPasswordMode) return
+        refreshPasswordFromField()
+        updatePasswordDisplay()
+    }
+
+    /**
      * Update the password display based on visibility state.
+     * Shows dots (●) when hidden, actual text when visible.
      */
     private fun updatePasswordDisplay() {
         passwordTextView?.apply {
-            if (isPasswordVisible && currentPasswordText.isNotEmpty()) {
+            if (currentPasswordText.isEmpty()) {
+                text = ""
+                visibility = View.VISIBLE  // Keep visible for layout stability
+            } else if (isPasswordVisible) {
+                // Show actual password text
                 text = currentPasswordText.toString()
                 visibility = View.VISIBLE
             } else {
-                text = ""
-                visibility = View.GONE
+                // Show dots for hidden password
+                text = "●".repeat(currentPasswordText.length)
+                visibility = View.VISIBLE
             }
         }
     }

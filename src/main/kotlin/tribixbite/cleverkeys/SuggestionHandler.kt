@@ -124,35 +124,36 @@ class SuggestionHandler(
 
     /**
      * Handle a character typed in password field.
-     * Updates the password display in the suggestion bar.
+     * Syncs with actual field content to handle all edge cases.
      *
      * @param char The character that was typed
      */
     fun handlePasswordChar(char: Char) {
         if (!isPasswordMode) return
-        suggestionBar?.appendPasswordChar(char)
+        // Sync with field to handle any edge cases (autocomplete, etc.)
+        suggestionBar?.syncPasswordWithField()
     }
 
     /**
      * Handle a string typed in password field.
-     * Updates the password display in the suggestion bar.
+     * Syncs with actual field content to handle all edge cases.
      *
      * @param text The text that was typed
      */
     fun handlePasswordText(text: String) {
         if (!isPasswordMode) return
-        text.forEach { char ->
-            suggestionBar?.appendPasswordChar(char)
-        }
+        // Sync with field to handle paste, autocomplete, etc.
+        suggestionBar?.syncPasswordWithField()
     }
 
     /**
      * Handle backspace in password field.
-     * Updates the password display in the suggestion bar.
+     * Syncs with actual field content to handle select-all+delete, etc.
      */
     fun handlePasswordBackspace() {
         if (!isPasswordMode) return
-        suggestionBar?.deletePasswordChar()
+        // Sync with field - handles select-all+delete, cursor position changes, etc.
+        suggestionBar?.syncPasswordWithField()
     }
 
     /**
