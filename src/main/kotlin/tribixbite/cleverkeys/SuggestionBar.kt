@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
+import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -514,17 +515,21 @@ class SuggestionBar : LinearLayout {
             layoutParams = params
 
             isHorizontalScrollBarEnabled = false
-            isFillViewport = true  // Center content when smaller than viewport
+            isFillViewport = false  // Don't fill - allow content to be wider and scroll
             setBackgroundColor(Color.TRANSPARENT)
+            // Ensure scroll view clips to its bounds but allows child to be wider
+            clipChildren = false
+            clipToPadding = false
         }
 
         // Create password text view inside scroll view
+        // Use FrameLayout.LayoutParams for proper scroll view child sizing
         passwordTextView = TextView(context).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
             )
-            gravity = Gravity.CENTER  // Center vertically and horizontally
+            gravity = Gravity.CENTER_VERTICAL  // Center vertically only
             setPadding(dpToPx(context, 16), 0, dpToPx(context, 16), 0)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
