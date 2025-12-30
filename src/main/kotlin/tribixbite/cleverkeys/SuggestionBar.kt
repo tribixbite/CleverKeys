@@ -537,7 +537,8 @@ class SuggestionBar : LinearLayout {
             typeface = Typeface.MONOSPACE
             text = ""
             maxLines = 1
-            setHorizontallyScrolling(false) // Allow expanding beyond parent width
+            setHorizontallyScrolling(true) // Allow expanding beyond parent width
+            movementMethod = null // Ensure TextView doesn't handle scrolling (let parent ScrollView handle it)
             letterSpacing = 0.15f  // Spacing for dots readability
         }
 
