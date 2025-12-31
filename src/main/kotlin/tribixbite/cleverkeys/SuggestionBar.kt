@@ -524,38 +524,45 @@ class SuggestionBar : LinearLayout {
             setBackgroundColor(Color.TRANSPARENT)
         }
 
-        // Wrapper to ensure proper measurement and centering in ScrollView
-        val contentWrapper = LinearLayout(context).apply {
+        // Wrapper for centering
+        val contentWrapper = FrameLayout(context).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER // Center the TextView inside this wrapper
         }
 
-        // Create password text view inside wrapper
-        passwordTextView = TextView(context).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+        // Use EditText instead of TextView for better single-line scrolling support
+        // but configured to look and act like a static label
+        passwordTextView = android.widget.EditText(context).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER
             )
+            
+            // Visual styling to match TextView
+            background = null
             setPadding(dpToPx(context, 16), 0, dpToPx(context, 16), 0)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
             typeface = Typeface.MONOSPACE
-            text = ""
+            setText("")
+            letterSpacing = 0.15f
             
-            // Configuration for proper scrolling of single line text
+            // Interaction settings - make it static
+            isCursorVisible = false
+            isFocusable = false
+            isClickable = false
+            isLongClickable = false
+            
+            // Scrolling settings
+            isSingleLine = true
             maxLines = 1
+            ellipsize = null // Disable ellipsis to allow scrolling
             setHorizontallyScrolling(true)
-            movementMethod = null // Disable internal cursor movement/scrolling
-            inputType = InputType.TYPE_NULL // Pure display view
-            
-            letterSpacing = 0.15f  // Spacing for dots readability
         }
 
-        // Assemble hierarchy: TextView -> LinearLayout -> ScrollView -> RelativeLayout
         contentWrapper.addView(passwordTextView)
         scrollView.addView(contentWrapper)
         passwordContainer?.addView(eyeToggleView)   // Add icon first

@@ -100,26 +100,22 @@ SuggestionBar (LinearLayout)
         ├── ALIGN_PARENT_START
         ├── START_OF(icon) ← Key constraint!
         ├── fillViewport=true (enables centering)
-        └── LinearLayout (Wrapper)
+        └── FrameLayout (Wrapper)
             ├── WRAP_CONTENT width
-            ├── gravity=CENTER (Centers TextView)
-            └── TextView
+            └── EditText (Used as static display)
                 ├── WRAP_CONTENT width
-                ├── inputType=TYPE_NULL
-                ├── maxLines=1 (NOT singleLine=true)
-                ├── horizontallyScrolling=true (Explicitly allow expansion)
-                └── movementMethod=null (Pass touches to parent ScrollView)
+                ├── layout_gravity=CENTER
+                ├── background=null (No underline)
+                ├── isFocusable=false
+                ├── isSingleLine=true
+                └── horizontallyScrolling=true
 ```
 
 **Key Insight** (from Gemini):
-- `START_OF` constraint creates fixed boundary for scroll view
-- `fillViewport=true` stretches the **wrapper** to fill the width.
-- `LinearLayout` wrapper isolates the TextView measurement from ScrollView quirks.
-- `gravity=CENTER` on the wrapper centers the TextView when text is short.
-- **Do NOT use `singleLine=true`** - it forces internal scrolling which breaks the parent `HorizontalScrollView`. Use `maxLines=1` instead.
-- **`horizontallyScrolling=true` is REQUIRED** to allow the TextView to grow wider than the screen.
-- **`inputType=TYPE_NULL`** ensures the TextView acts as a passive display view.
-- Do NOT use `clipChildren=false` - it breaks scrolling!
+- `EditText` provides more reliable single-line scrolling behavior than `TextView` in some contexts.
+- Configured with `isFocusable=false`, `isCursorVisible=false`, and `background=null`, it behaves visually like a `TextView`.
+- `FrameLayout` wrapper with `layout_gravity=CENTER` on the child ensures centering within the `HorizontalScrollView` when `fillViewport=true`.
+- **`ellipsize=null`** is critical to prevent truncation and force scrolling.
 
 ## Files Modified
 
