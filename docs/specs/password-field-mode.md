@@ -100,22 +100,23 @@ SuggestionBar (LinearLayout)
         ├── ALIGN_PARENT_START
         ├── START_OF(icon) ← Key constraint!
         ├── fillViewport=true (enables centering)
-        └── FrameLayout (Wrapper)
+        ├── OnTouchListener -> requestDisallowInterceptTouchEvent(true) (CRITICAL!)
+        └── LinearLayout (Wrapper)
             ├── WRAP_CONTENT width
-            └── EditText (Used as static display)
+            ├── gravity=CENTER
+            └── TextView
                 ├── WRAP_CONTENT width
-                ├── layout_gravity=CENTER
-                ├── background=null (No underline)
-                ├── isFocusable=false
-                ├── isSingleLine=true
-                └── horizontallyScrolling=true
+                ├── maxLines=1
+                ├── horizontallyScrolling=true
+                └── movementMethod=null
 ```
 
 **Key Insight** (from Gemini):
-- `EditText` provides more reliable single-line scrolling behavior than `TextView` in some contexts.
-- Configured with `isFocusable=false`, `isCursorVisible=false`, and `background=null`, it behaves visually like a `TextView`.
-- `FrameLayout` wrapper with `layout_gravity=CENTER` on the child ensures centering within the `HorizontalScrollView` when `fillViewport=true`.
-- **`ellipsize=null`** is critical to prevent truncation and force scrolling.
+- **Touch Interception:** The primary reason for scrolling failure in keyboard environments is that parent views (gesture detectors) intercept the horizontal drag.
+- **Fix:** Attached an `OnTouchListener` to the `HorizontalScrollView` that calls `requestDisallowInterceptTouchEvent(true)` on `ACTION_DOWN` and `ACTION_MOVE`.
+- **Structure:** Reverted to `TextView` wrapped in `LinearLayout` as it's the most semantic and clean layout, now that the touch event issue is resolved.
+- `fillViewport=true` + `LinearLayout(gravity=CENTER)` ensures centering when short.
+- `TextView(WRAP_CONTENT)` ensures expansion when long.
 
 ## Files Modified
 

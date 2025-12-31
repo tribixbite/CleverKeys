@@ -514,7 +514,7 @@ class SuggestionBar : LinearLayout {
             }
             layoutParams = params
 
-            isHorizontalScrollBarEnabled = true // Enable scrollbar
+            isHorizontalScrollBarEnabled = false // Hide scrollbar (cleaner UI)
             isClickable = true // Ensure touch events are caught
             isFocusable = true
 
@@ -525,46 +525,52 @@ class SuggestionBar : LinearLayout {
         }
 
         // Wrapper for centering
-        val contentWrapper = FrameLayout(context).apply {
+        val contentWrapper = LinearLayout(context).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
         }
 
-        // Use EditText instead of TextView for better single-line scrolling support
-        // but configured to look and act like a static label
-        passwordTextView = android.widget.EditText(context).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                Gravity.CENTER
+        // Revert to TextView but with touch interception fix on parent ScrollView
+        passwordTextView = TextView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
             )
             
-            // Visual styling to match TextView
-            background = null
             setPadding(dpToPx(context, 16), 0, dpToPx(context, 16), 0)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             setTextColor(theme?.labelColor?.takeIf { it != 0 } ?: Color.WHITE)
             typeface = Typeface.MONOSPACE
-            setText("")
+            text = ""
             letterSpacing = 0.15f
             
-            // Interaction settings - make it static
-            isCursorVisible = false
-            isFocusable = false
-            isClickable = false
-            isLongClickable = false
-            
-            // Scrolling settings
-            isSingleLine = true
+            // Single line settings
             maxLines = 1
-            ellipsize = null // Disable ellipsis to allow scrolling
             setHorizontallyScrolling(true)
+            movementMethod = null
         }
 
         contentWrapper.addView(passwordTextView)
         scrollView.addView(contentWrapper)
+
+        // CRITICAL FIX: Prevent parent keyboards/gesture detectors from stealing scroll events
+        scrollView.setOnTouchListener { v, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN,
+                android.view.MotionEvent.ACTION_MOVE -> {
+                    v.parent?.requestDisallowInterceptTouchEvent(true)
+                }
+                android.view.MotionEvent.ACTION_UP,
+                android.view.MotionEvent.ACTION_CANCEL -> {
+                    v.parent?.requestDisallowInterceptTouchEvent(false)
+                }
+            }
+            false // Let ScrollView handle the actual scrolling
+        }
         passwordContainer?.addView(eyeToggleView)   // Add icon first
         passwordContainer?.addView(scrollView)       // Add scroll view second
 
