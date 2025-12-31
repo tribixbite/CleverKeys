@@ -5,70 +5,125 @@
     android:orientation="vertical"
     android:background="#1e1e1e">
 
-    <!-- Top bar with title and copy button -->
+    <!-- Top bar with back arrow, title, and action icons -->
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:background="#2d2d2d">
+        android:layout_height="56dp"
+        android:paddingStart="4dp"
+        android:paddingEnd="8dp"
+        android:background="#2d2d2d"
+        android:elevation="4dp">
 
+        <!-- Back arrow -->
+        <ImageButton
+            android:id="@+id/back_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_centerVertical="true"
+            android:src="@android:drawable/ic_menu_revert"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:scaleType="centerInside"
+            android:padding="12dp"
+            android:tint="#ffffff" />
+
+        <!-- Title -->
         <TextView
             android:id="@+id/title_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/back_button"
+            android:layout_centerVertical="true"
             android:text="Swipe Debug Log"
             android:textColor="#ffffff"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_centerVertical="true" />
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/copy_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Copy"
+        <!-- Save to file icon -->
+        <ImageButton
+            android:id="@+id/save_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:textColor="#ffffff"
-            android:background="#4a4a4a"
-            android:padding="8dp"
-            android:minWidth="64dp" />
+            android:src="@android:drawable/ic_menu_save"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Save to file"
+            android:scaleType="centerInside"
+            android:padding="12dp"
+            android:tint="#ffffff" />
 
-        <Button
+        <!-- Copy to clipboard icon -->
+        <ImageButton
+            android:id="@+id/copy_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_toStartOf="@id/save_button"
+            android:layout_centerVertical="true"
+            android:src="@android:drawable/ic_menu_share"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Copy to clipboard"
+            android:scaleType="centerInside"
+            android:padding="12dp"
+            android:tint="#ffffff" />
+
+        <!-- Clear logs icon -->
+        <ImageButton
             android:id="@+id/clear_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Clear"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_toStartOf="@id/copy_button"
             android:layout_centerVertical="true"
-            android:layout_marginEnd="8dp"
-            android:textColor="#ffffff"
-            android:background="#4a4a4a"
-            android:padding="8dp"
-            android:minWidth="64dp" />
+            android:src="@android:drawable/ic_menu_delete"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Clear logs"
+            android:scaleType="centerInside"
+            android:padding="12dp"
+            android:tint="#ffffff" />
     </RelativeLayout>
 
-    <!-- Text input field -->
-    <EditText
-        android:id="@+id/input_text"
+    <!-- Text input field - single line, scrollable, shows keyboard output -->
+    <HorizontalScrollView
+        android:id="@+id/input_scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Type or swipe here..."
-        android:textColor="#ffffff"
-        android:textColorHint="#808080"
         android:background="#2d2d2d"
-        android:padding="12dp"
-        android:inputType="text"
-        android:textSize="16sp" />
+        android:scrollbars="none"
+        android:fillViewport="true">
 
-    <!-- Scrollable log output -->
+        <EditText
+            android:id="@+id/input_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="1000dp"
+            android:hint="Type or swipe here..."
+            android:textColor="#ffffff"
+            android:textColorHint="#808080"
+            android:background="@android:color/transparent"
+            android:padding="12dp"
+            android:inputType="text"
+            android:textSize="16sp"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:scrollHorizontally="true"
+            android:imeOptions="actionDone|flagNoExtractUi" />
+    </HorizontalScrollView>
+
+    <!-- Divider line -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#4a4a4a" />
+
+    <!-- Scrollable log output - takes remaining space -->
     <ScrollView
         android:id="@+id/log_scroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:fillViewport="true"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:background="#1a1a1a">
 
         <TextView
             android:id="@+id/log_output"
@@ -76,8 +131,9 @@
             android:layout_height="wrap_content"
             android:text="Waiting for swipe input...\n"
             android:textColor="#00ff00"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:fontFamily="monospace"
+            android:lineSpacingExtra="2dp"
             android:textIsSelectable="true" />
     </ScrollView>
 </LinearLayout>

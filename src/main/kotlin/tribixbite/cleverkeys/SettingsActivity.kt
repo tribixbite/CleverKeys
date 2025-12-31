@@ -2553,6 +2553,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             saveSetting("swipe_show_raw_beam_predictions", it)
                         }
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = { openSwipeDebugActivity() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Open Debug Log")
+                    }
                 }
 
                 // Max Sequence Length Override (advanced neural setting)
@@ -3219,6 +3228,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     private fun openCalibration() {
         startActivity(Intent(this, SwipeCalibrationActivity::class.java))
+    }
+
+    private fun openSwipeDebugActivity() {
+        startActivity(Intent(this, SwipeDebugActivity::class.java))
     }
 
     private fun openDictionaryManager() {
