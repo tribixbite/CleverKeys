@@ -1,0 +1,11 @@
+Password Field Mode:
+- Disable predictions/autocorrect in password/PIN fields
+- Eye toggle to show/hide password text in suggestion bar
+- Material Design visibility icons
+- Scrollable password display with fixed icon position
+- Syncs with InputConnection for accurate tracking
+
+Technical:
+- RelativeLayout with START_OF constraint for fixed icon
+- requestDisallowInterceptTouchEvent for scroll in keyboard context
+- Dots display when hidden, actual text when visible

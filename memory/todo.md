@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2025-12-30
-**Status**: v1.1.79 - Password Field Eye Toggle (pending test)
+**Status**: v1.1.79 - Password Field Eye Toggle
 
 ---
 
@@ -264,18 +264,21 @@
   - FIX: Only set isInitialized=true when isModelLoaded is true
   - Also reset isInitialized in cleanup() to allow re-initialization
   - Symptoms: swipe typing not working until manually toggled off/on in settings
-- [ ] Password field eye toggle feature (2025-12-30) **PENDING MANUAL TEST**
+- [x] Password field eye toggle feature (2025-12-30)
   - Detect password/PIN input fields (all Android InputType variations)
   - Disable predictions and autocorrect in password fields
-  - Show eye toggle icon in suggestion bar (custom EyeIconView with bezier curves)
-  - Toggle shows/hides password text in suggestion bar
-  - HorizontalScrollView for password text with fixed eye icon position
-  - InputConnectionProvider reads actual field content on toggle
-  - Handles cursor movement before backspace correctly
-  - Files modified: SuggestionBar.kt, SuggestionHandler.kt, CleverKeysService.kt
+  - Material Design visibility icons (ic_visibility.xml, ic_visibility_off.xml)
+  - Eye toggle in suggestion bar with theme colors
+  - RelativeLayout with START_OF constraint for fixed icon position
+  - HorizontalScrollView with requestDisallowInterceptTouchEvent for scrolling
+  - InputConnectionProvider syncs with actual field content
+  - Dots (●) when hidden, actual text when visible
+  - Centered when short, scrollable when long
+  - Files: SuggestionBar.kt, SuggestionHandler.kt, CleverKeysService.kt
+  - Spec: docs/specs/password-field-mode.md
 
-**Current Version**: 1.1.78 (versionCode 101783 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.78
+**Current Version**: 1.1.79 (versionCode 101793 for x86_64)
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.79
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 **Final Config**: No srclibs, no postbuild - just gradle + prebuild sed!
 
