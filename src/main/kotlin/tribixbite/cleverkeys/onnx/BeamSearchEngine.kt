@@ -151,17 +151,21 @@ class BeamSearchEngine(
                 candidates.removeIf { exp(-it.score) < 1e-6 }
             }
             
-            // Select top K
+            // Select top K with deduplication by token sequence
             beams.clear()
-            // 4D: Diverse Beam Search (Simplified implementation)
-            // Penalize beams that extend the same parent with similar tokens? 
-            // Or just ensure top K are distinct? (Already distinct by token path)
-            // Standard diversity adds penalty for selecting same token across groups.
-            // Here we just take top K for now, diversity is implicit in beam width.
-            
-            val beamsToKeep = min(beamWidth, candidates.size)
-            for (i in 0 until beamsToKeep) {
-                beams.add(candidates[i])
+            // FIX: Deduplicate beams by token sequence to prevent identical words
+            // Multiple paths can converge to the same token sequence via different parent beams
+            val seenTokenSeqs = HashSet<List<Long>>()
+
+            for (candidate in candidates) {
+                if (beams.size >= beamWidth) break
+
+                // Create immutable copy for hashing
+                val tokenSeq = candidate.tokens.toList()
+                if (!seenTokenSeqs.contains(tokenSeq)) {
+                    seenTokenSeqs.add(tokenSeq)
+                    beams.add(candidate)
+                }
             }
             
             // Adaptive Width Reduction
@@ -246,9 +250,14 @@ class BeamSearchEngine(
                         val topIndices = getTopKIndices(logProbs, beamWidth)
                         
                         for (idx in topIndices) {
-                            // Handle Special Tokens
-                            if (idx == SOS_IDX || idx == EOS_IDX || idx == PAD_IDX) {
-                                // FIX #2: Special tokens are finished
+                            // FIX: SOS and PAD should never be selected - skip entirely
+                            // (Trie masking sets them to -inf, but be safe if trie is disabled)
+                            if (idx == SOS_IDX || idx == PAD_IDX) {
+                                continue
+                            }
+
+                            // EOS marks end of word - create finished beam
+                            if (idx == EOS_IDX) {
                                 val newBeam = BeamState(beam)
                                 newBeam.tokens.add(idx.toLong())
                                 // FIX #1: Add NEGATIVE log prob (since logProbs are negative)
@@ -258,8 +267,8 @@ class BeamSearchEngine(
                                 newCandidates.add(newBeam)
                                 continue
                             }
-                            
-                            // Regular Tokens
+
+                            // Regular character tokens
                             val newBeam = BeamState(beam)
                             newBeam.tokens.add(idx.toLong())
                             newBeam.score += -logProbs[idx]
@@ -301,7 +310,11 @@ class BeamSearchEngine(
         val isWord = vocabTrie.containsWord(prefix)
         
         for (i in logits.indices) {
-            if (i == SOS_IDX || i == PAD_IDX) continue
+            // FIX: SOS and PAD should NEVER be selected as next tokens - mask them
+            if (i == SOS_IDX || i == PAD_IDX) {
+                logits[i] = Float.NEGATIVE_INFINITY
+                continue
+            }
             if (i == EOS_IDX) {
                 if (!isWord) logits[i] = Float.NEGATIVE_INFINITY
                 continue
