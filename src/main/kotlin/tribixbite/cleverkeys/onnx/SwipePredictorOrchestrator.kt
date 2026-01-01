@@ -285,6 +285,46 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                 }
                 sb.append("   ⏱️ Feature extraction: ${featureTime}ms\n")
                 logDebug(sb.toString())
+
+                // Log tensor shapes and padding status
+                sb.clear()
+                sb.append("\n📊 TENSOR SHAPES (NN INPUT):\n")
+                sb.append("─────────────────────────────────────────────────────────\n")
+                sb.append("   trajectory_features: [1, $maxSequenceLength, 6]\n")
+                sb.append("   nearest_keys: [1, $maxSequenceLength]\n")
+                sb.append("   actual_length: ${features.actualLength}\n")
+                sb.append("   padding: ${maxSequenceLength - features.actualLength} zero-padded positions\n")
+                sb.append("─────────────────────────────────────────────────────────\n")
+                logDebug(sb.toString())
+
+                // Log sample feature values (first, mid, last of actual data)
+                if (features.normalizedPoints.isNotEmpty()) {
+                    sb.clear()
+                    sb.append("\n🔬 FEATURE VALUES (x, y, vx, vy, ax, ay):\n")
+                    sb.append("─────────────────────────────────────────────────────────\n")
+                    val sampleIndices = listOf(0, features.actualLength / 2, features.actualLength - 1)
+                    for (idx in sampleIndices) {
+                        if (idx < features.normalizedPoints.size) {
+                            val p = features.normalizedPoints[idx]
+                            val label = when (idx) {
+                                0 -> "FIRST"
+                                features.actualLength - 1 -> "LAST"
+                                else -> "MID"
+                            }
+                            sb.append("   $label[$idx]: x=${String.format("%.3f", p.x)}, y=${String.format("%.3f", p.y)}, ")
+                            sb.append("vx=${String.format("%.2f", p.vx)}, vy=${String.format("%.2f", p.vy)}, ")
+                            sb.append("ax=${String.format("%.2f", p.ax)}, ay=${String.format("%.2f", p.ay)}\n")
+                        }
+                    }
+                    // Also show first padded position to verify padding
+                    if (features.actualLength < features.normalizedPoints.size) {
+                        val padIdx = features.actualLength
+                        val p = features.normalizedPoints[padIdx]
+                        sb.append("   PAD[$padIdx]: x=${String.format("%.3f", p.x)}, y=${String.format("%.3f", p.y)} (should be 0.0)\n")
+                    }
+                    sb.append("─────────────────────────────────────────────────────────\n")
+                    logDebug(sb.toString())
+                }
             }
 
             // Encoder
