@@ -186,6 +186,19 @@ class PredictionPostProcessor(
             debugLogger?.invoke(sb.toString())
         }
 
+        // DEBUG: Log final output order to trace prediction selection bugs
+        if (words.isNotEmpty()) {
+            val sb = StringBuilder("\n📤 FINAL POST-PROCESSOR OUTPUT (what goes to UI):\n")
+            sb.append("─────────────────────────────────────────────────────────\n")
+            words.take(5).forEachIndexed { idx, word ->
+                val score = if (idx < scores.size) scores[idx] else 0
+                sb.append("  #${idx + 1}: \"$word\" (score=$score)\n")
+            }
+            sb.append("─────────────────────────────────────────────────────────\n")
+            debugLogger?.invoke(sb.toString())
+            Log.d(TAG, sb.toString())
+        }
+
         return Result(words, scores)
     }
 }

@@ -87,24 +87,26 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#2d2d2d"
-        android:scrollbars="none"
-        android:fillViewport="true">
+        android:scrollbars="horizontal">
 
         <EditText
             android:id="@+id/input_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minWidth="1000dp"
+            android:minWidth="300dp"
             android:hint="Type or swipe here..."
             android:textColor="#ffffff"
             android:textColorHint="#808080"
             android:background="@android:color/transparent"
-            android:padding="12dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
             android:inputType="text"
             android:textSize="16sp"
             android:maxLines="1"
             android:singleLine="true"
-            android:scrollHorizontally="true"
+            android:gravity="start|center_vertical"
             android:imeOptions="actionDone|flagNoExtractUi" />
     </HorizontalScrollView>
 

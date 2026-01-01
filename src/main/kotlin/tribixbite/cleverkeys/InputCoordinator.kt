@@ -143,8 +143,16 @@ class InputCoordinator(
             bar.setSuggestionsWithScores(transformedPredictions, scores)
             android.util.Log.e(TAG, "⏱️ setSuggestionsWithScores: ${System.currentTimeMillis() - suggestionsStartTime}ms")
 
+            // DEBUG: Log what's in suggestion bar before auto-insert
+            val allSuggestions = bar.getCurrentSuggestions()
+            android.util.Log.e(TAG, "📋 SUGGESTION BAR CONTENTS BEFORE AUTO-INSERT:")
+            allSuggestions.take(5).forEachIndexed { idx, s ->
+                android.util.Log.e(TAG, "   #${idx + 1}: \"$s\"")
+            }
+
             // Auto-insert top prediction immediately after swipe completes
             bar.getTopSuggestion()?.takeIf { it.isNotEmpty() }?.let { topPrediction ->
+                android.util.Log.e(TAG, "🎯 TOP SUGGESTION SELECTED FOR INSERT: \"$topPrediction\"")
                 // If manual typing in progress, add space after it
                 if (contextTracker.getCurrentWordLength() > 0 && ic != null) {
                     val spaceCommitTime = System.currentTimeMillis()
@@ -242,6 +250,9 @@ class InputCoordinator(
         editorInfo: EditorInfo?,
         resources: Resources
     ) {
+        // DEBUG: Log incoming word for selection tracking
+        android.util.Log.e(TAG, "📥 onSuggestionSelected CALLED with word: \"$word\"")
+
         // Null/empty check
         var processedWord = word?.trim() ?: return
         if (processedWord.isEmpty()) return

@@ -90,14 +90,21 @@ class SwipeDebugActivity : Activity() {
             saveLogsToFile()
         }
 
-        // Setup input field with auto-scroll to end on text change
+        // Setup input field with auto-scroll behavior
         inputText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                // Auto-scroll to end when text changes
+                // Scroll to show cursor position (usually end of text)
+                // Use scrollTo with cursor position instead of fullScroll for better control
                 inputScroll.post {
-                    inputScroll.fullScroll(View.FOCUS_RIGHT)
+                    // Scroll to show end of text when content overflows
+                    // When text fits, scrollX=0 (show from start)
+                    // When text overflows, scroll to show end
+                    val textWidth = inputText.paint.measureText(s?.toString() ?: "")
+                    val paddingTotal = inputText.paddingStart + inputText.paddingEnd
+                    val scrollX = (textWidth + paddingTotal - inputScroll.width).coerceAtLeast(0f).toInt()
+                    inputScroll.scrollTo(scrollX, 0)
                 }
             }
         })

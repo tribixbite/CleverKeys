@@ -4,7 +4,7 @@
 # This script handles all the compatibility issues
 # Usage: ./build-on-termux.sh [debug|release]
 
-BUILD_TYPE="${1:-debug}"
+BUILD_TYPE="${1:-release}"
 BUILD_TYPE_LOWER=$(echo "$BUILD_TYPE" | tr '[:upper:]' '[:lower:]')
 
 echo "=== CleverKeys Termux Build Script ==="
