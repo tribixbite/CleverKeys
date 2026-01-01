@@ -37,7 +37,7 @@ class BeamSearchEngine(
     private val confidenceThreshold: Float = 0.01f, // Lowered default (0.05 -> 0.01) to keep more candidates
     private val lengthPenaltyAlpha: Float = 1.2f, // Length normalization factor
     private val adaptiveWidthConfidence: Float = 0.8f, // Pruning confidence threshold
-    private val scoreGapThreshold: Float = 5.0f, // Early stopping score gap
+    private val scoreGapThreshold: Float = 8.0f, // Early stopping score gap (increased from 5.0)
     private val debugLogger: ((String) -> Unit)? = null
 ) {
 
@@ -54,8 +54,10 @@ class BeamSearchEngine(
         private const val DECODER_SEQ_LEN = 20 // Must match model export
         private const val LOG_PROB_THRESHOLD = -13.8f // approx ln(1e-6)
         private const val PRUNE_STEP_THRESHOLD = 2
-        private const val ADAPTIVE_WIDTH_STEP = 5
-        private const val SCORE_GAP_STEP = 3
+        // FIX: Increased to allow longer words like "dangerously" (11 chars) to complete
+        // Previous values (5, 3) caused early termination favoring short words
+        private const val ADAPTIVE_WIDTH_STEP = 12 // Don't prune width until longest common words done
+        private const val SCORE_GAP_STEP = 10 // Don't early-stop until long words have a chance
         
         // Diversity parameters (4D: Diverse Beam Search)
         private const val DIVERSITY_LAMBDA = 0.5f // Penalty weight for similar beams
