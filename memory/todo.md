@@ -315,45 +315,37 @@
   - Added HashSet<List<Long>> to deduplicate beams by token sequence
   - Prevents identical words appearing multiple times in predictions
   - Fixed SOS/PAD token masking (set to -infinity instead of skipping)
+- [x] Beam search early termination fix for long words (2026-01-01)
+  - Root cause: ADAPTIVE_WIDTH_STEP=5 and SCORE_GAP_STEP=3 terminated too early
+  - Short words like "danger" (6 chars) finished before "dangerously" (11 chars) could complete
+  - Increased ADAPTIVE_WIDTH_STEP: 5→12 (don't prune width until longest common words done)
+  - Increased SCORE_GAP_STEP: 3→10 (don't early-stop until long words have a chance)
+  - Increased scoreGapThreshold: 5.0→8.0 (wider gap before triggering early stop)
 - [x] SwipeDebugActivity text overflow fix (2026-01-01)
   - Changed input field from right-aligned to left-aligned (gravity: start)
   - Added HorizontalScrollView with proper scroll calculation
   - Text scrolls to show cursor position as user types
 
-## Active Investigation: Prediction Selection Bug
+## Active Investigation: Long Word Prediction
 
-**Status**: Debug logging complete, awaiting user test
+**Status**: Beam search early termination fix applied (e63f45eb), awaiting test
 
-**Bug**: "dangerously" shows as #1 prediction but "dangers" gets inserted
+**Previous Bug**: "dangerously" (11 chars) couldn't beat shorter words like "danger" (6 chars)
 
-**Debug Logging Pipeline**:
-- ✅ Post-processor output (PredictionPostProcessor)
-- ✅ Suggestion bar contents before auto-insert (InputCoordinator)
-- ✅ Top suggestion selected for insert (InputCoordinator)
-- ✅ Word passed to onSuggestionSelected (InputCoordinator)
-- ✅ Final autocorrect change detection (InputCoordinator)
-- ✅ Final word to insert (InputCoordinator)
+**Root Cause Identified**:
+- ADAPTIVE_WIDTH_STEP=5 triggered beam width pruning before long words finished
+- SCORE_GAP_STEP=3 triggered early stopping when short word candidates dominated
+- Short words finish decoding first and accumulate score advantage
 
-**Logging Flow** (open SwipeDebugActivity, swipe a word):
-```
-📤 FINAL POST-PROCESSOR OUTPUT (what goes to UI):
-📋 SUGGESTION BAR CONTENTS BEFORE AUTO-INSERT:
-🎯 TOP SUGGESTION SELECTED FOR INSERT: "X"
-📥 onSuggestionSelected CALLED with word: "X"
-⚠️ FINAL AUTOCORRECT: "X" → "Y" (if changed)
-📝 FINAL WORD TO INSERT: "Y" (after autocorrect check)
-```
-
-**Possible Root Causes**:
-1. Final autocorrect changing word (but unlikely - different lengths)
-2. SuggestionHandler's separate handlePredictionResults path
-3. Race condition in async prediction callback
-4. Thread-safety issue in suggestion bar storage
+**Fix Applied**:
+- ADAPTIVE_WIDTH_STEP: 5→12 (wait for 11+ char words to complete)
+- SCORE_GAP_STEP: 3→10 (delay early-stop decision)
+- scoreGapThreshold: 5.0→8.0 (require wider score gap)
 
 **Next Steps**:
-- [ ] User test: swipe "dangerously" in SwipeDebugActivity
-- [ ] Check log output to identify where word changes
-- [ ] If autocorrect is culprit, adjust threshold or disable for swipe
+- [ ] Test: swipe "dangerously" in SwipeDebugActivity
+- [ ] Verify decoder produces more candidates (should see 6 instead of 3)
+- [ ] Confirm "dangerously" appears in top predictions
 
 ---
 
