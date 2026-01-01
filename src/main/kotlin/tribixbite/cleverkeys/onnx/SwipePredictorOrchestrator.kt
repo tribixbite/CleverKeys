@@ -8,6 +8,7 @@ import android.util.Log
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.KeyboardGrid
+import tribixbite.cleverkeys.NeuralSwipeTypingEngine
 import tribixbite.cleverkeys.ModelVersionManager
 import tribixbite.cleverkeys.NeuralModelMetadata
 import tribixbite.cleverkeys.OptimizedVocabulary
@@ -56,6 +57,9 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     private var forceCpuFallback = false
     private var encoderSession: OrtSession? = null
     private var decoderSession: OrtSession? = null
+
+    // Debug logging callback (sends to SwipeDebugActivity)
+    private var debugLogger: ((String) -> Unit)? = null
     
     // Configuration - defaults MUST match Defaults in Config.kt
     private var config: Config? = null
@@ -213,39 +217,108 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
 
     fun predict(input: SwipeInput): PredictionPostProcessor.Result {
         if (!isModelLoaded) return PredictionPostProcessor.Result(emptyList(), emptyList())
-        
+
+        val startTime = System.currentTimeMillis()
+
         try {
+            // Log touch trace
+            if (debugLogger != null && input.coordinates.isNotEmpty()) {
+                val sb = StringBuilder()
+                sb.append("\n📍 TOUCH TRACE (${input.coordinates.size} points):\n")
+                sb.append("─────────────────────────────────────────────────────────\n")
+
+                // Show first 5 and last 5 points
+                val coords = input.coordinates
+                val showCount = minOf(5, coords.size)
+                for (i in 0 until showCount) {
+                    val p = coords[i]
+                    sb.append("  [$i] (${String.format("%.1f", p.x)}, ${String.format("%.1f", p.y)})\n")
+                }
+                if (coords.size > 10) {
+                    sb.append("  ... ${coords.size - 10} more points ...\n")
+                    for (i in coords.size - 5 until coords.size) {
+                        val p = coords[i]
+                        sb.append("  [$i] (${String.format("%.1f", p.x)}, ${String.format("%.1f", p.y)})\n")
+                    }
+                }
+                logDebug(sb.toString())
+            }
+
             // Feature Extraction
+            val featureStartTime = System.currentTimeMillis()
             val features = trajectoryProcessor.extractFeatures(input, maxSequenceLength)
-            
+            val featureTime = System.currentTimeMillis() - featureStartTime
+
+            // Log detected key sequence
+            if (debugLogger != null && features.nearestKeys.isNotEmpty()) {
+                val keySeq = StringBuilder()
+                var lastKey = -1
+                for (tokenIdx in features.nearestKeys) {
+                    if (tokenIdx != lastKey && tokenIdx in 4..29) {
+                        keySeq.append('a' + (tokenIdx - 4))
+                        lastKey = tokenIdx
+                    }
+                }
+                logDebug("\n🎯 DETECTED KEY SEQUENCE: \"$keySeq\" (from ${features.actualLength} points, extracted in ${featureTime}ms)\n")
+            }
+
             // Encoder
+            val encoderStartTime = System.currentTimeMillis()
             val encoderResult = encoderWrapper!!.encode(features)
             val memory = encoderResult.memory
-            
+            val encoderTime = System.currentTimeMillis() - encoderStartTime
+
+            if (debugLogger != null) {
+                logDebug("⚡ Encoder: ${encoderTime}ms (seq_len=${features.actualLength})\n")
+            }
+
             // Decoder (Search)
+            val decoderStartTime = System.currentTimeMillis()
+            val searchMode = if (config?.neural_greedy_search == true) "greedy" else "beam(width=$beamWidth)"
+
             val candidates = if (config?.neural_greedy_search == true) {
-                val engine = GreedySearchEngine(decoderSession!!, ortEnvironment, tokenizer, maxLength)
+                val engine = GreedySearchEngine(decoderSession!!, ortEnvironment, tokenizer, maxLength, debugLogger)
                 val results = engine.search(memory, features.actualLength)
                 results.map { PredictionPostProcessor.Candidate(it.word, it.confidence) }
             } else {
                 val engine = BeamSearchEngine(
-                    decoderSession!!, ortEnvironment, tokenizer, 
-                    vocabulary.getVocabularyTrie(), beamWidth, maxLength, // Fixed: used getVocabularyTrie()
-                    confidenceThreshold, beamAlpha, beamPruneConfidence, beamScoreGap
+                    decoderSession!!, ortEnvironment, tokenizer,
+                    vocabulary.getVocabularyTrie(), beamWidth, maxLength,
+                    confidenceThreshold, beamAlpha, beamPruneConfidence, beamScoreGap,
+                    debugLogger
                 )
                 val results = engine.search(memory, features.actualLength, batchBeams)
                 results.map { PredictionPostProcessor.Candidate(it.word, it.confidence) }
             }
-            
+
+            val decoderTime = System.currentTimeMillis() - decoderStartTime
+
+            if (debugLogger != null) {
+                logDebug("⚡ Decoder ($searchMode): ${decoderTime}ms → ${candidates.size} candidates\n")
+            }
+
             // Post-processing
+            val postStartTime = System.currentTimeMillis()
             val postProcessor = PredictionPostProcessor(
-                vocabulary, confidenceThreshold, showRawOutput
+                vocabulary, confidenceThreshold, showRawOutput, debugLogger
             )
-            
-            return postProcessor.process(candidates, input, config?.swipe_show_raw_beam_predictions ?: false)
-            
+
+            val result = postProcessor.process(candidates, input, config?.swipe_show_raw_beam_predictions ?: false)
+            val postTime = System.currentTimeMillis() - postStartTime
+
+            val totalTime = System.currentTimeMillis() - startTime
+
+            if (debugLogger != null) {
+                logDebug("⚡ Post-processing: ${postTime}ms\n")
+                logDebug("─────────────────────────────────────────────────────────\n")
+                logDebug("⏱️ TOTAL INFERENCE: ${totalTime}ms (feature=${featureTime}ms, encoder=${encoderTime}ms, decoder=${decoderTime}ms, post=${postTime}ms)\n\n")
+            }
+
+            return result
+
         } catch (e: Exception) {
             Log.e(TAG, "Prediction failed", e)
+            logDebug("❌ Prediction failed: ${e.message}\n")
             return PredictionPostProcessor.Result(emptyList(), emptyList())
         }
     }
@@ -269,8 +342,20 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     fun reloadVocabulary() = vocabulary.reloadCustomAndDisabledWords()
     
     fun setDebugLogger(logger: Any?) {
-        // TODO: Implement proper debug logger interface if needed
-        // For now, we rely on Logcat and enableVerboseLogging flag
+        // Accept NeuralSwipeTypingEngine.DebugLogger and convert to lambda
+        @Suppress("UNCHECKED_CAST")
+        debugLogger = when (logger) {
+            is NeuralSwipeTypingEngine.DebugLogger -> { msg: String -> logger.log(msg) }
+            is Function1<*, *> -> logger as? ((String) -> Unit)
+            else -> null
+        }
+    }
+
+    private fun logDebug(message: String) {
+        debugLogger?.invoke(message)
+        if (enableVerboseLogging) {
+            Log.d(TAG, message)
+        }
     }
 
     fun cleanup() {
