@@ -310,14 +310,14 @@ class InputCoordinator(
                 predictionCoordinator.getWordPredictor()?.autoCorrect(processedWord)?.let { correctedWord ->
                     // If autocorrect found a better match, use it
                     if (correctedWord != processedWord) {
-                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                            android.util.Log.d("CleverKeysService", "FINAL AUTOCORRECT: \"$processedWord\" → \"$correctedWord\"")
-                        }
+                        debugLogger?.invoke("⚠️ FINAL AUTOCORRECT: \"$processedWord\" → \"$correctedWord\"")
                         processedWord = correctedWord
                     }
                 }
             }
         }
+
+        debugLogger?.invoke("📝 FINAL WORD TO INSERT: \"$processedWord\" (after autocorrect check)")
 
         // Record user selection for adaptation learning
         predictionCoordinator.getAdaptationManager()?.recordSelection(processedWord.trim())
