@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-30
-**Status**: v1.1.79 - Password Field Eye Toggle
+**Last Updated**: 2025-12-31
+**Status**: v1.1.79 - Comprehensive Swipe Debug Logging
 
 ---
 
@@ -276,6 +276,25 @@
   - Centered when short, scrollable when long
   - Files: SuggestionBar.kt, SuggestionHandler.kt, CleverKeysService.kt
   - Spec: docs/specs/password-field-mode.md
+
+- [x] SwipeDebugActivity UI overhaul (2025-12-30)
+  - Added back arrow, title "Swipe Debug Log", auto-focus input
+  - Single-line scrollable input with debug log viewer
+  - Copy and save icons for debug log output
+  - Save to file uses Storage Access Framework file picker
+- [x] Wire debug logger through inference pipeline (2025-12-31)
+  - Fixed setDebugLogger in SwipePredictorOrchestrator (was TODO stub)
+  - Chain: CleverKeysService → PredictionCoordinator → NeuralSwipeTypingEngine → SwipePredictorOrchestrator
+  - Added debugModeActive flag to gate expensive string building
+  - Propagation through DebugModePropagator → NeuralSwipeTypingEngine → SwipePredictorOrchestrator → SwipeTrajectoryProcessor
+- [x] Comprehensive debug logging for swipe inference (2025-12-31)
+  - Touch trace coordinates (first/last 5 points)
+  - Detected key sequence with start/end key analysis
+  - Out-of-bounds point counting
+  - Normalization parameters (keyboard dims, margins, QWERTY bounds, Y-offset)
+  - Raw-to-normalized coordinate transformations with clamping warnings
+  - Timing breakdown (feature extraction, encoder, decoder, post-processing)
+  - Raw beam search output before vocabulary filtering
 
 **Current Version**: 1.1.79 (versionCode 101793 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.79
