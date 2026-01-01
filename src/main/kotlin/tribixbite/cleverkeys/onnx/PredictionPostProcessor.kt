@@ -187,7 +187,8 @@ class PredictionPostProcessor(
         }
 
         // DEBUG: Log final output order to trace prediction selection bugs
-        if (words.isNotEmpty()) {
+        // Only logs when debugLogger is set (debug mode enabled in settings)
+        if (debugLogger != null && words.isNotEmpty()) {
             val sb = StringBuilder("\n📤 FINAL POST-PROCESSOR OUTPUT (what goes to UI):\n")
             sb.append("─────────────────────────────────────────────────────────\n")
             words.take(5).forEachIndexed { idx, word ->
@@ -195,8 +196,7 @@ class PredictionPostProcessor(
                 sb.append("  #${idx + 1}: \"$word\" (score=$score)\n")
             }
             sb.append("─────────────────────────────────────────────────────────\n")
-            debugLogger?.invoke(sb.toString())
-            Log.d(TAG, sb.toString())
+            debugLogger.invoke(sb.toString())
         }
 
         return Result(words, scores)

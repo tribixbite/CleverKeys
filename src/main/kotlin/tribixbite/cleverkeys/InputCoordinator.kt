@@ -48,6 +48,20 @@ class InputCoordinator(
         private const val TAG = "InputCoordinator"
     }
 
+    // Debug logger for SwipeDebugActivity integration
+    // Only active when debug mode is enabled in settings
+    private var debugLogger: ((String) -> Unit)? = null
+
+    /**
+     * Sets the debug logger for pipeline visibility.
+     * When set, debug messages appear in SwipeDebugActivity instead of logcat.
+     *
+     * @param logger Lambda that broadcasts debug messages to SwipeDebugActivity
+     */
+    fun setDebugLogger(logger: ((String) -> Unit)?) {
+        debugLogger = logger
+    }
+
     // Swipe ML data collection
     private var currentSwipeData: SwipeMLData? = null
 
@@ -125,11 +139,11 @@ class InputCoordinator(
         resources: Resources
     ) {
         val handleStartTime = System.currentTimeMillis()
-        android.util.Log.e(TAG, "⏱️ HANDLE_PREDICTIONS START")
+        debugLogger?.invoke("⏱️ HANDLE_PREDICTIONS START")
 
         if (predictions.isNullOrEmpty()) {
             suggestionBar?.clearSuggestions()
-            android.util.Log.e(TAG, "⏱️ HANDLE_PREDICTIONS COMPLETE (empty): ${System.currentTimeMillis() - handleStartTime}ms")
+            debugLogger?.invoke("⏱️ HANDLE_PREDICTIONS COMPLETE (empty): ${System.currentTimeMillis() - handleStartTime}ms")
             return
         }
 
@@ -141,23 +155,26 @@ class InputCoordinator(
             val suggestionsStartTime = System.currentTimeMillis()
             bar.setShowDebugScores(config.swipe_show_debug_scores)
             bar.setSuggestionsWithScores(transformedPredictions, scores)
-            android.util.Log.e(TAG, "⏱️ setSuggestionsWithScores: ${System.currentTimeMillis() - suggestionsStartTime}ms")
+            debugLogger?.invoke("⏱️ setSuggestionsWithScores: ${System.currentTimeMillis() - suggestionsStartTime}ms")
 
             // DEBUG: Log what's in suggestion bar before auto-insert
-            val allSuggestions = bar.getCurrentSuggestions()
-            android.util.Log.e(TAG, "📋 SUGGESTION BAR CONTENTS BEFORE AUTO-INSERT:")
-            allSuggestions.take(5).forEachIndexed { idx, s ->
-                android.util.Log.e(TAG, "   #${idx + 1}: \"$s\"")
+            if (debugLogger != null) {
+                val allSuggestions = bar.getCurrentSuggestions()
+                val sb = StringBuilder("📋 SUGGESTION BAR CONTENTS BEFORE AUTO-INSERT:\n")
+                allSuggestions.take(5).forEachIndexed { idx, s ->
+                    sb.append("   #${idx + 1}: \"$s\"\n")
+                }
+                debugLogger?.invoke(sb.toString())
             }
 
             // Auto-insert top prediction immediately after swipe completes
             bar.getTopSuggestion()?.takeIf { it.isNotEmpty() }?.let { topPrediction ->
-                android.util.Log.e(TAG, "🎯 TOP SUGGESTION SELECTED FOR INSERT: \"$topPrediction\"")
+                debugLogger?.invoke("🎯 TOP SUGGESTION SELECTED FOR INSERT: \"$topPrediction\"")
                 // If manual typing in progress, add space after it
                 if (contextTracker.getCurrentWordLength() > 0 && ic != null) {
                     val spaceCommitTime = System.currentTimeMillis()
                     ic.commitText(" ", 1)
-                    android.util.Log.e(TAG, "⏱️ commitText(space): ${System.currentTimeMillis() - spaceCommitTime}ms")
+                    debugLogger?.invoke("⏱️ commitText(space): ${System.currentTimeMillis() - spaceCommitTime}ms")
                     contextTracker.clearCurrentWord()
                     contextTracker.clearLastAutoInsertedWord()
                     contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
@@ -171,7 +188,7 @@ class InputCoordinator(
                 val insertStartTime = System.currentTimeMillis()
                 onSuggestionSelected(topPrediction, ic, editorInfo, resources)
                 val insertDuration = System.currentTimeMillis() - insertStartTime
-                android.util.Log.e(TAG, "⏱️ onSuggestionSelected('$topPrediction'): ${insertDuration}ms")
+                debugLogger?.invoke("⏱️ onSuggestionSelected('$topPrediction'): ${insertDuration}ms")
 
                 // Track as auto-inserted for replacement
                 val cleanPrediction = topPrediction.replace("^raw:".toRegex(), "")
@@ -184,7 +201,7 @@ class InputCoordinator(
         }
 
         val handleDuration = System.currentTimeMillis() - handleStartTime
-        android.util.Log.e(TAG, "⏱️ HANDLE_PREDICTIONS COMPLETE: ${handleDuration}ms")
+        debugLogger?.invoke("⏱️ HANDLE_PREDICTIONS COMPLETE: ${handleDuration}ms")
     }
 
     /**
@@ -251,7 +268,7 @@ class InputCoordinator(
         resources: Resources
     ) {
         // DEBUG: Log incoming word for selection tracking
-        android.util.Log.e(TAG, "📥 onSuggestionSelected CALLED with word: \"$word\"")
+        debugLogger?.invoke("📥 onSuggestionSelected CALLED with word: \"$word\"")
 
         // Null/empty check
         var processedWord = word?.trim() ?: return
@@ -401,7 +418,7 @@ class InputCoordinator(
                     }
 
                     val deleteDuration = System.currentTimeMillis() - deleteStartTime
-                    android.util.Log.e(TAG, "⏱️ UNIFIED DELETE (was auto-inserted): ${deleteDuration}ms")
+                    debugLogger?.invoke("⏱️ UNIFIED DELETE (was auto-inserted): ${deleteDuration}ms")
 
                     // Clear the tracking variables
                     contextTracker.clearLastAutoInsertedWord()
@@ -424,7 +441,7 @@ class InputCoordinator(
                     }
 
                     val partialDeleteDuration = System.currentTimeMillis() - partialDeleteStart
-                    android.util.Log.e(TAG, "⏱️ UNIFIED DELETE (partial word): ${partialDeleteDuration}ms")
+                    debugLogger?.invoke("⏱️ UNIFIED DELETE (partial word): ${partialDeleteDuration}ms")
                 }
 
                 // Add space before word if previous character isn't whitespace
@@ -466,7 +483,7 @@ class InputCoordinator(
                 val commitStartTime = System.currentTimeMillis()
                 connection.commitText(textToInsert, 1)
                 val commitDuration = System.currentTimeMillis() - commitStartTime
-                android.util.Log.e(TAG, "⏱️ commitText('$textToInsert'): ${commitDuration}ms")
+                debugLogger?.invoke("⏱️ commitText('$textToInsert'): ${commitDuration}ms")
 
                 // Notify auto-capitalization system about the inserted text
                 // This ensures shift is enabled after sentence-ending punctuation (. ! ?)
@@ -608,7 +625,7 @@ class InputCoordinator(
         val inTermux = try {
             editorInfo?.packageName == "com.termux"
         } catch (e: Exception) {
-            android.util.Log.e("CleverKeysService", "DELETE_LAST_WORD: Error detecting Termux", e)
+            debugLogger?.invoke("DELETE_LAST_WORD: Error detecting Termux: ${e.message}")
             false
         }
 
