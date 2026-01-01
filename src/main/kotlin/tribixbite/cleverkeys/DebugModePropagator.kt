@@ -19,6 +19,7 @@ package tribixbite.cleverkeys
 class DebugModePropagator(
     private val suggestionHandler: SuggestionHandler?,
     private val neuralLayoutHelper: NeuralLayoutHelper?,
+    private val predictionCoordinator: PredictionCoordinator?,
     private val debugLogger: SuggestionHandler.DebugLogger,
     private val debugLoggingManager: DebugLoggingManager
 ) : DebugLoggingManager.DebugModeListener {
@@ -42,6 +43,9 @@ class DebugModePropagator(
                 debugLoggingManager.sendDebugLog(message)
             }
         })
+
+        // Propagate debug mode to PredictionCoordinator (gates expensive logging)
+        predictionCoordinator?.setDebugModeActive(enabled)
     }
 
     companion object {
@@ -50,6 +54,7 @@ class DebugModePropagator(
          *
          * @param suggestionHandler The SuggestionHandler to receive debug mode updates (nullable)
          * @param neuralLayoutHelper The NeuralLayoutHelper to receive debug mode updates (nullable)
+         * @param predictionCoordinator The PredictionCoordinator to receive debug mode updates (nullable)
          * @param debugLogger The debug logger for SuggestionHandler
          * @param debugLoggingManager The debug logging manager for sending logs
          * @return A new DebugModePropagator instance
@@ -58,12 +63,14 @@ class DebugModePropagator(
         fun create(
             suggestionHandler: SuggestionHandler?,
             neuralLayoutHelper: NeuralLayoutHelper?,
+            predictionCoordinator: PredictionCoordinator?,
             debugLogger: SuggestionHandler.DebugLogger,
             debugLoggingManager: DebugLoggingManager
         ): DebugModePropagator {
             return DebugModePropagator(
                 suggestionHandler,
                 neuralLayoutHelper,
+                predictionCoordinator,
                 debugLogger,
                 debugLoggingManager
             )

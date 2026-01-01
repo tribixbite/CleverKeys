@@ -257,6 +257,13 @@ class PredictionCoordinator(
     }
 
     /**
+     * Set debug mode active state. When false, expensive debug logging is skipped.
+     */
+    fun setDebugModeActive(active: Boolean) {
+        neuralEngine?.setDebugModeActive(active)
+    }
+
+    /**
      * Ensures word predictor is initialized (lazy initialization).
      * Called when predictions are first requested.
      *

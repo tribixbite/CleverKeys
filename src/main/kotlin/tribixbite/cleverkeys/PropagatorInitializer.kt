@@ -51,6 +51,7 @@ class PropagatorInitializer(
         val debugModePropagator = DebugModePropagator.create(
             suggestionHandler,
             neuralLayoutHelper,
+            predictionCoordinator,
             debugLoggerImpl,
             debugLoggingManager
         )

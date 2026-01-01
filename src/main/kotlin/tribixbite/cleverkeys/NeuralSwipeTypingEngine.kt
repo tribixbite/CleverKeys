@@ -230,6 +230,13 @@ class NeuralSwipeTypingEngine(
         }
     }
 
+    /**
+     * Set debug mode active state. When false, expensive debug logging is skipped.
+     */
+    fun setDebugModeActive(active: Boolean) {
+        neuralPredictor.setDebugModeActive(active)
+    }
+
     private fun logDebug(message: String) {
         debugLogger?.log(message)
     }

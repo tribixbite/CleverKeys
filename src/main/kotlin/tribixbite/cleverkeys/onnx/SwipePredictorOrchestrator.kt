@@ -59,7 +59,9 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     private var decoderSession: OrtSession? = null
 
     // Debug logging callback (sends to SwipeDebugActivity)
+    // IMPORTANT: debugLogger is set, but debugModeActive gates expensive string building
     private var debugLogger: ((String) -> Unit)? = null
+    @Volatile private var debugModeActive = false
     
     // Configuration - defaults MUST match Defaults in Config.kt
     private var config: Config? = null
@@ -221,8 +223,8 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
         val startTime = System.currentTimeMillis()
 
         try {
-            // Log touch trace
-            if (debugLogger != null && input.coordinates.isNotEmpty()) {
+            // Log touch trace (gated behind debugModeActive to avoid expensive string building)
+            if (debugModeActive && input.coordinates.isNotEmpty()) {
                 val sb = StringBuilder()
                 sb.append("\n📍 TOUCH TRACE (${input.coordinates.size} points):\n")
                 sb.append("─────────────────────────────────────────────────────────\n")
@@ -250,7 +252,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             val featureTime = System.currentTimeMillis() - featureStartTime
 
             // Log detected key sequence
-            if (debugLogger != null && features.nearestKeys.isNotEmpty()) {
+            if (debugModeActive && features.nearestKeys.isNotEmpty()) {
                 val keySeq = StringBuilder()
                 var lastKey = -1
                 for (tokenIdx in features.nearestKeys) {
@@ -268,7 +270,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             val memory = encoderResult.memory
             val encoderTime = System.currentTimeMillis() - encoderStartTime
 
-            if (debugLogger != null) {
+            if (debugModeActive) {
                 logDebug("⚡ Encoder: ${encoderTime}ms (seq_len=${features.actualLength})\n")
             }
 
@@ -276,8 +278,11 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             val decoderStartTime = System.currentTimeMillis()
             val searchMode = if (config?.neural_greedy_search == true) "greedy" else "beam(width=$beamWidth)"
 
+            // Only pass debugLogger to child components when debug mode is active
+            val activeLogger = if (debugModeActive) debugLogger else null
+
             val candidates = if (config?.neural_greedy_search == true) {
-                val engine = GreedySearchEngine(decoderSession!!, ortEnvironment, tokenizer, maxLength, debugLogger)
+                val engine = GreedySearchEngine(decoderSession!!, ortEnvironment, tokenizer, maxLength, activeLogger)
                 val results = engine.search(memory, features.actualLength)
                 results.map { PredictionPostProcessor.Candidate(it.word, it.confidence) }
             } else {
@@ -285,7 +290,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                     decoderSession!!, ortEnvironment, tokenizer,
                     vocabulary.getVocabularyTrie(), beamWidth, maxLength,
                     confidenceThreshold, beamAlpha, beamPruneConfidence, beamScoreGap,
-                    debugLogger
+                    activeLogger
                 )
                 val results = engine.search(memory, features.actualLength, batchBeams)
                 results.map { PredictionPostProcessor.Candidate(it.word, it.confidence) }
@@ -293,14 +298,27 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
 
             val decoderTime = System.currentTimeMillis() - decoderStartTime
 
-            if (debugLogger != null) {
+            if (debugModeActive) {
                 logDebug("⚡ Decoder ($searchMode): ${decoderTime}ms → ${candidates.size} candidates\n")
+
+                // Log RAW beam search output before vocabulary filtering
+                val sb = StringBuilder()
+                sb.append("\n🔬 RAW BEAM SEARCH OUTPUT (before vocab filtering):\n")
+                sb.append("─────────────────────────────────────────────────────────\n")
+                candidates.take(15).forEachIndexed { idx, c ->
+                    sb.append("  #${idx + 1}: \"${c.word}\" (raw_conf=${String.format("%.4f", c.confidence)})\n")
+                }
+                if (candidates.size > 15) {
+                    sb.append("  ... and ${candidates.size - 15} more\n")
+                }
+                sb.append("─────────────────────────────────────────────────────────\n")
+                logDebug(sb.toString())
             }
 
             // Post-processing
             val postStartTime = System.currentTimeMillis()
             val postProcessor = PredictionPostProcessor(
-                vocabulary, confidenceThreshold, showRawOutput, debugLogger
+                vocabulary, confidenceThreshold, showRawOutput, activeLogger
             )
 
             val result = postProcessor.process(candidates, input, config?.swipe_show_raw_beam_predictions ?: false)
@@ -308,7 +326,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
 
             val totalTime = System.currentTimeMillis() - startTime
 
-            if (debugLogger != null) {
+            if (debugModeActive) {
                 logDebug("⚡ Post-processing: ${postTime}ms\n")
                 logDebug("─────────────────────────────────────────────────────────\n")
                 logDebug("⏱️ TOTAL INFERENCE: ${totalTime}ms (feature=${featureTime}ms, encoder=${encoderTime}ms, decoder=${decoderTime}ms, post=${postTime}ms)\n\n")
@@ -349,6 +367,14 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             is Function1<*, *> -> logger as? ((String) -> Unit)
             else -> null
         }
+    }
+
+    /**
+     * Set debug mode active state. When false, all debug logging is skipped
+     * to avoid expensive string building during normal inference.
+     */
+    fun setDebugModeActive(active: Boolean) {
+        debugModeActive = active
     }
 
     private fun logDebug(message: String) {
