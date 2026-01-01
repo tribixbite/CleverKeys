@@ -270,7 +270,7 @@ class NeuralLayoutHelper(
                     )
                 )
 
-                // Touch Y-offset for fat finger compensation
+                // Touch Y-offset for finger occlusion compensation
                 // RE-ENABLED (v1.32.943): Conservative 12.5% offset for better tap target prediction
                 // Previous 37% was too aggressive, 0% had no compensation - 12.5% is balanced
                 val touchYOffset = rowHeight * 0.125f // Conservative value within recommended 10-15% range
@@ -297,7 +297,7 @@ class NeuralLayoutHelper(
                 if (_debugMode) {
                     sendDebugLog(String.format(">>> Neural engine: %d key positions set\n", keyPositions.size))
                     sendDebugLog(String.format(">>> QWERTY bounds: top=%.0f, height=%.0f\n", qwertyTop, qwertyHeight))
-                    sendDebugLog(String.format(">>> Touch Y-offset: %.0f px (fat finger compensation)\n", touchYOffset))
+                    sendDebugLog(String.format(">>> Touch Y-offset: %.0f px (finger occlusion compensation)\n", touchYOffset))
                     val zPos = keyPositions.getOrDefault('z', mPos)
                     sendDebugLog(
                         String.format(

@@ -158,7 +158,7 @@ class NeuralSwipeTypingEngine(
     }
 
     /**
-     * Set touch Y-offset compensation for fat finger effect.
+     * Set touch Y-offset compensation for finger occlusion.
      * Users typically touch above key centers; this offset compensates.
      *
      * @param offset Pixels to add to Y coordinate (positive = shift down)

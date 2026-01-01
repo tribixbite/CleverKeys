@@ -35,7 +35,8 @@ class SwipeTrajectoryProcessor {
     private var qwertyAreaHeight = 0.0f   // Height of QWERTY key area only
 
     // Touch Y-offset compensation (v1.32.466)
-    // Users typically touch ~74 pixels above key center due to fat finger effect
+    // Users typically touch ~74 pixels above key center due to finger occlusion
+    // (the fingertip obscures the target, causing touches to land higher)
     // This offset is added to raw Y coordinates before normalization
     private var touchYOffset = 0.0f
 
@@ -97,9 +98,10 @@ class SwipeTrajectoryProcessor {
     }
 
     /**
-     * Set touch Y-offset compensation for fat finger effect.
-     * Users typically touch ~74 pixels above key centers due to finger geometry.
-     * This offset is added to raw Y coordinates before normalization.
+     * Set touch Y-offset compensation for finger occlusion.
+     * Users typically touch ~74 pixels above key centers because the fingertip
+     * obscures the visual target. This offset shifts raw Y coordinates down
+     * before normalization to compensate.
      *
      * @param offset Pixels to add to Y coordinate (positive = shift down toward key center)
      */
@@ -354,7 +356,7 @@ class SwipeTrajectoryProcessor {
             // Subtract left margin and divide by key area width (not total width)
             var x = (point.x - marginLeft) / effectiveKeyAreaWidth
 
-            // Apply touch Y-offset compensation (fat finger effect)
+            // Apply touch Y-offset compensation (finger occlusion)
             // Users typically touch ~74 pixels above key centers
             val adjustedY = point.y + touchYOffset
 
