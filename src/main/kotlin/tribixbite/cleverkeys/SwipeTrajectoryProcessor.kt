@@ -43,6 +43,10 @@ class SwipeTrajectoryProcessor {
     // Default to DISCARD to preserve start/end of long swipes (matching Config.java default)
     private var resamplingMode: SwipeResampler.ResamplingMode = SwipeResampler.ResamplingMode.DISCARD
 
+    // Debug logging callback (sends to SwipeDebugActivity)
+    private var debugLogger: ((String) -> Unit)? = null
+    @Volatile private var debugModeActive = false
+
     // OPTIMIZATION Phase 2: Reusable lists to reduce GC pressure
     // These are cleared and reused on each call to extractFeatures()
     private val reusableNormalizedCoords = ArrayList<PointF>(250)
@@ -110,6 +114,24 @@ class SwipeTrajectoryProcessor {
     fun setResamplingMode(mode: SwipeResampler.ResamplingMode) {
         this.resamplingMode = mode
         Log.d(TAG, "Resampling mode set to: $mode")
+    }
+
+    /**
+     * Set debug logger for detailed logging to SwipeDebugActivity
+     */
+    fun setDebugLogger(logger: ((String) -> Unit)?) {
+        this.debugLogger = logger
+    }
+
+    /**
+     * Set debug mode active state. When false, expensive debug logging is skipped.
+     */
+    fun setDebugModeActive(active: Boolean) {
+        this.debugModeActive = active
+    }
+
+    private fun logDebug(message: String) {
+        debugLogger?.invoke(message)
     }
 
     /**
@@ -300,7 +322,35 @@ class SwipeTrajectoryProcessor {
         val keyAreaWidth = keyboardWidth - marginLeft - marginRight
         val effectiveKeyAreaWidth = if (keyAreaWidth > 0) keyAreaWidth else keyboardWidth
 
+        // DEBUG: Log comprehensive normalization parameters (gated)
+        if (debugModeActive && coordinates.isNotEmpty()) {
+            val sb = StringBuilder()
+            sb.append("\n📐 NORMALIZATION PARAMETERS:\n")
+            sb.append("─────────────────────────────────────────────────────────\n")
+            sb.append("   Keyboard dimensions: ${keyboardWidth.toInt()} × ${keyboardHeight.toInt()} px\n")
+            sb.append("   Margins: left=${marginLeft.toInt()} px, right=${marginRight.toInt()} px\n")
+            sb.append("   Effective key area width: ${effectiveKeyAreaWidth.toInt()} px\n")
+            sb.append("   QWERTY bounds: ${if (usingQwertyBounds) "top=${yTop.toInt()}, height=${yHeight.toInt()} px" else "NOT SET (using full height)"}\n")
+            sb.append("   Touch Y-offset: ${touchYOffset.toInt()} px\n")
+            sb.append("─────────────────────────────────────────────────────────\n")
+            logDebug(sb.toString())
+        }
+
+        // Track clamping for debug output
+        var clampedCount = 0
+        var minRawX = Float.MAX_VALUE
+        var maxRawX = Float.MIN_VALUE
+        var minRawY = Float.MAX_VALUE
+        var maxRawY = Float.MIN_VALUE
+
         coordinates.forEach { point ->
+            if (debugModeActive) {
+                minRawX = minOf(minRawX, point.x)
+                maxRawX = maxOf(maxRawX, point.x)
+                minRawY = minOf(minRawY, point.y)
+                maxRawY = maxOf(maxRawY, point.y)
+            }
+
             // Subtract left margin and divide by key area width (not total width)
             var x = (point.x - marginLeft) / effectiveKeyAreaWidth
 
@@ -317,6 +367,11 @@ class SwipeTrajectoryProcessor {
                 adjustedY / keyboardHeight
             }
 
+            // Track if clamping happened
+            if (debugModeActive && (x < 0f || x > 1f || y < 0f || y > 1f)) {
+                clampedCount++
+            }
+
             // Clamp to [0,1]
             x = x.coerceIn(0f, 1f)
             y = y.coerceIn(0f, 1f)
@@ -325,19 +380,49 @@ class SwipeTrajectoryProcessor {
             outNormalized.add(TrajectoryObjectPool.obtainPointF(x, y))
         }
 
-        // Log normalization info for first and last points
+        // DEBUG: Log sample coordinate transformations (gated)
+        if (debugModeActive && coordinates.isNotEmpty() && outNormalized.isNotEmpty()) {
+            val sb = StringBuilder()
+            sb.append("\n📐 COORDINATE NORMALIZATION:\n")
+            sb.append("─────────────────────────────────────────────────────────\n")
+            sb.append("   Raw X range: [${String.format("%.1f", minRawX)}, ${String.format("%.1f", maxRawX)}] px\n")
+            sb.append("   Raw Y range: [${String.format("%.1f", minRawY)}, ${String.format("%.1f", maxRawY)}] px\n")
+
+            // Show sample transformations (first, middle, last)
+            val sampleIndices = listOf(0, coordinates.size / 2, coordinates.size - 1)
+            sb.append("   Sample transformations:\n")
+            for (i in sampleIndices) {
+                val raw = coordinates[i]
+                val norm = outNormalized[i]
+                val label = when (i) {
+                    0 -> "FIRST"
+                    coordinates.size - 1 -> "LAST"
+                    else -> "MID"
+                }
+                sb.append("     $label: raw=(${String.format("%.1f", raw.x)}, ${String.format("%.1f", raw.y)}) → norm=(${String.format("%.3f", norm.x)}, ${String.format("%.3f", norm.y)})\n")
+            }
+
+            if (clampedCount > 0) {
+                sb.append("   ⚠️ CLAMPED $clampedCount/${coordinates.size} points (${100 * clampedCount / coordinates.size}%) to [0,1] range\n")
+            } else {
+                sb.append("   ✅ All ${coordinates.size} points within valid [0,1] range\n")
+            }
+
+            // Verify expected normalized values for QWERTY rows
+            if (usingQwertyBounds) {
+                sb.append("   Expected Y for rows: top=0.17, middle=0.50, bottom=0.83\n")
+            }
+            sb.append("─────────────────────────────────────────────────────────\n")
+            logDebug(sb.toString())
+        }
+
+        // Keep existing Log.d for logcat
         if (coordinates.isNotEmpty() && outNormalized.isNotEmpty()) {
             val rawFirst = coordinates.first()
             val normFirst = outNormalized.first()
-            val rawLast = coordinates.last()
-            val normLast = outNormalized.last()
 
             if (usingQwertyBounds) {
                 Log.d(TAG, "📐 QWERTY NORMALIZATION: top=$yTop, height=$yHeight (kb=${keyboardWidth}x$keyboardHeight)")
-                Log.d(TAG, "📐 RAW first=(${rawFirst.x},${rawFirst.y}) last=(${rawLast.x},${rawLast.y})")
-                Log.d(TAG, "📐 NORMALIZED first=(${normFirst.x},${normFirst.y}) last=(${normLast.x},${normLast.y})")
-                // Show expected Y for z row (should be ~0.833)
-                Log.d(TAG, "📐 For z at pixel y=496: normalized y = ${(496 - yTop) / yHeight}")
             } else {
                 Log.d(TAG, "📐 Normalization: kb=${keyboardWidth}x$keyboardHeight, raw=(${rawFirst.x},${rawFirst.y}) → norm=(${normFirst.x},${normFirst.y})")
             }

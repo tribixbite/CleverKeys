@@ -251,17 +251,40 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             val features = trajectoryProcessor.extractFeatures(input, maxSequenceLength)
             val featureTime = System.currentTimeMillis() - featureStartTime
 
-            // Log detected key sequence
+            // Log detected key sequence with start/end analysis
             if (debugModeActive && features.nearestKeys.isNotEmpty()) {
                 val keySeq = StringBuilder()
                 var lastKey = -1
+                var firstKey: Char? = null
+                var lastKeyChar: Char? = null
+
                 for (tokenIdx in features.nearestKeys) {
                     if (tokenIdx != lastKey && tokenIdx in 4..29) {
-                        keySeq.append('a' + (tokenIdx - 4))
+                        val c = 'a' + (tokenIdx - 4)
+                        keySeq.append(c)
+                        if (firstKey == null) firstKey = c
+                        lastKeyChar = c
                         lastKey = tokenIdx
                     }
                 }
-                logDebug("\n🎯 DETECTED KEY SEQUENCE: \"$keySeq\" (from ${features.actualLength} points, extracted in ${featureTime}ms)\n")
+
+                // Count out-of-bounds points
+                var outOfBoundsCount = 0
+                for (coord in input.coordinates) {
+                    if (coord.y < 0 || coord.y > trajectoryProcessor.keyboardHeight) {
+                        outOfBoundsCount++
+                    }
+                }
+
+                val sb = StringBuilder()
+                sb.append("\n🎯 DETECTED KEY SEQUENCE: \"$keySeq\"\n")
+                sb.append("   📍 Start key: '$firstKey' | End key: '$lastKeyChar'\n")
+                sb.append("   📊 ${features.actualLength} points → ${keySeq.length} unique keys\n")
+                if (outOfBoundsCount > 0) {
+                    sb.append("   ⚠️ WARNING: $outOfBoundsCount points OUT OF BOUNDS (Y < 0 or Y > ${trajectoryProcessor.keyboardHeight.toInt()})\n")
+                }
+                sb.append("   ⏱️ Feature extraction: ${featureTime}ms\n")
+                logDebug(sb.toString())
             }
 
             // Encoder
@@ -367,6 +390,8 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             is Function1<*, *> -> logger as? ((String) -> Unit)
             else -> null
         }
+        // Propagate to trajectory processor
+        trajectoryProcessor.setDebugLogger(debugLogger)
     }
 
     /**
@@ -375,6 +400,8 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
      */
     fun setDebugModeActive(active: Boolean) {
         debugModeActive = active
+        // Propagate to trajectory processor
+        trajectoryProcessor.setDebugModeActive(active)
     }
 
     private fun logDebug(message: String) {
