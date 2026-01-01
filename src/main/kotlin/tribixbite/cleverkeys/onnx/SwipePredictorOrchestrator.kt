@@ -311,16 +311,16 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                                 features.actualLength - 1 -> "LAST"
                                 else -> "MID"
                             }
-                            sb.append("   $label[$idx]: x=${String.format("%.3f", p.x)}, y=${String.format("%.3f", p.y)}, ")
-                            sb.append("vx=${String.format("%.2f", p.vx)}, vy=${String.format("%.2f", p.vy)}, ")
-                            sb.append("ax=${String.format("%.2f", p.ax)}, ay=${String.format("%.2f", p.ay)}\n")
+                            sb.append("   $label[$idx]: pos=(${String.format("%.3f", p.x)}, ${String.format("%.3f", p.y)})")
+                            sb.append(" vel=(${String.format("%.4f", p.vx)}, ${String.format("%.4f", p.vy)})")
+                            sb.append(" acc=(${String.format("%.4f", p.ax)}, ${String.format("%.4f", p.ay)})\n")
                         }
                     }
                     // Also show first padded position to verify padding
                     if (features.actualLength < features.normalizedPoints.size) {
                         val padIdx = features.actualLength
                         val p = features.normalizedPoints[padIdx]
-                        sb.append("   PAD[$padIdx]: x=${String.format("%.3f", p.x)}, y=${String.format("%.3f", p.y)} (should be 0.0)\n")
+                        sb.append("   PAD[$padIdx]: pos=(${String.format("%.3f", p.x)}, ${String.format("%.3f", p.y)}) (should be 0.0)\n")
                     }
                     sb.append("─────────────────────────────────────────────────────────\n")
                     logDebug(sb.toString())

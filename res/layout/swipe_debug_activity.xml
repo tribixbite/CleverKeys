@@ -60,12 +60,11 @@
             android:layout_height="48dp"
             android:layout_toStartOf="@id/save_button"
             android:layout_centerVertical="true"
-            android:src="@android:drawable/ic_menu_share"
+            android:src="@drawable/ic_content_copy"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="Copy to clipboard"
             android:scaleType="centerInside"
-            android:padding="12dp"
-            android:tint="#ffffff" />
+            android:padding="12dp" />
 
         <!-- Clear logs icon -->
         <ImageButton

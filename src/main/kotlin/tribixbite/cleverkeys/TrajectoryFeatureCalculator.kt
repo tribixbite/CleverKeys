@@ -46,8 +46,12 @@ object TrajectoryFeatureCalculator {
      * ax, ay = np.clip(ax, -10, 10), np.clip(ay, -10, 10)
      * ```
      *
+     * CRITICAL: Python training uses timestamps in SECONDS. Android provides milliseconds,
+     * so we convert ms→s before calculating dt. This gives velocity units of
+     * normalized_distance/second instead of normalized_distance/millisecond.
+     *
      * @param normalizedCoords Coordinates normalized to [0, 1]
-     * @param timestamps Timestamps in milliseconds
+     * @param timestamps Timestamps in milliseconds (converted to seconds internally)
      * @return List of feature points
      */
     fun calculateFeatures(
@@ -64,16 +68,18 @@ object TrajectoryFeatureCalculator {
         val xs = FloatArray(n) { normalizedCoords[it].x }
         val ys = FloatArray(n) { normalizedCoords[it].y }
 
-        // Calculate dt (time differences)
+        // Calculate dt (time differences) - CRITICAL: Convert milliseconds to seconds!
         // dt = np.diff(ts, prepend=ts[0]) means dt[0] = 0, dt[i] = ts[i] - ts[i-1]
+        // Python training uses timestamps in SECONDS, Android provides milliseconds
         val dt = FloatArray(n)
         dt[0] = 0f
         for (i in 1 until n) {
-            dt[i] = (timestamps[i] - timestamps[i - 1]).toFloat()
+            // Convert ms to seconds to match Python training data
+            dt[i] = (timestamps[i] - timestamps[i - 1]).toFloat() / 1000f
         }
 
         // Ensure minimum dt to avoid division by zero
-        // dt = np.maximum(dt, 1e-6)
+        // dt = np.maximum(dt, 1e-6) - 1 microsecond minimum (makes sense for seconds)
         for (i in 0 until n) {
             dt[i] = max(dt[i], 1e-6f)
         }
