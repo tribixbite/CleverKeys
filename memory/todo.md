@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2025-12-31
-**Status**: v1.1.79 - Comprehensive Swipe Debug Logging
+**Last Updated**: 2026-01-01
+**Status**: v1.1.79 - Debug Logging Pipeline Complete
 
 ---
 
@@ -305,12 +305,60 @@
     - Token mapping: a=4..z=29 ✓
   - Small velocities (0.0001 range) are EXPECTED - model was trained on this
   - Attempted ms→s conversion made predictions WORSE (confirmed training used ms)
+- [x] Fix debug logging to use proper debugLogger pattern (2026-01-01)
+  - Previous logging used android.util.Log.e() which goes to logcat
+  - Replaced with debugLogger?.invoke() to send to SwipeDebugActivity
+  - Added debugLogger field and setDebugLogger() to InputCoordinator
+  - Wired up in CleverKeysService.onCreate() via DebugLoggingManager
+  - Debug messages now gated behind user's debug mode setting
+- [x] Beam search deduplication fix (2026-01-01)
+  - Added HashSet<List<Long>> to deduplicate beams by token sequence
+  - Prevents identical words appearing multiple times in predictions
+  - Fixed SOS/PAD token masking (set to -infinity instead of skipping)
+- [x] SwipeDebugActivity text overflow fix (2026-01-01)
+  - Changed input field from right-aligned to left-aligned (gravity: start)
+  - Added HorizontalScrollView with proper scroll calculation
+  - Text scrolls to show cursor position as user types
 
-## Active Investigation: Neural Swipe Inference Accuracy
+## Active Investigation: Prediction Selection Bug
 
-**Status**: Feature calculation verified correct, predictions still failing
+**Status**: Debug logging complete, awaiting user test
 
-**Verified Matching (Python Training vs Android)**:
+**Bug**: "dangerously" shows as #1 prediction but "dangers" gets inserted
+
+**Debug Logging Pipeline**:
+- ✅ Post-processor output (PredictionPostProcessor)
+- ✅ Suggestion bar contents before auto-insert (InputCoordinator)
+- ✅ Top suggestion selected for insert (InputCoordinator)
+- ✅ Word passed to onSuggestionSelected (InputCoordinator)
+- ✅ Final autocorrect change detection (InputCoordinator)
+- ✅ Final word to insert (InputCoordinator)
+
+**Logging Flow** (open SwipeDebugActivity, swipe a word):
+```
+📤 FINAL POST-PROCESSOR OUTPUT (what goes to UI):
+📋 SUGGESTION BAR CONTENTS BEFORE AUTO-INSERT:
+🎯 TOP SUGGESTION SELECTED FOR INSERT: "X"
+📥 onSuggestionSelected CALLED with word: "X"
+⚠️ FINAL AUTOCORRECT: "X" → "Y" (if changed)
+📝 FINAL WORD TO INSERT: "Y" (after autocorrect check)
+```
+
+**Possible Root Causes**:
+1. Final autocorrect changing word (but unlikely - different lengths)
+2. SuggestionHandler's separate handlePredictionResults path
+3. Race condition in async prediction callback
+4. Thread-safety issue in suggestion bar storage
+
+**Next Steps**:
+- [ ] User test: swipe "dangerously" in SwipeDebugActivity
+- [ ] Check log output to identify where word changes
+- [ ] If autocorrect is culprit, adjust threshold or disable for swipe
+
+---
+
+## Previously Verified (Feature Calculation)
+
 | Aspect | Python | Android | Match |
 |--------|--------|---------|-------|
 | Timestamps | ms, min 1e-6 | ms, min 1e-6 | ✅ |
@@ -319,14 +367,6 @@
 | Clipping | [-10, 10] | [-10, 10] | ✅ |
 | Token map | a=4..z=29 | a=4..z=29 | ✅ |
 | Coordinates | [0,1] normalized | [0,1] normalized | ✅ |
-
-**Remaining Investigation Areas**:
-- [ ] Verify QWERTY bounds are correctly calculated on device
-- [ ] Check Y-offset (fat finger compensation) values
-- [ ] Verify margin calculations don't skew coordinates
-- [ ] Add debug logging for normalized → token mapping
-- [ ] Compare raw encoder output values with Python inference
-- [ ] Check beam search parameters (beam width, length penalty)
 
 **Current Version**: 1.1.79 (versionCode 101793 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.79
