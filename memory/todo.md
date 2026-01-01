@@ -295,6 +295,38 @@
   - Raw-to-normalized coordinate transformations with clamping warnings
   - Timing breakdown (feature extraction, encoder, decoder, post-processing)
   - Raw beam search output before vocabulary filtering
+- [x] Deep analysis: Training vs Android feature calculation (2026-01-01)
+  - Restored training files from git history to `model/` folder
+  - Verified feature calculation matches Python training:
+    - Timestamps: milliseconds with 1e-6 minimum ✓
+    - Velocity: dx/dt (normalized coords / ms) ✓
+    - Acceleration: dvx/dt ✓
+    - Clipping: [-10, 10] ✓
+    - Token mapping: a=4..z=29 ✓
+  - Small velocities (0.0001 range) are EXPECTED - model was trained on this
+  - Attempted ms→s conversion made predictions WORSE (confirmed training used ms)
+
+## Active Investigation: Neural Swipe Inference Accuracy
+
+**Status**: Feature calculation verified correct, predictions still failing
+
+**Verified Matching (Python Training vs Android)**:
+| Aspect | Python | Android | Match |
+|--------|--------|---------|-------|
+| Timestamps | ms, min 1e-6 | ms, min 1e-6 | ✅ |
+| Velocity | dx/dt | dx/dt | ✅ |
+| Acceleration | dvx/dt | dvx/dt | ✅ |
+| Clipping | [-10, 10] | [-10, 10] | ✅ |
+| Token map | a=4..z=29 | a=4..z=29 | ✅ |
+| Coordinates | [0,1] normalized | [0,1] normalized | ✅ |
+
+**Remaining Investigation Areas**:
+- [ ] Verify QWERTY bounds are correctly calculated on device
+- [ ] Check Y-offset (fat finger compensation) values
+- [ ] Verify margin calculations don't skew coordinates
+- [ ] Add debug logging for normalized → token mapping
+- [ ] Compare raw encoder output values with Python inference
+- [ ] Check beam search parameters (beam width, length penalty)
 
 **Current Version**: 1.1.79 (versionCode 101793 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.79
