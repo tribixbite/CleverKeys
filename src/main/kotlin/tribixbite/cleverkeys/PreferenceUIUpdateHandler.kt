@@ -85,7 +85,6 @@ class PreferenceUIUpdateHandler(
          * Preference keys that require neural engine config updates.
          */
         private val MODEL_RELATED_KEYS = setOf(
-            "neural_model_version",
             "neural_user_max_seq_length"
         )
 

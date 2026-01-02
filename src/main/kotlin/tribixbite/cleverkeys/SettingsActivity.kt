@@ -242,7 +242,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var neuralBeamScoreGap by mutableStateOf(50.0f)
 
     // Neural model config settings
-    private var neuralModelVersion by mutableStateOf("v2")
     private var neuralResamplingMode by mutableStateOf("discard")
     private var neuralUserMaxSeqLength by mutableStateOf(0)
 
@@ -3127,7 +3126,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         neuralBeamScoreGap = Config.safeGetFloat(prefs, "neural_beam_score_gap", Defaults.NEURAL_BEAM_SCORE_GAP)
 
         // Neural model config settings
-        neuralModelVersion = prefs.getSafeString("neural_model_version", Defaults.NEURAL_MODEL_VERSION)
         neuralResamplingMode = prefs.getSafeString("neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE)
         neuralUserMaxSeqLength = Config.safeGetInt(prefs, "neural_user_max_seq_length", Defaults.NEURAL_USER_MAX_SEQ_LENGTH)
 

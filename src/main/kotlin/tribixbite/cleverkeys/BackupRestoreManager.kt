@@ -210,7 +210,6 @@ class BackupRestoreManager(private val context: Context) {
         "neural_beam_score_gap" to Defaults.NEURAL_BEAM_SCORE_GAP,
         "neural_adaptive_width_step" to Defaults.NEURAL_ADAPTIVE_WIDTH_STEP,
         "neural_score_gap_step" to Defaults.NEURAL_SCORE_GAP_STEP,
-        "neural_model_version" to Defaults.NEURAL_MODEL_VERSION,
         "neural_resampling_mode" to Defaults.NEURAL_RESAMPLING_MODE,
         "neural_user_max_seq_length" to Defaults.NEURAL_USER_MAX_SEQ_LENGTH,
 

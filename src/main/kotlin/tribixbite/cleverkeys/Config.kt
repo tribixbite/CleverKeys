@@ -107,7 +107,6 @@ object Defaults {
     const val NEURAL_ADAPTIVE_WIDTH_STEP = 12   // Step when to start adaptive width pruning
     const val NEURAL_SCORE_GAP_STEP = 10        // Step when to start score gap early stopping
 
-    const val NEURAL_MODEL_VERSION = "v2"
     const val NEURAL_RESAMPLING_MODE = "discard"
     const val NEURAL_USER_MAX_SEQ_LENGTH = 0
 
@@ -315,8 +314,7 @@ class Config private constructor(
     @JvmField var neural_adaptive_width_step = 0
     @JvmField var neural_score_gap_step = 0
 
-    // Neural model resampling (neural_model_version kept for UI but not used in model selection)
-    @JvmField var neural_model_version: String? = null
+    // Neural model resampling
     @JvmField var neural_user_max_seq_length = 0
     @JvmField var neural_resampling_mode: String? = null
     // NOTE: Custom encoder/decoder paths removed - feature not implemented
@@ -530,7 +528,6 @@ class Config private constructor(
         neural_adaptive_width_step = safeGetInt(_prefs, "neural_adaptive_width_step", Defaults.NEURAL_ADAPTIVE_WIDTH_STEP)
         neural_score_gap_step = safeGetInt(_prefs, "neural_score_gap_step", Defaults.NEURAL_SCORE_GAP_STEP)
 
-        neural_model_version = safeGetString(_prefs, "neural_model_version", Defaults.NEURAL_MODEL_VERSION)
         neural_user_max_seq_length = safeGetInt(_prefs, "neural_user_max_seq_length", Defaults.NEURAL_USER_MAX_SEQ_LENGTH)
         neural_resampling_mode = safeGetString(_prefs, "neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE)
 
