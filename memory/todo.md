@@ -352,12 +352,12 @@
 
 Now confidence values are COMPARABLE across word lengths!
 
-**Also**:
-- Length bonus default set to 0.0 (was 0.02)
-- Core normalization fix should handle the inherent bias
-- Length bonus slider remains available for additional tuning if needed
+**Cleanup Complete (2026-01-02)**:
+- [x] Removed length bonus feature entirely (was redundant after core fix)
+- [x] Kept beam alpha (Length Penalty) as the proper GNMT tuning knob
+- [x] Removed vestigial neural_model_version setting (stored but never used)
 
-**Next Steps**:
+**Testing Needed**:
 - [ ] Test: swipe "dangerously" in SwipeDebugActivity
 - [ ] Verify confidence values are now length-normalized
 - [ ] Confirm long words now competitive with short words
