@@ -240,7 +240,7 @@ class NeuralSettingsActivity : ComponentActivity() {
                 // Length Bonus
                 ParameterSlider(
                     title = "Length Bonus",
-                    description = "Per-character bonus to favor longer words. 0.02 = 20% boost for 10-letter words. Helps when NN prefers short words.",
+                    description = "Extra per-character boost. Core normalization already adjusts for length; use this for additional bias if short words still dominate. 0.01 = 10% boost for 10-letter words.",
                     value = lengthBonus,
                     valueRange = 0.0f..0.1f,
                     steps = 100,

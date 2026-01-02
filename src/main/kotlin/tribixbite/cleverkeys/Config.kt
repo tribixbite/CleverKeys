@@ -121,10 +121,13 @@ object Defaults {
     const val PREDICTION_CONTEXT_BOOST = 0.5f
     const val PREDICTION_FREQUENCY_SCALE = 100.0f
 
-    // Length bonus: counteracts NN model's bias towards shorter words
+    // Length bonus: ADDITIONAL boost for longer words beyond core normalization
+    // The BeamSearchEngine now applies length normalization to confidence values,
+    // so this bonus is for extra tuning if users still find short words dominating.
     // Applied as: score *= (1.0 + length_bonus * word_length)
-    // e.g., 0.02 gives 10-letter word a 20% bonus vs 1-letter word
-    const val SWIPE_LENGTH_BONUS = 0.02f
+    // e.g., 0.01 gives 10-letter word a 10% bonus vs 1-letter word
+    // Default: 0.0 (disabled) - let the core normalization fix work first
+    const val SWIPE_LENGTH_BONUS = 0.0f
 
     // Autocorrect
     const val AUTOCORRECT_ENABLED = true
