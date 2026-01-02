@@ -94,7 +94,7 @@ object Defaults {
 
     // Neural prediction - Core parameters
     const val NEURAL_BEAM_WIDTH = 6
-    const val NEURAL_MAX_LENGTH = 15
+    const val NEURAL_MAX_LENGTH = 20            // Match model's max_word_length
     const val NEURAL_CONFIDENCE_THRESHOLD = 0.01f
     const val NEURAL_BATCH_BEAMS = false
     const val NEURAL_GREEDY_SEARCH = false
@@ -106,6 +106,8 @@ object Defaults {
     const val NEURAL_BEAM_SCORE_GAP = 8.0f      // Early stopping score gap
     const val NEURAL_ADAPTIVE_WIDTH_STEP = 12   // Step when to start adaptive width pruning
     const val NEURAL_SCORE_GAP_STEP = 10        // Step when to start score gap early stopping
+    const val NEURAL_TEMPERATURE = 1.0f         // Softmax temperature (lower = more confident)
+    const val NEURAL_FREQUENCY_WEIGHT = 1.0f    // Vocab frequency weight in scoring (0=NN only, 2=heavy freq)
 
     const val NEURAL_RESAMPLING_MODE = "discard"
     const val NEURAL_USER_MAX_SEQ_LENGTH = 0
@@ -170,6 +172,74 @@ object Defaults {
     const val STICKY_KEYS_ENABLED = false
     const val STICKY_KEYS_TIMEOUT = 5000
     const val VOICE_GUIDANCE_ENABLED = false
+}
+
+/**
+ * Neural prediction presets for different use cases.
+ *
+ * These presets trade off between speed and accuracy:
+ * - SPEED: Fast predictions, lower beam width, earlier stopping
+ * - BALANCED: Default configuration, good for most users
+ * - ACCURACY: Thorough search, higher beam width, better for long/rare words
+ */
+enum class NeuralPreset(
+    val displayName: String,
+    val beamWidth: Int,
+    val maxLength: Int,
+    val confidenceThreshold: Float,
+    val beamAlpha: Float,
+    val beamPruneConfidence: Float,
+    val beamScoreGap: Float,
+    val adaptiveWidthStep: Int,
+    val scoreGapStep: Int,
+    val temperature: Float,
+    val frequencyWeight: Float
+) {
+    SPEED(
+        displayName = "Speed",
+        beamWidth = 4,
+        maxLength = 15,
+        confidenceThreshold = 0.02f,
+        beamAlpha = 1.0f,           // Less length bias
+        beamPruneConfidence = 0.7f, // Earlier pruning
+        beamScoreGap = 6.0f,        // Earlier stopping
+        adaptiveWidthStep = 8,      // Start pruning early
+        scoreGapStep = 6,           // Start gap check early
+        temperature = 1.0f,
+        frequencyWeight = 1.2f      // Favor common words
+    ),
+    BALANCED(
+        displayName = "Balanced",
+        beamWidth = Defaults.NEURAL_BEAM_WIDTH,
+        maxLength = Defaults.NEURAL_MAX_LENGTH,
+        confidenceThreshold = Defaults.NEURAL_CONFIDENCE_THRESHOLD,
+        beamAlpha = Defaults.NEURAL_BEAM_ALPHA,
+        beamPruneConfidence = Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE,
+        beamScoreGap = Defaults.NEURAL_BEAM_SCORE_GAP,
+        adaptiveWidthStep = Defaults.NEURAL_ADAPTIVE_WIDTH_STEP,
+        scoreGapStep = Defaults.NEURAL_SCORE_GAP_STEP,
+        temperature = Defaults.NEURAL_TEMPERATURE,
+        frequencyWeight = Defaults.NEURAL_FREQUENCY_WEIGHT
+    ),
+    ACCURACY(
+        displayName = "Accuracy",
+        beamWidth = 10,
+        maxLength = 20,
+        confidenceThreshold = 0.005f,  // Keep more candidates
+        beamAlpha = 1.4f,              // Favor longer words
+        beamPruneConfidence = 0.9f,    // Later pruning
+        beamScoreGap = 12.0f,          // Later stopping
+        adaptiveWidthStep = 15,        // Delay pruning
+        scoreGapStep = 14,             // Delay gap check
+        temperature = 0.9f,            // Slightly more confident
+        frequencyWeight = 0.8f         // Less frequency bias, trust NN more
+    );
+
+    companion object {
+        fun fromName(name: String): NeuralPreset? {
+            return values().find { it.name.equals(name, ignoreCase = true) }
+        }
+    }
 }
 
 class Config private constructor(
@@ -313,6 +383,8 @@ class Config private constructor(
     @JvmField var neural_beam_score_gap = 0f
     @JvmField var neural_adaptive_width_step = 0
     @JvmField var neural_score_gap_step = 0
+    @JvmField var neural_temperature = 0f
+    @JvmField var neural_frequency_weight = 0f
 
     // Neural model resampling
     @JvmField var neural_user_max_seq_length = 0
@@ -527,6 +599,8 @@ class Config private constructor(
         neural_beam_score_gap = safeGetFloat(_prefs, "neural_beam_score_gap", Defaults.NEURAL_BEAM_SCORE_GAP)
         neural_adaptive_width_step = safeGetInt(_prefs, "neural_adaptive_width_step", Defaults.NEURAL_ADAPTIVE_WIDTH_STEP)
         neural_score_gap_step = safeGetInt(_prefs, "neural_score_gap_step", Defaults.NEURAL_SCORE_GAP_STEP)
+        neural_temperature = safeGetFloat(_prefs, "neural_temperature", Defaults.NEURAL_TEMPERATURE)
+        neural_frequency_weight = safeGetFloat(_prefs, "neural_frequency_weight", Defaults.NEURAL_FREQUENCY_WEIGHT)
 
         neural_user_max_seq_length = safeGetInt(_prefs, "neural_user_max_seq_length", Defaults.NEURAL_USER_MAX_SEQ_LENGTH)
         neural_resampling_mode = safeGetString(_prefs, "neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE)
@@ -753,21 +827,24 @@ class Config private constructor(
 
         @JvmStatic
         fun repairCorruptedFloatPreferences(prefs: SharedPreferences) {
+            // NOTE: These defaults MUST match Defaults.* constants for consistency
             val floatPrefs = arrayOf(
-                arrayOf("character_size", "1.18"),
-                arrayOf("key_vertical_margin", "0.65"),
-                arrayOf("key_horizontal_margin", "0.7"),
-                arrayOf("custom_border_line_width", "0.0"),
-                arrayOf("prediction_context_boost", "0.5"),
-                arrayOf("prediction_frequency_scale", "100.0"),
-                arrayOf("autocorrect_char_match_threshold", "0.67"),
-                arrayOf("neural_confidence_threshold", "0.01"),
-                arrayOf("neural_beam_alpha", "1.0"),
-                arrayOf("neural_beam_prune_confidence", "0.03"),
-                arrayOf("neural_beam_score_gap", "20.0"),
-                arrayOf("swipe_rare_words_penalty", "1.0"),
-                arrayOf("swipe_common_words_boost", "1.0"),
-                arrayOf("swipe_top5000_boost", "1.0")
+                arrayOf("character_size", "${Defaults.CHARACTER_SIZE}"),
+                arrayOf("key_vertical_margin", "${Defaults.KEY_VERTICAL_MARGIN}"),
+                arrayOf("key_horizontal_margin", "${Defaults.KEY_HORIZONTAL_MARGIN}"),
+                arrayOf("custom_border_line_width", "${Defaults.CUSTOM_BORDER_LINE_WIDTH}"),
+                arrayOf("prediction_context_boost", "${Defaults.PREDICTION_CONTEXT_BOOST}"),
+                arrayOf("prediction_frequency_scale", "${Defaults.PREDICTION_FREQUENCY_SCALE}"),
+                arrayOf("autocorrect_char_match_threshold", "${Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD}"),
+                arrayOf("neural_confidence_threshold", "${Defaults.NEURAL_CONFIDENCE_THRESHOLD}"),
+                arrayOf("neural_beam_alpha", "${Defaults.NEURAL_BEAM_ALPHA}"),
+                arrayOf("neural_beam_prune_confidence", "${Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE}"),
+                arrayOf("neural_beam_score_gap", "${Defaults.NEURAL_BEAM_SCORE_GAP}"),
+                arrayOf("neural_temperature", "${Defaults.NEURAL_TEMPERATURE}"),
+                arrayOf("neural_frequency_weight", "${Defaults.NEURAL_FREQUENCY_WEIGHT}"),
+                arrayOf("swipe_rare_words_penalty", "${Defaults.SWIPE_RARE_WORDS_PENALTY}"),
+                arrayOf("swipe_common_words_boost", "${Defaults.SWIPE_COMMON_WORDS_BOOST}"),
+                arrayOf("swipe_top5000_boost", "${Defaults.SWIPE_TOP5000_BOOST}")
             )
 
             val editor = prefs.edit()

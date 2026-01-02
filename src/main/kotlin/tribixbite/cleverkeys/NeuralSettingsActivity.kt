@@ -42,9 +42,14 @@ class NeuralSettingsActivity : ComponentActivity() {
     private var beamScoreGap by mutableStateOf(Defaults.NEURAL_BEAM_SCORE_GAP)
     private var adaptiveWidthStep by mutableStateOf(Defaults.NEURAL_ADAPTIVE_WIDTH_STEP)
     private var scoreGapStep by mutableStateOf(Defaults.NEURAL_SCORE_GAP_STEP)
+    private var temperature by mutableStateOf(Defaults.NEURAL_TEMPERATURE)
+    private var frequencyWeight by mutableStateOf(Defaults.NEURAL_FREQUENCY_WEIGHT)
 
     // Model Configuration - MUST match Defaults in Config.kt
     private var resamplingMode by mutableStateOf(Defaults.NEURAL_RESAMPLING_MODE)
+
+    // Currently selected preset (null = custom settings)
+    private var selectedPreset by mutableStateOf<NeuralPreset?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,6 +91,9 @@ class NeuralSettingsActivity : ComponentActivity() {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp
             )
+
+            // Preset Selector
+            PresetSelector()
 
             // Core Parameters Section
             ParameterSection("Core Parameters") {
@@ -204,6 +212,37 @@ class NeuralSettingsActivity : ComponentActivity() {
                         updateNeuralParameters()
                     },
                     displayValue = scoreGapStep.toString()
+                )
+            }
+
+            // Inference Tuning Section
+            ParameterSection("Inference Tuning") {
+                // Temperature
+                ParameterSlider(
+                    title = "Temperature",
+                    description = "Softmax temperature. Lower = more confident/focused, Higher = more diverse.",
+                    value = temperature,
+                    valueRange = 0.1f..3.0f,
+                    steps = 29,
+                    onValueChange = {
+                        temperature = it
+                        updateNeuralParameters()
+                    },
+                    displayValue = "%.2f".format(temperature)
+                )
+
+                // Frequency Weight
+                ParameterSlider(
+                    title = "Vocabulary Frequency Weight",
+                    description = "How much word frequency affects ranking. 0 = NN only, 1 = balanced, 2 = heavy freq.",
+                    value = frequencyWeight,
+                    valueRange = 0.0f..2.0f,
+                    steps = 20,
+                    onValueChange = {
+                        frequencyWeight = it
+                        updateNeuralParameters()
+                    },
+                    displayValue = "%.2f".format(frequencyWeight)
                 )
             }
 
@@ -398,13 +437,20 @@ class NeuralSettingsActivity : ComponentActivity() {
                 config.neural_adaptive_width_step = adaptiveWidthStep
                 config.neural_score_gap_step = scoreGapStep
                 config.neural_resampling_mode = resamplingMode
+                config.neural_temperature = temperature
+                config.neural_frequency_weight = frequencyWeight
+
+                // Re-detect preset: if values were manually changed, this clears the preset
+                // If values match a preset (including after applyPreset), it stays selected
+                selectedPreset = detectCurrentPreset()
 
                 // Save to preferences for immediate use
                 saveParametersToPrefs()
 
                 android.util.Log.d("NeuralSettings",
                     "Updated parameters: beam=$beamWidth, maxLen=$maxLength, " +
-                    "conf=%.3f".format(confidenceThreshold))
+                    "conf=%.3f, temp=%.2f, freqWt=%.2f, preset=${selectedPreset?.name ?: "custom"}"
+                        .format(confidenceThreshold, temperature, frequencyWeight))
 
             } catch (e: Exception) {
                 android.util.Log.e("NeuralSettings", "Error updating configuration", e)
@@ -414,19 +460,9 @@ class NeuralSettingsActivity : ComponentActivity() {
 
     private fun resetToDefaults() {
         // Use Defaults.* constants for consistency across all settings
-        beamWidth = Defaults.NEURAL_BEAM_WIDTH
-        maxLength = Defaults.NEURAL_MAX_LENGTH
-        confidenceThreshold = Defaults.NEURAL_CONFIDENCE_THRESHOLD
-        beamAlpha = Defaults.NEURAL_BEAM_ALPHA
-        beamPruneConfidence = Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE
-        beamScoreGap = Defaults.NEURAL_BEAM_SCORE_GAP
-        adaptiveWidthStep = Defaults.NEURAL_ADAPTIVE_WIDTH_STEP
-        scoreGapStep = Defaults.NEURAL_SCORE_GAP_STEP
-        resamplingMode = Defaults.NEURAL_RESAMPLING_MODE
-
-        updateNeuralParameters()
-
-        Toast.makeText(this, "Reset to defaults", Toast.LENGTH_SHORT).show()
+        // This is equivalent to applying the BALANCED preset
+        applyPreset(NeuralPreset.BALANCED)
+        // Note: applyPreset already shows a toast
     }
 
     private fun saveAndApplyParameters() {
@@ -457,24 +493,133 @@ class NeuralSettingsActivity : ComponentActivity() {
         adaptiveWidthStep = Config.safeGetInt(prefs, "neural_adaptive_width_step", Defaults.NEURAL_ADAPTIVE_WIDTH_STEP)
         scoreGapStep = Config.safeGetInt(prefs, "neural_score_gap_step", Defaults.NEURAL_SCORE_GAP_STEP)
         resamplingMode = Config.safeGetString(prefs, "neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE) ?: Defaults.NEURAL_RESAMPLING_MODE
+        temperature = Config.safeGetFloat(prefs, "neural_temperature", Defaults.NEURAL_TEMPERATURE)
+        frequencyWeight = Config.safeGetFloat(prefs, "neural_frequency_weight", Defaults.NEURAL_FREQUENCY_WEIGHT)
+
+        // Detect if current settings match any preset
+        selectedPreset = detectCurrentPreset()
     }
 
     private fun saveParametersToPrefs() {
         // CRITICAL FIX: Use default shared preferences to match Config.kt
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
         val editor = prefs.edit()
-        
+
         editor.putInt("neural_beam_width", beamWidth)
         editor.putInt("neural_max_length", maxLength)
         editor.putFloat("neural_confidence_threshold", confidenceThreshold)
-        
+
         editor.putFloat("neural_beam_alpha", beamAlpha)
         editor.putFloat("neural_beam_prune_confidence", beamPruneConfidence)
         editor.putFloat("neural_beam_score_gap", beamScoreGap)
         editor.putInt("neural_adaptive_width_step", adaptiveWidthStep)
         editor.putInt("neural_score_gap_step", scoreGapStep)
         editor.putString("neural_resampling_mode", resamplingMode)
+        editor.putFloat("neural_temperature", temperature)
+        editor.putFloat("neural_frequency_weight", frequencyWeight)
+
+        // Save selected preset name (or "custom" if manually tweaked)
+        editor.putString("neural_preset", selectedPreset?.name ?: "custom")
 
         editor.apply()
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    private fun PresetSelector() {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            ),
+            shape = RoundedCornerShape(8.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Quick Presets",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+
+                Text(
+                    text = "Choose a preset or customize individual settings below.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    NeuralPreset.values().forEach { preset ->
+                        FilterChip(
+                            selected = selectedPreset == preset,
+                            onClick = { applyPreset(preset) },
+                            label = { Text(preset.displayName) },
+                            modifier = Modifier.weight(1f),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
+                    }
+                }
+
+                // Show "Custom" indicator if settings don't match any preset
+                if (selectedPreset == null) {
+                    Text(
+                        text = "⚙️ Custom settings",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Apply a preset, updating all parameters to the preset's values.
+     */
+    private fun applyPreset(preset: NeuralPreset) {
+        beamWidth = preset.beamWidth
+        maxLength = preset.maxLength
+        confidenceThreshold = preset.confidenceThreshold
+        beamAlpha = preset.beamAlpha
+        beamPruneConfidence = preset.beamPruneConfidence
+        beamScoreGap = preset.beamScoreGap
+        adaptiveWidthStep = preset.adaptiveWidthStep
+        scoreGapStep = preset.scoreGapStep
+        temperature = preset.temperature
+        frequencyWeight = preset.frequencyWeight
+
+        selectedPreset = preset
+
+        updateNeuralParameters()
+
+        Toast.makeText(this, "Applied ${preset.displayName} preset", Toast.LENGTH_SHORT).show()
+    }
+
+    /**
+     * Check if current settings match any preset, update selectedPreset accordingly.
+     */
+    private fun detectCurrentPreset(): NeuralPreset? {
+        return NeuralPreset.values().find { preset ->
+            preset.beamWidth == beamWidth &&
+            preset.maxLength == maxLength &&
+            preset.confidenceThreshold == confidenceThreshold &&
+            preset.beamAlpha == beamAlpha &&
+            preset.beamPruneConfidence == beamPruneConfidence &&
+            preset.beamScoreGap == beamScoreGap &&
+            preset.adaptiveWidthStep == adaptiveWidthStep &&
+            preset.scoreGapStep == scoreGapStep &&
+            preset.temperature == temperature &&
+            preset.frequencyWeight == frequencyWeight
+        }
     }
 }
