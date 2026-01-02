@@ -101,7 +101,7 @@ object Defaults {
 
     // Neural prediction - Beam search tuning
     // NOTE: These MUST match the working defaults in BeamSearchEngine.kt
-    const val NEURAL_BEAM_ALPHA = 0.0f          // Length penalty factor (0.0 = no normalization, matching training)
+    const val NEURAL_BEAM_ALPHA = 1.2f          // Length penalty factor (>1 favors long words)
     const val NEURAL_BEAM_PRUNE_CONFIDENCE = 0.8f  // Adaptive width pruning threshold
     const val NEURAL_BEAM_SCORE_GAP = 8.0f      // Early stopping score gap
     const val NEURAL_ADAPTIVE_WIDTH_STEP = 12   // Step when to start adaptive width pruning

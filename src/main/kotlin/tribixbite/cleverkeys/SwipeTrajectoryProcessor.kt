@@ -214,10 +214,7 @@ class SwipeTrajectoryProcessor {
 
         // 3. Detect nearest keys from FINAL processed coordinates (already normalized!)
         // CRITICAL: Must happen AFTER resampling to maintain point-key correspondence
-        // OPTIMIZATION Phase 2: Recycle reusable list for keys
-        reusableProcessedKeys.clear()
-        detectNearestKeys(processedCoords, reusableProcessedKeys)
-        val processedKeys = reusableProcessedKeys
+        val processedKeys = detectNearestKeys(processedCoords)
 
         // 4. Calculate velocities and accelerations using TrajectoryFeatureCalculator (v1.32.472)
         // CRITICAL: Must match Python training code exactly!
@@ -232,15 +229,17 @@ class SwipeTrajectoryProcessor {
 
         // Use Kotlin TrajectoryFeatureCalculator for correct feature calculation
         // CRITICAL: Use processedCoords and processedTimestamps
-        // OPTIMIZATION Phase 3: Zero-allocation callback based calculation
-        TrajectoryFeatureCalculator.calculateFeatures(processedCoords, processedTimestamps) { x, y, vx, vy, ax, ay ->
+        val featurePoints = TrajectoryFeatureCalculator.calculateFeatures(processedCoords, processedTimestamps)
+
+        // Convert to TrajectoryPoint list using object pool
+        featurePoints.forEach { fp ->
             val point = TrajectoryObjectPool.obtainTrajectoryPoint()
-            point.x = x
-            point.y = y
-            point.vx = vx
-            point.vy = vy
-            point.ax = ax
-            point.ay = ay
+            point.x = fp.x
+            point.y = fp.y
+            point.vx = fp.vx
+            point.vy = fp.vy
+            point.ax = fp.ax
+            point.ay = fp.ay
             reusablePoints.add(point)
         }
 
@@ -442,7 +441,8 @@ class SwipeTrajectoryProcessor {
      *
      * Input coordinates MUST be normalized to [0,1] range.
      */
-    private fun detectNearestKeys(normalizedCoordinates: List<PointF>, outNearestKeys: ArrayList<Int>) {
+    private fun detectNearestKeys(normalizedCoordinates: List<PointF>): List<Int> {
+        val nearestKeys = ArrayList<Int>()
         val debugKeySeq = StringBuilder()
         var lastDebugChar = '\u0000'
 
@@ -457,7 +457,7 @@ class SwipeTrajectoryProcessor {
         normalizedCoordinates.forEach { point ->
             // Use Kotlin KeyboardGrid for nearest key detection
             val tokenIndex = KeyboardGrid.getNearestKeyToken(point.x, point.y)
-            outNearestKeys.add(tokenIndex)
+            nearestKeys.add(tokenIndex)
 
             // Convert back to char for debug display
             if (debugModeActive) {
@@ -473,6 +473,8 @@ class SwipeTrajectoryProcessor {
         if (debugModeActive) {
             logDebug("🎯 DETECTED KEY SEQUENCE: \"$debugKeySeq\" (from ${normalizedCoordinates.size} points)")
         }
+
+        return nearestKeys
     }
 
     /**
