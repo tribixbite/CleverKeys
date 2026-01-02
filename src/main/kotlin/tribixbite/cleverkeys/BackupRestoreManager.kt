@@ -239,7 +239,6 @@ class BackupRestoreManager(private val context: Context) {
         "swipe_common_words_boost" to Defaults.SWIPE_COMMON_WORDS_BOOST,
         "swipe_top5000_boost" to Defaults.SWIPE_TOP5000_BOOST,
         "swipe_rare_words_penalty" to Defaults.SWIPE_RARE_WORDS_PENALTY,
-        "swipe_length_bonus" to Defaults.SWIPE_LENGTH_BONUS,
 
         // Clipboard
         "clipboard_history_enabled" to Defaults.CLIPBOARD_HISTORY_ENABLED,
@@ -589,9 +588,6 @@ class BackupRestoreManager(private val context: Context) {
             // Swipe typing boost parameters (0.0-2.0 range)
             "swipe_rare_words_penalty", "swipe_common_words_boost", "swipe_top5000_boost" -> value in 0.0f..2.0f
 
-            // Swipe length bonus (0.0-0.1 range, per-character bonus)
-            "swipe_length_bonus" -> value in 0.0f..0.2f
-
             // Unknown float preference - allow it (version-tolerant)
             else -> true
         }
@@ -725,8 +721,6 @@ class BackupRestoreManager(private val context: Context) {
             "neural_confidence_threshold",
             // Swipe typing boost parameters (SlideBarPreference floats)
             "swipe_rare_words_penalty", "swipe_common_words_boost", "swipe_top5000_boost",
-            // Swipe length bonus (per-character bonus to favor longer words)
-            "swipe_length_bonus",
             // Advanced gesture tuning floats
             "slider_speed_smoothing", "slider_speed_max",
             "swipe_min_distance", "swipe_min_key_distance", "swipe_noise_threshold",

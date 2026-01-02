@@ -79,7 +79,6 @@ class OptimizedVocabulary(private val context: Context) {
     private var _charMatchThreshold = 0.67f
     private var _useEditDistance = true
     private var _autocorrect_confidence_min_frequency: Int = 500 // Added for user-configured min frequency
-    private var _lengthBonus = Defaults.SWIPE_LENGTH_BONUS  // Per-character bonus to favor longer words
 
     // OPTIMIZATION Phase 2: Cache parsed custom words to avoid JSON parsing on every swipe
     // Maps custom word -> frequency
@@ -123,7 +122,6 @@ class OptimizedVocabulary(private val context: Context) {
         _charMatchThreshold = config.autocorrect_char_match_threshold
         _useEditDistance = "edit_distance" == config.swipe_fuzzy_match_mode
         _autocorrect_confidence_min_frequency = config.autocorrect_confidence_min_frequency // Cache this value
-        _lengthBonus = if (config.swipe_length_bonus > 0) config.swipe_length_bonus else Defaults.SWIPE_LENGTH_BONUS
 
         // OPTIMIZATION Phase 2: Parse and cache custom words here instead of on every swipe
         try {
@@ -245,7 +243,6 @@ class OptimizedVocabulary(private val context: Context) {
         val minWordLength = _minWordLength
         val charMatchThreshold = _charMatchThreshold
         val useEditDistance = _useEditDistance
-        val lengthBonus = _lengthBonus  // Per-character bonus to favor longer words
 
         if (debugMode && rawPredictions.isNotEmpty()) {
             val debug = StringBuilder("\n🔍 VOCABULARY FILTERING DEBUG (top 10 beam search outputs):\n")
@@ -348,14 +345,9 @@ class OptimizedVocabulary(private val context: Context) {
             }
 
             // v1.33+: Pass configurable weights to scoring function
-            var score = VocabularyUtils.calculateCombinedScore(candidate.confidence, info.frequency, boost, confidenceWeight, frequencyWeight)
-
-            // v1.34+: Apply length bonus to favor longer words (counteracts NN's short word bias)
-            // Formula: score *= (1.0 + lengthBonus * wordLength)
-            // e.g., with 0.02 bonus: 10-letter word gets 20% boost vs 1-letter word
-            val wordLen = displayWord.length
-            val lengthMultiplier = 1.0f + (lengthBonus * wordLen)
-            score *= lengthMultiplier
+            // Note: Length normalization is now handled in BeamSearchEngine.convertToCandidate()
+            // using the GNMT formula with lengthPenaltyAlpha parameter
+            val score = VocabularyUtils.calculateCombinedScore(candidate.confidence, info.frequency, boost, confidenceWeight, frequencyWeight)
 
             // Use displayWord for contractions (e.g., "doesn't" instead of "doesnt")
             val sourceLabel = if (displayWord != word) "$source-contraction" else source
@@ -364,8 +356,8 @@ class OptimizedVocabulary(private val context: Context) {
             // DEBUG: Show successful candidates with all scoring details
             if (debugMode) {
                 val displayInfo = if (displayWord != word) " [mapped from \"$word\"]" else ""
-                detailedLog?.append(String.format("✅ \"%s\"%s - KEPT (tier=%d, freq=%.4f, boost=%.2fx, len=%d, lenMult=%.2fx, NN=%.4f → score=%.4f) [%s]\n",
-                    displayWord, displayInfo, info.tier, info.frequency, boost, wordLen, lengthMultiplier, candidate.confidence, score, sourceLabel))
+                detailedLog?.append(String.format("✅ \"%s\"%s - KEPT (tier=%d, freq=%.4f, boost=%.2fx, NN=%.4f → score=%.4f) [%s]\n",
+                    displayWord, displayInfo, info.tier, info.frequency, boost, candidate.confidence, score, sourceLabel))
             }
         }
 
@@ -407,13 +399,12 @@ class OptimizedVocabulary(private val context: Context) {
 
                                 // v1.33.3: MULTIPLICATIVE SCORING - match quality dominates
                                 // Custom words: base_score = NN_confidence (ignore frequency)
-                                // final_score = base_score × (match_quality^3) × tier_boost × length_bonus
+                                // final_score = base_score × (match_quality^3) × tier_boost
+                                // Note: Length normalization handled in BeamSearchEngine
                                 val matchQuality = VocabularyUtils.calculateMatchQuality(customWord, beamWord, useEditDistance)
                                 val matchPower = matchQuality * matchQuality * matchQuality // Cubic
                                 val baseScore = confidence  // Ignore frequency for custom words
-                                // v1.34+: Apply length bonus to favor longer words
-                                val lengthMultiplier = 1.0f + (lengthBonus * customWord.length)
-                                val score = baseScore * matchPower * boost * lengthMultiplier
+                                val score = baseScore * matchPower * boost
 
                                 validPredictions.add(FilteredPrediction(customWord, score, confidence, normalizedFreq, "autocorrect"))
 
@@ -505,15 +496,14 @@ class OptimizedVocabulary(private val context: Context) {
 
                                 // v1.33.3: MULTIPLICATIVE SCORING - match quality dominates
                                 // Dict fuzzy: Use configured weights but penalize rescue (0.8x) to prefer direct matches
+                                // Note: Length normalization handled in BeamSearchEngine
                                 val matchQuality = VocabularyUtils.calculateMatchQuality(dictWord, beamWord, useEditDistance)
                                 val matchPower = matchQuality * matchQuality * matchQuality // Cubic
 
                                 var baseScore = (confidenceWeight * beamConfidence) + (frequencyWeight * info.frequency)
                                 baseScore *= 0.8f // Penalty for not being a direct beam match
 
-                                // v1.34+: Apply length bonus to favor longer words
-                                val lengthMultiplier = 1.0f + (lengthBonus * dictWord.length)
-                                val score = baseScore * matchPower * boost * lengthMultiplier
+                                val score = baseScore * matchPower * boost
 
                                 // Keep track of best match (v1.33.2: don't break on first match!)
                                 if (score > bestScore) {
