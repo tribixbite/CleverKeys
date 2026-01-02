@@ -382,24 +382,42 @@ class BeamSearchEngine(
         for (token in beam.tokens) {
             val idx = token.toInt()
             if (idx == SOS_IDX || idx == EOS_IDX || idx == PAD_IDX) continue
-            
+
             val ch = tokenizer.indexToChar(idx)
             if (ch != '?' && !ch.toString().startsWith("<")) {
                 word.append(ch)
             }
         }
-        
+
         val wordStr = word.toString()
         if (wordStr.isEmpty()) return null
-        
-        // Score is NLL, so Prob = exp(-score)
-        // Note: Length normalization is used for sorting (inside search) but NOT for final confidence.
-        // This matches Unexpected-Keyboard logic and ensures compatibility with its threshold settings.
-        val confidence = exp(-beam.score)
-        
-        // FIX #3: Lower confidence threshold
+
+        // CRITICAL FIX: Apply length normalization to final confidence!
+        // Score is accumulated NLL across all decoding steps, so longer words have
+        // inherently higher scores (lower probability) even with equal per-step confidence.
+        // Use the SAME normalization formula as beam sorting (lines 144-149) to make
+        // confidence values comparable across different word lengths.
+        //
+        // Formula: normFactor = (5 + len)^alpha / 6^alpha
+        // - At len=1: normFactor = 1.0 (no change)
+        // - At len=5: normFactor ≈ 1.87 (with alpha=1.2)
+        // - At len=10: normFactor ≈ 3.22 (with alpha=1.2)
+        //
+        // Without this fix:
+        //   "dames" (5 chars, score 1.05) → exp(-1.05) = 0.35
+        //   "dangerously" (11 chars, score 1.97) → exp(-1.97) = 0.14
+        // With this fix:
+        //   "dames" → exp(-1.05/1.87) = exp(-0.56) = 0.57
+        //   "dangerously" → exp(-1.97/3.58) = exp(-0.55) = 0.58
+        val len = wordStr.length.toFloat()
+        val normFactor = (5.0 + len).pow(lengthPenaltyAlpha.toDouble()).toFloat() /
+                         6.0.pow(lengthPenaltyAlpha.toDouble()).toFloat()
+        val normalizedScore = beam.score / normFactor
+        val confidence = exp(-normalizedScore)
+
+        // Apply confidence threshold to normalized value
         if (confidence < confidenceThreshold) return null
-        
+
         return BeamSearchCandidate(wordStr, confidence, beam.score)
     }
     
