@@ -40,6 +40,8 @@ class NeuralSettingsActivity : ComponentActivity() {
     private var beamAlpha by mutableStateOf(Defaults.NEURAL_BEAM_ALPHA)
     private var beamPruneConfidence by mutableStateOf(Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE)
     private var beamScoreGap by mutableStateOf(Defaults.NEURAL_BEAM_SCORE_GAP)
+    private var adaptiveWidthStep by mutableStateOf(Defaults.NEURAL_ADAPTIVE_WIDTH_STEP)
+    private var scoreGapStep by mutableStateOf(Defaults.NEURAL_SCORE_GAP_STEP)
 
     // Model Configuration - MUST match Defaults in Config.kt
     private var resamplingMode by mutableStateOf(Defaults.NEURAL_RESAMPLING_MODE)
@@ -174,6 +176,34 @@ class NeuralSettingsActivity : ComponentActivity() {
                         updateNeuralParameters()
                     },
                     displayValue = "%.1f".format(beamScoreGap)
+                )
+
+                // Adaptive Width Step (NEW)
+                ParameterSlider(
+                    title = "Width Pruning Step",
+                    description = "Decoding step to start beam width pruning. Higher = longer words complete before pruning.",
+                    value = adaptiveWidthStep.toFloat(),
+                    valueRange = 3f..20f,
+                    steps = 17,
+                    onValueChange = {
+                        adaptiveWidthStep = it.toInt()
+                        updateNeuralParameters()
+                    },
+                    displayValue = adaptiveWidthStep.toString()
+                )
+
+                // Score Gap Step (NEW)
+                ParameterSlider(
+                    title = "Early Stop Step",
+                    description = "Decoding step to start score gap early stopping. Higher = longer words get a chance.",
+                    value = scoreGapStep.toFloat(),
+                    valueRange = 3f..20f,
+                    steps = 17,
+                    onValueChange = {
+                        scoreGapStep = it.toInt()
+                        updateNeuralParameters()
+                    },
+                    displayValue = scoreGapStep.toString()
                 )
             }
 
@@ -365,6 +395,8 @@ class NeuralSettingsActivity : ComponentActivity() {
                 config.neural_beam_alpha = beamAlpha
                 config.neural_beam_prune_confidence = beamPruneConfidence
                 config.neural_beam_score_gap = beamScoreGap
+                config.neural_adaptive_width_step = adaptiveWidthStep
+                config.neural_score_gap_step = scoreGapStep
                 config.neural_resampling_mode = resamplingMode
 
                 // Save to preferences for immediate use
@@ -388,6 +420,8 @@ class NeuralSettingsActivity : ComponentActivity() {
         beamAlpha = Defaults.NEURAL_BEAM_ALPHA
         beamPruneConfidence = Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE
         beamScoreGap = Defaults.NEURAL_BEAM_SCORE_GAP
+        adaptiveWidthStep = Defaults.NEURAL_ADAPTIVE_WIDTH_STEP
+        scoreGapStep = Defaults.NEURAL_SCORE_GAP_STEP
         resamplingMode = Defaults.NEURAL_RESAMPLING_MODE
 
         updateNeuralParameters()
@@ -420,6 +454,8 @@ class NeuralSettingsActivity : ComponentActivity() {
         beamAlpha = Config.safeGetFloat(prefs, "neural_beam_alpha", Defaults.NEURAL_BEAM_ALPHA)
         beamPruneConfidence = Config.safeGetFloat(prefs, "neural_beam_prune_confidence", Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE)
         beamScoreGap = Config.safeGetFloat(prefs, "neural_beam_score_gap", Defaults.NEURAL_BEAM_SCORE_GAP)
+        adaptiveWidthStep = Config.safeGetInt(prefs, "neural_adaptive_width_step", Defaults.NEURAL_ADAPTIVE_WIDTH_STEP)
+        scoreGapStep = Config.safeGetInt(prefs, "neural_score_gap_step", Defaults.NEURAL_SCORE_GAP_STEP)
         resamplingMode = Config.safeGetString(prefs, "neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE) ?: Defaults.NEURAL_RESAMPLING_MODE
     }
 
@@ -435,6 +471,8 @@ class NeuralSettingsActivity : ComponentActivity() {
         editor.putFloat("neural_beam_alpha", beamAlpha)
         editor.putFloat("neural_beam_prune_confidence", beamPruneConfidence)
         editor.putFloat("neural_beam_score_gap", beamScoreGap)
+        editor.putInt("neural_adaptive_width_step", adaptiveWidthStep)
+        editor.putInt("neural_score_gap_step", scoreGapStep)
         editor.putString("neural_resampling_mode", resamplingMode)
 
         editor.apply()

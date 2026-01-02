@@ -37,7 +37,9 @@ class BeamSearchEngine(
     private val confidenceThreshold: Float = 0.01f, // Lowered default (0.05 -> 0.01) to keep more candidates
     private val lengthPenaltyAlpha: Float = 1.2f, // Length normalization factor
     private val adaptiveWidthConfidence: Float = 0.8f, // Pruning confidence threshold
-    private val scoreGapThreshold: Float = 8.0f, // Early stopping score gap (increased from 5.0)
+    private val scoreGapThreshold: Float = 8.0f, // Early stopping score gap
+    private val adaptiveWidthStep: Int = 12, // When to start adaptive width pruning
+    private val scoreGapStep: Int = 10, // When to start score gap early stopping
     private val debugLogger: ((String) -> Unit)? = null
 ) {
 
@@ -54,11 +56,9 @@ class BeamSearchEngine(
         private const val DECODER_SEQ_LEN = 20 // Must match model export
         private const val LOG_PROB_THRESHOLD = -13.8f // approx ln(1e-6)
         private const val PRUNE_STEP_THRESHOLD = 2
-        // FIX: Increased to allow longer words like "dangerously" (11 chars) to complete
-        // Previous values (5, 3) caused early termination favoring short words
-        private const val ADAPTIVE_WIDTH_STEP = 12 // Don't prune width until longest common words done
-        private const val SCORE_GAP_STEP = 10 // Don't early-stop until long words have a chance
-        
+        // Note: ADAPTIVE_WIDTH_STEP and SCORE_GAP_STEP are now constructor params
+        // to allow user customization for long word prediction tuning
+
         // Diversity parameters (4D: Diverse Beam Search)
         private const val DIVERSITY_LAMBDA = 0.5f // Penalty weight for similar beams
     }
@@ -170,8 +170,8 @@ class BeamSearchEngine(
                 }
             }
             
-            // Adaptive Width Reduction
-            if (step == ADAPTIVE_WIDTH_STEP && beams.size > 3) {
+            // Adaptive Width Reduction (uses constructor param instead of constant)
+            if (step == adaptiveWidthStep && beams.size > 3) {
                 val topScore = beams[0].score
                 val confidence = exp(-topScore)
                 if (confidence > adaptiveWidthConfidence) {
@@ -179,9 +179,9 @@ class BeamSearchEngine(
                     while (beams.size > 3) beams.removeAt(beams.size - 1)
                 }
             }
-            
-            // Score Gap Early Stopping
-            if (beams.size >= 2 && step >= SCORE_GAP_STEP) {
+
+            // Score Gap Early Stopping (uses constructor param instead of constant)
+            if (beams.size >= 2 && step >= scoreGapStep) {
                 val topScore = beams[0].score
                 val secondScore = beams[1].score
                 val gap = secondScore - topScore // positive since lower is better

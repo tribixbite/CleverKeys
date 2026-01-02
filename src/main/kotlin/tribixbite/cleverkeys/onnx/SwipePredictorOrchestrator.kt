@@ -71,6 +71,8 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     private var beamAlpha = Defaults.NEURAL_BEAM_ALPHA
     private var beamPruneConfidence = Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE
     private var beamScoreGap = Defaults.NEURAL_BEAM_SCORE_GAP
+    private var adaptiveWidthStep = Defaults.NEURAL_ADAPTIVE_WIDTH_STEP
+    private var scoreGapStep = Defaults.NEURAL_SCORE_GAP_STEP
     private var maxSequenceLength = 250
     private var enableVerboseLogging = false
     private var showRawOutput = false
@@ -91,6 +93,8 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             beamAlpha = it.neural_beam_alpha
             beamPruneConfidence = it.neural_beam_prune_confidence
             beamScoreGap = it.neural_beam_score_gap
+            adaptiveWidthStep = if (it.neural_adaptive_width_step > 0) it.neural_adaptive_width_step else Defaults.NEURAL_ADAPTIVE_WIDTH_STEP
+            scoreGapStep = if (it.neural_score_gap_step > 0) it.neural_score_gap_step else Defaults.NEURAL_SCORE_GAP_STEP
             enableVerboseLogging = it.swipe_debug_detailed_logging
             showRawOutput = it.swipe_debug_show_raw_output
             batchBeams = it.neural_batch_beams
@@ -353,7 +357,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                     decoderSession!!, ortEnvironment, tokenizer,
                     vocabulary.getVocabularyTrie(), beamWidth, maxLength,
                     confidenceThreshold, beamAlpha, beamPruneConfidence, beamScoreGap,
-                    activeLogger
+                    adaptiveWidthStep, scoreGapStep, activeLogger
                 )
                 val results = engine.search(memory, features.actualLength, batchBeams)
                 results.map { PredictionPostProcessor.Candidate(it.word, it.confidence) }

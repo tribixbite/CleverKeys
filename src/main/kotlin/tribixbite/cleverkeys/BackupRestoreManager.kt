@@ -208,6 +208,8 @@ class BackupRestoreManager(private val context: Context) {
         "neural_beam_alpha" to Defaults.NEURAL_BEAM_ALPHA,
         "neural_beam_prune_confidence" to Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE,
         "neural_beam_score_gap" to Defaults.NEURAL_BEAM_SCORE_GAP,
+        "neural_adaptive_width_step" to Defaults.NEURAL_ADAPTIVE_WIDTH_STEP,
+        "neural_score_gap_step" to Defaults.NEURAL_SCORE_GAP_STEP,
         "neural_model_version" to Defaults.NEURAL_MODEL_VERSION,
         "neural_resampling_mode" to Defaults.NEURAL_RESAMPLING_MODE,
         "neural_user_max_seq_length" to Defaults.NEURAL_USER_MAX_SEQ_LENGTH,
@@ -536,6 +538,8 @@ class BackupRestoreManager(private val context: Context) {
             "neural_beam_width" -> value in 1..32
             "neural_max_length" -> value in 10..100
             "neural_user_max_seq_length" -> value in 0..500
+            "neural_adaptive_width_step" -> value in 3..20
+            "neural_score_gap_step" -> value in 3..20
 
             // Auto-correction parameters
             "autocorrect_min_word_length" -> value in 2..5

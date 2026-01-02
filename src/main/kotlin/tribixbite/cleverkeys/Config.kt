@@ -92,15 +92,21 @@ object Defaults {
     const val SWIPE_TRAIL_WIDTH = 8.0f
     const val SWIPE_TRAIL_GLOW_RADIUS = 6.0f
 
-    // Neural prediction
+    // Neural prediction - Core parameters
     const val NEURAL_BEAM_WIDTH = 6
     const val NEURAL_MAX_LENGTH = 15
     const val NEURAL_CONFIDENCE_THRESHOLD = 0.01f
     const val NEURAL_BATCH_BEAMS = false
     const val NEURAL_GREEDY_SEARCH = false
-    const val NEURAL_BEAM_ALPHA = 1.55f
-    const val NEURAL_BEAM_PRUNE_CONFIDENCE = 0.33f
-    const val NEURAL_BEAM_SCORE_GAP = 50.0f
+
+    // Neural prediction - Beam search tuning
+    // NOTE: These MUST match the working defaults in BeamSearchEngine.kt
+    const val NEURAL_BEAM_ALPHA = 1.2f          // Length penalty factor (>1 favors long words)
+    const val NEURAL_BEAM_PRUNE_CONFIDENCE = 0.8f  // Adaptive width pruning threshold
+    const val NEURAL_BEAM_SCORE_GAP = 8.0f      // Early stopping score gap
+    const val NEURAL_ADAPTIVE_WIDTH_STEP = 12   // Step when to start adaptive width pruning
+    const val NEURAL_SCORE_GAP_STEP = 10        // Step when to start score gap early stopping
+
     const val NEURAL_MODEL_VERSION = "v2"
     const val NEURAL_RESAMPLING_MODE = "discard"
     const val NEURAL_USER_MAX_SEQ_LENGTH = 0
@@ -306,6 +312,8 @@ class Config private constructor(
     @JvmField var neural_beam_alpha = 0f
     @JvmField var neural_beam_prune_confidence = 0f
     @JvmField var neural_beam_score_gap = 0f
+    @JvmField var neural_adaptive_width_step = 0
+    @JvmField var neural_score_gap_step = 0
 
     // Neural model resampling (neural_model_version kept for UI but not used in model selection)
     @JvmField var neural_model_version: String? = null
@@ -519,6 +527,8 @@ class Config private constructor(
         neural_beam_alpha = safeGetFloat(_prefs, "neural_beam_alpha", Defaults.NEURAL_BEAM_ALPHA)
         neural_beam_prune_confidence = safeGetFloat(_prefs, "neural_beam_prune_confidence", Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE)
         neural_beam_score_gap = safeGetFloat(_prefs, "neural_beam_score_gap", Defaults.NEURAL_BEAM_SCORE_GAP)
+        neural_adaptive_width_step = safeGetInt(_prefs, "neural_adaptive_width_step", Defaults.NEURAL_ADAPTIVE_WIDTH_STEP)
+        neural_score_gap_step = safeGetInt(_prefs, "neural_score_gap_step", Defaults.NEURAL_SCORE_GAP_STEP)
 
         neural_model_version = safeGetString(_prefs, "neural_model_version", Defaults.NEURAL_MODEL_VERSION)
         neural_user_max_seq_length = safeGetInt(_prefs, "neural_user_max_seq_length", Defaults.NEURAL_USER_MAX_SEQ_LENGTH)
