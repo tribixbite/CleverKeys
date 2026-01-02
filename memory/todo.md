@@ -366,12 +366,21 @@ Now confidence values are COMPARABLE across word lengths!
 - [x] Added preset selector UI with FilterChips in NeuralSettingsActivity
 - [x] Written KV cache optimization spec (docs/specs/kv-cache-optimization.md)
 - [x] Written MemoryPool optimization spec (docs/specs/memory-pool-optimization.md)
+- [x] Wired temperature into BeamSearchEngine logSoftmax (c40ec131)
+  - Applied as `logits / temperature` before softmax
+  - Lower temp = sharper, higher = more uniform distribution
+- [x] Wired neural_frequency_weight into OptimizedVocabulary scoring (c40ec131)
+  - Applied as multiplier on existing frequency weight
+  - 0.0 = NN only, 1.0 = normal, 2.0 = heavy frequency influence
+  - Applied consistently in main scoring and dictionary fuzzy matching
 
 **Testing Needed**:
 - [ ] Test: swipe "dangerously" in SwipeDebugActivity
 - [ ] Verify confidence values are now length-normalized
 - [ ] Confirm long words now competitive with short words
 - [ ] Test neural presets (Speed/Balanced/Accuracy) in NeuralSettingsActivity
+- [ ] Test temperature slider effect on prediction sharpness
+- [ ] Test frequency weight slider (0=pure NN, 2=heavy frequency)
 
 ---
 
