@@ -121,6 +121,11 @@ object Defaults {
     const val PREDICTION_CONTEXT_BOOST = 0.5f
     const val PREDICTION_FREQUENCY_SCALE = 100.0f
 
+    // Length bonus: counteracts NN model's bias towards shorter words
+    // Applied as: score *= (1.0 + length_bonus * word_length)
+    // e.g., 0.02 gives 10-letter word a 20% bonus vs 1-letter word
+    const val SWIPE_LENGTH_BONUS = 0.02f
+
     // Autocorrect
     const val AUTOCORRECT_ENABLED = true
     const val AUTOCORRECT_MIN_WORD_LENGTH = 3
@@ -263,6 +268,7 @@ class Config private constructor(
     @JvmField var swipe_confidence_weight = 0f
     @JvmField var swipe_frequency_weight = 0f
     @JvmField var swipe_common_words_boost = 0f
+    @JvmField var swipe_length_bonus = 0f  // Bonus per character to favor longer words
     @JvmField var swipe_top5000_boost = 0f
     @JvmField var swipe_rare_words_penalty = 0f
 
@@ -488,6 +494,7 @@ class Config private constructor(
         swipe_common_words_boost = safeGetFloat(_prefs, "swipe_common_words_boost", Defaults.SWIPE_COMMON_WORDS_BOOST)
         swipe_top5000_boost = safeGetFloat(_prefs, "swipe_top5000_boost", Defaults.SWIPE_TOP5000_BOOST)
         swipe_rare_words_penalty = safeGetFloat(_prefs, "swipe_rare_words_penalty", Defaults.SWIPE_RARE_WORDS_PENALTY)
+        swipe_length_bonus = safeGetFloat(_prefs, "swipe_length_bonus", Defaults.SWIPE_LENGTH_BONUS)
 
         short_gestures_enabled = _prefs.getBoolean("short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)
         short_gesture_min_distance = safeGetInt(_prefs, "short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE)

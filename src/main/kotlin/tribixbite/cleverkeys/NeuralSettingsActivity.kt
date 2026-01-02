@@ -46,6 +46,9 @@ class NeuralSettingsActivity : ComponentActivity() {
     // Model Configuration - MUST match Defaults in Config.kt
     private var resamplingMode by mutableStateOf(Defaults.NEURAL_RESAMPLING_MODE)
 
+    // Scoring Configuration - MUST match Defaults in Config.kt
+    private var lengthBonus by mutableStateOf(Defaults.SWIPE_LENGTH_BONUS)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -232,6 +235,23 @@ class NeuralSettingsActivity : ComponentActivity() {
                 )
             }
 
+            // Scoring Configuration Section
+            ParameterSection("Scoring") {
+                // Length Bonus
+                ParameterSlider(
+                    title = "Length Bonus",
+                    description = "Per-character bonus to favor longer words. 0.02 = 20% boost for 10-letter words. Helps when NN prefers short words.",
+                    value = lengthBonus,
+                    valueRange = 0.0f..0.1f,
+                    steps = 100,
+                    onValueChange = {
+                        lengthBonus = it
+                        updateNeuralParameters()
+                    },
+                    displayValue = "%.3f".format(lengthBonus)
+                )
+            }
+
             // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -398,6 +418,7 @@ class NeuralSettingsActivity : ComponentActivity() {
                 config.neural_adaptive_width_step = adaptiveWidthStep
                 config.neural_score_gap_step = scoreGapStep
                 config.neural_resampling_mode = resamplingMode
+                config.swipe_length_bonus = lengthBonus
 
                 // Save to preferences for immediate use
                 saveParametersToPrefs()
@@ -422,6 +443,7 @@ class NeuralSettingsActivity : ComponentActivity() {
         beamScoreGap = Defaults.NEURAL_BEAM_SCORE_GAP
         adaptiveWidthStep = Defaults.NEURAL_ADAPTIVE_WIDTH_STEP
         scoreGapStep = Defaults.NEURAL_SCORE_GAP_STEP
+        lengthBonus = Defaults.SWIPE_LENGTH_BONUS
         resamplingMode = Defaults.NEURAL_RESAMPLING_MODE
 
         updateNeuralParameters()
@@ -457,6 +479,7 @@ class NeuralSettingsActivity : ComponentActivity() {
         adaptiveWidthStep = Config.safeGetInt(prefs, "neural_adaptive_width_step", Defaults.NEURAL_ADAPTIVE_WIDTH_STEP)
         scoreGapStep = Config.safeGetInt(prefs, "neural_score_gap_step", Defaults.NEURAL_SCORE_GAP_STEP)
         resamplingMode = Config.safeGetString(prefs, "neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE) ?: Defaults.NEURAL_RESAMPLING_MODE
+        lengthBonus = Config.safeGetFloat(prefs, "swipe_length_bonus", Defaults.SWIPE_LENGTH_BONUS)
     }
 
     private fun saveParametersToPrefs() {
@@ -474,6 +497,7 @@ class NeuralSettingsActivity : ComponentActivity() {
         editor.putInt("neural_adaptive_width_step", adaptiveWidthStep)
         editor.putInt("neural_score_gap_step", scoreGapStep)
         editor.putString("neural_resampling_mode", resamplingMode)
+        editor.putFloat("swipe_length_bonus", lengthBonus)
 
         editor.apply()
     }
