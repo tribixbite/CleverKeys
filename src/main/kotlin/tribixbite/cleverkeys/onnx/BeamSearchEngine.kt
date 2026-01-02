@@ -35,7 +35,7 @@ class BeamSearchEngine(
     private val beamWidth: Int,
     private val maxLength: Int,
     private val confidenceThreshold: Float = 0.01f, // Lowered default (0.05 -> 0.01) to keep more candidates
-    private val lengthPenaltyAlpha: Float = 1.2f, // Length normalization factor
+    private val lengthPenaltyAlpha: Float = 0.0f, // Length normalization factor (0.0 = disabled, matching training)
     private val adaptiveWidthConfidence: Float = 0.8f, // Pruning confidence threshold
     private val scoreGapThreshold: Float = 8.0f, // Early stopping score gap
     private val adaptiveWidthStep: Int = 12, // When to start adaptive width pruning
