@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-02
-**Status**: v1.1.79 - Critical Length Normalization Fix Applied
+**Status**: v1.1.79 - Neural Settings & Presets Enhancement
 
 ---
 
@@ -357,10 +357,21 @@ Now confidence values are COMPARABLE across word lengths!
 - [x] Kept beam alpha (Length Penalty) as the proper GNMT tuning knob
 - [x] Removed vestigial neural_model_version setting (stored but never used)
 
+**Neural Settings Enhancements (2026-01-02)**:
+- [x] Fixed NEURAL_MAX_LENGTH default: 15→20 (match model config)
+- [x] Added Temperature setting (0.1-3.0) for softmax confidence tuning
+- [x] Added Frequency Weight setting (0-2) for NN vs vocabulary frequency balance
+- [x] Fixed repair defaults to use Defaults.* constants consistently
+- [x] Added NeuralPreset enum (Speed/Balanced/Accuracy) in Config.kt
+- [x] Added preset selector UI with FilterChips in NeuralSettingsActivity
+- [x] Written KV cache optimization spec (docs/specs/kv-cache-optimization.md)
+- [x] Written MemoryPool optimization spec (docs/specs/memory-pool-optimization.md)
+
 **Testing Needed**:
 - [ ] Test: swipe "dangerously" in SwipeDebugActivity
 - [ ] Verify confidence values are now length-normalized
 - [ ] Confirm long words now competitive with short words
+- [ ] Test neural presets (Speed/Balanced/Accuracy) in NeuralSettingsActivity
 
 ---
 
