@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-01
-**Status**: v1.1.79 - Debug Logging Pipeline Complete
+**Last Updated**: 2026-01-02
+**Status**: v1.1.79 - Critical Length Normalization Fix Applied
 
 ---
 
@@ -328,24 +328,39 @@
 
 ## Active Investigation: Long Word Prediction
 
-**Status**: Beam search early termination fix applied (e63f45eb), awaiting test
+**Status**: CRITICAL FIX APPLIED (22fc3279) - Length normalization in beam search confidence
 
-**Previous Bug**: "dangerously" (11 chars) couldn't beat shorter words like "danger" (6 chars)
+**Previous Bug**: "dangerously" (11 chars) couldn't beat shorter words like "dames" (5 chars)
 
-**Root Cause Identified**:
-- ADAPTIVE_WIDTH_STEP=5 triggered beam width pruning before long words finished
-- SCORE_GAP_STEP=3 triggered early stopping when short word candidates dominated
-- Short words finish decoding first and accumulate score advantage
+**Root Cause #1 (Fixed 2026-01-01)**: Beam search early termination too aggressive
+- ADAPTIVE_WIDTH_STEP: 5→12, SCORE_GAP_STEP: 3→10, scoreGapThreshold: 5.0→8.0
 
-**Fix Applied**:
-- ADAPTIVE_WIDTH_STEP: 5→12 (wait for 11+ char words to complete)
-- SCORE_GAP_STEP: 3→10 (delay early-stop decision)
-- scoreGapThreshold: 5.0→8.0 (require wider score gap)
+**Root Cause #2 (CRITICAL - Fixed 2026-01-02)**: Final confidence NOT length-normalized!
+- Length normalization was only applied during beam search SORTING (to keep candidates alive)
+- But final confidence in `convertToCandidate()` used raw score: `exp(-score)`
+- Longer words accumulate more NLL (negative log-likelihood) over more decoding steps
+- Even with perfect per-step probability, longer words ALWAYS had lower confidence
+
+**Before Fix**:
+- "dames" (5 chars, NLL ~1.05) → confidence = exp(-1.05) = **0.35**
+- "dangerously" (11 chars, NLL ~1.97) → confidence = exp(-1.97) = **0.14**
+
+**After Fix** (same normalization formula as beam sorting):
+- normFactor = (5 + len)^alpha / 6^alpha
+- "dames": exp(-1.05/1.87) = exp(-0.56) = **0.57**
+- "dangerously": exp(-1.97/3.58) = exp(-0.55) = **0.58**
+
+Now confidence values are COMPARABLE across word lengths!
+
+**Also**:
+- Length bonus default set to 0.0 (was 0.02)
+- Core normalization fix should handle the inherent bias
+- Length bonus slider remains available for additional tuning if needed
 
 **Next Steps**:
 - [ ] Test: swipe "dangerously" in SwipeDebugActivity
-- [ ] Verify decoder produces more candidates (should see 6 instead of 3)
-- [ ] Confirm "dangerously" appears in top predictions
+- [ ] Verify confidence values are now length-normalized
+- [ ] Confirm long words now competitive with short words
 
 ---
 
