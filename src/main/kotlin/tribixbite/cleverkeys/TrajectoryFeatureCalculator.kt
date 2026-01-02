@@ -20,6 +20,66 @@ import kotlin.math.min
 object TrajectoryFeatureCalculator {
 
     /**
+     * Calculate features with zero allocation (callback based).
+     *
+     * @param normalizedCoords Coordinates normalized to [0, 1]
+     * @param timestamps Timestamps in milliseconds
+     * @param onPointCalculated Callback receiving calculated features for each point
+     */
+    inline fun calculateFeatures(
+        normalizedCoords: List<PointF>,
+        timestamps: List<Long>,
+        onPointCalculated: (x: Float, y: Float, vx: Float, vy: Float, ax: Float, ay: Float) -> Unit
+    ) {
+        val n = normalizedCoords.size
+        if (n == 0) return
+
+        var prevX = normalizedCoords[0].x
+        var prevY = normalizedCoords[0].y
+        var prevT = timestamps[0]
+        
+        var prevVx = 0f
+        var prevVy = 0f
+        
+        // Emit first point (v=0, a=0)
+        onPointCalculated(prevX, prevY, 0f, 0f, 0f, 0f)
+
+        for (i in 1 until n) {
+            val currX = normalizedCoords[i].x
+            val currY = normalizedCoords[i].y
+            val currT = timestamps[i]
+            
+            // Calculate dt (ms)
+            val dtRaw = (currT - prevT).toFloat()
+            val dt = max(dtRaw, 1e-6f) // Avoid div by zero
+            
+            // Calculate velocity
+            var vx = (currX - prevX) / dt
+            var vy = (currY - prevY) / dt
+            
+            // Calculate acceleration
+            var ax = (vx - prevVx) / dt
+            var ay = (vy - prevVy) / dt
+            
+            // Clip
+            vx = vx.coerceIn(-10f, 10f)
+            vy = vy.coerceIn(-10f, 10f)
+            ax = ax.coerceIn(-10f, 10f)
+            ay = ay.coerceIn(-10f, 10f)
+            
+            // Emit
+            onPointCalculated(currX, currY, vx, vy, ax, ay)
+            
+            // Update state
+            prevX = currX
+            prevY = currY
+            prevT = currT
+            prevVx = vx
+            prevVy = vy
+        }
+    }
+
+    /**
      * Single trajectory point with all 6 features.
      */
     data class FeaturePoint(
@@ -33,98 +93,17 @@ object TrajectoryFeatureCalculator {
 
     /**
      * Calculate trajectory features from normalized coordinates and timestamps.
-     *
-     * MATCHES PYTHON EXACTLY:
-     * ```python
-     * dt = np.diff(ts, prepend=ts[0])
-     * dt = np.maximum(dt, 1e-6)
-     * vx[1:] = np.diff(xs) / dt[1:]
-     * vy[1:] = np.diff(ys) / dt[1:]
-     * ax[1:] = np.diff(vx) / dt[1:]
-     * ay[1:] = np.diff(vy) / dt[1:]
-     * vx, vy = np.clip(vx, -10, 10), np.clip(vy, -10, 10)
-     * ax, ay = np.clip(ax, -10, 10), np.clip(ay, -10, 10)
-     * ```
-     *
-     * NOTE: Training data was collected from Android touch events with timestamps in
-     * milliseconds. Keep dt in milliseconds to match training. The small velocity values
-     * (0.001 range) are expected and match what the model was trained on.
-     *
-     * @param normalizedCoords Coordinates normalized to [0, 1]
-     * @param timestamps Timestamps in milliseconds
-     * @return List of feature points
+     * Legacy method: returns new List<FeaturePoint>. Use callback version for zero allocation.
      */
     fun calculateFeatures(
         normalizedCoords: List<PointF>,
         timestamps: List<Long>
     ): List<FeaturePoint> {
-        if (normalizedCoords.isEmpty()) {
-            return emptyList()
+        val result = ArrayList<FeaturePoint>(normalizedCoords.size)
+        calculateFeatures(normalizedCoords, timestamps) { x, y, vx, vy, ax, ay ->
+            result.add(FeaturePoint(x, y, vx, vy, ax, ay))
         }
-
-        val n = normalizedCoords.size
-
-        // Extract x and y arrays
-        val xs = FloatArray(n) { normalizedCoords[it].x }
-        val ys = FloatArray(n) { normalizedCoords[it].y }
-
-        // Calculate dt (time differences)
-        // dt = np.diff(ts, prepend=ts[0]) means dt[0] = 0, dt[i] = ts[i] - ts[i-1]
-        // NOTE: Training data was collected from Android touch events (milliseconds).
-        // Keep as milliseconds - empirically produces better predictions than converting to seconds.
-        val dt = FloatArray(n)
-        dt[0] = 0f
-        for (i in 1 until n) {
-            dt[i] = (timestamps[i] - timestamps[i - 1]).toFloat()
-        }
-
-        // Ensure minimum dt to avoid division by zero
-        // dt = np.maximum(dt, 1e-6) - 1 microsecond minimum (makes sense for seconds)
-        for (i in 0 until n) {
-            dt[i] = max(dt[i], 1e-6f)
-        }
-
-        // Calculate velocities
-        // vx[0] = 0, vx[i] = (xs[i] - xs[i-1]) / dt[i]
-        val vx = FloatArray(n)
-        val vy = FloatArray(n)
-        vx[0] = 0f
-        vy[0] = 0f
-        for (i in 1 until n) {
-            vx[i] = (xs[i] - xs[i - 1]) / dt[i]
-            vy[i] = (ys[i] - ys[i - 1]) / dt[i]
-        }
-
-        // Calculate accelerations
-        // ax[0] = 0, ax[i] = (vx[i] - vx[i-1]) / dt[i]
-        val ax = FloatArray(n)
-        val ay = FloatArray(n)
-        ax[0] = 0f
-        ay[0] = 0f
-        for (i in 1 until n) {
-            ax[i] = (vx[i] - vx[i - 1]) / dt[i]
-            ay[i] = (vy[i] - vy[i - 1]) / dt[i]
-        }
-
-        // Clip to [-10, 10]
-        for (i in 0 until n) {
-            vx[i] = vx[i].coerceIn(-10f, 10f)
-            vy[i] = vy[i].coerceIn(-10f, 10f)
-            ax[i] = ax[i].coerceIn(-10f, 10f)
-            ay[i] = ay[i].coerceIn(-10f, 10f)
-        }
-
-        // Build feature points
-        return List(n) { i ->
-            FeaturePoint(
-                x = xs[i],
-                y = ys[i],
-                vx = vx[i],
-                vy = vy[i],
-                ax = ax[i],
-                ay = ay[i]
-            )
-        }
+        return result
     }
 
     /**

@@ -163,8 +163,10 @@ class SwipeTrajectoryProcessor {
         var processedTimestamps: List<Long> = timestamps
 
         // DEBUG: Log resampling decision
-        Log.d(TAG, "🔍 Resampling check: size=${reusableNormalizedCoords.size}, max=$maxSequenceLength, " +
-                "mode=$resamplingMode, needsResample=${reusableNormalizedCoords.size > maxSequenceLength && resamplingMode != SwipeResampler.ResamplingMode.TRUNCATE}")
+        if (debugModeActive) {
+            Log.d(TAG, "🔍 Resampling check: size=${reusableNormalizedCoords.size}, max=$maxSequenceLength, " +
+                    "mode=$resamplingMode, needsResample=${reusableNormalizedCoords.size > maxSequenceLength && resamplingMode != SwipeResampler.ResamplingMode.TRUNCATE}")
+        }
 
         if (reusableNormalizedCoords.size > maxSequenceLength && resamplingMode != SwipeResampler.ResamplingMode.TRUNCATE) {
             // OPTIMIZATION Phase 2: Recycle previous resampled coords before creating new ones
@@ -200,7 +202,9 @@ class SwipeTrajectoryProcessor {
             processedTimestamps = reusableProcessedTimestamps
 
             // DEBUG: Always log resampling (remove isLoggable check for debugging)
-            Log.d(TAG, "🔄 Resampled trajectory: ${reusableNormalizedCoords.size} → $maxSequenceLength points (mode: $resamplingMode)")
+            if (debugModeActive) {
+                Log.d(TAG, "🔄 Resampled trajectory: ${reusableNormalizedCoords.size} → $maxSequenceLength points (mode: $resamplingMode)")
+            }
         }
 
         // DEBUG: Verify resampling worked
@@ -210,7 +214,10 @@ class SwipeTrajectoryProcessor {
 
         // 3. Detect nearest keys from FINAL processed coordinates (already normalized!)
         // CRITICAL: Must happen AFTER resampling to maintain point-key correspondence
-        val processedKeys = detectNearestKeys(processedCoords)
+        // OPTIMIZATION Phase 2: Recycle reusable list for keys
+        reusableProcessedKeys.clear()
+        detectNearestKeys(processedCoords, reusableProcessedKeys)
+        val processedKeys = reusableProcessedKeys
 
         // 4. Calculate velocities and accelerations using TrajectoryFeatureCalculator (v1.32.472)
         // CRITICAL: Must match Python training code exactly!
@@ -225,17 +232,15 @@ class SwipeTrajectoryProcessor {
 
         // Use Kotlin TrajectoryFeatureCalculator for correct feature calculation
         // CRITICAL: Use processedCoords and processedTimestamps
-        val featurePoints = TrajectoryFeatureCalculator.calculateFeatures(processedCoords, processedTimestamps)
-
-        // Convert to TrajectoryPoint list using object pool
-        featurePoints.forEach { fp ->
+        // OPTIMIZATION Phase 3: Zero-allocation callback based calculation
+        TrajectoryFeatureCalculator.calculateFeatures(processedCoords, processedTimestamps) { x, y, vx, vy, ax, ay ->
             val point = TrajectoryObjectPool.obtainTrajectoryPoint()
-            point.x = fp.x
-            point.y = fp.y
-            point.vx = fp.vx
-            point.vy = fp.vy
-            point.ax = fp.ax
-            point.ay = fp.ay
+            point.x = x
+            point.y = y
+            point.vx = vx
+            point.vy = vy
+            point.ax = ax
+            point.ay = ay
             reusablePoints.add(point)
         }
 
@@ -419,7 +424,7 @@ class SwipeTrajectoryProcessor {
         }
 
         // Keep existing Log.d for logcat
-        if (coordinates.isNotEmpty() && outNormalized.isNotEmpty()) {
+        if (debugModeActive && coordinates.isNotEmpty() && outNormalized.isNotEmpty()) {
             val rawFirst = coordinates.first()
             val normFirst = outNormalized.first()
 
@@ -437,36 +442,37 @@ class SwipeTrajectoryProcessor {
      *
      * Input coordinates MUST be normalized to [0,1] range.
      */
-    private fun detectNearestKeys(normalizedCoordinates: List<PointF>): List<Int> {
-        val nearestKeys = ArrayList<Int>()
+    private fun detectNearestKeys(normalizedCoordinates: List<PointF>, outNearestKeys: ArrayList<Int>) {
         val debugKeySeq = StringBuilder()
         var lastDebugChar = '\u0000'
 
         // Log first few coordinates for debugging
-        if (normalizedCoordinates.isNotEmpty()) {
+        if (debugModeActive && normalizedCoordinates.isNotEmpty()) {
             val first = normalizedCoordinates.first()
             val last = normalizedCoordinates.last()
-            Log.d(TAG, "🔍 Detecting keys from ${normalizedCoordinates.size} normalized points: " +
+            logDebug("🔍 Detecting keys from ${normalizedCoordinates.size} normalized points: " +
                     "first=(${first.x},${first.y}) last=(${last.x},${last.y})")
         }
 
         normalizedCoordinates.forEach { point ->
             // Use Kotlin KeyboardGrid for nearest key detection
             val tokenIndex = KeyboardGrid.getNearestKeyToken(point.x, point.y)
-            nearestKeys.add(tokenIndex)
+            outNearestKeys.add(tokenIndex)
 
             // Convert back to char for debug display
-            val debugChar = if (tokenIndex in 4..29) ('a' + (tokenIndex - 4)) else '?'
-            if (debugChar != lastDebugChar) {
-                debugKeySeq.append(debugChar)
-                lastDebugChar = debugChar
+            if (debugModeActive) {
+                val debugChar = if (tokenIndex in 4..29) ('a' + (tokenIndex - 4)) else '?'
+                if (debugChar != lastDebugChar) {
+                    debugKeySeq.append(debugChar)
+                    lastDebugChar = debugChar
+                }
             }
         }
 
         // Log the deduplicated key sequence detected from trajectory
-        Log.d(TAG, "🎯 DETECTED KEY SEQUENCE: \"$debugKeySeq\" (from ${normalizedCoordinates.size} points)")
-
-        return nearestKeys
+        if (debugModeActive) {
+            logDebug("🎯 DETECTED KEY SEQUENCE: \"$debugKeySeq\" (from ${normalizedCoordinates.size} points)")
+        }
     }
 
     /**
