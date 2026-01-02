@@ -68,6 +68,7 @@ class OptimizedVocabulary(private val context: Context) {
     private var _debugMode = false
     private var _confidenceWeight = CONFIDENCE_WEIGHT
     private var _frequencyWeight = FREQUENCY_WEIGHT
+    private var _neuralFrequencyWeight = 1.0f // Multiplier from NeuralSettingsActivity (0.0 = NN only, 2.0 = heavy freq)
     private var _commonBoost = COMMON_WORDS_BOOST
     private var _top5000Boost = TOP5000_BOOST
     private var _rarePenalty = RARE_WORDS_PENALTY
@@ -115,6 +116,10 @@ class OptimizedVocabulary(private val context: Context) {
 
         // Autocorrect settings
         _swipeAutocorrectEnabled = config.swipe_beam_autocorrect_enabled
+
+        // Neural frequency weight multiplier (0.0 = NN only, 1.0 = normal, 2.0 = double freq influence)
+        _neuralFrequencyWeight = if (config.neural_frequency_weight >= 0f) config.neural_frequency_weight else 1.0f
+
         _maxLengthDiff = config.autocorrect_max_length_diff
         _prefixLength = config.autocorrect_prefix_length
         _maxBeamCandidates = config.autocorrect_max_beam_candidates
@@ -347,7 +352,9 @@ class OptimizedVocabulary(private val context: Context) {
             // v1.33+: Pass configurable weights to scoring function
             // Note: Length normalization is now handled in BeamSearchEngine.convertToCandidate()
             // using the GNMT formula with lengthPenaltyAlpha parameter
-            val score = VocabularyUtils.calculateCombinedScore(candidate.confidence, info.frequency, boost, confidenceWeight, frequencyWeight)
+            // Apply neural_frequency_weight as a multiplier (0.0 = NN only, 1.0 = normal, 2.0 = heavy freq)
+            val effectiveFrequencyWeight = frequencyWeight * _neuralFrequencyWeight
+            val score = VocabularyUtils.calculateCombinedScore(candidate.confidence, info.frequency, boost, confidenceWeight, effectiveFrequencyWeight)
 
             // Use displayWord for contractions (e.g., "doesn't" instead of "doesnt")
             val sourceLabel = if (displayWord != word) "$source-contraction" else source
@@ -497,10 +504,12 @@ class OptimizedVocabulary(private val context: Context) {
                                 // v1.33.3: MULTIPLICATIVE SCORING - match quality dominates
                                 // Dict fuzzy: Use configured weights but penalize rescue (0.8x) to prefer direct matches
                                 // Note: Length normalization handled in BeamSearchEngine
+                                // Apply neural_frequency_weight as a multiplier (same as main scoring)
                                 val matchQuality = VocabularyUtils.calculateMatchQuality(dictWord, beamWord, useEditDistance)
                                 val matchPower = matchQuality * matchQuality * matchQuality // Cubic
+                                val effectiveFuzzyFreqWeight = frequencyWeight * _neuralFrequencyWeight
 
-                                var baseScore = (confidenceWeight * beamConfidence) + (frequencyWeight * info.frequency)
+                                var baseScore = (confidenceWeight * beamConfidence) + (effectiveFuzzyFreqWeight * info.frequency)
                                 baseScore *= 0.8f // Penalty for not being a direct beam match
 
                                 val score = baseScore * matchPower * boost

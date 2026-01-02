@@ -40,6 +40,7 @@ class BeamSearchEngine(
     private val scoreGapThreshold: Float = 8.0f, // Early stopping score gap
     private val adaptiveWidthStep: Int = 12, // When to start adaptive width pruning
     private val scoreGapStep: Int = 10, // When to start score gap early stopping
+    private val temperature: Float = 1.0f, // Softmax temperature (lower = sharper, higher = more uniform)
     private val debugLogger: ((String) -> Unit)? = null
 ) {
 
@@ -330,22 +331,32 @@ class BeamSearchEngine(
         }
     }
     
-    // FIX #3: Numerically stable log-softmax
+    // FIX #3: Numerically stable log-softmax with temperature scaling
+    // Temperature < 1.0: sharper distribution (more confident)
+    // Temperature > 1.0: more uniform distribution (more diverse)
     private fun logSoftmax(logits: FloatArray): FloatArray {
+        // Apply temperature scaling: logits / temperature
+        // For temperature = 1.0, this is a no-op
+        val scaledLogits = if (temperature != 1.0f) {
+            FloatArray(logits.size) { i -> logits[i] / temperature }
+        } else {
+            logits
+        }
+
         var maxLogit = Float.NEGATIVE_INFINITY
-        for (logit in logits) {
+        for (logit in scaledLogits) {
             if (logit > maxLogit) maxLogit = logit
         }
-        
+
         var sumExp = 0.0f
-        for (logit in logits) {
+        for (logit in scaledLogits) {
             sumExp += exp(logit - maxLogit)
         }
         val logSumExp = maxLogit + ln(sumExp)
-        
-        val logProbs = FloatArray(logits.size)
-        for (i in logits.indices) {
-            logProbs[i] = logits[i] - logSumExp
+
+        val logProbs = FloatArray(scaledLogits.size)
+        for (i in scaledLogits.indices) {
+            logProbs[i] = scaledLogits[i] - logSumExp
         }
         return logProbs
     }
