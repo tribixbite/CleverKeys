@@ -80,7 +80,7 @@ class SwipeTrajectoryProcessor {
     fun setMargins(left: Float, right: Float) {
         this.marginLeft = left
         this.marginRight = right
-        Log.d(TAG, "📐 Margins set: left=$left px, right=$right px")
+        if (debugModeActive) logDebug("📐 Margins set: left=$left px, right=$right px")
     }
 
     /**
@@ -94,7 +94,7 @@ class SwipeTrajectoryProcessor {
     fun setQwertyAreaBounds(qwertyTop: Float, qwertyHeight: Float) {
         this.qwertyAreaTop = qwertyTop
         this.qwertyAreaHeight = qwertyHeight
-        Log.d(TAG, "📐 QWERTY area bounds set: top=$qwertyTop, height=$qwertyHeight (full kb height=$keyboardHeight)")
+        if (debugModeActive) logDebug("📐 QWERTY area bounds set: top=$qwertyTop, height=$qwertyHeight (full kb height=$keyboardHeight)")
     }
 
     /**
@@ -107,7 +107,7 @@ class SwipeTrajectoryProcessor {
      */
     fun setTouchYOffset(offset: Float) {
         this.touchYOffset = offset
-        Log.d(TAG, "📐 Touch Y-offset set: $offset pixels")
+        if (debugModeActive) logDebug("📐 Touch Y-offset set: $offset pixels")
     }
 
     /**
@@ -115,7 +115,7 @@ class SwipeTrajectoryProcessor {
      */
     fun setResamplingMode(mode: SwipeResampler.ResamplingMode) {
         this.resamplingMode = mode
-        Log.d(TAG, "Resampling mode set to: $mode")
+        if (debugModeActive) logDebug("Resampling mode set to: $mode")
     }
 
     /**
@@ -164,7 +164,7 @@ class SwipeTrajectoryProcessor {
 
         // DEBUG: Log resampling decision
         if (debugModeActive) {
-            Log.d(TAG, "🔍 Resampling check: size=${reusableNormalizedCoords.size}, max=$maxSequenceLength, " +
+            logDebug("🔍 Resampling check: size=${reusableNormalizedCoords.size}, max=$maxSequenceLength, " +
                     "mode=$resamplingMode, needsResample=${reusableNormalizedCoords.size > maxSequenceLength && resamplingMode != SwipeResampler.ResamplingMode.TRUNCATE}")
         }
 
@@ -203,7 +203,7 @@ class SwipeTrajectoryProcessor {
 
             // DEBUG: Always log resampling (remove isLoggable check for debugging)
             if (debugModeActive) {
-                Log.d(TAG, "🔄 Resampled trajectory: ${reusableNormalizedCoords.size} → $maxSequenceLength points (mode: $resamplingMode)")
+                logDebug("🔄 Resampled trajectory: ${reusableNormalizedCoords.size} → $maxSequenceLength points (mode: $resamplingMode)")
             }
         }
 
@@ -314,7 +314,7 @@ class SwipeTrajectoryProcessor {
             }
             if (maxX > 1.0f) keyboardWidth = maxX * 1.1f  // Add 10% margin
             if (maxY > 1.0f) keyboardHeight = maxY * 1.1f
-            Log.d(TAG, "📐 Inferred keyboard size: $keyboardWidth x $keyboardHeight")
+            if (debugModeActive) logDebug("📐 Inferred keyboard size: $keyboardWidth x $keyboardHeight")
         }
 
         // Determine normalization parameters
@@ -422,17 +422,6 @@ class SwipeTrajectoryProcessor {
             logDebug(sb.toString())
         }
 
-        // Keep existing Log.d for logcat
-        if (debugModeActive && coordinates.isNotEmpty() && outNormalized.isNotEmpty()) {
-            val rawFirst = coordinates.first()
-            val normFirst = outNormalized.first()
-
-            if (usingQwertyBounds) {
-                Log.d(TAG, "📐 QWERTY NORMALIZATION: top=$yTop, height=$yHeight (kb=${keyboardWidth}x$keyboardHeight)")
-            } else {
-                Log.d(TAG, "📐 Normalization: kb=${keyboardWidth}x$keyboardHeight, raw=(${rawFirst.x},${rawFirst.y}) → norm=(${normFirst.x},${normFirst.y})")
-            }
-        }
     }
 
     /**
