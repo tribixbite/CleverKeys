@@ -374,6 +374,11 @@ Now confidence values are COMPARABLE across word lengths!
   - 0.0 = NN only, 1.0 = normal, 2.0 = heavy frequency influence
   - Applied consistently in main scoring and dictionary fuzzy matching
 
+**Defaults Aligned (2026-01-02 ed79d668)**:
+- NEURAL_FREQUENCY_WEIGHT: 1.0f → 0.57f (trust NN more, less freq bias)
+- NEURAL_SCORE_GAP_STEP: 10 → 12 (delay early stopping)
+- Matched values from working config export
+
 **Testing Needed**:
 - [ ] Test: swipe "dangerously" in SwipeDebugActivity
 - [ ] Verify confidence values are now length-normalized
