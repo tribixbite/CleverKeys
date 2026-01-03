@@ -857,31 +857,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                                 }
                             )
 
-                            SettingsSlider(
-                                title = "Pruning Confidence",
-                                description = "Min confidence to reduce beam width (0.0-1.0)",
-                                value = neuralBeamPruneConfidence,
-                                valueRange = 0.0f..1.0f,
-                                steps = 20,
-                                onValueChange = {
-                                    neuralBeamPruneConfidence = it
-                                    saveSetting("neural_beam_prune_confidence", neuralBeamPruneConfidence)
-                                },
-                                displayValue = "%.2f".format(neuralBeamPruneConfidence)
-                            )
-
-                            SettingsSlider(
-                                title = "Early Stop Gap",
-                                description = "Score difference to stop early (higher = search longer)",
-                                value = neuralBeamScoreGap,
-                                valueRange = 0.0f..100.0f,
-                                steps = 100,
-                                onValueChange = {
-                                    neuralBeamScoreGap = it
-                                    saveSetting("neural_beam_score_gap", neuralBeamScoreGap)
-                                },
-                                displayValue = "%.1f".format(neuralBeamScoreGap)
-                            )
+                            // NOTE: Pruning Confidence and Early Stop Gap moved to Full Neural Settings
+                            // to avoid overwhelming users with duplicate controls
 
                             Button(
                                 onClick = { openNeuralSettings() },

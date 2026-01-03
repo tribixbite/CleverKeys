@@ -212,6 +212,7 @@ class BackupRestoreManager(private val context: Context) {
         "neural_score_gap_step" to Defaults.NEURAL_SCORE_GAP_STEP,
         "neural_temperature" to Defaults.NEURAL_TEMPERATURE,
         "neural_frequency_weight" to Defaults.NEURAL_FREQUENCY_WEIGHT,
+        "swipe_smoothing_window" to Defaults.SWIPE_SMOOTHING_WINDOW,
         "neural_resampling_mode" to Defaults.NEURAL_RESAMPLING_MODE,
         "neural_user_max_seq_length" to Defaults.NEURAL_USER_MAX_SEQ_LENGTH,
 
@@ -541,6 +542,7 @@ class BackupRestoreManager(private val context: Context) {
             "neural_user_max_seq_length" -> value in 0..500
             "neural_adaptive_width_step" -> value in 3..20
             "neural_score_gap_step" -> value in 3..20
+            "swipe_smoothing_window" -> value in 1..7
 
             // Auto-correction parameters
             "autocorrect_min_word_length" -> value in 2..5

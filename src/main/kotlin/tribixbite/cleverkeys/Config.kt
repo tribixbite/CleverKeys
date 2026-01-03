@@ -108,6 +108,7 @@ object Defaults {
     const val NEURAL_SCORE_GAP_STEP = 10        // Step when to start score gap early stopping
     const val NEURAL_TEMPERATURE = 1.0f         // Softmax temperature (lower = more confident)
     const val NEURAL_FREQUENCY_WEIGHT = 1.0f    // Vocab frequency weight in scoring (0=NN only, 2=heavy freq)
+    const val SWIPE_SMOOTHING_WINDOW = 3        // Points for moving average smoothing (1 = disabled, 3 = optimal)
 
     const val NEURAL_RESAMPLING_MODE = "discard"
     const val NEURAL_USER_MAX_SEQ_LENGTH = 0
@@ -385,6 +386,7 @@ class Config private constructor(
     @JvmField var neural_score_gap_step = 0
     @JvmField var neural_temperature = 0f
     @JvmField var neural_frequency_weight = 0f
+    @JvmField var swipe_smoothing_window = 0
 
     // Neural model resampling
     @JvmField var neural_user_max_seq_length = 0
@@ -601,6 +603,7 @@ class Config private constructor(
         neural_score_gap_step = safeGetInt(_prefs, "neural_score_gap_step", Defaults.NEURAL_SCORE_GAP_STEP)
         neural_temperature = safeGetFloat(_prefs, "neural_temperature", Defaults.NEURAL_TEMPERATURE)
         neural_frequency_weight = safeGetFloat(_prefs, "neural_frequency_weight", Defaults.NEURAL_FREQUENCY_WEIGHT)
+        swipe_smoothing_window = safeGetInt(_prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
 
         neural_user_max_seq_length = safeGetInt(_prefs, "neural_user_max_seq_length", Defaults.NEURAL_USER_MAX_SEQ_LENGTH)
         neural_resampling_mode = safeGetString(_prefs, "neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE)

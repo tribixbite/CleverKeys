@@ -31,9 +31,9 @@ open class ImprovedSwipeGestureRecognizer {
     private var _lastKey: KeyboardData.Key? = null
     private var _lastRegisteredKey: KeyboardData.Key? = null
     
-    // Thresholds for improved filtering - non-configurable constants
-    // TODO: Reverted from 3 to 1 for testing - raw points without smoothing
-    private val SMOOTHING_WINDOW = 1 // Points for moving average (1 = disabled)
+    // Thresholds for improved filtering
+    private val SMOOTHING_WINDOW: Int
+        get() = Config.globalConfig().swipe_smoothing_window.coerceIn(1, 7)
     private val DUPLICATE_CHECK_WINDOW = 5 // Check last 5 keys for duplicates
     private val MAX_POINT_INTERVAL_MS = 500L
 

@@ -44,6 +44,7 @@ class NeuralSettingsActivity : ComponentActivity() {
     private var scoreGapStep by mutableStateOf(Defaults.NEURAL_SCORE_GAP_STEP)
     private var temperature by mutableStateOf(Defaults.NEURAL_TEMPERATURE)
     private var frequencyWeight by mutableStateOf(Defaults.NEURAL_FREQUENCY_WEIGHT)
+    private var smoothingWindow by mutableStateOf(Defaults.SWIPE_SMOOTHING_WINDOW)
 
     // Model Configuration - MUST match Defaults in Config.kt
     private var resamplingMode by mutableStateOf(Defaults.NEURAL_RESAMPLING_MODE)
@@ -244,6 +245,20 @@ class NeuralSettingsActivity : ComponentActivity() {
                     },
                     displayValue = "%.2f".format(frequencyWeight)
                 )
+
+                // Smoothing Window
+                ParameterSlider(
+                    title = "Touch Smoothing",
+                    description = "Points for moving average smoothing. 1 = raw input, 3 = optimal smoothing.",
+                    value = smoothingWindow.toFloat(),
+                    valueRange = 1f..7f,
+                    steps = 6,
+                    onValueChange = {
+                        smoothingWindow = it.toInt()
+                        updateNeuralParameters()
+                    },
+                    displayValue = smoothingWindow.toString()
+                )
             }
 
             // Model Configuration Section
@@ -439,6 +454,7 @@ class NeuralSettingsActivity : ComponentActivity() {
                 config.neural_resampling_mode = resamplingMode
                 config.neural_temperature = temperature
                 config.neural_frequency_weight = frequencyWeight
+                config.swipe_smoothing_window = smoothingWindow
 
                 // Re-detect preset: if values were manually changed, this clears the preset
                 // If values match a preset (including after applyPreset), it stays selected
@@ -495,6 +511,7 @@ class NeuralSettingsActivity : ComponentActivity() {
         resamplingMode = Config.safeGetString(prefs, "neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE) ?: Defaults.NEURAL_RESAMPLING_MODE
         temperature = Config.safeGetFloat(prefs, "neural_temperature", Defaults.NEURAL_TEMPERATURE)
         frequencyWeight = Config.safeGetFloat(prefs, "neural_frequency_weight", Defaults.NEURAL_FREQUENCY_WEIGHT)
+        smoothingWindow = Config.safeGetInt(prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
 
         // Detect if current settings match any preset
         selectedPreset = detectCurrentPreset()
@@ -517,6 +534,7 @@ class NeuralSettingsActivity : ComponentActivity() {
         editor.putString("neural_resampling_mode", resamplingMode)
         editor.putFloat("neural_temperature", temperature)
         editor.putFloat("neural_frequency_weight", frequencyWeight)
+        editor.putInt("swipe_smoothing_window", smoothingWindow)
 
         // Save selected preset name (or "custom" if manually tweaked)
         editor.putString("neural_preset", selectedPreset?.name ?: "custom")
