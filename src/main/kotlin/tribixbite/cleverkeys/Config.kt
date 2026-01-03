@@ -101,9 +101,9 @@ object Defaults {
 
     // Neural prediction - Beam search tuning
     // NOTE: These MUST match the working defaults in BeamSearchEngine.kt
-    const val NEURAL_BEAM_ALPHA = 0.0f          // Length penalty factor (0.0 = no normalization, matching training)
+    const val NEURAL_BEAM_ALPHA = 1.0f          // Length penalty factor (1.0 = linear normalization)
     const val NEURAL_BEAM_PRUNE_CONFIDENCE = 0.8f  // Adaptive width pruning threshold
-    const val NEURAL_BEAM_SCORE_GAP = 8.0f      // Early stopping score gap
+    const val NEURAL_BEAM_SCORE_GAP = 80.0f     // Early stopping score gap (high = search longer for long words)
     const val NEURAL_ADAPTIVE_WIDTH_STEP = 12   // Step when to start adaptive width pruning
     const val NEURAL_SCORE_GAP_STEP = 10        // Step when to start score gap early stopping
     const val NEURAL_TEMPERATURE = 1.0f         // Softmax temperature (lower = more confident)
@@ -201,9 +201,9 @@ enum class NeuralPreset(
         beamWidth = 4,
         maxLength = 15,
         confidenceThreshold = 0.02f,
-        beamAlpha = 0.0f,           // No length normalization (matches training)
+        beamAlpha = 0.8f,           // Slight length normalization
         beamPruneConfidence = 0.7f, // Earlier pruning
-        beamScoreGap = 6.0f,        // Earlier stopping
+        beamScoreGap = 40.0f,       // Earlier stopping but still allows medium words
         adaptiveWidthStep = 8,      // Start pruning early
         scoreGapStep = 6,           // Start gap check early
         temperature = 1.0f,
@@ -227,9 +227,9 @@ enum class NeuralPreset(
         beamWidth = 10,
         maxLength = 20,
         confidenceThreshold = 0.005f,  // Keep more candidates
-        beamAlpha = 0.0f,              // No length normalization (matches training)
+        beamAlpha = 1.2f,              // Favor longer words slightly
         beamPruneConfidence = 0.9f,    // Later pruning
-        beamScoreGap = 12.0f,          // Later stopping
+        beamScoreGap = 100.0f,         // Search thoroughly for long words
         adaptiveWidthStep = 15,        // Delay pruning
         scoreGapStep = 14,             // Delay gap check
         temperature = 0.9f,            // Slightly more confident

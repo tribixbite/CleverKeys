@@ -176,10 +176,10 @@ class NeuralSettingsActivity : ComponentActivity() {
                 // Score Gap
                 ParameterSlider(
                     title = "Score Gap Threshold",
-                    description = "Stop searching if top candidate is much better than others.",
+                    description = "Stop searching if top candidate is much better than others. Higher = search longer for long words.",
                     value = beamScoreGap,
-                    valueRange = 0.0f..50.0f,
-                    steps = 50,
+                    valueRange = 0.0f..150.0f,
+                    steps = 30,
                     onValueChange = {
                         beamScoreGap = it
                         updateNeuralParameters()

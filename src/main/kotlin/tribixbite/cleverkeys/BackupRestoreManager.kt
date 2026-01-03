@@ -584,7 +584,7 @@ class BackupRestoreManager(private val context: Context) {
             "neural_confidence_threshold" -> value in 0.0f..1.0f
 
             // Neural beam search parameters
-            "neural_beam_score_gap" -> value in 0.0f..100.0f
+            "neural_beam_score_gap" -> value in 0.0f..150.0f
             "neural_beam_prune_confidence" -> value in 0.0f..1.0f
             "neural_beam_alpha" -> value in 0.0f..10.0f
             "neural_temperature" -> value in 0.1f..3.0f
