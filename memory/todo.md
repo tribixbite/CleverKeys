@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-03
-**Status**: v1.1.80 - Collected Data View/Delete UI
+**Status**: v1.1.81 - Collected Data View/Delete UI
 
 ---
 
@@ -406,7 +406,7 @@ Now confidence values are COMPARABLE across word lengths!
 | Token map | a=4..z=29 | a=4..z=29 | ✅ |
 | Coordinates | [0,1] normalized | [0,1] normalized | ✅ |
 
-**Current Version**: 1.1.80 (versionCode 101803 for x86_64)
+**Current Version**: 1.1.81 (versionCode 101813 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.79
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 **Final Config**: No srclibs, no postbuild - just gradle + prebuild sed!

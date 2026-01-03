@@ -1,0 +1,14 @@
+v1.1.81 - Long Word Prediction & Neural Tuning
+
+Major improvements:
+- Fixed long word prediction (e.g. "dangerously" now works!)
+- Length-normalized beam search scoring for fair word comparison
+- Neural presets: Speed, Balanced, Accuracy modes
+- Temperature and frequency weight controls in Neural Settings
+- Swipe Debug tool redesigned with copy/save actions
+- On-device learning: manage your local training samples
+
+Technical:
+- Beam search deduplication and early termination tuning
+- Touch smoothing control for swipe trajectories
+- Optimized feature extraction pipeline
