@@ -1,0 +1,10 @@
+v1.1.81 - Collected Data Management
+- Add View button to inspect collected swipe data with stats
+- Add Delete button with confirmation to clear all data
+- Dialog shows target word, date, keys traversed, trace points
+
+v1.1.80 - Neural Prediction Tuning
+- Fixed beam search defaults for better long word prediction
+- Added configurable Touch Smoothing in Neural Settings
+- Consolidated duplicate settings
+- Tuned frequency weight and early stopping thresholds
