@@ -1,0 +1,5 @@
+Neural prediction tuning for long words:
+- Fixed beam search defaults for better long word prediction
+- Added configurable Touch Smoothing in Neural Settings
+- Consolidated duplicate settings (Pruning Confidence, Early Stop Gap now only in Full Neural Settings)
+- Tuned frequency weight and early stopping thresholds
