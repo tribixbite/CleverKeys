@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-02
-**Status**: v1.1.79 - Neural Settings & Presets Enhancement
+**Last Updated**: 2026-01-03
+**Status**: v1.1.80 - Collected Data View/Delete UI
 
 ---
 
@@ -387,6 +387,12 @@ Now confidence values are COMPARABLE across word lengths!
 - [ ] Test temperature slider effect on prediction sharpness
 - [ ] Test frequency weight slider (0=pure NN, 2=heavy frequency)
 
+**Completed (2026-01-03)**:
+- [x] Add View and Delete buttons to Collected Data settings (27a5bccc)
+  - View: Opens dialog showing all collected swipes with stats
+  - Delete: Confirmation dialog to clear all data
+  - Dialog shows: target word, date, keys traversed, trace points, collection source
+
 ---
 
 ## Previously Verified (Feature Calculation)
@@ -400,7 +406,7 @@ Now confidence values are COMPARABLE across word lengths!
 | Token map | a=4..z=29 | a=4..z=29 | ✅ |
 | Coordinates | [0,1] normalized | [0,1] normalized | ✅ |
 
-**Current Version**: 1.1.79 (versionCode 101793 for x86_64)
+**Current Version**: 1.1.80 (versionCode 101803 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.79
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 **Final Config**: No srclibs, no postbuild - just gradle + prebuild sed!
