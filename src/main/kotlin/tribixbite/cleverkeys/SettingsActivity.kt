@@ -285,6 +285,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var advancedSectionExpanded by mutableStateOf(false)
     private var infoSectionExpanded by mutableStateOf(false)
 
+    // Collected data viewer dialog state
+    private var showCollectedDataViewer by mutableStateOf(false)
+    private var collectedDataList by mutableStateOf<List<tribixbite.cleverkeys.ml.SwipeMLData>>(emptyList())
+    private var collectedDataStats by mutableStateOf<tribixbite.cleverkeys.ml.SwipeMLDataStore.DataStatistics?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -561,6 +566,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     @Composable
     private fun SettingsScreen() {
         val scrollState = rememberScrollState()
+
+        // Collected Data Viewer Dialog
+        if (showCollectedDataViewer) {
+            CollectedDataViewerDialog(
+                dataList = collectedDataList,
+                stats = collectedDataStats,
+                onDismiss = { showCollectedDataViewer = false }
+            )
+        }
 
         Column(
             modifier = Modifier
@@ -2434,6 +2448,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
+                    // Export buttons row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -2449,6 +2464,30 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             modifier = Modifier.weight(1f)
                         ) {
                             Text("Export NDJSON")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // View and Delete buttons row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { viewCollectedData() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("View")
+                        }
+                        OutlinedButton(
+                            onClick = { deleteCollectedData() },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Text("Delete")
                         }
                     }
                 } else {
@@ -2878,6 +2917,122 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }
         }
+    }
+
+    /**
+     * Dialog to view collected swipe data
+     */
+    @Composable
+    private fun CollectedDataViewerDialog(
+        dataList: List<tribixbite.cleverkeys.ml.SwipeMLData>,
+        stats: tribixbite.cleverkeys.ml.SwipeMLDataStore.DataStatistics?,
+        onDismiss: () -> Unit
+    ) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text("Collected Swipe Data")
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 400.dp)
+                ) {
+                    // Stats summary
+                    if (stats != null) {
+                        Text(
+                            text = "Total: ${stats.totalCount} swipes • ${stats.uniqueWords} unique words",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Text(
+                            text = "User: ${stats.userSelectionCount} • Calibration: ${stats.calibrationCount}",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                    }
+
+                    if (dataList.isEmpty()) {
+                        Text(
+                            text = "No data collected yet.",
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        // Scrollable list of entries
+                        val listScrollState = rememberScrollState()
+                        Column(
+                            modifier = Modifier
+                                .verticalScroll(listScrollState)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            dataList.forEachIndexed { index, data ->
+                                val dateFormat = java.text.SimpleDateFormat(
+                                    "MM/dd HH:mm",
+                                    java.util.Locale.getDefault()
+                                )
+                                val dateStr = dateFormat.format(java.util.Date(data.timestampUtc))
+                                val keys = data.getRegisteredKeys().joinToString("")
+                                val points = data.getTracePoints().size
+
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                    )
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(8.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = "\"${data.targetWord}\"",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 14.sp,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = dateStr,
+                                                fontSize = 11.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = "Keys: $keys",
+                                                fontSize = 11.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                text = "$points pts • ${data.collectionSource}",
+                                                fontSize = 10.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onDismiss) {
+                    Text("Close")
+                }
+            }
+        )
     }
 
     // Helper functions
@@ -3483,6 +3638,47 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         Toast.makeText(this@SettingsActivity, "All collected data cleared", Toast.LENGTH_SHORT).show()
                     } catch (e: Exception) {
                         Toast.makeText(this@SettingsActivity, "Error clearing data: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * View collected swipe data in a dialog
+     */
+    private fun viewCollectedData() {
+        lifecycleScope.launch {
+            try {
+                val dataStore = tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(this@SettingsActivity)
+                collectedDataList = dataStore.loadAllData()
+                collectedDataStats = dataStore.getStatistics()
+                showCollectedDataViewer = true
+            } catch (e: Exception) {
+                Toast.makeText(this@SettingsActivity, "Error loading data: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    /**
+     * Delete all collected swipe data with confirmation
+     */
+    private fun deleteCollectedData() {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Delete Collected Data")
+            .setMessage("This will permanently delete all collected swipe data.\n\n" +
+                "This action cannot be undone.")
+            .setPositiveButton("Delete") { _, _ ->
+                lifecycleScope.launch {
+                    try {
+                        val dataStore = tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(this@SettingsActivity)
+                        dataStore.clearAllData()
+                        Toast.makeText(this@SettingsActivity, "All swipe data deleted", Toast.LENGTH_SHORT).show()
+                        // Force UI refresh by recreating activity
+                        recreate()
+                    } catch (e: Exception) {
+                        Toast.makeText(this@SettingsActivity, "Error deleting data: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
