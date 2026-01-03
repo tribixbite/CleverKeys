@@ -105,9 +105,9 @@ object Defaults {
     const val NEURAL_BEAM_PRUNE_CONFIDENCE = 0.8f  // Adaptive width pruning threshold
     const val NEURAL_BEAM_SCORE_GAP = 80.0f     // Early stopping score gap (high = search longer for long words)
     const val NEURAL_ADAPTIVE_WIDTH_STEP = 12   // Step when to start adaptive width pruning
-    const val NEURAL_SCORE_GAP_STEP = 10        // Step when to start score gap early stopping
+    const val NEURAL_SCORE_GAP_STEP = 12        // Step when to start score gap early stopping
     const val NEURAL_TEMPERATURE = 1.0f         // Softmax temperature (lower = more confident)
-    const val NEURAL_FREQUENCY_WEIGHT = 1.0f    // Vocab frequency weight in scoring (0=NN only, 2=heavy freq)
+    const val NEURAL_FREQUENCY_WEIGHT = 0.57f   // Vocab frequency weight in scoring (0=NN only, 2=heavy freq)
     const val SWIPE_SMOOTHING_WINDOW = 3        // Points for moving average smoothing (1 = disabled, 3 = optimal)
 
     const val NEURAL_RESAMPLING_MODE = "discard"
