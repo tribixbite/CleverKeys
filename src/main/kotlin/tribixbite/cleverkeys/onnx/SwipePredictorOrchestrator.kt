@@ -446,6 +446,8 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
             val multiLangEnabled = prefs.getBoolean("pref_enable_multilang", false)
             val secondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
+            val autoSwitchEnabled = prefs.getBoolean("pref_auto_detect_language", false)
+            val autoSwitchThreshold = prefs.getFloat("pref_language_detection_sensitivity", 0.6f)
 
             if (multiLangEnabled && secondaryLang != "none") {
                 val loaded = vocabulary.loadSecondaryDictionary(secondaryLang)
@@ -454,9 +456,13 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                 } else {
                     Log.w(TAG, "Failed to load secondary dictionary: $secondaryLang")
                 }
+
+                // Configure auto-switch
+                vocabulary.setAutoSwitchConfig(autoSwitchEnabled, autoSwitchThreshold, secondaryLang)
             } else {
                 // Unload any existing secondary dictionary
                 vocabulary.unloadSecondaryDictionary()
+                vocabulary.setAutoSwitchConfig(false, 0.6f, "none")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error loading secondary dictionary from prefs", e)
@@ -510,9 +516,12 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     fun trackCommittedWord(word: String) {
         languageDetector.addWord(word)
 
+        // Update vocabulary language multiplier for auto-switch
+        val scores = languageDetector.getLanguageScores()
+        vocabulary.updateLanguageMultiplier(scores)
+
         // Log language scores in debug mode
         if (debugModeActive) {
-            val scores = languageDetector.getLanguageScores()
             val primary = languageDetector.getPrimaryLanguage()
             logDebug("🌍 Language detection: primary=$primary, scores=$scores\n")
         }

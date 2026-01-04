@@ -87,6 +87,14 @@ class OptimizedVocabulary(private val context: Context) {
     private var _useEditDistance = true
     private var _autocorrect_confidence_min_frequency: Int = 500 // Added for user-configured min frequency
 
+    // LANGUAGE DETECTION: Auto-switch configuration
+    // When detected language score exceeds threshold, boost that language's dictionary
+    private var _autoSwitchEnabled = false
+    private var _autoSwitchThreshold = 0.6f // Switch when secondary language score > 60%
+    private var _secondaryLanguageCode = "none" // Current secondary language code (e.g., "es")
+    @Volatile
+    private var _currentLanguageMultiplier = 0.9f // Dynamic multiplier based on detected language
+
     // OPTIMIZATION Phase 2: Cache parsed custom words to avoid JSON parsing on every swipe
     // Maps custom word -> frequency
     private val _cachedCustomWords: MutableMap<String, Int> = HashMap()
@@ -690,10 +698,14 @@ class OptimizedVocabulary(private val context: Context) {
                         }
                         if (alreadyPresent) continue
 
-                        // Score: NN confidence * frequency rank score * secondary penalty
+                        // Score: NN confidence * frequency rank score * language multiplier
+                        // Language multiplier is dynamic based on detected language:
+                        // - 0.9 (penalty) when primary language dominant
+                        // - 1.0 (neutral) when balanced
+                        // - 1.1+ (boost) when secondary language detected
                         val rankScore = 1.0f - (result.bestFrequencyRank / 255f)
-                        val secondaryPenalty = 0.9f // Slight penalty for secondary language
-                        val score = candidate.confidence * 0.6f + rankScore * 0.3f * secondaryPenalty
+                        val langMultiplier = _currentLanguageMultiplier
+                        val score = candidate.confidence * 0.6f + rankScore * 0.3f * langMultiplier
 
                         validPredictions.add(
                             FilteredPrediction(
@@ -1019,6 +1031,59 @@ class OptimizedVocabulary(private val context: Context) {
      */
     fun hasSecondaryDictionary(): Boolean {
         return secondaryNormalizedIndex != null
+    }
+
+    /**
+     * Update the language detection multiplier based on detected language scores.
+     * Called by SwipePredictorOrchestrator after each word is committed.
+     *
+     * When auto-switch is enabled:
+     * - If secondary language score > threshold: boost secondary dictionary (multiplier > 1.0)
+     * - If primary language dominant: penalize secondary dictionary (multiplier < 1.0)
+     * - Otherwise: neutral (multiplier = 1.0)
+     *
+     * @param languageScores Map of language code → confidence (0.0-1.0)
+     */
+    fun updateLanguageMultiplier(languageScores: Map<String, Float>) {
+        if (!_autoSwitchEnabled || _secondaryLanguageCode == "none") {
+            _currentLanguageMultiplier = 0.9f // Default penalty when auto-switch disabled
+            return
+        }
+
+        val secondaryScore = languageScores[_secondaryLanguageCode] ?: 0f
+        val primaryScore = languageScores["en"] ?: 0f
+
+        _currentLanguageMultiplier = when {
+            // Secondary language dominant: boost secondary dictionary
+            secondaryScore > _autoSwitchThreshold -> 1.1f + (secondaryScore - _autoSwitchThreshold) * 0.5f
+            // Primary language dominant: penalize secondary dictionary
+            primaryScore > _autoSwitchThreshold -> 0.85f
+            // Balanced: neutral
+            else -> 1.0f
+        }
+
+        if (_debugMode) {
+            Log.d(TAG, "🌍 Language multiplier updated: $_currentLanguageMultiplier " +
+                "(en=$primaryScore, $_secondaryLanguageCode=$secondaryScore, threshold=$_autoSwitchThreshold)")
+        }
+    }
+
+    /**
+     * Configure auto-switch settings.
+     *
+     * @param enabled Whether auto-switch is enabled
+     * @param threshold Score threshold to trigger switch (0.0-1.0)
+     * @param secondaryLanguage Secondary language code (e.g., "es")
+     */
+    fun setAutoSwitchConfig(enabled: Boolean, threshold: Float, secondaryLanguage: String) {
+        _autoSwitchEnabled = enabled
+        _autoSwitchThreshold = threshold.coerceIn(0.3f, 0.9f) // Reasonable bounds
+        _secondaryLanguageCode = secondaryLanguage
+
+        // Reset multiplier to default when config changes
+        _currentLanguageMultiplier = if (enabled) 1.0f else 0.9f
+
+        Log.i(TAG, "Auto-switch config: enabled=$enabled, threshold=$threshold, lang=$secondaryLanguage")
     }
 
     /**
