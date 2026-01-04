@@ -5,6 +5,49 @@
 
 ---
 
+## Multilanguage Full Support (v1.1.85) - COMPLETE
+
+**Implementation Summary**:
+- [x] Primary Language selector (any QWERTY-compatible language)
+- [x] Neural network outputs 26 English letters; dictionary provides accent recovery
+- [x] 6 bundled languages: EN, ES, FR, PT, IT, DE
+- [x] 9 downloadable language packs: FR, PT, IT, DE, NL, ID, MS, SW, TL
+- [x] Primary dictionary loads accent mappings (e.g., "cafe" → "café")
+- [x] Secondary dictionary unchanged (bilingual support)
+
+**Key Files Modified**:
+- `scripts/build_all_languages.py` - Master script to generate all dictionaries
+- `scripts/get_wordlist.py` - wordfreq extraction with fallback (large→small→best)
+- `src/main/kotlin/tribixbite/cleverkeys/OptimizedVocabulary.kt` - loadPrimaryDictionary(), getPrimaryAccentedForm()
+- `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` - Primary Language dropdown
+- `src/main/kotlin/tribixbite/cleverkeys/onnx/SwipePredictorOrchestrator.kt` - loadPrimaryDictionaryFromPrefs()
+
+**Bundled Dictionaries** (in assets/dictionaries/):
+| Language | File | Size | Words |
+|----------|------|------|-------|
+| English | en_enhanced.bin | 1.2MB | ~50k |
+| Spanish | es_enhanced.bin | 6.7MB | ~236k |
+| French | fr_enhanced.bin | 616KB | 25k |
+| Portuguese | pt_enhanced.bin | 619KB | 25k |
+| Italian | it_enhanced.bin | 630KB | 25k |
+| German | de_enhanced.bin | 650KB | 25k |
+
+**Language Packs** (in scripts/dictionaries/):
+| Language | File | Size |
+|----------|------|------|
+| Dutch | langpack-nl.zip | 244KB |
+| Indonesian | langpack-id.zip | 232KB |
+| Malay | langpack-ms.zip | 228KB |
+| Swahili | langpack-sw.zip | 233KB |
+| Tagalog | langpack-tl.zip | 237KB |
+
+**Testing Needed** (device locked - awaiting manual unlock):
+- [ ] Verify Primary Language dropdown shows EN, ES, FR, PT, IT, DE
+- [ ] Test accent recovery: swipe "cafe" → "café" with French primary
+- [ ] Test accent recovery: swipe "ecole" → "école" with French primary
+
+---
+
 ## F-Droid Submission Status
 
 ### MR !30449 - In Progress

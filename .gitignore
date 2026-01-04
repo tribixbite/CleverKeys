@@ -71,5 +71,15 @@ release_apks/
 
 # Dictionary build artifacts
 scripts/dictionaries/*.txt
-langpack-*.zip
 scripts/dictionaries/fr_words.txt
+
+# Language pack build temp directories (keep ZIPs for distribution)
+scripts/dictionaries/de/
+scripts/dictionaries/fr/
+scripts/dictionaries/id/
+scripts/dictionaries/it/
+scripts/dictionaries/ms/
+scripts/dictionaries/nl/
+scripts/dictionaries/pt/
+scripts/dictionaries/sw/
+scripts/dictionaries/tl/
