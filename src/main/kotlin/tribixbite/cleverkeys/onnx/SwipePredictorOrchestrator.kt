@@ -7,6 +7,7 @@ import android.graphics.PointF
 import android.util.Log
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Defaults
+import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.KeyboardGrid
 import tribixbite.cleverkeys.NeuralSwipeTypingEngine
 import tribixbite.cleverkeys.ModelVersionManager
@@ -147,6 +148,9 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             // Load Tokenizer & Vocabulary
             tokenizer.loadFromAssets(context)
             if (!vocabulary.isLoaded()) vocabulary.loadVocabulary()
+
+            // Load secondary language dictionary if configured
+            loadSecondaryDictionaryFromPrefs()
 
             // Load Models
             val encoderPath = "models/swipe_encoder_android.onnx"
@@ -427,7 +431,45 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     fun setTouchYOffset(offset: Float) = trajectoryProcessor.setTouchYOffset(offset)
     fun setMargins(left: Float, right: Float) = trajectoryProcessor.setMargins(left, right)
     fun reloadVocabulary() = vocabulary.reloadCustomAndDisabledWords()
-    
+
+    /**
+     * Load secondary dictionary based on user preference.
+     * Called during initialization and when settings change.
+     */
+    private fun loadSecondaryDictionaryFromPrefs() {
+        try {
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+            val multiLangEnabled = prefs.getBoolean("pref_enable_multilang", false)
+            val secondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
+
+            if (multiLangEnabled && secondaryLang != "none") {
+                val loaded = vocabulary.loadSecondaryDictionary(secondaryLang)
+                if (loaded) {
+                    Log.i(TAG, "Secondary dictionary loaded: $secondaryLang")
+                } else {
+                    Log.w(TAG, "Failed to load secondary dictionary: $secondaryLang")
+                }
+            } else {
+                // Unload any existing secondary dictionary
+                vocabulary.unloadSecondaryDictionary()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading secondary dictionary from prefs", e)
+        }
+    }
+
+    /**
+     * Reload secondary dictionary (called when settings change).
+     */
+    fun reloadSecondaryDictionary() {
+        loadSecondaryDictionaryFromPrefs()
+    }
+
+    /**
+     * Check if secondary dictionary is active.
+     */
+    fun hasSecondaryDictionary(): Boolean = vocabulary.hasSecondaryDictionary()
+
     fun setDebugLogger(logger: Any?) {
         // Accept NeuralSwipeTypingEngine.DebugLogger and convert to lambda
         @Suppress("UNCHECKED_CAST")

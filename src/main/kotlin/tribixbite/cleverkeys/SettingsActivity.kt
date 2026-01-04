@@ -248,8 +248,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Multi-language settings
     private var multiLangEnabled by mutableStateOf(false)
     private var primaryLanguage by mutableStateOf("en")
+    private var secondaryLanguage by mutableStateOf("none") // "none", "es", "fr", etc.
     private var autoDetectLanguage by mutableStateOf(true)
     private var languageDetectionSensitivity by mutableStateOf(0.6f)
+    private var availableSecondaryLanguages by mutableStateOf(listOf<String>()) // V2 dictionaries
 
     // Privacy settings - all OFF by default (CleverKeys is fully offline)
     private var privacyCollectSwipe by mutableStateOf(false)
@@ -2347,6 +2349,36 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         }
                     )
 
+                    // Secondary Language selector - shows available V2 dictionaries
+                    val secondaryOptions = listOf("none") + availableSecondaryLanguages
+                    val secondaryDisplayOptions = secondaryOptions.map { getLanguageDisplayName(it) }
+                    val secondarySelectedIndex = secondaryOptions.indexOf(secondaryLanguage).coerceAtLeast(0)
+
+                    SettingsDropdown(
+                        title = "Secondary Language",
+                        description = if (availableSecondaryLanguages.isEmpty())
+                            "No additional dictionaries available"
+                        else
+                            "Enable bilingual predictions (e.g., English + Spanish)",
+                        options = secondaryDisplayOptions,
+                        selectedIndex = secondarySelectedIndex,
+                        onSelectionChange = { index ->
+                            secondaryLanguage = secondaryOptions.getOrElse(index) { "none" }
+                            saveSetting("pref_secondary_language", secondaryLanguage)
+                            // TODO: Trigger secondary dictionary loading in CleverKeysService
+                        }
+                    )
+
+                    if (secondaryLanguage != "none") {
+                        Text(
+                            text = "Secondary dictionary will be loaded on next keyboard open. " +
+                                   "Words from both languages will appear in predictions.",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 8.dp)
+                        )
+                    }
+
                     SettingsSwitch(
                         title = "Auto-Detect Language",
                         description = "Automatically detect and switch languages while typing",
@@ -3264,8 +3296,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Multi-language settings
         multiLangEnabled = prefs.getSafeBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)
         primaryLanguage = prefs.getSafeString("pref_primary_language", Defaults.PRIMARY_LANGUAGE)
+        secondaryLanguage = prefs.getSafeString("pref_secondary_language", "none")
         autoDetectLanguage = prefs.getSafeBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
         languageDetectionSensitivity = Config.safeGetFloat(prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
+
+        // Detect available V2 dictionaries for secondary language options
+        availableSecondaryLanguages = detectAvailableV2Dictionaries()
 
         // Privacy settings - all OFF by default (CleverKeys is fully offline)
         privacyCollectSwipe = prefs.getSafeBoolean("privacy_collect_swipe", Defaults.PRIVACY_COLLECT_SWIPE)
@@ -3329,6 +3365,67 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             swipe_common_words_boost = swipeCommonWordsBoost
             swipe_top5000_boost = swipeTop5000Boost
             swipe_rare_words_penalty = swipeRareWordsPenalty
+        }
+    }
+
+    /**
+     * Detect available V2 binary dictionaries for secondary language selection.
+     * Scans assets/dictionaries/ for *_enhanced.bin files.
+     *
+     * @return List of language codes (e.g., ["es", "fr", "de"])
+     */
+    private fun detectAvailableV2Dictionaries(): List<String> {
+        val languages = mutableListOf<String>()
+        try {
+            val files = assets.list("dictionaries") ?: emptyArray()
+            for (file in files) {
+                if (file.endsWith("_enhanced.bin")) {
+                    val langCode = file.removeSuffix("_enhanced.bin")
+                    // Only include non-English languages as secondary options
+                    if (langCode != "en" && langCode.length in 2..3) {
+                        languages.add(langCode)
+                    }
+                }
+            }
+            android.util.Log.i(TAG, "Available V2 dictionaries: $languages")
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Failed to detect V2 dictionaries", e)
+        }
+        return languages.sorted()
+    }
+
+    /**
+     * Get display name for language code.
+     */
+    private fun getLanguageDisplayName(code: String): String {
+        return when (code) {
+            "none" -> "None (English only)"
+            "es" -> "Spanish (Español)"
+            "fr" -> "French (Français)"
+            "de" -> "German (Deutsch)"
+            "pt" -> "Portuguese (Português)"
+            "it" -> "Italian (Italiano)"
+            "ru" -> "Russian (Русский)"
+            "nl" -> "Dutch (Nederlands)"
+            "pl" -> "Polish (Polski)"
+            "sv" -> "Swedish (Svenska)"
+            "da" -> "Danish (Dansk)"
+            "no" -> "Norwegian (Norsk)"
+            "fi" -> "Finnish (Suomi)"
+            "cs" -> "Czech (Čeština)"
+            "hu" -> "Hungarian (Magyar)"
+            "tr" -> "Turkish (Türkçe)"
+            "el" -> "Greek (Ελληνικά)"
+            "ro" -> "Romanian (Română)"
+            "uk" -> "Ukrainian (Українська)"
+            "hr" -> "Croatian (Hrvatski)"
+            "sk" -> "Slovak (Slovenčina)"
+            "sl" -> "Slovenian (Slovenščina)"
+            "bg" -> "Bulgarian (Български)"
+            "ca" -> "Catalan (Català)"
+            "eu" -> "Basque (Euskara)"
+            "gl" -> "Galician (Galego)"
+            else -> code.uppercase()
         }
     }
 
