@@ -71,8 +71,17 @@ class PredictionViewSetup(
             // ONNX model loading takes 2.8-4.4s and MUST NOT block the main thread
             // OPTIMIZATION: Only spawn thread if neural engine not yet ready
             if (predictionCoordinator?.isSwipeTypingAvailable() == false) {
+                // Capture keyboard view for use in callback
+                val viewForCallback = keyboardView
                 Thread {
                     predictionCoordinator.ensureInitialized()
+                    // FIX v1.1.81: After initialization, trigger layout check on main thread
+                    // This ensures setNeuralKeyboardLayout() is called even if layout was
+                    // already complete before engine finished loading
+                    viewForCallback.post {
+                        // Force a layout pass to trigger the OnGlobalLayoutListener
+                        viewForCallback.requestLayout()
+                    }
                 }.start()
             }
 
@@ -151,39 +160,53 @@ class PredictionViewSetup(
             val inputView = inputViewContainer ?: keyboardView
 
             // Set correct keyboard dimensions for CGR after view is laid out
-            val neuralEngine = predictionCoordinator?.getNeuralEngine()
-            if (neuralEngine != null) {
-                // Helper to update layout dimensions and keys
-                val updateNeuralLayout = {
-                    if (keyboardView.width > 0 && keyboardView.height > 0) {
-                        // Use dynamic keyboard dimensions
-                        val keyboardWidth = keyboardView.width.toFloat()
-                        val keyboardHeight = neuralLayoutHelper?.calculateDynamicKeyboardHeight()
-                            ?: keyboardView.height.toFloat()
+            // FIX v1.1.81: On first app load, neural engine may still be initializing in background
+            // Keep the layout listener active until BOTH conditions are met:
+            // 1. Keyboard view has valid dimensions (layout complete)
+            // 2. Neural engine is initialized and ready
 
-                        neuralEngine.setKeyboardDimensions(keyboardWidth, keyboardHeight)
-
-                        // Set real key positions for accurate coordinate mapping
-                        neuralLayoutHelper?.setNeuralKeyboardLayout()
-                    }
+            // Helper to update layout dimensions and keys - requires both conditions
+            val updateNeuralLayout: () -> Boolean = updateFun@{
+                val engine = predictionCoordinator?.getNeuralEngine()
+                if (engine == null) {
+                    // Engine not ready yet - keep listener active
+                    return@updateFun false
+                }
+                if (keyboardView.width <= 0 || keyboardView.height <= 0) {
+                    // Layout not ready yet - keep listener active
+                    return@updateFun false
                 }
 
-                // Try setting immediately if dimensions are already available
-                // This ensures predictions work even if onGlobalLayout doesn't fire (e.g. view reuse)
-                updateNeuralLayout()
+                // Both conditions met - set up neural layout
+                val keyboardWidth = keyboardView.width.toFloat()
+                val keyboardHeight = neuralLayoutHelper?.calculateDynamicKeyboardHeight()
+                    ?: keyboardView.height.toFloat()
 
-                // Also add listener to catch layout completion or changes
+                engine.setKeyboardDimensions(keyboardWidth, keyboardHeight)
+
+                // Set real key positions for accurate coordinate mapping
+                neuralLayoutHelper?.setNeuralKeyboardLayout()
+
+                return@updateFun true // Success - can remove listener
+            }
+
+            // Try setting immediately if both conditions are already met
+            // This ensures predictions work for subsequent input views (view reuse)
+            val immediateSuccess = updateNeuralLayout()
+
+            // Add listener to catch layout completion AND/OR engine initialization
+            // Only remove when both conditions are satisfied
+            if (!immediateSuccess) {
                 keyboardView.viewTreeObserver.addOnGlobalLayoutListener(
                     object : ViewTreeObserver.OnGlobalLayoutListener {
                         override fun onGlobalLayout() {
-                            // Ensure we have valid dimensions
-                            if (keyboardView.width > 0 && keyboardView.height > 0) {
-                                updateNeuralLayout()
-
-                                // Remove listener to avoid repeated calls
+                            // Try to set up neural layout - returns true when successful
+                            if (updateNeuralLayout()) {
+                                // Both conditions met - remove listener
                                 keyboardView.viewTreeObserver
                                     .removeOnGlobalLayoutListener(this)
                             }
+                            // If false, listener stays active to retry on next layout pass
                         }
                     }
                 )
