@@ -182,19 +182,22 @@ class PrivacyManager(private val context: Context) {
 
     /**
      * Check if specific data collection type is allowed.
-     * Reads from main app preferences where SettingsActivity stores the toggles.
+     * Reads directly from main app preferences where SettingsActivity stores the toggles.
+     *
+     * Note: Since CleverKeys has no internet permission and all data stays on-device,
+     * the toggle in Settings is the sole control - no separate "consent" layer needed.
      */
     fun canCollectSwipeData(): Boolean {
-        // Read from main prefs using the key that SettingsActivity uses
-        return hasConsent() && mainPrefs.getBoolean("privacy_collect_swipe", Defaults.PRIVACY_COLLECT_SWIPE)
+        // Read directly from main prefs - toggle is the only control
+        return mainPrefs.getBoolean("privacy_collect_swipe", Defaults.PRIVACY_COLLECT_SWIPE)
     }
 
     fun canCollectPerformanceData(): Boolean {
-        return hasConsent() && mainPrefs.getBoolean("privacy_collect_performance", Defaults.PRIVACY_COLLECT_PERFORMANCE)
+        return mainPrefs.getBoolean("privacy_collect_performance", Defaults.PRIVACY_COLLECT_PERFORMANCE)
     }
 
     fun canCollectErrorLogs(): Boolean {
-        return hasConsent() && mainPrefs.getBoolean("privacy_collect_errors", Defaults.PRIVACY_COLLECT_ERRORS)
+        return mainPrefs.getBoolean("privacy_collect_errors", Defaults.PRIVACY_COLLECT_ERRORS)
     }
 
     /**

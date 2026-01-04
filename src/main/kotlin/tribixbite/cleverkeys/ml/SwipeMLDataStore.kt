@@ -404,7 +404,7 @@ class SwipeMLDataStore private constructor(context: Context) :
                 val source = cursor.getString(0)
                 val count = cursor.getInt(1)
                 when (source) {
-                    "calibration" -> stats.calibrationCount = count
+                    "calibration", "neural_calibration" -> stats.calibrationCount += count
                     "user_selection" -> stats.userSelectionCount = count
                 }
             }
@@ -527,8 +527,9 @@ class SwipeMLDataStore private constructor(context: Context) :
         editor.putInt(PREF_TOTAL_COUNT, total + 1)
 
         // Increment source-specific count
+        // Note: "neural_calibration" is the source used by SwipeCalibrationActivity
         when (source) {
-            "calibration" -> {
+            "calibration", "neural_calibration" -> {
                 val count = prefs.getInt(PREF_CALIBRATION_COUNT, 0)
                 editor.putInt(PREF_CALIBRATION_COUNT, count + 1)
             }
