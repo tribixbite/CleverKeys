@@ -2327,40 +2327,33 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
 
                 if (multiLangEnabled) {
-                    SettingsDropdown(
-                        title = "Primary Language",
-                        description = "Main language for predictions",
-                        options = listOf("English", "Spanish", "French", "German", "Portuguese", "Italian", "Russian", "Chinese", "Japanese", "Korean"),
-                        selectedIndex = when (primaryLanguage) {
-                            "en" -> 0
-                            "es" -> 1
-                            "fr" -> 2
-                            "de" -> 3
-                            "pt" -> 4
-                            "it" -> 5
-                            "ru" -> 6
-                            "zh" -> 7
-                            "ja" -> 8
-                            "ko" -> 9
-                            else -> 0
-                        },
-                        onSelectionChange = { index ->
-                            primaryLanguage = when (index) {
-                                0 -> "en"
-                                1 -> "es"
-                                2 -> "fr"
-                                3 -> "de"
-                                4 -> "pt"
-                                5 -> "it"
-                                6 -> "ru"
-                                7 -> "zh"
-                                8 -> "ja"
-                                9 -> "ko"
-                                else -> "en"
-                            }
-                            saveSetting("pref_primary_language", primaryLanguage)
+                    // Primary language is fixed to English (neural model is English-trained QWERTY)
+                    // Show as read-only info
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Primary Language",
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = "Neural model is trained for English QWERTY layout",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
-                    )
+                        Text(
+                            text = "English",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
 
                     // Secondary Language selector - shows available V2 dictionaries
                     val secondaryOptions = listOf("none") + availableSecondaryLanguages
