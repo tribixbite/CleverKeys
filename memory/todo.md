@@ -44,13 +44,24 @@
 **Bugs Fixed (2026-01-04)**:
 - [x] Primary dictionary lookup order: Now checks primary FIRST, then falls back to English
 - [x] English fallback disabled: When Primary=French, Secondary=None → only French predictions
-- [x] Multilang toggle bug: Dictionary now loads for ANY non-English primary (multilang toggle only controls secondary language feature)
+- [x] Multilang toggle bug: Dictionary now loads for ANY non-English primary
+- [x] **CRITICAL FIX**: Beam search trie expansion - French normalized words now added to vocabulary trie
 
-**Testing Needed** (device locked - awaiting manual unlock):
+**Architecture Documentation**:
+- NEW: `docs/specs/neural-multilanguage-architecture.md` - Complete pipeline documentation
+
+**The Fix Explained**:
+The beam search decoder was constrained to English vocabulary trie, which meant French-only
+words like "être" (normalized: "etre") could never be produced. Now when loading a non-English
+primary dictionary, the normalized words are added to the trie, enabling beam search to produce
+them. Post-processing then converts "etre" → "être" via accent mapping.
+
+**Testing Needed** (ADB disconnected - manual test required):
 - [ ] Verify Primary Language dropdown shows EN, ES, FR, PT, IT, DE
 - [ ] Test accent recovery: swipe "cafe" → "café" with French primary
-- [ ] Test accent recovery: swipe "ecole" → "école" with French primary
-- [ ] Confirm no English words appear when Primary=French, Secondary=None
+- [ ] Test French-only words: swipe "etre" → "être" (was blocked before)
+- [ ] Test French-only words: swipe "francais" → "français"
+- [ ] Confirm no English-only words appear when Primary=French, Secondary=None
 
 ---
 
