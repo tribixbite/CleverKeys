@@ -515,7 +515,7 @@ Now confidence values are COMPARABLE across word lengths!
 | Coordinates | [0,1] normalized | [0,1] normalized | ✅ |
 
 **Current Version**: 1.1.84 (versionCode 101843 for x86_64)
-**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.79
+**GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.84
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 **Final Config**: No srclibs, no postbuild - just gradle + prebuild sed!
 
