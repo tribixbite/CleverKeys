@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-04
-**Status**: v1.1.81 - Phase 4 multilanguage: auto-switching complete
+**Status**: v1.1.82 - Multilanguage complete (Phases 1-4)
 
 ---
 
@@ -502,7 +502,7 @@ Now confidence values are COMPARABLE across word lengths!
 | Token map | a=4..z=29 | a=4..z=29 | ✅ |
 | Coordinates | [0,1] normalized | [0,1] normalized | ✅ |
 
-**Current Version**: 1.1.81 (versionCode 101813 for x86_64)
+**Current Version**: 1.1.82 (versionCode 101823 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.79
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 **Final Config**: No srclibs, no postbuild - just gradle + prebuild sed!
