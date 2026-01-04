@@ -450,6 +450,11 @@ Now confidence values are COMPARABLE across word lengths!
 - [x] Wire preference to load secondary dictionary on startup
   - SwipePredictorOrchestrator.loadSecondaryDictionaryFromPrefs()
   - Automatically loads/unloads based on user preference
+- [x] Integrate secondary dictionary into filterPredictions
+  - Maps 26-letter NN output to accented forms
+  - Scoring: NN confidence × 0.6 + frequency rank × 0.3 × secondary penalty
+  - Deduplication prevents duplicates from both dictionaries
+  - Debug logging with 🌍 emoji for secondary matches
 
 ### Phase 3: Language Detection (v1.2.2)
 - [ ] Implement `UnigramLanguageDetector` (word-based)
