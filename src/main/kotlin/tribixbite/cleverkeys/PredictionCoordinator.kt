@@ -94,11 +94,10 @@ class PredictionCoordinator(
 
         // Initialize neural engine if swipe typing is enabled
         // This uses DE storage so it's safe before unlock
+        // CRITICAL: Must be SYNCHRONOUS to ensure first swipe works
+        // ~200ms load is acceptable for cold start; singleton persists after
         if (config.swipe_typing_enabled) {
-            // FIX: Initialize neural engine on background thread to avoid blocking startup
-            thread {
-                initializeNeuralEngine()
-            }
+            initializeNeuralEngine()
         }
     }
 

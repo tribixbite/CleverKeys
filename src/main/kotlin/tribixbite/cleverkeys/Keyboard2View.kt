@@ -790,6 +790,25 @@ class Keyboard2View @JvmOverloads constructor(
             width = (_keyWidth * keyboard.keysWidth + _marginLeft + _marginRight).toInt()
         }
 
+        // FIX: If insets haven't been applied yet, try to get them from root window
+        // This fixes keyboard appearing behind nav bar on very first load
+        if (_insets_bottom == 0 && android.os.Build.VERSION.SDK_INT >= 23) {
+            rootWindowInsets?.let { wi ->
+                if (android.os.Build.VERSION.SDK_INT >= 30) {
+                    val insets = wi.getInsets(android.view.WindowInsets.Type.systemBars())
+                    _insets_bottom = insets.bottom
+                    _insets_left = insets.left
+                    _insets_right = insets.right
+                } else if (android.os.Build.VERSION.SDK_INT >= 21) {
+                    @Suppress("DEPRECATION")
+                    val insets = wi.systemWindowInsets
+                    _insets_bottom = insets.bottom
+                    _insets_left = insets.left
+                    _insets_right = insets.right
+                }
+            }
+        }
+
         _marginLeft = maxOf(_config.margin_left, _insets_left.toFloat())
         _marginRight = maxOf(_config.margin_right, _insets_right.toFloat())
         _marginBottom = _config.margin_bottom + _insets_bottom.toFloat()
