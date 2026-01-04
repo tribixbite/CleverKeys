@@ -666,6 +666,63 @@ class OptimizedVocabulary(private val context: Context) {
             }
         }
 
+        // SECONDARY DICTIONARY: Add matches from secondary language dictionary
+        // This enables bilingual predictions (e.g., English + Spanish)
+        val secondaryIndex = secondaryNormalizedIndex
+        if (secondaryIndex != null && rawPredictions.isNotEmpty()) {
+            try {
+                for (candidate in rawPredictions) {
+                    val word = candidate.word.toLowerCase(Locale.ROOT).trim()
+
+                    // Skip if invalid format (NN outputs 26-letter only)
+                    if (!word.matches("^[a-z]+$".toRegex())) continue
+
+                    // Look up in secondary dictionary (accent-aware)
+                    val normalized = AccentNormalizer.normalize(word)
+                    val results = secondaryIndex.getWordsWithPrefix(normalized).filter {
+                        it.normalized == normalized // Exact match only
+                    }
+
+                    for (result in results) {
+                        // Check if this canonical form is already in predictions
+                        val alreadyPresent = validPredictions.any {
+                            AccentNormalizer.normalize(it.word) == result.normalized
+                        }
+                        if (alreadyPresent) continue
+
+                        // Score: NN confidence * frequency rank score * secondary penalty
+                        val rankScore = 1.0f - (result.bestFrequencyRank / 255f)
+                        val secondaryPenalty = 0.9f // Slight penalty for secondary language
+                        val score = candidate.confidence * 0.6f + rankScore * 0.3f * secondaryPenalty
+
+                        validPredictions.add(
+                            FilteredPrediction(
+                                result.bestCanonical,  // Accented form (e.g., "español")
+                                score,
+                                candidate.confidence,
+                                rankScore,
+                                "secondary"
+                            )
+                        )
+
+                        if (debugMode) {
+                            val msg = String.format("🌍 SECONDARY: \"%s\" → \"%s\" (score=%.4f)\n",
+                                word, result.bestCanonical, score)
+                            Log.d(TAG, msg)
+                            sendDebugLog(msg)
+                        }
+                    }
+                }
+
+                // Re-sort after adding secondary matches
+                if (validPredictions.isNotEmpty()) {
+                    validPredictions.sortWith { a, b -> b.score.compareTo(a.score) }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to apply secondary dictionary lookup", e)
+            }
+        }
+
         // DEBUG: Show final ranking
         if (debugMode && validPredictions.isNotEmpty()) {
             val ranking = StringBuilder("\n🏆 FINAL RANKING (after combining NN + frequency):\n")
