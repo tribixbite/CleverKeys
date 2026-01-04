@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-03
-**Status**: v1.1.81 - Collected Data View/Delete UI
+**Last Updated**: 2026-01-04
+**Status**: v1.1.81 - First-load NN fix
 
 ---
 
@@ -380,6 +380,7 @@ Now confidence values are COMPARABLE across word lengths!
 - Matched values from working config export
 
 **Testing Needed**:
+- [ ] Test first-load NN fix: clear app data, verify swipe works on first try
 - [ ] Test: swipe "dangerously" in SwipeDebugActivity
 - [ ] Verify confidence values are now length-normalized
 - [ ] Confirm long words now competitive with short words
@@ -392,6 +393,16 @@ Now confidence values are COMPARABLE across word lengths!
   - View: Opens dialog showing all collected swipes with stats
   - Delete: Confirmation dialog to clear all data
   - Dialog shows: target word, date, keys traversed, trace points, collection source
+
+**Completed (2026-01-04)**:
+- [x] Fix NN/swipe typing not working on very first app load (7aebb6a1)
+  - Root cause: Race condition between async engine init and layout listener
+  - OnGlobalLayoutListener fired before neural engine finished loading
+  - Listener removed itself after first layout, never calling setNeuralKeyboardLayout()
+  - Fix: Keep listener active until BOTH conditions met (engine ready AND layout done)
+  - Added post-initialization requestLayout() to trigger listener after engine loads
+- [x] Reverted unnecessary GC optimization in trajectory processor (263ec18f)
+  - User questioned added complexity; optimization was imperceptible to users
 
 ---
 

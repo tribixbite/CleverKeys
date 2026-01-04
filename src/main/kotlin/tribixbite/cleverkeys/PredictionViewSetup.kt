@@ -71,16 +71,25 @@ class PredictionViewSetup(
             // ONNX model loading takes 2.8-4.4s and MUST NOT block the main thread
             // OPTIMIZATION: Only spawn thread if neural engine not yet ready
             if (predictionCoordinator?.isSwipeTypingAvailable() == false) {
-                // Capture keyboard view for use in callback
-                val viewForCallback = keyboardView
+                // Capture references for use in callback
+                val coordRef = predictionCoordinator
+                val helperRef = neuralLayoutHelper
+                val viewRef = keyboardView
                 Thread {
-                    predictionCoordinator.ensureInitialized()
-                    // FIX v1.1.81: After initialization, trigger layout check on main thread
-                    // This ensures setNeuralKeyboardLayout() is called even if layout was
-                    // already complete before engine finished loading
-                    viewForCallback.post {
-                        // Force a layout pass to trigger the OnGlobalLayoutListener
-                        viewForCallback.requestLayout()
+                    coordRef.ensureInitialized()
+                    // FIX v1.1.81: After initialization, set up neural layout directly
+                    // Don't rely on requestLayout() triggering OnGlobalLayoutListener
+                    viewRef.post {
+                        val engine = coordRef.getNeuralEngine()
+                        if (engine != null && viewRef.width > 0 && viewRef.height > 0) {
+                            val kbWidth = viewRef.width.toFloat()
+                            val kbHeight = helperRef?.calculateDynamicKeyboardHeight()
+                                ?: viewRef.height.toFloat()
+                            engine.setKeyboardDimensions(kbWidth, kbHeight)
+                            helperRef?.setNeuralKeyboardLayout()
+                            android.util.Log.d("PredictionViewSetup",
+                                "Neural layout setup complete after async init: ${kbWidth}x${kbHeight}")
+                        }
                     }
                 }.start()
             }
