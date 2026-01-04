@@ -1083,7 +1083,19 @@ class OptimizedVocabulary(private val context: Context) {
 
         if (loaded) {
             normalizedIndex = index
-            Log.i(TAG, "Primary dictionary loaded: $language (${index.size()} normalized forms)")
+
+            // CRITICAL FIX: Expand vocabulary trie with normalized words from primary dictionary
+            // This allows beam search to produce words like "etre" which can then be
+            // converted to "être" during post-processing accent recovery.
+            // Without this, beam search is constrained to English-only vocabulary.
+            val normalizedWords = index.getAllNormalizedWords()
+            val newWords = normalizedWords.filter { !vocabularyTrie.containsWord(it) }
+            if (newWords.isNotEmpty()) {
+                vocabularyTrie.insertAll(newWords)
+                Log.i(TAG, "Expanded vocabulary trie with ${newWords.size} ${language.uppercase()} normalized words")
+            }
+
+            Log.i(TAG, "Primary dictionary loaded: $language (${index.size()} canonical, ${index.normalizedCount()} normalized)")
             return true
         } else {
             Log.w(TAG, "Failed to load primary dictionary: $language")

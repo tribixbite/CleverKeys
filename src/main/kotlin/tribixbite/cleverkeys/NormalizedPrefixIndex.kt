@@ -255,6 +255,14 @@ class NormalizedPrefixIndex {
     fun prefixCount(): Int = prefixIndex.size
 
     /**
+     * Get all normalized word forms in this index.
+     * Used to expand vocabulary trie for beam search constraint.
+     *
+     * @return Set of all normalized (accent-free) words
+     */
+    fun getAllNormalizedWords(): Set<String> = canonicalMap.keys.toSet()
+
+    /**
      * Merge another index into this one.
      *
      * Used for combining primary and secondary language dictionaries.
