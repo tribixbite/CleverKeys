@@ -21,6 +21,7 @@ import android.view.inputmethod.InputMethodSubtype
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import tribixbite.cleverkeys.ml.SwipeMLData
+import tribixbite.cleverkeys.onnx.SwipePredictorOrchestrator
 
 /**
  * Main InputMethodService implementation for Unexpected Keyboard.
@@ -571,6 +572,16 @@ class CleverKeysService : InputMethodService(),
         // We only do initial config load here if config is completely null (shouldn't happen normally)
         if (_config == null) {
             refresh_config()
+        }
+
+        // Clear language detection history when switching to a new text field (not restarting)
+        // This resets the language detector's word tracking for fresh context
+        if (!restarting) {
+            try {
+                SwipePredictorOrchestrator.getInstance(this).clearLanguageHistory()
+            } catch (e: Exception) {
+                // Ignore - orchestrator may not be initialized yet
+            }
         }
 
         // Check if the current view was created with a stale theme

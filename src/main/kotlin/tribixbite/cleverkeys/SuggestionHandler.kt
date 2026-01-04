@@ -7,6 +7,7 @@ import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import tribixbite.cleverkeys.ml.SwipeMLData
+import tribixbite.cleverkeys.onnx.SwipePredictorOrchestrator
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -514,6 +515,13 @@ class SuggestionHandler(
 
         // Add word to WordPredictor for language detection
         predictionCoordinator.getWordPredictor()?.addWordToContext(word)
+
+        // Track word for multi-language detection
+        try {
+            SwipePredictorOrchestrator.getInstance(context).trackCommittedWord(word)
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to track word for language detection", e)
+        }
     }
 
     /**

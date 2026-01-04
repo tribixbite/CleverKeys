@@ -17,6 +17,7 @@ import tribixbite.cleverkeys.SwipeInput
 import tribixbite.cleverkeys.SwipeResampler
 import tribixbite.cleverkeys.SwipeTokenizer
 import tribixbite.cleverkeys.SwipeTrajectoryProcessor
+import tribixbite.cleverkeys.UnigramLanguageDetector
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -48,6 +49,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     private val modelLoader = ModelLoader(context, ortEnvironment)
     private val trajectoryProcessor = SwipeTrajectoryProcessor() // Move here
     private val versionManager = ModelVersionManager.getInstance(context)
+    private val languageDetector = UnigramLanguageDetector(context)
     private var tensorFactory: TensorFactory? = null
     private var encoderWrapper: EncoderWrapper? = null
     private var decoderWrapper: DecoderWrapper? = null
@@ -151,6 +153,9 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
 
             // Load secondary language dictionary if configured
             loadSecondaryDictionaryFromPrefs()
+
+            // Initialize language detector with available languages
+            initializeLanguageDetector()
 
             // Load Models
             val encoderPath = "models/swipe_encoder_android.onnx"
@@ -469,6 +474,71 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
      * Check if secondary dictionary is active.
      */
     fun hasSecondaryDictionary(): Boolean = vocabulary.hasSecondaryDictionary()
+
+    /**
+     * Initialize language detector with configured languages.
+     * Loads unigram frequency lists for English and any secondary language.
+     */
+    private fun initializeLanguageDetector() {
+        try {
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+            val multiLangEnabled = prefs.getBoolean("pref_enable_multilang", false)
+            val secondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
+
+            // Always load English as primary
+            val languagesToLoad = mutableListOf("en")
+
+            // Add secondary language if configured
+            if (multiLangEnabled && secondaryLang != "none") {
+                languagesToLoad.add(secondaryLang)
+            }
+
+            val loaded = languageDetector.loadLanguages(languagesToLoad)
+            Log.i(TAG, "Language detector initialized: $loaded/${languagesToLoad.size} languages")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error initializing language detector", e)
+        }
+    }
+
+    /**
+     * Track a committed word for language detection.
+     * Call this when the user selects a suggestion or commits a word via space/punctuation.
+     * The language detector uses this to build a profile of the user's typing language.
+     *
+     * @param word The word that was committed
+     */
+    fun trackCommittedWord(word: String) {
+        languageDetector.addWord(word)
+
+        // Log language scores in debug mode
+        if (debugModeActive) {
+            val scores = languageDetector.getLanguageScores()
+            val primary = languageDetector.getPrimaryLanguage()
+            logDebug("🌍 Language detection: primary=$primary, scores=$scores\n")
+        }
+    }
+
+    /**
+     * Get current language detection scores.
+     *
+     * @return Map of language code → confidence score (0.0-1.0)
+     */
+    fun getLanguageScores(): Map<String, Float> = languageDetector.getLanguageScores()
+
+    /**
+     * Get the currently detected primary language.
+     *
+     * @return Language code (e.g., "en", "es") or null if no languages loaded
+     */
+    fun getDetectedLanguage(): String? = languageDetector.getPrimaryLanguage()
+
+    /**
+     * Clear language detection history.
+     * Call this when starting a new text field or conversation context.
+     */
+    fun clearLanguageHistory() {
+        languageDetector.clearHistory()
+    }
 
     fun setDebugLogger(logger: Any?) {
         // Accept NeuralSwipeTypingEngine.DebugLogger and convert to lambda
