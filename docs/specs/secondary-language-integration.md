@@ -3,8 +3,10 @@
 ## Feature Overview
 **Feature Name**: Secondary Language Integration (Dual-Dictionary Mode)
 **Priority**: P2 (Medium)
-**Status**: Proposal
-**Target Version**: v1.3.0
+**Status**: Architecture Finalized (2026-01-04)
+**Target Version**: v1.2.1
+
+> **Note**: This spec is a companion to `dictionary-and-language-system.md`. See Section 5 of that spec for the unified `SuggestionRanker` architecture.
 
 ### Summary
 This feature allows users to import a second dictionary (word list) that functions simultaneously with the primary language. This enables bilingual typing (e.g., English + Spanish) on the existing QWERTY layout without requiring the user to manually switch languages or layouts.

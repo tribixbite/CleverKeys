@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-04
-**Status**: v1.1.81 - First-load NN fix
+**Status**: v1.1.81 - Multilanguage architecture finalized
 
 ---
 
@@ -403,6 +403,46 @@ Now confidence values are COMPARABLE across word lengths!
   - Added post-initialization requestLayout() to trigger listener after engine loads
 - [x] Reverted unnecessary GC optimization in trajectory processor (263ec18f)
   - User questioned added complexity; optimization was imperceptible to users
+- [x] Fix keyboard behind nav bar on first display (system resource fallback)
+  - Root cause: onMeasure runs before onApplyWindowInsets callback
+  - Fix: Get nav bar height from `navigation_bar_height` system resource in onAttachedToWindow
+- [x] Fix GitHub issue #34: Android 8.1 (API 27) crash
+  - Error: NoSuchMethodError for getSystemWindowInsets()
+  - Root cause: wi.systemWindowInsets compiles to getSystemWindowInsets() returning Insets (API 29+)
+  - Fix: Split API branches - API 29 uses systemWindowInsets, API 21-28 uses individual systemWindowInsetLeft/Right/Bottom
+- [x] Multilanguage architecture finalized with Gemini consultation
+  - Accent handling: Normalize NN output (cafe) → lookup canonical (café)
+  - Binary format v2: Trie-based with normalized keys, frequency ranks (0-255)
+  - Multi-dict merging: SuggestionRanker with unified scoring
+  - Language detection: Word-based unigram frequency model
+  - Dictionary sources: AOSP (CC BY 4.0) + wordfreq/FrequencyWords (CC BY-SA 4.0)
+  - Updated docs/specs/dictionary-and-language-system.md with full implementation plan
+
+---
+
+## Multilanguage Implementation Roadmap
+
+### Phase 1: Foundation (v1.2.0)
+- [ ] Implement `AccentNormalizer` (Unicode NFD + accent stripping)
+- [ ] Create `NormalizedPrefixIndex` mapping normalized → canonical
+- [ ] Update `BinaryDictionaryLoader` for v2 format with trie
+- [ ] Build script: `scripts/build_dictionary.py`
+- [ ] Generate Spanish dictionary from AOSP + wordfreq
+
+### Phase 2: Multi-Dictionary (v1.2.1)
+- [ ] Implement `SuggestionRanker` for unified scoring
+- [ ] Add secondary dictionary slot in `DictionaryManager`
+- [ ] UI: Settings → Languages → Secondary Language import
+
+### Phase 3: Language Detection (v1.2.2)
+- [ ] Implement `UnigramLanguageDetector` (word-based)
+- [ ] Ship unigram lists for bundled languages
+- [ ] Auto-switching with configurable sensitivity
+
+### Phase 4: Language Packs (v1.3.0)
+- [ ] Language Pack ZIP format spec
+- [ ] Download manager for on-demand languages
+- [ ] UI: Language Store in Settings
 
 ---
 
