@@ -1,104 +1,233 @@
 # Secondary Language Integration Specification
 
 ## Feature Overview
-**Feature Name**: Secondary Language Integration (Dual-Dictionary Mode)
-**Priority**: P2 (Medium)
-**Status**: Architecture Finalized (2026-01-04)
-**Target Version**: v1.2.1
-
-> **Note**: This spec is a companion to `dictionary-and-language-system.md`. See Section 5 of that spec for the unified `SuggestionRanker` architecture.
+**Feature Name**: Secondary Language Integration (Multilanguage Mode)
+**Priority**: P1 (High)
+**Status**: ✅ COMPLETE (v1.1.84)
+**Implementation Date**: 2026-01-04
 
 ### Summary
-This feature allows users to import a second dictionary (word list) that functions simultaneously with the primary language. This enables bilingual typing (e.g., English + Spanish) on the existing QWERTY layout without requiring the user to manually switch languages or layouts.
+This feature allows users to type in multiple languages simultaneously using a single QWERTY layout. The system combines:
+- **V2 Binary Dictionaries** with accent normalization (e.g., "espanol" → "español")
+- **Unigram Language Detection** for automatic language context switching
+- **Language Packs** for importing additional languages without internet
 
 ### Motivation
-Many users type in two languages interchangeably. Switching language packs completely (which changes the layout and neural models) is friction-heavy for single sentences or mixed code-switching. A "Secondary Language" feature allows the prediction engine to suggest words from *both* languages at once, relying on the primary language's layout and neural model.
-
-### Constraints
-*   **Layout Compatibility**: The secondary language must be compatible with the current active layout (e.g., Latin script languages like French, Spanish, German, Portuguese on a US QWERTY layout).
-*   **Neural Model Reuse**: We will **reuse** the active language's neural model (likely English). This works because the geometric trace for "HOLA" is identical on a QWERTY keyboard regardless of whether the underlying model "knows" Spanish, provided the dictionary validates the word "HOLA".
-*   **Scope**: Only one secondary language active at a time.
+Many users type in two languages interchangeably. Rather than switching layouts, the prediction engine suggests words from *both* languages at once, using the primary language's neural model with a secondary dictionary for validation and accent mapping.
 
 ---
 
-## 1. User Experience
+## Architecture Overview
 
-### 1.1 Importing a Secondary Language
-*   **Settings Location**: `Settings -> Languages -> Secondary Language`.
-*   **Action**: "Import Dictionary File".
-*   **File Format**: Simple text file (one word per line) or JSON (`{"word": freq}`).
-*   **UI Feedback**: Toast confirming import count (e.g., "Imported 35,000 words into Secondary Dictionary").
+### Phase 1: Accent Normalization (v1.1.80)
+- **AccentNormalizer**: Maps 26-letter NN output to accented canonical forms
+- **NormalizedPrefixIndex**: Fast prefix lookup with accent mapping
+- **BinaryDictionaryLoader V2**: Loads dictionaries with accent data
 
-### 1.2 Managing the Dictionary
-*   **Location**: `Dictionary Manager` (via "Manage Custom Words").
-*   **New Tab**: A "Secondary" tab is added between "User Dict" and "Disabled".
-*   **Functionality**:
-    *   View all words in the secondary dictionary.
-    *   Search/Filter.
-    *   Delete specific words (if they conflict with primary language words).
-    *   "Clear All" option to remove the secondary language.
+### Phase 2: Multi-Dictionary Support (v1.1.81)
+- **SuggestionRanker**: Merges results from primary + secondary dictionaries
+- **OptimizedVocabulary**: Manages dual dictionary loading
+- **Settings UI**: Secondary language picker in Multi-Language section
 
-### 1.3 Typing Experience
-*   When typing/swiping, suggestions appear from *both* the Primary (Main + User + Custom) and Secondary dictionaries.
-*   No UI toggle is needed while typing.
-*   Prediction ranking handles conflicts (e.g., if "pie" exists in both, the frequency/context determines the winner).
+### Phase 3: Language Detection (v1.1.81)
+- **UnigramLanguageDetector**: Word-based detection using frequency analysis
+- Sliding window of 10 recent words
+- 5000 top unigrams per language (EN, ES bundled)
+
+### Phase 4: Auto-Switching (v1.1.82)
+- Dynamic language multiplier adjusts secondary dictionary scoring
+- Configurable detection sensitivity (0.4-0.9)
+- Multiplier formula:
+  - Secondary > threshold: boost (1.1+)
+  - Primary > threshold: penalty (0.85)
+  - Balanced: neutral (1.0)
+
+### Phase 5: Language Packs (v1.1.84)
+- **LanguagePackManager**: Import/validate/store ZIP packs
+- **ZIP Format**: manifest.json + dictionary.bin + unigrams.txt
+- No internet permission needed (Storage Access Framework)
 
 ---
 
-## 2. Technical Implementation
+## Technical Components
 
-### 2.1 Data Persistence
-*   **Storage**: A dedicated file `secondary_dictionary.bin` (or `.json`) in app-private storage.
-*   **Separation**: kept distinct from `user_dictionary` (Custom Words) to allow easy bulk-deletion or swapping of the secondary language without wiping user-taught words.
+### 1. V2 Binary Dictionary Format
 
-### 2.2 New Data Source
-A new implementation of `DictionaryDataSource`:
+```
+Header (48 bytes):
+  Magic:        4 bytes (0x54444B43 = "CKDT")
+  Version:      4 bytes (2)
+  Language:     4 bytes (e.g., "es\0\0")
+  Word Count:   4 bytes
+  Canonical Offset:   4 bytes
+  Normalized Offset:  4 bytes
+  Accent Map Offset:  4 bytes
+  Reserved:     20 bytes
+
+Canonical Section:
+  For each word:
+    Length:     2 bytes (uint16)
+    Word:       UTF-8 bytes
+    Rank:       1 byte (0-255, 0=most common)
+
+Normalized Section:
+  Count:        4 bytes (uint32)
+  For each normalized form:
+    Length:     2 bytes (uint16)
+    Word:       UTF-8 bytes (accent-stripped)
+
+Accent Map Section:
+  For each normalized form:
+    Count:      1 byte (number of canonical forms)
+    Indices:    4 bytes each (uint32 index into canonical section)
+```
+
+### 2. Key Classes
+
+```
+src/main/kotlin/tribixbite/cleverkeys/
+├── AccentNormalizer.kt          # Strips diacritical marks
+├── NormalizedPrefixIndex.kt     # Accent-aware prefix lookup
+├── BinaryDictionaryLoader.kt    # V1/V2 dictionary loading
+├── OptimizedVocabulary.kt       # Dual dictionary management
+├── SuggestionRanker.kt          # Merges primary + secondary results
+├── UnigramLanguageDetector.kt   # Word-based language detection
+└── langpack/
+    └── LanguagePackManager.kt   # Language pack import/storage
+```
+
+### 3. Dictionary Loading Flow
 
 ```kotlin
-class SecondaryDictionarySource(context: Context) : DictionaryDataSource {
-    // Reads from files/secondary_dictionary.json
-    // Supports read (getAll, search) and delete
-    // 'add' might be restricted to bulk imports
+// OptimizedVocabulary.loadSecondaryDictionary()
+fun loadSecondaryDictionary(language: String): Boolean {
+    // 1. Try loading from installed language packs first
+    val packManager = LanguagePackManager.getInstance(context)
+    val dictFile = packManager.getDictionaryPath(language)
+    if (dictFile != null) {
+        return BinaryDictionaryLoader.loadIntoNormalizedIndexFromFile(dictFile, index)
+    }
+
+    // 2. Fall back to bundled assets
+    return BinaryDictionaryLoader.loadIntoNormalizedIndex(
+        context, "dictionaries/${language}_enhanced.bin", index
+    )
 }
 ```
 
-### 2.3 Dictionary Manager UI Updates
-*   Update `DictionaryManagerActivity.kt` to include `TabType.SECONDARY`.
-*   Update `WordListFragment.kt` to instantiate `SecondaryDictionarySource`.
-*   Update `BackupRestoreManager.kt` to support exporting/importing this specific file separately (optional but good practice).
+### 4. Prediction Flow with Secondary Dictionary
 
-### 2.4 WordPredictor Integration
-The `WordPredictor` currently relies on a single `dictionary` map and `prefixIndex`. To support this feature efficiently:
+```kotlin
+// SuggestionRanker.getSuggestions()
+fun getSuggestions(prefix: String, limit: Int): List<Candidate> {
+    val candidates = mutableListOf<Candidate>()
 
-1.  **Dual Index Strategy**:
-    *   Maintain a separate `secondaryPrefixIndex` in memory.
-    *   **Reason**: Allows instant enabling/disabling of the secondary language without rebuilding the massive primary index.
+    // Primary dictionary (with user words)
+    candidates += primaryIndex.getByNormalizedPrefix(prefix)
 
-2.  **Candidate Generation**:
-    *   In `predictInternal()`, query both `prefixIndex` (Primary) and `secondaryPrefixIndex` (Secondary).
-    *   Merge candidate lists.
+    // Secondary dictionary (if loaded)
+    secondaryIndex?.let { secondary ->
+        val langMultiplier = vocabulary.currentLanguageMultiplier
+        secondary.getByNormalizedPrefix(prefix).forEach { entry ->
+            candidates += entry.copy(
+                score = entry.confidence * langMultiplier
+            )
+        }
+    }
 
-3.  **Scoring**:
-    *   Apply the same `calculateUnifiedScore` logic.
-    *   *Optional Tuning*: Add a small penalty (e.g., 0.9x multiplier) to secondary language words to prefer the primary language in tie-breaking scenarios (e.g., "fin" in English vs "fin" in French).
-
-### 2.5 Schema
-No database schema changes required. File-based persistence preferred for portability and size management.
+    return candidates.sortedByDescending { it.score }.take(limit)
+}
+```
 
 ---
 
-## 3. Workflow Example: "Franglais" Support
+## Language Pack System
 
-1.  User is on **English (US)** layout.
-2.  User downloads `french_common_words.txt`.
-3.  User goes to **Settings > Secondary Language > Import**.
-4.  App parses 20,000 French words and saves to `secondary_dictionary.json`.
-5.  User opens **Dictionary Manager**; sees new "Secondary" tab populated.
-6.  User types "bonjour".
-    *   `WordPredictor` checks English dict: No match.
-    *   `WordPredictor` checks Secondary dict: Match found!
-    *   Suggestion "Bonjour" appears.
-7.  User types "chat".
-    *   English dict: "chat" (talk).
-    *   Secondary dict: "chat" (cat).
-    *   Result: "chat" appears. (Context/Frequency determines priority).
+### ZIP File Structure
+```
+langpack-fr.zip
+├── manifest.json      # Metadata
+├── dictionary.bin     # V2 binary dictionary
+└── unigrams.txt       # Word frequency list (optional)
+```
+
+### manifest.json
+```json
+{
+  "code": "fr",
+  "name": "French",
+  "version": 1,
+  "author": "CleverKeys",
+  "wordCount": 100000
+}
+```
+
+### Build Scripts
+```bash
+# Generate word list from wordfreq
+python3 scripts/get_wordlist.py --lang fr --output fr_words.txt --count 100000
+
+# Build language pack ZIP
+python3 scripts/build_langpack.py \
+    --lang fr \
+    --name "French" \
+    --input fr_words.txt \
+    --output langpack-fr.zip \
+    --use-wordfreq
+```
+
+### Import Flow
+1. User downloads ZIP file externally (browser, file transfer)
+2. Settings → Multi-Language → Import Pack
+3. File picker opens (Storage Access Framework)
+4. LanguagePackManager validates and extracts to `files/langpacks/{code}/`
+5. Language appears in Secondary Language dropdown
+
+---
+
+## Settings UI
+
+**Location**: Settings → Multi-Language
+
+| Setting | Key | Default | Description |
+|---------|-----|---------|-------------|
+| Enable Multi-Language | pref_enable_multilang | false | Master switch |
+| Primary Language | pref_primary_language | en | Main language |
+| Secondary Language | pref_secondary_language | none | Additional language |
+| Auto-Detect Language | pref_auto_detect_language | true | Enable detection |
+| Detection Sensitivity | pref_language_detection_sensitivity | 0.6 | Auto-switch threshold |
+
+**Language Packs Section**:
+- "Import Pack" button → file picker
+- "Manage" button → view/delete installed packs
+- Shows installed pack count
+
+---
+
+## Performance Considerations
+
+1. **Memory**: Secondary dictionary loads into separate NormalizedPrefixIndex (~2-5MB)
+2. **Lookup**: O(log n) prefix search in each dictionary, merged linearly
+3. **Language Detection**: O(1) per word (hash lookup in unigram set)
+4. **Pack Import**: One-time extraction, ~1-2 seconds for 100k word pack
+
+---
+
+## Testing Checklist
+
+- [x] Load bundled Spanish dictionary (es_enhanced.bin)
+- [x] Accent normalization: "espanol" → "español"
+- [x] Secondary dictionary appears in suggestions
+- [x] Language multiplier adjusts based on context
+- [ ] Import French language pack from ZIP
+- [ ] Secondary language dropdown shows imported packs
+- [ ] Delete language pack via Manage dialog
+
+---
+
+## Future Enhancements
+
+1. **Language Pack Repository**: Optional online catalog (requires INTERNET permission)
+2. **Auto-Download**: Detect device locale and offer relevant packs
+3. **Multiple Secondary Languages**: Support 2+ secondary dictionaries
+4. **Per-App Language**: Remember language preference per input field
