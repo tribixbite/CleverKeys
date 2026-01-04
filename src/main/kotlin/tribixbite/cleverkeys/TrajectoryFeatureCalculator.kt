@@ -31,6 +31,79 @@ object TrajectoryFeatureCalculator {
         val ay: Float
     )
 
+    // OPTIMIZATION: Reusable scratch arrays to eliminate per-swipe allocations
+    // These are sized for max sequence length (250) and reused across calls
+    private var scratchDt = FloatArray(256)
+    private var scratchVx = FloatArray(256)
+    private var scratchVy = FloatArray(256)
+
+    /**
+     * Streaming feature calculation - writes directly to pooled TrajectoryPoints.
+     * Eliminates 7 intermediate FloatArrays and List<FeaturePoint> allocation.
+     *
+     * @param normalizedCoords Input coordinates (normalized to [0,1])
+     * @param timestamps Input timestamps in milliseconds
+     * @param outPoints Output list - will be cleared and populated with pooled TrajectoryPoints
+     */
+    fun calculateFeaturesStreaming(
+        normalizedCoords: List<PointF>,
+        timestamps: List<Long>,
+        outPoints: ArrayList<SwipeTrajectoryProcessor.TrajectoryPoint>
+    ) {
+        outPoints.clear()
+
+        if (normalizedCoords.isEmpty()) {
+            return
+        }
+
+        val n = normalizedCoords.size
+
+        // Ensure scratch arrays are large enough
+        if (n > scratchDt.size) {
+            val newSize = (n * 1.5).toInt()
+            scratchDt = FloatArray(newSize)
+            scratchVx = FloatArray(newSize)
+            scratchVy = FloatArray(newSize)
+        }
+
+        // Calculate dt (time differences) into scratch array
+        scratchDt[0] = 1e-6f  // Minimum to avoid div by zero
+        for (i in 1 until n) {
+            scratchDt[i] = max((timestamps[i] - timestamps[i - 1]).toFloat(), 1e-6f)
+        }
+
+        // Calculate velocities into scratch arrays
+        scratchVx[0] = 0f
+        scratchVy[0] = 0f
+        for (i in 1 until n) {
+            scratchVx[i] = ((normalizedCoords[i].x - normalizedCoords[i - 1].x) / scratchDt[i]).coerceIn(-10f, 10f)
+            scratchVy[i] = ((normalizedCoords[i].y - normalizedCoords[i - 1].y) / scratchDt[i]).coerceIn(-10f, 10f)
+        }
+
+        // First point: all zeros for velocity/acceleration
+        val firstPoint = TrajectoryObjectPool.obtainTrajectoryPoint()
+        firstPoint.x = normalizedCoords[0].x
+        firstPoint.y = normalizedCoords[0].y
+        firstPoint.vx = 0f
+        firstPoint.vy = 0f
+        firstPoint.ax = 0f
+        firstPoint.ay = 0f
+        outPoints.add(firstPoint)
+
+        // Remaining points: calculate acceleration inline, no intermediate array needed
+        for (i in 1 until n) {
+            val point = TrajectoryObjectPool.obtainTrajectoryPoint()
+            point.x = normalizedCoords[i].x
+            point.y = normalizedCoords[i].y
+            point.vx = scratchVx[i]
+            point.vy = scratchVy[i]
+            // Acceleration = velocity change / time change, clipped
+            point.ax = ((scratchVx[i] - scratchVx[i - 1]) / scratchDt[i]).coerceIn(-10f, 10f)
+            point.ay = ((scratchVy[i] - scratchVy[i - 1]) / scratchDt[i]).coerceIn(-10f, 10f)
+            outPoints.add(point)
+        }
+    }
+
     /**
      * Calculate trajectory features from normalized coordinates and timestamps.
      *

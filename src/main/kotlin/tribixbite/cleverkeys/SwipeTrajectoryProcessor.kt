@@ -55,6 +55,7 @@ class SwipeTrajectoryProcessor {
     private val reusableProcessedTimestamps = ArrayList<Long>(250)
     private val reusableProcessedKeys = ArrayList<Int>(250)
     private val reusablePoints = ArrayList<TrajectoryPoint>(250)
+    private val reusableDetectedKeys = ArrayList<Int>(250)  // For detectNearestKeysInto
 
     /**
      * Set keyboard dimensions and key positions
@@ -214,7 +215,8 @@ class SwipeTrajectoryProcessor {
 
         // 3. Detect nearest keys from FINAL processed coordinates (already normalized!)
         // CRITICAL: Must happen AFTER resampling to maintain point-key correspondence
-        val processedKeys = detectNearestKeys(processedCoords)
+        // OPTIMIZATION: Use reusable list to avoid allocation
+        detectNearestKeysInto(processedCoords, reusableDetectedKeys)
 
         // 4. Calculate velocities and accelerations using TrajectoryFeatureCalculator (v1.32.472)
         // CRITICAL: Must match Python training code exactly!
@@ -223,25 +225,10 @@ class SwipeTrajectoryProcessor {
         // - All clipped to [-10, 10]
         val actualLength = processedCoords.size
 
-        // OPTIMIZATION Phase 2: Recycle TrajectoryPoints from previous call
+        // OPTIMIZATION Phase 3: Recycle TrajectoryPoints and use streaming calculator
+        // This eliminates 7 intermediate FloatArrays and List<FeaturePoint> allocation
         TrajectoryObjectPool.recycleTrajectoryPointList(reusablePoints)
-        reusablePoints.clear()
-
-        // Use Kotlin TrajectoryFeatureCalculator for correct feature calculation
-        // CRITICAL: Use processedCoords and processedTimestamps
-        val featurePoints = TrajectoryFeatureCalculator.calculateFeatures(processedCoords, processedTimestamps)
-
-        // Convert to TrajectoryPoint list using object pool
-        featurePoints.forEach { fp ->
-            val point = TrajectoryObjectPool.obtainTrajectoryPoint()
-            point.x = fp.x
-            point.y = fp.y
-            point.vx = fp.vx
-            point.vy = fp.vy
-            point.ax = fp.ax
-            point.ay = fp.ay
-            reusablePoints.add(point)
-        }
+        TrajectoryFeatureCalculator.calculateFeaturesStreaming(processedCoords, processedTimestamps, reusablePoints)
 
         // 5. Truncate or pad features to maxSequenceLength
         // Training: traj_features = np.pad(traj_features, ((0, pad_len), (0, 0)), mode="constant")
@@ -267,9 +254,9 @@ class SwipeTrajectoryProcessor {
         // Training: nearest_keys = nearest_keys + [self.tokenizer.pad_idx] * pad_len
         // OPTIMIZATION Phase 2: Use reusable list for keys
         reusableProcessedKeys.clear()
-        val keysToCopy = minOf(processedKeys.size, maxSequenceLength)
+        val keysToCopy = minOf(reusableDetectedKeys.size, maxSequenceLength)
         for (i in 0 until keysToCopy) {
-            reusableProcessedKeys.add(processedKeys[i])
+            reusableProcessedKeys.add(reusableDetectedKeys[i])
         }
         while (reusableProcessedKeys.size < maxSequenceLength) {
             reusableProcessedKeys.add(0)  // PAD token
@@ -425,14 +412,16 @@ class SwipeTrajectoryProcessor {
     }
 
     /**
-     * Detect nearest key for each coordinate using KeyboardGrid
+     * Detect nearest key for each coordinate using KeyboardGrid.
+     * OPTIMIZATION: Writes to pre-allocated output list to avoid allocation.
      * CRITICAL: Returns integer token indices (4-29 for a-z), NOT characters!
      *
-     * Input coordinates MUST be normalized to [0,1] range.
+     * @param normalizedCoordinates Input coordinates (must be normalized to [0,1])
+     * @param outKeys Output list - will be cleared and populated with token indices
      */
-    private fun detectNearestKeys(normalizedCoordinates: List<PointF>): List<Int> {
-        val nearestKeys = ArrayList<Int>()
-        val debugKeySeq = StringBuilder()
+    private fun detectNearestKeysInto(normalizedCoordinates: List<PointF>, outKeys: ArrayList<Int>) {
+        outKeys.clear()
+        val debugKeySeq = if (debugModeActive) StringBuilder() else null
         var lastDebugChar = '\u0000'
 
         // Log first few coordinates for debugging
@@ -446,10 +435,10 @@ class SwipeTrajectoryProcessor {
         normalizedCoordinates.forEach { point ->
             // Use Kotlin KeyboardGrid for nearest key detection
             val tokenIndex = KeyboardGrid.getNearestKeyToken(point.x, point.y)
-            nearestKeys.add(tokenIndex)
+            outKeys.add(tokenIndex)
 
             // Convert back to char for debug display
-            if (debugModeActive) {
+            if (debugKeySeq != null) {
                 val debugChar = if (tokenIndex in 4..29) ('a' + (tokenIndex - 4)) else '?'
                 if (debugChar != lastDebugChar) {
                     debugKeySeq.append(debugChar)
@@ -459,11 +448,9 @@ class SwipeTrajectoryProcessor {
         }
 
         // Log the deduplicated key sequence detected from trajectory
-        if (debugModeActive) {
+        if (debugKeySeq != null) {
             logDebug("🎯 DETECTED KEY SEQUENCE: \"$debugKeySeq\" (from ${normalizedCoordinates.size} points)")
         }
-
-        return nearestKeys
     }
 
     /**
