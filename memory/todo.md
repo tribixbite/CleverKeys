@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-04
-**Status**: v1.1.83 - Multilanguage complete (Phases 1-5, Language Packs)
+**Status**: v1.1.84 - Language packs fully integrated with dictionary loading
 
 ---
 
@@ -484,7 +484,7 @@ Now confidence values are COMPARABLE across word lengths!
   - Balanced: neutral (1.0)
 - [x] Update language scores after each committed word
 
-### Phase 5: Language Packs (v1.1.83) ✅ COMPLETE
+### Phase 5: Language Packs (v1.1.84) ✅ COMPLETE
 - [x] Language Pack ZIP format spec
   - manifest.json: code, name, version, author, wordCount
   - dictionary.bin: V2 binary dictionary with accent normalization
@@ -497,6 +497,9 @@ Now confidence values are COMPARABLE across word lengths!
 - [x] Build scripts:
   - build_langpack.py: creates language pack ZIPs from word lists
   - get_wordlist.py: extracts word lists from wordfreq library
+- [x] Dictionary loading integration (v1.1.84):
+  - BinaryDictionaryLoader.loadIntoNormalizedIndexFromFile() for file paths
+  - OptimizedVocabulary.loadSecondaryDictionary() checks packs first, then assets
 
 ---
 
@@ -511,7 +514,7 @@ Now confidence values are COMPARABLE across word lengths!
 | Token map | a=4..z=29 | a=4..z=29 | ✅ |
 | Coordinates | [0,1] normalized | [0,1] normalized | ✅ |
 
-**Current Version**: 1.1.83 (versionCode 101833 for x86_64)
+**Current Version**: 1.1.84 (versionCode 101843 for x86_64)
 **GitHub Release**: https://github.com/tribixbite/CleverKeys/releases/tag/v1.1.79
 **F-Droid MR**: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/30449
 **Final Config**: No srclibs, no postbuild - just gradle + prebuild sed!
