@@ -589,9 +589,9 @@ Technical debt identified but not blocking F-Droid submission:
 - [ ] `TemplateBrowserActivity` → `Activity`
 
 **Ghost Activities in AndroidManifest (no source files):**
-- [ ] `tribixbite.cleverkeys.NeuralBrowserActivity` - declared but doesn't exist
-- [ ] `tribixbite.cleverkeys.neural.NeuralBrowserActivityM3` - declared but doesn't exist
-- [ ] `tribixbite.cleverkeys.TestActivity` - declared but doesn't exist
+- [x] `tribixbite.cleverkeys.NeuralBrowserActivity` - REMOVED from manifest
+- [x] `tribixbite.cleverkeys.neural.NeuralBrowserActivityM3` - REMOVED from manifest
+- [x] `tribixbite.cleverkeys.TestActivity` - REMOVED from manifest
 
 **Legacy Themes:**
 - [ ] `appTheme` uses `Theme.AppCompat.DayNight.DarkActionBar` (used by settingsTheme)
