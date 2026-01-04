@@ -443,7 +443,13 @@ Now confidence values are COMPARABLE across word lengths!
   - loadNormalizedIndex() with caching and error handling
   - createCandidatesFromNnPredictions() for SuggestionRanker integration
 - [x] Spanish dictionary included in assets (es_enhanced.bin - 236k words)
-- [ ] UI: Settings → Languages → Secondary Language picker (Phase 2b)
+- [x] UI: Settings → Multi-Language → Secondary Language picker (Phase 2b)
+  - Dynamically detects available V2 dictionaries in assets
+  - Shows display names for 25+ supported languages
+  - Persists to pref_secondary_language preference
+- [x] Wire preference to load secondary dictionary on startup
+  - SwipePredictorOrchestrator.loadSecondaryDictionaryFromPrefs()
+  - Automatically loads/unloads based on user preference
 
 ### Phase 3: Language Detection (v1.2.2)
 - [ ] Implement `UnigramLanguageDetector` (word-based)
