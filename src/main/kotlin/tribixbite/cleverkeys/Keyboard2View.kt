@@ -150,8 +150,32 @@ class Keyboard2View @JvmOverloads constructor(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        // Request insets immediately on attach to ensure proper nav bar positioning
-        // Without this, keyboard may appear below nav bar on first load
+        // FIX: Get insets immediately AND request layout to prevent keyboard behind nav bar
+        // The issue: onMeasure runs before onApplyWindowInsets callback arrives
+        // Solution: Proactively fetch insets here and trigger re-layout if needed
+        if (_insets_bottom == 0 && android.os.Build.VERSION.SDK_INT >= 23) {
+            rootWindowInsets?.let { wi ->
+                if (android.os.Build.VERSION.SDK_INT >= 30) {
+                    val insets = wi.getInsets(android.view.WindowInsets.Type.systemBars())
+                    if (insets.bottom > 0) {
+                        _insets_bottom = insets.bottom
+                        _insets_left = insets.left
+                        _insets_right = insets.right
+                        requestLayout() // Force re-measure with correct insets
+                    }
+                } else if (android.os.Build.VERSION.SDK_INT >= 21) {
+                    @Suppress("DEPRECATION")
+                    val insets = wi.systemWindowInsets
+                    if (insets.bottom > 0) {
+                        _insets_bottom = insets.bottom
+                        _insets_left = insets.left
+                        _insets_right = insets.right
+                        requestLayout()
+                    }
+                }
+            }
+        }
+        // Also request insets callback for cases where rootWindowInsets isn't ready yet
         requestApplyInsets()
     }
 
