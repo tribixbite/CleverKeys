@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-04
-**Status**: v1.1.81 - Multilanguage architecture finalized
+**Status**: v1.1.81 - Phase 3 multilanguage: language detection complete
 
 ---
 
@@ -456,10 +456,21 @@ Now confidence values are COMPARABLE across word lengths!
   - Deduplication prevents duplicates from both dictionaries
   - Debug logging with 🌍 emoji for secondary matches
 
-### Phase 3: Language Detection (v1.2.2)
-- [ ] Implement `UnigramLanguageDetector` (word-based)
-- [ ] Ship unigram lists for bundled languages
-- [ ] Auto-switching with configurable sensitivity
+### Phase 3: Language Detection (v1.2.2) ✅ COMPLETE
+- [x] Implement `UnigramLanguageDetector` (word-based)
+  - Sliding window of 10 recent words
+  - Weighted scoring by frequency rank
+  - Cached scores with invalidation
+- [x] Ship unigram lists for bundled languages
+  - `generate_unigrams.py` script using wordfreq library
+  - EN: 5000 words (top frequency, alphabetic only)
+  - ES: 5000 words (top frequency, alphabetic only)
+- [x] Wire language detection into prediction flow
+  - SuggestionHandler.updateContext() → trackCommittedWord()
+  - CleverKeysService.onStartInputView() → clearLanguageHistory()
+  - SwipePredictorOrchestrator manages detector lifecycle
+  - Debug logging with 🌍 emoji for language scores
+- [ ] Auto-switching with configurable sensitivity (deferred to Phase 4)
 
 ### Phase 4: Language Packs (v1.3.0)
 - [ ] Language Pack ZIP format spec
