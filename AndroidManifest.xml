@@ -95,21 +95,7 @@
       </intent-filter>
     </activity>
 
-    <!-- ClipboardSettingsActivity removed - settings now inline in main SettingsActivity -->
-
-    <activity android:name="tribixbite.cleverkeys.NeuralBrowserActivity" android:label="Neural Model Browser (Legacy)" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
-      <intent-filter>
-        <action android:name="android.intent.action.MAIN"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-      </intent-filter>
-    </activity>
-
-    <activity android:name="tribixbite.cleverkeys.neural.NeuralBrowserActivityM3" android:label="Neural Model Browser (Material 3)" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
-      <intent-filter>
-        <action android:name="android.intent.action.MAIN"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-      </intent-filter>
-    </activity>
+    <!-- Ghost activities removed: NeuralBrowserActivity, NeuralBrowserActivityM3, TestActivity (no source files) -->
 
     <activity android:name="tribixbite.cleverkeys.BackupRestoreActivity" android:label="Backup &amp; Restore" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
@@ -117,8 +103,6 @@
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity>
-
-    <activity android:name="tribixbite.cleverkeys.TestActivity" android:exported="true"/>
 
     <activity android:name="tribixbite.cleverkeys.SwipeDebugActivity" android:label="Swipe Debug Log" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
       <intent-filter>
