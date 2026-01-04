@@ -378,6 +378,63 @@ object BinaryDictionaryLoader {
     }
 
     /**
+     * Load V2 binary dictionary from a file path into NormalizedPrefixIndex.
+     * Used for loading language packs from internal storage.
+     *
+     * @param file Binary dictionary file
+     * @param outIndex NormalizedPrefixIndex to populate
+     * @return true if loading succeeded, false otherwise
+     */
+    @JvmStatic
+    fun loadIntoNormalizedIndexFromFile(
+        file: java.io.File,
+        outIndex: NormalizedPrefixIndex
+    ): Boolean {
+        android.os.Trace.beginSection("BinaryDictionaryLoader.loadFromFile")
+        try {
+            val startTime = System.currentTimeMillis()
+
+            try {
+                val inputStream = java.io.FileInputStream(file)
+                val channel = Channels.newChannel(inputStream)
+
+                val buffer = ByteBuffer.allocate(file.length().toInt()).apply {
+                    order(ByteOrder.LITTLE_ENDIAN)
+                }
+                channel.read(buffer)
+                buffer.flip()
+                channel.close()
+                inputStream.close()
+
+                // Check magic number - only V2 format supported for language packs
+                val magic = buffer.int
+                if (magic != MAGIC_V2) {
+                    Log.e(TAG, String.format("Invalid magic number for language pack: 0x%08X", magic))
+                    return false
+                }
+
+                val version = buffer.int
+                if (version != EXPECTED_VERSION_V2) {
+                    Log.e(TAG, "Unsupported V2 version: $version")
+                    return false
+                }
+
+                outIndex.clear()
+                loadV2IntoNormalizedIndex(buffer, outIndex)
+
+                val elapsed = System.currentTimeMillis() - startTime
+                Log.i(TAG, "Loaded ${outIndex.size()} entries from ${file.name} in ${elapsed}ms")
+                return true
+            } catch (e: IOException) {
+                Log.e(TAG, "Failed to load dictionary from file: ${file.absolutePath}", e)
+                return false
+            }
+        } finally {
+            android.os.Trace.endSection()
+        }
+    }
+
+    /**
      * Load V1 binary format into NormalizedPrefixIndex.
      * Converts raw frequencies to ranks (0-255).
      */

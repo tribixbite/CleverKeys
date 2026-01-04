@@ -1003,14 +1003,35 @@ class OptimizedVocabulary(private val context: Context) {
      * @return true if loaded successfully
      */
     fun loadSecondaryDictionary(language: String): Boolean {
-        val filename = "dictionaries/${language}_enhanced.bin"
-
         val index = NormalizedPrefixIndex()
-        val loaded = BinaryDictionaryLoader.loadIntoNormalizedIndex(context, filename, index)
+        var loaded = false
+
+        // First try loading from installed language packs
+        try {
+            val packManager = tribixbite.cleverkeys.langpack.LanguagePackManager.getInstance(context)
+            val dictFile = packManager.getDictionaryPath(language)
+            if (dictFile != null) {
+                loaded = BinaryDictionaryLoader.loadIntoNormalizedIndexFromFile(dictFile, index)
+                if (loaded) {
+                    Log.i(TAG, "Loaded secondary dictionary from language pack: $language")
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to load from language pack: $language", e)
+        }
+
+        // Fall back to bundled dictionary in assets
+        if (!loaded) {
+            val filename = "dictionaries/${language}_enhanced.bin"
+            loaded = BinaryDictionaryLoader.loadIntoNormalizedIndex(context, filename, index)
+            if (loaded) {
+                Log.i(TAG, "Loaded secondary dictionary from assets: $language")
+            }
+        }
 
         if (loaded) {
             secondaryNormalizedIndex = index
-            Log.i(TAG, "Loaded secondary dictionary: $language (${index.size()} normalized forms)")
+            Log.i(TAG, "Secondary dictionary loaded: $language (${index.size()} normalized forms)")
             return true
         } else {
             Log.w(TAG, "Failed to load secondary dictionary: $language")
