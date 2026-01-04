@@ -1,7 +1,7 @@
 # CleverKeys Feature Specifications
 
-**Last Updated**: 2025-12-19
-**Total Specs**: 13 (core) + 4 (optional enhancements)
+**Last Updated**: 2026-01-04
+**Total Specs**: 14 (core) + 4 (optional enhancements)
 
 This directory contains feature specifications and architectural decision records (ADRs) for CleverKeys. All specifications follow the template in `SPEC_TEMPLATE.md`.
 
@@ -126,9 +126,15 @@ These specs would document existing features that don't have formal documentatio
     - Components: `ABTestManager.kt`, `ModelVersionManager.kt`, `ModelComparisonTracker.kt`
     - Status: ✅ Implemented (new Phase 6.3-6.4 features)
 
+16. **[Secondary Language Integration](./secondary-language-integration.md)** - P1
+    - Status: ✅ COMPLETE (v1.1.84 - 2026-01-04)
+    - Covers: Multilanguage typing, accent normalization, language detection, language packs
+    - Components: `AccentNormalizer.kt`, `NormalizedPrefixIndex.kt`, `UnigramLanguageDetector.kt`, `LanguagePackManager.kt`
+    - Phases: V2 dictionaries → Multi-dictionary → Detection → Auto-switch → Language packs
+
 ---
 
-## 🎯 Current Focus (2025-12-04)
+## 🎯 Current Focus (2026-01-04)
 
 ### Session Progress (2025-12-04) ✅
 - **Spec Audit Complete**: All 10 core specs reviewed and verified
