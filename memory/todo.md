@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-04
-**Status**: v1.1.81 - Phase 3 multilanguage: language detection complete
+**Status**: v1.1.81 - Phase 4 multilanguage: auto-switching complete
 
 ---
 
@@ -470,9 +470,21 @@ Now confidence values are COMPARABLE across word lengths!
   - CleverKeysService.onStartInputView() → clearLanguageHistory()
   - SwipePredictorOrchestrator manages detector lifecycle
   - Debug logging with 🌍 emoji for language scores
-- [ ] Auto-switching with configurable sensitivity (deferred to Phase 4)
 
-### Phase 4: Language Packs (v1.3.0)
+### Phase 4: Auto-Switching (v1.2.3) ✅ COMPLETE
+- [x] Add dynamic language multiplier in OptimizedVocabulary
+  - `updateLanguageMultiplier()` adjusts scoring based on detected language
+  - `setAutoSwitchConfig()` configures threshold and secondary language
+- [x] Wire to existing Settings UI
+  - "Auto-Detect Language" toggle → `pref_auto_detect_language`
+  - "Detection Sensitivity" slider → `pref_language_detection_sensitivity`
+- [x] Multiplier formula:
+  - Secondary language > threshold: boost (1.1 + bonus)
+  - Primary language > threshold: penalty (0.85)
+  - Balanced: neutral (1.0)
+- [x] Update language scores after each committed word
+
+### Phase 5: Language Packs (v1.3.0)
 - [ ] Language Pack ZIP format spec
 - [ ] Download manager for on-demand languages
 - [ ] UI: Language Store in Settings
