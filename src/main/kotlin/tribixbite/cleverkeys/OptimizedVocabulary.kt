@@ -25,6 +25,7 @@ import kotlin.math.max
  * - Hierarchical vocabulary (common -> top5000 -> full)
  * - Combined confidence + frequency scoring
  * - Length-based filtering and word lookup
+ * - Accent-aware lookups via NormalizedPrefixIndex (multilanguage support)
  */
 class OptimizedVocabulary(private val context: Context) {
 
@@ -39,6 +40,11 @@ class OptimizedVocabulary(private val context: Context) {
     // OPTIMIZATION Phase 2: Length-based buckets for fuzzy matching (reduces 50k iteration to ~2k)
     // Maps word length -> list of words with that length
     private val vocabularyByLength: MutableMap<Int, MutableList<String>> = HashMap()
+
+    // MULTILANGUAGE: Accent-aware lookup for secondary dictionaries
+    // Maps normalized (accent-free) → canonical (with accents) + frequency rank
+    private var normalizedIndex: NormalizedPrefixIndex? = null
+    private var secondaryNormalizedIndex: NormalizedPrefixIndex? = null
 
     // Scoring parameters (tuned for 50k vocabulary)
     private val CONFIDENCE_WEIGHT = 0.6f
@@ -913,7 +919,129 @@ class OptimizedVocabulary(private val context: Context) {
             isLoaded
         )
     }
-    
+
+    // ==================== MULTILANGUAGE SUPPORT ====================
+
+    /**
+     * Load a secondary language dictionary (V2 binary format) for accent-aware lookups.
+     *
+     * The secondary dictionary enables bilingual typing without manual language switching:
+     * - NN outputs 26-letter predictions (e.g., "espanol")
+     * - NormalizedPrefixIndex maps to canonical forms (e.g., "español")
+     * - SuggestionRanker merges results from both dictionaries
+     *
+     * @param language Language code (e.g., "es", "fr", "de")
+     * @return true if loaded successfully
+     */
+    fun loadSecondaryDictionary(language: String): Boolean {
+        val filename = "dictionaries/${language}_enhanced.bin"
+
+        val index = NormalizedPrefixIndex()
+        val loaded = BinaryDictionaryLoader.loadIntoNormalizedIndex(context, filename, index)
+
+        if (loaded) {
+            secondaryNormalizedIndex = index
+            Log.i(TAG, "Loaded secondary dictionary: $language (${index.size()} normalized forms)")
+            return true
+        } else {
+            Log.w(TAG, "Failed to load secondary dictionary: $language")
+            return false
+        }
+    }
+
+    /**
+     * Unload the secondary dictionary to free memory.
+     */
+    fun unloadSecondaryDictionary() {
+        secondaryNormalizedIndex = null
+        Log.i(TAG, "Unloaded secondary dictionary")
+    }
+
+    /**
+     * Check if a secondary dictionary is loaded.
+     */
+    fun hasSecondaryDictionary(): Boolean {
+        return secondaryNormalizedIndex != null
+    }
+
+    /**
+     * Get the secondary dictionary's NormalizedPrefixIndex for direct access.
+     * Used by SuggestionRanker for unified scoring.
+     */
+    fun getSecondaryIndex(): NormalizedPrefixIndex? {
+        return secondaryNormalizedIndex
+    }
+
+    /**
+     * Look up a normalized (accent-free) word in the secondary dictionary.
+     *
+     * @param normalizedWord The NN output (26-letter only, e.g., "espanol")
+     * @return List of canonical forms with accents, sorted by frequency
+     */
+    fun lookupSecondaryCanonicals(normalizedWord: String): List<NormalizedPrefixIndex.LookupResult> {
+        val index = secondaryNormalizedIndex ?: return emptyList()
+        return index.getWordsWithPrefix(normalizedWord).filter {
+            it.normalized == normalizedWord // Exact match, not prefix
+        }
+    }
+
+    /**
+     * Get accent-aware predictions from secondary dictionary.
+     *
+     * Given an NN prediction like "espanol", returns the canonical "español"
+     * if it exists in the secondary dictionary.
+     *
+     * @param nnPrediction The NN output word (26-letter)
+     * @return The best canonical form, or null if not found
+     */
+    fun getAccentedForm(nnPrediction: String): String? {
+        val index = secondaryNormalizedIndex ?: return null
+        val normalized = AccentNormalizer.normalize(nnPrediction)
+        val results = index.getWordsWithPrefix(normalized).filter {
+            it.normalized == normalized
+        }
+        return results.firstOrNull()?.bestCanonical
+    }
+
+    /**
+     * Create SuggestionRanker candidates from secondary dictionary lookup.
+     *
+     * @param nnPredictions List of NN predictions with confidence scores
+     * @param languageCode Language code for these candidates
+     * @return List of candidates ready for ranking
+     */
+    fun createSecondaryCandidates(
+        nnPredictions: List<CandidateWord>,
+        languageCode: String
+    ): List<SuggestionRanker.Candidate> {
+        val index = secondaryNormalizedIndex ?: return emptyList()
+        val candidates = mutableListOf<SuggestionRanker.Candidate>()
+
+        for (prediction in nnPredictions) {
+            val normalized = AccentNormalizer.normalize(prediction.word)
+            val results = index.getWordsWithPrefix(normalized).filter {
+                it.normalized == normalized
+            }
+
+            for (result in results) {
+                candidates.add(
+                    SuggestionRanker.Candidate(
+                        word = result.bestCanonical,
+                        normalized = result.normalized,
+                        frequencyRank = result.bestFrequencyRank,
+                        source = SuggestionRanker.WordSource.SECONDARY,
+                        nnConfidence = prediction.confidence,
+                        languageCode = languageCode
+                    )
+                )
+            }
+        }
+
+        return candidates
+    }
+
+    // ==================== END MULTILANGUAGE SUPPORT ====================
+
     /**
      * Load custom words and Android user dictionary into beam search vocabulary
      * High frequency ensures they appear in predictions
