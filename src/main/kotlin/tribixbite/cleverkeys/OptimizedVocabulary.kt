@@ -92,6 +92,8 @@ class OptimizedVocabulary(private val context: Context) {
     private var _autoSwitchEnabled = false
     private var _autoSwitchThreshold = 0.6f // Switch when secondary language score > 60%
     private var _secondaryLanguageCode = "none" // Current secondary language code (e.g., "es")
+    private var _primaryLanguageCode = "en" // Current primary language code
+    private var _englishFallbackEnabled = true // Whether to use English vocabulary as fallback
     @Volatile
     private var _currentLanguageMultiplier = 0.9f // Dynamic multiplier based on detected language
 
@@ -343,8 +345,10 @@ class OptimizedVocabulary(private val context: Context) {
                 }
             }
 
-            // Fall back to English vocabulary if not in primary dictionary
-            if (info == null) {
+            // Fall back to English vocabulary ONLY if English fallback is enabled
+            // When Primary=French, Secondary=None: English fallback is DISABLED
+            // When Primary=French, Secondary=English: English fallback is ENABLED
+            if (info == null && _englishFallbackEnabled) {
                 info = vocabulary[word]
             }
 
@@ -1231,6 +1235,32 @@ class OptimizedVocabulary(private val context: Context) {
         _currentLanguageMultiplier = if (enabled) 1.0f else 0.9f
 
         Log.i(TAG, "Auto-switch config: enabled=$enabled, threshold=$threshold, lang=$secondaryLanguage")
+    }
+
+    /**
+     * Configure primary language settings.
+     * This determines whether English vocabulary is used as fallback.
+     *
+     * English fallback is ENABLED when:
+     * - Primary = English (en)
+     * - Primary = non-English AND Secondary = English (en)
+     *
+     * English fallback is DISABLED when:
+     * - Primary = non-English AND Secondary = None or another non-English language
+     *
+     * @param primaryLanguage Primary language code (e.g., "fr", "de", "en")
+     * @param secondaryLanguage Secondary language code (e.g., "en", "es", "none")
+     */
+    fun setPrimaryLanguageConfig(primaryLanguage: String, secondaryLanguage: String) {
+        _primaryLanguageCode = primaryLanguage
+        _secondaryLanguageCode = secondaryLanguage
+
+        // English fallback is enabled if:
+        // 1. Primary is English, OR
+        // 2. Secondary is English (user explicitly wants English as backup)
+        _englishFallbackEnabled = (primaryLanguage == "en") || (secondaryLanguage == "en")
+
+        Log.i(TAG, "Primary language config: primary=$primaryLanguage, secondary=$secondaryLanguage, englishFallback=$_englishFallbackEnabled")
     }
 
     /**

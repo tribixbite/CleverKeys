@@ -450,11 +450,17 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
             val multiLangEnabled = prefs.getBoolean("pref_enable_multilang", false)
             val primaryLang = prefs.getString("pref_primary_language", "en") ?: "en"
+            val secondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
+
+            // Configure English fallback based on language settings
+            // English fallback is DISABLED when Primary=French, Secondary=None (French only)
+            // English fallback is ENABLED when Primary=French, Secondary=English (French + English)
+            vocabulary.setPrimaryLanguageConfig(primaryLang, secondaryLang)
 
             if (multiLangEnabled && primaryLang != "en") {
                 val loaded = vocabulary.loadPrimaryDictionary(primaryLang)
                 if (loaded) {
-                    Log.i(TAG, "Primary dictionary loaded: $primaryLang")
+                    Log.i(TAG, "Primary dictionary loaded: $primaryLang (English fallback: ${primaryLang == "en" || secondaryLang == "en"})")
                 } else {
                     Log.w(TAG, "Failed to load primary dictionary: $primaryLang")
                 }
