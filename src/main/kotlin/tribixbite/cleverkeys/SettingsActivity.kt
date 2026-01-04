@@ -2327,36 +2327,25 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
 
                 if (multiLangEnabled) {
-                    // Primary language is fixed to English (neural model is English-trained QWERTY)
-                    // Show as read-only info
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Primary Language",
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 14.sp
-                            )
-                            Text(
-                                text = "Neural model is trained for English QWERTY layout",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                    // Primary Language selector - any QWERTY-compatible language
+                    // NN outputs 26 letters, dictionary provides accent recovery
+                    val primaryOptions = listOf("en") + availableSecondaryLanguages
+                    val primaryDisplayOptions = primaryOptions.map { getLanguageDisplayName(it) }
+                    val primarySelectedIndex = primaryOptions.indexOf(primaryLanguage).coerceAtLeast(0)
+
+                    SettingsDropdown(
+                        title = "Primary Language",
+                        description = "Main language for predictions (NN works with any QWERTY language)",
+                        options = primaryDisplayOptions,
+                        selectedIndex = primarySelectedIndex,
+                        onSelectionChange = { index ->
+                            primaryLanguage = primaryOptions.getOrElse(index) { "en" }
+                            saveSetting("pref_primary_language", primaryLanguage)
                         }
-                        Text(
-                            text = "English",
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    )
 
                     // Secondary Language selector - shows available V2 dictionaries
-                    val secondaryOptions = listOf("none") + availableSecondaryLanguages
+                    val secondaryOptions = listOf("none") + availableSecondaryLanguages.filter { it != primaryLanguage }
                     val secondaryDisplayOptions = secondaryOptions.map { getLanguageDisplayName(it) }
                     val secondarySelectedIndex = secondaryOptions.indexOf(secondaryLanguage).coerceAtLeast(0)
 

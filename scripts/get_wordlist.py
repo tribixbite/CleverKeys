@@ -29,14 +29,31 @@ def main():
     print(f"Extracting top {args.count} words for language: {args.lang}")
 
     words = []
-    for word in iter_wordlist(args.lang, wordlist='large'):
-        # Filter by length
-        if args.min_length <= len(word) <= args.max_length:
-            # Skip words with digits or special characters (except accented letters)
-            if word.isalpha():
-                words.append(word)
-                if len(words) >= args.count:
-                    break
+    # Try 'large' wordlist first, fall back to 'small' or 'best'
+    wordlists_to_try = ['large', 'small', 'best']
+    wordlist_used = None
+
+    for wordlist in wordlists_to_try:
+        try:
+            for word in iter_wordlist(args.lang, wordlist=wordlist):
+                # Filter by length
+                if args.min_length <= len(word) <= args.max_length:
+                    # Skip words with digits or special characters (except accented letters)
+                    if word.isalpha():
+                        words.append(word)
+                        if len(words) >= args.count:
+                            break
+            wordlist_used = wordlist
+            break
+        except LookupError:
+            print(f"Warning: '{wordlist}' wordlist not available for {args.lang}, trying next...")
+            continue
+
+    if not wordlist_used:
+        print(f"Error: No wordlist available for language '{args.lang}'", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Using '{wordlist_used}' wordlist")
 
     print(f"Found {len(words)} words")
 

@@ -316,15 +316,44 @@ class OptimizedVocabulary(private val context: Context) {
             }
 
             // CRITICAL OPTIMIZATION: SINGLE hash lookup (was 3 lookups!)
-            val info = vocabulary[word]
+            var info = vocabulary[word]
+            var displayWord = word
+            var fromPrimaryDict = false
+
+            // If not in English vocabulary, check primary language dictionary for accent recovery
+            // This enables non-English primary languages (French, Spanish, etc.)
+            if (info == null && normalizedIndex != null) {
+                val accentedForm = getPrimaryAccentedForm(word)
+                if (accentedForm != null) {
+                    // Found in primary dictionary - use accented form
+                    displayWord = accentedForm
+                    fromPrimaryDict = true
+                    // Create synthetic WordInfo for primary dictionary match
+                    // Use tier 1 (top5000-equivalent) and frequency from dictionary rank
+                    val matches = normalizedIndex!!.getWordsWithPrefix(word)
+                    val exactMatch = matches.find { it.normalized == word }
+                    val freq = if (exactMatch != null) {
+                        // Convert rank (0-255, 0=most common) to frequency (0-1, 1=most common)
+                        1.0f - (exactMatch.bestFrequencyRank / 255.0f)
+                    } else {
+                        0.5f // Default mid-range frequency
+                    }
+                    info = WordInfo(freq, 1.toByte()) // tier 1 for primary dict matches
+                    if (debugMode) detailedLog?.append(String.format("🌐 \"%s\" → \"%s\" (from primary dictionary)\n", word, accentedForm))
+                }
+            }
+
             if (info == null) {
-                if (debugMode) detailedLog?.append(String.format("❌ \"%s\" - NOT IN VOCABULARY (not in main/custom/user dict)\n", word))
+                if (debugMode) detailedLog?.append(String.format("❌ \"%s\" - NOT IN VOCABULARY (not in main/custom/user/primary dict)\n", word))
                 continue // Word not in vocabulary
             }
 
             // Check if this word should be displayed as a contraction (e.g., "doesnt" -> "doesn't")
             // This happens AFTER vocabulary lookup succeeds - the word is valid, just needs apostrophe
-            val displayWord = nonPairedContractions[word] ?: word
+            // Skip contraction mapping for primary dictionary matches (already have accented form)
+            if (!fromPrimaryDict) {
+                displayWord = nonPairedContractions[word] ?: word
+            }
 
             // OPTIMIZATION: Tier is embedded in WordInfo (no additional lookups!)
             // v1.33+: Use configurable boost values instead of hardcoded constants
@@ -371,7 +400,12 @@ class OptimizedVocabulary(private val context: Context) {
             val score = VocabularyUtils.calculateCombinedScore(candidate.confidence, info.frequency, boost, confidenceWeight, effectiveFrequencyWeight)
 
             // Use displayWord for contractions (e.g., "doesn't" instead of "doesnt")
-            val sourceLabel = if (displayWord != word) "$source-contraction" else source
+            // For primary dictionary matches, label as "primary"
+            val sourceLabel = when {
+                fromPrimaryDict -> "primary"
+                displayWord != word -> "$source-contraction"
+                else -> source
+            }
             validPredictions.add(FilteredPrediction(displayWord, score, candidate.confidence, info.frequency, sourceLabel))
 
             // DEBUG: Show successful candidates with all scoring details
@@ -990,6 +1024,93 @@ class OptimizedVocabulary(private val context: Context) {
     }
 
     // ==================== MULTILANGUAGE SUPPORT ====================
+
+    /**
+     * Load a primary language dictionary (V2 binary format) for accent-aware lookups.
+     *
+     * The primary dictionary enables typing in non-English QWERTY languages:
+     * - NN outputs 26-letter predictions (e.g., "cafe")
+     * - NormalizedPrefixIndex maps to canonical forms (e.g., "café")
+     * - Works for any QWERTY-compatible language (French, Spanish, Portuguese, etc.)
+     *
+     * Note: For English, this is not needed since the vocabulary is already English.
+     *
+     * @param language Language code (e.g., "fr", "de", "pt")
+     * @return true if loaded successfully
+     */
+    fun loadPrimaryDictionary(language: String): Boolean {
+        // English doesn't need accent normalization for primary
+        if (language == "en") {
+            normalizedIndex = null
+            Log.i(TAG, "Primary language is English - no accent normalization needed")
+            return true
+        }
+
+        val index = NormalizedPrefixIndex()
+        var loaded = false
+
+        // First try loading from installed language packs
+        try {
+            val packManager = tribixbite.cleverkeys.langpack.LanguagePackManager.getInstance(context)
+            val dictFile = packManager.getDictionaryPath(language)
+            if (dictFile != null) {
+                loaded = BinaryDictionaryLoader.loadIntoNormalizedIndexFromFile(dictFile, index)
+                if (loaded) {
+                    Log.i(TAG, "Loaded primary dictionary from language pack: $language")
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to load from language pack: $language", e)
+        }
+
+        // Fall back to bundled dictionary in assets
+        if (!loaded) {
+            val filename = "dictionaries/${language}_enhanced.bin"
+            loaded = BinaryDictionaryLoader.loadIntoNormalizedIndex(context, filename, index)
+            if (loaded) {
+                Log.i(TAG, "Loaded primary dictionary from assets: $language")
+            }
+        }
+
+        if (loaded) {
+            normalizedIndex = index
+            Log.i(TAG, "Primary dictionary loaded: $language (${index.size()} normalized forms)")
+            return true
+        } else {
+            Log.w(TAG, "Failed to load primary dictionary: $language")
+            return false
+        }
+    }
+
+    /**
+     * Unload the primary dictionary to free memory.
+     */
+    fun unloadPrimaryDictionary() {
+        normalizedIndex = null
+        Log.i(TAG, "Unloaded primary dictionary")
+    }
+
+    /**
+     * Check if a primary dictionary is loaded.
+     */
+    fun hasPrimaryDictionary(): Boolean {
+        return normalizedIndex != null
+    }
+
+    /**
+     * Get the accented form of a word from the primary dictionary.
+     * Used to convert NN output (26-letter) to proper accented form.
+     *
+     * @param normalized The 26-letter normalized word (e.g., "cafe")
+     * @return The accented canonical form (e.g., "café"), or null if not found
+     */
+    fun getPrimaryAccentedForm(normalized: String): String? {
+        val index = normalizedIndex ?: return null
+        val results = index.getWordsWithPrefix(normalized)
+        // Return exact match if exists (compare normalized forms)
+        val exactMatch = results.find { it.normalized == normalized }
+        return exactMatch?.bestCanonical
+    }
 
     /**
      * Load a secondary language dictionary (V2 binary format) for accent-aware lookups.

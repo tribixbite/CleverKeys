@@ -151,6 +151,9 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             tokenizer.loadFromAssets(context)
             if (!vocabulary.isLoaded()) vocabulary.loadVocabulary()
 
+            // Load primary language dictionary if not English
+            loadPrimaryDictionaryFromPrefs()
+
             // Load secondary language dictionary if configured
             loadSecondaryDictionaryFromPrefs()
 
@@ -436,6 +439,45 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     fun setTouchYOffset(offset: Float) = trajectoryProcessor.setTouchYOffset(offset)
     fun setMargins(left: Float, right: Float) = trajectoryProcessor.setMargins(left, right)
     fun reloadVocabulary() = vocabulary.reloadCustomAndDisabledWords()
+
+    /**
+     * Load primary dictionary based on user preference.
+     * Called during initialization and when settings change.
+     * For non-English primary languages, loads V2 binary dictionary for accent recovery.
+     */
+    private fun loadPrimaryDictionaryFromPrefs() {
+        try {
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+            val multiLangEnabled = prefs.getBoolean("pref_enable_multilang", false)
+            val primaryLang = prefs.getString("pref_primary_language", "en") ?: "en"
+
+            if (multiLangEnabled && primaryLang != "en") {
+                val loaded = vocabulary.loadPrimaryDictionary(primaryLang)
+                if (loaded) {
+                    Log.i(TAG, "Primary dictionary loaded: $primaryLang")
+                } else {
+                    Log.w(TAG, "Failed to load primary dictionary: $primaryLang")
+                }
+            } else {
+                // English or multilang disabled - no accent normalization needed
+                vocabulary.unloadPrimaryDictionary()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading primary dictionary from prefs", e)
+        }
+    }
+
+    /**
+     * Reload primary dictionary (called when settings change).
+     */
+    fun reloadPrimaryDictionary() {
+        loadPrimaryDictionaryFromPrefs()
+    }
+
+    /**
+     * Check if primary dictionary is active (for non-English languages).
+     */
+    fun hasPrimaryDictionary(): Boolean = vocabulary.hasPrimaryDictionary()
 
     /**
      * Load secondary dictionary based on user preference.
