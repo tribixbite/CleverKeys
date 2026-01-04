@@ -71,3 +71,4 @@ release_apks/
 
 # Dictionary build artifacts
 scripts/dictionaries/*.txt
+langpack-*.zip

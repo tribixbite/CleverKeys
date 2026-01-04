@@ -40,6 +40,9 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.Properties
 import tribixbite.cleverkeys.theme.KeyboardTheme
+import tribixbite.cleverkeys.langpack.LanguagePackManager
+import tribixbite.cleverkeys.langpack.ImportResult
+import tribixbite.cleverkeys.langpack.LanguagePackManifest
 
 /**
  * Modern settings activity for CleverKeys.
@@ -111,6 +114,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         ActivityResultContracts.CreateDocument("application/x-ndjson")
     ) { uri: Uri? ->
         uri?.let { performSwipeDataNdjsonExport(it) }
+    }
+
+    // Language pack import launcher
+    private val languagePackImportLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { performLanguagePackImport(it) }
     }
 
     // Settings state for reactive UI
@@ -252,6 +262,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var autoDetectLanguage by mutableStateOf(true)
     private var languageDetectionSensitivity by mutableStateOf(0.6f)
     private var availableSecondaryLanguages by mutableStateOf(listOf<String>()) // V2 dictionaries
+    private var installedLanguagePacks by mutableStateOf(listOf<LanguagePackManifest>())
+    private var showLanguagePackDialog by mutableStateOf(false)
+    private var languagePackImportStatus by mutableStateOf<String?>(null)
 
     // Privacy settings - all OFF by default (CleverKeys is fully offline)
     private var privacyCollectSwipe by mutableStateOf(false)
@@ -2403,7 +2416,122 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             displayValue = "%.2f".format(languageDetectionSensitivity)
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Language Packs Section
+                    Text(
+                        text = "Language Packs",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Text(
+                        text = "Import additional language dictionaries from ZIP files. " +
+                               "Download packs externally and import here (no internet permission needed).",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    // Installed packs count
+                    Text(
+                        text = "Installed: ${installedLanguagePacks.size} language pack(s)",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Button(
+                            onClick = { importLanguagePack() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Import Pack")
+                        }
+                        OutlinedButton(
+                            onClick = { showLanguagePackDialog = true },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Manage")
+                        }
+                    }
+
+                    // Import status message
+                    languagePackImportStatus?.let { status ->
+                        Text(
+                            text = status,
+                            fontSize = 11.sp,
+                            color = if (status.startsWith("Error"))
+                                MaterialTheme.colorScheme.error
+                            else
+                                MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
+            }
+
+            // Language Pack Management Dialog
+            if (showLanguagePackDialog) {
+                AlertDialog(
+                    onDismissRequest = { showLanguagePackDialog = false },
+                    title = { Text("Installed Language Packs") },
+                    text = {
+                        Column {
+                            if (installedLanguagePacks.isEmpty()) {
+                                Text(
+                                    text = "No language packs installed.\n\n" +
+                                           "Download language pack ZIP files and use 'Import Pack' to add them.",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            } else {
+                                installedLanguagePacks.forEach { pack ->
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(12.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = pack.name,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                                Text(
+                                                    text = "Code: ${pack.code} • ${pack.wordCount} words",
+                                                    fontSize = 11.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                            TextButton(
+                                                onClick = { deleteLanguagePack(pack.code) }
+                                            ) {
+                                                Text("Delete", color = MaterialTheme.colorScheme.error)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showLanguagePackDialog = false }) {
+                            Text("Close")
+                        }
+                    }
+                )
             }
 
             // Privacy Section (Collapsible)
@@ -3303,6 +3431,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Detect available V2 dictionaries for secondary language options
         availableSecondaryLanguages = detectAvailableV2Dictionaries()
 
+        // Load installed language packs
+        refreshInstalledLanguagePacks()
+
         // Privacy settings - all OFF by default (CleverKeys is fully offline)
         privacyCollectSwipe = prefs.getSafeBoolean("privacy_collect_swipe", Defaults.PRIVACY_COLLECT_SWIPE)
         privacyCollectPerformance = prefs.getSafeBoolean("privacy_collect_performance", Defaults.PRIVACY_COLLECT_PERFORMANCE)
@@ -3375,8 +3506,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * @return List of language codes (e.g., ["es", "fr", "de"])
      */
     private fun detectAvailableV2Dictionaries(): List<String> {
-        val languages = mutableListOf<String>()
+        val languages = mutableSetOf<String>()
         try {
+            // Bundled dictionaries in assets
             val files = assets.list("dictionaries") ?: emptyArray()
             for (file in files) {
                 if (file.endsWith("_enhanced.bin")) {
@@ -3387,11 +3519,24 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     }
                 }
             }
+
+            // Installed language packs
+            val packManager = LanguagePackManager.getInstance(this)
+            packManager.getInstalledPacks().forEach { pack ->
+                if (pack.code != "en") {
+                    languages.add(pack.code)
+                }
+            }
+
             android.util.Log.i(TAG, "Available V2 dictionaries: $languages")
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Failed to detect V2 dictionaries", e)
         }
         return languages.sorted()
+    }
+
+    private fun refreshAvailableSecondaryLanguages() {
+        availableSecondaryLanguages = detectAvailableV2Dictionaries()
     }
 
     /**
@@ -3589,6 +3734,70 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             clipboardImportLauncher.launch(arrayOf("application/json", "*/*"))
         } catch (e: Exception) {
             Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun importLanguagePack() {
+        languagePackImportStatus = null
+        try {
+            languagePackImportLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed", "*/*"))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun performLanguagePackImport(uri: Uri) {
+        lifecycleScope.launch {
+            try {
+                val manager = LanguagePackManager.getInstance(this@SettingsActivity)
+                when (val result = manager.importLanguagePack(uri)) {
+                    is ImportResult.Success -> {
+                        languagePackImportStatus = "Imported: ${result.manifest.name} (${result.manifest.wordCount} words)"
+                        refreshInstalledLanguagePacks()
+                        refreshAvailableSecondaryLanguages()
+                        Toast.makeText(
+                            this@SettingsActivity,
+                            "Language pack imported: ${result.manifest.name}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    is ImportResult.Error -> {
+                        languagePackImportStatus = "Error: ${result.message}"
+                        Toast.makeText(
+                            this@SettingsActivity,
+                            "Import failed: ${result.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                languagePackImportStatus = "Error: ${e.message}"
+                Toast.makeText(this@SettingsActivity, "Import failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun deleteLanguagePack(code: String) {
+        lifecycleScope.launch {
+            try {
+                val manager = LanguagePackManager.getInstance(this@SettingsActivity)
+                if (manager.deletePack(code)) {
+                    refreshInstalledLanguagePacks()
+                    refreshAvailableSecondaryLanguages()
+                    Toast.makeText(this@SettingsActivity, "Language pack deleted", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@SettingsActivity, "Delete failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun refreshInstalledLanguagePacks() {
+        try {
+            val manager = LanguagePackManager.getInstance(this)
+            installedLanguagePacks = manager.getInstalledPacks()
+        } catch (e: Exception) {
+            installedLanguagePacks = emptyList()
         }
     }
 
