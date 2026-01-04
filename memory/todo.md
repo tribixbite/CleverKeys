@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-04
-**Status**: v1.1.84 - Language packs complete, primary language fixed to English-only
+**Status**: v1.1.85 - Full multilanguage support (any QWERTY language as primary)
 
 ---
 
