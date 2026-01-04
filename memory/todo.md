@@ -41,10 +41,16 @@
 | Swahili | langpack-sw.zip | 233KB |
 | Tagalog | langpack-tl.zip | 237KB |
 
+**Bugs Fixed (2026-01-04)**:
+- [x] Primary dictionary lookup order: Now checks primary FIRST, then falls back to English
+- [x] English fallback disabled: When Primary=French, Secondary=None → only French predictions
+- [x] Multilang toggle bug: Dictionary now loads for ANY non-English primary (multilang toggle only controls secondary language feature)
+
 **Testing Needed** (device locked - awaiting manual unlock):
 - [ ] Verify Primary Language dropdown shows EN, ES, FR, PT, IT, DE
 - [ ] Test accent recovery: swipe "cafe" → "café" with French primary
 - [ ] Test accent recovery: swipe "ecole" → "école" with French primary
+- [ ] Confirm no English words appear when Primary=French, Secondary=None
 
 ---
 
