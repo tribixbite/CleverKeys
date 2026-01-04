@@ -315,21 +315,21 @@ class OptimizedVocabulary(private val context: Context) {
                 continue // Skip disabled words from beam search
             }
 
-            // CRITICAL OPTIMIZATION: SINGLE hash lookup (was 3 lookups!)
-            var info = vocabulary[word]
+            // Primary language dictionary lookup (FIRST priority when non-English primary set)
+            // When user sets Primary Language to French, check French dictionary FIRST
+            // This enables accent recovery: "cafe" → "café", "ecole" → "école"
+            var info: WordInfo? = null
             var displayWord = word
             var fromPrimaryDict = false
 
-            // If not in English vocabulary, check primary language dictionary for accent recovery
-            // This enables non-English primary languages (French, Spanish, etc.)
-            if (info == null && normalizedIndex != null) {
+            if (normalizedIndex != null) {
+                // Non-English primary language - check primary dictionary FIRST
                 val accentedForm = getPrimaryAccentedForm(word)
                 if (accentedForm != null) {
                     // Found in primary dictionary - use accented form
                     displayWord = accentedForm
                     fromPrimaryDict = true
-                    // Create synthetic WordInfo for primary dictionary match
-                    // Use tier 1 (top5000-equivalent) and frequency from dictionary rank
+                    // Create WordInfo from primary dictionary frequency rank
                     val matches = normalizedIndex!!.getWordsWithPrefix(word)
                     val exactMatch = matches.find { it.normalized == word }
                     val freq = if (exactMatch != null) {
@@ -341,6 +341,11 @@ class OptimizedVocabulary(private val context: Context) {
                     info = WordInfo(freq, 1.toByte()) // tier 1 for primary dict matches
                     if (debugMode) detailedLog?.append(String.format("🌐 \"%s\" → \"%s\" (from primary dictionary)\n", word, accentedForm))
                 }
+            }
+
+            // Fall back to English vocabulary if not in primary dictionary
+            if (info == null) {
+                info = vocabulary[word]
             }
 
             if (info == null) {
