@@ -452,19 +452,27 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             val primaryLang = prefs.getString("pref_primary_language", "en") ?: "en"
             val secondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
 
+            // DEBUG: Force log to see what's happening
+            Log.e(TAG, "=== MULTILANG CONFIG ===")
+            Log.e(TAG, "multiLangEnabled=$multiLangEnabled, primary=$primaryLang, secondary=$secondaryLang")
+
             // Configure English fallback based on language settings
             // English fallback is DISABLED when Primary=French, Secondary=None (French only)
             // English fallback is ENABLED when Primary=French, Secondary=English (French + English)
             vocabulary.setPrimaryLanguageConfig(primaryLang, secondaryLang)
 
             if (multiLangEnabled && primaryLang != "en") {
+                Log.e(TAG, "Loading primary dictionary: $primaryLang")
                 val loaded = vocabulary.loadPrimaryDictionary(primaryLang)
                 if (loaded) {
-                    Log.i(TAG, "Primary dictionary loaded: $primaryLang (English fallback: ${primaryLang == "en" || secondaryLang == "en"})")
+                    Log.e(TAG, "SUCCESS: Primary dictionary loaded: $primaryLang")
+                    Log.e(TAG, "English fallback: ${primaryLang == "en" || secondaryLang == "en"}")
+                    Log.e(TAG, "Has primary dict: ${vocabulary.hasPrimaryDictionary()}")
                 } else {
-                    Log.w(TAG, "Failed to load primary dictionary: $primaryLang")
+                    Log.e(TAG, "FAILED: Could not load primary dictionary: $primaryLang")
                 }
             } else {
+                Log.e(TAG, "Skipping primary dictionary: multiLangEnabled=$multiLangEnabled, primaryLang=$primaryLang")
                 // English or multilang disabled - no accent normalization needed
                 vocabulary.unloadPrimaryDictionary()
             }
