@@ -150,33 +150,51 @@ class Keyboard2View @JvmOverloads constructor(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        // FIX: Get insets immediately AND request layout to prevent keyboard behind nav bar
-        // The issue: onMeasure runs before onApplyWindowInsets callback arrives
-        // Solution: Proactively fetch insets here and trigger re-layout if needed
-        if (_insets_bottom == 0 && android.os.Build.VERSION.SDK_INT >= 23) {
-            rootWindowInsets?.let { wi ->
-                if (android.os.Build.VERSION.SDK_INT >= 30) {
-                    val insets = wi.getInsets(android.view.WindowInsets.Type.systemBars())
-                    if (insets.bottom > 0) {
-                        _insets_bottom = insets.bottom
-                        _insets_left = insets.left
-                        _insets_right = insets.right
-                        requestLayout() // Force re-measure with correct insets
-                    }
-                } else if (android.os.Build.VERSION.SDK_INT >= 21) {
-                    @Suppress("DEPRECATION")
-                    val insets = wi.systemWindowInsets
-                    if (insets.bottom > 0) {
-                        _insets_bottom = insets.bottom
-                        _insets_left = insets.left
-                        _insets_right = insets.right
-                        requestLayout()
-                    }
-                }
+        // Request insets callback
+        requestApplyInsets()
+
+        // FIX: If insets are 0, get nav bar height from system resources as fallback
+        // This ensures keyboard is positioned correctly even before WindowInsets callback
+        if (_insets_bottom == 0) {
+            val navBarHeight = getNavigationBarHeight()
+            if (navBarHeight > 0) {
+                _insets_bottom = navBarHeight
+                post { requestLayout() }
             }
         }
-        // Also request insets callback for cases where rootWindowInsets isn't ready yet
-        requestApplyInsets()
+    }
+
+    /**
+     * Get navigation bar height from system resources.
+     * Fallback for when WindowInsets aren't available yet.
+     */
+    private fun getNavigationBarHeight(): Int {
+        // Check if device has navigation bar
+        val hasNavBar = resources.getIdentifier("config_showNavigationBar", "bool", "android")
+            .let { id -> id > 0 && resources.getBoolean(id) }
+
+        // Also check for gesture navigation (no visible nav bar)
+        val isGestureNav = if (android.os.Build.VERSION.SDK_INT >= 29) {
+            val navMode = android.provider.Settings.Secure.getInt(
+                context.contentResolver,
+                "navigation_mode",
+                0 // 0 = 3-button, 2 = gesture
+            )
+            navMode == 2
+        } else false
+
+        // If gesture nav, nav bar height is smaller (pill only)
+        // If no nav bar at all, return 0
+        if (!hasNavBar && !isGestureNav) {
+            // Try to get height anyway - some devices report false but have nav bar
+        }
+
+        val resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android")
+        return if (resourceId > 0) {
+            resources.getDimensionPixelSize(resourceId)
+        } else {
+            0
+        }
     }
 
     private fun initSwipeTrailPaint() {
@@ -823,12 +841,20 @@ class Keyboard2View @JvmOverloads constructor(
                     _insets_bottom = insets.bottom
                     _insets_left = insets.left
                     _insets_right = insets.right
-                } else if (android.os.Build.VERSION.SDK_INT >= 21) {
+                } else if (android.os.Build.VERSION.SDK_INT >= 29) {
                     @Suppress("DEPRECATION")
                     val insets = wi.systemWindowInsets
                     _insets_bottom = insets.bottom
                     _insets_left = insets.left
                     _insets_right = insets.right
+                } else {
+                    // API 23-28: Use individual deprecated methods
+                    @Suppress("DEPRECATION")
+                    _insets_bottom = wi.systemWindowInsetBottom
+                    @Suppress("DEPRECATION")
+                    _insets_left = wi.systemWindowInsetLeft
+                    @Suppress("DEPRECATION")
+                    _insets_right = wi.systemWindowInsetRight
                 }
             }
         }
@@ -894,13 +920,22 @@ class Keyboard2View @JvmOverloads constructor(
             _insets_right = insets.right
             _insets_bottom = insets.bottom
         }
-        // API 21-29: Use deprecated systemWindowInsets for nav bar offset
-        else if (VERSION.SDK_INT >= 21) {
+        // API 29: Use deprecated systemWindowInsets property (returns Insets)
+        else if (VERSION.SDK_INT >= 29) {
             @Suppress("DEPRECATION")
             val insets = wi.systemWindowInsets
             _insets_left = insets.left
             _insets_right = insets.right
             _insets_bottom = insets.bottom
+        }
+        // API 21-28: Use individual deprecated methods (getSystemWindowInsets() not available)
+        else if (VERSION.SDK_INT >= 21) {
+            @Suppress("DEPRECATION")
+            _insets_left = wi.systemWindowInsetLeft
+            @Suppress("DEPRECATION")
+            _insets_right = wi.systemWindowInsetRight
+            @Suppress("DEPRECATION")
+            _insets_bottom = wi.systemWindowInsetBottom
         }
 
         // CRITICAL: If insets changed, request re-layout to recalculate keyboard position
