@@ -68,3 +68,6 @@ tools/aapt2_official/
 *.apk
 release_apks/
 *debug_apk/
+
+# Dictionary build artifacts
+scripts/dictionaries/*.txt

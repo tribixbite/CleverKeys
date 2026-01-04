@@ -422,12 +422,12 @@ Now confidence values are COMPARABLE across word lengths!
 
 ## Multilanguage Implementation Roadmap
 
-### Phase 1: Foundation (v1.2.0)
-- [ ] Implement `AccentNormalizer` (Unicode NFD + accent stripping)
-- [ ] Create `NormalizedPrefixIndex` mapping normalized → canonical
-- [ ] Update `BinaryDictionaryLoader` for v2 format with trie
-- [ ] Build script: `scripts/build_dictionary.py`
-- [ ] Generate Spanish dictionary from AOSP + wordfreq
+### Phase 1: Foundation (v1.2.0) ✅ COMPLETE
+- [x] Implement `AccentNormalizer` (Unicode NFD + accent stripping)
+- [x] Create `NormalizedPrefixIndex` mapping normalized → canonical
+- [x] Update `BinaryDictionaryLoader` for v2 format
+- [x] Build script: `scripts/build_dictionary.py`
+- [x] Generate Spanish dictionary from AOSP (236k words, 31.5% accented)
 
 ### Phase 2: Multi-Dictionary (v1.2.1)
 - [ ] Implement `SuggestionRanker` for unified scoring
