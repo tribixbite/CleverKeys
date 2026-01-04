@@ -429,10 +429,21 @@ Now confidence values are COMPARABLE across word lengths!
 - [x] Build script: `scripts/build_dictionary.py`
 - [x] Generate Spanish dictionary from AOSP (236k words, 31.5% accented)
 
-### Phase 2: Multi-Dictionary (v1.2.1)
-- [ ] Implement `SuggestionRanker` for unified scoring
-- [ ] Add secondary dictionary slot in `DictionaryManager`
-- [ ] UI: Settings → Languages → Secondary Language import
+### Phase 2: Multi-Dictionary (v1.2.1) ✅ COMPLETE
+- [x] Implement `SuggestionRanker` for unified scoring
+  - WordSource enum with priority weights (CUSTOM > USER > SECONDARY > MAIN)
+  - Scoring formula: nnConfidence × rankScore × langMultiplier × sourcePriority
+  - rankAndMerge() combines primary + secondary with deduplication
+- [x] Wire NormalizedPrefixIndex into OptimizedVocabulary
+  - loadSecondaryDictionary() loads V2 binary format
+  - createSecondaryCandidates() generates ranker candidates from NN predictions
+  - getAccentedForm() maps 26-letter NN output to accented canonical forms
+- [x] Add V2 support to MultiLanguageDictionaryManager
+  - normalizedIndexes ConcurrentHashMap for V2 dictionaries
+  - loadNormalizedIndex() with caching and error handling
+  - createCandidatesFromNnPredictions() for SuggestionRanker integration
+- [x] Spanish dictionary included in assets (es_enhanced.bin - 236k words)
+- [ ] UI: Settings → Languages → Secondary Language picker (Phase 2b)
 
 ### Phase 3: Language Detection (v1.2.2)
 - [ ] Implement `UnigramLanguageDetector` (word-based)
