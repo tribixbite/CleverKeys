@@ -1,7 +1,25 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-05
-**Status**: v1.1.87 - Multilanguage contraction/apostrophe support + Language Pack Contractions
+**Status**: v1.1.88 - Spanish accent fix + Legacy dictionary migration
+
+---
+
+## v1.1.88 Fixes - COMPLETE
+
+**Spanish Accent Key Fix (#40)**:
+- [x] Fixed short gesture handling for dead keys (accent modifiers)
+- [x] Dead keys like `accent_aigu` now LATCH instead of producing no output
+- [x] Swipe SW on "d" → latches accent → tap "a" → produces "á"
+- [x] Root cause: `onPointerDown/onPointerUp` doesn't latch modifiers
+- [x] Fix: Detect `FLAG_P_LATCHABLE` and create latched pointer instead
+
+**Legacy Dictionary Migration (v1.1.88)**:
+- [x] `LanguagePreferenceKeys.migrateUserDictionary()` migrates legacy `user_dictionary` SharedPreferences
+- [x] `BackupRestoreManager` export now uses language-specific format (`custom_words_by_language`)
+- [x] `BackupRestoreManager` import handles both old (array) and new (language map) formats
+- [x] Old JSON imports automatically migrate to English language-specific keys
+- [x] Migration runs on app startup via `OptimizedVocabulary.loadCustomAndUserWords()`
 
 ---
 
