@@ -484,6 +484,45 @@ Some languages use apostrophes for contractions or grammatical constructs. The `
 1. ~~**French-only words blocked**: See Section 6 - architectural limitation~~ **RESOLVED** with language-specific tries
 2. **Latency on long words**: Beam search timeout at 20 characters
 3. **Memory pressure**: Loading multiple language dictionaries simultaneously
+4. **English words appear in non-English mode** - See Section 10.1
+
+### 10.1 English Words in Non-English Mode
+
+**Issue**: Some English words still appear in predictions when Primary=French (or other non-English) and Secondary=None.
+
+**Root Causes** (NOT bugs - intentional behavior):
+
+1. **English contractions loaded as fallback** (~100 words)
+   ```kotlin
+   // OptimizedVocabulary.kt loadContractionMappings()
+   if (_primaryLanguageCode != "en") {
+       loadLanguageContractions("en")  // Loads dont, cant, wont, etc.
+   }
+   ```
+   These ~100 English contraction keys are added to `nonPairedContractions`, then to the language trie. This allows "dont" → "don't" to work even in French mode.
+
+2. **Word overlap between languages** (thousands of words)
+   Many words exist in BOTH English and the target language:
+   - French: table, menu, hotel, simple, possible, important, service...
+   - These are legitimate French words that happen to also be English words
+   - The French dictionary contains them, so they're valid predictions
+
+3. **Custom words are language-agnostic**
+   User-added custom words are not filtered by language.
+
+**What IS filtered** (working correctly):
+- The 50,000-word English vocabulary is NOT used when `_englishFallbackEnabled = false`
+- English words that don't exist in the target language dictionary are filtered out
+- The beam search trie only contains target language words + contractions
+
+**What appears as "English"**:
+- ~100 English contraction keys (intentional fallback)
+- ~1000+ cognates/loanwords that exist in both languages (legitimate target language words)
+
+**Potential future improvements**:
+- Option to disable English contraction fallback per-language
+- Separate contraction loading by language (no fallback)
+- Visual indicator for cognate/shared words
 
 ---
 
