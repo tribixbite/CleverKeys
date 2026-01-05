@@ -290,13 +290,24 @@ class PredictionCoordinator(
      * @param newConfig Updated configuration
      */
     fun setConfig(newConfig: Config) {
+        val oldPrimaryLang = config.primary_language
         config = newConfig
+        val newPrimaryLang = config.primary_language
 
         // Update neural engine config if it exists
         neuralEngine?.setConfig(config)
 
         // Update word predictor config if it exists
         wordPredictor?.setConfig(config)
+
+        // v1.1.89: Reload dictionary if primary language changed
+        if (oldPrimaryLang != newPrimaryLang && wordPredictor != null) {
+            Log.i(TAG, "Primary language changed from '$oldPrimaryLang' to '$newPrimaryLang' - reloading dictionary")
+            wordPredictor?.loadDictionaryAsync(context, newPrimaryLang) {
+                Log.i(TAG, "Dictionary reloaded for '$newPrimaryLang'")
+            }
+            dictionaryManager?.setLanguage(newPrimaryLang)
+        }
     }
 
     /**
