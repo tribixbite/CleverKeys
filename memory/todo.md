@@ -30,11 +30,18 @@
 - [x] Skip condition: `_primaryLanguageCode != "en" && !_englishFallbackEnabled`
 - [x] Prevents English words from "rescuing" rejected beam outputs
 
+**Touch Typing Dictionary Fix**:
+- [x] `PredictionCoordinator.initializeWordPredictor()` now loads `config.primary_language`
+- [x] Previously hardcoded to "en", causing English predictions in French/German mode
+- [x] `PredictionCoordinator.setConfig()` detects language changes and reloads dictionary
+- [x] `WordPredictor.autoCorrect()` now uses loaded language dictionary
+
 **Diagnostic Logging**:
 - [x] BeamSearchEngine: Logs trie status (null vs active) on first masking call
 - [x] BeamSearchEngine: Logs prefix masking details for debugging
 - [x] OptimizedVocabulary: Logs if English test words found in non-English trie
 - [ ] Verify diagnostic output shows correct trie is being used
+- [ ] Verify touch typing shows primary language predictions
 
 ---
 
