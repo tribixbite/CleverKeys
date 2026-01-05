@@ -16,10 +16,11 @@
 
 **French Contraction Fix**:
 - [x] Fixed "mappelle" → "m'appelle" not working when Primary=French, Secondary=None
-- [x] Root cause: `_englishFallbackEnabled` was false, skipping vocabulary lookup
-- [x] Contractions were added to `vocabulary` but lookup was guarded by fallback flag
-- [x] Fix: Check `nonPairedContractions` BEFORE filtering out the word
-- [x] Now accepts contraction keys even when English fallback is disabled
+- [x] Root cause #1: `_englishFallbackEnabled` was false, skipping vocabulary lookup
+- [x] Fix #1: Check `nonPairedContractions` BEFORE filtering out the word
+- [x] Root cause #2: `loadPrimaryDictionary()` created new trie, discarding contractions
+- [x] Fix #2: Add contraction keys to the new language trie after creating it
+- [x] Now beam search can discover "mappelle" and convert to "m'appelle"
 
 **Legacy Dictionary Migration (v1.1.88)**:
 - [x] `LanguagePreferenceKeys.migrateUserDictionary()` migrates legacy `user_dictionary` SharedPreferences
