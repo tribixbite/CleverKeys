@@ -25,10 +25,15 @@ interface DictionaryDataSource {
 /**
  * Main dictionary source - loads from assets dictionary file
  * Uses prefix indexing for fast search with 50k vocabulary
+ *
+ * v1.1.89: Added language support - loads language-specific dictionary when available
+ *
+ * @param languageCode ISO 639-1 language code (e.g., "en", "fr", "es"). Defaults to "en".
  */
 class MainDictionarySource(
     private val context: Context,
-    private val disabledSource: DisabledDictionarySource
+    private val disabledSource: DisabledDictionarySource,
+    private val languageCode: String = "en"
 ) : DictionaryDataSource {
 
     // Cache the dictionary after first load
@@ -46,9 +51,25 @@ class MainDictionarySource(
             val disabled = disabledSource.getDisabledWords()
             val words = mutableListOf<DictionaryWord>()
 
+            // v1.1.89: Try language-specific binary dictionary first (for non-English)
+            if (languageCode != "en") {
+                try {
+                    val binFilename = "dictionaries/${languageCode}_enhanced.bin"
+                    val loaded = loadBinaryDictionary(binFilename, words, disabled)
+                    if (loaded) {
+                        Log.d(TAG, "Loaded ${words.size} words from binary dictionary: $binFilename")
+                        cachedWords = words.sorted()
+                        buildPrefixIndex(cachedWords!!)
+                        return@withContext cachedWords!!
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Binary dictionary not found for $languageCode, trying JSON/TXT fallback")
+                }
+            }
+
             // Try JSON format first (50k words with frequencies)
             try {
-                val jsonFilename = "dictionaries/en_enhanced.json"
+                val jsonFilename = "dictionaries/${languageCode}_enhanced.json"
                 val jsonString = context.assets.open(jsonFilename).bufferedReader().use { it.readText() }
                 val jsonDict = org.json.JSONObject(jsonString)
                 val keys = jsonDict.keys()
@@ -70,10 +91,10 @@ class MainDictionarySource(
                 }
                 Log.d(TAG, "Loaded ${words.size} words from JSON dictionary")
             } catch (e: Exception) {
-                Log.w(TAG, "JSON dictionary not found, falling back to text format")
+                Log.w(TAG, "JSON dictionary not found for $languageCode, falling back to text format")
 
                 // Fall back to text format
-                val filename = "dictionaries/en_enhanced.txt"
+                val filename = "dictionaries/${languageCode}_enhanced.txt"
                 context.assets.open(filename).bufferedReader().use { reader ->
                     reader.lineSequence()
                         .filter { it.isNotBlank() && !it.startsWith("#") }
@@ -163,6 +184,44 @@ class MainDictionarySource(
     override suspend fun updateWord(oldWord: String, newWord: String, frequency: Int) {
         // Main dictionary is read-only
         throw UnsupportedOperationException("Cannot update words in main dictionary")
+    }
+
+    /**
+     * Load dictionary from binary format (.bin files for non-English languages).
+     * Uses NormalizedPrefixIndex to read the binary format.
+     */
+    private fun loadBinaryDictionary(
+        filename: String,
+        words: MutableList<DictionaryWord>,
+        disabled: Set<String>
+    ): Boolean {
+        return try {
+            val index = NormalizedPrefixIndex()
+            val loaded = BinaryDictionaryLoader.loadIntoNormalizedIndex(context, filename, index)
+            if (loaded) {
+                // Extract all words from the index
+                val normalizedWords = index.getAllNormalizedWords()
+                for (word in normalizedWords) {
+                    // Get canonical form (with accents) if available
+                    val results = index.getWordsWithPrefix(word)
+                    val canonical = results.find { it.normalized == word }?.bestCanonical ?: word
+                    words.add(
+                        DictionaryWord(
+                            word = canonical,  // Show accented form
+                            frequency = 100,   // Binary format doesn't store frequency for display
+                            source = WordSource.MAIN,
+                            enabled = !disabled.contains(word) && !disabled.contains(canonical)
+                        )
+                    )
+                }
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading binary dictionary: $filename", e)
+            false
+        }
     }
 
     companion object {

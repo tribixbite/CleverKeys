@@ -19,6 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.89] - 2025-01-05
+
+### Fixed - Language Isolation
+- **Dictionary Manager**: Now loads correct language dictionary (was always English)
+- **Beam Search Trie**: Defensive check prevents English trie contamination
+  - Returns null if primary is non-English but trie wasn't replaced
+  - Logs error to help diagnose initialization issues
+- **MainDictionarySource**: Added language parameter, loads binary dictionaries for non-English
+
+---
+
 ## [1.1.88] - 2025-01-05
 
 ### Added - Multilanguage Support 🌍

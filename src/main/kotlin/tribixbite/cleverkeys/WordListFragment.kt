@@ -95,7 +95,8 @@ class WordListFragment : Fragment() {
         val disabledSource = DisabledDictionarySource(defaultPrefs, languageCode)
 
         dataSource = when (tabType) {
-            TabType.ACTIVE -> MainDictionarySource(requireContext(), disabledSource)
+            // v1.1.89: Pass language code to load correct dictionary (not always English)
+            TabType.ACTIVE -> MainDictionarySource(requireContext(), disabledSource, languageCode ?: "en")
             TabType.DISABLED -> disabledSource
             TabType.USER -> UserDictionarySource(requireContext(), requireContext().contentResolver)
             TabType.CUSTOM -> {

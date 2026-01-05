@@ -117,15 +117,31 @@ class OptimizedVocabulary(private val context: Context) {
      * - Primary=English: Returns English vocabulary trie
      * - Primary=French: Returns French normalized words trie
      *
-     * @return The active beam search trie, or null if not loaded
+     * CRITICAL v1.1.89: If primary is non-English but activeBeamSearchTrie still points
+     * to vocabularyTrie (English), return null to disable trie constraining rather than
+     * using the wrong language's vocabulary.
+     *
+     * @return The active beam search trie, or null if not loaded or language mismatch
      */
     fun getVocabularyTrie(): VocabularyTrie? {
-        val trie = if (isLoaded) activeBeamSearchTrie else null
-        val isLanguageTrie = (trie != null && trie !== vocabularyTrie)
-        val stats = trie?.getStats()
-        Log.d(TAG, "getVocabularyTrie(): isLoaded=$isLoaded, isLanguageTrie=$isLanguageTrie, " +
-            "trieWords=${stats?.first ?: 0}, primary=$_primaryLanguageCode, englishFallback=$_englishFallbackEnabled")
-        return trie
+        if (!isLoaded) return null
+
+        val isLanguageTrie = activeBeamSearchTrie !== vocabularyTrie
+        val stats = activeBeamSearchTrie.getStats()
+
+        // CRITICAL CHECK: If primary is non-English, we MUST have a language-specific trie
+        // If we're still pointing to vocabularyTrie (English), something went wrong with
+        // loadPrimaryDictionary() - disable trie constraining to avoid English contamination
+        if (_primaryLanguageCode != "en" && !isLanguageTrie) {
+            Log.e(TAG, "🚨 LANGUAGE MISMATCH: primary=$_primaryLanguageCode but using English trie! " +
+                "Disabling trie constraint to avoid contamination. " +
+                "Call loadPrimaryDictionary() to fix.")
+            return null  // Return null to disable trie constraining
+        }
+
+        Log.d(TAG, "getVocabularyTrie(): isLanguageTrie=$isLanguageTrie, " +
+            "trieWords=${stats.first}, primary=$_primaryLanguageCode, englishFallback=$_englishFallbackEnabled")
+        return activeBeamSearchTrie
     }
 
     /**

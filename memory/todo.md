@@ -1,17 +1,22 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-05
-**Status**: v1.1.88 RELEASED - Multilanguage support with contraction isolation
+**Status**: v1.1.89 - Language isolation fixes for Dict Manager and beam search
 
 ---
 
-## Known Issues (Post-Release)
+## v1.1.89 Fixes - IN TESTING
 
-**English Words in French-Only Mode**:
-- Some English words still appear in predictions when Primary=French, Secondary=None
-- Dictionary Manager still shows English tab
-- Investigation ongoing - likely trie contamination from binary cache
-- Contraction isolation fix applied but additional source of contamination exists
+**Dictionary Manager Language Fix**:
+- [x] `MainDictionarySource` was hardcoded to load `en_enhanced.json`
+- [x] Added `languageCode` parameter to load correct language dictionary
+- [x] `WordListFragment` now passes language code to `MainDictionarySource`
+- [x] Binary dictionary loading added for non-English languages
+
+**Beam Search Trie Defensive Check**:
+- [x] `getVocabularyTrie()` now verifies trie matches expected language
+- [x] If Primary=non-English but trie is still English, returns null (disables constraining)
+- [x] Logs error message to help diagnose initialization issues
 
 ---
 
