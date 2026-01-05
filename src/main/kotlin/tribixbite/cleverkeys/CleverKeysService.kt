@@ -758,6 +758,7 @@ class CleverKeysService : InputMethodService(),
         // Initialize handler lazily (depends on components that may not exist yet)
         if (_preferenceUIUpdateHandler == null) {
             _preferenceUIUpdateHandler = PreferenceUIUpdateHandler.create(
+                this,  // Context for language dictionary reload (v1.1.86)
                 _config,
                 _layoutBridge,
                 _predictionCoordinator,

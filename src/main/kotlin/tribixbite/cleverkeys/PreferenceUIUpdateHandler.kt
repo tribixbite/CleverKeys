@@ -1,6 +1,8 @@
 package tribixbite.cleverkeys
 
+import android.content.Context
 import android.util.Log
+import tribixbite.cleverkeys.onnx.SwipePredictorOrchestrator
 
 /**
  * Handles UI updates when SharedPreferences change.
@@ -9,6 +11,7 @@ import android.util.Log
  * - Updates keyboard layout view when layout preferences change
  * - Updates suggestion bar opacity when opacity preference changes
  * - Updates neural engine config when model-related settings change
+ * - Reloads primary/secondary language dictionaries when language settings change
  *
  * Note: ConfigurationManager is the primary SharedPreferences listener and
  * handles config refresh. This handler focuses on UI-specific updates.
@@ -16,8 +19,10 @@ import android.util.Log
  * Extracted from CleverKeysService.onSharedPreferenceChanged() to reduce main class size.
  *
  * @since v1.32.412
+ * @since v1.1.86 - Added language dictionary reload on pref_primary_language/pref_secondary_language change
  */
 class PreferenceUIUpdateHandler(
+    private val context: Context,
     private val config: Config?,
     private val layoutBridge: LayoutBridge?,
     private val predictionCoordinator: PredictionCoordinator?,
@@ -38,6 +43,9 @@ class PreferenceUIUpdateHandler(
 
         // Update neural engine config for model-related settings
         updateNeuralEngineIfNeeded(key)
+
+        // Reload language dictionaries if language settings changed
+        reloadLanguageDictionaryIfNeeded(key)
     }
 
     /**
@@ -78,6 +86,45 @@ class PreferenceUIUpdateHandler(
         }
     }
 
+    /**
+     * Reload language dictionaries if language settings changed.
+     *
+     * When user changes pref_primary_language or pref_secondary_language in settings,
+     * this triggers a full reload of the vocabulary trie used by beam search.
+     * This ensures the neural prediction uses the correct language dictionary.
+     *
+     * Note: Primary language is currently read-only (NN only supports English),
+     * but we still handle both for future extensibility.
+     *
+     * @param key The preference key that changed
+     * @since v1.1.86
+     */
+    private fun reloadLanguageDictionaryIfNeeded(key: String?) {
+        if (key == null) return
+
+        try {
+            val orchestrator = SwipePredictorOrchestrator.getInstance(context)
+
+            when (key) {
+                "pref_primary_language" -> {
+                    orchestrator.reloadPrimaryDictionary()
+                    Log.i(TAG, "Primary language changed - dictionary reloaded")
+                }
+                "pref_secondary_language" -> {
+                    orchestrator.reloadSecondaryDictionary()
+                    Log.i(TAG, "Secondary language changed - dictionary reloaded")
+                }
+                "pref_enable_multilang" -> {
+                    // Reload secondary dict when multilang toggle changes
+                    orchestrator.reloadSecondaryDictionary()
+                    Log.i(TAG, "Multilang toggle changed - secondary dictionary reloaded")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to reload dictionary on language change: ${e.message}", e)
+        }
+    }
+
     companion object {
         private const val TAG = "PreferenceUIUpdateHandler"
 
@@ -91,6 +138,7 @@ class PreferenceUIUpdateHandler(
         /**
          * Create a PreferenceUIUpdateHandler.
          *
+         * @param context The Android context for accessing orchestrator
          * @param config The configuration
          * @param layoutBridge The layout bridge (nullable)
          * @param predictionCoordinator The prediction coordinator (nullable)
@@ -100,6 +148,7 @@ class PreferenceUIUpdateHandler(
          */
         @JvmStatic
         fun create(
+            context: Context,
             config: Config?,
             layoutBridge: LayoutBridge?,
             predictionCoordinator: PredictionCoordinator?,
@@ -107,6 +156,7 @@ class PreferenceUIUpdateHandler(
             suggestionBar: SuggestionBar?
         ): PreferenceUIUpdateHandler {
             return PreferenceUIUpdateHandler(
+                context,
                 config,
                 layoutBridge,
                 predictionCoordinator,
