@@ -67,32 +67,33 @@ Or with collapsible sections:
 
 ## Implementation Plan
 
-### Step 1: Create Language Key Helper
+### Step 1: Create Language Key Helper ✅ DONE
 ```kotlin
 object LanguagePreferenceKeys {
     fun customWordsKey(languageCode: String) = "custom_words_$languageCode"
     fun disabledWordsKey(languageCode: String) = "disabled_words_$languageCode"
 }
 ```
+Implemented in `LanguagePreferenceKeys.kt`.
 
-### Step 2: Modify OptimizedVocabulary
-- Add `currentLanguage` field (from primary language preference)
-- Change `loadDisabledWords()` to use language-specific key
-- Change custom words loading to use language-specific key
-- Add migration for existing data (copy to "en" key)
+### Step 2: Modify OptimizedVocabulary ✅ DONE
+- Uses `_primaryLanguageCode` field (from primary language preference)
+- `loadDisabledWords()` uses `LanguagePreferenceKeys.disabledWordsKey()`
+- Custom words loading uses `LanguagePreferenceKeys.customWordsKey()`
+- Migration runs via `LanguagePreferenceKeys.migrateToLanguageSpecific()`
 
-### Step 3: Modify Data Sources
-- Update constructors to accept language code
-- Use language-specific preference keys
+### Step 3: Modify Data Sources ✅ DONE
+- `DisabledDictionarySource` accepts optional `languageCode` parameter
+- Uses language-specific preference keys when languageCode provided
 
-### Step 4: Update DictionaryManagerActivity
+### Step 4: Update DictionaryManagerActivity - PENDING
 - Read primary/secondary language from prefs
 - Generate tabs dynamically based on enabled languages
 - Pass language code to fragment factory
 
-### Step 5: Migration
-- On first run after update, copy existing global data to "en" keys
-- Mark migration complete with version flag
+### Step 5: Migration ✅ DONE
+- `LanguagePreferenceKeys.migrateToLanguageSpecific()` copies global data to "en" keys
+- Uses `lang_pref_migration_version` flag to track migration status
 
 ## Testing
 
