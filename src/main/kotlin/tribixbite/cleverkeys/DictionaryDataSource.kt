@@ -356,34 +356,52 @@ class UserDictionarySource(
 }
 
 /**
- * Custom dictionary source - app-specific custom words
+ * Custom dictionary source - app-specific custom words (language-aware)
+ *
+ * v1.1.87: Now uses language-specific storage via LanguagePreferenceKeys.
+ * This matches how OptimizedVocabulary stores custom words for swipe prediction.
+ *
+ * @param prefs SharedPreferences for storage (typically DirectBootAwarePreferences)
+ * @param languageCode Language code for language-specific storage (e.g., "en", "fr")
+ *                     If null, uses legacy global key "custom_words" for backwards compatibility
  */
-class CustomDictionarySource(private val prefs: SharedPreferences) : DictionaryDataSource {
+class CustomDictionarySource(
+    private val prefs: SharedPreferences,
+    private val languageCode: String? = null
+) : DictionaryDataSource {
 
     private val gson = Gson()
 
-    // CRITICAL FIX: Key must match what DictionaryManager and BackupRestoreManager use
-    // Previous "custom_words" (json map) was wrong; it should be "user_words" (string set)
-    // But wait, the old BackupRestoreManager used "user_words" as a Set<String> in the old implementation?
-    // Let's look at DictionaryManager.kt:
-    // private const val USER_WORDS_KEY = "user_words"
-    // val words = userDictPrefs.getStringSet(USER_WORDS_KEY, emptySet())
-    //
-    // So the internal storage is a StringSet, not a JSON map.
-    
-    private fun getCustomWords(): MutableSet<String> {
-        return prefs.getStringSet(PREF_CUSTOM_WORDS, emptySet())?.toMutableSet() ?: mutableSetOf()
+    // Use language-specific key when languageCode is provided
+    private val customWordsKey: String = if (languageCode != null) {
+        LanguagePreferenceKeys.customWordsKey(languageCode)
+    } else {
+        PREF_CUSTOM_WORDS_LEGACY
     }
 
-    private fun saveCustomWords(words: Set<String>) {
-        prefs.edit().putStringSet(PREF_CUSTOM_WORDS, words).apply()
+    private fun getCustomWords(): MutableMap<String, Int> {
+        // Try JSON format first (used by OptimizedVocabulary)
+        val jsonString = prefs.getString(customWordsKey, null)
+        if (jsonString != null) {
+            return try {
+                val type = object : com.google.gson.reflect.TypeToken<MutableMap<String, Int>>() {}.type
+                gson.fromJson(jsonString, type) ?: mutableMapOf()
+            } catch (e: Exception) {
+                mutableMapOf()
+            }
+        }
+        return mutableMapOf()
+    }
+
+    private fun saveCustomWords(words: Map<String, Int>) {
+        prefs.edit().putString(customWordsKey, gson.toJson(words)).apply()
     }
 
     override suspend fun getAllWords(): List<DictionaryWord> = withContext(Dispatchers.IO) {
         getCustomWords()
-            .map { word ->
-                // Custom words don't store frequency in StringSet, assume default
-                DictionaryWord(word, 100, WordSource.CUSTOM, true)
+            .map { (word, freq) ->
+                // Use stored frequency or default to 100
+                DictionaryWord(word, freq, WordSource.CUSTOM, true)
             }
             .sorted()
     }
@@ -400,7 +418,7 @@ class CustomDictionarySource(private val prefs: SharedPreferences) : DictionaryD
 
     override suspend fun addWord(word: String, frequency: Int) {
         val words = getCustomWords()
-        words.add(word)
+        words[word] = frequency
         saveCustomWords(words)
     }
 
@@ -413,12 +431,12 @@ class CustomDictionarySource(private val prefs: SharedPreferences) : DictionaryD
     override suspend fun updateWord(oldWord: String, newWord: String, frequency: Int) {
         val words = getCustomWords()
         words.remove(oldWord)
-        words.add(newWord)
+        words[newWord] = frequency
         saveCustomWords(words)
     }
 
     companion object {
-        // CRITICAL: Must match DictionaryManager.USER_WORDS_KEY
-        private const val PREF_CUSTOM_WORDS = "user_words"
+        // Legacy key for backwards compatibility (used when languageCode is null)
+        private const val PREF_CUSTOM_WORDS_LEGACY = "custom_words"
     }
 }

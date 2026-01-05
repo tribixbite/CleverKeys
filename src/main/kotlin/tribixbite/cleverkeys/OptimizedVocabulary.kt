@@ -1660,6 +1660,12 @@ class OptimizedVocabulary(private val context: Context) {
 
     /**
      * Load contractions from an InputStream.
+     * Also adds contraction keys (apostrophe-free forms) to vocabulary so they pass
+     * the vocabulary filter and can be converted to their apostrophe form.
+     *
+     * Example: "mappelle" -> "m'appelle"
+     * - "mappelle" is added to vocabulary (so NN prediction passes filter)
+     * - contraction map converts display to "m'appelle"
      */
     private fun loadContractionsFromInputStream(inputStream: InputStream): Int {
         val reader = BufferedReader(InputStreamReader(inputStream))
@@ -1680,6 +1686,21 @@ class OptimizedVocabulary(private val context: Context) {
             // Don't overwrite existing mappings (primary language takes precedence)
             if (!nonPairedContractions.containsKey(withoutApostrophe)) {
                 nonPairedContractions[withoutApostrophe] = withApostrophe
+
+                // CRITICAL FIX: Add contraction key to vocabulary so it passes the filter
+                // This allows NN predictions like "mappelle" to be accepted and then
+                // converted to "m'appelle" via the contraction map
+                // Use tier 1 (top5000 equivalent) with mid-range frequency
+                if (!vocabulary.containsKey(withoutApostrophe)) {
+                    vocabulary[withoutApostrophe] = WordInfo(0.6f, 1.toByte())
+                    // Add to ACTIVE beam search trie (may be language-specific)
+                    activeBeamSearchTrie.insert(withoutApostrophe)
+                    // Also add to English vocabulary trie for fallback
+                    vocabularyTrie.insert(withoutApostrophe)
+                    // Add to length-based buckets
+                    vocabularyByLength.getOrPut(withoutApostrophe.length) { ArrayList() }
+                        .add(withoutApostrophe)
+                }
                 count++
             }
         }

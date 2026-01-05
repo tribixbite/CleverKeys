@@ -99,8 +99,10 @@ class WordListFragment : Fragment() {
             TabType.DISABLED -> disabledSource
             TabType.USER -> UserDictionarySource(requireContext(), requireContext().contentResolver)
             TabType.CUSTOM -> {
-                val customPrefs = requireContext().getSharedPreferences("user_dictionary", android.content.Context.MODE_PRIVATE)
-                CustomDictionarySource(customPrefs)
+                // v1.1.87: Use language-specific custom words storage
+                // This matches OptimizedVocabulary's storage format for swipe prediction
+                val customPrefs = DirectBootAwarePreferences.get_shared_preferences(requireContext())
+                CustomDictionarySource(customPrefs, languageCode ?: "en")
             }
         }
     }

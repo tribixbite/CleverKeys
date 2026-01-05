@@ -620,7 +620,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             // Activities Section (Special Feature Managers) - at top for quick access
             val activityContext = LocalContext.current
             CollapsibleSettingsSection(
-                title = "Activities",
+                title = "📱 Activities",
                 expanded = activitiesSectionExpanded,
                 onExpandChange = { activitiesSectionExpanded = it }
             ) {
@@ -1151,7 +1151,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Swipe Trail Section (Collapsible)
             CollapsibleSettingsSection(
-                title = "Swipe Trail",
+                title = "✨ Swipe Trail",
                 expanded = swipeTrailSectionExpanded,
                 onExpandChange = { swipeTrailSectionExpanded = it }
             ) {
@@ -1608,7 +1608,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Auto-Correction Section (consolidated from Input + Swipe Corrections)
             CollapsibleSettingsSection(
-                title = "Auto-Correction",
+                title = "✏️ Auto-Correction",
                 expanded = swipeCorrectionsSectionExpanded,
                 onExpandChange = { swipeCorrectionsSectionExpanded = it }
             ) {
@@ -1842,7 +1842,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Gesture Tuning Section (Collapsible)
             CollapsibleSettingsSection(
-                title = "Gesture Tuning",
+                title = "👆 Gesture Tuning",
                 expanded = gestureTuningSectionExpanded,
                 onExpandChange = { gestureTuningSectionExpanded = it }
             ) {
@@ -2124,7 +2124,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Clipboard Section (Collapsible)
             CollapsibleSettingsSection(
-                title = "Clipboard",
+                title = "📋 Clipboard",
                 expanded = clipboardSectionExpanded,
                 onExpandChange = { clipboardSectionExpanded = it }
             ) {
@@ -2216,7 +2216,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Backup & Restore Section (Collapsible)
             CollapsibleSettingsSection(
-                title = "Backup & Restore",
+                title = "💾 Backup & Restore",
                 expanded = backupRestoreSectionExpanded,
                 onExpandChange = { backupRestoreSectionExpanded = it }
             ) {
@@ -2313,7 +2313,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Multi-Language Section (Collapsible)
             CollapsibleSettingsSection(
-                title = "Multi-Language",
+                title = "🌐 Multi-Language",
                 expanded = multiLangSectionExpanded,
                 onExpandChange = { multiLangSectionExpanded = it }
             ) {
@@ -2519,7 +2519,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Privacy Section (Collapsible)
             CollapsibleSettingsSection(
-                title = "Privacy & Data",
+                title = "🔒 Privacy & Data",
                 expanded = privacySectionExpanded,
                 onExpandChange = { privacySectionExpanded = it }
             ) {
@@ -3533,7 +3533,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      */
     private fun getLanguageDisplayName(code: String): String {
         return when (code) {
-            "none" -> "None (English only)"
+            "none" -> "None"
+            "en" -> "English"
             "es" -> "Spanish (Español)"
             "fr" -> "French (Français)"
             "de" -> "German (Deutsch)"
@@ -3559,6 +3560,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             "ca" -> "Catalan (Català)"
             "eu" -> "Basque (Euskara)"
             "gl" -> "Galician (Galego)"
+            // Downloadable language packs
+            "id" -> "Indonesian (Bahasa Indonesia)"
+            "ms" -> "Malay (Bahasa Melayu)"
+            "sw" -> "Swahili (Kiswahili)"
+            "tl" -> "Tagalog (Filipino)"
             else -> code.uppercase()
         }
     }
