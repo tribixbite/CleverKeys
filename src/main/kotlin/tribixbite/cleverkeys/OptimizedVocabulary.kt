@@ -154,10 +154,16 @@ class OptimizedVocabulary(private val context: Context) {
         _autocorrect_confidence_min_frequency = config.autocorrect_confidence_min_frequency // Cache this value
 
         // OPTIMIZATION Phase 2: Parse and cache custom words here instead of on every swipe
+        // v1.1.86: Uses language-specific keys
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-            val customWordsJson = prefs.getString("custom_words", "{}")
-            
+
+            // Run migration if needed (idempotent)
+            LanguagePreferenceKeys.migrateToLanguageSpecific(prefs)
+
+            val customWordsKey = LanguagePreferenceKeys.customWordsKey(_primaryLanguageCode)
+            val customWordsJson = prefs.getString(customWordsKey, "{}")
+
             // Only parse if content changed
             if (customWordsJson != _lastCustomWordsJson) {
                 _cachedCustomWords.clear()
@@ -169,7 +175,7 @@ class OptimizedVocabulary(private val context: Context) {
                         val customFreq = jsonObj.optInt(customWord, 1000)
                         _cachedCustomWords[customWord] = customFreq
                     }
-                    Log.d(TAG, "Cached " + _cachedCustomWords.size + " custom words")
+                    Log.d(TAG, "Cached ${_cachedCustomWords.size} custom words for $_primaryLanguageCode")
                 }
                 _lastCustomWordsJson = customWordsJson ?: "" // Handle null string
             }
@@ -1366,6 +1372,8 @@ class OptimizedVocabulary(private val context: Context) {
     /**
      * Load custom words and Android user dictionary into beam search vocabulary
      * High frequency ensures they appear in predictions
+     *
+     * @since v1.1.86 - Uses language-specific keys for custom words
      */
     private fun loadCustomAndUserWords() {
         if (context == null) return // Redundant check, context is non-null
@@ -1373,8 +1381,12 @@ class OptimizedVocabulary(private val context: Context) {
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
 
-            // 1. Load custom words from SharedPreferences
-            val customWordsJson = prefs.getString("custom_words", "{}")
+            // v1.1.86: Run migration if needed (copy global keys to English keys)
+            LanguagePreferenceKeys.migrateToLanguageSpecific(prefs)
+
+            // 1. Load custom words from SharedPreferences (language-specific key)
+            val customWordsKey = LanguagePreferenceKeys.customWordsKey(_primaryLanguageCode)
+            val customWordsJson = prefs.getString(customWordsKey, "{}")
             if (customWordsJson != "{}") {
                 try {
                     val jsonObj = org.json.JSONObject(customWordsJson)
@@ -1456,7 +1468,9 @@ class OptimizedVocabulary(private val context: Context) {
     }
 
     /**
-     * Load disabled words set for filtering beam search results
+     * Load disabled words from preferences for filtering beam search results.
+     *
+     * @since v1.1.86 - Uses language-specific keys for disabled words
      */
     private fun loadDisabledWords() {
         if (context == null) { // Redundant check, context is non-null
@@ -1466,9 +1480,15 @@ class OptimizedVocabulary(private val context: Context) {
 
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-            val disabledSet = prefs.getStringSet("disabled_words", HashSet())
+
+            // v1.1.86: Run migration if needed (idempotent)
+            LanguagePreferenceKeys.migrateToLanguageSpecific(prefs)
+
+            // Use language-specific key
+            val disabledKey = LanguagePreferenceKeys.disabledWordsKey(_primaryLanguageCode)
+            val disabledSet = prefs.getStringSet(disabledKey, HashSet())
             disabledWords = HashSet(disabledSet)
-            Log.d(TAG, "Loaded " + disabledWords.size + " disabled words for beam search filtering")
+            Log.d(TAG, "Loaded ${disabledWords.size} disabled words for $disabledKey")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load disabled words", e)
             disabledWords = HashSet()

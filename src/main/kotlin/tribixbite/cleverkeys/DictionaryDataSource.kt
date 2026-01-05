@@ -172,12 +172,31 @@ class MainDictionarySource(
 }
 
 /**
- * Disabled words source - manages disabled word list
+ * Disabled words source - manages disabled word list.
+ *
+ * @param prefs SharedPreferences to use
+ * @param languageCode ISO 639-1 language code (e.g., "en", "es") for language-specific storage.
+ *                     If null, uses global key (legacy behavior).
+ * @since v1.1.86 - Added language-specific storage support
  */
-class DisabledDictionarySource(private val prefs: SharedPreferences) : DictionaryDataSource {
+class DisabledDictionarySource(
+    private val prefs: SharedPreferences,
+    private val languageCode: String? = null
+) : DictionaryDataSource {
+
+    /**
+     * Get the preference key for disabled words.
+     * Uses language-specific key if languageCode is provided, otherwise legacy global key.
+     */
+    private val disabledWordsKey: String
+        get() = if (languageCode != null) {
+            LanguagePreferenceKeys.disabledWordsKey(languageCode)
+        } else {
+            PREF_DISABLED_WORDS_LEGACY
+        }
 
     fun getDisabledWords(): Set<String> {
-        return prefs.getStringSet(PREF_DISABLED_WORDS, emptySet()) ?: emptySet()
+        return prefs.getStringSet(disabledWordsKey, emptySet()) ?: emptySet()
     }
 
     fun setWordEnabled(word: String, enabled: Boolean) {
@@ -187,7 +206,7 @@ class DisabledDictionarySource(private val prefs: SharedPreferences) : Dictionar
         } else {
             disabled.add(word)
         }
-        prefs.edit().putStringSet(PREF_DISABLED_WORDS, disabled).apply()
+        prefs.edit().putStringSet(disabledWordsKey, disabled).apply()
     }
 
     override suspend fun getAllWords(): List<DictionaryWord> = withContext(Dispatchers.IO) {
@@ -220,7 +239,8 @@ class DisabledDictionarySource(private val prefs: SharedPreferences) : Dictionar
     }
 
     companion object {
-        private const val PREF_DISABLED_WORDS = "disabled_words"
+        // Legacy global key (pre-v1.1.86)
+        private const val PREF_DISABLED_WORDS_LEGACY = "disabled_words"
     }
 }
 
