@@ -524,6 +524,52 @@ Some languages use apostrophes for contractions or grammatical constructs. The `
 - Separate contraction loading by language (no fallback)
 - Visual indicator for cognate/shared words
 
+### 10.2 CRITICAL BUG: English Words Predicted in French-Only Mode
+
+**Symptom**: User types in French-only mode (Primary=French, Secondary=None) but all predictions are English words like "every", "word", "this", "was", "done".
+
+**Status**: Under investigation
+
+**Expected behavior**:
+- Beam search should use French trie (only French normalized words)
+- English words NOT in French dictionary should be unpredictable
+- Only words that exist in French dictionary should appear
+
+**Possible root causes** (to investigate):
+
+1. **French trie not being set as active**
+   - `loadPrimaryDictionary()` may not be called when language changes
+   - `activeBeamSearchTrie` may still point to English trie
+   - Check: Does `reloadPrimaryDictionary()` get called on language change?
+
+2. **Keyboard not initialized when language changes**
+   - `CleverKeysService.onSharedPreferenceChanged()` returns early if `!::_layoutBridge.isInitialized`
+   - If user changes language before using keyboard, reload is skipped
+   - Fix needed: Reload on keyboard init if pending language change
+
+3. **French dictionary loading failure**
+   - `BinaryDictionaryLoader.loadIntoNormalizedIndex()` might fail silently
+   - If load fails, `activeBeamSearchTrie` stays as English trie
+   - Check: Verify `fr_enhanced.bin` loads correctly
+
+4. **Race condition**
+   - Predictions requested before dictionary reload completes
+   - BeamSearchEngine created with old trie reference
+   - Fix needed: Block predictions during language switch
+
+**Diagnostic steps**:
+1. Enable debug logging in OptimizedVocabulary
+2. Log when `loadPrimaryDictionary()` is called and what trie is set
+3. Log what trie BeamSearchEngine receives
+4. Verify French dictionary contains expected words (not English words)
+
+**Code locations to check**:
+- `CleverKeysService.kt:747-771` - onSharedPreferenceChanged handler
+- `PreferenceUIUpdateHandler.kt:102-126` - reloadLanguageDictionaryIfNeeded
+- `SwipePredictorOrchestrator.kt:488-490` - reloadPrimaryDictionary
+- `OptimizedVocabulary.kt:1111-1175` - loadPrimaryDictionary
+- `OptimizedVocabulary.kt:1166` - activeBeamSearchTrie assignment
+
 ---
 
 ## 11. Future Work
