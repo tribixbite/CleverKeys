@@ -32,6 +32,7 @@ from collections import defaultdict
 ASK_BASE = Path("/data/data/com.termux/files/home/git/swype/AnySoftKeyboard/addons/languages")
 
 # Language dictionary mappings
+# Bundled languages
 LANG_DICT_PATHS = {
     "fr": ASK_BASE / "french/pack/dictionary/fr_wordlist.combined.gz",
     "it": ASK_BASE / "italian/pack/dictionary/it_wordlist.combined.gz",
@@ -39,6 +40,9 @@ LANG_DICT_PATHS = {
     "es": ASK_BASE / "spain/pack/dictionary/es_wordlist.combined.gz",
     "pt": ASK_BASE / "brazilian/pack/dictionary/pt_BR_wordlist.combined.gz",
     "en": ASK_BASE / "english/pack/dictionary/en_wordlist.combined.gz",
+    # Downloadable language packs
+    "nl": ASK_BASE / "dutch/pack/dictionary/nl_wordlist.combined.gz",
+    # Note: id, ms, sw, tl don't have ASK dictionaries and rarely use apostrophes
 }
 
 # Output directory
@@ -48,12 +52,16 @@ OUTPUT_DIR = Path(__file__).parent.parent / "src/main/assets/dictionaries"
 WORD_PATTERN = re.compile(r"word=([^,]+),f=(\d+)")
 
 
-def extract_apostrophe_words(dict_path: Path) -> dict:
+def extract_apostrophe_words(dict_path: Path, lang: str = "") -> dict:
     """
     Extract words containing apostrophes from an ASK dictionary.
 
     Returns dict mapping: without_apostrophe -> with_apostrophe
     Only includes real words (not proper nouns starting with O', McDonald's, etc.)
+
+    Language-specific handling:
+    - Dutch (nl): Include 's plurals (auto's, foto's) which are NOT possessives
+    - Other languages: Filter out 's endings as possessives
     """
     contractions = {}
 
@@ -79,13 +87,16 @@ def extract_apostrophe_words(dict_path: Path) -> dict:
             if word[0].isupper() and (
                 word.startswith("O'") or  # Irish names
                 word.startswith("D'") or  # D'Arcy, etc.
-                word.endswith("'s") or    # Possessives
+                (word.endswith("'s") and lang != "nl") or    # Possessives (but not Dutch plurals)
                 "'" in word and word.split("'")[0][0].isupper()  # Other proper nouns
             ):
                 continue
 
             # Skip brand names and special cases
-            skip_patterns = ["McDonald", "Rock'n'Roll", "rock'n'roll", "'s"]
+            # For Dutch, don't skip 's endings (they're plurals, not possessives)
+            skip_patterns = ["McDonald", "Rock'n'Roll", "rock'n'roll"]
+            if lang != "nl":
+                skip_patterns.append("'s")  # Only skip 's for non-Dutch
             if any(p in word for p in skip_patterns):
                 continue
 
@@ -116,7 +127,7 @@ def extract_all_languages():
 
     for lang, dict_path in LANG_DICT_PATHS.items():
         print(f"Processing {lang}...")
-        contractions = extract_apostrophe_words(dict_path)
+        contractions = extract_apostrophe_words(dict_path, lang)
         results[lang] = contractions
         print(f"  Found {len(contractions)} apostrophe word mappings")
 

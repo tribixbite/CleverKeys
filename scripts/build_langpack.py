@@ -6,6 +6,7 @@ Creates a language pack ZIP file containing:
 - manifest.json: metadata (language code, name, version)
 - dictionary.bin: V2 binary dictionary with accent normalization
 - unigrams.txt: word frequency list for language detection
+- contractions.json: apostrophe word mappings (optional, for languages that use them)
 
 Usage:
     python3 build_langpack.py --lang fr --name "French" --input french_words.txt --output langpack-fr.zip
@@ -149,6 +150,9 @@ def build_langpack(
         with open(manifest_file, 'w', encoding='utf-8') as f:
             json.dump(manifest, f, indent=2, ensure_ascii=False)
 
+        # Look for contractions file in assets
+        contractions_file = SCRIPT_DIR.parent / f"src/main/assets/dictionaries/contractions_{lang}.json"
+
         # Create ZIP
         print(f"\n=== Creating {output} ===")
         with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as zf:
@@ -157,6 +161,15 @@ def build_langpack(
             if final_unigrams and final_unigrams.exists():
                 zf.write(final_unigrams, "unigrams.txt")
                 print(f"  + unigrams.txt")
+            if contractions_file.exists():
+                # Check if contractions file has content (not just "{}")
+                with open(contractions_file, 'r') as cf:
+                    content = cf.read().strip()
+                    if content and content != "{}":
+                        zf.write(contractions_file, "contractions.json")
+                        print(f"  + contractions.json")
+                    else:
+                        print(f"  (no contractions - language doesn't use apostrophes)")
 
         # Print summary
         zip_size = output.stat().st_size

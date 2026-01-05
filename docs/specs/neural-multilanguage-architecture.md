@@ -2,8 +2,8 @@
 
 ## Feature Overview
 **Feature Name**: Neural Swipe Prediction Multilanguage System
-**Status**: Implemented (v1.1.85) - Language-Specific Beam Search Tries
-**Last Updated**: 2026-01-04
+**Status**: Implemented (v1.1.85) - Language-Specific Beam Search Tries + Contractions
+**Last Updated**: 2026-01-05
 
 ### Summary
 This document describes the **actual** neural swipe prediction pipeline and how multilanguage support is integrated. It documents a critical architectural constraint that affects non-English language support.
@@ -366,11 +366,63 @@ Output: être
 ### 7.2 Downloadable Language Packs
 
 Located in `scripts/dictionaries/langpack-{lang}.zip`:
-- Dutch (nl)
-- Indonesian (id)
-- Malay (ms)
-- Swahili (sw)
-- Tagalog (tl)
+
+| Language | Code | File | Words | Contractions |
+|----------|------|------|-------|--------------|
+| Dutch | nl | langpack-nl.zip | 20k | 118 (auto's, zo'n) |
+| Indonesian | id | langpack-id.zip | 20k | 0 |
+| Malay | ms | langpack-ms.zip | 20k | 0 |
+| Swahili | sw | langpack-sw.zip | 20k | 0 |
+| Tagalog | tl | langpack-tl.zip | 20k | 0 |
+
+### 7.3 Language Pack File Format
+
+Each `.zip` language pack contains:
+
+```
+langpack-{lang}.zip
+├── manifest.json      # Metadata: code, name, version, wordCount
+├── dictionary.bin     # V2 binary dictionary with accent normalization
+├── unigrams.txt       # Top 5000 words for language detection
+└── contractions.json  # Optional: apostrophe word mappings
+```
+
+### 7.4 Contractions (Apostrophe Words)
+
+Some languages use apostrophes for contractions or grammatical constructs. The `contractions.json` file maps apostrophe-free forms to their canonical apostrophe forms:
+
+```json
+{
+  "cest": "c'est",
+  "jai": "j'ai",
+  "autos": "auto's"  // Dutch plural
+}
+```
+
+**Language-specific apostrophe usage:**
+
+| Language | Apostrophe Use | Examples |
+|----------|----------------|----------|
+| French | Contractions | c'est, j'ai, l'homme, d'accord |
+| Italian | Elisions | l'uomo, un'amica, dell'arte |
+| Dutch | Plurals + Contractions | auto's, foto's, zo'n, z'n |
+| English | Contractions + Possessives | don't, it's, John's |
+| German | Colloquial only | wie's, gibt's |
+| Spanish | Rare | None commonly used |
+| Portuguese | Rare | None commonly used |
+| Indonesian | Not used | - |
+| Malay | Not used | - |
+| Swahili | Not used | - |
+| Tagalog | Not used | - |
+
+**Contraction counts by language (bundled):**
+- French: 27,494 mappings
+- Italian: 22,474 mappings
+- English: 102 mappings
+- Dutch: 118 mappings (including plurals)
+- German: 4 mappings
+- Spanish: 0
+- Portuguese: 0
 
 ---
 
