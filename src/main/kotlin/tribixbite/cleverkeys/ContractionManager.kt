@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.util.Log
 import org.json.JSONObject
+import tribixbite.cleverkeys.langpack.LanguagePackManager
 import java.io.BufferedReader
+import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
 
@@ -72,36 +74,69 @@ class ContractionManager(private val context: Context) {
      * Load language-specific contractions for the given language.
      * Called when keyboard language changes to load appropriate contraction mappings.
      *
-     * @param langCode Language code (e.g., "fr", "it", "de", "es", "pt")
+     * Tries to load from:
+     * 1. Installed language pack (files/langpacks/{code}/contractions.json)
+     * 2. Bundled assets (assets/dictionaries/contractions_{code}.json)
+     *
+     * @param langCode Language code (e.g., "fr", "it", "de", "es", "pt", "nl")
      */
     fun loadLanguageContractions(langCode: String) {
-        val filename = "dictionaries/contractions_$langCode.json"
+        // First try loading from installed language pack
+        val langPackManager = LanguagePackManager.getInstance(context)
+        val packContractionsFile = langPackManager.getContractionsPath(langCode)
 
+        if (packContractionsFile != null) {
+            try {
+                val count = loadContractionsFromFile(packContractionsFile)
+                Log.d(TAG, "Loaded $count contractions for $langCode from language pack (total: ${nonPairedContractions.size})")
+                return
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to load contractions from language pack for $langCode: ${e.message}")
+            }
+        }
+
+        // Fall back to bundled assets
+        val filename = "dictionaries/contractions_$langCode.json"
         try {
             val inputStream = assetManager.open(filename)
-            val jsonString = readStream(inputStream)
-            val jsonObj = JSONObject(jsonString)
-            val keys = jsonObj.keys()
-            var count = 0
-
-            while (keys.hasNext()) {
-                val withoutApostrophe = keys.next()
-                val withApostrophe = jsonObj.getString(withoutApostrophe)
-
-                // Don't overwrite existing mappings (first language loaded takes precedence)
-                if (!nonPairedContractions.containsKey(withoutApostrophe.lowercase())) {
-                    nonPairedContractions[withoutApostrophe.lowercase()] = withApostrophe.lowercase()
-                    knownContractions.add(withApostrophe.lowercase())
-                    count++
-                }
-            }
-
-            Log.d(TAG, "Loaded $count contractions for $langCode (total: ${nonPairedContractions.size})")
+            val count = loadContractionsFromStream(inputStream)
+            Log.d(TAG, "Loaded $count contractions for $langCode from assets (total: ${nonPairedContractions.size})")
         } catch (e: java.io.FileNotFoundException) {
             Log.d(TAG, "No contraction file for $langCode (this is normal for some languages)")
         } catch (e: Exception) {
             Log.w(TAG, "Failed to load contractions for $langCode: ${e.message}")
         }
+    }
+
+    /**
+     * Load contractions from a File (used for imported language packs).
+     */
+    private fun loadContractionsFromFile(file: File): Int {
+        return loadContractionsFromStream(file.inputStream())
+    }
+
+    /**
+     * Load contractions from an InputStream.
+     */
+    private fun loadContractionsFromStream(inputStream: InputStream): Int {
+        val jsonString = readStream(inputStream)
+        val jsonObj = JSONObject(jsonString)
+        val keys = jsonObj.keys()
+        var count = 0
+
+        while (keys.hasNext()) {
+            val withoutApostrophe = keys.next()
+            val withApostrophe = jsonObj.getString(withoutApostrophe)
+
+            // Don't overwrite existing mappings (first language loaded takes precedence)
+            if (!nonPairedContractions.containsKey(withoutApostrophe.lowercase())) {
+                nonPairedContractions[withoutApostrophe.lowercase()] = withApostrophe.lowercase()
+                knownContractions.add(withApostrophe.lowercase())
+                count++
+            }
+        }
+
+        return count
     }
 
     /**

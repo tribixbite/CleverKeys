@@ -16,6 +16,7 @@ import java.util.zip.ZipInputStream
  * - manifest.json: metadata (language code, name, version)
  * - dictionary.bin: V2 binary dictionary with accent normalization
  * - unigrams.txt: word frequency list for language detection
+ * - contractions.json: optional apostrophe word mappings (e.g., "cest" -> "c'est")
  *
  * Packs are imported via Storage Access Framework (no internet permission needed).
  * Stored in app internal storage: files/langpacks/{code}/
@@ -28,6 +29,7 @@ class LanguagePackManager(private val context: Context) {
         private const val MANIFEST_FILE = "manifest.json"
         private const val DICTIONARY_FILE = "dictionary.bin"
         private const val UNIGRAMS_FILE = "unigrams.txt"
+        private const val CONTRACTIONS_FILE = "contractions.json"
 
         // V2 dictionary magic number: "CKDT"
         private const val DICT_MAGIC = 0x54444B43
@@ -127,6 +129,13 @@ class LanguagePackManager(private val context: Context) {
                 unigramsFile.copyTo(File(packDir, UNIGRAMS_FILE), overwrite = true)
             }
 
+            // Copy contractions if present
+            val contractionsFile = File(tempDir, CONTRACTIONS_FILE)
+            if (contractionsFile.exists()) {
+                contractionsFile.copyTo(File(packDir, CONTRACTIONS_FILE), overwrite = true)
+                Log.d(TAG, "Copied contractions.json for ${manifest.code}")
+            }
+
             Log.i(TAG, "Successfully imported language pack: ${manifest.name} (${manifest.code})")
             return ImportResult.Success(manifest)
 
@@ -222,6 +231,15 @@ class LanguagePackManager(private val context: Context) {
     fun getUnigramsPath(code: String): File? {
         val unigramsFile = File(langpacksDir, "$code/$UNIGRAMS_FILE")
         return if (unigramsFile.exists()) unigramsFile else null
+    }
+
+    /**
+     * Get contractions file path for a language code.
+     * Returns null if not available.
+     */
+    fun getContractionsPath(code: String): File? {
+        val contractionsFile = File(langpacksDir, "$code/$CONTRACTIONS_FILE")
+        return if (contractionsFile.exists()) contractionsFile else null
     }
 
     /**

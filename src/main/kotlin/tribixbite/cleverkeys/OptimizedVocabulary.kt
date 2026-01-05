@@ -4,7 +4,9 @@ import android.content.Context
 import android.util.Log
 import tribixbite.cleverkeys.VocabularyCache
 import tribixbite.cleverkeys.Config // Assuming Config is in this package or imported
+import tribixbite.cleverkeys.langpack.LanguagePackManager
 import java.io.BufferedReader
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -1616,46 +1618,73 @@ class OptimizedVocabulary(private val context: Context) {
     /**
      * Load language-specific contraction mappings.
      *
+     * Tries to load from:
+     * 1. Installed language pack (files/langpacks/{code}/contractions.json)
+     * 2. Bundled assets (assets/dictionaries/contractions_{code}.json)
+     *
      * Contraction files map apostrophe-free forms to apostrophe forms:
      * - contractions_fr.json: "cest" -> "c'est", "jai" -> "j'ai"
      * - contractions_it.json: "luomo" -> "l'uomo", "ce" -> "c'è"
      * - contractions_en.json: "dont" -> "don't", "cant" -> "can't"
+     * - contractions_nl.json: "autos" -> "auto's", "zon" -> "zo'n"
      *
-     * @param langCode Language code (e.g., "fr", "it", "en")
+     * @param langCode Language code (e.g., "fr", "it", "en", "nl")
      */
     private fun loadLanguageContractions(langCode: String) {
-        val filename = "dictionaries/contractions_$langCode.json"
+        // First try loading from installed language pack
+        val langPackManager = LanguagePackManager.getInstance(context!!)
+        val packContractionsFile = langPackManager.getContractionsPath(langCode)
 
+        if (packContractionsFile != null) {
+            try {
+                val count = loadContractionsFromInputStream(packContractionsFile.inputStream())
+                Log.d(TAG, "Loaded $count contractions for $langCode from language pack")
+                return
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to load contractions from language pack for $langCode: ${e.message}")
+            }
+        }
+
+        // Fall back to bundled assets
+        val filename = "dictionaries/contractions_$langCode.json"
         try {
             val inputStream = context!!.assets.open(filename)
-            val reader = BufferedReader(InputStreamReader(inputStream))
-            val jsonBuilder = StringBuilder()
-            var line: String?
-            while (reader.readLine().also { line = it } != null) {
-                jsonBuilder.append(line)
-            }
-            reader.close()
-
-            val jsonObj = org.json.JSONObject(jsonBuilder.toString())
-            val keys = jsonObj.keys()
-            var count = 0
-
-            while (keys.hasNext()) {
-                val withoutApostrophe = keys.next().lowercase(Locale.ROOT)
-                val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(Locale.ROOT)
-                // Don't overwrite existing mappings (primary language takes precedence)
-                if (!nonPairedContractions.containsKey(withoutApostrophe)) {
-                    nonPairedContractions[withoutApostrophe] = withApostrophe
-                    count++
-                }
-            }
-
-            Log.d(TAG, "Loaded $count contractions for $langCode")
+            val count = loadContractionsFromInputStream(inputStream)
+            Log.d(TAG, "Loaded $count contractions for $langCode from assets")
         } catch (e: java.io.FileNotFoundException) {
             Log.d(TAG, "No contraction file for $langCode (this is normal for some languages)")
         } catch (e: Exception) {
             Log.w(TAG, "Failed to load contractions for $langCode: ${e.message}")
         }
+    }
+
+    /**
+     * Load contractions from an InputStream.
+     */
+    private fun loadContractionsFromInputStream(inputStream: InputStream): Int {
+        val reader = BufferedReader(InputStreamReader(inputStream))
+        val jsonBuilder = StringBuilder()
+        var line: String?
+        while (reader.readLine().also { line = it } != null) {
+            jsonBuilder.append(line)
+        }
+        reader.close()
+
+        val jsonObj = org.json.JSONObject(jsonBuilder.toString())
+        val keys = jsonObj.keys()
+        var count = 0
+
+        while (keys.hasNext()) {
+            val withoutApostrophe = keys.next().lowercase(Locale.ROOT)
+            val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(Locale.ROOT)
+            // Don't overwrite existing mappings (primary language takes precedence)
+            if (!nonPairedContractions.containsKey(withoutApostrophe)) {
+                nonPairedContractions[withoutApostrophe] = withApostrophe
+                count++
+            }
+        }
+
+        return count
     }
 
     /**
