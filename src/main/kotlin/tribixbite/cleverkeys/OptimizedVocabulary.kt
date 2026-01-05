@@ -1251,17 +1251,14 @@ class OptimizedVocabulary(private val context: Context) {
                 Log.i(TAG, "Added ${contractionKeys.size} contraction keys to language trie")
             }
 
-            activeBeamSearchTrie = languageTrie
-
-            // v1.1.93 CRITICAL FIX: Set _primaryLanguageCode AFTER activeBeamSearchTrie
-            // This prevents race condition where getVocabularyTrie() sees:
-            // - _primaryLanguageCode = "fr" (already set by setPrimaryLanguageConfig)
-            // - activeBeamSearchTrie still points to English trie (not loaded yet)
-            // By setting _primaryLanguageCode HERE, the check in getVocabularyTrie() will either:
-            // 1. See _primaryLanguageCode="en" and return English trie (loading not started)
-            // 2. See _primaryLanguageCode="fr" and return French trie (loading complete)
-            // There's no window where _primaryLanguageCode is French but trie is still English
+            // v1.1.94 CRITICAL FIX: Set _primaryLanguageCode BEFORE activeBeamSearchTrie
+            // Due to Java Memory Model volatile ordering:
+            // - If reader sees French trie, they're guaranteed to see "fr" (write #1 happens-before write #2)
+            // - This ensures filterPredictions() sees correct language when checking shouldFuzzyMatch
+            // Previous fix (v1.1.93) had writes in wrong order - reader could see French trie
+            // but stale "en" for _primaryLanguageCode, causing English fuzzy matching to run
             _primaryLanguageCode = language
+            activeBeamSearchTrie = languageTrie
 
             Log.i(TAG, "✅ Primary dictionary loaded: $language")
             Log.i(TAG, "  - ${index.size()} canonical words (with accents)")

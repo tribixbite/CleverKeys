@@ -224,16 +224,19 @@ class WordPredictor {
      * Reload custom words and user dictionary (called when Dictionary Manager makes changes)
      * PERFORMANCE: Only reloads small dynamic sets, overwrites existing entries
      * Also rebuilds prefix index to include new words
+     *
+     * v1.1.90: Uses currentLanguage to filter UserDictionary by locale.
      */
     fun reloadCustomAndUserWords() {
         context?.let {
-            val customWords = loadCustomAndUserWords(it)
+            // v1.1.90: Pass currentLanguage to filter by locale
+            val customWords = loadCustomAndUserWords(it, currentLanguage)
             // NOTE: Full rebuild needed here because we don't track which words were removed
             // Future optimization: track previous custom words to compute diff (added/removed)
             buildPrefixIndex()
             lastReloadTime = System.currentTimeMillis()
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                Log.d(TAG, "Reloaded ${customWords.size} custom/user words + rebuilt prefix index")
+                Log.d(TAG, "Reloaded ${customWords.size} custom/user words for '$currentLanguage' + rebuilt prefix index")
             }
         }
     }
@@ -469,7 +472,8 @@ class WordPredictor {
 
         // Load custom words and user dictionary (additive to main dictionary)
         // OPTIMIZATION v2: Use incremental prefix index updates instead of full rebuild
-        val customWords = loadCustomAndUserWords(context)
+        // v1.1.90: Pass language to filter UserDictionary by locale
+        val customWords = loadCustomAndUserWords(context, language)
 
         // Add custom words to prefix index (incremental update)
         if (customWords.isNotEmpty()) {
@@ -521,7 +525,8 @@ class WordPredictor {
             ): Set<String> {
                 // OPTIMIZATION v4 (perftodos4.md): This runs on BACKGROUND THREAD!
                 // Load custom words into the maps before they're swapped on main thread
-                val customWords = loadCustomAndUserWordsIntoMap(ctx, dictionary)
+                // v1.1.90: Pass language to filter UserDictionary by locale
+                val customWords = loadCustomAndUserWordsIntoMap(ctx, dictionary, language)
 
                 // Add custom words to prefix index
                 if (customWords.isNotEmpty()) {
@@ -645,11 +650,15 @@ class WordPredictor {
      * OPTIMIZATION v4 (perftodos4.md): Allows loading into new map off main thread,
      * then swapping the entire map atomically instead of putAll() on main thread.
      *
+     * v1.1.90: Added language parameter to filter UserDictionary by locale.
+     * This prevents English words from appearing in French touch typing predictions.
+     *
      * @param context Android context for accessing SharedPreferences and ContentProvider
      * @param targetMap The map to load words into (not dictionary)
+     * @param language Language code to filter UserDictionary (e.g., "fr", "de")
      * @return Set of all words loaded (for incremental prefix index updates)
      */
-    private fun loadCustomAndUserWordsIntoMap(context: Context, targetMap: MutableMap<String, Int>): Set<String> {
+    private fun loadCustomAndUserWordsIntoMap(context: Context, targetMap: MutableMap<String, Int>, language: String = "en"): Set<String> {
         val loadedWords = mutableSetOf<String>()
 
         try {
@@ -679,15 +688,20 @@ class WordPredictor {
             }
 
             // 2. Load Android user dictionary
+            // v1.1.90: Filter by locale to prevent English contamination in non-English modes
+            // Accept words matching current language OR words with null locale (global)
             try {
+                val selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} IS NULL"
+                val selectionArgs = arrayOf(language)
+
                 val cursor = context.contentResolver.query(
                     UserDictionary.Words.CONTENT_URI,
                     arrayOf(
                         UserDictionary.Words.WORD,
                         UserDictionary.Words.FREQUENCY
                     ),
-                    null,
-                    null,
+                    selection,
+                    selectionArgs,
                     null
                 )
 
@@ -705,7 +719,7 @@ class WordPredictor {
                     }
 
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        Log.d(TAG, "Loaded $userCount user dictionary words into new map")
+                        Log.d(TAG, "Loaded $userCount user dictionary words for locale '$language' into new map")
                     }
                 }
             } catch (e: Exception) {
@@ -744,10 +758,14 @@ class WordPredictor {
      *
      * OPTIMIZATION v2: Returns the set of loaded words for incremental prefix index updates
      *
+     * v1.1.90: Added language parameter to filter UserDictionary by locale.
+     * This prevents English words from appearing in French touch typing predictions.
+     *
      * @param context Android context for accessing preferences and content providers
+     * @param language Language code to filter UserDictionary (e.g., "fr", "de")
      * @return Set of words that were added to the dictionary
      */
-    private fun loadCustomAndUserWords(context: Context): Set<String> {
+    private fun loadCustomAndUserWords(context: Context, language: String = "en"): Set<String> {
         val loadedWords = mutableSetOf<String>()
 
         try {
@@ -777,15 +795,20 @@ class WordPredictor {
             }
 
             // 2. Load Android user dictionary
+            // v1.1.90: Filter by locale to prevent English contamination in non-English modes
+            // Accept words matching current language OR words with null locale (global)
             try {
+                val selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} IS NULL"
+                val selectionArgs = arrayOf(language)
+
                 val cursor = context.contentResolver.query(
                     UserDictionary.Words.CONTENT_URI,
                     arrayOf(
                         UserDictionary.Words.WORD,
                         UserDictionary.Words.FREQUENCY
                     ),
-                    null,
-                    null,
+                    selection,
+                    selectionArgs,
                     null
                 )
 
@@ -803,7 +826,7 @@ class WordPredictor {
                     }
 
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        Log.d(TAG, "Loaded $userCount user dictionary words")
+                        Log.d(TAG, "Loaded $userCount user dictionary words for locale '$language'")
                     }
                 }
             } catch (e: Exception) {
