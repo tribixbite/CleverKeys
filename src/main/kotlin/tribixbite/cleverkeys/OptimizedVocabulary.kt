@@ -379,6 +379,17 @@ class OptimizedVocabulary(private val context: Context) {
                 info = vocabulary[word]
             }
 
+            // v1.1.88: Check for contractions BEFORE filtering out the word
+            // This allows "mappelle" → "m'appelle" even when English fallback is disabled
+            // Contractions were added to vocabulary in loadContractionsFromInputStream()
+            // but vocabulary lookup is guarded by _englishFallbackEnabled
+            if (info == null && nonPairedContractions.containsKey(word)) {
+                // Word is a contraction key - accept it with mid-range frequency
+                info = WordInfo(0.6f, 1.toByte())
+                displayWord = nonPairedContractions[word]!!
+                if (debugMode) detailedLog?.append(String.format("🔤 \"%s\" → \"%s\" (contraction mapping)\n", word, displayWord))
+            }
+
             if (info == null) {
                 if (debugMode) detailedLog?.append(String.format("❌ \"%s\" - NOT IN VOCABULARY (not in main/custom/user/primary dict)\n", word))
                 continue // Word not in vocabulary
@@ -387,7 +398,8 @@ class OptimizedVocabulary(private val context: Context) {
             // Check if this word should be displayed as a contraction (e.g., "doesnt" -> "doesn't")
             // This happens AFTER vocabulary lookup succeeds - the word is valid, just needs apostrophe
             // Skip contraction mapping for primary dictionary matches (already have accented form)
-            if (!fromPrimaryDict) {
+            // v1.1.88: Also skip if we already set displayWord from contraction check above
+            if (!fromPrimaryDict && displayWord == word) {
                 displayWord = nonPairedContractions[word] ?: word
             }
 
