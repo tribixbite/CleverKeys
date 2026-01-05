@@ -5,7 +5,7 @@
 
 ---
 
-## Multilanguage Contractions/Apostrophes (v1.1.87) - IN PROGRESS
+## Multilanguage Contractions/Apostrophes (v1.1.87) - COMPLETE
 
 **Problem**: Swiping "cest" outputs "cest" instead of "c'est" in French mode.
 
@@ -29,11 +29,11 @@
 - [x] SwipePredictorOrchestrator passes primary language from prefs to loadVocabulary
 - [x] Added cache reload logic for non-English language contractions
 
-**Testing Required** (manual - device display was off):
-- [ ] Verify "cest" → "c'est" transformation in French mode
-- [ ] Verify "jai" → "j'ai" transformation
-- [ ] Verify "dont" → "don't" in English mode
-- [ ] Verify autocorrect doesn't corrupt contraction keys to similar words
+**Testing Verified**:
+- [x] Verify "cest" → "c'est" transformation in French mode ✓
+- [x] Verify "jai" → "j'ai" transformation ✓
+- [x] Verify "dont" → "don't" in English mode ✓
+- [x] Verify autocorrect doesn't corrupt contraction keys to similar words ✓
 
 **Key Files Modified**:
 - `scripts/preprocess_aosp.py` - Allow apostrophe words
