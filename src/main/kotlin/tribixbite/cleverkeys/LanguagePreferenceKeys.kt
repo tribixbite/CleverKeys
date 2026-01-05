@@ -1,0 +1,121 @@
+package tribixbite.cleverkeys
+
+import android.content.SharedPreferences
+import android.util.Log
+
+/**
+ * Helper for language-specific preference keys.
+ *
+ * Prior to v1.1.86, custom_words and disabled_words were global (not language-specific).
+ * This helper provides language-specific keys and migration utilities.
+ *
+ * @since v1.1.86
+ */
+object LanguagePreferenceKeys {
+    private const val TAG = "LanguagePreferenceKeys"
+
+    // Legacy global keys (pre-v1.1.86)
+    private const val LEGACY_CUSTOM_WORDS = "custom_words"
+    private const val LEGACY_DISABLED_WORDS = "disabled_words"
+
+    // Version flag for migration
+    private const val MIGRATION_VERSION_KEY = "lang_pref_migration_version"
+    private const val CURRENT_MIGRATION_VERSION = 1
+
+    /**
+     * Get the custom words preference key for a language.
+     *
+     * @param languageCode ISO 639-1 language code (e.g., "en", "es", "fr")
+     * @return Preference key like "custom_words_en"
+     */
+    fun customWordsKey(languageCode: String): String = "custom_words_${languageCode.lowercase()}"
+
+    /**
+     * Get the disabled words preference key for a language.
+     *
+     * @param languageCode ISO 639-1 language code (e.g., "en", "es", "fr")
+     * @return Preference key like "disabled_words_en"
+     */
+    fun disabledWordsKey(languageCode: String): String = "disabled_words_${languageCode.lowercase()}"
+
+    /**
+     * Check if migration from global keys to language-specific keys is needed.
+     *
+     * @param prefs SharedPreferences to check
+     * @return true if migration is needed
+     */
+    fun needsMigration(prefs: SharedPreferences): Boolean {
+        val migrationVersion = prefs.getInt(MIGRATION_VERSION_KEY, 0)
+        return migrationVersion < CURRENT_MIGRATION_VERSION
+    }
+
+    /**
+     * Migrate legacy global custom/disabled words to English-specific keys.
+     *
+     * This should be called once on app startup (or vocabulary load) to
+     * migrate existing user data to the new per-language format.
+     *
+     * @param prefs SharedPreferences to migrate
+     * @return true if migration was performed, false if already done
+     */
+    fun migrateToLanguageSpecific(prefs: SharedPreferences): Boolean {
+        if (!needsMigration(prefs)) {
+            return false
+        }
+
+        val editor = prefs.edit()
+
+        // Migrate custom_words to custom_words_en
+        val legacyCustomWords = prefs.getString(LEGACY_CUSTOM_WORDS, null)
+        if (legacyCustomWords != null && legacyCustomWords != "{}") {
+            val enKey = customWordsKey("en")
+            if (!prefs.contains(enKey)) {
+                editor.putString(enKey, legacyCustomWords)
+                Log.i(TAG, "Migrated custom_words to $enKey")
+            }
+        }
+
+        // Migrate disabled_words to disabled_words_en
+        val legacyDisabledWords = prefs.getStringSet(LEGACY_DISABLED_WORDS, null)
+        if (legacyDisabledWords != null && legacyDisabledWords.isNotEmpty()) {
+            val enKey = disabledWordsKey("en")
+            if (!prefs.contains(enKey)) {
+                editor.putStringSet(enKey, legacyDisabledWords)
+                Log.i(TAG, "Migrated disabled_words to $enKey (${legacyDisabledWords.size} words)")
+            }
+        }
+
+        // Mark migration complete
+        editor.putInt(MIGRATION_VERSION_KEY, CURRENT_MIGRATION_VERSION)
+        editor.apply()
+
+        Log.i(TAG, "Language preference migration complete (version $CURRENT_MIGRATION_VERSION)")
+        return true
+    }
+
+    /**
+     * Get all language codes that have custom words stored.
+     *
+     * @param prefs SharedPreferences to scan
+     * @return List of language codes with custom words
+     */
+    fun getLanguagesWithCustomWords(prefs: SharedPreferences): List<String> {
+        return prefs.all.keys
+            .filter { it.startsWith("custom_words_") }
+            .map { it.removePrefix("custom_words_") }
+            .distinct()
+    }
+
+    /**
+     * Get all language codes that have disabled words stored.
+     *
+     * @param prefs SharedPreferences to scan
+     * @return List of language codes with disabled words
+     */
+    fun getLanguagesWithDisabledWords(prefs: SharedPreferences): List<String> {
+        return prefs.all.keys
+            .filter { it.startsWith("disabled_words_") }
+            .map { it.removePrefix("disabled_words_") }
+            .distinct()
+    }
+}
