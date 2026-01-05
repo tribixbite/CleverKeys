@@ -5,6 +5,19 @@
 
 ---
 
+## v1.1.92 Fixes - IN PROGRESS
+
+**Thread Visibility Bug (CRITICAL - b9a66bfa)**:
+- [x] Root cause: `activeBeamSearchTrie` was NOT @Volatile
+- [x] `loadPrimaryDictionary()` runs on init thread, writes new French trie
+- [x] `getVocabularyTrie()` runs on main thread, reads stale cached English trie reference
+- [x] Without @Volatile, CPU caching prevented cross-thread visibility
+- [x] Added @Volatile to:
+  - `activeBeamSearchTrie` (critical - beam search trie reference)
+  - `normalizedIndex`, `secondaryNormalizedIndex` (accent lookups)
+  - `_primaryLanguageCode`, `_secondaryLanguageCode`, `_englishFallbackEnabled` (language config)
+- [ ] Test: swipe typing with French primary language
+
 ## v1.1.91 Fixes - COMPLETE
 
 **V2 Dictionary Format Support for WordPredictor (Touch Typing)**:
@@ -23,13 +36,10 @@
 - [x] `PreferenceUIUpdateHandler` reloads WordPredictor dictionary when language changes
 - [x] Added `reloadWordPredictorDictionary()` method to PredictionCoordinator
 
-**English Words in Beam Search (Investigation)**:
+**English Words in Beam Search (Diagnosis)**:
 - [x] BeamSearchEngine runs UNCONSTRAINED when vocabTrie is null
 - [x] `getVocabularyTrie()` returns null on language mismatch (primary≠en but trie is English)
-- [x] Root cause: if `loadPrimaryDictionary()` fails, trie stays English → mismatch → null
-- [ ] Verify French dictionary loads successfully (fr_enhanced.bin is V2 format)
-- [ ] Check logs for "loadPrimaryDictionary() called with language='fr'"
-- [ ] Verify "isLanguageTrie=true" in getVocabularyTrie() diagnostic logs
+- [x] Root cause identified: Thread visibility - @Volatile was missing (fixed in v1.1.92)
 
 ## v1.1.89 Fixes - COMPLETED
 
