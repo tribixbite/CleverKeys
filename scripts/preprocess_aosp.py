@@ -18,6 +18,12 @@ for line in sys.stdin:
     if match:
         word = match.group(1)
         freq = match.group(2)
-        # Skip entries with special characters or very short
-        if len(word) >= 1 and word.isalpha():
-            print(f"{word}\t{freq}")
+        # Allow words with apostrophes (contractions, elisions)
+        # Filter: must be >= 1 char, only letters and apostrophes, no leading/trailing apostrophes
+        if len(word) >= 1:
+            # Check if word contains only letters and apostrophes (no hyphens, numbers, etc.)
+            valid_chars = all(c.isalpha() or c == "'" for c in word)
+            # Don't allow words that start or end with apostrophe
+            no_edge_apostrophe = not (word.startswith("'") or word.endswith("'"))
+            if valid_chars and no_edge_apostrophe:
+                print(f"{word}\t{freq}")

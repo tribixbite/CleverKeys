@@ -1496,85 +1496,133 @@ class OptimizedVocabulary(private val context: Context) {
     }
 
     /**
-     * Load contraction mappings for apostrophe display support
-     * Loads both paired contractions (base word exists: "well" -> "we'll")
-     * and non-paired contractions (base doesn't exist: "dont" -> "don't")
+     * Load contraction mappings for apostrophe display support.
+     *
+     * Loads both:
+     * - Paired contractions (base word exists: "well" -> "we'll") - English only
+     * - Non-paired contractions (without apostrophe -> with apostrophe)
+     *
+     * For non-English languages (FR, IT, PT, DE), loads language-specific
+     * contraction files that map apostrophe-free forms to apostrophe forms:
+     * - French: "cest" -> "c'est", "jai" -> "j'ai", etc.
+     * - Italian: "luomo" -> "l'uomo", "ce" -> "c'è", etc.
+     *
+     * @since v1.1.87 - Added multilanguage contraction support
      */
     private fun loadContractionMappings() {
-        if (context == null) { // Redundant check, context is non-null
+        if (context == null) {
             contractionPairings = HashMap()
             nonPairedContractions = HashMap()
             return
         }
 
         try {
-            // Load paired contractions (base word -> list of contraction variants)
-            try {
-                val inputStream = context.assets.open("dictionaries/contraction_pairings.json")
-                val reader = BufferedReader(InputStreamReader(inputStream))
-                val jsonBuilder = StringBuilder()
-                var line: String?
-                while (reader.readLine().also { line = it } != null) {
-                    jsonBuilder.append(line)
-                }
-                reader.close()
+            // Load English paired contractions (base word -> list of contraction variants)
+            // This is English-specific (possessives like "we'll", "they're")
+            loadEnglishPairedContractions()
 
-                // Parse JSON object: { "well": [{"contraction": "we'll", "frequency": 243}], ... }
-                val jsonObj = org.json.JSONObject(jsonBuilder.toString())
-                val keys = jsonObj.keys()
-                var pairingCount = 0
+            // Load non-paired contractions for the current language
+            // This maps apostrophe-free -> with apostrophe
+            loadLanguageContractions(_primaryLanguageCode)
 
-                while (keys.hasNext()) {
-                    val baseWord = keys.next().toLowerCase(Locale.ROOT)
-                    val contractionArray = jsonObj.getJSONArray(baseWord)
-                    val contractionList = ArrayList<String>()
-
-                    for (i in 0 until contractionArray.length()) {
-                        val contractionObj = contractionArray.getJSONObject(i)
-                        val contraction = contractionObj.getString("contraction").toLowerCase(Locale.ROOT)
-                        contractionList.add(contraction)
-                    }
-
-                    contractionPairings[baseWord] = contractionList
-                    pairingCount += contractionList.size
-                }
-
-                Log.d(TAG, "Loaded $pairingCount paired contractions for " + contractionPairings.size + " base words")
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to load contraction pairings: " + e.message)
-                contractionPairings = HashMap()
+            // If primary is not English, also load English contractions as fallback
+            if (_primaryLanguageCode != "en") {
+                loadLanguageContractions("en")
             }
 
-            // Load non-paired contractions (without apostrophe -> with apostrophe)
-            try {
-                val inputStream = context.assets.open("dictionaries/contractions_non_paired.json")
-                val reader = BufferedReader(InputStreamReader(inputStream))
-                val jsonBuilder = StringBuilder()
-                var line: String?
-                while (reader.readLine().also { line = it } != null) {
-                    jsonBuilder.append(line)
-                }
-                reader.close()
+            Log.d(TAG, "Loaded contractions for $_primaryLanguageCode: " +
+                    "${nonPairedContractions.size} mappings, ${contractionPairings.size} paired bases")
 
-                // Parse JSON object: { "dont": "don't", "cant": "can't", ... }
-                val jsonObj = org.json.JSONObject(jsonBuilder.toString())
-                val keys = jsonObj.keys()
-
-                while (keys.hasNext()) {
-                    val withoutApostrophe = keys.next().toLowerCase(Locale.ROOT)
-                    val withApostrophe = jsonObj.getString(withoutApostrophe).toLowerCase(Locale.ROOT)
-                    nonPairedContractions[withoutApostrophe] = withApostrophe
-                }
-
-                Log.d(TAG, "Loaded " + nonPairedContractions.size + " non-paired contractions")
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to load non-paired contractions: " + e.message)
-                nonPairedContractions = HashMap()
-            }
         } catch (e: Exception) {
             Log.e(TAG, "Error loading contraction mappings", e)
             contractionPairings = HashMap()
             nonPairedContractions = HashMap()
+        }
+    }
+
+    /**
+     * Load English paired contractions (base word -> contraction variants).
+     * Example: "well" -> ["we'll"], "they" -> ["they're", "they've", "they'd"]
+     */
+    private fun loadEnglishPairedContractions() {
+        try {
+            val inputStream = context!!.assets.open("dictionaries/contraction_pairings.json")
+            val reader = BufferedReader(InputStreamReader(inputStream))
+            val jsonBuilder = StringBuilder()
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                jsonBuilder.append(line)
+            }
+            reader.close()
+
+            val jsonObj = org.json.JSONObject(jsonBuilder.toString())
+            val keys = jsonObj.keys()
+            var pairingCount = 0
+
+            while (keys.hasNext()) {
+                val baseWord = keys.next().lowercase(Locale.ROOT)
+                val contractionArray = jsonObj.getJSONArray(baseWord)
+                val contractionList = ArrayList<String>()
+
+                for (i in 0 until contractionArray.length()) {
+                    val contractionObj = contractionArray.getJSONObject(i)
+                    val contraction = contractionObj.getString("contraction").lowercase(Locale.ROOT)
+                    contractionList.add(contraction)
+                }
+
+                contractionPairings[baseWord] = contractionList
+                pairingCount += contractionList.size
+            }
+
+            Log.d(TAG, "Loaded $pairingCount English paired contractions")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to load English paired contractions: ${e.message}")
+            contractionPairings = HashMap()
+        }
+    }
+
+    /**
+     * Load language-specific contraction mappings.
+     *
+     * Contraction files map apostrophe-free forms to apostrophe forms:
+     * - contractions_fr.json: "cest" -> "c'est", "jai" -> "j'ai"
+     * - contractions_it.json: "luomo" -> "l'uomo", "ce" -> "c'è"
+     * - contractions_en.json: "dont" -> "don't", "cant" -> "can't"
+     *
+     * @param langCode Language code (e.g., "fr", "it", "en")
+     */
+    private fun loadLanguageContractions(langCode: String) {
+        val filename = "dictionaries/contractions_$langCode.json"
+
+        try {
+            val inputStream = context!!.assets.open(filename)
+            val reader = BufferedReader(InputStreamReader(inputStream))
+            val jsonBuilder = StringBuilder()
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                jsonBuilder.append(line)
+            }
+            reader.close()
+
+            val jsonObj = org.json.JSONObject(jsonBuilder.toString())
+            val keys = jsonObj.keys()
+            var count = 0
+
+            while (keys.hasNext()) {
+                val withoutApostrophe = keys.next().lowercase(Locale.ROOT)
+                val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(Locale.ROOT)
+                // Don't overwrite existing mappings (primary language takes precedence)
+                if (!nonPairedContractions.containsKey(withoutApostrophe)) {
+                    nonPairedContractions[withoutApostrophe] = withApostrophe
+                    count++
+                }
+            }
+
+            Log.d(TAG, "Loaded $count contractions for $langCode")
+        } catch (e: java.io.FileNotFoundException) {
+            Log.d(TAG, "No contraction file for $langCode (this is normal for some languages)")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to load contractions for $langCode: ${e.message}")
         }
     }
 
