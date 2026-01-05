@@ -370,6 +370,28 @@ class Pointers(
                             }
 
                             Log.d("Pointers", "SHORT_GESTURE SUCCESS: triggering ${gestureValue}")
+
+                            // v1.1.88: Handle latchable keys (modifiers/dead keys) correctly
+                            // Dead keys like accent_aigu should LATCH, not output immediately
+                            val gestureFlags = pointer_flags_of_kv(gestureValue)
+                            if ((gestureFlags and FLAG_P_LATCHABLE) != 0) {
+                                // This is a latchable key (dead key/modifier) - create a latched pointer
+                                Log.d("Pointers", "SHORT_GESTURE: Latchable key detected, creating latched pointer")
+                                // Clear existing latched modifiers if this is a non-special latchable key
+                                if ((gestureFlags and FLAG_P_CLEAR_LATCHED) != 0) {
+                                    clearLatched()
+                                }
+                                // Create a new latched pointer for this modifier
+                                val latchedFlags = gestureFlags or FLAG_P_LATCHED
+                                val latchedPtr = Pointer(-1, ptr.key, gestureValue, ptr.downX, ptr.downY, Modifiers.EMPTY, latchedFlags)
+                                _ptrs.add(latchedPtr)
+                                _handler.onPointerFlagsChanged(false)
+                                _swipeRecognizer.reset()
+                                removePtr(ptr)
+                                return
+                            }
+
+                            // Non-latchable key - trigger normally
                             _handler.onPointerDown(gestureValue, false)
                             _handler.onPointerUp(gestureValue, ptr.modifiers)
                             clearLatched() // Clear shift after gesture completes
