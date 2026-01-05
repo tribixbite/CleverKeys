@@ -1152,6 +1152,17 @@ class OptimizedVocabulary(private val context: Context) {
             val normalizedWords = index.getAllNormalizedWords()
             val languageTrie = VocabularyTrie()
             languageTrie.insertAll(normalizedWords)
+
+            // v1.1.88: Add contraction keys to the new trie
+            // This allows beam search to discover "mappelle" which gets converted to "m'appelle"
+            // Previously contractions were added to activeBeamSearchTrie but then lost when
+            // the trie was replaced with languageTrie
+            val contractionKeys = nonPairedContractions.keys
+            if (contractionKeys.isNotEmpty()) {
+                languageTrie.insertAll(contractionKeys)
+                Log.i(TAG, "Added ${contractionKeys.size} contraction keys to language trie")
+            }
+
             activeBeamSearchTrie = languageTrie
 
             Log.i(TAG, "Primary dictionary loaded: $language")
