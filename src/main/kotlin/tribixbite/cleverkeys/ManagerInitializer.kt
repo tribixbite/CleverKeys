@@ -84,6 +84,15 @@ class ManagerInitializer(
         val contractionManager = ContractionManager(context)
         contractionManager.loadMappings()
 
+        // v1.1.87: Load language-specific contractions for the primary language
+        // This enables French "cest" -> "c'est", Italian "luomo" -> "l'uomo", etc.
+        val primaryLang = config.primary_language
+        if (primaryLang != "en") {
+            contractionManager.loadLanguageContractions(primaryLang)
+        }
+        // Always load English as fallback (already loaded in loadMappings, but language-specific file may have more)
+        contractionManager.loadLanguageContractions("en")
+
         // Initialize clipboard manager (v1.32.349)
         val clipboardManager = ClipboardManager(context, config)
 

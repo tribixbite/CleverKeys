@@ -287,12 +287,23 @@ class InputCoordinator(
         // v1.32.341: Use ContractionManager for lookup
         val isKnownContraction = contractionManager.isKnownContraction(processedWord)
 
+        // v1.1.87: Also check if this is a contraction KEY (apostrophe-free form)
+        // Words like "cest", "jai", "dun" should NOT be autocorrected to similar words
+        // They will be transformed to "c'est", "j'ai", "d'un" by contraction mapping
+        val isContractionKey = contractionManager.isContractionKey(processedWord)
+
         // Skip autocorrect for:
         // 1. Known contractions (prevent fuzzy matching)
-        // 2. Raw predictions (user explicitly selected this neural output)
+        // 2. Contraction keys (will be transformed to apostrophe form)
+        // 3. Raw predictions (user explicitly selected this neural output)
         if (isKnownContraction) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 android.util.Log.d("CleverKeysService", "KNOWN CONTRACTION: \"$processedWord\" - skipping autocorrect")
+            }
+        }
+        if (isContractionKey) {
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                android.util.Log.d("CleverKeysService", "CONTRACTION KEY: \"$processedWord\" - skipping autocorrect (will become apostrophe form)")
             }
         }
         if (isRawPrediction) {
@@ -301,7 +312,7 @@ class InputCoordinator(
             }
         }
 
-        if (!isKnownContraction && !isRawPrediction) {
+        if (!isKnownContraction && !isContractionKey && !isRawPrediction) {
             // v1.33.7: Final autocorrect - second chance autocorrect after beam search
             // Applies when user selects/auto-inserts a prediction (even if beam autocorrect was OFF)
             // Useful for correcting vocabulary misses

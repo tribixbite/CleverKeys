@@ -1004,6 +1004,28 @@ class OptimizedVocabulary(private val context: Context) {
     }
 
     /**
+     * Check if a word is a contraction key (apostrophe-free form that maps to contraction).
+     * Used by autocorrect to skip correction for words like "cest" → "c'est".
+     *
+     * @param word The word to check (should be lowercase)
+     * @return true if word is a contraction key, false otherwise
+     */
+    fun isContractionKey(word: String): Boolean {
+        return nonPairedContractions.containsKey(word.lowercase())
+    }
+
+    /**
+     * Get the contraction form for a given key.
+     * Example: "cest" → "c'est", "jai" → "j'ai"
+     *
+     * @param word The apostrophe-free form
+     * @return The contraction with apostrophe, or null if not found
+     */
+    fun getContraction(word: String): String? {
+        return nonPairedContractions[word.lowercase()]
+    }
+
+    /**
      * Reload custom words, user dictionary, and disabled words without reloading main vocabulary
      * Called when Dictionary Manager makes changes
      * PERFORMANCE: Only reloads small dynamic sets, not the 10k main dictionary

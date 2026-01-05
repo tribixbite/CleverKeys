@@ -69,6 +69,42 @@ class ContractionManager(private val context: Context) {
     }
 
     /**
+     * Load language-specific contractions for the given language.
+     * Called when keyboard language changes to load appropriate contraction mappings.
+     *
+     * @param langCode Language code (e.g., "fr", "it", "de", "es", "pt")
+     */
+    fun loadLanguageContractions(langCode: String) {
+        val filename = "dictionaries/contractions_$langCode.json"
+
+        try {
+            val inputStream = assetManager.open(filename)
+            val jsonString = readStream(inputStream)
+            val jsonObj = JSONObject(jsonString)
+            val keys = jsonObj.keys()
+            var count = 0
+
+            while (keys.hasNext()) {
+                val withoutApostrophe = keys.next()
+                val withApostrophe = jsonObj.getString(withoutApostrophe)
+
+                // Don't overwrite existing mappings (first language loaded takes precedence)
+                if (!nonPairedContractions.containsKey(withoutApostrophe.lowercase())) {
+                    nonPairedContractions[withoutApostrophe.lowercase()] = withApostrophe.lowercase()
+                    knownContractions.add(withApostrophe.lowercase())
+                    count++
+                }
+            }
+
+            Log.d(TAG, "Loaded $count contractions for $langCode (total: ${nonPairedContractions.size})")
+        } catch (e: java.io.FileNotFoundException) {
+            Log.d(TAG, "No contraction file for $langCode (this is normal for some languages)")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to load contractions for $langCode: ${e.message}")
+        }
+    }
+
+    /**
      * Load contractions from optimized binary format.
      *
      * OPTIMIZATION v1 (perftodos2.md Todo 4): Fast binary loading without JSON parsing.
@@ -107,6 +143,22 @@ class ContractionManager(private val context: Context) {
      */
     fun isKnownContraction(word: String): Boolean {
         return knownContractions.contains(word.lowercase())
+    }
+
+    /**
+     * Checks if a word is a contraction key (apostrophe-free form that maps to contraction).
+     * Used to skip autocorrect for words like "cest" that should become "c'est".
+     *
+     * @param word Word to check (case-insensitive)
+     * @return true if word is a key in nonPairedContractions
+     *
+     * Examples:
+     * - isContractionKey("cest") -> true (maps to "c'est")
+     * - isContractionKey("jai") -> true (maps to "j'ai")
+     * - isContractionKey("hello") -> false
+     */
+    fun isContractionKey(word: String): Boolean {
+        return nonPairedContractions.containsKey(word.lowercase())
     }
 
     /**
