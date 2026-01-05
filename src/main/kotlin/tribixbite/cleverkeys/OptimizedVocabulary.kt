@@ -35,13 +35,20 @@ class OptimizedVocabulary(private val context: Context) {
     private val vocabulary: MutableMap<String, WordInfo> = HashMap()
 
     // OPTIMIZATION Phase 2: Trie for constrained beam search (eliminates invalid paths)
+    // This is the English vocabulary trie, always loaded
     private val vocabularyTrie: VocabularyTrie = VocabularyTrie()
+
+    // MULTILANGUAGE: Language-specific trie for beam search constraint
+    // When Primary=English, this points to vocabularyTrie
+    // When Primary=French, this is built from French normalized words
+    // Beam search uses this trie, not vocabularyTrie directly
+    private var activeBeamSearchTrie: VocabularyTrie = vocabularyTrie
 
     // OPTIMIZATION Phase 2: Length-based buckets for fuzzy matching (reduces 50k iteration to ~2k)
     // Maps word length -> list of words with that length
     private val vocabularyByLength: MutableMap<Int, MutableList<String>> = HashMap()
 
-    // MULTILANGUAGE: Accent-aware lookup for secondary dictionaries
+    // MULTILANGUAGE: Accent-aware lookup for primary/secondary dictionaries
     // Maps normalized (accent-free) → canonical (with accents) + frequency rank
     private var normalizedIndex: NormalizedPrefixIndex? = null
     private var secondaryNormalizedIndex: NormalizedPrefixIndex? = null
@@ -103,13 +110,15 @@ class OptimizedVocabulary(private val context: Context) {
     private var _lastCustomWordsJson = "" // Track last parsed JSON to avoid redundant parsing
 
     /**
-     * Get the vocabulary trie for constrained beam search.
-     * Allows beam search to check if a prefix is valid before exploring it.
+     * Get the active vocabulary trie for constrained beam search.
+     * Returns the language-appropriate trie based on primary language setting:
+     * - Primary=English: Returns English vocabulary trie
+     * - Primary=French: Returns French normalized words trie
      *
-     * @return The vocabulary trie, or null if not loaded
+     * @return The active beam search trie, or null if not loaded
      */
     fun getVocabularyTrie(): VocabularyTrie? {
-        return if (isLoaded) vocabularyTrie else null
+        return if (isLoaded) activeBeamSearchTrie else null
     }
 
     /**
@@ -1084,18 +1093,18 @@ class OptimizedVocabulary(private val context: Context) {
         if (loaded) {
             normalizedIndex = index
 
-            // CRITICAL FIX: Expand vocabulary trie with normalized words from primary dictionary
-            // This allows beam search to produce words like "etre" which can then be
-            // converted to "être" during post-processing accent recovery.
-            // Without this, beam search is constrained to English-only vocabulary.
+            // Build language-specific trie from normalized words
+            // This trie is used by beam search instead of the English trie
+            // NN outputs 26 English letters → beam search constrains to valid normalized words
+            // → post-processing converts normalized to accented (e.g., "etre" → "être")
             val normalizedWords = index.getAllNormalizedWords()
-            val newWords = normalizedWords.filter { !vocabularyTrie.containsWord(it) }
-            if (newWords.isNotEmpty()) {
-                vocabularyTrie.insertAll(newWords)
-                Log.i(TAG, "Expanded vocabulary trie with ${newWords.size} ${language.uppercase()} normalized words")
-            }
+            val languageTrie = VocabularyTrie()
+            languageTrie.insertAll(normalizedWords)
+            activeBeamSearchTrie = languageTrie
 
-            Log.i(TAG, "Primary dictionary loaded: $language (${index.size()} canonical, ${index.normalizedCount()} normalized)")
+            Log.i(TAG, "Primary dictionary loaded: $language")
+            Log.i(TAG, "  - ${index.size()} canonical words (with accents)")
+            Log.i(TAG, "  - ${normalizedWords.size} normalized words (beam search trie)")
             return true
         } else {
             Log.w(TAG, "Failed to load primary dictionary: $language")
@@ -1104,11 +1113,12 @@ class OptimizedVocabulary(private val context: Context) {
     }
 
     /**
-     * Unload the primary dictionary to free memory.
+     * Unload the primary dictionary and reset to English trie.
      */
     fun unloadPrimaryDictionary() {
         normalizedIndex = null
-        Log.i(TAG, "Unloaded primary dictionary")
+        activeBeamSearchTrie = vocabularyTrie  // Reset to English trie
+        Log.i(TAG, "Unloaded primary dictionary, reset to English beam search trie")
     }
 
     /**

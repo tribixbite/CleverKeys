@@ -310,21 +310,43 @@ French words NOT in English vocabulary:
 
 ### 6.4 Implemented Solution (v1.1.85)
 
-**Trie Expansion on Primary Dictionary Load**
+**Language-Specific Beam Search Tries**
 
-When a non-English primary dictionary is loaded, its normalized words are added to the English vocabulary trie:
+Each language dictionary generates its own trie from normalized words. When primary language changes, the active beam search trie is swapped:
 
 ```kotlin
-// OptimizedVocabulary.kt - loadPrimaryDictionary()
-val normalizedWords = index.getAllNormalizedWords()
-val newWords = normalizedWords.filter { !vocabularyTrie.containsWord(it) }
-vocabularyTrie.insertAll(newWords)
+// OptimizedVocabulary.kt
+private val vocabularyTrie: VocabularyTrie        // English (always loaded)
+private var activeBeamSearchTrie: VocabularyTrie  // Points to active language's trie
+
+// loadPrimaryDictionary() - builds French trie from normalized words
+val normalizedWords = index.getAllNormalizedWords()  // "etre", "cafe", "francais"...
+val languageTrie = VocabularyTrie()
+languageTrie.insertAll(normalizedWords)
+activeBeamSearchTrie = languageTrie  // Beam search now uses French trie
+
+// unloadPrimaryDictionary() - reset to English
+activeBeamSearchTrie = vocabularyTrie
 ```
 
-This enables:
-- Beam search can now produce "etre" (French normalized form)
-- Post-processing converts "etre" → "être" via accent map
-- Memory impact: ~1MB extra for ~15k new trie entries
+**Data Flow:**
+```
+French Dictionary: être, café, français, école...
+         ↓ normalize (remove accents)
+Normalized Forms: etre, cafe, francais, ecole...
+         ↓ build trie
+French Trie (activeBeamSearchTrie)
+         ↓ beam search produces "etre"
+Accent Map: etre → être
+         ↓ post-processing
+Output: être
+```
+
+**Benefits:**
+- Clean separation: no mixing of English + French in single trie
+- Beam search uses ONLY the primary language's vocabulary
+- Memory efficient: separate tries, swap on language change
+- Proper architecture: each language has its own constraint space
 
 ---
 
