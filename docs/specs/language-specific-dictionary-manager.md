@@ -86,10 +86,11 @@ Implemented in `LanguagePreferenceKeys.kt`.
 - `DisabledDictionarySource` accepts optional `languageCode` parameter
 - Uses language-specific preference keys when languageCode provided
 
-### Step 4: Update DictionaryManagerActivity - PENDING
-- Read primary/secondary language from prefs
-- Generate tabs dynamically based on enabled languages
-- Pass language code to fragment factory
+### Step 4: Update DictionaryManagerActivity ✅ DONE
+- `loadLanguagePreferences()` reads primary/secondary from prefs
+- `setupViewPager()` generates tabs dynamically based on enabled languages
+- WordListFragment receives language code for language-aware data sources
+- Tab layout uses MODE_SCROLLABLE when >4 tabs
 
 ### Step 5: Migration ✅ DONE
 - `LanguagePreferenceKeys.migrateToLanguageSpecific()` copies global data to "en" keys

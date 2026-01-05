@@ -95,12 +95,11 @@ No mixing of languages in a single trie - clean separation.
   - `DisabledDictionarySource` - Accepts optional languageCode parameter
   - Automatic migration from global keys to English keys on first run
   - Spec: `docs/specs/language-specific-dictionary-manager.md`
-
-**Pending Implementation** (v1.1.87+):
-- [ ] Add language-specific tabs to Dictionary Manager UI
-  - When multilang enabled: Active [en], Disabled [en], Custom [en], Active [es], Disabled [es], Custom [es]
-  - Primary language tabs first, secondary language tabs second
-  - When primary != English, existing tabs should show primary language data
+- [x] Add language-specific tabs to Dictionary Manager UI (32856e92)
+  - Multilang mode: Active [EN], Disabled [EN], Custom [EN], User Dict, Active [ES], Disabled [ES], Custom [ES]
+  - Single language mode: Standard tabs with language label if non-English
+  - Tab layout uses MODE_SCROLLABLE when >4 tabs
+  - WordListFragment accepts optional languageCode parameter
 
 ---
 
