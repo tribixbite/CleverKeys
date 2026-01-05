@@ -27,6 +27,7 @@ class WordListFragment : Fragment() {
     private lateinit var adapter: BaseWordAdapter
 
     private var tabType: TabType = TabType.ACTIVE
+    private var languageCode: String? = null  // Language code for language-specific tabs (v1.1.86)
     private var searchJob: kotlinx.coroutines.Job? = null  // Track search coroutine for cancellation
 
     enum class TabType {
@@ -35,11 +36,21 @@ class WordListFragment : Fragment() {
 
     companion object {
         private const val ARG_TAB_TYPE = "tab_type"
+        private const val ARG_LANGUAGE_CODE = "language_code"
 
-        fun newInstance(tabType: TabType): WordListFragment {
+        /**
+         * Create a new WordListFragment instance.
+         *
+         * @param tabType The type of word list to display
+         * @param languageCode Optional language code for language-specific tabs (e.g., "en", "es").
+         *                     If null, uses global/legacy storage.
+         * @since v1.1.86 - Added languageCode parameter
+         */
+        fun newInstance(tabType: TabType, languageCode: String? = null): WordListFragment {
             val fragment = WordListFragment()
             val args = Bundle()
             args.putInt(ARG_TAB_TYPE, tabType.ordinal)
+            languageCode?.let { args.putString(ARG_LANGUAGE_CODE, it) }
             fragment.arguments = args
             return fragment
         }
@@ -48,6 +59,7 @@ class WordListFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         tabType = TabType.values()[arguments?.getInt(ARG_TAB_TYPE) ?: 0]
+        languageCode = arguments?.getString(ARG_LANGUAGE_CODE)
     }
 
     override fun onCreateView(
@@ -72,9 +84,15 @@ class WordListFragment : Fragment() {
         loadWords()
     }
 
+    /**
+     * Initialize the data source based on tab type and language code.
+     *
+     * @since v1.1.86 - Uses language-specific storage when languageCode is provided
+     */
     private fun initializeDataSource() {
         val defaultPrefs = DirectBootAwarePreferences.get_shared_preferences(requireContext())
-        val disabledSource = DisabledDictionarySource(defaultPrefs)
+        // Use language-specific DisabledDictionarySource when languageCode is provided
+        val disabledSource = DisabledDictionarySource(defaultPrefs, languageCode)
 
         dataSource = when (tabType) {
             TabType.ACTIVE -> MainDictionarySource(requireContext(), disabledSource)

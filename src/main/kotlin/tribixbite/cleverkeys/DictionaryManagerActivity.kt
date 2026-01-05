@@ -56,10 +56,27 @@ class DictionaryManagerActivity : AppCompatActivity() {
 
     companion object {
         private const val SEARCH_DEBOUNCE_MS = 300L
-        private val TAB_TITLES = listOf("Active", "Disabled", "User Dict", "Custom")
         private const val COUNT_UPDATE_DELAY_MS = 100L // Delay to ensure fragments have updated
         private const val TAG = "DictionaryManagerActivity"
+
+        // Language display names for tabs
+        private val LANGUAGE_NAMES = mapOf(
+            "en" to "EN",
+            "es" to "ES",
+            "fr" to "FR",
+            "pt" to "PT",
+            "it" to "IT",
+            "de" to "DE",
+            "nl" to "NL",
+            "id" to "ID",
+            "ms" to "MS",
+            "sw" to "SW",
+            "tl" to "TL"
+        )
     }
+
+    // Dynamic tab titles based on active languages
+    private var tabTitles = mutableListOf<String>()
 
     enum class FilterType {
         ALL, MAIN, USER, CUSTOM
@@ -67,9 +84,17 @@ class DictionaryManagerActivity : AppCompatActivity() {
 
     private var currentFilter: FilterType = FilterType.ALL
 
+    // Active languages for tab generation
+    private var primaryLanguage = "en"
+    private var secondaryLanguage: String? = null
+    private var multiLangEnabled = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dictionary_manager)
+
+        // Read language preferences
+        loadLanguagePreferences()
 
         initializeViews()
         setupToolbar()
@@ -86,11 +111,28 @@ class DictionaryManagerActivity : AppCompatActivity() {
             filterSpinner.setSelection(currentFilter.ordinal)
 
             // Reapply search/filter after all fragments load
-            // With offscreenPageLimit set, all 4 fragments will load immediately
             searchHandler.postDelayed({
                 performSearch(currentSearchQuery)
-            }, 400)  // Delay to ensure all 4 fragments created and data loaded
+            }, 400)
         }
+    }
+
+    /**
+     * Load language preferences from SharedPreferences.
+     * Determines which languages are active for tab generation.
+     */
+    private fun loadLanguagePreferences() {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        primaryLanguage = prefs.getString("pref_primary_language", "en") ?: "en"
+        multiLangEnabled = prefs.getBoolean("pref_enable_multilang", false)
+        secondaryLanguage = if (multiLangEnabled) {
+            val secondary = prefs.getString("pref_secondary_language", "none") ?: "none"
+            if (secondary != "none") secondary else null
+        } else {
+            null
+        }
+
+        android.util.Log.d(TAG, "Language prefs: primary=$primaryLanguage, secondary=$secondaryLanguage, multilang=$multiLangEnabled")
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -126,14 +168,67 @@ class DictionaryManagerActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Setup ViewPager with language-specific tabs.
+     *
+     * Tab structure:
+     * - Single language mode: Active, Disabled, User Dict, Custom (all for primary language)
+     * - Multilang mode: Active [P], Disabled [P], Custom [P], User Dict, Active [S], Disabled [S], Custom [S]
+     *
+     * Where [P] = primary language code, [S] = secondary language code
+     *
+     * @since v1.1.86 - Added language-specific tab generation
+     */
     private fun setupViewPager() {
-        // Create fragments for each tab
-        fragments = listOf(
-            WordListFragment.newInstance(WordListFragment.TabType.ACTIVE),
-            WordListFragment.newInstance(WordListFragment.TabType.DISABLED),
-            WordListFragment.newInstance(WordListFragment.TabType.USER),
-            WordListFragment.newInstance(WordListFragment.TabType.CUSTOM)
-        )
+        val fragmentList = mutableListOf<WordListFragment>()
+        tabTitles.clear()
+
+        val primaryLangLabel = LANGUAGE_NAMES[primaryLanguage] ?: primaryLanguage.uppercase()
+
+        if (secondaryLanguage != null) {
+            // Multilang mode: Show language-specific tabs for each language
+            val secondaryLangLabel = LANGUAGE_NAMES[secondaryLanguage] ?: secondaryLanguage!!.uppercase()
+
+            // Primary language tabs
+            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.ACTIVE, primaryLanguage))
+            tabTitles.add("Active [$primaryLangLabel]")
+
+            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.DISABLED, primaryLanguage))
+            tabTitles.add("Disabled [$primaryLangLabel]")
+
+            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.CUSTOM, primaryLanguage))
+            tabTitles.add("Custom [$primaryLangLabel]")
+
+            // User Dict (global - Android system dictionary is not language-specific)
+            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.USER))
+            tabTitles.add("User Dict")
+
+            // Secondary language tabs
+            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.ACTIVE, secondaryLanguage))
+            tabTitles.add("Active [$secondaryLangLabel]")
+
+            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.DISABLED, secondaryLanguage))
+            tabTitles.add("Disabled [$secondaryLangLabel]")
+
+            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.CUSTOM, secondaryLanguage))
+            tabTitles.add("Custom [$secondaryLangLabel]")
+
+        } else {
+            // Single language mode: Standard tabs with primary language
+            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.ACTIVE, primaryLanguage))
+            tabTitles.add(if (primaryLanguage != "en") "Active [$primaryLangLabel]" else "Active")
+
+            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.DISABLED, primaryLanguage))
+            tabTitles.add(if (primaryLanguage != "en") "Disabled [$primaryLangLabel]" else "Disabled")
+
+            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.USER))
+            tabTitles.add("User Dict")
+
+            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.CUSTOM, primaryLanguage))
+            tabTitles.add(if (primaryLanguage != "en") "Custom [$primaryLangLabel]" else "Custom")
+        }
+
+        fragments = fragmentList
 
         // Setup ViewPager2 adapter
         viewPager.adapter = object : FragmentStateAdapter(this) {
@@ -144,12 +239,15 @@ class DictionaryManagerActivity : AppCompatActivity() {
         // CRITICAL: Set offscreenPageLimit to keep all fragments in memory
         // Without this, ViewPager2 only loads visible tab + 1 adjacent tab
         // This causes counts to show 0 for unvisited tabs after rotation
-        viewPager.offscreenPageLimit = fragments.size - 1  // Keep all 4 tabs loaded
+        viewPager.offscreenPageLimit = fragments.size - 1
 
         // Connect TabLayout with ViewPager2
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            tab.text = TAB_TITLES[position]
+            tab.text = tabTitles[position]
         }.attach()
+
+        // Enable tab scrolling for multilang mode with many tabs
+        tabLayout.tabMode = if (fragments.size > 4) TabLayout.MODE_SCROLLABLE else TabLayout.MODE_FIXED
     }
 
     private fun setupSearch() {
@@ -221,7 +319,7 @@ class DictionaryManagerActivity : AppCompatActivity() {
         for (i in fragments.indices) {
             val tab = tabLayout.getTabAt(i) ?: continue
             val count = fragments[i].getFilteredCount()
-            val title = TAB_TITLES[i]
+            val title = tabTitles.getOrElse(i) { "Tab $i" }
             tab.text = "$title\n($count)"
         }
     }
