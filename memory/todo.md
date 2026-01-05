@@ -515,6 +515,50 @@ No mixing of languages in a single trie - clean separation.
   - Added HorizontalScrollView with proper scroll calculation
   - Text scrolls to show cursor position as user types
 
+## Active Investigation: English Words in French-Only Mode
+
+**Status**: DIAGNOSTIC LOGGING ADDED (83ea45f7) - Awaiting test results
+
+**Problem**: User reports English words like "every", "word", "this" appear when Primary=French, Secondary=None (French-only mode), even after service restart.
+
+**Investigation Progress**:
+1. Verified French contraction fix works ("mappelle" → "m'appelle") ✓
+2. Verified Italian contractions use same generic fix ✓
+3. French dictionary (fr_enhanced.bin) exists and has 616KB (~25k words)
+4. `loadPrimaryDictionary()` code path looks correct:
+   - Creates new `languageTrie` from French normalized words
+   - Adds contraction keys to trie
+   - Replaces `activeBeamSearchTrie` with French trie
+5. `getVocabularyTrie()` dynamically returns `activeBeamSearchTrie`
+6. `BeamSearchEngine` gets trie on every prediction (not cached)
+
+**Diagnostic Logging Added**:
+- `getVocabularyTrie()`: logs isLanguageTrie, trieWords, primaryLanguage, englishFallback
+- `loadPrimaryDictionary()`: logs before/after trie replacement status
+
+**Potential Root Causes to Verify**:
+1. Preference `pref_primary_language` not being read correctly
+2. French dictionary not loading (file missing or corrupt)
+3. Something resetting `activeBeamSearchTrie` after initialization
+4. Race condition between async init and first prediction
+
+**User Testing Required**:
+1. Force stop app
+2. Start app and open keyboard
+3. Make a swipe gesture
+4. Check logcat: `adb logcat | grep "getVocabularyTrie\|loadPrimaryDictionary"`
+5. Expected logs should show:
+   - `loadPrimaryDictionary() called with language='fr'`
+   - `isLanguageTrie=true` (NOT false)
+   - `trieWords=~25000` (French trie, NOT ~50000 English)
+
+**Key Files**:
+- `OptimizedVocabulary.kt`: Trie initialization and getVocabularyTrie()
+- `SwipePredictorOrchestrator.kt`: loadPrimaryDictionaryFromPrefs()
+- `BeamSearchEngine.kt`: applyTrieMasking() using vocabTrie
+
+---
+
 ## Active Investigation: Long Word Prediction
 
 **Status**: CRITICAL FIX APPLIED (22fc3279) - Length normalization in beam search confidence
