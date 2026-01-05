@@ -28,6 +28,12 @@ class WordPredictor {
         private const val MAX_RECENT_WORDS = 20 // Keep last 20 words for language detection
         private const val PREFIX_INDEX_MAX_LENGTH = 3 // Index prefixes up to 3 chars
 
+        // Next word prediction scoring constants
+        private const val BIGRAM_SCORE_SCALE = 10000 // Scale bigram probability (0-1) to 0-10000 range
+        private const val FALLBACK_SCORE_MULTIPLIER = 0.5f // Multiplier for high-frequency words without bigram match
+        private const val PERSONALIZATION_BOOST_DIVISOR = 4.0f // Divisor for personalization boost (0-6 range → 1.0-2.5 multiplier)
+        private const val FREQUENCY_NORMALIZATION_FACTOR = 1000.0f // Normalization factor for frequency in scoring
+
         // Static flag to signal all WordPredictor instances need to reload custom/user/disabled words
         @Volatile
         private var needsReload = false
@@ -1218,7 +1224,7 @@ class WordPredictor {
 
                 // Calculate score combining bigram probability and frequency
                 // Bigram probability is 0-1, scale to 0-10000 range for scoring
-                val bigramScore = (bigramProb * 10000).toInt()
+                val bigramScore = (bigramProb * BIGRAM_SCORE_SCALE).toInt()
                 
                 // User adaptation multiplier
                 val adaptationMultiplier = adaptationManager?.getAdaptationMultiplier(word) ?: 1.0f
@@ -1235,7 +1241,7 @@ class WordPredictor {
                 val personalizationEnabled = config?.personalized_learning_enabled ?: true
                 val personalizationMultiplier = if (personalizationEnabled && personalizationEngine != null) {
                     val boost = personalizationEngine?.getPersonalizationBoost(word) ?: 0.0f
-                    1.0f + (boost / 4.0f)
+                    1.0f + (boost / PERSONALIZATION_BOOST_DIVISOR)
                 } else {
                     1.0f
                 }
@@ -1243,7 +1249,7 @@ class WordPredictor {
                 // Combine all signals
                 // Bigram score is primary signal for next word prediction
                 // Frequency provides secondary ranking
-                val frequencyFactor = 1.0f + ln1p((frequency / 1000.0f).toDouble()).toFloat()
+                val frequencyFactor = 1.0f + ln1p((frequency / FREQUENCY_NORMALIZATION_FACTOR).toDouble()).toFloat()
                 val finalScore = bigramScore * 
                     adaptationMultiplier * 
                     personalizationMultiplier *
@@ -1266,7 +1272,7 @@ class WordPredictor {
                     .forEach { (word, frequency) ->
                         // Lower base score since these don't have context
                         val adaptationMultiplier = adaptationManager?.getAdaptationMultiplier(word) ?: 1.0f
-                        val score = (frequency * 0.5 * adaptationMultiplier).toInt()
+                        val score = (frequency * FALLBACK_SCORE_MULTIPLIER * adaptationMultiplier).toInt()
                         candidates.add(WordCandidate(word, score))
                     }
             }
