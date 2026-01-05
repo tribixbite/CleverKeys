@@ -1,13 +1,28 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-05
-**Status**: v1.1.89 - Critical language isolation fixes
+**Status**: v1.1.93 - Race condition fix for language trie loading
 
 ---
 
-## v1.1.92 Fixes - IN PROGRESS
+## v1.1.93 Fixes - IN PROGRESS
 
-**Thread Visibility Bug (CRITICAL - b9a66bfa)**:
+**Race Condition Fix (CRITICAL - 776ce3e8)**:
+- [x] Root cause: `_primaryLanguageCode` was set BEFORE `activeBeamSearchTrie` was updated
+- [x] Created window where `getVocabularyTrie()` saw:
+  - `_primaryLanguageCode = "fr"` (already set by setPrimaryLanguageConfig)
+  - `activeBeamSearchTrie` still pointing to English trie (loading not done)
+- [x] Language mismatch check correctly returned null (safety)
+- [x] Null trie = unconstrained beam search = English-sounding words
+- [x] Fix: Set `_primaryLanguageCode` AFTER `activeBeamSearchTrie` in `loadPrimaryDictionary()`
+- [x] `loadVocabulary()`: Use local variable for contraction logic, don't set `_primaryLanguageCode`
+- [x] `setPrimaryLanguageConfig()`: Only set `_primaryLanguageCode` for English
+- [x] `unloadPrimaryDictionary()`: Reset `_primaryLanguageCode` to "en"
+- [ ] Test: swipe typing with French primary language
+
+## v1.1.92 Fixes - COMPLETED
+
+**Thread Visibility Bug (b9a66bfa)**:
 - [x] Root cause: `activeBeamSearchTrie` was NOT @Volatile
 - [x] `loadPrimaryDictionary()` runs on init thread, writes new French trie
 - [x] `getVocabularyTrie()` runs on main thread, reads stale cached English trie reference
@@ -16,7 +31,6 @@
   - `activeBeamSearchTrie` (critical - beam search trie reference)
   - `normalizedIndex`, `secondaryNormalizedIndex` (accent lookups)
   - `_primaryLanguageCode`, `_secondaryLanguageCode`, `_englishFallbackEnabled` (language config)
-- [ ] Test: swipe typing with French primary language
 
 ## v1.1.91 Fixes - COMPLETE
 
