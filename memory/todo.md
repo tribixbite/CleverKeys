@@ -1,7 +1,48 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-05
-**Status**: v1.1.86 - Language dictionary reload on preference change
+**Status**: v1.1.87 - Multilanguage contraction/apostrophe support
+
+---
+
+## Multilanguage Contractions/Apostrophes (v1.1.87) - IN PROGRESS
+
+**Problem**: Swiping "cest" outputs "cest" instead of "c'est" in French mode.
+
+**Root Causes Fixed**:
+1. **preprocess_aosp.py** - `word.isalpha()` was filtering out apostrophe words
+2. **Autocorrect** - WordPredictor was matching "cest" to "cent" (75% char match)
+3. **OptimizedVocabulary** - `_primaryLanguageCode` defaulted to "en" before contractions loaded
+
+**Implementation**:
+- [x] Fixed preprocess_aosp.py to allow apostrophe characters in words
+- [x] Created extract_apostrophe_words.py to extract from ASK dictionaries
+- [x] Generated language contraction files:
+  - contractions_fr.json: 27,494 mappings (cest→c'est, jai→j'ai, etc.)
+  - contractions_it.json: 22,474 mappings (luomo→l'uomo, etc.)
+  - contractions_de.json: 24 mappings (gehts→geht's, etc.)
+  - contractions_en.json: 122 mappings (dont→don't, etc.)
+- [x] Added isContractionKey() to ContractionManager for autocorrect bypass
+- [x] InputCoordinator now skips autocorrect for contraction keys
+- [x] ManagerInitializer loads language-specific contractions at startup
+- [x] OptimizedVocabulary.loadVocabulary() now accepts primaryLanguageCode parameter
+- [x] SwipePredictorOrchestrator passes primary language from prefs to loadVocabulary
+- [x] Added cache reload logic for non-English language contractions
+
+**Testing Required** (manual - device display was off):
+- [ ] Verify "cest" → "c'est" transformation in French mode
+- [ ] Verify "jai" → "j'ai" transformation
+- [ ] Verify "dont" → "don't" in English mode
+- [ ] Verify autocorrect doesn't corrupt contraction keys to similar words
+
+**Key Files Modified**:
+- `scripts/preprocess_aosp.py` - Allow apostrophe words
+- `scripts/extract_apostrophe_words.py` - NEW: Extract from ASK dictionaries
+- `src/main/kotlin/.../ContractionManager.kt` - isContractionKey(), loadLanguageContractions()
+- `src/main/kotlin/.../InputCoordinator.kt` - Skip autocorrect for contraction keys
+- `src/main/kotlin/.../ManagerInitializer.kt` - Load language-specific contractions
+- `src/main/kotlin/.../OptimizedVocabulary.kt` - loadVocabulary(primaryLanguageCode)
+- `src/main/kotlin/.../onnx/SwipePredictorOrchestrator.kt` - Pass language to loadVocabulary
 
 ---
 
