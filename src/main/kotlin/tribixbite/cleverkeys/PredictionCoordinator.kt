@@ -311,6 +311,28 @@ class PredictionCoordinator(
     }
 
     /**
+     * Reload WordPredictor dictionary for a specific language.
+     * Called when language preference changes.
+     *
+     * v1.1.90: Direct reload method that doesn't rely on config comparison
+     * (since config object is shared and already updated when this is called)
+     *
+     * @param language Language code to load (e.g., "fr", "de", "en")
+     */
+    fun reloadWordPredictorDictionary(language: String) {
+        if (wordPredictor == null) {
+            Log.w(TAG, "Cannot reload dictionary - WordPredictor not initialized")
+            return
+        }
+
+        Log.i(TAG, "Reloading WordPredictor dictionary for language: $language")
+        wordPredictor?.loadDictionaryAsync(context, language) {
+            Log.i(TAG, "WordPredictor dictionary reloaded for '$language'")
+        }
+        dictionaryManager?.setLanguage(language)
+    }
+
+    /**
      * Gets the WordPredictor instance.
      *
      * @return WordPredictor for typing predictions, or null if not initialized

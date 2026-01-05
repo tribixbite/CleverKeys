@@ -107,8 +107,16 @@ class PreferenceUIUpdateHandler(
 
             when (key) {
                 "pref_primary_language" -> {
+                    // Reload swipe dictionary (OptimizedVocabulary/beam search trie)
                     orchestrator.reloadPrimaryDictionary()
-                    Log.i(TAG, "Primary language changed - dictionary reloaded")
+                    Log.i(TAG, "Primary language changed - swipe dictionary reloaded")
+
+                    // v1.1.90: Also reload WordPredictor dictionary for touch typing
+                    // Read fresh language value from prefs (config may be stale or shared)
+                    val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+                    val newPrimaryLang = prefs.getString("pref_primary_language", "en") ?: "en"
+                    predictionCoordinator?.reloadWordPredictorDictionary(newPrimaryLang)
+                    Log.i(TAG, "Primary language changed to '$newPrimaryLang' - touch typing dictionary reload triggered")
                 }
                 "pref_secondary_language" -> {
                     orchestrator.reloadSecondaryDictionary()
