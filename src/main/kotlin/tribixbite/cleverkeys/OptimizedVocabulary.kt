@@ -120,7 +120,12 @@ class OptimizedVocabulary(private val context: Context) {
      * @return The active beam search trie, or null if not loaded
      */
     fun getVocabularyTrie(): VocabularyTrie? {
-        return if (isLoaded) activeBeamSearchTrie else null
+        val trie = if (isLoaded) activeBeamSearchTrie else null
+        val isLanguageTrie = (trie != null && trie !== vocabularyTrie)
+        val stats = trie?.getStats()
+        Log.d(TAG, "getVocabularyTrie(): isLoaded=$isLoaded, isLanguageTrie=$isLanguageTrie, " +
+            "trieWords=${stats?.first ?: 0}, primary=$_primaryLanguageCode, englishFallback=$_englishFallbackEnabled")
+        return trie
     }
 
     /**
@@ -1109,6 +1114,9 @@ class OptimizedVocabulary(private val context: Context) {
      * @return true if loaded successfully
      */
     fun loadPrimaryDictionary(language: String): Boolean {
+        Log.i(TAG, "🔄 loadPrimaryDictionary() called with language='$language'")
+        Log.i(TAG, "   Before: activeBeamSearchTrie === vocabularyTrie? ${activeBeamSearchTrie === vocabularyTrie}")
+
         // English doesn't need accent normalization for primary
         if (language == "en") {
             normalizedIndex = null
@@ -1165,9 +1173,11 @@ class OptimizedVocabulary(private val context: Context) {
 
             activeBeamSearchTrie = languageTrie
 
-            Log.i(TAG, "Primary dictionary loaded: $language")
+            Log.i(TAG, "✅ Primary dictionary loaded: $language")
             Log.i(TAG, "  - ${index.size()} canonical words (with accents)")
             Log.i(TAG, "  - ${normalizedWords.size} normalized words (beam search trie)")
+            Log.i(TAG, "   After: activeBeamSearchTrie === vocabularyTrie? ${activeBeamSearchTrie === vocabularyTrie}")
+            Log.i(TAG, "   After: activeBeamSearchTrie.words=${activeBeamSearchTrie.getStats().first}, vocabularyTrie.words=${vocabularyTrie.getStats().first}")
             return true
         } else {
             Log.w(TAG, "Failed to load primary dictionary: $language")

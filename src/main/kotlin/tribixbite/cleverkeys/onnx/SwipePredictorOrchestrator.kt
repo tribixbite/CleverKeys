@@ -373,9 +373,11 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                 val results = engine.search(memory, features.actualLength)
                 results.map { PredictionPostProcessor.Candidate(it.word, it.confidence) }
             } else {
+                // DIAGNOSTIC: Log trie info on every prediction
+                val trie = vocabulary.getVocabularyTrie()
                 val engine = BeamSearchEngine(
                     decoderSession!!, ortEnvironment, tokenizer,
-                    vocabulary.getVocabularyTrie(), beamWidth, maxLength,
+                    trie, beamWidth, maxLength,
                     confidenceThreshold, beamAlpha, beamPruneConfidence, beamScoreGap,
                     adaptiveWidthStep, scoreGapStep, temperature, activeLogger
                 )
