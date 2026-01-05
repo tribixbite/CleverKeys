@@ -88,10 +88,15 @@ No mixing of languages in a single trie - clean separation.
 - [ ] Confirm no English-only words appear when Primary=French, Secondary=None
 - [ ] Test language reload on preference change (settings → keyboard)
 
-**Pending Implementation** (v1.1.86+):
-- [ ] Split custom/disabled words by language in Dictionary Manager
-  - Currently custom_words and disabled_words are global (shared across all languages)
-  - Should be per-language: custom_words_en, custom_words_es, etc.
+**Completed (v1.1.86)**:
+- [x] Split custom/disabled words by language in storage layer (061fc67e)
+  - `LanguagePreferenceKeys.kt` - Helper for language-specific preference keys
+  - `OptimizedVocabulary.kt` - Uses `custom_words_{lang}` and `disabled_words_{lang}` keys
+  - `DisabledDictionarySource` - Accepts optional languageCode parameter
+  - Automatic migration from global keys to English keys on first run
+  - Spec: `docs/specs/language-specific-dictionary-manager.md`
+
+**Pending Implementation** (v1.1.87+):
 - [ ] Add language-specific tabs to Dictionary Manager UI
   - When multilang enabled: Active [en], Disabled [en], Custom [en], Active [es], Disabled [es], Custom [es]
   - Primary language tabs first, secondary language tabs second
