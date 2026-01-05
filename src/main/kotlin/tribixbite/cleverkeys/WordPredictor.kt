@@ -1080,16 +1080,9 @@ class WordPredictor {
             return typedWord
         }
 
-        // v1.1.89 FIX: Skip autocorrect when primary language is non-English
-        // The dictionary variable contains English words, so autocorrect would
-        // incorrectly "correct" German/French/etc words to similar English words
-        // (e.g., "bereits" → "berries", "maison" → "mason")
-        // Use config.primary_language (user setting) instead of currentLanguage (detection result)
-        val primaryLang = config?.primary_language ?: "en"
-        if (primaryLang != "en") {
-            Log.d(TAG, "autoCorrect SKIPPED: primary language is '$primaryLang', not English")
-            return typedWord
-        }
+        // v1.1.89: Dictionary now loads primary language, so autocorrect uses correct vocabulary
+        // The dictionary variable contains words from config.primary_language (loaded in PredictionCoordinator)
+        // No need to skip autocorrect for non-English - it will match against the loaded dictionary
 
         val lowerTypedWord = typedWord.lowercase()
 

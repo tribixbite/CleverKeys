@@ -132,8 +132,11 @@ class PredictionCoordinator(
      * Initializes word predictor for typing predictions.
      */
     private fun initializeWordPredictor() {
+        // v1.1.89: Use primary language from config instead of hardcoding "en"
+        val primaryLang = config.primary_language
+
         dictionaryManager = DictionaryManager(context).apply {
-            setLanguage("en")
+            setLanguage(primaryLang)
         }
 
         wordPredictor = WordPredictor().apply {
@@ -143,9 +146,10 @@ class PredictionCoordinator(
 
             // FIX: Load dictionary asynchronously to prevent Main Thread blocking during startup
             // This prevents ANRs when the keyboard initializes
-            Log.d(TAG, "Starting async dictionary loading...")
-            loadDictionaryAsync(context, "en") {
-                Log.d(TAG, "Dictionary loaded successfully")
+            // v1.1.89: Load primary language dictionary instead of hardcoding English
+            Log.d(TAG, "Starting async dictionary loading for '$primaryLang'...")
+            loadDictionaryAsync(context, primaryLang) {
+                Log.d(TAG, "Dictionary loaded successfully: $primaryLang")
             }
 
             // OPTIMIZATION: Start observing dictionary changes for automatic updates
