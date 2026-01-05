@@ -294,9 +294,18 @@ class BeamSearchEngine(
         return newCandidates
     }
     
+    // v1.1.89 DIAGNOSTIC: Track if we've logged trie status for this search
+    private var trieStatusLogged = false
+
     private fun applyTrieMasking(beam: BeamState, logits: FloatArray) {
-        if (vocabTrie == null) return
-        
+        if (vocabTrie == null) {
+            if (!trieStatusLogged) {
+                Log.w(TAG, "🚨 TRIE IS NULL - No masking applied! Beam search is UNCONSTRAINED")
+                trieStatusLogged = true
+            }
+            return
+        }
+
         val partialWord = StringBuilder()
         for (token in beam.tokens) {
             val idx = token.toInt()
@@ -307,10 +316,22 @@ class BeamSearchEngine(
                 }
             }
         }
-        
+
         val prefix = partialWord.toString()
         val allowed = vocabTrie.getAllowedNextChars(prefix)
         val isWord = vocabTrie.containsWord(prefix)
+
+        // v1.1.89 DIAGNOSTIC: Log masking for first few prefixes
+        if (!trieStatusLogged || prefix.length <= 2) {
+            if (!trieStatusLogged) {
+                val stats = vocabTrie.getStats()
+                Log.d(TAG, "✅ Trie masking ACTIVE: ${stats.first} words in trie")
+                trieStatusLogged = true
+            }
+            if (prefix.isNotEmpty() && prefix.length <= 2) {
+                Log.d(TAG, "  MASK prefix='$prefix' allowed=${allowed.toList().take(10)}... isWord=$isWord")
+            }
+        }
         
         for (i in logits.indices) {
             // FIX: SOS and PAD should NEVER be selected as next tokens - mask them

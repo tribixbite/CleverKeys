@@ -42,8 +42,11 @@ class MainDictionarySource(
     private var prefixIndex: Map<String, List<DictionaryWord>>? = null
 
     override suspend fun getAllWords(): List<DictionaryWord> = withContext(Dispatchers.IO) {
+        Log.d(TAG, "getAllWords() called for language: $languageCode")
+
         // Return cached if available
         if (cachedWords != null) {
+            Log.d(TAG, "Returning ${cachedWords!!.size} cached words for $languageCode")
             return@withContext cachedWords!!
         }
 
@@ -53,6 +56,7 @@ class MainDictionarySource(
 
             // v1.1.89: Try language-specific binary dictionary first (for non-English)
             if (languageCode != "en") {
+                Log.d(TAG, "Trying binary dictionary for non-English: $languageCode")
                 try {
                     val binFilename = "dictionaries/${languageCode}_enhanced.bin"
                     val loaded = loadBinaryDictionary(binFilename, words, disabled)

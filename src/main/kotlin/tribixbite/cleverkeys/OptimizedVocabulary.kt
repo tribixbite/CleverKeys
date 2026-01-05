@@ -141,6 +141,18 @@ class OptimizedVocabulary(private val context: Context) {
 
         Log.d(TAG, "getVocabularyTrie(): isLanguageTrie=$isLanguageTrie, " +
             "trieWords=${stats.first}, primary=$_primaryLanguageCode, englishFallback=$_englishFallbackEnabled")
+
+        // v1.1.89 DIAGNOSTIC: Check if English words are in the trie (they shouldn't be for non-English primary)
+        if (_primaryLanguageCode != "en") {
+            val englishTestWords = listOf("the", "brother", "open", "still", "that", "this", "what", "with", "have")
+            val foundEnglish = englishTestWords.filter { activeBeamSearchTrie.containsWord(it) }
+            if (foundEnglish.isNotEmpty()) {
+                Log.e(TAG, "🚨 TRIE CONTAMINATION: English words found in $_primaryLanguageCode trie: $foundEnglish")
+            } else {
+                Log.d(TAG, "✅ Trie clean: No English test words found")
+            }
+        }
+
         return activeBeamSearchTrie
     }
 
@@ -269,6 +281,15 @@ class OptimizedVocabulary(private val context: Context) {
                     contractionPairings,
                     nonPairedContractions
                 )
+            }
+
+            // v1.1.89: Add contraction keys to vocabularyTrie for English mode
+            // For non-English primary languages, loadPrimaryDictionary() creates a separate trie
+            // But for English, we use vocabularyTrie directly so contractions must be in it
+            if (_primaryLanguageCode == "en" && nonPairedContractions.isNotEmpty()) {
+                val contractionKeys = nonPairedContractions.keys.toList()
+                vocabularyTrie.insertAll(contractionKeys)
+                Log.d(TAG, "Added ${contractionKeys.size} contraction keys to English vocabularyTrie")
             }
 
             isLoaded = true
@@ -558,7 +579,14 @@ class OptimizedVocabulary(private val context: Context) {
         // MAIN DICTIONARY FUZZY MATCHING: Match rejected beam outputs against dictionary words
         // v1.33.1: NEW - allows "proxity" (beam) to match "proximity" (dict)
         // Only run if autocorrect is enabled and we have few/no valid predictions
-        if (swipeAutocorrectEnabled && validPredictions.size < 3 && rawPredictions.isNotEmpty()) {
+        // v1.1.89 FIX: Skip English vocabulary fuzzy matching when primary is non-English
+        // The vocabularyByLength buckets contain English words which would contaminate French-only results
+        val shouldFuzzyMatch = swipeAutocorrectEnabled &&
+            validPredictions.size < 3 &&
+            rawPredictions.isNotEmpty() &&
+            (_primaryLanguageCode == "en" || _englishFallbackEnabled)
+
+        if (shouldFuzzyMatch) {
             try {
                 if (debugMode) {
                     val fuzzyMsg = String.format("\n🔍 MAIN DICTIONARY FUZZY MATCHING (validPredictions=%d, trying to rescue rejected beam outputs):\n", validPredictions.size)
@@ -1215,6 +1243,16 @@ class OptimizedVocabulary(private val context: Context) {
             Log.i(TAG, "  - ${normalizedWords.size} normalized words (beam search trie)")
             Log.i(TAG, "   After: activeBeamSearchTrie === vocabularyTrie? ${activeBeamSearchTrie === vocabularyTrie}")
             Log.i(TAG, "   After: activeBeamSearchTrie.words=${activeBeamSearchTrie.getStats().first}, vocabularyTrie.words=${vocabularyTrie.getStats().first}")
+
+            // v1.1.89 DIAGNOSTIC: Verify language trie doesn't contain English words
+            val englishTestWords = listOf("the", "brother", "open", "still", "that", "this", "what", "with", "have", "get", "feeling")
+            val foundInNewTrie = englishTestWords.filter { languageTrie.containsWord(it) }
+            if (foundInNewTrie.isNotEmpty()) {
+                Log.e(TAG, "🚨 TRIE BUILT WITH ENGLISH: New $language trie contains: $foundInNewTrie")
+            } else {
+                Log.i(TAG, "✅ New $language trie clean - no English test words found")
+            }
+
             return true
         } else {
             Log.w(TAG, "Failed to load primary dictionary: $language")
@@ -1759,17 +1797,15 @@ class OptimizedVocabulary(private val context: Context) {
             if (!nonPairedContractions.containsKey(withoutApostrophe)) {
                 nonPairedContractions[withoutApostrophe] = withApostrophe
 
-                // CRITICAL FIX: Add contraction key to vocabulary so it passes the filter
+                // Add contraction key to vocabulary so it passes the filter
                 // This allows NN predictions like "mappelle" to be accepted and then
                 // converted to "m'appelle" via the contraction map
                 // Use tier 1 (top5000 equivalent) with mid-range frequency
+                // NOTE: Do NOT insert into activeBeamSearchTrie here - it may point to wrong trie!
+                // Trie insertion is handled by loadPrimaryDictionary() after creating the language trie
                 if (!vocabulary.containsKey(withoutApostrophe)) {
                     vocabulary[withoutApostrophe] = WordInfo(0.6f, 1.toByte())
-                    // Add to ACTIVE beam search trie (may be language-specific)
-                    activeBeamSearchTrie.insert(withoutApostrophe)
-                    // Also add to English vocabulary trie for fallback
-                    vocabularyTrie.insert(withoutApostrophe)
-                    // Add to length-based buckets
+                    // Add to length-based buckets for fuzzy matching
                     vocabularyByLength.getOrPut(withoutApostrophe.length) { ArrayList() }
                         .add(withoutApostrophe)
                 }
