@@ -91,9 +91,14 @@ object BinaryDictionaryLoader {
     /**
      * Load dictionary from binary format.
      *
+     * Supports both V1 and V2 binary formats:
+     * - V1: Magic "DICT", word+frequency pairs
+     * - V2: Magic "CKDT", canonical words with frequency ranks (converted to frequencies)
+     *
      * @param context Android context for asset access
      * @param filename Binary dictionary filename in assets
      * @return Dict mapping words to frequencies, or null if loading fails
+     * @since v1.1.91 - Added V2 format support for multilanguage touch typing
      */
     @JvmStatic
     fun loadDictionary(context: Context, filename: String): Map<String, Int>? {
@@ -115,46 +120,37 @@ object BinaryDictionaryLoader {
                 channel.close()
                 inputStream.close()
 
-                // Parse header
+                // Parse header - check magic to determine format version
                 val magic = buffer.int
-                if (magic != MAGIC) {
-                    Log.e(TAG, String.format("Invalid magic number: 0x%08X (expected 0x%08X)", magic, MAGIC))
+                val isV1 = magic == MAGIC_V1
+                val isV2 = magic == MAGIC_V2
+
+                if (!isV1 && !isV2) {
+                    Log.e(TAG, String.format("Invalid magic number: 0x%08X (expected V1=0x%08X or V2=0x%08X)",
+                        magic, MAGIC_V1, MAGIC_V2))
                     return null
                 }
 
                 val version = buffer.int
-                if (version != EXPECTED_VERSION) {
-                    Log.e(TAG, String.format("Unsupported version: %d (expected %d)", version, EXPECTED_VERSION))
+                if (isV1 && version != EXPECTED_VERSION) {
+                    Log.e(TAG, String.format("Unsupported V1 version: %d (expected %d)", version, EXPECTED_VERSION))
+                    return null
+                }
+                if (isV2 && version != EXPECTED_VERSION_V2) {
+                    Log.e(TAG, String.format("Unsupported V2 version: %d (expected %d)", version, EXPECTED_VERSION_V2))
                     return null
                 }
 
-                val wordCount = buffer.int
-                val dictOffset = buffer.int
-                val freqOffset = buffer.int
-                val prefixOffset = buffer.int
-                buffer.position(buffer.position() + 8) // Skip reserved bytes
-
-                // Load dictionary words
-                buffer.position(dictOffset)
-                val words = Array(wordCount) {
-                    val wordLen = buffer.short.toInt() and 0xFFFF // Unsigned short
-                    val wordBytes = ByteArray(wordLen)
-                    buffer.get(wordBytes)
-                    String(wordBytes, Charsets.UTF_8)
-                }
-
-                // Load frequencies
-                buffer.position(freqOffset)
-                val dictionary = mutableMapOf<String, Int>()
-                for (i in 0 until wordCount) {
-                    val frequency = buffer.int
-                    dictionary[words[i]] = frequency
+                val dictionary = if (isV1) {
+                    loadDictionaryV1(buffer)
+                } else {
+                    loadDictionaryV2(buffer)
                 }
 
                 val loadTime = System.currentTimeMillis() - startTime
                 Log.i(TAG, String.format(
-                    "Loaded %d words from binary dictionary in %dms (%.1fx faster than JSON)",
-                    wordCount, loadTime, estimateJsonLoadTime(wordCount) / loadTime.toFloat()
+                    "Loaded %d words from binary dictionary (V%d) in %dms",
+                    dictionary.size, if (isV1) 1 else 2, loadTime
                 ))
 
                 return dictionary
@@ -165,6 +161,80 @@ object BinaryDictionaryLoader {
         } finally {
             android.os.Trace.endSection()
         }
+    }
+
+    /**
+     * Load V1 format dictionary (word + frequency pairs).
+     */
+    private fun loadDictionaryV1(buffer: ByteBuffer): Map<String, Int> {
+        val wordCount = buffer.int
+        val dictOffset = buffer.int
+        val freqOffset = buffer.int
+        val prefixOffset = buffer.int
+        buffer.position(buffer.position() + 8) // Skip reserved bytes
+
+        // Load dictionary words
+        buffer.position(dictOffset)
+        val words = Array(wordCount) {
+            val wordLen = buffer.short.toInt() and 0xFFFF // Unsigned short
+            val wordBytes = ByteArray(wordLen)
+            buffer.get(wordBytes)
+            String(wordBytes, Charsets.UTF_8)
+        }
+
+        // Load frequencies
+        buffer.position(freqOffset)
+        val dictionary = mutableMapOf<String, Int>()
+        for (i in 0 until wordCount) {
+            val frequency = buffer.int
+            dictionary[words[i]] = frequency
+        }
+
+        return dictionary
+    }
+
+    /**
+     * Load V2 format dictionary (canonical words with frequency ranks).
+     * Converts ranks (0-255) to frequencies for compatibility with WordPredictor.
+     *
+     * V2 rank 0 = most common, rank 255 = least common
+     * Converted to frequency: freq = 1000000 - (rank * 3900)
+     * This gives range ~1M (rank 0) to ~2500 (rank 255)
+     *
+     * @since v1.1.91
+     */
+    private fun loadDictionaryV2(buffer: ByteBuffer): Map<String, Int> {
+        // Read V2 header (magic+version already consumed)
+        val langBytes = ByteArray(4)
+        buffer.get(langBytes)
+        val language = String(langBytes, Charsets.UTF_8).trim('\u0000')
+
+        val wordCount = buffer.int
+        val canonicalOffset = buffer.int
+        val normalizedOffset = buffer.int
+        val accentMapOffset = buffer.int
+        buffer.position(buffer.position() + 20) // Skip reserved
+
+        // Load canonical words with frequency ranks
+        buffer.position(canonicalOffset)
+        val dictionary = mutableMapOf<String, Int>()
+
+        for (i in 0 until wordCount) {
+            val wordLen = buffer.short.toInt() and 0xFFFF
+            val wordBytes = ByteArray(wordLen)
+            buffer.get(wordBytes)
+            val word = String(wordBytes, Charsets.UTF_8)
+            val rank = buffer.get().toInt() and 0xFF
+
+            // Convert rank (0-255) to frequency
+            // rank 0 -> freq 1000000 (most common)
+            // rank 255 -> freq ~5000 (least common)
+            val frequency = 1000000 - (rank * 3900)
+            dictionary[word] = frequency
+        }
+
+        Log.d(TAG, "Loaded V2 dictionary for language '$language': $wordCount words")
+        return dictionary
     }
 
     /**
