@@ -33,6 +33,7 @@ class WordPredictor {
         private const val FALLBACK_SCORE_MULTIPLIER = 0.5f // Multiplier for high-frequency words without bigram match
         private const val PERSONALIZATION_BOOST_DIVISOR = 4.0f // Divisor for personalization boost (0-6 range → 1.0-2.5 multiplier)
         private const val FREQUENCY_NORMALIZATION_FACTOR = 1000.0f // Normalization factor for frequency in scoring
+        private const val BIGRAM_EXPANSION_FACTOR = 3 // Get 3x more bigram candidates than requested for better filtering
 
         // Static flag to signal all WordPredictor instances need to reload custom/user/disabled words
         @Volatile
@@ -1206,7 +1207,7 @@ class WordPredictor {
             val candidates = mutableListOf<WordCandidate>()
 
             // Get bigram predictions from BigramModel
-            val bigramPredictions = bigramModel?.getPredictedWords(context, maxPredictions * 3) ?: emptyList()
+            val bigramPredictions = bigramModel?.getPredictedWords(context, maxPredictions * BIGRAM_EXPANSION_FACTOR) ?: emptyList()
 
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 Log.d(TAG, "BigramModel returned ${bigramPredictions.size} predictions")
@@ -1229,7 +1230,7 @@ class WordPredictor {
                 // User adaptation multiplier
                 val adaptationMultiplier = adaptationManager?.getAdaptationMultiplier(word) ?: 1.0f
 
-                // Phase 7.1: Dynamic context boost from ContextModel
+                // Dynamic context boost from learned N-gram patterns (ContextModel)
                 val contextAwareEnabled = config?.context_aware_predictions_enabled ?: true
                 val dynamicContextBoost = if (contextAwareEnabled && contextModel != null && context.isNotEmpty()) {
                     contextModel?.getContextBoost(word, context) ?: 1.0f
@@ -1237,7 +1238,7 @@ class WordPredictor {
                     1.0f
                 }
 
-                // Phase 7.2: Personalization boost
+                // Personalization boost from user's typing frequency and recency
                 val personalizationEnabled = config?.personalized_learning_enabled ?: true
                 val personalizationMultiplier = if (personalizationEnabled && personalizationEngine != null) {
                     val boost = personalizationEngine?.getPersonalizationBoost(word) ?: 0.0f

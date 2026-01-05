@@ -465,7 +465,8 @@ class BigramModel private constructor() {
         }
 
         // Get the previous word (use the last word in context)
-        val prevWord = context.last().lowercase()
+        // Thread-safe: create local copy to avoid concurrent modification
+        val prevWord = context.lastOrNull()?.lowercase() ?: return emptyList()
         
         // Get language-specific bigram probabilities
         val bigramProbs = languageBigramProbs[currentLanguage] ?: languageBigramProbs["en"]

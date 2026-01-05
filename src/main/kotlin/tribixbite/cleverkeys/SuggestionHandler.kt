@@ -50,6 +50,7 @@ class SuggestionHandler(
 ) {
     companion object {
         private const val TAG = "SuggestionHandler"
+        private const val SPACE_CHARACTER = " " // Trigger character for next word predictions
     }
 
     /**
@@ -572,7 +573,7 @@ class SuggestionHandler(
                     }
 
                     if (config.autocorrect_enabled && predictionCoordinator.getWordPredictor() != null &&
-                        text == " " && !inTermuxApp) {
+                        text == SPACE_CHARACTER && !inTermuxApp) {
                         val correctedWord = predictionCoordinator.getWordPredictor()?.autoCorrect(completedWord)
 
                         // If correction was made, replace the typed word
@@ -619,7 +620,7 @@ class SuggestionHandler(
                 
                 // NEW: Show next word predictions after completing a word (space/punctuation)
                 // Only trigger for space character to avoid excessive predictions
-                if (text == " " && config.word_prediction_enabled) {
+                if (text == SPACE_CHARACTER && config.word_prediction_enabled) {
                     updateNextWordPredictions()
                 } else {
                     suggestionBar?.clearSuggestions()
