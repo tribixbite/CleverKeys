@@ -1,11 +1,31 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-05
-**Status**: v1.1.93 - Race condition fix for language trie loading
+**Status**: v1.1.90 - Touch typing UserDictionary locale filtering
 
 ---
 
-## v1.1.93 Fixes - IN PROGRESS
+## v1.1.90 Fixes - COMPLETE
+
+**Touch Typing UserDictionary Contamination Fix (a94ab90d)**:
+- [x] Root cause: `WordPredictor` loaded ALL words from Android UserDictionary regardless of language
+- [x] This contaminated French-only touch typing with English user dictionary words
+- [x] Swipe typing was fixed in v1.1.89 (dictionary regeneration)
+- [x] Fix: Filter UserDictionary query by LOCALE column
+- [x] Added `language` parameter to `loadCustomAndUserWords()` and `loadCustomAndUserWordsIntoMap()`
+- [x] Query: `LOCALE = ? OR LOCALE IS NULL` (matches current lang or global words)
+- [x] Pass language through async loading callback chain
+- [x] Test: touch typing with French primary language
+
+**Dictionary Regeneration (from previous session)**:
+- [x] Root cause: fr/de/pt/it_enhanced.bin contained English "cognate" words
+- [x] French: regenerated with 24722 pure words (removed 278 English-only words)
+- [x] German: removed 168 English-only words
+- [x] Portuguese: removed 180 English-only words
+- [x] Italian: removed 153 English-only words
+- [x] Swipe typing confirmed fixed by user
+
+## v1.1.93-94 Fixes - COMPLETE
 
 **Race Condition Fix (CRITICAL - 776ce3e8)**:
 - [x] Root cause: `_primaryLanguageCode` was set BEFORE `activeBeamSearchTrie` was updated
@@ -18,7 +38,7 @@
 - [x] `loadVocabulary()`: Use local variable for contraction logic, don't set `_primaryLanguageCode`
 - [x] `setPrimaryLanguageConfig()`: Only set `_primaryLanguageCode` for English
 - [x] `unloadPrimaryDictionary()`: Reset `_primaryLanguageCode` to "en"
-- [ ] Test: swipe typing with French primary language
+- [x] Swipe typing confirmed fixed by user
 
 ## v1.1.92 Fixes - COMPLETED
 
