@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-04
-**Status**: v1.1.85 - Full multilanguage support (any QWERTY language as primary)
+**Last Updated**: 2026-01-05
+**Status**: v1.1.86 - Language dictionary reload on preference change
 
 ---
 
@@ -46,6 +46,10 @@
 - [x] English fallback disabled: When Primary=French, Secondary=None → only French predictions
 - [x] Multilang toggle bug: Dictionary now loads for ANY non-English primary
 - [x] **CRITICAL FIX**: Language-specific beam search tries (each language has own trie)
+- [x] **CRITICAL FIX**: Language dictionary not reloading on preference change (47cc00ef)
+  - PreferenceUIUpdateHandler now triggers reloadPrimaryDictionary/reloadSecondaryDictionary
+  - Previously dictionaries only loaded at initialization
+  - Changing language in settings now immediately updates beam search trie
 
 **Dictionary Verification (2026-01-04)**:
 - [x] FR: V2 format, 29k canonical, 23.7k normalized (être, café, français ✓)
@@ -82,6 +86,16 @@ No mixing of languages in a single trie - clean separation.
 - [ ] Test French-only words: swipe "etre" → "être" (architecture now supports this)
 - [ ] Test French-only words: swipe "francais" → "français"
 - [ ] Confirm no English-only words appear when Primary=French, Secondary=None
+- [ ] Test language reload on preference change (settings → keyboard)
+
+**Pending Implementation** (v1.1.86+):
+- [ ] Split custom/disabled words by language in Dictionary Manager
+  - Currently custom_words and disabled_words are global (shared across all languages)
+  - Should be per-language: custom_words_en, custom_words_es, etc.
+- [ ] Add language-specific tabs to Dictionary Manager UI
+  - When multilang enabled: Active [en], Disabled [en], Custom [en], Active [es], Disabled [es], Custom [es]
+  - Primary language tabs first, secondary language tabs second
+  - When primary != English, existing tabs should show primary language data
 
 ---
 
