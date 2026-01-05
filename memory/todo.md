@@ -5,10 +5,14 @@
 
 ---
 
-## v1.1.91 Fixes - IN PROGRESS
+## v1.1.91 Fixes - COMPLETE
 
 **V2 Dictionary Format Support for WordPredictor (Touch Typing)**:
 - [x] `BinaryDictionaryLoader.loadDictionary()` now supports both V1 and V2 formats
+- [x] `BinaryDictionaryLoader.loadDictionaryWithPrefixIndex()` now supports V2 format (33979adb)
+  - V1: loads pre-built prefix index from file
+  - V2: loads canonical words and builds prefix index at runtime
+  - This was the CRITICAL missing piece - AsyncDictionaryLoader uses this method
 - [x] V1 format (magic 'DICT'): English dictionary, word+frequency pairs
 - [x] V2 format (magic 'CKDT'): Non-English dictionaries with canonical words and frequency ranks
 - [x] Rank-to-frequency conversion: rank 0 → ~1M, rank 255 → ~5K
