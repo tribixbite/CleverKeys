@@ -191,9 +191,14 @@ class OptimizedVocabulary(private val context: Context) {
     /**
      * Load vocabulary from assets with frequency data
      * Creates hierarchical structure for fast filtering
+     *
+     * @param primaryLanguageCode The primary language code for contraction loading (default "en")
      */
-    fun loadVocabulary(): Boolean {
+    fun loadVocabulary(primaryLanguageCode: String = "en"): Boolean {
         try {
+            // v1.1.87: Set the primary language BEFORE loading contractions
+            // This ensures language-specific contractions (fr: cest->c'est) are loaded
+            _primaryLanguageCode = primaryLanguageCode
             // OPTIMIZATION: Load vocabulary with fast-path sets built during loading
             val t0 = System.currentTimeMillis()
             loadWordFrequencies()
@@ -214,6 +219,11 @@ class OptimizedVocabulary(private val context: Context) {
             // Load contraction mappings for apostrophe display (only if not cached)
             if (!contractionsLoadedFromCache) {
                 loadContractionMappings()
+            } else if (_primaryLanguageCode != "en") {
+                // v1.1.87: Cache contains English contractions only
+                // Reload language-specific contractions for non-English primary languages
+                Log.d(TAG, "Reloading contractions for primary language: $_primaryLanguageCode")
+                loadLanguageContractions(_primaryLanguageCode)
             }
             val t4 = System.currentTimeMillis()
             Log.d(TAG, "⏱️ loadContractions: " + (t4 - t3) + "ms")

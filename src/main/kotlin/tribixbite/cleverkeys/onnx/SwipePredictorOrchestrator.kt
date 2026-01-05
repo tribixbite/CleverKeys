@@ -149,7 +149,13 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
 
             // Load Tokenizer & Vocabulary
             tokenizer.loadFromAssets(context)
-            if (!vocabulary.isLoaded()) vocabulary.loadVocabulary()
+            if (!vocabulary.isLoaded()) {
+                // v1.1.87: Get primary language BEFORE loading vocabulary
+                // so that language-specific contractions (fr: cest->c'est) are loaded
+                val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+                val primaryLang = prefs.getString("pref_primary_language", "en") ?: "en"
+                vocabulary.loadVocabulary(primaryLang)
+            }
 
             // Load primary language dictionary if not English
             loadPrimaryDictionaryFromPrefs()

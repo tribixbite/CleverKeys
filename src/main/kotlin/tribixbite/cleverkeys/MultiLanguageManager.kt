@@ -102,7 +102,8 @@ class MultiLanguageManager(
             // TODO Phase 8.2: Load language-specific dictionaries
             val vocabulary = try {
                 val vocab = OptimizedVocabulary(context)
-                val success = vocab.loadVocabulary()
+                // v1.1.87: Pass language code to load correct contraction mappings
+                val success = vocab.loadVocabulary(language)
                 if (success) vocab else null
             } catch (e: Exception) {
                 Log.w(TAG, "Dictionary not found for $language", e)

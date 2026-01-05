@@ -59,7 +59,8 @@ class MultiLanguageDictionaryManager(
             // For multi-language support, we would need language-specific dictionaries
             // For now, just load the standard vocabulary
             val vocab = OptimizedVocabulary(context)
-            val success = vocab.loadVocabulary()
+            // v1.1.87: Pass language code to load correct contraction mappings
+            val success = vocab.loadVocabulary(language)
 
             if (!success) {
                 Log.w(TAG, "Failed to load vocabulary for $language")
