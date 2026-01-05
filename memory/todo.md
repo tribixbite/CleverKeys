@@ -1,7 +1,31 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-05
-**Status**: v1.1.87 - Multilanguage contraction/apostrophe support
+**Status**: v1.1.87 - Multilanguage contraction/apostrophe support + Language Pack Contractions
+
+---
+
+## Language Pack Contractions (v1.1.87) - COMPLETE
+
+**Problem**: Imported language packs (NL, ID, MS, SW, TL) didn't load contractions.
+
+**Implementation**:
+- [x] Updated `build_langpack.py` to include `contractions.json` in ZIP if present
+- [x] Updated `extract_apostrophe_words.py` with Dutch 's plural handling
+- [x] Created contraction files: nl (118 mappings), id/ms/sw/tl (empty - no apostrophes)
+- [x] `LanguagePackManager` now extracts `contractions.json` from ZIP during import
+- [x] Added `getContractionsPath(code)` method to LanguagePackManager
+- [x] `ContractionManager` tries language pack first, falls back to assets
+- [x] `OptimizedVocabulary` also updated to load from language packs
+
+**Dictionary Manager Improvements (v1.1.87)**:
+- [x] Added language change broadcast from SettingsActivity
+- [x] DictionaryManagerActivity listens for `LANGUAGE_CHANGED` broadcasts
+- [x] Tabs rebuild automatically when primary/secondary languages change
+- [x] Added support for user-imported language pack Custom tabs
+- [x] Modularized `setupViewPager()` with helper methods
+
+**Testing Note**: Users with OLD imported langpacks need to re-import to get contractions.json extracted.
 
 ---
 
