@@ -19,6 +19,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.88] - 2025-01-05
+
+### Added - Multilanguage Support 🌍
+- **Primary Language Selection**: Choose your primary typing language (French, Spanish, German, Italian, Portuguese, Dutch, Polish, Turkish, Swedish)
+- **Downloadable Language Packs**: 50k-word dictionaries for 9 QWERTY-compatible languages
+- **Dual Language Mode**: Primary + Secondary language for bilingual typing
+- **Language-Specific Beam Search**: Neural network constrained to target language vocabulary
+- **Accent Recovery**: Neural predictions (26-letter) → properly accented words (café, naïve, señor)
+
+### Added - Dictionary Manager Improvements
+- **Language-Specific Storage**: Custom words and disabled words stored per-language
+- **Language Tabs**: Separate tabs for each configured language
+- **Auto-Reload**: Dictionary manager refreshes when language settings change
+- **Legacy Migration**: Automatic migration of global word lists to language-specific keys
+
+### Added - Contraction Support
+- **Multilingual Contractions**: Support for French (m'appelle, c'est, d'accord), Spanish, and English
+- **Language Pack Contractions**: Contractions included in downloadable language packs
+- **Contraction Prediction**: Neural network discovers contraction keys (mappelle → m'appelle)
+
+### Fixed
+- **Spanish Accent Keys (#40)**: Short gesture handling for dead keys (accent modifiers)
+- **French Contractions**: Working when English fallback is disabled
+- **Contraction Key Isolation**: Language-specific contractions don't contaminate other languages
+- **Primary Dictionary Priority**: Non-English dictionary checked FIRST for accent recovery
+- **Multilang Toggle**: Primary dictionary loads regardless of multilang toggle state
+- **Preference Reload**: Language dictionaries reload when preferences change
+
+### Technical
+- Language-specific beam search trie architecture
+- Per-language preference keys (custom_words_fr, disabled_words_en, etc.)
+- LanguagePreferenceKeys helper for migration and key generation
+
+---
+
 ## [2.0.2] - 2025-11-20
 
 ### Fixed

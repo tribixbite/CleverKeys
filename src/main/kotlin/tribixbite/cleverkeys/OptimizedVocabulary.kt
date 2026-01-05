@@ -228,8 +228,12 @@ class OptimizedVocabulary(private val context: Context) {
                 loadContractionMappings()
             } else if (_primaryLanguageCode != "en") {
                 // v1.1.87: Cache contains English contractions only
-                // Reload language-specific contractions for non-English primary languages
-                Log.d(TAG, "Reloading contractions for primary language: $_primaryLanguageCode")
+                // CRITICAL FIX v1.1.88: Clear English contractions before loading language-specific ones
+                // Without this, English contraction keys contaminate the language trie
+                val priorCount = nonPairedContractions.size
+                nonPairedContractions.clear()
+                contractionPairings.clear()
+                Log.d(TAG, "Cleared $priorCount English contractions before loading $_primaryLanguageCode")
                 loadLanguageContractions(_primaryLanguageCode)
             }
             val t4 = System.currentTimeMillis()
@@ -1161,10 +1165,27 @@ class OptimizedVocabulary(private val context: Context) {
             val languageTrie = VocabularyTrie()
             languageTrie.insertAll(normalizedWords)
 
-            // v1.1.88: Add contraction keys to the new trie
-            // This allows beam search to discover "mappelle" which gets converted to "m'appelle"
-            // Previously contractions were added to activeBeamSearchTrie but then lost when
-            // the trie was replaced with languageTrie
+            // v1.1.88 CRITICAL FIX: Clear English contractions and reload for target language
+            // Without this, English contraction keys like "dont", "cant", "wed", "hell" etc.
+            // contaminate the language trie and allow English words in beam search
+            val priorContractionCount = nonPairedContractions.size
+            nonPairedContractions.clear()
+            contractionPairings.clear()
+            Log.i(TAG, "Cleared $priorContractionCount cached contractions before loading $language")
+
+            // Load primary language contractions (e.g., French "mappelle" → "m'appelle")
+            loadLanguageContractions(language)
+            Log.i(TAG, "Loaded ${nonPairedContractions.size} contractions for $language")
+
+            // DUAL LANGUAGE: If secondary language is set, also load its contractions
+            // This allows typing secondary language contractions while in dual mode
+            if (_secondaryLanguageCode != "none" && _secondaryLanguageCode != language) {
+                val beforeSecondary = nonPairedContractions.size
+                loadLanguageContractions(_secondaryLanguageCode)
+                Log.i(TAG, "Dual mode: added ${nonPairedContractions.size - beforeSecondary} $_secondaryLanguageCode contractions")
+            }
+
+            // Add contraction keys to the new trie (primary + optional secondary)
             val contractionKeys = nonPairedContractions.keys
             if (contractionKeys.isNotEmpty()) {
                 languageTrie.insertAll(contractionKeys)

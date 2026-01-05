@@ -1,11 +1,21 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-05
-**Status**: v1.1.88 - Spanish accent fix + Legacy dictionary migration
+**Status**: v1.1.88 RELEASED - Multilanguage support with contraction isolation
 
 ---
 
-## v1.1.88 Fixes - COMPLETE
+## Known Issues (Post-Release)
+
+**English Words in French-Only Mode**:
+- Some English words still appear in predictions when Primary=French, Secondary=None
+- Dictionary Manager still shows English tab
+- Investigation ongoing - likely trie contamination from binary cache
+- Contraction isolation fix applied but additional source of contamination exists
+
+---
+
+## v1.1.88 Fixes - RELEASED
 
 **Spanish Accent Key Fix (#40)**:
 - [x] Fixed short gesture handling for dead keys (accent modifiers)
