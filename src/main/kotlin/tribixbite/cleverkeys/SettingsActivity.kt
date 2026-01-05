@@ -43,6 +43,7 @@ import tribixbite.cleverkeys.theme.KeyboardTheme
 import tribixbite.cleverkeys.langpack.LanguagePackManager
 import tribixbite.cleverkeys.langpack.ImportResult
 import tribixbite.cleverkeys.langpack.LanguagePackManifest
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 /**
  * Modern settings activity for CleverKeys.
@@ -3447,6 +3448,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                 // Update configuration object
                 updateConfigFromSettings()
+
+                // Broadcast language changes so other activities can refresh
+                if (key in listOf("pref_primary_language", "pref_secondary_language", "pref_enable_multilang")) {
+                    LocalBroadcastManager.getInstance(this@SettingsActivity)
+                        .sendBroadcast(Intent("tribixbite.cleverkeys.LANGUAGE_CHANGED"))
+                }
 
                 android.util.Log.d(TAG, "Setting saved: $key = $value")
 
