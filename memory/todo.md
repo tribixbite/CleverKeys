@@ -50,11 +50,23 @@
 **Architecture Documentation**:
 - NEW: `docs/specs/neural-multilanguage-architecture.md` - Complete pipeline documentation
 
-**The Fix Explained**:
-The beam search decoder was constrained to English vocabulary trie, which meant French-only
-words like "être" (normalized: "etre") could never be produced. Now when loading a non-English
-primary dictionary, the normalized words are added to the trie, enabling beam search to produce
-them. Post-processing then converts "etre" → "être" via accent mapping.
+**The Fix Explained** (Refactored - cleaner architecture):
+Each language now has its own beam search trie built from normalized words:
+
+```
+vocabularyTrie (English)      ← always loaded
+activeBeamSearchTrie          ← points to current language's trie
+
+Primary=French:
+  French Dict → normalize → French Trie → activeBeamSearchTrie
+  Beam search uses ONLY French words
+  etre → être (post-processing)
+
+Primary=English:
+  activeBeamSearchTrie = vocabularyTrie (English)
+```
+
+No mixing of languages in a single trie - clean separation.
 
 **Testing Needed** (ADB disconnected - manual test required):
 - [ ] Verify Primary Language dropdown shows EN, ES, FR, PT, IT, DE
