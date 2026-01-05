@@ -55,7 +55,12 @@ object LanguagePreferenceKeys {
      * This should be called once on app startup (or vocabulary load) to
      * migrate existing user data to the new per-language format.
      *
-     * @param prefs SharedPreferences to migrate
+     * Migration sources (in priority order):
+     * 1. `custom_words` in DirectBootAwarePreferences (JSON Map format)
+     * 2. `user_words` in separate "user_dictionary" SharedPreferences (StringSet format)
+     * 3. `disabled_words` in DirectBootAwarePreferences (StringSet format)
+     *
+     * @param prefs SharedPreferences to migrate (DirectBootAwarePreferences)
      * @return true if migration was performed, false if already done
      */
     fun migrateToLanguageSpecific(prefs: SharedPreferences): Boolean {
@@ -64,25 +69,21 @@ object LanguagePreferenceKeys {
         }
 
         val editor = prefs.edit()
+        val enCustomKey = customWordsKey("en")
+        val enDisabledKey = disabledWordsKey("en")
 
-        // Migrate custom_words to custom_words_en
+        // Migrate custom_words JSON format to custom_words_en
         val legacyCustomWords = prefs.getString(LEGACY_CUSTOM_WORDS, null)
-        if (legacyCustomWords != null && legacyCustomWords != "{}") {
-            val enKey = customWordsKey("en")
-            if (!prefs.contains(enKey)) {
-                editor.putString(enKey, legacyCustomWords)
-                Log.i(TAG, "Migrated custom_words to $enKey")
-            }
+        if (legacyCustomWords != null && legacyCustomWords != "{}" && !prefs.contains(enCustomKey)) {
+            editor.putString(enCustomKey, legacyCustomWords)
+            Log.i(TAG, "Migrated custom_words (JSON) to $enCustomKey")
         }
 
         // Migrate disabled_words to disabled_words_en
         val legacyDisabledWords = prefs.getStringSet(LEGACY_DISABLED_WORDS, null)
-        if (legacyDisabledWords != null && legacyDisabledWords.isNotEmpty()) {
-            val enKey = disabledWordsKey("en")
-            if (!prefs.contains(enKey)) {
-                editor.putStringSet(enKey, legacyDisabledWords)
-                Log.i(TAG, "Migrated disabled_words to $enKey (${legacyDisabledWords.size} words)")
-            }
+        if (legacyDisabledWords != null && legacyDisabledWords.isNotEmpty() && !prefs.contains(enDisabledKey)) {
+            editor.putStringSet(enDisabledKey, legacyDisabledWords)
+            Log.i(TAG, "Migrated disabled_words to $enDisabledKey (${legacyDisabledWords.size} words)")
         }
 
         // Mark migration complete
@@ -91,6 +92,53 @@ object LanguagePreferenceKeys {
 
         Log.i(TAG, "Language preference migration complete (version $CURRENT_MIGRATION_VERSION)")
         return true
+    }
+
+    /**
+     * Migrate legacy "user_dictionary" SharedPreferences file to DirectBootAwarePreferences.
+     *
+     * v1.1.87+: Custom words are stored as JSON Map<String, Int> in DirectBootAwarePreferences
+     * with key `custom_words_${lang}`. This migrates from the legacy location.
+     *
+     * @param context Context to access SharedPreferences
+     * @param prefs DirectBootAwarePreferences to migrate into
+     * @return Number of words migrated, or 0 if no migration needed
+     */
+    fun migrateUserDictionary(context: android.content.Context, prefs: SharedPreferences): Int {
+        val legacyDictPrefs = context.getSharedPreferences("user_dictionary", android.content.Context.MODE_PRIVATE)
+        val legacyUserWords = legacyDictPrefs.getStringSet("user_words", null)
+
+        if (legacyUserWords.isNullOrEmpty()) {
+            return 0
+        }
+
+        val enCustomKey = customWordsKey("en")
+
+        // Load existing custom words (if any)
+        val existingJson = prefs.getString(enCustomKey, "{}")
+        val gson = com.google.gson.Gson()
+        val type = object : com.google.gson.reflect.TypeToken<MutableMap<String, Int>>() {}.type
+        val customWords: MutableMap<String, Int> = try {
+            gson.fromJson(existingJson, type) ?: mutableMapOf()
+        } catch (e: Exception) {
+            mutableMapOf()
+        }
+
+        // Add legacy words with default frequency
+        var migratedCount = 0
+        for (word in legacyUserWords) {
+            if (!customWords.containsKey(word)) {
+                customWords[word] = 100 // Default frequency
+                migratedCount++
+            }
+        }
+
+        if (migratedCount > 0) {
+            prefs.edit().putString(enCustomKey, gson.toJson(customWords)).apply()
+            Log.i(TAG, "Migrated $migratedCount words from user_dictionary to $enCustomKey")
+        }
+
+        return migratedCount
     }
 
     /**

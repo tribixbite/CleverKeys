@@ -832,8 +832,8 @@ class BackupRestoreManager(private val context: Context) {
      * Export user dictionaries to JSON file
      * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
      *
-     * CRITICAL: DictionaryManager uses SharedPreferences file "user_dictionary" with key "user_words"
-     * stored as a StringSet. We export from that location to ensure consistency with import.
+     * v1.1.88: Exports in language-specific format (custom_words_${lang}, disabled_words_${lang})
+     * Also includes legacy format for backwards compatibility with older app versions.
      */
     fun exportDictionaries(uri: Uri) {
         try {
@@ -845,30 +845,78 @@ class BackupRestoreManager(private val context: Context) {
             metadata.addProperty("export_date",
                 SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date()))
             metadata.addProperty("type", "dictionaries")
+            metadata.addProperty("format_version", 2) // v2 = language-specific format
             root.add("metadata", metadata)
 
-            // Export user words from internal 'user_dictionary' SharedPreferences (Custom Words)
-            val userDictPrefs = context.getSharedPreferences("user_dictionary", Context.MODE_PRIVATE)
-            val userWordsSet = userDictPrefs.getStringSet("user_words", emptySet()) ?: emptySet()
-            
-            val userWords = JsonArray()
-            for (word in userWordsSet) {
-                val wordObj = JsonObject()
-                wordObj.addProperty("word", word)
-                wordObj.addProperty("frequency", DEFAULT_USER_WORD_FREQ)
-                userWords.add(wordObj)
-            }
-            root.add("user_words", userWords)
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
 
-            // Export disabled words from WordPredictor's storage
-            val disabledWordsPrefs = DirectBootAwarePreferences.get_shared_preferences(context)
-            val disabledWordsSet = disabledWordsPrefs.getStringSet("disabled_words", emptySet()) ?: emptySet()
+            // Run migration first to ensure all words are in new format
+            LanguagePreferenceKeys.migrateToLanguageSpecific(prefs)
+            LanguagePreferenceKeys.migrateUserDictionary(context, prefs)
+
+            // Export custom words per language (new format)
+            val customWordsPerLang = JsonObject()
+            val languages = LanguagePreferenceKeys.getLanguagesWithCustomWords(prefs)
+            var totalCustomWords = 0
+
+            for (lang in languages) {
+                val langKey = LanguagePreferenceKeys.customWordsKey(lang)
+                val wordsJson = prefs.getString(langKey, "{}")
+                if (wordsJson != null && wordsJson != "{}") {
+                    customWordsPerLang.add(lang, JsonParser.parseString(wordsJson))
+                    // Count words for logging
+                    try {
+                        val wordsMap = JsonParser.parseString(wordsJson).asJsonObject
+                        totalCustomWords += wordsMap.size()
+                    } catch (e: Exception) { /* ignore count errors */ }
+                }
+            }
+            root.add("custom_words_by_language", customWordsPerLang)
+
+            // Export disabled words per language (new format)
+            val disabledWordsPerLang = JsonObject()
+            val disabledLanguages = LanguagePreferenceKeys.getLanguagesWithDisabledWords(prefs)
+            var totalDisabledWords = 0
+
+            for (lang in disabledLanguages) {
+                val langKey = LanguagePreferenceKeys.disabledWordsKey(lang)
+                val wordsSet = prefs.getStringSet(langKey, emptySet()) ?: emptySet()
+                if (wordsSet.isNotEmpty()) {
+                    val wordsArray = JsonArray()
+                    for (word in wordsSet) {
+                        wordsArray.add(word)
+                    }
+                    disabledWordsPerLang.add(lang, wordsArray)
+                    totalDisabledWords += wordsSet.size
+                }
+            }
+            root.add("disabled_words_by_language", disabledWordsPerLang)
+
+            // Also export in legacy format for backwards compatibility
+            // Use English words if available, otherwise empty
+            val enCustomWordsJson = prefs.getString(LanguagePreferenceKeys.customWordsKey("en"), "{}")
+            if (enCustomWordsJson != null && enCustomWordsJson != "{}") {
+                try {
+                    val enWordsMap = JsonParser.parseString(enCustomWordsJson).asJsonObject
+                    val userWords = JsonArray()
+                    for ((word, freq) in enWordsMap.entrySet()) {
+                        val wordObj = JsonObject()
+                        wordObj.addProperty("word", word)
+                        wordObj.addProperty("frequency", freq.asInt)
+                        userWords.add(wordObj)
+                    }
+                    root.add("user_words", userWords) // Legacy format
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to export legacy format", e)
+                }
+            }
+
+            val enDisabledWords = prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey("en"), emptySet()) ?: emptySet()
             val disabledWords = JsonArray()
-            for (word in disabledWordsSet) {
+            for (word in enDisabledWords) {
                 disabledWords.add(word)
             }
-
-            root.add("disabled_words", disabledWords)
+            root.add("disabled_words", disabledWords) // Legacy format
 
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                 outputStream.writer().use { writer ->
@@ -877,7 +925,7 @@ class BackupRestoreManager(private val context: Context) {
                 }
             }
 
-            Log.i(TAG, "Exported dictionaries: ${userWords.size()} user words, ${disabledWords.size()} disabled words")
+            Log.i(TAG, "Exported dictionaries: $totalCustomWords custom words, $totalDisabledWords disabled words (${languages.size + disabledLanguages.size} languages)")
         } catch (e: Exception) {
             Log.e(TAG, "Dictionary export failed", e)
             throw Exception("Dictionary export failed: ${e.message}", e)
@@ -889,8 +937,9 @@ class BackupRestoreManager(private val context: Context) {
      * @param uri URI from Storage Access Framework (ACTION_OPEN_DOCUMENT)
      * @return DictionaryImportResult with statistics
      *
-     * CRITICAL: Imports into internal 'user_dictionary' SharedPreferences (Custom Words)
-     * instead of system UserDictionary, as requested.
+     * v1.1.88: Supports both old format (user_words, disabled_words) and new language-specific format
+     * (custom_words_by_language, disabled_words_by_language). Old format is automatically migrated
+     * to English language-specific keys.
      */
     fun importDictionaries(uri: Uri): DictionaryImportResult {
         return try {
@@ -905,80 +954,141 @@ class BackupRestoreManager(private val context: Context) {
 
             val root = JsonParser.parseString(jsonBuilder.toString()).asJsonObject
             val result = DictionaryImportResult()
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
 
             if (root.has("metadata")) {
                 val metadata = root.getAsJsonObject("metadata")
                 result.sourceVersion = metadata.get("app_version")?.asString ?: "unknown"
             }
 
-            // Load existing Custom Words from SharedPreferences (internal storage)
-            val userDictPrefs = context.getSharedPreferences("user_dictionary", Context.MODE_PRIVATE)
-            val existingCustomWords = userDictPrefs.getStringSet("user_words", emptySet())?.toMutableSet() ?: mutableSetOf()
-            val initialSize = existingCustomWords.size
+            // Check if using new language-specific format (v2+)
+            val isNewFormat = root.has("custom_words_by_language") || root.has("disabled_words_by_language")
 
-            // Helper to add word to internal set
-            fun addWordToCustom(word: String) {
-                if (word !in existingCustomWords) {
-                    existingCustomWords.add(word)
-                    result.userWordsImported++
+            if (isNewFormat) {
+                // Import new format: custom_words_by_language
+                if (root.has("custom_words_by_language") && root.get("custom_words_by_language").isJsonObject) {
+                    val byLang = root.getAsJsonObject("custom_words_by_language")
+                    for ((lang, wordsElement) in byLang.entrySet()) {
+                        if (wordsElement.isJsonObject) {
+                            val langKey = LanguagePreferenceKeys.customWordsKey(lang)
+                            val existingJson = prefs.getString(langKey, "{}")
+                            val existingWords: MutableMap<String, Int> = try {
+                                val type = object : com.google.gson.reflect.TypeToken<MutableMap<String, Int>>() {}.type
+                                Gson().fromJson(existingJson, type) ?: mutableMapOf()
+                            } catch (e: Exception) { mutableMapOf() }
+
+                            val importWords = wordsElement.asJsonObject
+                            for ((word, freq) in importWords.entrySet()) {
+                                if (!existingWords.containsKey(word)) {
+                                    existingWords[word] = freq.asInt
+                                    result.userWordsImported++
+                                }
+                            }
+
+                            prefs.edit().putString(langKey, Gson().toJson(existingWords)).apply()
+                            Log.i(TAG, "Imported ${importWords.size()} custom words for $lang")
+                        }
+                    }
+                }
+
+                // Import new format: disabled_words_by_language
+                if (root.has("disabled_words_by_language") && root.get("disabled_words_by_language").isJsonObject) {
+                    val byLang = root.getAsJsonObject("disabled_words_by_language")
+                    for ((lang, wordsElement) in byLang.entrySet()) {
+                        if (wordsElement.isJsonArray) {
+                            val langKey = LanguagePreferenceKeys.disabledWordsKey(lang)
+                            val existingWords = prefs.getStringSet(langKey, emptySet())?.toMutableSet() ?: mutableSetOf()
+
+                            val importWords = wordsElement.asJsonArray
+                            for (wordElement in importWords) {
+                                val word = wordElement.asString
+                                if (word !in existingWords) {
+                                    existingWords.add(word)
+                                    result.disabledWordsImported++
+                                }
+                            }
+
+                            prefs.edit().putStringSet(langKey, existingWords).apply()
+                            Log.i(TAG, "Imported ${importWords.size()} disabled words for $lang")
+                        }
+                    }
                 }
             }
 
-            // Handle new format: custom_words as object with word -> frequency
+            // Also handle legacy format (for backwards compatibility)
+            // This imports old format directly into English language-specific keys
+
+            // Legacy custom_words (JSON object with word -> frequency)
             if (root.has("custom_words") && root.get("custom_words").isJsonObject) {
                 val customWords = root.getAsJsonObject("custom_words")
-                for ((word, _) in customWords.entrySet()) {
-                    addWordToCustom(word)
+                val enKey = LanguagePreferenceKeys.customWordsKey("en")
+                val existingJson = prefs.getString(enKey, "{}")
+                val existingWords: MutableMap<String, Int> = try {
+                    val type = object : com.google.gson.reflect.TypeToken<MutableMap<String, Int>>() {}.type
+                    Gson().fromJson(existingJson, type) ?: mutableMapOf()
+                } catch (e: Exception) { mutableMapOf() }
+
+                for ((word, freq) in customWords.entrySet()) {
+                    if (!existingWords.containsKey(word)) {
+                        existingWords[word] = freq.asInt
+                        result.userWordsImported++
+                    }
                 }
-                Log.i(TAG, "Parsed ${customWords.size()} custom_words (new format)")
+
+                prefs.edit().putString(enKey, Gson().toJson(existingWords)).apply()
+                Log.i(TAG, "Parsed ${customWords.size()} custom_words (legacy format) -> English")
             }
 
-            // Handle old format: user_words as array of strings or objects
+            // Legacy user_words (array of strings or objects)
             if (root.has("user_words") && root.get("user_words").isJsonArray) {
                 val userWordsArray = root.getAsJsonArray("user_words")
+                val enKey = LanguagePreferenceKeys.customWordsKey("en")
+                val existingJson = prefs.getString(enKey, "{}")
+                val existingWords: MutableMap<String, Int> = try {
+                    val type = object : com.google.gson.reflect.TypeToken<MutableMap<String, Int>>() {}.type
+                    Gson().fromJson(existingJson, type) ?: mutableMapOf()
+                } catch (e: Exception) { mutableMapOf() }
+
                 for (element in userWordsArray) {
                     val word: String
+                    val freq: Int
                     if (element.isJsonObject) {
-                        word = element.getAsJsonObject().get("word").asString
+                        val obj = element.asJsonObject
+                        word = obj.get("word").asString
+                        freq = obj.get("frequency")?.asInt ?: DEFAULT_USER_WORD_FREQ
                     } else {
                         word = element.asString
+                        freq = DEFAULT_USER_WORD_FREQ
                     }
-                    addWordToCustom(word)
+                    if (!existingWords.containsKey(word)) {
+                        existingWords[word] = freq
+                        result.userWordsImported++
+                    }
                 }
-                Log.i(TAG, "Parsed ${userWordsArray.size()} user_words (old format)")
+
+                prefs.edit().putString(enKey, Gson().toJson(existingWords)).apply()
+                Log.i(TAG, "Parsed ${userWordsArray.size()} user_words (legacy format) -> English")
             }
 
-            // Save updated custom words back to SharedPreferences
-            if (existingCustomWords.size > initialSize) {
-                userDictPrefs.edit().putStringSet("user_words", existingCustomWords).apply()
-                Log.i(TAG, "Saved ${existingCustomWords.size} custom words (+${result.userWordsImported} new)")
-            }
-
-            // Handle disabled_words - these go to DirectBootAwarePreferences
+            // Legacy disabled_words (array of strings)
             if (root.has("disabled_words") && root.get("disabled_words").isJsonArray) {
-                val disabledWordsPrefs = DirectBootAwarePreferences.get_shared_preferences(context)
-                val existingDisabled = disabledWordsPrefs.getStringSet("disabled_words", emptySet())?.toMutableSet() ?: mutableSetOf()
-                val newDisabled = mutableSetOf<String>()
+                val enKey = LanguagePreferenceKeys.disabledWordsKey("en")
+                val existingDisabled = prefs.getStringSet(enKey, emptySet())?.toMutableSet() ?: mutableSetOf()
 
                 val disabledWords = root.getAsJsonArray("disabled_words")
                 for (wordElement in disabledWords) {
                     val wordStr = wordElement.asString
                     if (wordStr !in existingDisabled) {
-                        newDisabled.add(wordStr)
+                        existingDisabled.add(wordStr)
                         result.disabledWordsImported++
                     }
                 }
 
-                if (newDisabled.isNotEmpty()) {
-                    val allDisabled = existingDisabled + newDisabled
-                    disabledWordsPrefs.edit()
-                        .putStringSet("disabled_words", allDisabled)
-                        .apply()
-                    Log.i(TAG, "Saved ${allDisabled.size} disabled words (${newDisabled.size} new)")
-                }
+                prefs.edit().putStringSet(enKey, existingDisabled).apply()
+                Log.i(TAG, "Parsed ${disabledWords.size()} disabled_words (legacy format) -> English")
             }
 
-            Log.i(TAG, "Imported dictionaries: ${result.userWordsImported} user words, ${result.disabledWordsImported} disabled words")
+            Log.i(TAG, "Imported dictionaries: ${result.userWordsImported} custom words, ${result.disabledWordsImported} disabled words")
             result
         } catch (e: Exception) {
             Log.e(TAG, "Dictionary import failed", e)

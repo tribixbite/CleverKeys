@@ -1417,6 +1417,8 @@ class OptimizedVocabulary(private val context: Context) {
 
             // v1.1.86: Run migration if needed (copy global keys to English keys)
             LanguagePreferenceKeys.migrateToLanguageSpecific(prefs)
+            // v1.1.88: Also migrate legacy user_dictionary SharedPreferences file
+            LanguagePreferenceKeys.migrateUserDictionary(context, prefs)
 
             // 1. Load custom words from SharedPreferences (language-specific key)
             val customWordsKey = LanguagePreferenceKeys.customWordsKey(_primaryLanguageCode)
