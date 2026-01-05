@@ -1176,6 +1176,124 @@ class WordPredictor {
     }
 
     /**
+     * Predict next words based on previous context (no partial word being typed).
+     * This is called after the user completes a word (e.g., after space/punctuation).
+     *
+     * Unlike predictInternal which completes a partial word, this predicts what
+     * word should come next based on the completed words in context.
+     *
+     * @param context List of previous completed words
+     * @param maxPredictions Maximum number of predictions to return (default 5)
+     * @return PredictionResult with next word predictions
+     */
+    fun predictNextWords(context: List<String>, maxPredictions: Int = 5): PredictionResult {
+        // OPTIMIZATION v3 (perftodos3.md): Use android.os.Trace for system-level profiling
+        android.os.Trace.beginSection("WordPredictor.predictNextWords")
+        try {
+            // Check if dictionary changes require reload
+            checkAndReload()
+
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Predicting next words with context: $context")
+            }
+
+            val candidates = mutableListOf<WordCandidate>()
+
+            // Get bigram predictions from BigramModel
+            val bigramPredictions = bigramModel?.getPredictedWords(context, maxPredictions * 3) ?: emptyList()
+
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "BigramModel returned ${bigramPredictions.size} predictions")
+            }
+
+            // Score each bigram prediction
+            for ((word, bigramProb) in bigramPredictions) {
+                // Skip disabled words
+                if (isWordDisabled(word)) {
+                    continue
+                }
+
+                // Check if word exists in dictionary
+                val frequency = dictionary.get()[word] ?: continue
+
+                // Calculate score combining bigram probability and frequency
+                // Bigram probability is 0-1, scale to 0-10000 range for scoring
+                val bigramScore = (bigramProb * 10000).toInt()
+                
+                // User adaptation multiplier
+                val adaptationMultiplier = adaptationManager?.getAdaptationMultiplier(word) ?: 1.0f
+
+                // Phase 7.1: Dynamic context boost from ContextModel
+                val contextAwareEnabled = config?.context_aware_predictions_enabled ?: true
+                val dynamicContextBoost = if (contextAwareEnabled && contextModel != null && context.isNotEmpty()) {
+                    contextModel?.getContextBoost(word, context) ?: 1.0f
+                } else {
+                    1.0f
+                }
+
+                // Phase 7.2: Personalization boost
+                val personalizationEnabled = config?.personalized_learning_enabled ?: true
+                val personalizationMultiplier = if (personalizationEnabled && personalizationEngine != null) {
+                    val boost = personalizationEngine?.getPersonalizationBoost(word) ?: 0.0f
+                    1.0f + (boost / 4.0f)
+                } else {
+                    1.0f
+                }
+
+                // Combine all signals
+                // Bigram score is primary signal for next word prediction
+                // Frequency provides secondary ranking
+                val frequencyFactor = 1.0f + ln1p((frequency / 1000.0f).toDouble()).toFloat()
+                val finalScore = bigramScore * 
+                    adaptationMultiplier * 
+                    personalizationMultiplier *
+                    dynamicContextBoost *
+                    frequencyFactor
+
+                candidates.add(WordCandidate(word, finalScore.toInt()))
+            }
+
+            // If we don't have enough predictions from bigrams, add high-frequency words
+            if (candidates.size < maxPredictions) {
+                // Get most common words from dictionary that aren't already in candidates
+                val existingWords = candidates.map { it.word }.toSet()
+                
+                dictionary.get().entries
+                    .asSequence()
+                    .filter { !isWordDisabled(it.key) && !existingWords.contains(it.key) }
+                    .sortedByDescending { it.value }
+                    .take(maxPredictions - candidates.size)
+                    .forEach { (word, frequency) ->
+                        // Lower base score since these don't have context
+                        val adaptationMultiplier = adaptationManager?.getAdaptationMultiplier(word) ?: 1.0f
+                        val score = (frequency * 0.5 * adaptationMultiplier).toInt()
+                        candidates.add(WordCandidate(word, score))
+                    }
+            }
+
+            // Sort by score and extract top N
+            candidates.sortByDescending { it.score }
+            
+            val predictions = mutableListOf<String>()
+            val scores = mutableListOf<Int>()
+
+            for (candidate in candidates.take(maxPredictions)) {
+                predictions.add(candidate.word)
+                scores.add(candidate.score)
+            }
+
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Next word predictions (${predictions.size}): $predictions")
+                Log.d(TAG, "Scores: $scores")
+            }
+
+            return PredictionResult(predictions, scores)
+        } finally {
+            android.os.Trace.endSection()
+        }
+    }
+
+    /**
      * Helper class to store word candidates with scores
      */
     private data class WordCandidate(val word: String, val score: Int)

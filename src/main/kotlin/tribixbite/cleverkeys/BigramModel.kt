@@ -446,6 +446,45 @@ class BigramModel private constructor() {
     }
 
     /**
+     * Get next word predictions based on previous word context.
+     * Returns words that are likely to follow the given context.
+     *
+     * @param context List of previous words (typically last 1-2 words)
+     * @param maxPredictions Maximum number of predictions to return
+     * @return List of (word, probability) pairs sorted by probability (descending)
+     */
+    fun getPredictedWords(context: List<String>?, maxPredictions: Int = 5): List<Pair<String, Float>> {
+        if (context.isNullOrEmpty()) {
+            // No context: return most common words from unigram model
+            val unigramProbs = languageUnigramProbs[currentLanguage] ?: languageUnigramProbs["en"]
+            return unigramProbs?.entries
+                ?.sortedByDescending { it.value }
+                ?.take(maxPredictions)
+                ?.map { Pair(it.key, it.value) }
+                ?: emptyList()
+        }
+
+        // Get the previous word (use the last word in context)
+        val prevWord = context.last().lowercase()
+        
+        // Get language-specific bigram probabilities
+        val bigramProbs = languageBigramProbs[currentLanguage] ?: languageBigramProbs["en"]
+
+        // Find all bigrams that start with the previous word
+        val predictions = mutableListOf<Pair<String, Float>>()
+        
+        bigramProbs?.forEach { (bigramKey, prob) ->
+            val parts = bigramKey.split("|")
+            if (parts.size == 2 && parts[0] == prevWord) {
+                predictions.add(Pair(parts[1], prob))
+            }
+        }
+
+        // Sort by probability (descending) and take top N
+        return predictions.sortedByDescending { it.second }.take(maxPredictions)
+    }
+
+    /**
      * Add a bigram observation (for user adaptation)
      */
     fun addBigram(prevWord: String, word: String, weight: Float) {

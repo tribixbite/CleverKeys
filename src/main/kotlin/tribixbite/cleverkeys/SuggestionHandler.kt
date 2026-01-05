@@ -616,7 +616,14 @@ class SuggestionHandler(
                 // Reset current word
                 contextTracker.clearCurrentWord()
                 predictionCoordinator.getWordPredictor()?.reset()
-                suggestionBar?.clearSuggestions()
+                
+                // NEW: Show next word predictions after completing a word (space/punctuation)
+                // Only trigger for space character to avoid excessive predictions
+                if (text == " " && config.word_prediction_enabled) {
+                    updateNextWordPredictions()
+                } else {
+                    suggestionBar?.clearSuggestions()
+                }
             }
             text.length > 1 -> {
                 // Multi-character input (paste, etc) - reset
@@ -693,6 +700,46 @@ class SuggestionHandler(
                             bar.setSuggestionsWithScores(transformedWords, result.scores)
                         }
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * Update predictions for the next word based on context.
+     * Called after user completes a word (e.g., after typing space).
+     */
+    private fun updateNextWordPredictions() {
+        // Copy context to be thread-safe
+        val contextWords = contextTracker.getContextWords().toList()
+        
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.d(TAG, "updateNextWordPredictions called with context: $contextWords")
+        }
+
+        // Cancel previous task if running
+        currentPredictionTask?.cancel(true)
+
+        // Submit new prediction task
+        currentPredictionTask = predictionExecutor.submit {
+            if (Thread.currentThread().isInterrupted) return@submit
+
+            // Get next word predictions (no partial word, only context)
+            val result = predictionCoordinator.getWordPredictor()?.predictNextWords(contextWords)
+
+            if (Thread.currentThread().isInterrupted || result == null || result.words.isEmpty()) {
+                return@submit
+            }
+
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Next word predictions: ${result.words}")
+            }
+
+            // Post result to UI thread
+            suggestionBar?.post {
+                suggestionBar?.let { bar ->
+                    bar.setShowDebugScores(config.swipe_show_debug_scores)
+                    bar.setSuggestionsWithScores(result.words, result.scores)
                 }
             }
         }
