@@ -44,6 +44,9 @@ class OptimizedVocabulary(private val context: Context) {
     // When Primary=English, this points to vocabularyTrie
     // When Primary=French, this is built from French normalized words
     // Beam search uses this trie, not vocabularyTrie directly
+    // v1.1.92: CRITICAL FIX - Must be @Volatile for cross-thread visibility!
+    // loadPrimaryDictionary() writes on init thread, getVocabularyTrie() reads on main thread
+    @Volatile
     private var activeBeamSearchTrie: VocabularyTrie = vocabularyTrie
 
     // OPTIMIZATION Phase 2: Length-based buckets for fuzzy matching (reduces 50k iteration to ~2k)
@@ -52,7 +55,10 @@ class OptimizedVocabulary(private val context: Context) {
 
     // MULTILANGUAGE: Accent-aware lookup for primary/secondary dictionaries
     // Maps normalized (accent-free) → canonical (with accents) + frequency rank
+    // v1.1.92: Must be @Volatile for cross-thread visibility (written on init, read on swipe)
+    @Volatile
     private var normalizedIndex: NormalizedPrefixIndex? = null
+    @Volatile
     private var secondaryNormalizedIndex: NormalizedPrefixIndex? = null
 
     // Scoring parameters (tuned for 50k vocabulary)
@@ -100,8 +106,13 @@ class OptimizedVocabulary(private val context: Context) {
     // When detected language score exceeds threshold, boost that language's dictionary
     private var _autoSwitchEnabled = false
     private var _autoSwitchThreshold = 0.6f // Switch when secondary language score > 60%
+    // v1.1.92: Language config vars must be @Volatile - written by setPrimaryLanguageConfig,
+    // read by getVocabularyTrie() on different thread
+    @Volatile
     private var _secondaryLanguageCode = "none" // Current secondary language code (e.g., "es")
+    @Volatile
     private var _primaryLanguageCode = "en" // Current primary language code
+    @Volatile
     private var _englishFallbackEnabled = true // Whether to use English vocabulary as fallback
     @Volatile
     private var _currentLanguageMultiplier = 0.9f // Dynamic multiplier based on detected language
