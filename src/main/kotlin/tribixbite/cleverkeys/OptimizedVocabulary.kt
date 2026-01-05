@@ -242,9 +242,13 @@ class OptimizedVocabulary(private val context: Context) {
      */
     fun loadVocabulary(primaryLanguageCode: String = "en"): Boolean {
         try {
-            // v1.1.87: Set the primary language BEFORE loading contractions
-            // This ensures language-specific contractions (fr: cest->c'est) are loaded
-            _primaryLanguageCode = primaryLanguageCode
+            // v1.1.93 CRITICAL FIX: Do NOT set _primaryLanguageCode here!
+            // Setting _primaryLanguageCode before loadPrimaryDictionary() completes creates a race:
+            // - getVocabularyTrie() sees _primaryLanguageCode="fr" but activeBeamSearchTrie is still English
+            // - This returns null (language mismatch), causing unconstrained beam search → English words
+            // Instead, use a local variable for contraction loading logic.
+            // _primaryLanguageCode will be set in loadPrimaryDictionary() AFTER trie is ready.
+            val targetLanguage = primaryLanguageCode
             // OPTIMIZATION: Load vocabulary with fast-path sets built during loading
             val t0 = System.currentTimeMillis()
             loadWordFrequencies()
@@ -265,15 +269,15 @@ class OptimizedVocabulary(private val context: Context) {
             // Load contraction mappings for apostrophe display (only if not cached)
             if (!contractionsLoadedFromCache) {
                 loadContractionMappings()
-            } else if (_primaryLanguageCode != "en") {
+            } else if (targetLanguage != "en") {
                 // v1.1.87: Cache contains English contractions only
                 // CRITICAL FIX v1.1.88: Clear English contractions before loading language-specific ones
                 // Without this, English contraction keys contaminate the language trie
                 val priorCount = nonPairedContractions.size
                 nonPairedContractions.clear()
                 contractionPairings.clear()
-                Log.d(TAG, "Cleared $priorCount English contractions before loading $_primaryLanguageCode")
-                loadLanguageContractions(_primaryLanguageCode)
+                Log.d(TAG, "Cleared $priorCount English contractions before loading $targetLanguage")
+                loadLanguageContractions(targetLanguage)
             }
             val t4 = System.currentTimeMillis()
             Log.d(TAG, "⏱️ loadContractions: " + (t4 - t3) + "ms")
@@ -297,7 +301,7 @@ class OptimizedVocabulary(private val context: Context) {
             // v1.1.89: Add contraction keys to vocabularyTrie for English mode
             // For non-English primary languages, loadPrimaryDictionary() creates a separate trie
             // But for English, we use vocabularyTrie directly so contractions must be in it
-            if (_primaryLanguageCode == "en" && nonPairedContractions.isNotEmpty()) {
+            if (targetLanguage == "en" && nonPairedContractions.isNotEmpty()) {
                 val contractionKeys = nonPairedContractions.keys.toList()
                 vocabularyTrie.insertAll(contractionKeys)
                 Log.d(TAG, "Added ${contractionKeys.size} contraction keys to English vocabularyTrie")
@@ -1249,6 +1253,16 @@ class OptimizedVocabulary(private val context: Context) {
 
             activeBeamSearchTrie = languageTrie
 
+            // v1.1.93 CRITICAL FIX: Set _primaryLanguageCode AFTER activeBeamSearchTrie
+            // This prevents race condition where getVocabularyTrie() sees:
+            // - _primaryLanguageCode = "fr" (already set by setPrimaryLanguageConfig)
+            // - activeBeamSearchTrie still points to English trie (not loaded yet)
+            // By setting _primaryLanguageCode HERE, the check in getVocabularyTrie() will either:
+            // 1. See _primaryLanguageCode="en" and return English trie (loading not started)
+            // 2. See _primaryLanguageCode="fr" and return French trie (loading complete)
+            // There's no window where _primaryLanguageCode is French but trie is still English
+            _primaryLanguageCode = language
+
             Log.i(TAG, "✅ Primary dictionary loaded: $language")
             Log.i(TAG, "  - ${index.size()} canonical words (with accents)")
             Log.i(TAG, "  - ${normalizedWords.size} normalized words (beam search trie)")
@@ -1277,6 +1291,8 @@ class OptimizedVocabulary(private val context: Context) {
     fun unloadPrimaryDictionary() {
         normalizedIndex = null
         activeBeamSearchTrie = vocabularyTrie  // Reset to English trie
+        // v1.1.93: Reset _primaryLanguageCode when unloading (must be after activeBeamSearchTrie reset)
+        _primaryLanguageCode = "en"
         Log.i(TAG, "Unloaded primary dictionary, reset to English beam search trie")
     }
 
@@ -1433,7 +1449,16 @@ class OptimizedVocabulary(private val context: Context) {
      * @param secondaryLanguage Secondary language code (e.g., "en", "es", "none")
      */
     fun setPrimaryLanguageConfig(primaryLanguage: String, secondaryLanguage: String) {
-        _primaryLanguageCode = primaryLanguage
+        // v1.1.93 CRITICAL FIX: For non-English primary, _primaryLanguageCode is set in
+        // loadPrimaryDictionary() AFTER activeBeamSearchTrie is updated.
+        // This prevents race condition where getVocabularyTrie() sees _primaryLanguageCode="fr"
+        // but activeBeamSearchTrie still points to English trie.
+        // For English primary, set it here since loadPrimaryDictionary() is not called.
+        if (primaryLanguage == "en") {
+            _primaryLanguageCode = primaryLanguage
+        }
+        // Note: _primaryLanguageCode for non-English is set in loadPrimaryDictionary()
+
         _secondaryLanguageCode = secondaryLanguage
 
         // English fallback is enabled if:
@@ -1441,7 +1466,7 @@ class OptimizedVocabulary(private val context: Context) {
         // 2. Secondary is English (user explicitly wants English as backup)
         _englishFallbackEnabled = (primaryLanguage == "en") || (secondaryLanguage == "en")
 
-        Log.i(TAG, "Primary language config: primary=$primaryLanguage, secondary=$secondaryLanguage, englishFallback=$_englishFallbackEnabled")
+        Log.i(TAG, "Primary language config: primary=$primaryLanguage, secondary=$secondaryLanguage, englishFallback=$_englishFallbackEnabled, _primaryLanguageCode=$_primaryLanguageCode")
     }
 
     /**
