@@ -101,6 +101,8 @@ class ManagerInitializer(
 
         // Initialize prediction coordinator (v1.32.346)
         val predictionCoordinator = PredictionCoordinator(context, config)
+        // v1.1.90: CRITICAL - Must call initialize() to load dictionary and neural engine
+        predictionCoordinator.initialize()
 
         // Initialize input coordinator (v1.32.350)
         // Note: SuggestionBar will be set later in onStartInputView
