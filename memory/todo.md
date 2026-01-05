@@ -14,6 +14,13 @@
 - [x] Root cause: `onPointerDown/onPointerUp` doesn't latch modifiers
 - [x] Fix: Detect `FLAG_P_LATCHABLE` and create latched pointer instead
 
+**French Contraction Fix**:
+- [x] Fixed "mappelle" → "m'appelle" not working when Primary=French, Secondary=None
+- [x] Root cause: `_englishFallbackEnabled` was false, skipping vocabulary lookup
+- [x] Contractions were added to `vocabulary` but lookup was guarded by fallback flag
+- [x] Fix: Check `nonPairedContractions` BEFORE filtering out the word
+- [x] Now accepts contraction keys even when English fallback is disabled
+
 **Legacy Dictionary Migration (v1.1.88)**:
 - [x] `LanguagePreferenceKeys.migrateUserDictionary()` migrates legacy `user_dictionary` SharedPreferences
 - [x] `BackupRestoreManager` export now uses language-specific format (`custom_words_by_language`)
