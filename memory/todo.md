@@ -5,7 +5,29 @@
 
 ---
 
-## v1.1.89 Fixes - IN TESTING
+## v1.1.91 Fixes - IN PROGRESS
+
+**V2 Dictionary Format Support for WordPredictor (Touch Typing)**:
+- [x] `BinaryDictionaryLoader.loadDictionary()` now supports both V1 and V2 formats
+- [x] V1 format (magic 'DICT'): English dictionary, word+frequency pairs
+- [x] V2 format (magic 'CKDT'): Non-English dictionaries with canonical words and frequency ranks
+- [x] Rank-to-frequency conversion: rank 0 → ~1M, rank 255 → ~5K
+- [x] Enables French, German, Italian, Portuguese, Spanish touch typing predictions
+
+**Previous Fixes (v1.1.89-v1.1.90)**:
+- [x] `PredictionCoordinator.initialize()` now called from ManagerInitializer (was missing)
+- [x] `PreferenceUIUpdateHandler` reloads WordPredictor dictionary when language changes
+- [x] Added `reloadWordPredictorDictionary()` method to PredictionCoordinator
+
+**English Words in Beam Search (Investigation)**:
+- [x] BeamSearchEngine runs UNCONSTRAINED when vocabTrie is null
+- [x] `getVocabularyTrie()` returns null on language mismatch (primary≠en but trie is English)
+- [x] Root cause: if `loadPrimaryDictionary()` fails, trie stays English → mismatch → null
+- [ ] Verify French dictionary loads successfully (fr_enhanced.bin is V2 format)
+- [ ] Check logs for "loadPrimaryDictionary() called with language='fr'"
+- [ ] Verify "isLanguageTrie=true" in getVocabularyTrie() diagnostic logs
+
+## v1.1.89 Fixes - COMPLETED
 
 **Dictionary Manager Language Fix**:
 - [x] `MainDictionarySource` was hardcoded to load `en_enhanced.json`
@@ -40,8 +62,6 @@
 - [x] BeamSearchEngine: Logs trie status (null vs active) on first masking call
 - [x] BeamSearchEngine: Logs prefix masking details for debugging
 - [x] OptimizedVocabulary: Logs if English test words found in non-English trie
-- [ ] Verify diagnostic output shows correct trie is being used
-- [ ] Verify touch typing shows primary language predictions
 
 ---
 
