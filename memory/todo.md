@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-05
-**Status**: v1.1.89 - Language isolation fixes for Dict Manager and beam search
+**Status**: v1.1.89 - Critical language isolation fixes
 
 ---
 
@@ -17,6 +17,24 @@
 - [x] `getVocabularyTrie()` now verifies trie matches expected language
 - [x] If Primary=non-English but trie is still English, returns null (disables constraining)
 - [x] Logs error message to help diagnose initialization issues
+- [x] Added diagnostic logging to check for English words in non-English trie
+
+**Autocorrect Language Contamination Fix**:
+- [x] `WordPredictor.autoCorrect()` now skips when primary language is non-English
+- [x] Fixes: "bereits" being inserted as "berries" in German mode
+- [x] Root cause: autocorrect was fuzzy matching against English dictionary
+- [x] Solution: Check `config.primary_language` before allowing autocorrect
+
+**English Fuzzy Matching Fix**:
+- [x] `OptimizedVocabulary.filterPredictions()` skips English vocab fuzzy matching
+- [x] Skip condition: `_primaryLanguageCode != "en" && !_englishFallbackEnabled`
+- [x] Prevents English words from "rescuing" rejected beam outputs
+
+**Diagnostic Logging**:
+- [x] BeamSearchEngine: Logs trie status (null vs active) on first masking call
+- [x] BeamSearchEngine: Logs prefix masking details for debugging
+- [x] OptimizedVocabulary: Logs if English test words found in non-English trie
+- [ ] Verify diagnostic output shows correct trie is being used
 
 ---
 
