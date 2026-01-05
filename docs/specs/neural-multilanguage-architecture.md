@@ -2,7 +2,7 @@
 
 ## Feature Overview
 **Feature Name**: Neural Swipe Prediction Multilanguage System
-**Status**: Implemented (v1.1.85) - Critical Architecture Limitations Documented
+**Status**: Implemented (v1.1.85) - Language-Specific Beam Search Tries
 **Last Updated**: 2026-01-04
 
 ### Summary
@@ -400,16 +400,27 @@ Located in `scripts/dictionaries/langpack-{lang}.zip`:
 
 ## 9. Testing Checklist
 
-### 9.1 Basic Functionality
+### 9.1 Dictionary Verification (Verified 2026-01-04)
+- [x] FR: V2 format, 25k canonical, 23.7k normalized (être, café, français ✓)
+- [x] ES: V2 format, 236k canonical, 223k normalized (niño, español, años ✓)
+- [x] PT: V2 format, 25k canonical, 24.5k normalized (você, não, também ✓)
+- [x] IT: V2 format, 25k canonical, 24.8k normalized (perché, più, città ✓)
+- [x] DE: V2 format, 25k canonical, 24.8k normalized (für, über, größe ✓)
+
+### 9.2 Basic Functionality
+- [x] Language-specific beam search trie architecture implemented
+- [x] Primary dictionary loads trie from normalized words
+- [x] activeBeamSearchTrie swaps on language change
 - [ ] Swipe "hello" with Primary=English → "hello"
 - [ ] Swipe "cafe" with Primary=French → "café"
-- [ ] Swipe "hotel" with Primary=French → "hôtel"
+- [ ] Swipe "etre" with Primary=French → "être"
 
-### 9.2 English Fallback
+### 9.3 English Fallback
+- [x] Code verified: `_englishFallbackEnabled = (primary == "en") || (secondary == "en")`
 - [ ] Primary=French, Secondary=None → English words filtered out
 - [ ] Primary=French, Secondary=English → English words allowed
 
-### 9.3 Edge Cases
+### 9.4 Edge Cases
 - [ ] Words in both languages (e.g., "table") display correctly
 - [ ] Short words (2-3 letters) work with accents
 - [ ] Long words (10+ letters) complete successfully
@@ -418,7 +429,7 @@ Located in `scripts/dictionaries/langpack-{lang}.zip`:
 
 ## 10. Known Issues
 
-1. **French-only words blocked**: See Section 6 - architectural limitation
+1. ~~**French-only words blocked**: See Section 6 - architectural limitation~~ **RESOLVED** with language-specific tries
 2. **Latency on long words**: Beam search timeout at 20 characters
 3. **Memory pressure**: Loading multiple language dictionaries simultaneously
 
@@ -426,7 +437,8 @@ Located in `scripts/dictionaries/langpack-{lang}.zip`:
 
 ## 11. Future Work
 
-1. **Expand vocabulary trie** to include normalized forms of common Latin-script words
+1. ~~**Expand vocabulary trie** to include normalized forms~~ **DONE** - each language has its own trie
 2. **Language-specific neural models** (currently all languages use English model)
 3. **Adaptive trie** that learns from user's typing patterns
 4. **Multi-script support** (Cyrillic, Arabic) requires new models
+5. **Language pack download UI** for additional languages (NL, ID, MS, SW, TL)

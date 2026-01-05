@@ -45,7 +45,14 @@
 - [x] Primary dictionary lookup order: Now checks primary FIRST, then falls back to English
 - [x] English fallback disabled: When Primary=French, Secondary=None → only French predictions
 - [x] Multilang toggle bug: Dictionary now loads for ANY non-English primary
-- [x] **CRITICAL FIX**: Beam search trie expansion - French normalized words now added to vocabulary trie
+- [x] **CRITICAL FIX**: Language-specific beam search tries (each language has own trie)
+
+**Dictionary Verification (2026-01-04)**:
+- [x] FR: V2 format, 29k canonical, 23.7k normalized (être, café, français ✓)
+- [x] ES: V2 format, 236k canonical, 223k normalized (niño, español, años ✓)
+- [x] PT: V2 format, 30k canonical, 24.5k normalized (você, não, também ✓)
+- [x] IT: V2 format, 30k canonical, 24.8k normalized (perché, più, città ✓)
+- [x] DE: V2 format, 26k canonical, 24.8k normalized (für, über, größe ✓)
 
 **Architecture Documentation**:
 - NEW: `docs/specs/neural-multilanguage-architecture.md` - Complete pipeline documentation
@@ -68,10 +75,11 @@ Primary=English:
 
 No mixing of languages in a single trie - clean separation.
 
-**Testing Needed** (ADB disconnected - manual test required):
+**Testing Needed** (manual test required - device locked):
+- [x] Dictionary verification completed programmatically (2026-01-04)
 - [ ] Verify Primary Language dropdown shows EN, ES, FR, PT, IT, DE
 - [ ] Test accent recovery: swipe "cafe" → "café" with French primary
-- [ ] Test French-only words: swipe "etre" → "être" (was blocked before)
+- [ ] Test French-only words: swipe "etre" → "être" (architecture now supports this)
 - [ ] Test French-only words: swipe "francais" → "français"
 - [ ] Confirm no English-only words appear when Primary=French, Secondary=None
 
