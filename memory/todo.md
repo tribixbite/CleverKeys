@@ -1,11 +1,30 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-06
-**Status**: v1.1.93 - Bilingual touch/swipe typing improvements
+**Status**: v1.1.94 - Bilingual typing with custom words support
 
 ---
 
-## v1.1.93 Fixes - IN PROGRESS
+## v1.1.94 Fixes - COMPLETE
+
+**English Duplicate in Primary Dropdown**:
+- [x] Issue: English appeared twice (manually added + from availableSecondaryLanguages)
+- [x] Fix: Filter out "en" when building primaryOptions
+
+**Custom Words for Secondary Language (Touch Typing)**:
+- [x] Issue: Secondary dictionary only loaded binary file, not custom words
+- [x] Added `loadSecondaryCustomWords()` to WordPredictor
+- [x] Custom words from `custom_words_${lang}` now added to secondary NormalizedPrefixIndex
+- [x] Frequency converted to rank (0-255) for proper scoring
+
+**Custom Words for Secondary Language (Swipe Typing)**:
+- [x] Issue: Same as touch typing - secondary dict missing custom words
+- [x] Added `loadSecondaryCustomWords()` to OptimizedVocabulary
+- [x] Custom words now included in swipe beam search secondary lookups
+
+---
+
+## v1.1.93 Fixes - COMPLETE
 
 **English in Secondary Language Dropdown**:
 - [x] Issue: English was explicitly excluded from secondary language options
@@ -19,11 +38,6 @@
 - [x] Modified `predictInternal()` to query secondary dictionary and merge results
 - [x] Added `reloadWordPredictorSecondaryDictionary()` to PredictionCoordinator
 - [x] Wired up preference change handler for secondary language changes
-
-**Swipe Secondary Dictionary Investigation**:
-- [ ] Verify secondary dictionary is being loaded (check `pref_enable_multilang` toggle)
-- [ ] V2 dictionaries (es, fr, de, pt, it) should work as secondary
-- [ ] V1 English dictionary won't work as secondary (needs V2 conversion)
 
 ---
 

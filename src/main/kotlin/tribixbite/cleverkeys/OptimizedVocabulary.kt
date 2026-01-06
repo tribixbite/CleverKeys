@@ -116,6 +116,7 @@ class OptimizedVocabulary(private val context: Context) {
     private var _englishFallbackEnabled = true // Whether to use English vocabulary as fallback
     @Volatile
     private var _currentLanguageMultiplier = 0.9f // Dynamic multiplier based on detected language
+    private var _secondaryPredictionWeight = 0.9f // v1.1.94: Base weight for secondary predictions (from config)
 
     // OPTIMIZATION Phase 2: Cache parsed custom words to avoid JSON parsing on every swipe
     // Maps custom word -> frequency
@@ -198,6 +199,7 @@ class OptimizedVocabulary(private val context: Context) {
         _charMatchThreshold = config.autocorrect_char_match_threshold
         _useEditDistance = "edit_distance" == config.swipe_fuzzy_match_mode
         _autocorrect_confidence_min_frequency = config.autocorrect_confidence_min_frequency // Cache this value
+        _secondaryPredictionWeight = config.secondary_prediction_weight // v1.1.94: Secondary dictionary weight
 
         // OPTIMIZATION Phase 2: Parse and cache custom words here instead of on every swipe
         // v1.1.86: Uses language-specific keys
@@ -1354,8 +1356,12 @@ class OptimizedVocabulary(private val context: Context) {
         }
 
         if (loaded) {
+            // v1.1.94: Also load custom words for secondary language
+            val customWordsAdded = loadSecondaryCustomWords(index, language)
+
             secondaryNormalizedIndex = index
-            Log.i(TAG, "Secondary dictionary loaded: $language (${index.size()} normalized forms)")
+            _secondaryLanguageCode = language
+            Log.i(TAG, "Secondary dictionary loaded: $language (${index.size()} normalized forms, +$customWordsAdded custom)")
             return true
         } else {
             Log.w(TAG, "Failed to load secondary dictionary: $language")
@@ -1364,10 +1370,48 @@ class OptimizedVocabulary(private val context: Context) {
     }
 
     /**
+     * v1.1.94: Load custom words for secondary language into NormalizedPrefixIndex.
+     *
+     * @param index The NormalizedPrefixIndex to add words to
+     * @param language Language code for custom words key
+     * @return Number of custom words added
+     */
+    private fun loadSecondaryCustomWords(index: NormalizedPrefixIndex, language: String): Int {
+        var count = 0
+        try {
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+            val customWordsKey = LanguagePreferenceKeys.customWordsKey(language)
+            val customWordsJson = prefs.getString(customWordsKey, "{}") ?: "{}"
+
+            if (customWordsJson != "{}") {
+                val jsonObj = org.json.JSONObject(customWordsJson)
+                val keys = jsonObj.keys()
+
+                while (keys.hasNext()) {
+                    val word = keys.next()
+                    val frequency = jsonObj.optInt(word, 1000)
+                    // Convert frequency to rank (0-255): higher frequency = lower rank
+                    val rank = kotlin.math.max(0, kotlin.math.min(255, 255 - (frequency / 4000)))
+                    index.addWord(word, rank)
+                    count++
+                }
+
+                if (count > 0) {
+                    Log.d(TAG, "Added $count custom words to secondary index for '$language'")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load secondary custom words for '$language'", e)
+        }
+        return count
+    }
+
+    /**
      * Unload the secondary dictionary to free memory.
      */
     fun unloadSecondaryDictionary() {
         secondaryNormalizedIndex = null
+        _secondaryLanguageCode = "none"
         Log.i(TAG, "Unloaded secondary dictionary")
     }
 
@@ -1391,7 +1435,7 @@ class OptimizedVocabulary(private val context: Context) {
      */
     fun updateLanguageMultiplier(languageScores: Map<String, Float>) {
         if (!_autoSwitchEnabled || _secondaryLanguageCode == "none") {
-            _currentLanguageMultiplier = 0.9f // Default penalty when auto-switch disabled
+            _currentLanguageMultiplier = _secondaryPredictionWeight // v1.1.94: Use config value
             return
         }
 
@@ -1426,7 +1470,8 @@ class OptimizedVocabulary(private val context: Context) {
         _secondaryLanguageCode = secondaryLanguage
 
         // Reset multiplier to default when config changes
-        _currentLanguageMultiplier = if (enabled) 1.0f else 0.9f
+        // v1.1.94: Use config value when disabled (no dynamic adjustment)
+        _currentLanguageMultiplier = if (enabled) 1.0f else _secondaryPredictionWeight
 
         Log.i(TAG, "Auto-switch config: enabled=$enabled, threshold=$threshold, lang=$secondaryLanguage")
     }

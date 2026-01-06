@@ -645,9 +645,12 @@ class WordPredictor {
             }
 
             if (loaded && index.size() > 0) {
+                // v1.1.94: Also load custom words for secondary language
+                val customWordsAdded = loadSecondaryCustomWords(ctx, index, language)
+
                 secondaryIndex = index
                 secondaryLanguageCode = language
-                Log.i(TAG, "Secondary dictionary loaded: $language (${index.size()} words)")
+                Log.i(TAG, "Secondary dictionary loaded: $language (${index.size()} words, +$customWordsAdded custom)")
                 return true
             } else {
                 Log.w(TAG, "Failed to load secondary dictionary: $language")
@@ -666,6 +669,44 @@ class WordPredictor {
         secondaryIndex = null
         secondaryLanguageCode = "none"
         Log.i(TAG, "Unloaded secondary dictionary for touch typing")
+    }
+
+    /**
+     * v1.1.94: Load custom words for secondary language into NormalizedPrefixIndex.
+     *
+     * @param context Android context
+     * @param index The NormalizedPrefixIndex to add words to
+     * @param language Language code for custom words key
+     * @return Number of custom words added
+     */
+    private fun loadSecondaryCustomWords(context: Context, index: NormalizedPrefixIndex, language: String): Int {
+        var count = 0
+        try {
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+            val customWordsKey = LanguagePreferenceKeys.customWordsKey(language)
+            val customWordsJson = prefs.getString(customWordsKey, "{}") ?: "{}"
+
+            if (customWordsJson != "{}") {
+                val jsonObj = JSONObject(customWordsJson)
+                val keys = jsonObj.keys()
+
+                while (keys.hasNext()) {
+                    val word = keys.next()
+                    val frequency = jsonObj.optInt(word, 1000)
+                    // Convert frequency to rank (0-255): higher frequency = lower rank
+                    val rank = max(0, min(255, 255 - (frequency / 4000)))
+                    index.addWord(word, rank)
+                    count++
+                }
+
+                if (count > 0) {
+                    Log.d(TAG, "Added $count custom words to secondary index for '$language'")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load secondary custom words for '$language'", e)
+        }
+        return count
     }
 
     /**
@@ -1080,9 +1121,10 @@ class WordPredictor {
                     // Rank 0 = most common → high frequency; Rank 255 = rare → low frequency
                     val frequency = ((255 - result.bestFrequencyRank) * 4000) + 1000
 
-                    // Calculate score with slight secondary penalty (0.9x)
+                    // Calculate score with secondary penalty (configurable, default 0.9x)
                     val baseScore = calculateUnifiedScore(result.bestCanonical, lowerSequence, frequency, context)
-                    val score = (baseScore * 0.9).toInt()
+                    val secondaryWeight = config?.secondary_prediction_weight ?: Defaults.SECONDARY_PREDICTION_WEIGHT
+                    val score = (baseScore * secondaryWeight).toInt()
 
                     if (score > 0) {
                         candidates.add(WordCandidate(result.bestCanonical, score))

@@ -262,6 +262,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var secondaryLanguage by mutableStateOf("none") // "none", "es", "fr", etc.
     private var autoDetectLanguage by mutableStateOf(true)
     private var languageDetectionSensitivity by mutableStateOf(0.6f)
+    private var secondaryPredictionWeight by mutableStateOf(0.9f) // v1.1.94: Secondary dictionary weight
     private var availableSecondaryLanguages by mutableStateOf(listOf<String>()) // V2 dictionaries
     private var installedLanguagePacks by mutableStateOf(listOf<LanguagePackManifest>())
     private var showLanguagePackDialog by mutableStateOf(false)
@@ -2330,7 +2331,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 if (multiLangEnabled) {
                     // Primary Language selector - any QWERTY-compatible language
                     // NN outputs 26 letters, dictionary provides accent recovery
-                    val primaryOptions = listOf("en") + availableSecondaryLanguages
+                    // v1.1.94: Filter out "en" from availableSecondaryLanguages to avoid duplicate
+                    val primaryOptions = listOf("en") + availableSecondaryLanguages.filter { it != "en" }
                     val primaryDisplayOptions = primaryOptions.map { getLanguageDisplayName(it) }
                     val primarySelectedIndex = primaryOptions.indexOf(primaryLanguage).coerceAtLeast(0)
 
@@ -2372,6 +2374,20 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 8.dp)
+                        )
+
+                        // v1.1.94: Secondary language prediction weight slider
+                        SettingsSlider(
+                            title = "Secondary Language Weight",
+                            description = "Prediction weight for secondary dictionary (0.5-1.5)",
+                            value = secondaryPredictionWeight,
+                            valueRange = 0.5f..1.5f,
+                            steps = 20,
+                            onValueChange = {
+                                secondaryPredictionWeight = it
+                                saveSetting("pref_secondary_prediction_weight", secondaryPredictionWeight)
+                            },
+                            displayValue = "%.2f".format(secondaryPredictionWeight)
                         )
                     }
 
@@ -3410,6 +3426,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         secondaryLanguage = prefs.getSafeString("pref_secondary_language", "none")
         autoDetectLanguage = prefs.getSafeBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
         languageDetectionSensitivity = Config.safeGetFloat(prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
+        secondaryPredictionWeight = Config.safeGetFloat(prefs, "pref_secondary_prediction_weight", Defaults.SECONDARY_PREDICTION_WEIGHT)
 
         // Detect available V2 dictionaries for secondary language options
         availableSecondaryLanguages = detectAvailableV2Dictionaries()

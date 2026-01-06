@@ -155,6 +155,7 @@ object Defaults {
     const val PRIMARY_LANGUAGE = "en"
     const val AUTO_DETECT_LANGUAGE = true
     const val LANGUAGE_DETECTION_SENSITIVITY = 0.6f
+    const val SECONDARY_PREDICTION_WEIGHT = 0.9f  // v1.1.94: Multiplier for secondary dictionary predictions
 
     // Debug
     const val DEBUG_ENABLED = false
@@ -317,6 +318,7 @@ class Config private constructor(
     @JvmField var primary_language = "en" // Phase 8.3: Primary language (default)
     @JvmField var auto_detect_language = true // Phase 8.3: Auto-detect language from context
     @JvmField var language_detection_sensitivity = 0.6f // Phase 8.3: Detection sensitivity (0.0-1.0)
+    @JvmField var secondary_prediction_weight = Defaults.SECONDARY_PREDICTION_WEIGHT // v1.1.94: Weight for secondary predictions
 
     // Auto-correction settings
     @JvmField var autocorrect_enabled = false
@@ -539,6 +541,8 @@ class Config private constructor(
         auto_detect_language = _prefs.getBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
         // SlideBarPreference stores as Float (0.4-0.9), not Int
         language_detection_sensitivity = safeGetFloat(_prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
+        // v1.1.94: Secondary prediction weight (0.5-1.5)
+        secondary_prediction_weight = safeGetFloat(_prefs, "pref_secondary_prediction_weight", Defaults.SECONDARY_PREDICTION_WEIGHT)
 
         autocorrect_enabled = _prefs.getBoolean("autocorrect_enabled", Defaults.AUTOCORRECT_ENABLED)
         autocorrect_min_word_length = safeGetInt(_prefs, "autocorrect_min_word_length", Defaults.AUTOCORRECT_MIN_WORD_LENGTH)
