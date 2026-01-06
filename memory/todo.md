@@ -1,11 +1,11 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-06
-**Status**: v1.1.94 - Bilingual typing with custom words support
+**Status**: v1.1.94 - Bilingual typing with configurable secondary weight
 
 ---
 
-## v1.1.94 Fixes - COMPLETE
+## v1.1.94 Features - COMPLETE
 
 **English Duplicate in Primary Dropdown**:
 - [x] Issue: English appeared twice (manually added + from availableSecondaryLanguages)
@@ -21,6 +21,14 @@
 - [x] Issue: Same as touch typing - secondary dict missing custom words
 - [x] Added `loadSecondaryCustomWords()` to OptimizedVocabulary
 - [x] Custom words now included in swipe beam search secondary lookups
+
+**Secondary Prediction Weight Slider**:
+- [x] Added `SECONDARY_PREDICTION_WEIGHT = 0.9f` constant to Config.Defaults
+- [x] Added `secondary_prediction_weight` field to Config class
+- [x] Added slider UI in SettingsActivity (Multi-Language section, 0.5x-1.5x range)
+- [x] Updated WordPredictor.predictInternal() to use config value
+- [x] Updated OptimizedVocabulary with cached `_secondaryPredictionWeight` field
+- [x] Updated `updateLanguageMultiplier()` and `setAutoSwitchConfig()` to use config value
 
 ---
 
