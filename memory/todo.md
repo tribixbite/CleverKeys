@@ -1,9 +1,24 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-05
-**Status**: v1.1.90 - Touch typing UserDictionary locale filtering
+**Last Updated**: 2026-01-06
+**Status**: v1.1.91 - Proper locale format matching for UserDictionary
 
 ---
+
+## v1.1.91 Fixes - COMPLETE
+
+**Locale Format Matching Fix (19b10d9e)**:
+- [x] Issue: v1.1.90 used exact locale match (`LOCALE = 'fr'`)
+- [x] But Android uses full locale codes like `"en_US"`, `"fr_FR"`, `"fr_CA"`
+- [x] Fix: Use `LIKE` for partial match: `LOCALE = ? OR LOCALE LIKE ? OR LOCALE IS NULL`
+- [x] Now matches: `"fr"`, `"fr_FR"`, `"fr_CA"`, and `null` (global words)
+
+**UserDictionaryObserver Locale Filtering (19b10d9e)**:
+- [x] Issue: Observer had NO language filter - loaded ALL words from system UserDictionary
+- [x] This caused English words to appear when user switched to French-only
+- [x] Fix: Added `setLanguage(language)` method to observer
+- [x] Observer now filters `loadUserDictionaryCache()` and `checkUserDictionaryChanges()` by locale
+- [x] `WordPredictor.setLanguage()` now propagates to observer
 
 ## v1.1.90 Fixes - COMPLETE
 
