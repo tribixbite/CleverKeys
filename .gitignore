@@ -90,6 +90,13 @@ scripts/dictionaries/tl/
 scripts/swahili_freq.ods
 scripts/sw_words.txt
 
+# English corpus comparison data (external sources)
+scripts/en_opensubtitles_50k.txt
+scripts/en_opensubtitles_words.txt
+scripts/en_wordfreq_words.txt
+scripts/google_10000.txt
+scripts/twitter_background.csv
+
 # Language pack build intermediates
 scripts/dictionaries/*/
 !scripts/dictionaries/*.zip
