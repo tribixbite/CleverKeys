@@ -42,6 +42,13 @@
 - [x] Fix: Collect custom/user words into list, insert into `activeBeamSearchTrie` at end of `loadCustomAndUserWords()`
 - [x] Log confirms: "Custom/user words: 5 words, +2 added to beam trie"
 
+**Android User Dictionary Locale Filter (Swipe Pipeline)**:
+- [x] Issue: OptimizedVocabulary loaded ALL Android user dictionary words regardless of language
+- [x] This caused cross-language contamination (English words in French mode)
+- [x] Fix was already applied to WordPredictor (v1.1.90) but NOT to OptimizedVocabulary
+- [x] Fix: Add LOCALE filter to user dictionary query: `LOCALE = ? OR LOCALE LIKE ? OR LOCALE IS NULL`
+- [x] Matches exact language code, or locale prefix (fr_FR), or global (null locale)
+
 ---
 
 ## v1.1.93 Fixes - COMPLETE
