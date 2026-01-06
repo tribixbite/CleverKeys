@@ -54,10 +54,11 @@ class MainDictionarySource(
             val disabled = disabledSource.getDisabledWords()
             val words = mutableListOf<DictionaryWord>()
 
-            // v1.1.89: Try language-specific binary dictionary first (for non-English)
+            // v1.1.89: Try language-specific binary dictionary first
             // v1.1.96: Also check installed language packs
-            if (languageCode != "en") {
-                Log.d(TAG, "Trying binary dictionary for non-English: $languageCode")
+            // v1.1.97: Fixed - also load English from V2 binary (was skipping to JSON with 128-255 scale)
+            run {
+                Log.d(TAG, "Trying binary dictionary for language: $languageCode")
 
                 // First try installed language pack
                 try {
