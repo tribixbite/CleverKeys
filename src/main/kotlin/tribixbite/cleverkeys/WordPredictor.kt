@@ -187,6 +187,8 @@ class WordPredictor {
 
     /**
      * Load disabled words from SharedPreferences
+     *
+     * v1.1.92: Use language-specific key (disabled_words_${lang}) instead of legacy global key
      */
     private fun loadDisabledWords() {
         if (context == null) {
@@ -200,10 +202,12 @@ class WordPredictor {
             return
         }
         val prefs = DirectBootAwarePreferences.get_shared_preferences(ctx)
-        val disabledSet = prefs.getStringSet("disabled_words", emptySet()) ?: emptySet()
+        // v1.1.92: Use language-specific disabled words key
+        val disabledWordsKey = LanguagePreferenceKeys.disabledWordsKey(currentLanguage)
+        val disabledSet = prefs.getStringSet(disabledWordsKey, emptySet()) ?: emptySet()
         // Create a new HashSet to avoid modifying the original
         disabledWords = disabledSet.toMutableSet()
-        Log.d(TAG, "Loaded ${disabledWords.size} disabled words")
+        Log.d(TAG, "Loaded ${disabledWords.size} disabled words for '$currentLanguage'")
     }
 
     /**
@@ -285,6 +289,7 @@ class WordPredictor {
      * Set the active language for N-gram predictions
      *
      * v1.1.91: Also updates UserDictionaryObserver to filter by new language.
+     * v1.1.92: Reloads disabled words for language-specific key.
      */
     fun setLanguage(language: String) {
         currentLanguage = language
@@ -305,6 +310,9 @@ class WordPredictor {
 
         // v1.1.91: Update observer to filter by new language
         dictionaryObserver?.setLanguage(language)
+
+        // v1.1.92: Reload disabled words for language-specific key
+        loadDisabledWords()
     }
 
     /**
@@ -670,7 +678,9 @@ class WordPredictor {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
 
             // 1. Load custom words from SharedPreferences
-            val customWordsJson = prefs.getString("custom_words", "{}") ?: "{}"
+            // v1.1.92: Use language-specific key (custom_words_${lang}) instead of legacy global key
+            val customWordsKey = LanguagePreferenceKeys.customWordsKey(language)
+            val customWordsJson = prefs.getString(customWordsKey, "{}") ?: "{}"
             if (customWordsJson != "{}") {
                 try {
                     // Parse JSON map: {"word": frequency, ...}
@@ -685,7 +695,7 @@ class WordPredictor {
                         customCount++
                     }
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        Log.d(TAG, "Loaded $customCount custom words into new map")
+                        Log.d(TAG, "Loaded $customCount custom words for '$language' into new map")
                     }
                 } catch (e: JSONException) {
                     Log.e(TAG, "Failed to parse custom words JSON", e)
@@ -780,7 +790,9 @@ class WordPredictor {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
 
             // 1. Load custom words from SharedPreferences
-            val customWordsJson = prefs.getString("custom_words", "{}") ?: "{}"
+            // v1.1.92: Use language-specific key (custom_words_${lang}) instead of legacy global key
+            val customWordsKey = LanguagePreferenceKeys.customWordsKey(language)
+            val customWordsJson = prefs.getString(customWordsKey, "{}") ?: "{}"
             if (customWordsJson != "{}") {
                 try {
                     // Parse JSON map: {"word": frequency, ...}
@@ -795,7 +807,7 @@ class WordPredictor {
                         customCount++
                     }
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        Log.d(TAG, "Loaded $customCount custom words")
+                        Log.d(TAG, "Loaded $customCount custom words for '$language'")
                     }
                 } catch (e: JSONException) {
                     Log.e(TAG, "Failed to parse custom words JSON", e)

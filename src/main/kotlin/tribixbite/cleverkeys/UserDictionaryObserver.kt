@@ -57,9 +57,11 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
     private val cachedCustomWords: MutableMap<String, Int> = mutableMapOf()
 
     // SharedPreferences listener
+    // v1.1.92: Listen for language-specific custom words key (custom_words_${lang})
     private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        if (key == "custom_words") {
-            Log.d(TAG, "Custom words changed in SharedPreferences")
+        val expectedKey = LanguagePreferenceKeys.customWordsKey(currentLanguage)
+        if (key == expectedKey) {
+            Log.d(TAG, "Custom words changed for '$currentLanguage' in SharedPreferences")
             checkCustomWordsChanges()
         }
     }
@@ -104,13 +106,15 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
      *
      * @param language Language code (e.g., "en", "fr", "de")
      * @since v1.1.91
+     * @since v1.1.92 Also reloads custom words cache for language-specific key
      */
     fun setLanguage(language: String) {
         if (currentLanguage != language) {
             currentLanguage = language
-            Log.d(TAG, "Language set to: $language - reloading cache")
-            // Reload cache with new language filter
+            Log.d(TAG, "Language set to: $language - reloading caches")
+            // Reload caches with new language filter
             loadUserDictionaryCache()
+            loadCustomWordsCache()  // v1.1.92: Custom words are now language-specific
         }
     }
 
@@ -203,13 +207,17 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
 
     /**
      * Load custom words from SharedPreferences into cache.
+     *
+     * v1.1.92: Uses language-specific key (custom_words_${lang}) instead of legacy global key.
      */
     private fun loadCustomWordsCache() {
         cachedCustomWords.clear()
 
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-            val customWordsJson = prefs.getString("custom_words", "{}") ?: "{}"
+            // v1.1.92: Use language-specific custom words key
+            val customWordsKey = LanguagePreferenceKeys.customWordsKey(currentLanguage)
+            val customWordsJson = prefs.getString(customWordsKey, "{}") ?: "{}"
 
             if (customWordsJson != "{}") {
                 val jsonObj = JSONObject(customWordsJson)
@@ -221,7 +229,7 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
                     cachedCustomWords[word] = frequency
                 }
 
-                Log.d(TAG, "Loaded ${cachedCustomWords.size} custom words into cache")
+                Log.d(TAG, "Loaded ${cachedCustomWords.size} custom words for '$currentLanguage' into cache")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load custom words cache", e)
@@ -299,13 +307,17 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
 
     /**
      * Check for custom words changes and notify listener.
+     *
+     * v1.1.92: Uses language-specific key (custom_words_${lang}) instead of legacy global key.
      */
     private fun checkCustomWordsChanges() {
         try {
             val currentWords = mutableMapOf<String, Int>()
 
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
-            val customWordsJson = prefs.getString("custom_words", "{}") ?: "{}"
+            // v1.1.92: Use language-specific custom words key
+            val customWordsKey = LanguagePreferenceKeys.customWordsKey(currentLanguage)
+            val customWordsJson = prefs.getString(customWordsKey, "{}") ?: "{}"
 
             if (customWordsJson != "{}") {
                 val jsonObj = JSONObject(customWordsJson)

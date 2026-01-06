@@ -1,7 +1,25 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-06
-**Status**: v1.1.91 - Proper locale format matching for UserDictionary
+**Status**: v1.1.92 - Language-specific custom/disabled words keys
+
+---
+
+## v1.1.92 Fixes - COMPLETE
+
+**Language-Specific Custom Words Keys**:
+- [x] Issue: Custom words used legacy global key `"custom_words"` for ALL languages
+- [x] This mixed French custom words with English custom words
+- [x] Fix: Use `LanguagePreferenceKeys.customWordsKey(language)` → `"custom_words_${lang}"`
+- [x] Updated WordPredictor.loadCustomAndUserWordsIntoMap() to use language-specific key
+- [x] Updated WordPredictor.loadDisabledWords() to use language-specific key
+- [x] Updated UserDictionaryObserver.loadCustomWordsCache() to use language-specific key
+- [x] Updated UserDictionaryObserver.checkCustomWordsChanges() to use language-specific key
+- [x] Updated SharedPreferences listener to watch for language-specific key changes
+
+**Files Modified**:
+- WordPredictor.kt: loadCustomAndUserWordsIntoMap(), loadDisabledWords(), setLanguage()
+- UserDictionaryObserver.kt: prefsListener, loadCustomWordsCache(), checkCustomWordsChanges()
 
 ---
 
