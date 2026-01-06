@@ -26,6 +26,12 @@
 - [x] Bundled: en, es, fr, pt, it, de (50k/25k words)
 - [x] Downloadable: nl, id, ms, sw, tl (20k words)
 
+**Dictionary Manager Not Loading from Language Packs**:
+- [x] Issue: Imported lang packs showed empty tabs in Dictionary Manager
+- [x] Root cause: MainDictionarySource.getAllWords() only checked bundled assets, not installed packs
+- [x] Fix: Added lang pack check via LanguagePackManager.getDictionaryPath() before assets fallback
+- [x] Added loadBinaryDictionaryFromFile() and extractWordsFromIndex() helper methods
+
 ---
 
 ## v1.1.94/95 Features - COMPLETE
