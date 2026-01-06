@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.provider.UserDictionary
 import android.util.Log
 import tribixbite.cleverkeys.contextaware.ContextModel
+import tribixbite.cleverkeys.langpack.LanguagePackManager
 import tribixbite.cleverkeys.personalization.PersonalizationEngine
 import tribixbite.cleverkeys.personalization.PersonalizedScorer
 import org.json.JSONException
@@ -70,6 +71,11 @@ class WordPredictor {
     // OPTIMIZATION: UserDictionary and custom words observer
     private var dictionaryObserver: UserDictionaryObserver? = null
     private var observerActive: Boolean = false
+
+    // v1.1.93: Secondary language dictionary for bilingual touch typing
+    @Volatile
+    private var secondaryIndex: NormalizedPrefixIndex? = null
+    private var secondaryLanguageCode: String = "none"
 
     /**
      * Set context for accessing disabled words from SharedPreferences
@@ -604,6 +610,78 @@ class WordPredictor {
         return !isLoadingState && dictionary.get().isNotEmpty()
     }
 
+    // ==================== v1.1.93: SECONDARY DICTIONARY SUPPORT ====================
+
+    /**
+     * Load a secondary language dictionary for bilingual touch typing.
+     *
+     * Uses NormalizedPrefixIndex (V2 format) for accent-aware lookups.
+     * Secondary dictionary words will be included in touch typing predictions.
+     *
+     * @param language Language code (e.g., "es", "fr", "de")
+     * @return true if loaded successfully
+     */
+    fun loadSecondaryDictionary(language: String): Boolean {
+        if (language == "none" || language.isEmpty()) {
+            unloadSecondaryDictionary()
+            return true
+        }
+
+        val ctx = context ?: return false
+
+        try {
+            Log.i(TAG, "Loading secondary dictionary for touch typing: $language")
+
+            // Try language pack first, then bundled assets
+            val packManager = LanguagePackManager.getInstance(ctx)
+            val packPath: java.io.File? = packManager.getDictionaryPath(language)
+
+            val index = NormalizedPrefixIndex()
+            val loaded = if (packPath != null) {
+                BinaryDictionaryLoader.loadIntoNormalizedIndexFromFile(packPath, index)
+            } else {
+                val filename = "dictionaries/${language}_enhanced.bin"
+                BinaryDictionaryLoader.loadIntoNormalizedIndex(ctx, filename, index)
+            }
+
+            if (loaded && index.size() > 0) {
+                secondaryIndex = index
+                secondaryLanguageCode = language
+                Log.i(TAG, "Secondary dictionary loaded: $language (${index.size()} words)")
+                return true
+            } else {
+                Log.w(TAG, "Failed to load secondary dictionary: $language")
+                return false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading secondary dictionary: $language", e)
+            return false
+        }
+    }
+
+    /**
+     * Unload the secondary dictionary to free memory.
+     */
+    fun unloadSecondaryDictionary() {
+        secondaryIndex = null
+        secondaryLanguageCode = "none"
+        Log.i(TAG, "Unloaded secondary dictionary for touch typing")
+    }
+
+    /**
+     * Check if a secondary dictionary is loaded.
+     */
+    fun hasSecondaryDictionary(): Boolean {
+        return secondaryIndex != null
+    }
+
+    /**
+     * Get the secondary language code.
+     */
+    fun getSecondaryLanguageCode(): String {
+        return secondaryLanguageCode
+    }
+
     /**
      * Build prefix index for fast word lookup during predictions
      * Creates mapping from prefixes (1-3 chars) to sets of matching words
@@ -978,6 +1056,41 @@ class WordPredictor {
 
                 if (score > 0) {
                     candidates.add(WordCandidate(word, score))
+                }
+            }
+
+            // v1.1.93: SECONDARY DICTIONARY LOOKUP for bilingual touch typing
+            val secIndex = secondaryIndex
+            if (secIndex != null) {
+                val primaryWords = candidates.map { it.word.lowercase() }.toSet()
+                val secondaryResults = secIndex.getWordsWithPrefix(lowerSequence)
+
+                for (result in secondaryResults) {
+                    // Skip if already in primary dictionary
+                    if (result.normalized in primaryWords || result.bestCanonical.lowercase() in primaryWords) {
+                        continue
+                    }
+
+                    // Skip disabled words
+                    if (isWordDisabled(result.bestCanonical)) {
+                        continue
+                    }
+
+                    // Convert frequency rank (0-255) to frequency score
+                    // Rank 0 = most common → high frequency; Rank 255 = rare → low frequency
+                    val frequency = ((255 - result.bestFrequencyRank) * 4000) + 1000
+
+                    // Calculate score with slight secondary penalty (0.9x)
+                    val baseScore = calculateUnifiedScore(result.bestCanonical, lowerSequence, frequency, context)
+                    val score = (baseScore * 0.9).toInt()
+
+                    if (score > 0) {
+                        candidates.add(WordCandidate(result.bestCanonical, score))
+                    }
+                }
+
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    Log.d(TAG, "Secondary dictionary: ${secondaryResults.size} matches for '$lowerSequence' (lang=$secondaryLanguageCode)")
                 }
             }
 

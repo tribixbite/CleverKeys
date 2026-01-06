@@ -119,13 +119,20 @@ class PreferenceUIUpdateHandler(
                     Log.i(TAG, "Primary language changed to '$newPrimaryLang' - touch typing dictionary reload triggered")
                 }
                 "pref_secondary_language" -> {
+                    // v1.1.93: Reload secondary dictionary for BOTH swipe and touch typing
                     orchestrator.reloadSecondaryDictionary()
-                    Log.i(TAG, "Secondary language changed - dictionary reloaded")
+                    val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+                    val newSecondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
+                    predictionCoordinator?.reloadWordPredictorSecondaryDictionary(newSecondaryLang)
+                    Log.i(TAG, "Secondary language changed to '$newSecondaryLang' - dictionaries reloaded")
                 }
                 "pref_enable_multilang" -> {
                     // Reload secondary dict when multilang toggle changes
                     orchestrator.reloadSecondaryDictionary()
-                    Log.i(TAG, "Multilang toggle changed - secondary dictionary reloaded")
+                    val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+                    val secondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
+                    predictionCoordinator?.reloadWordPredictorSecondaryDictionary(secondaryLang)
+                    Log.i(TAG, "Multilang toggle changed - secondary dictionaries reloaded")
                 }
             }
         } catch (e: Exception) {

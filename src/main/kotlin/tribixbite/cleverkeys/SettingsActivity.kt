@@ -3502,8 +3502,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             for (file in files) {
                 if (file.endsWith("_enhanced.bin")) {
                     val langCode = file.removeSuffix("_enhanced.bin")
-                    // Only include non-English languages as secondary options
-                    if (langCode != "en" && langCode.length in 2..3) {
+                    // v1.1.93: Include ALL languages including English
+                    // UI already filters out primary language from secondary options
+                    if (langCode.length in 2..3) {
                         languages.add(langCode)
                     }
                 }
@@ -3512,9 +3513,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             // Installed language packs
             val packManager = LanguagePackManager.getInstance(this)
             packManager.getInstalledPacks().forEach { pack ->
-                if (pack.code != "en") {
-                    languages.add(pack.code)
-                }
+                languages.add(pack.code)
             }
 
             android.util.Log.i(TAG, "Available V2 dictionaries: $languages")

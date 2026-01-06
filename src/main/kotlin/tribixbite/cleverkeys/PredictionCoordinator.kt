@@ -152,6 +152,15 @@ class PredictionCoordinator(
                 Log.d(TAG, "Dictionary loaded successfully: $primaryLang")
             }
 
+            // v1.1.93: Load secondary dictionary for bilingual touch typing
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+            val multiLangEnabled = prefs.getBoolean("pref_enable_multilang", false)
+            val secondaryLang = prefs.getString("pref_secondary_language", "none") ?: "none"
+            if (multiLangEnabled && secondaryLang != "none" && secondaryLang.isNotEmpty()) {
+                Log.d(TAG, "Loading secondary dictionary for touch typing: $secondaryLang")
+                loadSecondaryDictionary(secondaryLang)
+            }
+
             // OPTIMIZATION: Start observing dictionary changes for automatic updates
             startObservingDictionaryChanges()
         }
@@ -330,6 +339,27 @@ class PredictionCoordinator(
             Log.i(TAG, "WordPredictor dictionary reloaded for '$language'")
         }
         dictionaryManager?.setLanguage(language)
+    }
+
+    /**
+     * v1.1.93: Reload secondary dictionary for bilingual touch typing.
+     * Called when secondary language preference changes.
+     *
+     * @param language Secondary language code (e.g., "es", "fr") or "none" to unload
+     */
+    fun reloadWordPredictorSecondaryDictionary(language: String) {
+        if (wordPredictor == null) {
+            Log.w(TAG, "Cannot reload secondary dictionary - WordPredictor not initialized")
+            return
+        }
+
+        if (language == "none" || language.isEmpty()) {
+            Log.i(TAG, "Unloading secondary dictionary for touch typing")
+            wordPredictor?.unloadSecondaryDictionary()
+        } else {
+            Log.i(TAG, "Loading secondary dictionary for touch typing: $language")
+            wordPredictor?.loadSecondaryDictionary(language)
+        }
     }
 
     /**

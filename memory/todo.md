@@ -1,7 +1,29 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-06
-**Status**: v1.1.92 - Language-specific custom/disabled words keys
+**Status**: v1.1.93 - Bilingual touch/swipe typing improvements
+
+---
+
+## v1.1.93 Fixes - IN PROGRESS
+
+**English in Secondary Language Dropdown**:
+- [x] Issue: English was explicitly excluded from secondary language options
+- [x] Fix: Removed exclusion filter in `detectAvailableV2Dictionaries()`
+- [x] Note: English uses V1 format, needs V2 conversion to work as secondary (TODO)
+
+**Secondary Dictionary for Touch Typing**:
+- [x] Issue: WordPredictor had no secondary dictionary support
+- [x] Added `secondaryIndex: NormalizedPrefixIndex?` field to WordPredictor
+- [x] Added `loadSecondaryDictionary()`, `unloadSecondaryDictionary()` methods
+- [x] Modified `predictInternal()` to query secondary dictionary and merge results
+- [x] Added `reloadWordPredictorSecondaryDictionary()` to PredictionCoordinator
+- [x] Wired up preference change handler for secondary language changes
+
+**Swipe Secondary Dictionary Investigation**:
+- [ ] Verify secondary dictionary is being loaded (check `pref_enable_multilang` toggle)
+- [ ] V2 dictionaries (es, fr, de, pt, it) should work as secondary
+- [ ] V1 English dictionary won't work as secondary (needs V2 conversion)
 
 ---
 
