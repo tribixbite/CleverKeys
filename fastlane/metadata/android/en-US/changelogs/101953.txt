@@ -1,0 +1,15 @@
+EXPERIMENTAL: Multilanguage Swipe Typing Support
+
+- Primary language selection (6 bundled: EN, ES, FR, PT, IT, DE)
+- Secondary language for bilingual predictions (true bilingual, not just accent recovery)
+- Per-language custom word dictionaries (custom words now language-specific)
+- Per-language disabled words lists
+- Downloadable language packs (NL, ID, MS, SW, TL)
+- Configurable secondary language weight slider (0.5x-1.5x)
+- Auto language detection with sensitivity slider
+- Neural network predicts from BOTH primary and secondary dictionaries
+- Custom words now available in swipe (NN) pipeline
+- Android user dictionary filtered by locale (prevents cross-language contamination)
+- Language-specific contraction support (French c'est, Italian l'uomo, etc.)
+
+Note: NN outputs 26 English letters; dictionaries provide accent recovery (cafe -> cafe)

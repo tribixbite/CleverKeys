@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-06
-**Status**: v1.1.94 - Bilingual typing with configurable secondary weight
+**Status**: v1.1.95 - Experimental multilanguage swipe typing with per-language custom dictionaries
 
 ---
 
