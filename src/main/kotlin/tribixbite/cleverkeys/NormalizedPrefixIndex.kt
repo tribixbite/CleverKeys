@@ -263,6 +263,27 @@ class NormalizedPrefixIndex {
     fun getAllNormalizedWords(): Set<String> = canonicalMap.keys.toSet()
 
     /**
+     * Get top N normalized words by frequency rank.
+     * Used to limit beam trie insertions for large dictionaries.
+     *
+     * @param maxCount Maximum number of words to return (0 = all)
+     * @param maxRank Maximum frequency rank to include (0-255, lower = more frequent)
+     * @return Set of normalized words, sorted by frequency
+     */
+    fun getTopNormalizedWords(maxCount: Int = 0, maxRank: Int = 255): Set<String> {
+        // Get all entries with their best rank
+        val wordsWithRank = canonicalMap.mapNotNull { (normalized, entries) ->
+            val bestRank = entries.minOfOrNull { it.frequencyRank } ?: 255
+            if (bestRank <= maxRank) normalized to bestRank else null
+        }
+
+        // Sort by rank (most frequent first) and take top N
+        val sorted = wordsWithRank.sortedBy { it.second }
+        val limited = if (maxCount > 0) sorted.take(maxCount) else sorted
+        return limited.map { it.first }.toSet()
+    }
+
+    /**
      * Merge another index into this one.
      *
      * Used for combining primary and secondary language dictionaries.

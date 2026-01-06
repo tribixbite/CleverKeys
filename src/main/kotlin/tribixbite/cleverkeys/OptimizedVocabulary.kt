@@ -1362,14 +1362,18 @@ class OptimizedVocabulary(private val context: Context) {
             secondaryNormalizedIndex = index
             _secondaryLanguageCode = language
 
-            // v1.1.94 FIX: Add secondary dictionary words to beam search trie
+            // v1.1.95 FIX: Add top secondary dictionary words to beam search trie
             // This enables TRUE bilingual predictions - NN can now predict words from BOTH languages
-            val secondaryWords = index.getAllNormalizedWords()
+            // LIMIT to top 30k words by frequency to prevent OOM on large dictionaries (Spanish=236k)
+            val MAX_SECONDARY_TRIE_WORDS = 30000
+            val secondaryWords = index.getTopNormalizedWords(maxCount = MAX_SECONDARY_TRIE_WORDS)
             val beforeSize = activeBeamSearchTrie.getStats().first
             activeBeamSearchTrie.insertAll(secondaryWords)
             val afterSize = activeBeamSearchTrie.getStats().first
             val wordsAdded = afterSize - beforeSize
-            Log.i(TAG, "Secondary dictionary loaded: $language (${index.size()} normalized forms, +$customWordsAdded custom, +$wordsAdded added to beam trie)")
+            val totalWords = index.size()
+            val limitNote = if (totalWords > MAX_SECONDARY_TRIE_WORDS) " (limited from $totalWords)" else ""
+            Log.i(TAG, "Secondary dictionary loaded: $language (${secondaryWords.size} in trie$limitNote, +$customWordsAdded custom, +$wordsAdded new)")
             return true
         } else {
             Log.w(TAG, "Failed to load secondary dictionary: $language")

@@ -206,13 +206,18 @@ class MainDictionarySource(
                 // Extract all words from the index
                 val normalizedWords = index.getAllNormalizedWords()
                 for (word in normalizedWords) {
-                    // Get canonical form (with accents) if available
+                    // Get canonical form (with accents) and frequency rank
                     val results = index.getWordsWithPrefix(word)
-                    val canonical = results.find { it.normalized == word }?.bestCanonical ?: word
+                    val match = results.find { it.normalized == word }
+                    val canonical = match?.bestCanonical ?: word
+                    // Convert rank (0-255, 0=most common) to display frequency (1-10000)
+                    // rank 0 → 10000, rank 255 → 1
+                    val rank = match?.bestFrequencyRank ?: 255
+                    val frequency = 10000 - (rank * 39)  // ~10000 to ~50
                     words.add(
                         DictionaryWord(
                             word = canonical,  // Show accented form
-                            frequency = 100,   // Binary format doesn't store frequency for display
+                            frequency = frequency.coerceIn(1, 10000),
                             source = WordSource.MAIN,
                             enabled = !disabled.contains(word) && !disabled.contains(canonical)
                         )
