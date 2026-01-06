@@ -1361,7 +1361,15 @@ class OptimizedVocabulary(private val context: Context) {
 
             secondaryNormalizedIndex = index
             _secondaryLanguageCode = language
-            Log.i(TAG, "Secondary dictionary loaded: $language (${index.size()} normalized forms, +$customWordsAdded custom)")
+
+            // v1.1.94 FIX: Add secondary dictionary words to beam search trie
+            // This enables TRUE bilingual predictions - NN can now predict words from BOTH languages
+            val secondaryWords = index.getAllNormalizedWords()
+            val beforeSize = activeBeamSearchTrie.getStats().first
+            activeBeamSearchTrie.insertAll(secondaryWords)
+            val afterSize = activeBeamSearchTrie.getStats().first
+            val wordsAdded = afterSize - beforeSize
+            Log.i(TAG, "Secondary dictionary loaded: $language (${index.size()} normalized forms, +$customWordsAdded custom, +$wordsAdded added to beam trie)")
             return true
         } else {
             Log.w(TAG, "Failed to load secondary dictionary: $language")
