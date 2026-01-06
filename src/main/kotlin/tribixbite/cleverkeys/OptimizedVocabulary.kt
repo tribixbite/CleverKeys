@@ -1606,6 +1606,9 @@ class OptimizedVocabulary(private val context: Context) {
     private fun loadCustomAndUserWords() {
         if (context == null) return // Redundant check, context is non-null
 
+        // v1.1.94: Collect custom words to add to beam search trie
+        val customWordsForTrie = mutableListOf<String>()
+
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
 
@@ -1636,6 +1639,7 @@ class OptimizedVocabulary(private val context: Context) {
                         val tier = if (frequency >= 8000) 2.toByte() else 1.toByte()
 
                         vocabulary[word] = WordInfo(normalizedFreq, tier)
+                        customWordsForTrie.add(word) // v1.1.94: Also add to trie list
                         customCount++
 
                         // DEBUG: Log each custom word loaded
@@ -1684,6 +1688,7 @@ class OptimizedVocabulary(private val context: Context) {
                         val tier: Byte = 2
 
                         vocabulary[word] = WordInfo(normalizedFreq, tier)
+                        customWordsForTrie.add(word) // v1.1.94: Also add to trie list
                         userCount++
                     }
 
@@ -1691,6 +1696,16 @@ class OptimizedVocabulary(private val context: Context) {
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load user dictionary for beam search", e)
+            }
+
+            // v1.1.94 FIX: Add custom/user words to beam search trie
+            // This enables NN to predict custom words during swipe typing
+            if (customWordsForTrie.isNotEmpty()) {
+                val beforeSize = activeBeamSearchTrie.getStats().first
+                activeBeamSearchTrie.insertAll(customWordsForTrie)
+                val afterSize = activeBeamSearchTrie.getStats().first
+                val wordsAdded = afterSize - beforeSize
+                Log.i(TAG, "Custom/user words: ${customWordsForTrie.size} words, +$wordsAdded added to beam trie")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error loading custom/user words for beam search", e)
