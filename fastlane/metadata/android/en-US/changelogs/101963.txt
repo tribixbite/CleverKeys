@@ -1,0 +1,6 @@
+Bug fixes for multilanguage support:
+
+- Fix crash when importing large language packs (Spanish 236k words caused OOM)
+- Limited secondary dictionary trie insertions to top 30k most frequent words
+- Fix frequency display in Dictionary Manager (was showing 100 for all)
+- Now properly reads and displays frequency ranks from V2 binary format
