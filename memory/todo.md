@@ -1,11 +1,34 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-06
-**Status**: v1.1.95 - Experimental multilanguage swipe typing with per-language custom dictionaries
+**Status**: v1.1.96 - Multilanguage swipe typing with proper frequency handling
 
 ---
 
-## v1.1.94 Features - COMPLETE
+## v1.1.96 Fixes - COMPLETE
+
+**OOM Crash on Large Language Packs**:
+- [x] Issue: Importing large dictionaries (Spanish 236k words) caused OutOfMemoryError
+- [x] Crash occurred in VocabularyTrie.insert when adding ALL secondary words to beam trie
+- [x] Fix: Added `getTopNormalizedWords(maxCount, maxRank)` to NormalizedPrefixIndex
+- [x] Limited secondary trie insertions to top 30k most frequent words
+- [x] Large dictionaries still work - just uses most common words for NN predictions
+
+**Frequency Display in Dictionary Manager**:
+- [x] Issue: All words showed frequency=100 regardless of actual frequency
+- [x] Root cause: MainDictionarySource.loadBinaryDictionary() hardcoded frequency=100
+- [x] V2 binary format DOES store frequency rank (0-255) but it wasn't being read
+- [x] Fix: Read bestFrequencyRank from LookupResult and convert to display frequency
+- [x] Conversion: rank 0 → 10000, rank 255 → ~50
+
+**Language Dictionary Regeneration**:
+- [x] Regenerated all 11 languages with wordfreq for proper frequency ranks
+- [x] Bundled: en, es, fr, pt, it, de (50k/25k words)
+- [x] Downloadable: nl, id, ms, sw, tl (20k words)
+
+---
+
+## v1.1.94/95 Features - COMPLETE
 
 **English Duplicate in Primary Dropdown**:
 - [x] Issue: English appeared twice (manually added + from availableSecondaryLanguages)
