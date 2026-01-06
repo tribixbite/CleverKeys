@@ -1658,16 +1658,22 @@ class OptimizedVocabulary(private val context: Context) {
                 }
             }
 
-            // 2. Load Android user dictionary
+            // 2. Load Android user dictionary (filtered by locale)
+            // v1.1.94: Filter by locale to prevent cross-language contamination
+            // Match: exact language code, or locale starting with language code (e.g., fr_FR)
+            // Also match null locale (words marked as "all languages")
             try {
+                val selection = "${android.provider.UserDictionary.Words.LOCALE} = ? OR ${android.provider.UserDictionary.Words.LOCALE} LIKE ? OR ${android.provider.UserDictionary.Words.LOCALE} IS NULL"
+                val selectionArgs = arrayOf(_primaryLanguageCode, "${_primaryLanguageCode}%")
+
                 val cursor = context.contentResolver.query(
                     android.provider.UserDictionary.Words.CONTENT_URI,
                     arrayOf(
                         android.provider.UserDictionary.Words.WORD,
                         android.provider.UserDictionary.Words.FREQUENCY
                     ),
-                    null,
-                    null,
+                    selection,
+                    selectionArgs,
                     null
                 )
 
@@ -1692,7 +1698,7 @@ class OptimizedVocabulary(private val context: Context) {
                         userCount++
                     }
 
-                    Log.d(TAG, "Loaded $userCount user dictionary words into beam search")
+                    Log.d(TAG, "Loaded $userCount user dictionary words for '$_primaryLanguageCode' into beam search")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load user dictionary for beam search", e)

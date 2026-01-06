@@ -30,6 +30,18 @@
 - [x] Updated OptimizedVocabulary with cached `_secondaryPredictionWeight` field
 - [x] Updated `updateLanguageMultiplier()` and `setAutoSwitchConfig()` to use config value
 
+**Secondary Dictionary for Swipe Typing (True Bilingual)**:
+- [x] Issue: Secondary dictionary only did accent recovery, not true bilingual predictions
+- [x] NN beam search trie only contained primary language words
+- [x] Fix: Add secondary dictionary words to `activeBeamSearchTrie` in `loadSecondaryDictionary()`
+- [x] Log confirms: "+20847 added to beam trie" for Italian secondary
+
+**Custom Words for NN Swipe Pipeline**:
+- [x] Issue: Custom words added to vocabulary HashMap (for scoring) but NOT to beam search trie
+- [x] NN couldn't predict custom words during swipe typing because they weren't in trie
+- [x] Fix: Collect custom/user words into list, insert into `activeBeamSearchTrie` at end of `loadCustomAndUserWords()`
+- [x] Log confirms: "Custom/user words: 5 words, +2 added to beam trie"
+
 ---
 
 ## v1.1.93 Fixes - COMPLETE
