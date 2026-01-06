@@ -55,13 +55,34 @@ class MainDictionarySource(
             val words = mutableListOf<DictionaryWord>()
 
             // v1.1.89: Try language-specific binary dictionary first (for non-English)
+            // v1.1.96: Also check installed language packs
             if (languageCode != "en") {
                 Log.d(TAG, "Trying binary dictionary for non-English: $languageCode")
+
+                // First try installed language pack
+                try {
+                    val packManager = tribixbite.cleverkeys.langpack.LanguagePackManager.getInstance(context)
+                    val packPath = packManager.getDictionaryPath(languageCode)
+                    if (packPath != null) {
+                        Log.d(TAG, "Found language pack dictionary: ${packPath.absolutePath}")
+                        val loaded = loadBinaryDictionaryFromFile(packPath, words, disabled)
+                        if (loaded) {
+                            Log.d(TAG, "Loaded ${words.size} words from language pack: $languageCode")
+                            cachedWords = words.sorted()
+                            buildPrefixIndex(cachedWords!!)
+                            return@withContext cachedWords!!
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Language pack not found for $languageCode, trying bundled assets", e)
+                }
+
+                // Fall back to bundled assets
                 try {
                     val binFilename = "dictionaries/${languageCode}_enhanced.bin"
                     val loaded = loadBinaryDictionary(binFilename, words, disabled)
                     if (loaded) {
-                        Log.d(TAG, "Loaded ${words.size} words from binary dictionary: $binFilename")
+                        Log.d(TAG, "Loaded ${words.size} words from bundled binary dictionary: $binFilename")
                         cachedWords = words.sorted()
                         buildPrefixIndex(cachedWords!!)
                         return@withContext cachedWords!!
@@ -191,6 +212,30 @@ class MainDictionarySource(
     }
 
     /**
+     * Load dictionary from binary file (File object, for language packs).
+     * v1.1.96: Added for language pack support.
+     */
+    private fun loadBinaryDictionaryFromFile(
+        file: java.io.File,
+        words: MutableList<DictionaryWord>,
+        disabled: Set<String>
+    ): Boolean {
+        return try {
+            val index = NormalizedPrefixIndex()
+            val loaded = BinaryDictionaryLoader.loadIntoNormalizedIndexFromFile(file, index)
+            if (loaded) {
+                extractWordsFromIndex(index, words, disabled)
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading binary dictionary from file: ${file.absolutePath}", e)
+            false
+        }
+    }
+
+    /**
      * Load dictionary from binary format (.bin files for non-English languages).
      * Uses NormalizedPrefixIndex to read the binary format.
      */
@@ -203,26 +248,7 @@ class MainDictionarySource(
             val index = NormalizedPrefixIndex()
             val loaded = BinaryDictionaryLoader.loadIntoNormalizedIndex(context, filename, index)
             if (loaded) {
-                // Extract all words from the index
-                val normalizedWords = index.getAllNormalizedWords()
-                for (word in normalizedWords) {
-                    // Get canonical form (with accents) and frequency rank
-                    val results = index.getWordsWithPrefix(word)
-                    val match = results.find { it.normalized == word }
-                    val canonical = match?.bestCanonical ?: word
-                    // Convert rank (0-255, 0=most common) to display frequency (1-10000)
-                    // rank 0 → 10000, rank 255 → 1
-                    val rank = match?.bestFrequencyRank ?: 255
-                    val frequency = 10000 - (rank * 39)  // ~10000 to ~50
-                    words.add(
-                        DictionaryWord(
-                            word = canonical,  // Show accented form
-                            frequency = frequency.coerceIn(1, 10000),
-                            source = WordSource.MAIN,
-                            enabled = !disabled.contains(word) && !disabled.contains(canonical)
-                        )
-                    )
-                }
+                extractWordsFromIndex(index, words, disabled)
                 true
             } else {
                 false
@@ -230,6 +256,36 @@ class MainDictionarySource(
         } catch (e: Exception) {
             Log.e(TAG, "Error loading binary dictionary: $filename", e)
             false
+        }
+    }
+
+    /**
+     * Extract words from NormalizedPrefixIndex into word list.
+     * Shared by both loadBinaryDictionary() and loadBinaryDictionaryFromFile().
+     */
+    private fun extractWordsFromIndex(
+        index: NormalizedPrefixIndex,
+        words: MutableList<DictionaryWord>,
+        disabled: Set<String>
+    ) {
+        val normalizedWords = index.getAllNormalizedWords()
+        for (word in normalizedWords) {
+            // Get canonical form (with accents) and frequency rank
+            val results = index.getWordsWithPrefix(word)
+            val match = results.find { it.normalized == word }
+            val canonical = match?.bestCanonical ?: word
+            // Convert rank (0-255, 0=most common) to display frequency (1-10000)
+            // rank 0 → 10000, rank 255 → 1
+            val rank = match?.bestFrequencyRank ?: 255
+            val frequency = 10000 - (rank * 39)  // ~10000 to ~50
+            words.add(
+                DictionaryWord(
+                    word = canonical,  // Show accented form
+                    frequency = frequency.coerceIn(1, 10000),
+                    source = WordSource.MAIN,
+                    enabled = !disabled.contains(word) && !disabled.contains(canonical)
+                )
+            )
         }
     }
 

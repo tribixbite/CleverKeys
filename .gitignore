@@ -83,3 +83,7 @@ scripts/dictionaries/nl/
 scripts/dictionaries/pt/
 scripts/dictionaries/sw/
 scripts/dictionaries/tl/
+
+# Language pack build intermediates
+scripts/dictionaries/*/
+!scripts/dictionaries/*.zip
