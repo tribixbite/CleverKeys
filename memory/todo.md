@@ -49,6 +49,24 @@
 - [x] Top words verified as real Swahili: ya, na, wa, kwa, katika, ni, la, za, kama, cha
 - [x] Rank 0 (ya) = 10000 display freq, properly distributed down to rare words
 
+**English Dictionary V2 Binary Fix (v1.1.97)**:
+- [x] Issue: English showed max frequency 255 in Dictionary Manager, other languages showed 10000
+- [x] Root cause: DictionaryDataSource.kt line 59 had `if (languageCode != "en")`
+- [x] English was SKIPPING V2 binary loading and falling through to JSON with raw 128-255 frequencies
+- [x] Fix: Changed `if (languageCode != "en")` to `run {` so all languages use V2 binary path
+- [x] Now English properly loads from V2 binary format with normalized 1-10000 scale
+
+**English Frequency Comparison Analysis (v1.1.97)**:
+- [x] Created langpack-en-opensubtitles-50k.zip (50k words from OpenSubtitles 2018 corpus)
+- [x] Source: FrequencyWords by HermitDave (movie/TV subtitle frequencies)
+- [x] Comparison findings (Current wordfreq vs OpenSubtitles):
+  - OpenSubtitles has casual spoken words ranked higher: "yeah" (7.2x), "gonna" (5.4x), "okay" (11.8x)
+  - wordfreq has internet slang ranked higher: "lol" (20x), "btw" (7x) - text not spoken
+  - Profanity much more common in OpenSubtitles (movie/TV dialog)
+  - User's requested comparisons: "fickle" vs "fucker", "ashok" vs "ashore" vs "adsorption" vs "asshole"
+- [x] Reddit langpack attempt failed (Pushshift API token expired May 2023)
+- [x] OpenSubtitles serves as good proxy for informal mobile-typed text
+
 ---
 
 ## v1.1.94/95 Features - COMPLETE
