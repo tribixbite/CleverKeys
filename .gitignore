@@ -75,6 +75,8 @@ scripts/dictionaries/fr_words.txt
 
 # Language pack build temp directories (keep ZIPs for distribution)
 scripts/dictionaries/de/
+scripts/dictionaries/en/
+scripts/dictionaries/es/
 scripts/dictionaries/fr/
 scripts/dictionaries/id/
 scripts/dictionaries/it/
@@ -83,6 +85,10 @@ scripts/dictionaries/nl/
 scripts/dictionaries/pt/
 scripts/dictionaries/sw/
 scripts/dictionaries/tl/
+
+# Swahili corpus data (external source)
+scripts/swahili_freq.ods
+scripts/sw_words.txt
 
 # Language pack build intermediates
 scripts/dictionaries/*/
