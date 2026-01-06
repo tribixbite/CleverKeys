@@ -58,14 +58,21 @@
 
 **English Frequency Comparison Analysis (v1.1.97)**:
 - [x] Created langpack-en-opensubtitles-50k.zip (50k words from OpenSubtitles 2018 corpus)
-- [x] Source: FrequencyWords by HermitDave (movie/TV subtitle frequencies)
-- [x] Comparison findings (Current wordfreq vs OpenSubtitles):
-  - OpenSubtitles has casual spoken words ranked higher: "yeah" (7.2x), "gonna" (5.4x), "okay" (11.8x)
-  - wordfreq has internet slang ranked higher: "lol" (20x), "btw" (7x) - text not spoken
-  - Profanity much more common in OpenSubtitles (movie/TV dialog)
-  - User's requested comparisons: "fickle" vs "fucker", "ashok" vs "ashore" vs "adsorption" vs "asshole"
-- [x] Reddit langpack attempt failed (Pushshift API token expired May 2023)
-- [x] OpenSubtitles serves as good proxy for informal mobile-typed text
+- [x] Created langpack-en-norvig-50k.zip (50k words from Norvig/Google web corpus)
+- [x] 3-way comparison: wordfreq (balanced) vs OpenSubtitles (spoken) vs Norvig (web/forum)
+- [x] OpenSubtitles: casual words ranked higher (yeah 7.2x, gonna 5.4x, okay 11.8x)
+- [x] Norvig: web/forum text with profanity and technical terms
+- [x] Word comparison files saved: norvig_missing.txt, opensub_missing.txt
+- [x] Norvig-only words mostly spam/adult content from 2008 web crawl
+- [x] OpenSubtitles-only words mostly contractions as separate tokens ('s, 't, 'm, etc.)
+
+**English Contractions Bug Fix (v1.1.97)**:
+- [x] Issue: contractions_en.json was missing 18 essential contractions from contractions_non_paired.json
+- [x] Missing: im->i'm, ive->i've, hes->he's, shes->she's, thats->that's, etc.
+- [x] OptimizedVocabulary only loads contractions_en.json for English (not contractions_non_paired.json)
+- [x] Fix: Merged 18 missing entries into both files (now 120 entries each)
+- [x] Regenerated contractions.bin (120 non-paired, 1183 paired, 13KB)
+- [x] Swipe predictions "im", "ive", "hes" now correctly convert to "i'm", "i've", "he's"
 
 ---
 
