@@ -96,6 +96,8 @@ scripts/en_opensubtitles_50k_words.txt
 scripts/en_opensubtitles_full.txt
 scripts/en_opensubtitles_words.txt
 scripts/en_wordfreq_words.txt
+scripts/en_norvig_50k.txt
+scripts/norvig_count_1w.txt
 scripts/google_10000.txt
 scripts/twitter_background.csv
 scripts/reddit_wordcount.txt
