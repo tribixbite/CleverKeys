@@ -24,13 +24,21 @@
 **Language Dictionary Regeneration**:
 - [x] Regenerated all 11 languages with wordfreq for proper frequency ranks
 - [x] Bundled: en, es, fr, pt, it, de (50k/25k words)
-- [x] Downloadable: nl, id, ms, sw, tl (20k words)
+- [x] Downloadable: nl, id, ms, tl (20k words) [sw removed - wordfreq unsupported]
 
 **Dictionary Manager Not Loading from Language Packs**:
 - [x] Issue: Imported lang packs showed empty tabs in Dictionary Manager
 - [x] Root cause: MainDictionarySource.getAllWords() only checked bundled assets, not installed packs
 - [x] Fix: Added lang pack check via LanguagePackManager.getDictionaryPath() before assets fallback
 - [x] Added loadBinaryDictionaryFromFile() and extractWordsFromIndex() helper methods
+
+**Swahili wordfreq Fallback Bug**:
+- [x] Issue: Swahili (sw) predictions were all English words
+- [x] Root cause: wordfreq silently falls back to English for unsupported languages
+- [x] Swahili isn't properly supported - "jambo" has freq 1.2e-7, "the" has 5.4e-2
+- [x] Fix: Removed 'sw' from SUPPORTED_LANGUAGES, deleted langpack-sw.zip
+- [x] Added UNSUPPORTED_LANGUAGES check in get_wordlist.py
+- [x] Properly supported: en, es, fr, pt, it, de, nl, id, ms, tl
 
 ---
 
