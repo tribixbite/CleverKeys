@@ -40,6 +40,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 SCRIPT_DIR = Path(__file__).parent
 
 # All supported languages with display names and word counts
+# NOTE: Only languages properly supported by wordfreq are included.
+# Swahili (sw) was removed because wordfreq falls back to English data for it.
 SUPPORTED_LANGUAGES = {
     'en': {'name': 'English', 'words': 50000, 'bundle': True},
     'es': {'name': 'Spanish', 'words': 50000, 'bundle': True},
@@ -50,7 +52,6 @@ SUPPORTED_LANGUAGES = {
     'nl': {'name': 'Dutch', 'words': 20000, 'bundle': False},
     'id': {'name': 'Indonesian', 'words': 20000, 'bundle': False},
     'ms': {'name': 'Malay', 'words': 20000, 'bundle': False},
-    'sw': {'name': 'Swahili', 'words': 20000, 'bundle': False},
     'tl': {'name': 'Tagalog', 'words': 20000, 'bundle': False},
 }
 
