@@ -36,9 +36,18 @@
 - [x] Issue: Swahili (sw) predictions were all English words
 - [x] Root cause: wordfreq silently falls back to English for unsupported languages
 - [x] Swahili isn't properly supported - "jambo" has freq 1.2e-7, "the" has 5.4e-2
-- [x] Fix: Removed 'sw' from SUPPORTED_LANGUAGES, deleted langpack-sw.zip
+- [x] Fix: Removed 'sw' from SUPPORTED_LANGUAGES in build_all_languages.py
 - [x] Added UNSUPPORTED_LANGUAGES check in get_wordlist.py
-- [x] Properly supported: en, es, fr, pt, it, de, nl, id, ms, tl
+- [x] Properly supported via wordfreq: en, es, fr, pt, it, de, nl, id, ms, tl
+
+**Swahili External Corpus Solution (v1.1.97)**:
+- [x] wordfreq doesn't support Swahili, but real frequency data IS available
+- [x] Source: Kwici Swahili Wikipedia Corpus (2.8M words, CC-BY-SA)
+- [x] URL: https://kevindonnelly.org.uk/swahili/swwiki/
+- [x] Created parse_swahili_ods.py to extract 168k words with frequencies from ODS file
+- [x] Built langpack-sw.zip with 20k words and proper frequency ranks
+- [x] Top words verified as real Swahili: ya, na, wa, kwa, katika, ni, la, za, kama, cha
+- [x] Rank 0 (ya) = 10000 display freq, properly distributed down to rare words
 
 ---
 
@@ -365,13 +374,13 @@
 | German | de_enhanced.bin | 650KB | 25k |
 
 **Language Packs** (in scripts/dictionaries/):
-| Language | File | Size |
-|----------|------|------|
-| Dutch | langpack-nl.zip | 244KB |
-| Indonesian | langpack-id.zip | 232KB |
-| Malay | langpack-ms.zip | 228KB |
-| Swahili | langpack-sw.zip | 233KB |
-| Tagalog | langpack-tl.zip | 237KB |
+| Language | File | Size | Source |
+|----------|------|------|--------|
+| Dutch | langpack-nl.zip | 244KB | wordfreq |
+| Indonesian | langpack-id.zip | 232KB | wordfreq |
+| Malay | langpack-ms.zip | 228KB | wordfreq |
+| Swahili | langpack-sw.zip | 231KB | Kwici Wikipedia Corpus (CC-BY-SA) |
+| Tagalog | langpack-tl.zip | 237KB | wordfreq |
 
 **Bugs Fixed (2026-01-04)**:
 - [x] Primary dictionary lookup order: Now checks primary FIRST, then falls back to English
