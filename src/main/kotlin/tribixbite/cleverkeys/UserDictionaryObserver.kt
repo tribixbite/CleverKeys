@@ -46,6 +46,10 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
 
     private val handler = Handler(Looper.getMainLooper())
 
+    // v1.1.91: Current language for filtering UserDictionary queries
+    // Only words matching this language (or null locale) will be tracked
+    private var currentLanguage: String = "en"
+
     // Cached user dictionary words (for detecting changes)
     private val cachedUserWords: MutableMap<String, Int> = mutableMapOf()
 
@@ -89,6 +93,25 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
      */
     fun setChangeListener(listener: ChangeListener) {
         changeListener = listener
+    }
+
+    /**
+     * Set the current language for filtering UserDictionary queries.
+     * Only words matching this language (or null locale) will be tracked.
+     *
+     * Call this when the keyboard language changes to ensure only
+     * relevant words are included in change notifications.
+     *
+     * @param language Language code (e.g., "en", "fr", "de")
+     * @since v1.1.91
+     */
+    fun setLanguage(language: String) {
+        if (currentLanguage != language) {
+            currentLanguage = language
+            Log.d(TAG, "Language set to: $language - reloading cache")
+            // Reload cache with new language filter
+            loadUserDictionaryCache()
+        }
     }
 
     /**
@@ -137,19 +160,27 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
 
     /**
      * Load UserDictionary into cache.
+     *
+     * v1.1.91: Filters by currentLanguage to prevent cross-language contamination.
+     * Matches exact language code, locale prefix (e.g., fr_FR), or null locale (global).
      */
     private fun loadUserDictionaryCache() {
         cachedUserWords.clear()
 
         try {
+            // v1.1.91: Filter by locale to prevent English contamination
+            // Match: exact language code, locale starting with language (e.g., fr_FR), or null (global)
+            val selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} LIKE ? OR ${UserDictionary.Words.LOCALE} IS NULL"
+            val selectionArgs = arrayOf(currentLanguage, "$currentLanguage%")
+
             val cursor: Cursor? = context.contentResolver.query(
                 UserDictionary.Words.CONTENT_URI,
                 arrayOf(
                     UserDictionary.Words.WORD,
                     UserDictionary.Words.FREQUENCY
                 ),
-                null,
-                null,
+                selection,
+                selectionArgs,
                 null
             )
 
@@ -163,7 +194,7 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
                     cachedUserWords[word] = frequency
                 }
 
-                Log.d(TAG, "Loaded ${cachedUserWords.size} user dictionary words into cache")
+                Log.d(TAG, "Loaded ${cachedUserWords.size} user dictionary words for locale '$currentLanguage' into cache")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load user dictionary cache", e)
@@ -199,10 +230,17 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
 
     /**
      * Check for UserDictionary changes and notify listener.
+     *
+     * v1.1.91: Filters by currentLanguage to prevent cross-language contamination.
      */
     private fun checkUserDictionaryChanges() {
         try {
             val currentWords = mutableMapOf<String, Int>()
+
+            // v1.1.91: Filter by locale to prevent English contamination
+            // Match: exact language code, locale starting with language (e.g., fr_FR), or null (global)
+            val selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} LIKE ? OR ${UserDictionary.Words.LOCALE} IS NULL"
+            val selectionArgs = arrayOf(currentLanguage, "$currentLanguage%")
 
             val cursor: Cursor? = context.contentResolver.query(
                 UserDictionary.Words.CONTENT_URI,
@@ -210,8 +248,8 @@ class UserDictionaryObserver(private val context: Context) : ContentObserver(Han
                     UserDictionary.Words.WORD,
                     UserDictionary.Words.FREQUENCY
                 ),
-                null,
-                null,
+                selection,
+                selectionArgs,
                 null
             )
 

@@ -283,6 +283,8 @@ class WordPredictor {
 
     /**
      * Set the active language for N-gram predictions
+     *
+     * v1.1.91: Also updates UserDictionaryObserver to filter by new language.
      */
     fun setLanguage(language: String) {
         currentLanguage = language
@@ -300,6 +302,9 @@ class WordPredictor {
                 Log.w(TAG, "Failed to switch MultiLanguageManager to: $language")
             }
         }
+
+        // v1.1.91: Update observer to filter by new language
+        dictionaryObserver?.setLanguage(language)
     }
 
     /**
@@ -689,10 +694,13 @@ class WordPredictor {
 
             // 2. Load Android user dictionary
             // v1.1.90: Filter by locale to prevent English contamination in non-English modes
+            // v1.1.91: Use LIKE for partial locale match (e.g., "fr" matches "fr", "fr_FR", "fr_CA")
             // Accept words matching current language OR words with null locale (global)
             try {
-                val selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} IS NULL"
-                val selectionArgs = arrayOf(language)
+                // Match: exact language code, or locale starting with language code (e.g., fr_FR)
+                // Also match null locale (words marked as "all languages")
+                val selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} LIKE ? OR ${UserDictionary.Words.LOCALE} IS NULL"
+                val selectionArgs = arrayOf(language, "$language%")
 
                 val cursor = context.contentResolver.query(
                     UserDictionary.Words.CONTENT_URI,
@@ -796,10 +804,13 @@ class WordPredictor {
 
             // 2. Load Android user dictionary
             // v1.1.90: Filter by locale to prevent English contamination in non-English modes
+            // v1.1.91: Use LIKE for partial locale match (e.g., "fr" matches "fr", "fr_FR", "fr_CA")
             // Accept words matching current language OR words with null locale (global)
             try {
-                val selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} IS NULL"
-                val selectionArgs = arrayOf(language)
+                // Match: exact language code, or locale starting with language code (e.g., fr_FR)
+                // Also match null locale (words marked as "all languages")
+                val selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} LIKE ? OR ${UserDictionary.Words.LOCALE} IS NULL"
+                val selectionArgs = arrayOf(language, "$language%")
 
                 val cursor = context.contentResolver.query(
                     UserDictionary.Words.CONTENT_URI,
