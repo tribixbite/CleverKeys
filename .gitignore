@@ -105,3 +105,5 @@ scripts/reddit_wordcount.txt
 # Language pack build intermediates
 scripts/dictionaries/*/
 !scripts/dictionaries/*.zip
+scripts/norvig_missing.txt
+scripts/opensub_missing.txt
