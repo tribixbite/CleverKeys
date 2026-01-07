@@ -74,6 +74,18 @@
 - [x] Regenerated contractions.bin (120 non-paired, 1183 paired, 13KB)
 - [x] Swipe predictions "im", "ive", "hes" now correctly convert to "i'm", "i've", "he's"
 
+**English Dictionary V3 Creation (v1.1.97)**:
+- [x] Issue: V2 dictionary was pure wordfreq, losing V1's curated features
+- [x] V2 was missing: single letters, contractions, possessives, custom words
+- [x] V2 added 14 new slurs not in V1 (wordfreq tracks actual web usage)
+- [x] V3 Strategy: V1 base + V2 valuable additions - typos - specified offensive
+- [x] Removed 15 common typos (dissapointed, recieved, thier, definately, etc.)
+- [x] Removed only 4 offensive words per user request (retard*, shemale)
+- [x] Preserved all V1 features: single letters, contractions, possessives, custom words
+- [x] Final V3: 52,042 words (V1: 49,297 + V2 additions: 2,763 - removed: 18)
+- [x] JSON and binary now in sync
+- [x] Saved 197 accented words for later review: scripts/accented_words_for_review.txt
+
 ---
 
 ## v1.1.94/95 Features - COMPLETE
