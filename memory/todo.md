@@ -801,6 +801,13 @@ No mixing of languages in a single trie - clean separation.
   - Changed input field from right-aligned to left-aligned (gravity: start)
   - Added HorizontalScrollView with proper scroll calculation
   - Text scrolls to show cursor position as user types
+- [x] Custom short swipe support for Event and Editing commands (2026-01-07)
+  - Issue: Per-key customization commands not working: settings, clipboard, voice typing, numeric switch, AI assistant, text replace
+  - Root cause: CustomShortSwipeExecutor only handled InputConnection-based commands
+  - Event-type commands (config, switch_clipboard, switch_numeric, voice_typing, voice_typing_chooser) require service.triggerKeyboardEvent()
+  - Editing-type commands (replaceText, textAssist, autofill) require InputConnection.performContextMenuAction()
+  - Fix: Added KeyValue-based execution path in onCustomShortSwipe() for Event and Editing kinds
+  - Also fixed VOICE_INPUT in legacy AvailableCommand fallback
 
 ## Active Investigation: English Words in French-Only Mode
 
