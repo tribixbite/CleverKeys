@@ -808,6 +808,12 @@ No mixing of languages in a single trie - clean separation.
   - Editing-type commands (replaceText, textAssist, autofill) require InputConnection.performContextMenuAction()
   - Fix: Added KeyValue-based execution path in onCustomShortSwipe() for Event and Editing kinds
   - Also fixed VOICE_INPUT in legacy AvailableCommand fallback
+- [x] Icon preview fix in per-key customization UI (2026-01-07)
+  - Issue: PUA characters (icons for settings, clipboard, voice, etc.) displayed as Chinese characters
+  - Root cause: Compose Text() uses system font which doesn't support Private Use Area chars
+  - Fix: Use AndroidView with Theme.getKeyFont() for icon rendering in:
+    - MappingListItem: Shows icon when useKeyFont=true
+    - CommandPaletteDialog preview: Renders actual icon instead of [Icon: name]
 
 ## Active Investigation: English Words in French-Only Mode
 
