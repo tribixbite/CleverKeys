@@ -326,11 +326,12 @@ private fun LabelConfirmationDialog(
                             }
                             isIconMode -> {
                                 // Icon mode with default label - render with special font
+                                // Icon font glyphs are visually larger, so use 14f to match 18sp text
                                 AndroidView(
                                     factory = { ctx ->
                                         android.widget.TextView(ctx).apply {
                                             typeface = Theme.getKeyFont(ctx)
-                                            textSize = 18f
+                                            textSize = 14f
                                             setTextColor(android.graphics.Color.WHITE)
                                             text = defaultLabel
                                         }
