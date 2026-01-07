@@ -20,6 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
+import tribixbite.cleverkeys.Theme
 
 /**
  * Data class to hold the complete mapping selection with separate label and action.
@@ -295,6 +298,7 @@ private fun LabelConfirmationDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Preview
+                val context = LocalContext.current
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -309,18 +313,41 @@ private fun LabelConfirmationDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text("Preview: ", color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        // Show readable description for icons, actual text for custom labels
-                        val previewText = when {
-                            currentLabel.isNotBlank() -> currentLabel
-                            isIconMode && iconPreviewText != null -> "[${iconPreviewText}]"
-                            else -> defaultLabel
+                        // Show actual icon using special font when in icon mode with default label
+                        when {
+                            currentLabel.isNotBlank() -> {
+                                // User typed custom text - show it as regular text
+                                Text(
+                                    currentLabel,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                            isIconMode -> {
+                                // Icon mode with default label - render with special font
+                                AndroidView(
+                                    factory = { ctx ->
+                                        android.widget.TextView(ctx).apply {
+                                            typeface = Theme.getKeyFont(ctx)
+                                            textSize = 18f
+                                            setTextColor(android.graphics.Color.WHITE)
+                                            text = defaultLabel
+                                        }
+                                    },
+                                    modifier = Modifier.padding(horizontal = 4.dp)
+                                )
+                            }
+                            else -> {
+                                // Regular text label
+                                Text(
+                                    defaultLabel,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
                         }
-                        Text(
-                            previewText,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
                     }
                 }
 

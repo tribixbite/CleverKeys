@@ -23,6 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -35,6 +37,7 @@ import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.customization.*
+import android.graphics.Typeface
 
 /**
  * Short Swipe Customization Activity v4
@@ -503,6 +506,8 @@ private fun MappingListItem(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val context = LocalContext.current
+
     Card(
         onClick = onEdit,
         modifier = Modifier
@@ -539,11 +544,39 @@ private fun MappingListItem(
 
             // Mapping info
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "\"${mapping.displayText}\"",
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 13.sp
-                )
+                // Use AndroidView with special font for icon characters when useKeyFont is true
+                if (mapping.useKeyFont) {
+                    // Show icon using special font via AndroidView
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "\"",
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 13.sp
+                        )
+                        AndroidView(
+                            factory = { ctx ->
+                                android.widget.TextView(ctx).apply {
+                                    typeface = Theme.getKeyFont(ctx)
+                                    textSize = 13f
+                                    setTextColor(android.graphics.Color.WHITE)
+                                    text = mapping.displayText
+                                }
+                            },
+                            modifier = Modifier.padding(horizontal = 2.dp)
+                        )
+                        Text(
+                            text = "\"",
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 13.sp
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "\"${mapping.displayText}\"",
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 13.sp
+                    )
+                }
                 Text(
                     text = "${mapping.actionType.displayName}: ${mapping.actionValue.take(30)}${if (mapping.actionValue.length > 30) "..." else ""}",
                     fontSize = 11.sp,
