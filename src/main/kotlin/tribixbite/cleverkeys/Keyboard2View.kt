@@ -597,30 +597,56 @@ class Keyboard2View @JvmOverloads constructor(
         val executed = _customSwipeExecutor.execute(mapping, inputConnection, editorInfo)
 
         if (!executed) {
-            // Some commands need special handling (SWITCH_IME, VOICE_INPUT, layout switching)
-            // Handle these system commands directly via InputMethodManager or keyboard service
-            val command = mapping.getCommand()
-            when (command) {
-                AvailableCommand.SWITCH_IME -> {
-                    Log.d("Keyboard2View", "Executing SWITCH_IME via InputMethodManager")
-                    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-                    imm?.showInputMethodPicker()
+            // Executor couldn't handle it - try KeyValue-based execution
+            // This handles Event-type keys (settings, clipboard, voice, numeric) and
+            // Editing-type keys (replaceText, textAssist) that require service/system handling
+            val actionValue = mapping.actionValue
+            val keyValue = KeyValue.getKeyByName(actionValue)
+
+            if (keyValue != null) {
+                when (keyValue.getKind()) {
+                    KeyValue.Kind.Event -> {
+                        // Event-type commands require keyboard service handling
+                        val event = keyValue.getEvent()
+                        Log.d("Keyboard2View", "Executing Event command via service: $actionValue -> $event")
+                        service.triggerKeyboardEvent(event)
+                    }
+                    KeyValue.Kind.Editing -> {
+                        // Editing-type commands use context menu actions
+                        val editing = keyValue.getEditing()
+                        Log.d("Keyboard2View", "Executing Editing command: $actionValue -> $editing")
+                        executeEditingCommand(editing, inputConnection)
+                    }
+                    else -> {
+                        Log.w("Keyboard2View", "Unhandled KeyValue kind for custom swipe: ${keyValue.getKind()}")
+                    }
                 }
-                AvailableCommand.VOICE_INPUT -> {
-                    // TODO: Implement voice input trigger when the feature is supported
-                    Log.w("Keyboard2View", "VOICE_INPUT command not yet implemented")
-                }
-                AvailableCommand.SWITCH_FORWARD -> {
-                    Log.d("Keyboard2View", "Executing SWITCH_FORWARD via keyboard service")
-                    service.triggerKeyboardEvent(KeyValue.Event.SWITCH_FORWARD)
-                }
-                AvailableCommand.SWITCH_BACKWARD -> {
-                    Log.d("Keyboard2View", "Executing SWITCH_BACKWARD via keyboard service")
-                    service.triggerKeyboardEvent(KeyValue.Event.SWITCH_BACKWARD)
-                }
-                else -> {
-                    if (command != null) {
-                        Log.w("Keyboard2View", "Custom swipe command failed to execute: ${mapping.actionValue}")
+            } else {
+                // Fallback to legacy AvailableCommand handling for backward compatibility
+                val command = mapping.getCommand()
+                when (command) {
+                    AvailableCommand.SWITCH_IME -> {
+                        Log.d("Keyboard2View", "Executing SWITCH_IME via InputMethodManager")
+                        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                        imm?.showInputMethodPicker()
+                    }
+                    AvailableCommand.VOICE_INPUT -> {
+                        // Trigger voice typing via service
+                        Log.d("Keyboard2View", "Executing VOICE_INPUT via keyboard service")
+                        service.triggerKeyboardEvent(KeyValue.Event.SWITCH_VOICE_TYPING)
+                    }
+                    AvailableCommand.SWITCH_FORWARD -> {
+                        Log.d("Keyboard2View", "Executing SWITCH_FORWARD via keyboard service")
+                        service.triggerKeyboardEvent(KeyValue.Event.SWITCH_FORWARD)
+                    }
+                    AvailableCommand.SWITCH_BACKWARD -> {
+                        Log.d("Keyboard2View", "Executing SWITCH_BACKWARD via keyboard service")
+                        service.triggerKeyboardEvent(KeyValue.Event.SWITCH_BACKWARD)
+                    }
+                    else -> {
+                        if (command != null) {
+                            Log.w("Keyboard2View", "Custom swipe command failed to execute: ${mapping.actionValue}")
+                        }
                     }
                 }
             }
@@ -628,6 +654,32 @@ class Keyboard2View @JvmOverloads constructor(
 
         // Provide haptic feedback for successful gesture
         performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+    }
+
+    /**
+     * Execute an Editing-type command via InputConnection context menu actions.
+     */
+    @android.annotation.SuppressLint("InlinedApi")
+    private fun executeEditingCommand(editing: KeyValue.Editing, inputConnection: android.view.inputmethod.InputConnection?) {
+        if (inputConnection == null) {
+            Log.w("Keyboard2View", "Cannot execute editing command: no input connection")
+            return
+        }
+
+        when (editing) {
+            KeyValue.Editing.COPY -> inputConnection.performContextMenuAction(android.R.id.copy)
+            KeyValue.Editing.PASTE -> inputConnection.performContextMenuAction(android.R.id.paste)
+            KeyValue.Editing.CUT -> inputConnection.performContextMenuAction(android.R.id.cut)
+            KeyValue.Editing.SELECT_ALL -> inputConnection.performContextMenuAction(android.R.id.selectAll)
+            KeyValue.Editing.SHARE -> inputConnection.performContextMenuAction(android.R.id.shareText)
+            KeyValue.Editing.PASTE_PLAIN -> inputConnection.performContextMenuAction(android.R.id.pasteAsPlainText)
+            KeyValue.Editing.UNDO -> inputConnection.performContextMenuAction(android.R.id.undo)
+            KeyValue.Editing.REDO -> inputConnection.performContextMenuAction(android.R.id.redo)
+            KeyValue.Editing.REPLACE -> inputConnection.performContextMenuAction(android.R.id.replaceText)
+            KeyValue.Editing.ASSIST -> inputConnection.performContextMenuAction(android.R.id.textAssist)
+            KeyValue.Editing.AUTOFILL -> inputConnection.performContextMenuAction(android.R.id.autofill)
+            else -> Log.w("Keyboard2View", "Unhandled editing command: $editing")
+        }
     }
 
     fun setSwipeTypingComponents(predictor: WordPredictor?, keyboard2: CleverKeysService?) {
