@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-06
-**Status**: v1.1.96 - Multilanguage swipe typing with proper frequency handling
+**Last Updated**: 2026-01-07
+**Status**: v1.1.97 - Experimental multilanguage swipe typing with curated V3 English dictionary
 
 ---
 

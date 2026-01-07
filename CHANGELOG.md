@@ -19,6 +19,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.97] - 2026-01-07
+
+### 🌍 Experimental: Multilanguage Swipe Typing
+
+**This release introduces experimental multilanguage support for neural swipe typing.** The ONNX neural network outputs 26 English letters, which are then mapped to properly accented words via per-language dictionaries.
+
+### Added - Multilanguage System
+
+- **Primary Language Selection**: Choose from 11 languages (English, Spanish, French, Portuguese, Italian, German, Dutch, Indonesian, Malay, Swahili, Tagalog)
+- **Downloadable Language Packs**: Import additional languages via Settings → Multi-Language → Import Language Pack
+- **Per-Language Custom Dictionaries**: Custom words and disabled words stored separately for each language
+- **Secondary Language Mode**: True bilingual swipe typing with weighted predictions
+- **Language Detection**: Auto-detect language from typed words (experimental)
+- **Secondary Prediction Weight**: Slider to adjust balance between primary/secondary languages
+
+### Added - V3 English Dictionary (Curated)
+
+- **52,042 words** combining best of wordfreq + curated entries
+- Removed 15 common typos (dissapointed→disappointed, recieved→received, etc.)
+- Preserved single letters, contractions, possessives, custom words from V1
+- 197 accented words saved for future review
+
+### Added - Swahili Support
+
+- **External corpus source**: Kwici Swahili Wikipedia Corpus (CC-BY-SA)
+- wordfreq library doesn't support Swahili; we built from 168k-word external corpus
+- Properly frequency-ranked with real Swahili top words (ya, na, wa, kwa, katika)
+
+### Fixed - Critical Multilanguage Issues
+
+- **OOM Crash on Large Language Packs**: Limited secondary trie to top 30k words
+- **Frequency Display**: Dictionary Manager now shows actual 1-10000 frequency scale (was hardcoded 100)
+- **English Dictionary V2 Binary**: Fixed skip condition that bypassed V2 binary format for English
+- **Missing Contractions**: Merged 18 essential contractions into contractions_en.json (im→i'm, ive→i've, etc.)
+- **Thread Visibility**: Added @Volatile to beam search trie for cross-thread safety
+- **Race Condition**: Fixed timing where language code was set before trie was ready
+- **UserDictionary Locale Filter**: Now filters Android UserDictionary by language locale
+- **Custom Words Keys**: Fixed use of global key → language-specific keys (custom_words_fr, etc.)
+- **Secondary Dictionary Loading**: Custom words now load for secondary language too
+
+### Technical
+
+- V2 binary dictionary format with normalized prefix index for accent recovery
+- Per-language beam search trie architecture
+- Swahili wordfreq fallback detection and exclusion
+- Language pack ZIP format with manifest.json + dictionary.bin + contractions.json
+
+---
+
 ## [1.1.89] - 2025-01-05
 
 ### Fixed - Language Isolation
