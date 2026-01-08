@@ -60,12 +60,14 @@ CleverKeys is the only fully open-source neural network gesture keyboard for And
 |---------|:----------:|:---------:|:----:|:-----------:|:---------------:|
 | **Gesture Typing in Termux** | ✅ | ⚠️ Corrupted⁴ | ❌ Broken | ⚠️ Disabled | ⚠️ Experimental |
 | **Gesture/Swipe Typing** | ✅ Stable | ✅ Stable | ⚠️ Alpha | ⚠️ Disabled⁵ | ⚠️ Experimental |
+| **Multi-Language Swipe**⁹ | ✅ 11 languages | ⚠️ Single | ⚠️ English only | ❌ | ❌ |
 | **Gesture Engine Open Source** | ✅ | ❌¹ | ✅² | ✅ | ✅ |
 | **ML Training Code Public** | ✅ | N/A | ✅⁶ | N/A³ | N/A³ |
 | **Model Size** | 13MB | Proprietary | 62MB | N/A | N/A |
 | **APK Size** | ~52MB | ~45MB | ~200MB | ~15MB | ~25MB |
 | **Clipboard History** | ✅ Unlimited | ⚠️ 10min default⁷ | ✅ 25 items | ✅ 20 items | ❌ 15s hint only |
 | **Short-Swipe Actions**⁸ | ✅ 208 gestures | ⚠️ Limited | ❌ | ⚠️ Limited | ⚠️ Limited |
+| **Per-Key Customization** | ✅ 204+ commands | ❌ | ❌ | ❌ | ❌ |
 | **Custom Layouts** | ✅ XML (8 sublabels) | ✅ JSON | ✅ YAML | ⚠️ JSON (no editor) | ⚠️ Addon packs only |
 | **DIY Theme Creator** | ✅ | ✅ | ❌ (16 built-in) | ✅ Snygg v2 | ✅ |
 | **Word Suggestions** | ✅ | ✅ | ✅ | ❌ (v0.6 planned) | ✅ |
@@ -90,6 +92,8 @@ CleverKeys is the only fully open-source neural network gesture keyboard for And
 ⁷ HeliBoard clipboard retention defaults to 10 minutes but is configurable; items are not persisted across restarts by default
 
 ⁸ Short-swipe actions: 8 directions × 26 keys = 208 one-touch gestures for navigation (arrows, home/end), editing (select all, undo, cut/copy/paste), function keys (F1-F12), and more — no long-press menus needed
+
+⁹ Multi-language swipe typing: CleverKeys uses the same neural network model for all languages — dictionaries provide word candidates, not language-specific models. 6 languages bundled (en, es, fr, pt, it, de), 5 downloadable (nl, id, ms, tl, sw). Primary + secondary language support with automatic best-match selection.
 
 </details>
 
@@ -186,6 +190,14 @@ Unlike black-box keyboards, CleverKeys exposes all parameters:
 - Dictionary control (custom words, frequency adjustments)
 - Gesture sensitivity and thresholds
 
+### 🎯 Per-Key Short Swipe Customization
+Assign custom actions to any key's 8 swipe directions:
+- **204+ built-in commands** — navigation, editing, clipboard, function keys, special characters
+- **Custom text macros** — email addresses, signatures, code snippets, emoji sequences
+- **System actions** — keyboard settings, voice typing, language switch, numeric pad
+- **Visual feedback** — custom icons displayed as sublabels on keys
+- **Import/Export** — share your customizations as JSON profiles
+
 ### ⌨️ 100+ Keyboard Layouts
 Inherited from Unexpected Keyboard:
 - QWERTY, AZERTY, QWERTZ, Dvorak, Colemak
@@ -197,6 +209,90 @@ Inherited from Unexpected Keyboard:
 - **Terminal mode** — Ctrl/Meta/Fn keys for Termux users
 - **Short swipe gestures** — Swipe keys for symbols, navigation, clipboard, and function keys (inherited from Unexpected Keyboard)
 - **Backup & Restore** — Export all settings and custom data
+
+<div align="center">
+
+# 🌍 Multi-Language Swipe Typing
+
+</div>
+
+CleverKeys supports swipe typing in **11 languages** with intelligent multi-language features:
+
+### Bundled Languages (6)
+Included in the APK — no additional download required:
+
+| Language | Code | Dictionary Size |
+|----------|:----:|---------------:|
+| English | en | 52,000 words |
+| Spanish | es | 50,000 words |
+| French | fr | 25,000 words |
+| Portuguese | pt | 25,000 words |
+| Italian | it | 25,000 words |
+| German | de | 25,000 words |
+
+### Downloadable Language Packs (5)
+Available via **Settings → Languages → Download Language Packs**:
+
+| Language | Code | Dictionary Size | Source |
+|----------|:----:|---------------:|--------|
+| Dutch | nl | 20,000 words | wordfreq |
+| Indonesian | id | 20,000 words | wordfreq |
+| Malay | ms | 20,000 words | wordfreq |
+| Tagalog | tl | 20,000 words | wordfreq |
+| Swahili | sw | 20,000 words | Wikipedia corpus |
+
+### Multi-Language Features
+
+**Primary + Secondary Language**
+- Set your primary language for main typing
+- Add a secondary language for automatic detection
+- Neural network evaluates both dictionaries simultaneously
+- Best prediction selected automatically per swipe
+
+**Smart Accent & Punctuation Insertion**
+- Automatic accent marks for languages that need them (café, naïve, señor)
+- Language-aware punctuation (Spanish ¿¡, French « », German „")
+- Proper handling of contractions across languages
+
+**Per-Language Dictionary Manager**
+- Separate tabs for each active language
+- View word frequencies and dictionary statistics
+- Add custom words per language
+- Import/export language-specific word lists
+
+### Creating Custom Language Packs
+
+You can create dictionaries for any language using the included Python scripts:
+
+```bash
+# Navigate to scripts directory
+cd scripts/
+
+# Option 1: Generate from wordfreq (requires Python wordfreq package)
+# Supported: en, es, fr, de, it, pt, nl, id, ms, tl, and 20+ more
+python build_langpack.py --lang fr --output langpack-fr.zip
+
+# Option 2: Build from custom word frequency list
+# Format: word,frequency (one per line)
+python build_dictionary.py --input my_words.csv --output my_lang.bin
+
+# Option 3: Build all supported languages at once
+python build_all_languages.py
+```
+
+**Script Details:**
+- `build_langpack.py` — Creates complete .zip language packs from wordfreq
+- `build_dictionary.py` — Builds binary dictionary from CSV word lists
+- `build_all_languages.py` — Batch builds all supported languages
+- `get_wordlist.py` — Extracts top N words from wordfreq for a language
+
+Language packs are simple .zip files containing:
+- `{lang}_enhanced.bin` — Binary dictionary with frequency data
+- `{lang}_enhanced.json` — Human-readable word list with frequencies
+- `manifest.json` — Metadata (language code, version, word count)
+
+**Pre-built Language Packs:**
+Available in [`scripts/dictionaries/`](./scripts/dictionaries/) for testing, or download directly from the app.
 
 <div align="center">
 
