@@ -281,9 +281,65 @@ class SuggestionBar : LinearLayout {
             return
         }
 
+        // Clear any inline autofill view
+        clearInlineAutofillView()
+
         // ALWAYS show empty suggestions instead of hiding - prevents UI disappearing
         setSuggestions(emptyList())
         Log.d(TAG, "clearSuggestions called - showing empty list instead of hiding")
+    }
+
+    // ==================== Inline Autofill Support ====================
+    // Track the inline autofill view to properly manage its lifecycle
+
+    private var inlineAutofillView: View? = null
+    private var isInlineAutofillMode = false
+
+    /**
+     * Set an inline autofill view to display password manager suggestions.
+     * This replaces the normal suggestions with the autofill content.
+     *
+     * @param view The inline autofill view from InlineAutofillUtils
+     */
+    fun setInlineAutofillView(view: View?) {
+        if (view == null) {
+            clearInlineAutofillView()
+            return
+        }
+
+        // Don't show autofill in password mode (we have our own password display)
+        if (isPasswordMode) {
+            return
+        }
+
+        // Clear existing suggestions and views
+        removeAllViews()
+        suggestionViews.clear()
+        currentSuggestions.clear()
+        currentScores.clear()
+
+        // Add the inline autofill view
+        inlineAutofillView = view
+        isInlineAutofillMode = true
+
+        addView(view, LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        ))
+
+        Log.d(TAG, "setInlineAutofillView: Displaying inline autofill suggestions")
+    }
+
+    /**
+     * Clear the inline autofill view and return to normal suggestion mode.
+     */
+    private fun clearInlineAutofillView() {
+        if (isInlineAutofillMode && inlineAutofillView != null) {
+            removeView(inlineAutofillView)
+            inlineAutofillView = null
+            isInlineAutofillMode = false
+            Log.d(TAG, "clearInlineAutofillView: Cleared inline autofill view")
+        }
     }
 
     /**

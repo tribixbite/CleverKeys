@@ -744,6 +744,53 @@ class CleverKeysService : InputMethodService(),
         _suggestionBar?.clearSuggestions()
     }
 
+    // ==================== Inline Autofill Support (API 30+) ====================
+    // These callbacks enable seamless password manager integration without button presses.
+    // The system automatically calls these when focusing on autofill-enabled fields.
+
+    @androidx.annotation.RequiresApi(android.os.Build.VERSION_CODES.R)
+    override fun onCreateInlineSuggestionsRequest(uiExtras: android.os.Bundle): android.view.inputmethod.InlineSuggestionsRequest? {
+        // Don't show autofill suggestions if word prediction is disabled (no suggestion bar)
+        if (_config?.word_prediction_enabled != true) {
+            return null
+        }
+
+        return try {
+            tribixbite.cleverkeys.autofill.InlineAutofillUtils.createInlineSuggestionsRequest(this)
+        } catch (e: Exception) {
+            android.util.Log.e("CleverKeysService", "Failed to create inline suggestions request", e)
+            null
+        }
+    }
+
+    @androidx.annotation.RequiresApi(android.os.Build.VERSION_CODES.R)
+    override fun onInlineSuggestionsResponse(response: android.view.inputmethod.InlineSuggestionsResponse): Boolean {
+        // Don't show autofill suggestions if word prediction is disabled (no suggestion bar)
+        if (_config?.word_prediction_enabled != true) {
+            return false
+        }
+
+        val inlineSuggestions = response.inlineSuggestions
+        if (inlineSuggestions.isEmpty()) {
+            return false
+        }
+
+        return try {
+            val inlineSuggestionView = tribixbite.cleverkeys.autofill.InlineAutofillUtils.createView(
+                inlineSuggestions,
+                this
+            )
+
+            // Display inline autofill suggestions in the suggestion bar
+            _suggestionBar?.setInlineAutofillView(inlineSuggestionView)
+
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("CleverKeysService", "Failed to display inline suggestions", e)
+            false
+        }
+    }
+
     override fun onSharedPreferenceChanged(prefs: SharedPreferences, key: String?) {
         // NOTE: ConfigurationManager is the primary SharedPreferences listener and handles
         // config refresh. This method handles additional UI updates.
