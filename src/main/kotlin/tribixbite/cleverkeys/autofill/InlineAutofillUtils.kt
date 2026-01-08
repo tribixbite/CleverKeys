@@ -52,7 +52,6 @@ object InlineAutofillUtils {
      */
     fun createInlineSuggestionsRequest(context: Context): InlineSuggestionsRequest {
         // Use default dark theme colors for autofill chips
-        // TODO: Get these from Theme class when keyboard view is available
         val backgroundColor = 0xFF2D2D2D.toInt()
         val textColor = 0xFFFFFFFF.toInt()
         val hintColor = 0xFFAAAAAA.toInt()

@@ -750,10 +750,7 @@ class CleverKeysService : InputMethodService(),
 
     @androidx.annotation.RequiresApi(android.os.Build.VERSION_CODES.R)
     override fun onCreateInlineSuggestionsRequest(uiExtras: android.os.Bundle): android.view.inputmethod.InlineSuggestionsRequest? {
-        // Don't show autofill suggestions if word prediction is disabled (no suggestion bar)
-        if (_config?.word_prediction_enabled != true) {
-            return null
-        }
+        // Always allow inline autofill suggestions when the feature is available
 
         return try {
             tribixbite.cleverkeys.autofill.InlineAutofillUtils.createInlineSuggestionsRequest(this)
@@ -765,10 +762,7 @@ class CleverKeysService : InputMethodService(),
 
     @androidx.annotation.RequiresApi(android.os.Build.VERSION_CODES.R)
     override fun onInlineSuggestionsResponse(response: android.view.inputmethod.InlineSuggestionsResponse): Boolean {
-        // Don't show autofill suggestions if word prediction is disabled (no suggestion bar)
-        if (_config?.word_prediction_enabled != true) {
-            return false
-        }
+        // Always handle inline autofill suggestions when available
 
         val inlineSuggestions = response.inlineSuggestions
         if (inlineSuggestions.isEmpty()) {

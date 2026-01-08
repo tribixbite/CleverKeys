@@ -1282,8 +1282,8 @@ class Keyboard2View @JvmOverloads constructor(
     ) {
         val a = LABEL_POSITION_H[sub_index]
         val v = LABEL_POSITION_V[sub_index]
-        // Match the size of built-in sublabels for consistency
-        val textSize = _subLabelSize
+        // Apply smaller font scaling for icon-font labels (0.75f) to match built-in sublabels with FLAG_SMALLER_FONT
+        val textSize = if (useKeyFont) _subLabelSize * 0.75f else _subLabelSize
 
         // Use the theme's sublabel_paint for consistent font selection
         val paint = tc_key.sublabel_paint(useKeyFont, color, textSize, a)
