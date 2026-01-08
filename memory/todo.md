@@ -1,7 +1,31 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-08
-**Status**: v1.1.97 - Multilanguage swipe typing with curated V3 English dictionary + Seamless Password Manager autofill (API 30+)
+**Status**: v1.1.97 - Experimental multilanguage swipe typing with curated V3 English dictionary
+
+---
+
+## v1.1.97+ Custom Per-Key Actions Fixes - COMPLETE
+
+**Custom Short Swipe Commands Not Working**:
+- [x] Issue: Event-type commands (config, clipboard, voice, numeric) did nothing when assigned
+- [x] Root cause: CustomShortSwipeExecutor only handled InputConnection-based commands
+- [x] Fix: Added KeyValue-based execution in Keyboard2View.onCustomShortSwipe()
+- [x] Event-type commands now call service.triggerKeyboardEvent()
+- [x] Editing-type commands call InputConnection.performContextMenuAction()
+
+**PUA Characters Showing as Chinese in Customization UI**:
+- [x] Issue: Icon characters (PUA range) rendered as Chinese in per-key selection
+- [x] Root cause: Compose Text() uses system font, not special_font.ttf
+- [x] Fix: Use AndroidView with Theme.getKeyFont() for icon preview
+- [x] Fixed in: ShortSwipeCustomizationActivity (MappingListItem) and CommandPaletteDialog (preview)
+
+**Custom Sublabel Icons Larger Than Built-in Icons**:
+- [x] Issue: Custom per-key action icons appeared 33% larger than built-in sublabels
+- [x] Root cause: Built-in sublabels with FLAG_SMALLER_FONT use _subLabelSize * 0.75f
+- [x] Custom sublabels in drawCustomSubLabel() always used full _subLabelSize
+- [x] Fix: Apply 0.75f scaling when useKeyFont is true
+- [x] Code change: `val textSize = if (useKeyFont) _subLabelSize * 0.75f else _subLabelSize`
 
 ---
 
@@ -814,25 +838,6 @@ No mixing of languages in a single trie - clean separation.
   - Fix: Use AndroidView with Theme.getKeyFont() for icon rendering in:
     - MappingListItem: Shows icon when useKeyFont=true
     - CommandPaletteDialog preview: Renders actual icon instead of [Icon: name]
-- [x] Icon size standardization in per-key customization UI (2026-01-08)
-  - Issue: Custom per-key action icons appeared larger than keyboard sublabels
-  - Fix: Changed icon text size from 10sp to 11sp to match description text
-  - Changed surrounding quotes from 13sp to 11sp for visual consistency
-- [x] Password Manager autofill support (2026-01-08)
-  - Added "autofill" to extra keys list for easy keyboard access (manual fallback)
-  - Added string resource and keyTitle/keyDescription entries
-  - Positioned next to paste key for form filling workflows
-  - Uses existing Android autofill framework (API 26+) via performContextMenuAction()
-- [x] Seamless Inline Autofill for password managers (2026-01-08, API 30+)
-  - Implemented Android Inline Suggestions API for automatic autofill
-  - Created InlineAutofillUtils.kt utility class in autofill/ package
-  - Override onCreateInlineSuggestionsRequest() to describe suggestion styling
-  - Override onInlineSuggestionsResponse() to receive and display suggestions
-  - Added setInlineAutofillView() to SuggestionBar for displaying autofill chips
-  - Password manager suggestions appear directly in suggestion bar
-  - No button press required - autofill appears when focusing on autofill-enabled fields
-  - Added autofill_chip_background.xml drawable and suggestion_strip_height dimen
-  - Added androidx.autofill:autofill:1.1.0 dependency
 
 ## Active Investigation: English Words in French-Only Mode
 
