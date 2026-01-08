@@ -235,7 +235,6 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "switch_forward" -> id = R.string.key_descr_switch_forward
                 "switch_backward" -> id = R.string.key_descr_switch_backward
                 "undo" -> id = R.string.key_descr_undo
-                "autofill" -> id = R.string.key_descr_autofill
                 "voice_typing" -> id = R.string.key_descr_voice_typing
                 "ª" -> id = R.string.key_descr_ª
                 "º" -> id = R.string.key_descr_º
@@ -305,7 +304,6 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "pasteAsPlainText" -> "Paste Plain"
                 "undo" -> "Undo"
                 "redo" -> "Redo"
-                "autofill" -> "Autofill"
                 "delete_word" -> "Delete Word"
                 "forward_delete_word" -> "Fwd Delete Word"
                 "superscript" -> "Superscript"
@@ -396,7 +394,6 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "cut" -> mkPreferredPos("x", 2, 2, true)
                 "copy" -> mkPreferredPos("c", 2, 3, true)
                 "paste" -> mkPreferredPos("v", 2, 4, true)
-                "autofill" -> mkPreferredPos("v", 2, 5, true)  // Next to paste for form filling
                 "undo" -> mkPreferredPos("z", 2, 1, true)
                 "selectAll" -> mkPreferredPos("a", 1, 0, true)
                 "redo" -> mkPreferredPos("y", 0, 5, true)

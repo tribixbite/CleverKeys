@@ -19,6 +19,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.98] - 2026-01-08
+
+### Fixed - Per-Key Short Swipe Customization
+
+- **Event-type Commands**: Fixed keyboard settings, clipboard, voice typing, numeric pad shortcuts not working when assigned via per-key customization
+- **Editing-type Commands**: Fixed replaceText, textAssist commands not executing
+- **Icon Rendering**: Fixed PUA characters (icons) showing as Chinese characters in customization UI - now uses special keyboard font
+- **Icon Sizing**: Custom sublabel icons now match built-in sublabel sizes (apply 0.75f scaling for icon-font labels)
+
+### Fixed - Compilation Issues
+
+- **Autofill Config**: Removed invalid Config.show_suggestions references
+- **Theme Colors**: Fixed invalid Theme.getColor() calls in autofill utils
+
+### Documentation
+
+- **README**: Added comprehensive multi-language swipe typing section with 11 supported languages
+- **README**: Added per-key customization feature documentation (204+ commands)
+- **README**: Updated comparison table with multi-language and per-key customization rows
+- **README**: Added custom language pack creation guide with script documentation
+
+---
+
 ## [1.1.97] - 2026-01-07
 
 ### 🌍 Experimental: Multilanguage Swipe Typing

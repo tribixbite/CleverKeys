@@ -1,0 +1,15 @@
+v1.1.97 - Multilanguage Swipe Typing
+
+NEW: Experimental multilanguage support for neural swipe typing
+- Primary language selection: 11 languages supported
+- Secondary language mode with weighted predictions
+- Downloadable language packs (Dutch, Indonesian, Malay, Swahili, Tagalog)
+- Per-language custom dictionaries
+
+NEW: V3 English Dictionary (52,042 curated words)
+- Removed common typos, preserved contractions and custom words
+
+FIXED: OOM crash on large language packs
+FIXED: Dictionary frequency display (now 1-10000 scale)
+FIXED: Missing contractions (im→i'm, ive→i've, etc.)
+FIXED: Race conditions in beam search trie initialization

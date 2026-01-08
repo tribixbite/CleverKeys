@@ -1,0 +1,13 @@
+v1.1.98 - Per-Key Customization Fixes
+
+FIXED: Per-key short swipe customization
+- Event commands now work (settings, clipboard, voice, numeric)
+- Editing commands now work (replaceText, textAssist)
+- Icon characters render correctly (was showing Chinese)
+- Custom sublabel icons match built-in icon sizes
+
+DOCS: Comprehensive README update
+- Multi-language swipe typing guide (11 languages)
+- Per-key customization docs (204+ commands)
+- Custom language pack creation scripts
+- Updated comparison table

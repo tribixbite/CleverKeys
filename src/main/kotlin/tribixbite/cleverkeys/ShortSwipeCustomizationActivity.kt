@@ -547,19 +547,18 @@ private fun MappingListItem(
                 // Use AndroidView with special font for icon characters when useKeyFont is true
                 if (mapping.useKeyFont) {
                     // Show icon using special font via AndroidView
-                    // Use same size as description text (11sp) for compact appearance
+                    // Keyboard sublabels are ~10sp but list rows are shorter, so use 8sp
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "\"",
                             fontWeight = FontWeight.Medium,
-                            fontSize = 11.sp
+                            fontSize = 13.sp
                         )
                         AndroidView(
                             factory = { ctx ->
                                 android.widget.TextView(ctx).apply {
                                     typeface = Theme.getKeyFont(ctx)
-                                    // Match description text size (11sp) for compact icon appearance
-                                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 11f)
+                                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 8f)
                                     setTextColor(android.graphics.Color.WHITE)
                                     text = mapping.displayText
                                 }
@@ -569,14 +568,14 @@ private fun MappingListItem(
                         Text(
                             text = "\"",
                             fontWeight = FontWeight.Medium,
-                            fontSize = 11.sp
+                            fontSize = 13.sp
                         )
                     }
                 } else {
                     Text(
                         text = "\"${mapping.displayText}\"",
                         fontWeight = FontWeight.Medium,
-                        fontSize = 11.sp
+                        fontSize = 13.sp
                     )
                 }
                 Text(
