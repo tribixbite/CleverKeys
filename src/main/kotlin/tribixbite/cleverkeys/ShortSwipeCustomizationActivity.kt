@@ -547,8 +547,7 @@ private fun MappingListItem(
                 // Use AndroidView with special font for icon characters when useKeyFont is true
                 if (mapping.useKeyFont) {
                     // Show icon using special font via AndroidView
-                    // Keyboard uses sublabelTextSize=0.22 vs labelTextSize=0.33 (ratio ~0.67)
-                    // Icon font glyphs are visually larger, so use ~8sp to match 13sp text visually
+                    // Use smaller size (10sp) to approximate keyboard sublabel appearance
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "\"",
@@ -559,7 +558,7 @@ private fun MappingListItem(
                             factory = { ctx ->
                                 android.widget.TextView(ctx).apply {
                                     typeface = Theme.getKeyFont(ctx)
-                                    textSize = 8f  // Match keyboard sublabel ratio (0.22/0.33 of main text)
+                                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 10f)
                                     setTextColor(android.graphics.Color.WHITE)
                                     text = mapping.displayText
                                 }

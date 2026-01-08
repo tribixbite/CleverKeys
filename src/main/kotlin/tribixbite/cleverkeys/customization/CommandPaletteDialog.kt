@@ -326,13 +326,12 @@ private fun LabelConfirmationDialog(
                             }
                             isIconMode -> {
                                 // Icon mode with default label - render with special font
-                                // Keyboard uses sublabelTextSize=0.22 vs labelTextSize=0.33 (ratio ~0.67)
-                                // 18sp text * 0.67 ≈ 12sp for icon to match keyboard proportions
+                                // Use 14sp to be visible in preview while smaller than 18sp text
                                 AndroidView(
                                     factory = { ctx ->
                                         android.widget.TextView(ctx).apply {
                                             typeface = Theme.getKeyFont(ctx)
-                                            textSize = 12f
+                                            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 14f)
                                             setTextColor(android.graphics.Color.WHITE)
                                             text = defaultLabel
                                         }
