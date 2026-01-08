@@ -65,7 +65,7 @@ CleverKeys is the only fully open-source neural network gesture keyboard for And
 | **ML Training Code Public** | ✅ | N/A | ✅⁶ | N/A³ | N/A³ |
 | **Model Size** | 13MB | Proprietary | 62MB | N/A | N/A |
 | **APK Size** | ~52MB | ~45MB | ~200MB | ~15MB | ~25MB |
-| **Clipboard History** | ✅ Unlimited | ⚠️ 10min default⁷ | ✅ 25 items | ✅ 20 items | ❌ 15s hint only |
+| **Clipboard History** | ✅ Unlimited | ⚠️ 10min default⁷ | ✅ 25 items | ✅ 20-100 items | ❌ 15s hint only |
 | **Short-Swipe Actions**⁸ | ✅ 208 gestures | ⚠️ Limited | ❌ | ⚠️ Limited | ⚠️ Limited |
 | **Per-Key Customization** | ✅ 204+ commands | ❌ | ❌ | ❌ | ❌ |
 | **Custom Layouts** | ✅ XML (8 sublabels) | ✅ JSON | ✅ YAML | ⚠️ JSON (no editor) | ⚠️ Addon packs only |
