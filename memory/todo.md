@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-08
-**Status**: v1.1.97 - Multilanguage swipe typing with curated V3 English dictionary + Password Manager autofill
+**Status**: v1.1.97 - Multilanguage swipe typing with curated V3 English dictionary + Seamless Password Manager autofill (API 30+)
 
 ---
 
@@ -819,10 +819,20 @@ No mixing of languages in a single trie - clean separation.
   - Fix: Changed icon text size from 10sp to 11sp to match description text
   - Changed surrounding quotes from 13sp to 11sp for visual consistency
 - [x] Password Manager autofill support (2026-01-08)
-  - Added "autofill" to extra keys list for easy keyboard access
+  - Added "autofill" to extra keys list for easy keyboard access (manual fallback)
   - Added string resource and keyTitle/keyDescription entries
   - Positioned next to paste key for form filling workflows
   - Uses existing Android autofill framework (API 26+) via performContextMenuAction()
+- [x] Seamless Inline Autofill for password managers (2026-01-08, API 30+)
+  - Implemented Android Inline Suggestions API for automatic autofill
+  - Created InlineAutofillUtils.kt utility class in autofill/ package
+  - Override onCreateInlineSuggestionsRequest() to describe suggestion styling
+  - Override onInlineSuggestionsResponse() to receive and display suggestions
+  - Added setInlineAutofillView() to SuggestionBar for displaying autofill chips
+  - Password manager suggestions appear directly in suggestion bar
+  - No button press required - autofill appears when focusing on autofill-enabled fields
+  - Added autofill_chip_background.xml drawable and suggestion_strip_height dimen
+  - Added androidx.autofill:autofill:1.1.0 dependency
 
 ## Active Investigation: English Words in French-Only Mode
 
