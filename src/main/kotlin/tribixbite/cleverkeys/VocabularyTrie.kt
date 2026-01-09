@@ -25,14 +25,19 @@ class VocabularyTrie {
 
     /**
      * Node in the trie. Each node represents a character position in words.
+     *
+     * @property subtreeWordCount Number of complete words reachable from this node
+     *           (including this node if isEndOfWord). Used for LM fusion scoring.
      */
     private class TrieNode {
         val children = mutableMapOf<Char, TrieNode>()
         var isEndOfWord = false
+        var subtreeWordCount = 0  // Words reachable from this node (for LM boost)
     }
 
     /**
      * Insert a word into the trie. Case-insensitive (converts to lowercase).
+     * Updates subtreeWordCount for all nodes along the path.
      *
      * @param word The word to insert (will be lowercased)
      */
@@ -40,15 +45,24 @@ class VocabularyTrie {
         if (word.isEmpty()) return
 
         val lowerWord = word.lowercase()
+
+        // Track path for subtreeWordCount updates
+        val path = mutableListOf<TrieNode>()
         var current = root
+        path.add(current)
 
         for (char in lowerWord) {
             current = current.children.getOrPut(char) { TrieNode() }
+            path.add(current)
         }
 
         if (!current.isEndOfWord) {
             current.isEndOfWord = true
             wordCount++
+            // Increment subtreeWordCount for all ancestors (including root and current)
+            for (node in path) {
+                node.subtreeWordCount++
+            }
         }
     }
 
@@ -92,6 +106,47 @@ class VocabularyTrie {
         }
 
         return current.children.keys
+    }
+
+    /**
+     * Get the number of words reachable from a given prefix.
+     * Used for LM fusion scoring in beam search - paths with more reachable
+     * words get a probability boost proportional to log(count).
+     *
+     * @param prefix The prefix to check (will be lowercased)
+     * @return Number of complete words that start with this prefix, or 0 if prefix not found
+     */
+    fun getSubtreeWordCount(prefix: String): Int {
+        if (prefix.isEmpty()) return root.subtreeWordCount
+
+        val lowerPrefix = prefix.lowercase()
+        var current = root
+
+        for (char in lowerPrefix) {
+            val next = current.children[char] ?: return 0
+            current = next
+        }
+
+        return current.subtreeWordCount
+    }
+
+    /**
+     * Get allowed next characters with their subtree word counts.
+     * Efficient single-traversal method for LM fusion scoring.
+     *
+     * @param prefix The prefix to check (will be lowercased)
+     * @return Map of char -> subtreeWordCount, or empty map if prefix not found
+     */
+    fun getAllowedNextCharsWithCounts(prefix: String): Map<Char, Int> {
+        val lowerPrefix = prefix.lowercase()
+        var current = root
+
+        for (char in lowerPrefix) {
+            val next = current.children[char] ?: return emptyMap()
+            current = next
+        }
+
+        return current.children.mapValues { it.value.subtreeWordCount }
     }
 
     /**
@@ -146,6 +201,7 @@ class VocabularyTrie {
      */
     fun clear() {
         root.children.clear()
+        root.subtreeWordCount = 0
         wordCount = 0
     }
 
