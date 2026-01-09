@@ -1185,7 +1185,13 @@ class OptimizedVocabulary(private val context: Context) {
         // English doesn't need accent normalization for primary
         if (language == "en") {
             normalizedIndex = null
-            Log.i(TAG, "Primary language is English - no accent normalization needed")
+            // v1.2.0: Reload English contractions when switching back to English
+            // Previous non-English language cleared contractions, must restore them
+            val priorCount = nonPairedContractions.size
+            nonPairedContractions.clear()
+            contractionPairings.clear()
+            loadContractionMappings()  // Reloads English + any fallback contractions
+            Log.i(TAG, "Primary language is English - reloaded ${nonPairedContractions.size} contractions (was $priorCount)")
             return true
         }
 
@@ -1292,7 +1298,14 @@ class OptimizedVocabulary(private val context: Context) {
         activeBeamSearchTrie = vocabularyTrie  // Reset to English trie
         // v1.1.93: Reset _primaryLanguageCode when unloading (must be after activeBeamSearchTrie reset)
         _primaryLanguageCode = "en"
-        Log.i(TAG, "Unloaded primary dictionary, reset to English beam search trie")
+
+        // v1.2.0: Reload English contractions when switching back from non-English
+        // loadPrimaryDictionary() for non-English clears contractions - must restore them
+        val priorCount = nonPairedContractions.size
+        nonPairedContractions.clear()
+        contractionPairings.clear()
+        loadContractionMappings()  // Reloads English + paired contractions
+        Log.i(TAG, "Unloaded primary dictionary, reset to English (reloaded ${nonPairedContractions.size} contractions, was $priorCount)")
     }
 
     /**
