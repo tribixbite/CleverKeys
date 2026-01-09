@@ -42,11 +42,12 @@
   - Touch typing now shows contraction forms (e.g., "don't") when user types key like "dont"
   - Contraction appears as first suggestion with higher score
   - Same contraction awareness as swipe typing now available for touch typing
-- [ ] **INVESTIGATE**: English word contamination in touch typing (needs user testing)
-  - Added debug logging to trace dictionary loading: sample words, language, dict size
-  - Logs appear when dictionary loads and when predictions are made
-  - User should check logcat for: "Async dictionary load complete for 'lang': X words"
-  - Check that sample words match the expected language
+- [x] **FIX**: English word contamination in touch typing (2026-01-09)
+  - Root cause: Dictionary reload was blocked if previous load was in progress
+  - WordPredictor.loadDictionaryAsync() had `isLoadingState` check that ignored reload requests
+  - When user toggled language during initial English dictionary load, new language was ignored
+  - Fix: Reset isLoadingState flag and let AsyncDictionaryLoader cancel previous task
+  - Added debug logging for verification: sample words, language, dict size
 
 **Technical Details**:
 - `showNoTextSelectedToast(actionName)` - toast helper with try/catch
