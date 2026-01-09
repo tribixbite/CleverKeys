@@ -1,7 +1,27 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-09
-**Status**: v1.1.99 - Per-key customization fixes + multilanguage swipe typing
+**Status**: v1.2.0 - Language toggles + text menu + multilanguage swipe typing
+
+---
+
+## v1.2.0 Language Toggle & Text Menu - COMPLETE
+
+**New Features for v1.2.0**:
+- [x] "No text selected" toast for Text Assist and Replace Text when no selection
+- [x] Show Text Menu command - selects word at cursor, triggers native toolbar
+- [x] Primary Language Toggle - swap between two configured primary languages
+- [x] Secondary Language Toggle - swap between two configured secondary languages
+- [x] New preference keys: `pref_primary_language_alt`, `pref_secondary_language_alt`
+- [x] Added 5 new AvailableCommand entries for per-key customization
+- [x] Settings UI: "Quick Language Toggle" section with alternate language dropdowns
+
+**Technical Details**:
+- `showNoTextSelectedToast(actionName)` - toast helper with try/catch
+- `showTextContextMenu(ic)` - word boundary detection + setSelection
+- `togglePrimaryLanguage()` - swaps pref_primary_language with pref_primary_language_alt
+- `toggleSecondaryLanguage()` - swaps pref_secondary_language with pref_secondary_language_alt
+- `getLanguageDisplayName(code)` - maps language codes to display names
 
 ---
 

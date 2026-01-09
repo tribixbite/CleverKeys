@@ -18,6 +18,7 @@ import android.util.LruCache
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
+import android.widget.Toast
 import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
 import tribixbite.cleverkeys.customization.AvailableCommand
@@ -603,6 +604,18 @@ class Keyboard2View @JvmOverloads constructor(
             val actionValue = mapping.actionValue
             val keyValue = KeyValue.getKeyByName(actionValue)
 
+            // v1.2.0 custom commands - check before KeyValue to prevent String fallback interception
+            val customCommandHandled = when (actionValue) {
+                "primaryLangToggle" -> { togglePrimaryLanguage(); true }
+                "secondaryLangToggle" -> { toggleSecondaryLanguage(); true }
+                "textAssist" -> { launchTextAssistActivity(inputConnection); true }
+                "replaceText" -> { launchReplaceTextActivity(inputConnection); true }
+                "showTextMenu" -> { showTextContextMenu(inputConnection); true }
+                else -> false
+            }
+
+            if (customCommandHandled) return@onCustomShortSwipe
+
             if (keyValue != null) {
                 when (keyValue.getKind()) {
                     KeyValue.Kind.Event -> {
@@ -617,36 +630,59 @@ class Keyboard2View @JvmOverloads constructor(
                         Log.d("Keyboard2View", "Executing Editing command: $actionValue -> $editing")
                         executeEditingCommand(editing, inputConnection)
                     }
+                    KeyValue.Kind.String -> {
+                        // String keys that aren't our custom commands - fall through to legacy handling
+                        Log.d("Keyboard2View", "String KeyValue, falling through to legacy handler")
+                    }
                     else -> {
                         Log.w("Keyboard2View", "Unhandled KeyValue kind for custom swipe: ${keyValue.getKind()}")
                     }
                 }
-            } else {
-                // Fallback to legacy AvailableCommand handling for backward compatibility
-                val command = mapping.getCommand()
-                when (command) {
-                    AvailableCommand.SWITCH_IME -> {
-                        Log.d("Keyboard2View", "Executing SWITCH_IME via InputMethodManager")
-                        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-                        imm?.showInputMethodPicker()
-                    }
-                    AvailableCommand.VOICE_INPUT -> {
-                        // Trigger voice typing via service
-                        Log.d("Keyboard2View", "Executing VOICE_INPUT via keyboard service")
-                        service.triggerKeyboardEvent(KeyValue.Event.SWITCH_VOICE_TYPING)
-                    }
-                    AvailableCommand.SWITCH_FORWARD -> {
-                        Log.d("Keyboard2View", "Executing SWITCH_FORWARD via keyboard service")
-                        service.triggerKeyboardEvent(KeyValue.Event.SWITCH_FORWARD)
-                    }
-                    AvailableCommand.SWITCH_BACKWARD -> {
-                        Log.d("Keyboard2View", "Executing SWITCH_BACKWARD via keyboard service")
-                        service.triggerKeyboardEvent(KeyValue.Event.SWITCH_BACKWARD)
-                    }
-                    else -> {
-                        if (command != null) {
-                            Log.w("Keyboard2View", "Custom swipe command failed to execute: ${mapping.actionValue}")
-                        }
+            }
+
+            // Fallback to legacy AvailableCommand handling for backward compatibility
+            val command = mapping.getCommand()
+            when (command) {
+                AvailableCommand.SWITCH_IME -> {
+                    Log.d("Keyboard2View", "Executing SWITCH_IME via InputMethodManager")
+                    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                    imm?.showInputMethodPicker()
+                }
+                AvailableCommand.VOICE_INPUT -> {
+                    Log.d("Keyboard2View", "Executing VOICE_INPUT via keyboard service")
+                    service.triggerKeyboardEvent(KeyValue.Event.SWITCH_VOICE_TYPING)
+                }
+                AvailableCommand.SWITCH_FORWARD -> {
+                    Log.d("Keyboard2View", "Executing SWITCH_FORWARD via keyboard service")
+                    service.triggerKeyboardEvent(KeyValue.Event.SWITCH_FORWARD)
+                }
+                AvailableCommand.SWITCH_BACKWARD -> {
+                    Log.d("Keyboard2View", "Executing SWITCH_BACKWARD via keyboard service")
+                    service.triggerKeyboardEvent(KeyValue.Event.SWITCH_BACKWARD)
+                }
+                AvailableCommand.TEXT_ASSIST -> {
+                    Log.d("Keyboard2View", "Executing TEXT_ASSIST")
+                    launchTextAssistActivity(inputConnection)
+                }
+                AvailableCommand.REPLACE_TEXT -> {
+                    Log.d("Keyboard2View", "Executing REPLACE_TEXT")
+                    launchReplaceTextActivity(inputConnection)
+                }
+                AvailableCommand.SHOW_TEXT_MENU -> {
+                    Log.d("Keyboard2View", "Executing SHOW_TEXT_MENU")
+                    showTextContextMenu(inputConnection)
+                }
+                AvailableCommand.PRIMARY_LANG_TOGGLE -> {
+                    Log.d("Keyboard2View", "Executing PRIMARY_LANG_TOGGLE")
+                    togglePrimaryLanguage()
+                }
+                AvailableCommand.SECONDARY_LANG_TOGGLE -> {
+                    Log.d("Keyboard2View", "Executing SECONDARY_LANG_TOGGLE")
+                    toggleSecondaryLanguage()
+                }
+                else -> {
+                    if (command != null) {
+                        Log.w("Keyboard2View", "Custom swipe command failed to execute: ${mapping.actionValue}")
                     }
                 }
             }
@@ -683,6 +719,17 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /**
+     * Show a toast message indicating no text is selected for the given action.
+     */
+    private fun showNoTextSelectedToast(actionName: String) {
+        try {
+            Toast.makeText(context, "No text selected for $actionName", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e("Keyboard2View", "Failed to show toast", e)
+        }
+    }
+
+    /**
      * Launch text assist activity using ACTION_PROCESS_TEXT intent.
      * This allows apps like Google Assistant, translation services, etc. to process selected text.
      */
@@ -691,8 +738,7 @@ class Keyboard2View @JvmOverloads constructor(
         val selectedText = inputConnection.getSelectedText(0)?.toString()
         if (selectedText.isNullOrEmpty()) {
             Log.d("Keyboard2View", "No text selected for text assist")
-            // Still try context menu action as fallback
-            inputConnection.performContextMenuAction(android.R.id.textAssist)
+            showNoTextSelectedToast("Text Assist")
             return
         }
 
@@ -725,8 +771,7 @@ class Keyboard2View @JvmOverloads constructor(
         val selectedText = inputConnection.getSelectedText(0)?.toString()
         if (selectedText.isNullOrEmpty()) {
             Log.d("Keyboard2View", "No text selected for replace")
-            // Still try context menu action as fallback
-            inputConnection.performContextMenuAction(android.R.id.replaceText)
+            showNoTextSelectedToast("Replace Text")
             return
         }
 
@@ -747,6 +792,178 @@ class Keyboard2View @JvmOverloads constructor(
             Log.e("Keyboard2View", "Failed to launch replace text", e)
             // Fallback to context menu action
             inputConnection.performContextMenuAction(android.R.id.replaceText)
+        }
+    }
+
+    /**
+     * Show text context menu by selecting the word under cursor.
+     * This triggers the native floating toolbar with cut/copy/paste/translate options.
+     */
+    private fun showTextContextMenu(inputConnection: android.view.inputmethod.InputConnection?) {
+        if (inputConnection == null) {
+            Log.w("Keyboard2View", "Cannot show text menu: no input connection")
+            return
+        }
+
+        try {
+            // Check if there's already a selection
+            val existingSelection = inputConnection.getSelectedText(0)?.toString()
+            if (!existingSelection.isNullOrEmpty()) {
+                // Already have selection, just show toast indicating menu should appear
+                Log.d("Keyboard2View", "Text already selected, toolbar should be visible")
+                Toast.makeText(context, "Selection menu available", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            // No selection - try to select the word at cursor to trigger toolbar
+            // Get text around cursor
+            val textBefore = inputConnection.getTextBeforeCursor(50, 0)?.toString() ?: ""
+            val textAfter = inputConnection.getTextAfterCursor(50, 0)?.toString() ?: ""
+
+            if (textBefore.isEmpty() && textAfter.isEmpty()) {
+                Toast.makeText(context, "No text to select", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            // Find word boundaries
+            var startOffset = textBefore.length
+            var endOffset = 0
+
+            // Find start of word (go backwards from cursor)
+            for (i in textBefore.lastIndex downTo 0) {
+                if (!textBefore[i].isLetterOrDigit() && textBefore[i] != '\'') {
+                    break
+                }
+                startOffset = i
+            }
+
+            // Find end of word (go forwards from cursor)
+            for (i in textAfter.indices) {
+                if (!textAfter[i].isLetterOrDigit() && textAfter[i] != '\'') {
+                    break
+                }
+                endOffset = i + 1
+            }
+
+            // Calculate selection offsets relative to cursor
+            val selectBackward = textBefore.length - startOffset
+            val selectForward = endOffset
+
+            if (selectBackward == 0 && selectForward == 0) {
+                Toast.makeText(context, "No word at cursor", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            // Get extracted text to find cursor position
+            val extracted = inputConnection.getExtractedText(android.view.inputmethod.ExtractedTextRequest(), 0)
+            if (extracted != null) {
+                val cursorPos = extracted.selectionStart
+                val wordStart = cursorPos - selectBackward
+                val wordEnd = cursorPos + selectForward
+
+                // Select the word using absolute positions
+                inputConnection.setSelection(wordStart, wordEnd)
+                Log.d("Keyboard2View", "Selected word at positions: $wordStart to $wordEnd")
+                Toast.makeText(context, "Word selected", Toast.LENGTH_SHORT).show()
+            } else {
+                // Fallback: try double-tap simulation via ctrl+shift+left then shift+right
+                // Send Ctrl+Shift+Left to select word left
+                val downTime = System.currentTimeMillis()
+                val selectWordEvent = android.view.KeyEvent(
+                    downTime, downTime,
+                    android.view.KeyEvent.ACTION_DOWN,
+                    android.view.KeyEvent.KEYCODE_DPAD_LEFT,
+                    0,
+                    android.view.KeyEvent.META_CTRL_ON or android.view.KeyEvent.META_SHIFT_ON
+                )
+                inputConnection.sendKeyEvent(selectWordEvent)
+                inputConnection.sendKeyEvent(android.view.KeyEvent(
+                    downTime, downTime,
+                    android.view.KeyEvent.ACTION_UP,
+                    android.view.KeyEvent.KEYCODE_DPAD_LEFT,
+                    0,
+                    android.view.KeyEvent.META_CTRL_ON or android.view.KeyEvent.META_SHIFT_ON
+                ))
+                Toast.makeText(context, "Word selection attempted", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Log.e("Keyboard2View", "Failed to show text menu", e)
+            Toast.makeText(context, "Could not select text", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Toggle between two primary languages.
+     * Swaps the current primary language with the alternate primary language.
+     */
+    private fun togglePrimaryLanguage() {
+        try {
+            val prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(context)
+            val currentPrimary = prefs.getString("pref_primary_language", "en") ?: "en"
+            val alternatePrimary = prefs.getString("pref_primary_language_alt", "es") ?: "es"
+
+            // Swap the languages
+            prefs.edit()
+                .putString("pref_primary_language", alternatePrimary)
+                .putString("pref_primary_language_alt", currentPrimary)
+                .apply()
+
+            // Show toast with new language
+            val langName = getLanguageDisplayName(alternatePrimary)
+            Toast.makeText(context, "Primary: $langName", Toast.LENGTH_SHORT).show()
+            Log.d("Keyboard2View", "Toggled primary: $currentPrimary -> $alternatePrimary")
+        } catch (e: Exception) {
+            Log.e("Keyboard2View", "Failed to toggle primary language", e)
+            Toast.makeText(context, "Language toggle failed", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Toggle between two secondary languages.
+     * Swaps the current secondary language with the alternate secondary language.
+     */
+    private fun toggleSecondaryLanguage() {
+        try {
+            val prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(context)
+            val currentSecondary = prefs.getString("pref_secondary_language", "none") ?: "none"
+            val alternateSecondary = prefs.getString("pref_secondary_language_alt", "none") ?: "none"
+
+            // Swap the languages
+            prefs.edit()
+                .putString("pref_secondary_language", alternateSecondary)
+                .putString("pref_secondary_language_alt", currentSecondary)
+                .apply()
+
+            // Show toast with new language
+            val langName = if (alternateSecondary == "none") "None" else getLanguageDisplayName(alternateSecondary)
+            Toast.makeText(context, "Secondary: $langName", Toast.LENGTH_SHORT).show()
+
+            Log.d("Keyboard2View", "Toggled secondary language: $currentSecondary -> $alternateSecondary")
+            // PreferenceUIUpdateHandler will automatically reload dictionaries on preference change
+        } catch (e: Exception) {
+            Log.e("Keyboard2View", "Failed to toggle secondary language", e)
+            Toast.makeText(context, "Language toggle failed", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Get display name for a language code.
+     */
+    private fun getLanguageDisplayName(langCode: String): String {
+        return when (langCode) {
+            "en" -> "English"
+            "es" -> "Spanish"
+            "fr" -> "French"
+            "de" -> "German"
+            "it" -> "Italian"
+            "pt" -> "Portuguese"
+            "nl" -> "Dutch"
+            "id" -> "Indonesian"
+            "ms" -> "Malay"
+            "tl" -> "Tagalog"
+            "sw" -> "Swahili"
+            "none" -> "None"
+            else -> langCode.uppercase()
         }
     }
 

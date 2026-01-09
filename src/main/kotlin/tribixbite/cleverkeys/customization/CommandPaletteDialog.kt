@@ -523,6 +523,8 @@ private fun CategoryHeader(category: CommandRegistry.Category, commandCount: Int
             CommandRegistry.Category.MEDIA -> Icons.Filled.PlayArrow       // Media controls
             CommandRegistry.Category.SYSTEM -> Icons.Filled.Build          // System/app keys
             CommandRegistry.Category.TEXT -> Icons.Filled.Create           // Text
+            CommandRegistry.Category.LANGUAGE -> Icons.Filled.Refresh      // Language toggle
+            CommandRegistry.Category.TEXT_ACTIONS -> Icons.Filled.Menu     // Text actions
         }
 
         Icon(

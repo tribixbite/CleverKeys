@@ -263,6 +263,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var autoDetectLanguage by mutableStateOf(true)
     private var languageDetectionSensitivity by mutableStateOf(0.6f)
     private var secondaryPredictionWeight by mutableStateOf(0.9f) // v1.1.94: Secondary dictionary weight
+    private var primaryLanguageAlt by mutableStateOf("es") // v1.2.0: Alternate primary for quick toggle
+    private var secondaryLanguageAlt by mutableStateOf("none") // v1.2.0: Alternate secondary for quick toggle
     private var availableSecondaryLanguages by mutableStateOf(listOf<String>()) // V2 dictionaries
     private var installedLanguagePacks by mutableStateOf(listOf<LanguagePackManifest>())
     private var showLanguagePackDialog by mutableStateOf(false)
@@ -2420,6 +2422,61 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    // Quick Language Toggle Section (v1.2.0)
+                    Text(
+                        text = "Quick Language Toggle",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Text(
+                        text = "Configure alternate languages for quick toggle commands. " +
+                               "Assign PRIMARY_LANG_TOGGLE or SECONDARY_LANG_TOGGLE to any key's short swipe.",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    // Alternate Primary Language selector
+                    val altPrimaryOptions = availableSecondaryLanguages.filter { it != primaryLanguage }
+                    if (altPrimaryOptions.isNotEmpty()) {
+                        val altPrimaryDisplayOptions = altPrimaryOptions.map { getLanguageDisplayName(it) }
+                        val altPrimarySelectedIndex = altPrimaryOptions.indexOf(primaryLanguageAlt).coerceAtLeast(0)
+
+                        SettingsDropdown(
+                            title = "Alternate Primary",
+                            description = "Toggle between $primaryLanguage ↔ ${primaryLanguageAlt}",
+                            options = altPrimaryDisplayOptions,
+                            selectedIndex = altPrimarySelectedIndex,
+                            onSelectionChange = { index ->
+                                primaryLanguageAlt = altPrimaryOptions.getOrElse(index) { "es" }
+                                saveSetting("pref_primary_language_alt", primaryLanguageAlt)
+                            }
+                        )
+                    }
+
+                    // Alternate Secondary Language selector
+                    val altSecondaryOptions = listOf("none") + availableSecondaryLanguages.filter {
+                        it != secondaryLanguage && it != primaryLanguage
+                    }
+                    val altSecondaryDisplayOptions = altSecondaryOptions.map { getLanguageDisplayName(it) }
+                    val altSecondarySelectedIndex = altSecondaryOptions.indexOf(secondaryLanguageAlt).coerceAtLeast(0)
+
+                    SettingsDropdown(
+                        title = "Alternate Secondary",
+                        description = "Toggle between ${getLanguageDisplayName(secondaryLanguage)} ↔ ${getLanguageDisplayName(secondaryLanguageAlt)}",
+                        options = altSecondaryDisplayOptions,
+                        selectedIndex = altSecondarySelectedIndex,
+                        onSelectionChange = { index ->
+                            secondaryLanguageAlt = altSecondaryOptions.getOrElse(index) { "none" }
+                            saveSetting("pref_secondary_language_alt", secondaryLanguageAlt)
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     // Language Packs Section
                     Text(
                         text = "Language Packs",
@@ -3427,6 +3484,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         autoDetectLanguage = prefs.getSafeBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
         languageDetectionSensitivity = Config.safeGetFloat(prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
         secondaryPredictionWeight = Config.safeGetFloat(prefs, "pref_secondary_prediction_weight", Defaults.SECONDARY_PREDICTION_WEIGHT)
+        primaryLanguageAlt = prefs.getSafeString("pref_primary_language_alt", "es")
+        secondaryLanguageAlt = prefs.getSafeString("pref_secondary_language_alt", "none")
 
         // Detect available V2 dictionaries for secondary language options
         availableSecondaryLanguages = detectAvailableV2Dictionaries()

@@ -96,7 +96,16 @@ enum class AvailableCommand(
 
     // Layout switching
     SWITCH_FORWARD("Next Layout", "Switch to next keyboard layout", "keyboard_arrow_right"),
-    SWITCH_BACKWARD("Previous Layout", "Switch to previous keyboard layout", "keyboard_arrow_left");
+    SWITCH_BACKWARD("Previous Layout", "Switch to previous keyboard layout", "keyboard_arrow_left"),
+
+    // Text processing
+    TEXT_ASSIST("Text Assist", "Process selected text with AI assistants", "smart_toy"),
+    REPLACE_TEXT("Replace Text", "Replace selected text with alternatives", "find_replace"),
+    SHOW_TEXT_MENU("Show Text Menu", "Show cut/copy/paste/translate menu by selecting word", "menu"),
+
+    // Language switching
+    PRIMARY_LANG_TOGGLE("Toggle Primary Language", "Switch between two primary languages", "language"),
+    SECONDARY_LANG_TOGGLE("Toggle Secondary Language", "Switch between two secondary languages", "translate");
 
     companion object {
         /**
@@ -117,6 +126,8 @@ enum class AvailableCommand(
             "Navigation" to listOf(CURSOR_HOME, CURSOR_END, CURSOR_DOC_START, CURSOR_DOC_END),
             "Words" to listOf(WORD_LEFT, WORD_RIGHT, DELETE_WORD),
             "Layout" to listOf(SWITCH_FORWARD, SWITCH_BACKWARD),
+            "Text" to listOf(TEXT_ASSIST, REPLACE_TEXT, SHOW_TEXT_MENU),
+            "Language" to listOf(PRIMARY_LANG_TOGGLE, SECONDARY_LANG_TOGGLE),
             "System" to listOf(SWITCH_IME, VOICE_INPUT)
         )
     }

@@ -185,6 +185,30 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 "insert" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_INSERT)
                 "scroll_lock" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_SCROLL_LOCK)
 
+                // Language toggle commands (v1.2.0) - require keyboard service handling
+                "primaryLangToggle" -> {
+                    Log.d(TAG, "primaryLangToggle - requires keyboard view handling")
+                    false
+                }
+                "secondaryLangToggle" -> {
+                    Log.d(TAG, "secondaryLangToggle - requires keyboard view handling")
+                    false
+                }
+
+                // Text action commands (v1.2.0) - require keyboard view handling
+                "textAssist" -> {
+                    Log.d(TAG, "textAssist - requires keyboard view handling")
+                    false
+                }
+                "replaceText" -> {
+                    Log.d(TAG, "replaceText - requires keyboard view handling")
+                    false
+                }
+                "showTextMenu" -> {
+                    Log.d(TAG, "showTextMenu - requires keyboard view handling")
+                    false
+                }
+
                 // Fallback: try to get KeyValue for character-based commands
                 // (Hebrew niqqud, Arabic vowels, combining diacritics, etc.)
                 else -> {
@@ -353,6 +377,32 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 }
                 AvailableCommand.SWITCH_BACKWARD -> {
                     Log.d(TAG, "SWITCH_BACKWARD command - requires keyboard service handling")
+                    false
+                }
+
+                // Text processing commands - require keyboard view handling
+                AvailableCommand.TEXT_ASSIST -> {
+                    Log.d(TAG, "TEXT_ASSIST command - requires keyboard view handling")
+                    false // Let the caller know this needs special handling
+                }
+                AvailableCommand.REPLACE_TEXT -> {
+                    Log.d(TAG, "REPLACE_TEXT command - requires keyboard view handling")
+                    false
+                }
+                AvailableCommand.SHOW_TEXT_MENU -> {
+                    // Select word under cursor to trigger floating toolbar
+                    // First, we'll select the word to make the toolbar appear
+                    Log.d(TAG, "SHOW_TEXT_MENU command - selecting word to show toolbar")
+                    false // Let the caller know this needs special handling
+                }
+
+                // Language switching commands - require keyboard service handling
+                AvailableCommand.PRIMARY_LANG_TOGGLE -> {
+                    Log.d(TAG, "PRIMARY_LANG_TOGGLE command - requires keyboard service handling")
+                    false
+                }
+                AvailableCommand.SECONDARY_LANG_TOGGLE -> {
+                    Log.d(TAG, "SECONDARY_LANG_TOGGLE command - requires keyboard service handling")
                     false
                 }
             }

@@ -59,7 +59,9 @@ object CommandRegistry {
         DIACRITICS_SLAVONIC("Slavonic Diacritics", 14),
         DIACRITICS_ARABIC("Arabic Diacritics", 15),
         HEBREW("Hebrew Marks", 16),
-        TEXT("Text Input", 17)
+        TEXT("Text Input", 17),
+        LANGUAGE("Language", 18),
+        TEXT_ACTIONS("Text Actions", 19)
     }
 
     /**
@@ -521,7 +523,21 @@ object CommandRegistry {
         Command("shindot", "Shin Dot", "Hebrew shin dot (שׁ)", Category.HEBREW,
             keywords = listOf("hebrew", "shin", "dot", "niqqud")),
         Command("sindot", "Sin Dot", "Hebrew sin dot (שׂ)", Category.HEBREW,
-            keywords = listOf("hebrew", "sin", "dot", "niqqud"))
+            keywords = listOf("hebrew", "sin", "dot", "niqqud")),
+
+        // ========== LANGUAGE (v1.2.0) ==========
+        Command("primaryLangToggle", "Toggle Primary Language", "Swap between two primary languages", Category.LANGUAGE,
+            keywords = listOf("language", "toggle", "primary", "switch", "swap")),
+        Command("secondaryLangToggle", "Toggle Secondary Language", "Swap between two secondary languages", Category.LANGUAGE,
+            keywords = listOf("language", "toggle", "secondary", "switch", "swap")),
+
+        // ========== TEXT ACTIONS (v1.2.0) ==========
+        Command("textAssist", "Text Assist", "Process selected text with AI assistants", Category.TEXT_ACTIONS,
+            keywords = listOf("text", "assist", "ai", "process", "google")),
+        Command("replaceText", "Replace Text", "Replace selected text with alternatives", Category.TEXT_ACTIONS,
+            keywords = listOf("replace", "text", "substitute", "change")),
+        Command("showTextMenu", "Show Text Menu", "Select word at cursor and show native toolbar", Category.TEXT_ACTIONS,
+            keywords = listOf("text", "menu", "toolbar", "cut", "copy", "paste", "translate", "select"))
     )
 
     /**

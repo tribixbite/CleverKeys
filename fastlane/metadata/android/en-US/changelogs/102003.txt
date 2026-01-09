@@ -1,0 +1,12 @@
+v1.2.0 - Language Toggle & Text Menu
+
+NEW: Quick language switching commands
+- Primary Language Toggle: Swap between two primary languages instantly
+- Secondary Language Toggle: Swap between two secondary languages
+- Assign to any key's short swipe for fast switching
+
+NEW: Show Text Menu command
+- Selects word at cursor and triggers native cut/copy/paste/translate toolbar
+
+IMPROVED: Text Assist & Replace Text
+- Now shows "No text selected" toast when no selection exists

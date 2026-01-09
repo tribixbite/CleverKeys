@@ -19,6 +19,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-01-09
+
+### New Features - Language Toggle & Text Menu
+
+- **Primary Language Toggle**: New command to instantly swap between two primary languages
+  - Swaps current primary with alternate primary language
+  - Shows toast with new active language
+  - Auto-reloads dictionaries on change
+  - Assign to any key's short swipe gesture
+- **Secondary Language Toggle**: New command to swap between two secondary languages
+  - Same behavior as primary toggle for secondary language slot
+  - Useful for multilingual typists switching context frequently
+- **Show Text Menu**: New command to select word at cursor and trigger native toolbar
+  - Selects word under cursor using text boundary detection
+  - Triggers native floating toolbar (cut/copy/paste/translate)
+  - Shows toast if no word at cursor position
+- **No Text Selected Toast**: Text Assist and Replace Text now show helpful toast when no text is selected
+
+### Settings UI
+
+- **Quick Language Toggle** section in Multi-Language settings:
+  - Alternate Primary Language dropdown
+  - Alternate Secondary Language dropdown
+  - Configure which languages to toggle between
+
+### Technical
+
+- Added 5 new commands to AvailableCommand enum:
+  - `TEXT_ASSIST`, `REPLACE_TEXT`, `SHOW_TEXT_MENU`, `PRIMARY_LANG_TOGGLE`, `SECONDARY_LANG_TOGGLE`
+- New preference keys: `pref_primary_language_alt`, `pref_secondary_language_alt`
+- All new commands available in Per-Key Customization settings
+
+---
+
 ## [1.1.99] - 2026-01-09
 
 ### Fixed - Text Assist and Replace Text Actions
