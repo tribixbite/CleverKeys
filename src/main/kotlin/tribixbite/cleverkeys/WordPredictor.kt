@@ -526,9 +526,11 @@ class WordPredictor {
      * @param callback Callback for load completion (optional, can be null)
      */
     fun loadDictionaryAsync(context: Context, language: String, callback: Runnable?) {
+        // v1.2.0: Don't ignore reload requests - AsyncDictionaryLoader will cancel previous task
+        // This fixes language toggle not reloading dictionary when initial load is in progress
         if (isLoadingState) {
-            Log.w(TAG, "Dictionary already loading, ignoring request")
-            return
+            Log.i(TAG, "Dictionary load in progress, will cancel and reload for '$language'")
+            isLoadingState = false  // Reset flag so new load can proceed
         }
 
         asyncLoader.loadDictionaryAsync(context, language, object : AsyncDictionaryLoader.LoadCallback {
