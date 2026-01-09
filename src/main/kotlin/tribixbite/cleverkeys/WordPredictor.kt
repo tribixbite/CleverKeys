@@ -824,12 +824,21 @@ class WordPredictor {
             // 2. Load Android user dictionary
             // v1.1.90: Filter by locale to prevent English contamination in non-English modes
             // v1.1.91: Use LIKE for partial locale match (e.g., "fr" matches "fr", "fr_FR", "fr_CA")
-            // Accept words matching current language OR words with null locale (global)
+            // v1.2.0: Only include null-locale words for English (untagged words are typically English)
             try {
                 // Match: exact language code, or locale starting with language code (e.g., fr_FR)
-                // Also match null locale (words marked as "all languages")
-                val selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} LIKE ? OR ${UserDictionary.Words.LOCALE} IS NULL"
-                val selectionArgs = arrayOf(language, "$language%")
+                // Only include null locale (untagged words) for English to prevent contamination
+                val selection: String
+                val selectionArgs: Array<String>
+                if (language == "en") {
+                    // For English: include untagged words (likely English anyway)
+                    selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} LIKE ? OR ${UserDictionary.Words.LOCALE} IS NULL"
+                    selectionArgs = arrayOf(language, "$language%")
+                } else {
+                    // For other languages: exclude untagged words to prevent English contamination
+                    selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} LIKE ?"
+                    selectionArgs = arrayOf(language, "$language%")
+                }
 
                 val cursor = context.contentResolver.query(
                     UserDictionary.Words.CONTENT_URI,
@@ -936,12 +945,21 @@ class WordPredictor {
             // 2. Load Android user dictionary
             // v1.1.90: Filter by locale to prevent English contamination in non-English modes
             // v1.1.91: Use LIKE for partial locale match (e.g., "fr" matches "fr", "fr_FR", "fr_CA")
-            // Accept words matching current language OR words with null locale (global)
+            // v1.2.0: Only include null-locale words for English (untagged words are typically English)
             try {
                 // Match: exact language code, or locale starting with language code (e.g., fr_FR)
-                // Also match null locale (words marked as "all languages")
-                val selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} LIKE ? OR ${UserDictionary.Words.LOCALE} IS NULL"
-                val selectionArgs = arrayOf(language, "$language%")
+                // Only include null locale (untagged words) for English to prevent contamination
+                val selection: String
+                val selectionArgs: Array<String>
+                if (language == "en") {
+                    // For English: include untagged words (likely English anyway)
+                    selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} LIKE ? OR ${UserDictionary.Words.LOCALE} IS NULL"
+                    selectionArgs = arrayOf(language, "$language%")
+                } else {
+                    // For other languages: exclude untagged words to prevent English contamination
+                    selection = "${UserDictionary.Words.LOCALE} = ? OR ${UserDictionary.Words.LOCALE} LIKE ?"
+                    selectionArgs = arrayOf(language, "$language%")
+                }
 
                 val cursor = context.contentResolver.query(
                     UserDictionary.Words.CONTENT_URI,

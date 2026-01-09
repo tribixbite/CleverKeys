@@ -28,6 +28,11 @@
   - Root cause: Android 13+ (API 33+) suppresses Toast from IME services
   - Fix: Added `SuggestionBar.showTemporaryMessage()` for in-keyboard feedback
   - Shows message briefly, then restores previous suggestions
+- [x] **FIX**: Touch typing predictions showing English when not primary/secondary
+  - Root cause: UserDictionary words with NULL locale were included in all languages
+  - Android adds typed words without locale tagging, causing cross-language contamination
+  - Fix: Only include null-locale words when language is English
+  - For other languages, strictly filter by matching locale only
 
 **Technical Details**:
 - `showNoTextSelectedToast(actionName)` - toast helper with try/catch
