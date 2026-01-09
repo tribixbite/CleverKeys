@@ -1,7 +1,47 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-09
-**Status**: v1.2.0 - Language toggles + text menu + multilanguage swipe typing
+**Status**: v1.2.1 - Language toggles + text menu + multilanguage swipe typing + LM fusion
+
+---
+
+## v1.2.1 LM Fusion Vocabulary Coverage Boost - COMPLETE
+
+**Feature**: Language Model fusion for multilanguage swipe prediction improvement
+
+**Problem**: French word "veux" (rank=79, very common) never appeared in predictions,
+but "vérification" (rank=140) did. Root cause: Trie branch imbalance + English-biased NN.
+- 79 words start with "ver/vér" vs only 9 words start with "veu"
+- NN gives low probability to "u" after "ve" (not common in English)
+- Beam width of 6 prunes the "veu" path before it can reach "veux"
+
+**Solution** (recommended by Gemini via Zen MCP):
+Prefix-based LM fusion - boost paths with more reachable words:
+```
+new_score = current_score + log(P_nn) + (λ * log(word_count))
+```
+
+**Implementation**:
+- [x] VocabularyTrie: Add `subtreeWordCount` to TrieNode, pre-calculated during insert()
+- [x] VocabularyTrie: Add `getSubtreeWordCount(prefix)` and `getAllowedNextCharsWithCounts(prefix)`
+- [x] BeamSearchEngine: Add `vocabBoostLambda` parameter (default 0.0f = off)
+- [x] BeamSearchEngine: Add `applyVocabBoost()` method, applied before softmax
+- [x] Config/Defaults: Add `NEURAL_VOCAB_BOOST_LAMBDA = 0.3f`
+- [x] NeuralPreset: Add vocabBoostLambda to presets (Speed=0.2, Balanced=0.3, Accuracy=0.4)
+- [x] NeuralSettingsActivity: Add "Vocabulary Coverage Boost" slider (0-1 range)
+- [x] SwipePredictorOrchestrator: Wire vocabBoostLambda from config to BeamSearchEngine
+
+**Files Modified**:
+- `VocabularyTrie.kt`: Node subtree counts + new methods
+- `BeamSearchEngine.kt`: vocabBoostLambda param + applyVocabBoost()
+- `Config.kt`: Defaults + field + refresh() + NeuralPreset enum
+- `NeuralSettingsActivity.kt`: State + UI slider + load/save/detect
+- `SwipePredictorOrchestrator.kt`: Wire config to engine
+
+**Testing Needed**:
+- [ ] Test French "veux" appears in predictions with vocabBoostLambda=0.3
+- [ ] Test slider in Neural Settings (0 = off, 0.3 = balanced, 0.5 = strong)
+- [ ] Verify English predictions not degraded by boost
 
 ---
 
