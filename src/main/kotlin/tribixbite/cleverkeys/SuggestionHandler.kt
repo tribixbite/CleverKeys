@@ -673,15 +673,32 @@ class SuggestionHandler(
 
                 if (Thread.currentThread().isInterrupted || result == null) return@submit
 
+                // v1.2.0: Apply contraction transformation (e.g., "dont" -> "don't")
+                // Check if the typed partial matches a contraction key
+                val contractionWords = mutableListOf<String>()
+                val contractionScores = mutableListOf<Int>()
+
+                // Check if the exact partial is a contraction key
+                val contractionMapping = contractionManager.getNonPairedMapping(partial)
+                if (contractionMapping != null) {
+                    // Add contraction as first suggestion with high score
+                    contractionWords.add(contractionMapping)
+                    contractionScores.add(result.scores.firstOrNull()?.plus(1000) ?: 10000)
+                }
+
+                // Merge contraction with predictions (contraction first, then original predictions)
+                val mergedWords = contractionWords + result.words.filter { it.lowercase() != contractionMapping?.lowercase() }
+                val mergedScores = contractionScores + result.scores.take(result.words.size - contractionWords.size.coerceAtMost(1))
+
                 // Apply capitalization transformation if user started with uppercase
                 val transformedWords = if (shouldCapitalize) {
-                    result.words.map { word ->
+                    mergedWords.map { word ->
                         word.replaceFirstChar {
                             if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
                         }
                     }
                 } else {
-                    result.words
+                    mergedWords
                 }
 
                 // Post result to UI thread
@@ -690,7 +707,8 @@ class SuggestionHandler(
                         // Verify context hasn't changed drastically (optional, but good practice)
                         suggestionBar?.let { bar ->
                             bar.setShowDebugScores(config.swipe_show_debug_scores)
-                            bar.setSuggestionsWithScores(transformedWords, result.scores)
+                            // v1.2.0: Use merged scores that include contraction scores
+                            bar.setSuggestionsWithScores(transformedWords, mergedScores)
                         }
                     }
                 }
