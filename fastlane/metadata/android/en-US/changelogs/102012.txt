@@ -1,0 +1,7 @@
+v1.2.1 - Contraction Fix
+
+FIXED: English contractions (don't, can't, won't) now work after language toggle
+- Swipe typing: "dont" → "don't" works after toggling French → English
+- Touch typing: Contraction suggestions work after any language switch
+
+Root cause: Contraction keys weren't added to beam search trie when switching back to English. Now properly inserts contraction keys into vocabulary trie on language change.
