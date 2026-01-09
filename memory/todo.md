@@ -1,7 +1,18 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-08
-**Status**: v1.1.97 - Experimental multilanguage swipe typing with curated V3 English dictionary
+**Last Updated**: 2026-01-09
+**Status**: v1.1.99 - Per-key customization fixes + multilanguage swipe typing
+
+---
+
+## v1.1.99 Text Processing Actions Fix - COMPLETE
+
+**textAssist and replaceText Not Triggering Activities**:
+- [x] Issue: performContextMenuAction for textAssist/replaceText not supported by most apps
+- [x] Root cause: android.R.id.textAssist and android.R.id.replaceText context menu actions are rarely implemented
+- [x] Fix: Use ACTION_PROCESS_TEXT intent which is widely supported
+- [x] Shows app chooser (Google Assistant, translators, search engines, etc.)
+- [x] Falls back to context menu action if no text selected
 
 ---
 
