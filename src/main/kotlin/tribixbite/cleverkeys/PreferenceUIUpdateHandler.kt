@@ -121,14 +121,17 @@ class PreferenceUIUpdateHandler(
 
                     // v1.2.0: Reload contractions for the new language
                     // Fixes: contractions not working after toggling language and back to English
+                    // Must match ManagerInitializer logic: loadMappings + language + always English
                     contractionManager?.let { cm ->
-                        // Reload base contractions (clears and reloads English base)
+                        // Reload base contractions (from contractions.bin)
                         cm.loadMappings()
-                        // Load language-specific contractions on top
+                        // Load language-specific contractions
                         if (newPrimaryLang != "en") {
                             cm.loadLanguageContractions(newPrimaryLang)
                         }
-                        Log.i(TAG, "Contractions reloaded for language '$newPrimaryLang'")
+                        // Always load English contractions (contractions_en.json has additional entries)
+                        cm.loadLanguageContractions("en")
+                        Log.i(TAG, "Contractions reloaded for language '$newPrimaryLang' (+ English fallback)")
                     }
                 }
                 "pref_secondary_language" -> {
