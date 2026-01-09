@@ -15,6 +15,10 @@
 - [x] New preference keys: `pref_primary_language_alt`, `pref_secondary_language_alt`
 - [x] Added 5 new AvailableCommand entries for per-key customization
 - [x] Settings UI: "Quick Language Toggle" section with alternate language dropdowns
+- [x] **FIX**: Command execution order - check custom commands BEFORE KeyValue lookup
+  - Root cause: KeyValue.getKeyByName() has fallback creating String KeyValue for any name
+  - This intercepted custom commands (primaryLangToggle, etc.) before they could execute
+  - Fix: Check actionValue against custom commands FIRST, return if handled
 
 **Technical Details**:
 - `showNoTextSelectedToast(actionName)` - toast helper with try/catch
