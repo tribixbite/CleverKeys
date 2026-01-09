@@ -657,7 +657,7 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /**
-     * Execute an Editing-type command via InputConnection context menu actions.
+     * Execute an Editing-type command via InputConnection context menu actions or intents.
      */
     @android.annotation.SuppressLint("InlinedApi")
     private fun executeEditingCommand(editing: KeyValue.Editing, inputConnection: android.view.inputmethod.InputConnection?) {
@@ -675,10 +675,78 @@ class Keyboard2View @JvmOverloads constructor(
             KeyValue.Editing.PASTE_PLAIN -> inputConnection.performContextMenuAction(android.R.id.pasteAsPlainText)
             KeyValue.Editing.UNDO -> inputConnection.performContextMenuAction(android.R.id.undo)
             KeyValue.Editing.REDO -> inputConnection.performContextMenuAction(android.R.id.redo)
-            KeyValue.Editing.REPLACE -> inputConnection.performContextMenuAction(android.R.id.replaceText)
-            KeyValue.Editing.ASSIST -> inputConnection.performContextMenuAction(android.R.id.textAssist)
+            KeyValue.Editing.REPLACE -> launchReplaceTextActivity(inputConnection)
+            KeyValue.Editing.ASSIST -> launchTextAssistActivity(inputConnection)
             KeyValue.Editing.AUTOFILL -> inputConnection.performContextMenuAction(android.R.id.autofill)
             else -> Log.w("Keyboard2View", "Unhandled editing command: $editing")
+        }
+    }
+
+    /**
+     * Launch text assist activity using ACTION_PROCESS_TEXT intent.
+     * This allows apps like Google Assistant, translation services, etc. to process selected text.
+     */
+    private fun launchTextAssistActivity(inputConnection: android.view.inputmethod.InputConnection) {
+        // Get selected text
+        val selectedText = inputConnection.getSelectedText(0)?.toString()
+        if (selectedText.isNullOrEmpty()) {
+            Log.d("Keyboard2View", "No text selected for text assist")
+            // Still try context menu action as fallback
+            inputConnection.performContextMenuAction(android.R.id.textAssist)
+            return
+        }
+
+        try {
+            val intent = android.content.Intent(android.content.Intent.ACTION_PROCESS_TEXT).apply {
+                type = "text/plain"
+                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT, selectedText)
+                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT_READONLY, false)
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            // Create chooser to let user pick which app to use
+            val chooser = android.content.Intent.createChooser(intent, "Process text with...")
+            chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(chooser)
+            Log.d("Keyboard2View", "Launched text assist chooser for: $selectedText")
+        } catch (e: Exception) {
+            Log.e("Keyboard2View", "Failed to launch text assist", e)
+            // Fallback to context menu action
+            inputConnection.performContextMenuAction(android.R.id.textAssist)
+        }
+    }
+
+    /**
+     * Launch replace text activity. Since most apps don't support android.R.id.replaceText,
+     * we use ACTION_PROCESS_TEXT with a hint that this is for replacement.
+     */
+    private fun launchReplaceTextActivity(inputConnection: android.view.inputmethod.InputConnection) {
+        // Get selected text
+        val selectedText = inputConnection.getSelectedText(0)?.toString()
+        if (selectedText.isNullOrEmpty()) {
+            Log.d("Keyboard2View", "No text selected for replace")
+            // Still try context menu action as fallback
+            inputConnection.performContextMenuAction(android.R.id.replaceText)
+            return
+        }
+
+        try {
+            // Use ACTION_PROCESS_TEXT which is more widely supported than replaceText context menu
+            val intent = android.content.Intent(android.content.Intent.ACTION_PROCESS_TEXT).apply {
+                type = "text/plain"
+                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT, selectedText)
+                putExtra(android.content.Intent.EXTRA_PROCESS_TEXT_READONLY, false) // Allow replacement
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            val chooser = android.content.Intent.createChooser(intent, "Replace text with...")
+            chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(chooser)
+            Log.d("Keyboard2View", "Launched replace text chooser for: $selectedText")
+        } catch (e: Exception) {
+            Log.e("Keyboard2View", "Failed to launch replace text", e)
+            // Fallback to context menu action
+            inputConnection.performContextMenuAction(android.R.id.replaceText)
         }
     }
 
