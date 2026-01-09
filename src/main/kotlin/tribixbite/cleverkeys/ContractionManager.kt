@@ -48,6 +48,11 @@ class ContractionManager(private val context: Context) {
      */
     fun loadMappings() {
         try {
+            // v1.2.1: Clear existing mappings before loading to prevent stale data on reload
+            // Without this, language toggle could leave old contractions mixed with new
+            nonPairedContractions.clear()
+            knownContractions.clear()
+
             // Try binary format first (fastest)
             if (loadBinaryContractions()) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {

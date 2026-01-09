@@ -1185,12 +1185,24 @@ class OptimizedVocabulary(private val context: Context) {
         // English doesn't need accent normalization for primary
         if (language == "en") {
             normalizedIndex = null
+            activeBeamSearchTrie = vocabularyTrie  // Reset to English trie
+            _primaryLanguageCode = "en"  // v1.2.1: Set language code (was missing!)
+
             // v1.2.0: Reload English contractions when switching back to English
             // Previous non-English language cleared contractions, must restore them
             val priorCount = nonPairedContractions.size
             nonPairedContractions.clear()
             contractionPairings.clear()
             loadContractionMappings()  // Reloads English + any fallback contractions
+
+            // v1.2.1 CRITICAL FIX: Insert contraction keys into vocabularyTrie
+            // If app was launched with non-English primary, vocabularyTrie won't have contraction keys
+            if (nonPairedContractions.isNotEmpty()) {
+                val contractionKeys = nonPairedContractions.keys.toList()
+                vocabularyTrie.insertAll(contractionKeys)
+                Log.i(TAG, "Added ${contractionKeys.size} contraction keys to vocabularyTrie")
+            }
+
             Log.i(TAG, "Primary language is English - reloaded ${nonPairedContractions.size} contractions (was $priorCount)")
             return true
         }
@@ -1305,6 +1317,16 @@ class OptimizedVocabulary(private val context: Context) {
         nonPairedContractions.clear()
         contractionPairings.clear()
         loadContractionMappings()  // Reloads English + paired contractions
+
+        // v1.2.1 CRITICAL FIX: Insert contraction keys into vocabularyTrie
+        // If app was launched with non-English primary, vocabularyTrie won't have contraction keys
+        // Without this, beam search rejects words like "dont", "cant" so they never reach contraction processing
+        if (nonPairedContractions.isNotEmpty()) {
+            val contractionKeys = nonPairedContractions.keys.toList()
+            vocabularyTrie.insertAll(contractionKeys)
+            Log.i(TAG, "Added ${contractionKeys.size} contraction keys to vocabularyTrie")
+        }
+
         Log.i(TAG, "Unloaded primary dictionary, reset to English (reloaded ${nonPairedContractions.size} contractions, was $priorCount)")
     }
 

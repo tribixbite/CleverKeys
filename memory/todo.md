@@ -38,6 +38,13 @@
   - When toggling English → French → English, contractions (dont → don't) stopped working
   - Fix: Added contraction reload in PreferenceUIUpdateHandler when primary language changes
   - Now reloads base contractions + language-specific contractions on each toggle
+- [x] **FIX**: English contractions not working for swipe/touch typing after language toggle (2026-01-09)
+  - Root cause: Contraction keys (like "dont", "cant") not inserted into vocabularyTrie on reload
+  - If app launched with non-English primary, vocabularyTrie never had contraction keys
+  - Beam search rejected contraction words before they could reach contraction processing
+  - Fix 1: OptimizedVocabulary.unloadPrimaryDictionary() now inserts contraction keys to trie
+  - Fix 2: OptimizedVocabulary.loadPrimaryDictionary("en") now inserts contraction keys + sets state
+  - Fix 3: ContractionManager.loadMappings() now clears maps before loading to prevent stale data
 - [x] **FEAT**: Contraction suggestions in touch typing predictions (2026-01-09)
   - Touch typing now shows contraction forms (e.g., "don't") when user types key like "dont"
   - Contraction appears as first suggestion with higher score
