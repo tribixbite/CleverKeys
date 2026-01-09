@@ -10,6 +10,7 @@ import android.inputmethodservice.InputMethodService
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.View
 import android.view.ViewGroup
@@ -935,6 +936,18 @@ class CleverKeysService : InputMethodService(),
 
     fun clearSwipePredictions() {
         _neuralLayoutBridge.clearSwipePredictions()
+    }
+
+    /**
+     * Show a temporary message in the suggestion bar.
+     * Used for feedback when Toast is suppressed (Android 13+ IME restrictions).
+     *
+     * @param message The message to display
+     * @param durationMs How long to show the message (default 1500ms)
+     * @since v1.2.0
+     */
+    fun showSuggestionBarMessage(message: String, durationMs: Long = 1500L) {
+        _suggestionBar?.showTemporaryMessage(message, durationMs)
     }
 
     // CRITICAL: Extract key positions for neural swipe (v1.32.407: Delegated to NeuralLayoutBridge)

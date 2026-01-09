@@ -605,29 +605,16 @@ class Keyboard2View @JvmOverloads constructor(
             val keyValue = KeyValue.getKeyByName(actionValue)
 
             // v1.2.0 custom commands - check before KeyValue to prevent String fallback interception
-            Log.e("Keyboard2View", ">>> Checking custom command for: '$actionValue' <<<")
             val customCommandHandled = when (actionValue) {
-                "primaryLangToggle" -> {
-                    Log.e("Keyboard2View", ">>> MATCHED: primaryLangToggle <<<")
-                    togglePrimaryLanguage()
-                    true
-                }
-                "secondaryLangToggle" -> {
-                    Log.e("Keyboard2View", ">>> MATCHED: secondaryLangToggle <<<")
-                    toggleSecondaryLanguage()
-                    true
-                }
+                "primaryLangToggle" -> { togglePrimaryLanguage(); true }
+                "secondaryLangToggle" -> { toggleSecondaryLanguage(); true }
                 "textAssist" -> { launchTextAssistActivity(inputConnection); true }
                 "replaceText" -> { launchReplaceTextActivity(inputConnection); true }
                 "showTextMenu" -> { showTextContextMenu(inputConnection); true }
-                else -> {
-                    Log.e("Keyboard2View", ">>> NO MATCH for: '$actionValue' <<<")
-                    false
-                }
+                else -> false
             }
 
             if (customCommandHandled) {
-                Log.e("Keyboard2View", ">>> Custom command handled, returning <<<")
                 return@onCustomShortSwipe
             }
 
@@ -912,12 +899,12 @@ class Keyboard2View @JvmOverloads constructor(
      * Swaps the current primary language with the alternate primary language.
      */
     private fun togglePrimaryLanguage() {
-        Log.e("Keyboard2View", ">>> togglePrimaryLanguage() CALLED <<<")
+        Log.d("Keyboard2View", "togglePrimaryLanguage() called")
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
             val currentPrimary = prefs.getString("pref_primary_language", "en") ?: "en"
             val alternatePrimary = prefs.getString("pref_primary_language_alt", "es") ?: "es"
-            Log.e("Keyboard2View", ">>> Toggle: $currentPrimary -> $alternatePrimary <<<")
+            Log.d("Keyboard2View", "Toggle primary: $currentPrimary -> $alternatePrimary")
 
             // Swap the languages
             prefs.edit()
@@ -925,13 +912,13 @@ class Keyboard2View @JvmOverloads constructor(
                 .putString("pref_primary_language_alt", currentPrimary)
                 .commit() // Use commit() for synchronous save
 
-            // Show toast with new language
+            // Show feedback in suggestion bar (Toast suppressed on Android 13+ IME)
             val langName = getLanguageDisplayName(alternatePrimary)
-            Log.e("Keyboard2View", ">>> Showing toast: Primary: $langName <<<")
-            Toast.makeText(context, "Primary: $langName", Toast.LENGTH_SHORT).show()
+            _keyboard2?.showSuggestionBarMessage("Primary: $langName")
+            Log.d("Keyboard2View", "Primary language toggled to: $langName")
         } catch (e: Exception) {
             Log.e("Keyboard2View", "Failed to toggle primary language", e)
-            Toast.makeText(context, "Language toggle failed", Toast.LENGTH_SHORT).show()
+            _keyboard2?.showSuggestionBarMessage("Language toggle failed")
         }
     }
 
@@ -940,10 +927,12 @@ class Keyboard2View @JvmOverloads constructor(
      * Swaps the current secondary language with the alternate secondary language.
      */
     private fun toggleSecondaryLanguage() {
+        Log.d("Keyboard2View", "toggleSecondaryLanguage() called")
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
             val currentSecondary = prefs.getString("pref_secondary_language", "none") ?: "none"
             val alternateSecondary = prefs.getString("pref_secondary_language_alt", "none") ?: "none"
+            Log.d("Keyboard2View", "Toggle secondary: $currentSecondary -> $alternateSecondary")
 
             // Swap the languages
             prefs.edit()
@@ -951,15 +940,14 @@ class Keyboard2View @JvmOverloads constructor(
                 .putString("pref_secondary_language_alt", currentSecondary)
                 .apply()
 
-            // Show toast with new language
+            // Show feedback in suggestion bar (Toast suppressed on Android 13+ IME)
             val langName = if (alternateSecondary == "none") "None" else getLanguageDisplayName(alternateSecondary)
-            Toast.makeText(context, "Secondary: $langName", Toast.LENGTH_SHORT).show()
-
-            Log.d("Keyboard2View", "Toggled secondary language: $currentSecondary -> $alternateSecondary")
+            _keyboard2?.showSuggestionBarMessage("Secondary: $langName")
+            Log.d("Keyboard2View", "Secondary language toggled to: $langName")
             // PreferenceUIUpdateHandler will automatically reload dictionaries on preference change
         } catch (e: Exception) {
             Log.e("Keyboard2View", "Failed to toggle secondary language", e)
-            Toast.makeText(context, "Language toggle failed", Toast.LENGTH_SHORT).show()
+            _keyboard2?.showSuggestionBarMessage("Language toggle failed")
         }
     }
 

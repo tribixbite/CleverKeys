@@ -19,6 +19,15 @@
   - Root cause: KeyValue.getKeyByName() has fallback creating String KeyValue for any name
   - This intercepted custom commands (primaryLangToggle, etc.) before they could execute
   - Fix: Check actionValue against custom commands FIRST, return if handled
+- [x] **FIX**: DirectBootAwarePreferences for toggle persistence
+  - Root cause: Toggle functions used `PreferenceManager.getDefaultSharedPreferences()` (credential-encrypted)
+  - But service listens on `DirectBootAwarePreferences.get_shared_preferences()` (device-protected)
+  - These are DIFFERENT SharedPreferences files on Android 24+ (Direct Boot)
+  - Fix: Changed toggle functions to use DirectBootAwarePreferences
+- [x] **FIX**: Suggestion bar message feedback (Android 13+ Toast suppression)
+  - Root cause: Android 13+ (API 33+) suppresses Toast from IME services
+  - Fix: Added `SuggestionBar.showTemporaryMessage()` for in-keyboard feedback
+  - Shows message briefly, then restores previous suggestions
 
 **Technical Details**:
 - `showNoTextSelectedToast(actionName)` - toast helper with try/catch
@@ -26,6 +35,8 @@
 - `togglePrimaryLanguage()` - swaps pref_primary_language with pref_primary_language_alt
 - `toggleSecondaryLanguage()` - swaps pref_secondary_language with pref_secondary_language_alt
 - `getLanguageDisplayName(code)` - maps language codes to display names
+- `SuggestionBar.showTemporaryMessage(msg, duration)` - temporary feedback display
+- `CleverKeysService.showSuggestionBarMessage(msg, duration)` - public API for feedback
 
 ---
 

@@ -2,6 +2,8 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.graphics.Color
+import android.os.Handler
+import android.os.Looper
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.text.InputType
@@ -46,6 +48,16 @@ class SuggestionBar : LinearLayout {
     private var passwordTextView: TextView? = null
     private var eyeToggleView: ImageView? = null
     private var inputConnectionProvider: InputConnectionProvider? = null
+
+    // Temporary message properties (for language toggle feedback, etc.)
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var savedSuggestions: List<String> = emptyList()
+    private var savedScores: List<Int> = emptyList()
+    private var isShowingTemporaryMessage = false
+    private val restoreRunnable = Runnable {
+        isShowingTemporaryMessage = false
+        setSuggestionsWithScores(savedSuggestions, savedScores)
+    }
 
     /**
      * Interface for providing InputConnection to read actual field content.
@@ -287,6 +299,52 @@ class SuggestionBar : LinearLayout {
         // ALWAYS show empty suggestions instead of hiding - prevents UI disappearing
         setSuggestions(emptyList())
         Log.d(TAG, "clearSuggestions called - showing empty list instead of hiding")
+    }
+
+    /**
+     * Show a temporary message in the suggestion bar, then restore previous suggestions.
+     * Used for feedback that can't use Toast (Android 13+ IME toast restrictions).
+     *
+     * @param message The message to display
+     * @param durationMs How long to show the message (default 1500ms)
+     * @since v1.2.0
+     */
+    fun showTemporaryMessage(message: String, durationMs: Long = 1500L) {
+        if (isPasswordMode) return  // Don't interrupt password mode
+
+        // Cancel any pending restore
+        mainHandler.removeCallbacks(restoreRunnable)
+
+        // Save current suggestions if not already showing a temp message
+        if (!isShowingTemporaryMessage) {
+            savedSuggestions = currentSuggestions.toList()
+            savedScores = currentScores.toList()
+        }
+        isShowingTemporaryMessage = true
+
+        // Clear and show single message
+        removeAllViews()
+        suggestionViews.clear()
+        currentSuggestions.clear()
+        currentScores.clear()
+
+        val messageView = TextView(context).apply {
+            layoutParams = LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            gravity = Gravity.CENTER
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            setTextColor(theme?.activatedColor?.takeIf { it != 0 } ?: Color.CYAN)
+            typeface = Typeface.DEFAULT_BOLD
+            text = message
+        }
+        addView(messageView)
+
+        Log.d(TAG, "showTemporaryMessage: '$message' for ${durationMs}ms")
+
+        // Schedule restore
+        mainHandler.postDelayed(restoreRunnable, durationMs)
     }
 
     // ==================== Inline Autofill Support ====================
