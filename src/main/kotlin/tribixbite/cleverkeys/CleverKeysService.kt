@@ -805,7 +805,8 @@ class CleverKeysService : InputMethodService(),
                 _layoutBridge,
                 _predictionCoordinator,
                 _keyboardView,
-                _suggestionBar
+                _suggestionBar,
+                _contractionManager  // v1.2.0: Enable contraction reload on language toggle
             )
         }
 

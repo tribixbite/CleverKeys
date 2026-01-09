@@ -27,7 +27,8 @@ class PreferenceUIUpdateHandler(
     private val layoutBridge: LayoutBridge?,
     private val predictionCoordinator: PredictionCoordinator?,
     private val keyboardView: Keyboard2View?,
-    private val suggestionBar: SuggestionBar?
+    private val suggestionBar: SuggestionBar?,
+    private val contractionManager: ContractionManager? = null  // v1.2.0: For contraction reload on language toggle
 ) {
     /**
      * Handle UI updates for preference changes.
@@ -117,6 +118,18 @@ class PreferenceUIUpdateHandler(
                     val newPrimaryLang = prefs.getString("pref_primary_language", "en") ?: "en"
                     predictionCoordinator?.reloadWordPredictorDictionary(newPrimaryLang)
                     Log.i(TAG, "Primary language changed to '$newPrimaryLang' - touch typing dictionary reload triggered")
+
+                    // v1.2.0: Reload contractions for the new language
+                    // Fixes: contractions not working after toggling language and back to English
+                    contractionManager?.let { cm ->
+                        // Reload base contractions (clears and reloads English base)
+                        cm.loadMappings()
+                        // Load language-specific contractions on top
+                        if (newPrimaryLang != "en") {
+                            cm.loadLanguageContractions(newPrimaryLang)
+                        }
+                        Log.i(TAG, "Contractions reloaded for language '$newPrimaryLang'")
+                    }
                 }
                 "pref_secondary_language" -> {
                     // v1.1.93: Reload secondary dictionary for BOTH swipe and touch typing
@@ -159,6 +172,7 @@ class PreferenceUIUpdateHandler(
          * @param predictionCoordinator The prediction coordinator (nullable)
          * @param keyboardView The keyboard view (nullable)
          * @param suggestionBar The suggestion bar (nullable)
+         * @param contractionManager The contraction manager (nullable, for v1.2.0 language toggle fix)
          * @return A new PreferenceUIUpdateHandler instance
          */
         @JvmStatic
@@ -168,7 +182,8 @@ class PreferenceUIUpdateHandler(
             layoutBridge: LayoutBridge?,
             predictionCoordinator: PredictionCoordinator?,
             keyboardView: Keyboard2View?,
-            suggestionBar: SuggestionBar?
+            suggestionBar: SuggestionBar?,
+            contractionManager: ContractionManager? = null
         ): PreferenceUIUpdateHandler {
             return PreferenceUIUpdateHandler(
                 context,
@@ -176,7 +191,8 @@ class PreferenceUIUpdateHandler(
                 layoutBridge,
                 predictionCoordinator,
                 keyboardView,
-                suggestionBar
+                suggestionBar,
+                contractionManager
             )
         }
     }

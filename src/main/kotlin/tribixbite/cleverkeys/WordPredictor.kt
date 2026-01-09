@@ -573,8 +573,10 @@ class WordPredictor {
                 setLanguage(language)
 
                 isLoadingState = false
-                Log.i(TAG, "Async dictionary load complete: ${this@WordPredictor.dictionary.get().size} words, " +
-                    "${this@WordPredictor.prefixIndex.get().size} prefixes (atomic swap)")
+                // v1.2.0: Enhanced logging for debugging language toggle issues
+                val sampleWords = this@WordPredictor.dictionary.get().keys.take(5).joinToString(", ")
+                Log.i(TAG, "Async dictionary load complete for '$language': ${this@WordPredictor.dictionary.get().size} words, " +
+                    "${this@WordPredictor.prefixIndex.get().size} prefixes (sample: $sampleWords)")
 
                 callback?.run()
             }
@@ -1083,6 +1085,8 @@ class WordPredictor {
             val lowerSequence = keySequence.lowercase()
 
             // OPTIMIZATION: Verbose logging disabled in release builds for performance
+            // v1.2.0: Always log prediction language for debugging language toggle issues
+            Log.d(TAG, "Predicting for: '$lowerSequence' (lang=$currentLanguage, dictSize=${dictionary.get().size})")
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 Log.d(TAG, "Predicting for: $lowerSequence (len=${lowerSequence.length}) with context: $context")
             }
