@@ -77,7 +77,6 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     private var adaptiveWidthStep = Defaults.NEURAL_ADAPTIVE_WIDTH_STEP
     private var scoreGapStep = Defaults.NEURAL_SCORE_GAP_STEP
     private var temperature = Defaults.NEURAL_TEMPERATURE
-    private var vocabBoostLambda = Defaults.NEURAL_VOCAB_BOOST_LAMBDA
     private var maxSequenceLength = 250
     private var enableVerboseLogging = false
     private var showRawOutput = false
@@ -101,7 +100,6 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             adaptiveWidthStep = if (it.neural_adaptive_width_step > 0) it.neural_adaptive_width_step else Defaults.NEURAL_ADAPTIVE_WIDTH_STEP
             scoreGapStep = if (it.neural_score_gap_step > 0) it.neural_score_gap_step else Defaults.NEURAL_SCORE_GAP_STEP
             temperature = if (it.neural_temperature > 0f) it.neural_temperature else Defaults.NEURAL_TEMPERATURE
-            vocabBoostLambda = it.neural_vocab_boost_lambda  // Can be 0 (disabled)
             enableVerboseLogging = it.swipe_debug_detailed_logging
             showRawOutput = it.swipe_debug_show_raw_output
             batchBeams = it.neural_batch_beams
@@ -381,7 +379,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                     decoderSession!!, ortEnvironment, tokenizer,
                     trie, beamWidth, maxLength,
                     confidenceThreshold, beamAlpha, beamPruneConfidence, beamScoreGap,
-                    adaptiveWidthStep, scoreGapStep, temperature, vocabBoostLambda, activeLogger
+                    adaptiveWidthStep, scoreGapStep, temperature, activeLogger
                 )
                 val results = engine.search(memory, features.actualLength, batchBeams)
                 results.map { PredictionPostProcessor.Candidate(it.word, it.confidence) }

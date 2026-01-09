@@ -108,7 +108,6 @@ object Defaults {
     const val NEURAL_SCORE_GAP_STEP = 12        // Step when to start score gap early stopping
     const val NEURAL_TEMPERATURE = 1.0f         // Softmax temperature (lower = more confident)
     const val NEURAL_FREQUENCY_WEIGHT = 0.57f   // Vocab frequency weight in scoring (0=NN only, 2=heavy freq)
-    const val NEURAL_VOCAB_BOOST_LAMBDA = 0.3f  // LM fusion: vocabulary coverage boost (0=off, 0.1-0.5 typical)
     const val SWIPE_SMOOTHING_WINDOW = 3        // Points for moving average smoothing (1 = disabled, 3 = optimal)
 
     const val NEURAL_RESAMPLING_MODE = "discard"
@@ -196,8 +195,7 @@ enum class NeuralPreset(
     val adaptiveWidthStep: Int,
     val scoreGapStep: Int,
     val temperature: Float,
-    val frequencyWeight: Float,
-    val vocabBoostLambda: Float  // LM fusion vocabulary coverage boost
+    val frequencyWeight: Float
 ) {
     SPEED(
         displayName = "Speed",
@@ -210,8 +208,7 @@ enum class NeuralPreset(
         adaptiveWidthStep = 8,      // Start pruning early
         scoreGapStep = 6,           // Start gap check early
         temperature = 1.0f,
-        frequencyWeight = 1.2f,     // Favor common words
-        vocabBoostLambda = 0.2f     // Lower boost for speed
+        frequencyWeight = 1.2f      // Favor common words
     ),
     BALANCED(
         displayName = "Balanced",
@@ -224,8 +221,7 @@ enum class NeuralPreset(
         adaptiveWidthStep = Defaults.NEURAL_ADAPTIVE_WIDTH_STEP,
         scoreGapStep = Defaults.NEURAL_SCORE_GAP_STEP,
         temperature = Defaults.NEURAL_TEMPERATURE,
-        frequencyWeight = Defaults.NEURAL_FREQUENCY_WEIGHT,
-        vocabBoostLambda = Defaults.NEURAL_VOCAB_BOOST_LAMBDA
+        frequencyWeight = Defaults.NEURAL_FREQUENCY_WEIGHT
     ),
     ACCURACY(
         displayName = "Accuracy",
@@ -238,8 +234,7 @@ enum class NeuralPreset(
         adaptiveWidthStep = 15,        // Delay pruning
         scoreGapStep = 14,             // Delay gap check
         temperature = 0.9f,            // Slightly more confident
-        frequencyWeight = 0.8f,        // Less frequency bias, trust NN more
-        vocabBoostLambda = 0.4f        // Higher boost for better multilang
+        frequencyWeight = 0.8f         // Less frequency bias, trust NN more
     );
 
     companion object {
@@ -393,7 +388,6 @@ class Config private constructor(
     @JvmField var neural_score_gap_step = 0
     @JvmField var neural_temperature = 0f
     @JvmField var neural_frequency_weight = 0f
-    @JvmField var neural_vocab_boost_lambda = 0f  // LM fusion vocabulary coverage boost
     @JvmField var swipe_smoothing_window = 0
 
     // Neural model resampling
@@ -613,7 +607,6 @@ class Config private constructor(
         neural_score_gap_step = safeGetInt(_prefs, "neural_score_gap_step", Defaults.NEURAL_SCORE_GAP_STEP)
         neural_temperature = safeGetFloat(_prefs, "neural_temperature", Defaults.NEURAL_TEMPERATURE)
         neural_frequency_weight = safeGetFloat(_prefs, "neural_frequency_weight", Defaults.NEURAL_FREQUENCY_WEIGHT)
-        neural_vocab_boost_lambda = safeGetFloat(_prefs, "neural_vocab_boost_lambda", Defaults.NEURAL_VOCAB_BOOST_LAMBDA)
         swipe_smoothing_window = safeGetInt(_prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
 
         neural_user_max_seq_length = safeGetInt(_prefs, "neural_user_max_seq_length", Defaults.NEURAL_USER_MAX_SEQ_LENGTH)

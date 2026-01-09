@@ -41,7 +41,6 @@ class BeamSearchEngine(
     private val adaptiveWidthStep: Int = 12, // When to start adaptive width pruning
     private val scoreGapStep: Int = 10, // When to start score gap early stopping
     private val temperature: Float = 1.0f, // Softmax temperature (lower = sharper, higher = more uniform)
-    private val vocabBoostLambda: Float = 0.0f, // LM fusion: vocabulary coverage boost (0.0 = off, 0.1-0.5 typical)
     private val debugLogger: ((String) -> Unit)? = null
 ) {
 
@@ -244,15 +243,9 @@ class BeamSearchEngine(
                     if (currentPos in 0 until DECODER_SEQ_LEN) {
                         val logits = logits3D[0][currentPos]
                         
-                        // Apply Trie Masking (sets invalid chars to -inf)
-                        val prefix = applyTrieMasking(beam, logits)
-
-                        // Apply vocabulary coverage boost (LM fusion)
-                        // Paths with more reachable words get a probability boost
-                        if (vocabBoostLambda > 0f && vocabTrie != null && prefix != null) {
-                            applyVocabBoost(prefix, logits)
-                        }
-
+                        // Apply Trie Masking
+                        applyTrieMasking(beam, logits)
+                        
                         // FIX: Log-Softmax for numerical stability and correct scoring
                         val logProbs = logSoftmax(logits)
                         
@@ -304,17 +297,13 @@ class BeamSearchEngine(
     // v1.1.89 DIAGNOSTIC: Track if we've logged trie status for this search
     private var trieStatusLogged = false
 
-    /**
-     * Apply trie masking to logits - sets invalid character logits to -inf.
-     * @return The current prefix string (for use in vocab boost), or null if trie is null
-     */
-    private fun applyTrieMasking(beam: BeamState, logits: FloatArray): String? {
+    private fun applyTrieMasking(beam: BeamState, logits: FloatArray) {
         if (vocabTrie == null) {
             if (!trieStatusLogged) {
                 Log.w(TAG, "🚨 TRIE IS NULL - No masking applied! Beam search is UNCONSTRAINED")
                 trieStatusLogged = true
             }
-            return null
+            return
         }
 
         val partialWord = StringBuilder()
@@ -343,7 +332,7 @@ class BeamSearchEngine(
                 Log.d(TAG, "  MASK prefix='$prefix' allowed=${allowed.toList().take(10)}... isWord=$isWord")
             }
         }
-
+        
         for (i in logits.indices) {
             // FIX: SOS and PAD should NEVER be selected as next tokens - mask them
             if (i == SOS_IDX || i == PAD_IDX) {
@@ -354,44 +343,11 @@ class BeamSearchEngine(
                 if (!isWord) logits[i] = Float.NEGATIVE_INFINITY
                 continue
             }
-
+            
             val c = tokenizer.indexToChar(i)
             // Trie stores lowercase
             if (c == '?' || !allowed.contains(c.lowercaseChar())) {
                 logits[i] = Float.NEGATIVE_INFINITY
-            }
-        }
-
-        return prefix
-    }
-
-    /**
-     * Apply vocabulary coverage boost to logits (LM fusion).
-     * Paths with more reachable words get a probability boost proportional to log(word_count).
-     * This helps overcome English-biased NN scores for valid non-English vocabulary paths.
-     *
-     * @param prefix Current word prefix
-     * @param logits Logits array to modify in-place
-     */
-    private fun applyVocabBoost(prefix: String, logits: FloatArray) {
-        if (vocabTrie == null || vocabBoostLambda <= 0f) return
-
-        // Get word counts for all valid next characters in one traversal
-        val charCounts = vocabTrie.getAllowedNextCharsWithCounts(prefix)
-        if (charCounts.isEmpty()) return
-
-        // Apply boost: logit += lambda * ln(wordCount)
-        for (i in logits.indices) {
-            if (logits[i] == Float.NEGATIVE_INFINITY) continue
-            if (i == SOS_IDX || i == PAD_IDX || i == EOS_IDX) continue
-
-            val c = tokenizer.indexToChar(i).lowercaseChar()
-            val wordCount = charCounts[c] ?: 0
-            if (wordCount > 0) {
-                // Boost proportional to vocabulary coverage
-                // ln(wordCount) gives: 1 word = 0, 10 words ≈ 2.3, 100 words ≈ 4.6
-                val boost = vocabBoostLambda * ln(wordCount.toFloat())
-                logits[i] += boost
             }
         }
     }
