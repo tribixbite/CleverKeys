@@ -19,6 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.99] - 2026-01-09
+
+### Fixed - Text Assist and Replace Text Actions
+
+- **textAssist**: Now uses `ACTION_PROCESS_TEXT` intent instead of unsupported context menu action
+- **replaceText**: Now uses `ACTION_PROCESS_TEXT` intent with chooser dialog
+- Shows app chooser (Google Assistant, translators, search, etc.) when text is selected
+- Falls back to context menu action if no text selected
+
+---
+
 ## [1.1.98] - 2026-01-08
 
 ### Fixed - Per-Key Short Swipe Customization

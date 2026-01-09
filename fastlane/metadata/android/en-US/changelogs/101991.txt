@@ -1,0 +1,7 @@
+v1.1.99 - Text Assist & Replace Text Fix
+
+FIXED: textAssist and replaceText actions now work
+- Uses ACTION_PROCESS_TEXT intent instead of unsupported context menu
+- Shows app chooser (Google Assistant, translators, etc.)
+- Works when text is selected in any app
+- Falls back gracefully if no text selected
