@@ -263,6 +263,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var autoDetectLanguage by mutableStateOf(true)
     private var languageDetectionSensitivity by mutableStateOf(0.6f)
     private var secondaryPredictionWeight by mutableStateOf(0.9f) // v1.1.94: Secondary dictionary weight
+    private var prefixBoostMultiplier by mutableStateOf(Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
+    private var prefixBoostMax by mutableStateOf(Defaults.NEURAL_PREFIX_BOOST_MAX)
     private var primaryLanguageAlt by mutableStateOf("es") // v1.2.0: Alternate primary for quick toggle
     private var secondaryLanguageAlt by mutableStateOf("none") // v1.2.0: Alternate secondary for quick toggle
     private var availableSecondaryLanguages by mutableStateOf(listOf<String>()) // V2 dictionaries
@@ -2418,6 +2420,53 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         )
                     }
 
+                    // Prefix Boost Settings - only shown for non-English primary
+                    if (primaryLanguage != "en") {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        HorizontalDivider()
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = "Prefix Boost (Non-English)",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        Text(
+                            text = "Boost prefixes common in ${getLanguageDisplayName(primaryLanguage)} but rare in English. " +
+                                   "Helps predict words like 'veux' in French.",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        SettingsSlider(
+                            title = "Boost Strength",
+                            description = "0 = disabled, 1 = normal, 2+ = aggressive",
+                            value = prefixBoostMultiplier,
+                            valueRange = 0f..3f,
+                            steps = 30,
+                            onValueChange = {
+                                prefixBoostMultiplier = it
+                                saveSetting("neural_prefix_boost_multiplier", prefixBoostMultiplier)
+                            },
+                            displayValue = "%.2f".format(prefixBoostMultiplier)
+                        )
+
+                        SettingsSlider(
+                            title = "Max Boost",
+                            description = "Cap on boost values (higher = stronger correction)",
+                            value = prefixBoostMax,
+                            valueRange = 1f..15f,
+                            steps = 28,
+                            onValueChange = {
+                                prefixBoostMax = it
+                                saveSetting("neural_prefix_boost_max", prefixBoostMax)
+                            },
+                            displayValue = "%.1f".format(prefixBoostMax)
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(12.dp))
@@ -3484,6 +3533,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         autoDetectLanguage = prefs.getSafeBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
         languageDetectionSensitivity = Config.safeGetFloat(prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
         secondaryPredictionWeight = Config.safeGetFloat(prefs, "pref_secondary_prediction_weight", Defaults.SECONDARY_PREDICTION_WEIGHT)
+        prefixBoostMultiplier = Config.safeGetFloat(prefs, "neural_prefix_boost_multiplier", Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
+        prefixBoostMax = Config.safeGetFloat(prefs, "neural_prefix_boost_max", Defaults.NEURAL_PREFIX_BOOST_MAX)
         primaryLanguageAlt = prefs.getSafeString("pref_primary_language_alt", "es")
         secondaryLanguageAlt = prefs.getSafeString("pref_secondary_language_alt", "none")
 
