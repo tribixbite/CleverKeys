@@ -317,12 +317,13 @@ class BeamSearchEngine(
         return newCandidates
     }
     
-    // v1.1.89 DIAGNOSTIC: Track if we've logged trie status for this search
+    // Track if we've logged trie status for this search (only when debug enabled)
     private var trieStatusLogged = false
 
     private fun applyTrieMasking(beam: BeamState, logits: FloatArray) {
         if (vocabTrie == null) {
-            if (!trieStatusLogged) {
+            // Only log once per session when debug is enabled
+            if (!trieStatusLogged && debugLogger != null) {
                 Log.w(TAG, "🚨 TRIE IS NULL - No masking applied! Beam search is UNCONSTRAINED")
                 trieStatusLogged = true
             }
@@ -344,18 +345,12 @@ class BeamSearchEngine(
         val allowed = vocabTrie.getAllowedNextChars(prefix)
         val isWord = vocabTrie.containsWord(prefix)
 
-        // v1.1.89 DIAGNOSTIC: Log masking for first few prefixes
-        if (!trieStatusLogged || prefix.length <= 2) {
-            if (!trieStatusLogged) {
-                val stats = vocabTrie.getStats()
-                Log.d(TAG, "✅ Trie masking ACTIVE: ${stats.first} words in trie")
-                trieStatusLogged = true
-            }
-            if (prefix.isNotEmpty() && prefix.length <= 2) {
-                Log.d(TAG, "  MASK prefix='$prefix' allowed=${allowed.toList().take(10)}... isWord=$isWord")
-            }
+        // Only log trie status once when debug is enabled (avoid hot path overhead)
+        if (debugLogger != null && !trieStatusLogged) {
+            debugLogger.invoke("Trie masking ACTIVE for beam search")
+            trieStatusLogged = true
         }
-        
+
         for (i in logits.indices) {
             // FIX: SOS and PAD should NEVER be selected as next tokens - mask them
             if (i == SOS_IDX || i == PAD_IDX) {
@@ -416,10 +411,8 @@ class BeamSearchEngine(
             }
         }
 
-        // Log first few boost applications for debugging (only when state is early)
-        if (boostsApplied > 0 && currentState < 100 && debugLogger != null) {
-            Log.d(TAG, "  PREFIX BOOST: state=$currentState → $boostsApplied chars boosted")
-        }
+        // Removed per-call logging - too frequent in hot path
+        // Use debugLogger at end of search() for summary if needed
     }
 
     // FIX #3: Numerically stable log-softmax with temperature scaling

@@ -139,7 +139,6 @@ class OptimizedVocabulary(private val context: Context) {
         if (!isLoaded) return null
 
         val isLanguageTrie = activeBeamSearchTrie !== vocabularyTrie
-        val stats = activeBeamSearchTrie.getStats()
 
         // CRITICAL CHECK: If primary is non-English, we MUST have a language-specific trie
         // If we're still pointing to vocabularyTrie (English), something went wrong with
@@ -151,18 +150,11 @@ class OptimizedVocabulary(private val context: Context) {
             return null  // Return null to disable trie constraining
         }
 
-        Log.d(TAG, "getVocabularyTrie(): isLanguageTrie=$isLanguageTrie, " +
-            "trieWords=${stats.first}, primary=$_primaryLanguageCode, englishFallback=$_englishFallbackEnabled")
-
-        // v1.1.89 DIAGNOSTIC: Check if English words are in the trie (they shouldn't be for non-English primary)
-        if (_primaryLanguageCode != "en") {
-            val englishTestWords = listOf("the", "brother", "open", "still", "that", "this", "what", "with", "have")
-            val foundEnglish = englishTestWords.filter { activeBeamSearchTrie.containsWord(it) }
-            if (foundEnglish.isNotEmpty()) {
-                Log.e(TAG, "🚨 TRIE CONTAMINATION: English words found in $_primaryLanguageCode trie: $foundEnglish")
-            } else {
-                Log.d(TAG, "✅ Trie clean: No English test words found")
-            }
+        // Only log when detailed debugging is enabled (expensive getStats() call)
+        if (_debugMode) {
+            val stats = activeBeamSearchTrie.getStats()
+            Log.d(TAG, "getVocabularyTrie(): isLanguageTrie=$isLanguageTrie, " +
+                "trieWords=${stats.first}, primary=$_primaryLanguageCode, englishFallback=$_englishFallbackEnabled")
         }
 
         return activeBeamSearchTrie
@@ -323,17 +315,6 @@ class OptimizedVocabulary(private val context: Context) {
      * Implements fast-path lookup and combined scoring from web app
      */
     fun filterPredictions(rawPredictions: List<CandidateWord>, swipeStats: SwipeStats): List<FilteredPrediction> {
-        // Always log raw beam outputs for debugging prediction issues
-        if (rawPredictions.isNotEmpty()) {
-            val debug = StringBuilder("🔥 RAW BEAM (${rawPredictions.size}): ")
-            val numToShow = min(8, rawPredictions.size)
-            for (i in 0 until numToShow) {
-                val c = rawPredictions[i]
-                if (i > 0) debug.append(", ")
-                debug.append("${c.word}(${"%.2f".format(c.confidence)})")
-            }
-            Log.d(TAG, debug.toString())
-        }
         if (!isLoaded) {
             Log.w(TAG, "Vocabulary not loaded, returning raw predictions")
             return convertToFiltered(rawPredictions)
