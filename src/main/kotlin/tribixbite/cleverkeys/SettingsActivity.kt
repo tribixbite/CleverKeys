@@ -2348,6 +2348,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         onSelectionChange = { index ->
                             primaryLanguage = primaryOptions.getOrElse(index) { "en" }
                             saveSetting("pref_primary_language", primaryLanguage)
+                            // Reload per-language prefix boost settings
+                            loadPrefixBoostForLanguage(primaryLanguage)
                         }
                     )
 
@@ -2421,20 +2423,21 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     }
 
                     // Prefix Boost Settings - only shown for non-English primary
+                    // Per-language settings: each language has its own boost multiplier and max
                     if (primaryLanguage != "en") {
                         Spacer(modifier = Modifier.height(16.dp))
                         HorizontalDivider()
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = "Prefix Boost (Non-English)",
+                            text = "Prefix Boost (${getLanguageDisplayName(primaryLanguage)})",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             modifier = Modifier.padding(bottom = 4.dp)
                         )
                         Text(
                             text = "Boost prefixes common in ${getLanguageDisplayName(primaryLanguage)} but rare in English. " +
-                                   "Helps predict words like 'veux' in French.",
+                                   "Settings are saved per language.",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -2448,7 +2451,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             steps = 30,
                             onValueChange = {
                                 prefixBoostMultiplier = it
-                                saveSetting("neural_prefix_boost_multiplier", prefixBoostMultiplier)
+                                // Save per-language: neural_prefix_boost_multiplier_fr, _de, etc.
+                                saveSetting("neural_prefix_boost_multiplier_$primaryLanguage", prefixBoostMultiplier)
                             },
                             displayValue = "%.2f".format(prefixBoostMultiplier)
                         )
@@ -2461,7 +2465,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             steps = 28,
                             onValueChange = {
                                 prefixBoostMax = it
-                                saveSetting("neural_prefix_boost_max", prefixBoostMax)
+                                // Save per-language: neural_prefix_boost_max_fr, _de, etc.
+                                saveSetting("neural_prefix_boost_max_$primaryLanguage", prefixBoostMax)
                             },
                             displayValue = "%.1f".format(prefixBoostMax)
                         )
@@ -3533,8 +3538,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         autoDetectLanguage = prefs.getSafeBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
         languageDetectionSensitivity = Config.safeGetFloat(prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
         secondaryPredictionWeight = Config.safeGetFloat(prefs, "pref_secondary_prediction_weight", Defaults.SECONDARY_PREDICTION_WEIGHT)
-        prefixBoostMultiplier = Config.safeGetFloat(prefs, "neural_prefix_boost_multiplier", Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
-        prefixBoostMax = Config.safeGetFloat(prefs, "neural_prefix_boost_max", Defaults.NEURAL_PREFIX_BOOST_MAX)
+        // Load per-language prefix boost values (falls back to global default if not set)
+        prefixBoostMultiplier = Config.safeGetFloat(prefs, "neural_prefix_boost_multiplier_$primaryLanguage", Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
+        prefixBoostMax = Config.safeGetFloat(prefs, "neural_prefix_boost_max_$primaryLanguage", Defaults.NEURAL_PREFIX_BOOST_MAX)
         primaryLanguageAlt = prefs.getSafeString("pref_primary_language_alt", "es")
         secondaryLanguageAlt = prefs.getSafeString("pref_secondary_language_alt", "none")
 
@@ -3693,6 +3699,16 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             "tl" -> "Tagalog (Filipino)"
             else -> code.uppercase()
         }
+    }
+
+    /**
+     * Load per-language prefix boost settings.
+     * Called when primary language changes to load that language's specific boost values.
+     */
+    private fun loadPrefixBoostForLanguage(langCode: String) {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        prefixBoostMultiplier = Config.safeGetFloat(prefs, "neural_prefix_boost_multiplier_$langCode", Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
+        prefixBoostMax = Config.safeGetFloat(prefs, "neural_prefix_boost_max_$langCode", Defaults.NEURAL_PREFIX_BOOST_MAX)
     }
 
     private fun loadVersionInfo(): Properties {

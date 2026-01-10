@@ -620,9 +620,12 @@ class Config private constructor(
         neural_user_max_seq_length = safeGetInt(_prefs, "neural_user_max_seq_length", Defaults.NEURAL_USER_MAX_SEQ_LENGTH)
         neural_resampling_mode = safeGetString(_prefs, "neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE)
 
-        // Language-specific prefix boost settings
-        neural_prefix_boost_multiplier = safeGetFloat(_prefs, "neural_prefix_boost_multiplier", Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
-        neural_prefix_boost_max = safeGetFloat(_prefs, "neural_prefix_boost_max", Defaults.NEURAL_PREFIX_BOOST_MAX)
+        // Language-specific prefix boost settings (per-language keys)
+        // Try per-language key first, fall back to global default
+        neural_prefix_boost_multiplier = safeGetFloat(_prefs, "neural_prefix_boost_multiplier_$primary_language",
+            safeGetFloat(_prefs, "neural_prefix_boost_multiplier", Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER))
+        neural_prefix_boost_max = safeGetFloat(_prefs, "neural_prefix_boost_max_$primary_language",
+            safeGetFloat(_prefs, "neural_prefix_boost_max", Defaults.NEURAL_PREFIX_BOOST_MAX))
 
         val screen_width_dp = dm.widthPixels / dm.density
         wide_screen = screen_width_dp >= WIDE_DEVICE_THRESHOLD
