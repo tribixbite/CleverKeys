@@ -50,7 +50,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     private val trajectoryProcessor = SwipeTrajectoryProcessor() // Move here
     private val versionManager = ModelVersionManager.getInstance(context)
     private val languageDetector = UnigramLanguageDetector(context)
-    private val prefixBoostLoader = PrefixBoostLoader(context) // Language-specific prefix boosts
+    private val prefixBoostTrie = PrefixBoostTrie(context) // Language-specific prefix boosts (Aho-Corasick trie)
     private var tensorFactory: TensorFactory? = null
     private var encoderWrapper: EncoderWrapper? = null
     private var decoderWrapper: DecoderWrapper? = null
@@ -389,8 +389,8 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                     trie, beamWidth, maxLength,
                     confidenceThreshold, beamAlpha, beamPruneConfidence, beamScoreGap,
                     adaptiveWidthStep, scoreGapStep, temperature, activeLogger,
-                    // Language-specific prefix boost support
-                    prefixBoostLoader = if (prefixBoostLoader.hasBoosts()) prefixBoostLoader else null,
+                    // Language-specific prefix boost support (Aho-Corasick trie for O(1) lookups)
+                    prefixBoostTrie = if (prefixBoostTrie.hasBoosts()) prefixBoostTrie else null,
                     prefixBoostMultiplier = prefixBoostMultiplier,
                     prefixBoostMax = prefixBoostMax
                 )
@@ -489,18 +489,18 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                     Log.w(TAG, "Failed to load primary dictionary: $primaryLang")
                 }
 
-                // Load prefix boosts for non-English primary language
-                val boostsLoaded = prefixBoostLoader.loadBoosts(primaryLang)
+                // Load prefix boosts for non-English primary language (Aho-Corasick trie)
+                val boostsLoaded = prefixBoostTrie.loadFromAssets(primaryLang)
                 if (boostsLoaded) {
-                    val stats = prefixBoostLoader.getStats()
-                    Log.i(TAG, "Prefix boosts loaded: ${stats.prefixCount} prefixes, ${stats.boostCount} boosts (max=${stats.maxBoost})")
+                    val stats = prefixBoostTrie.getStats()
+                    Log.i(TAG, "Prefix boosts loaded: ${stats.nodeCount} nodes, ${stats.edgeCount} edges (max=${stats.maxBoost})")
                 } else {
                     Log.w(TAG, "No prefix boosts available for $primaryLang")
                 }
             } else {
                 Log.i(TAG, "Primary=English, no accent dictionary needed")
                 vocabulary.unloadPrimaryDictionary()
-                prefixBoostLoader.unloadBoosts() // Unload any existing boosts
+                prefixBoostTrie.unload() // Unload any existing boosts
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error loading primary dictionary from prefs", e)

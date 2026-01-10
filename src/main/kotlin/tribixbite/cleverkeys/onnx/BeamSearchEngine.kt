@@ -42,8 +42,8 @@ class BeamSearchEngine(
     private val scoreGapStep: Int = 10, // When to start score gap early stopping
     private val temperature: Float = 1.0f, // Softmax temperature (lower = sharper, higher = more uniform)
     private val debugLogger: ((String) -> Unit)? = null,
-    // Language-specific prefix boost support
-    private val prefixBoostLoader: PrefixBoostLoader? = null,
+    // Language-specific prefix boost support (Aho-Corasick trie for O(1) lookups)
+    private val prefixBoostTrie: PrefixBoostTrie? = null,
     private val prefixBoostMultiplier: Float = 1.0f, // Scaling factor for prefix boosts
     private val prefixBoostMax: Float = 5.0f // Maximum boost value (clamping)
 ) {
@@ -74,20 +74,23 @@ class BeamSearchEngine(
         val tokens: ArrayList<Long>,
         var score: Float, // Accumulated negative log-likelihood
         var finished: Boolean,
-        val parentBeam: BeamState? = null // For diversity tracking (optional)
+        val parentBeam: BeamState? = null, // For diversity tracking (optional)
+        var boostState: Int = 0 // Aho-Corasick trie state for O(1) prefix boost lookups
     ) {
         constructor(startToken: Int, startScore: Float) : this(
             tokens = ArrayList(listOf(startToken.toLong())),
             score = startScore,
-            finished = false
+            finished = false,
+            boostState = 0
         )
-        
+
         // Copy constructor
         constructor(other: BeamState) : this(
             tokens = ArrayList(other.tokens),
             score = other.score,
             finished = other.finished,
-            parentBeam = other.parentBeam
+            parentBeam = other.parentBeam,
+            boostState = other.boostState
         )
     }
 
@@ -275,6 +278,7 @@ class BeamSearchEngine(
                                 // score += -logP
                                 newBeam.score += -logProbs[idx]
                                 newBeam.finished = true
+                                // boostState stays the same (EOS doesn't advance trie)
                                 newCandidates.add(newBeam)
                                 continue
                             }
@@ -284,6 +288,17 @@ class BeamSearchEngine(
                             newBeam.tokens.add(idx.toLong())
                             newBeam.score += -logProbs[idx]
                             newBeam.finished = false
+
+                            // Advance the Aho-Corasick trie state for prefix boost lookups
+                            // This is O(1) amortized and handles failure links automatically
+                            if (prefixBoostTrie != null && prefixBoostTrie.hasBoosts()) {
+                                val c = tokenizer.indexToChar(idx)
+                                if (c in 'a'..'z') {
+                                    newBeam.boostState = prefixBoostTrie.getNextState(beam.boostState, c)
+                                }
+                                // Non-letter characters reset to root (state 0) via trie's getNextState
+                            }
+
                             newCandidates.add(newBeam)
                         }
                     }
@@ -361,7 +376,7 @@ class BeamSearchEngine(
     }
 
     /**
-     * Apply language-specific prefix boosts to logits.
+     * Apply language-specific prefix boosts to logits using Aho-Corasick trie.
      *
      * This compensates for prefixes that are common in the target language (e.g., French)
      * but rare in English. The English-trained NN assigns low probability to these prefixes,
@@ -372,36 +387,27 @@ class BeamSearchEngine(
      *
      * Boosts are applied additively to logits (before softmax), which is equivalent to
      * multiplicative scaling of probabilities.
+     *
+     * OPTIMIZATION: Uses beam.boostState for O(1) trie lookups with zero string allocation.
+     * The boostState tracks the current position in the Aho-Corasick automaton.
      */
     private fun applyPrefixBoosts(beam: BeamState, logits: FloatArray) {
-        if (prefixBoostLoader == null || !prefixBoostLoader.hasBoosts() || prefixBoostMultiplier == 0f) {
+        if (prefixBoostTrie == null || !prefixBoostTrie.hasBoosts() || prefixBoostMultiplier == 0f) {
             return
         }
 
-        // Build current prefix from beam tokens
-        val partialWord = StringBuilder()
-        for (token in beam.tokens) {
-            val idx = token.toInt()
-            if (idx != SOS_IDX && idx != EOS_IDX && idx != PAD_IDX) {
-                val ch = tokenizer.indexToChar(idx)
-                if (ch != '?' && !ch.toString().startsWith("<")) {
-                    partialWord.append(ch.lowercaseChar())
-                }
-            }
-        }
-
-        val prefix = partialWord.toString()
-        if (prefix.isEmpty()) return
-
-        // Apply boosts using the loader's logic (longest-match-only)
+        // Use the beam's trie state for O(1) lookups - no string building needed!
+        val currentState = beam.boostState
         var boostsApplied = 0
+
         for (i in logits.indices) {
             if (logits[i] == Float.NEGATIVE_INFINITY) continue  // Skip masked tokens
 
             val c = tokenizer.indexToChar(i)
-            if (!c.isLetter()) continue
+            if (c < 'a' || c > 'z') continue  // Trie only handles lowercase a-z
 
-            val boost = prefixBoostLoader.getBoost(prefix, c)
+            // O(1) lookup: get boost for transitioning to this character from current state
+            val boost = prefixBoostTrie.getBoost(currentState, c)
             if (boost > 0f) {
                 // Scale and clamp the boost
                 val scaledBoost = (boost * prefixBoostMultiplier).coerceIn(-prefixBoostMax, prefixBoostMax)
@@ -410,9 +416,9 @@ class BeamSearchEngine(
             }
         }
 
-        // Log first few boost applications for debugging
-        if (boostsApplied > 0 && prefix.length <= 3 && debugLogger != null) {
-            Log.d(TAG, "  PREFIX BOOST: '$prefix' → $boostsApplied chars boosted (mult=$prefixBoostMultiplier)")
+        // Log first few boost applications for debugging (only when state is early)
+        if (boostsApplied > 0 && currentState < 100 && debugLogger != null) {
+            Log.d(TAG, "  PREFIX BOOST: state=$currentState → $boostsApplied chars boosted")
         }
     }
 
