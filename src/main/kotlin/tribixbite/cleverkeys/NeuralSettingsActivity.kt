@@ -46,11 +46,6 @@ class NeuralSettingsActivity : ComponentActivity() {
     private var frequencyWeight by mutableStateOf(Defaults.NEURAL_FREQUENCY_WEIGHT)
     private var smoothingWindow by mutableStateOf(Defaults.SWIPE_SMOOTHING_WINDOW)
 
-    // Multi-Language Prefix Boost Parameters (per-language)
-    private var primaryLanguage by mutableStateOf("en")
-    private var prefixBoostMultiplier by mutableStateOf(Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
-    private var prefixBoostMax by mutableStateOf(Defaults.NEURAL_PREFIX_BOOST_MAX)
-
     // Model Configuration - MUST match Defaults in Config.kt
     private var resamplingMode by mutableStateOf(Defaults.NEURAL_RESAMPLING_MODE)
 
@@ -266,56 +261,6 @@ class NeuralSettingsActivity : ComponentActivity() {
                 )
             }
 
-            // Multi-Language Section - Per-language settings
-            val langDisplayName = when (primaryLanguage) {
-                "en" -> "English"
-                "fr" -> "French"
-                "de" -> "German"
-                "es" -> "Spanish"
-                "it" -> "Italian"
-                "pt" -> "Portuguese"
-                else -> primaryLanguage.uppercase()
-            }
-            ParameterSection("Prefix Boost ($langDisplayName)") {
-                Text(
-                    text = if (primaryLanguage == "en")
-                        "English is primary - prefix boosts not needed."
-                    else
-                        "Settings for $langDisplayName. Each language has independent boost values.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                // Prefix Boost Multiplier
-                ParameterSlider(
-                    title = "Boost Strength",
-                    description = "0 = disabled, 1 = normal, 2+ = aggressive",
-                    value = prefixBoostMultiplier,
-                    valueRange = 0.0f..3.0f,
-                    steps = 30,
-                    onValueChange = {
-                        prefixBoostMultiplier = it
-                        updateNeuralParameters()
-                    },
-                    displayValue = "%.2f".format(prefixBoostMultiplier)
-                )
-
-                // Prefix Boost Max
-                ParameterSlider(
-                    title = "Max Boost",
-                    description = "Cap on boost values (higher = stronger correction)",
-                    value = prefixBoostMax,
-                    valueRange = 1.0f..15.0f,
-                    steps = 28,
-                    onValueChange = {
-                        prefixBoostMax = it
-                        updateNeuralParameters()
-                    },
-                    displayValue = "%.1f".format(prefixBoostMax)
-                )
-            }
-
             // Model Configuration Section
             ParameterSection("Model Configuration") {
                 // Trajectory Resampling
@@ -510,8 +455,6 @@ class NeuralSettingsActivity : ComponentActivity() {
                 config.neural_temperature = temperature
                 config.neural_frequency_weight = frequencyWeight
                 config.swipe_smoothing_window = smoothingWindow
-                config.neural_prefix_boost_multiplier = prefixBoostMultiplier
-                config.neural_prefix_boost_max = prefixBoostMax
 
                 // Re-detect preset: if values were manually changed, this clears the preset
                 // If values match a preset (including after applyPreset), it stays selected
@@ -570,11 +513,6 @@ class NeuralSettingsActivity : ComponentActivity() {
         frequencyWeight = Config.safeGetFloat(prefs, "neural_frequency_weight", Defaults.NEURAL_FREQUENCY_WEIGHT)
         smoothingWindow = Config.safeGetInt(prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
 
-        // Load per-language prefix boost values
-        primaryLanguage = Config.safeGetString(prefs, "pref_primary_language", "en") ?: "en"
-        prefixBoostMultiplier = Config.safeGetFloat(prefs, "neural_prefix_boost_multiplier_$primaryLanguage", Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
-        prefixBoostMax = Config.safeGetFloat(prefs, "neural_prefix_boost_max_$primaryLanguage", Defaults.NEURAL_PREFIX_BOOST_MAX)
-
         // Detect if current settings match any preset
         selectedPreset = detectCurrentPreset()
     }
@@ -597,9 +535,6 @@ class NeuralSettingsActivity : ComponentActivity() {
         editor.putFloat("neural_temperature", temperature)
         editor.putFloat("neural_frequency_weight", frequencyWeight)
         editor.putInt("swipe_smoothing_window", smoothingWindow)
-        // Save per-language prefix boost values
-        editor.putFloat("neural_prefix_boost_multiplier_$primaryLanguage", prefixBoostMultiplier)
-        editor.putFloat("neural_prefix_boost_max_$primaryLanguage", prefixBoostMax)
 
         // Save selected preset name (or "custom" if manually tweaked)
         editor.putString("neural_preset", selectedPreset?.name ?: "custom")
