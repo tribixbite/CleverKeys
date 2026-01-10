@@ -563,6 +563,14 @@ class BackupRestoreManager(private val context: Context) {
      * Validate float preference values
      */
     private fun validateFloatPreference(key: String, value: Float): Boolean {
+        // Validate per-language prefix boost patterns
+        if (key.startsWith("neural_prefix_boost_multiplier_")) {
+            return value in 0.0f..3.0f  // Multiplier range 0-3x
+        }
+        if (key.startsWith("neural_prefix_boost_max_")) {
+            return value in 0.0f..10.0f  // Max boost 0-10 logits
+        }
+
         return when (key) {
             // Character size (0.75-1.5)
             "character_size" -> value in 0.75f..1.5f
@@ -592,6 +600,10 @@ class BackupRestoreManager(private val context: Context) {
 
             // Swipe typing boost parameters (0.0-2.0 range)
             "swipe_rare_words_penalty", "swipe_common_words_boost", "swipe_top5000_boost" -> value in 0.0f..2.0f
+
+            // Global prefix boost defaults
+            "neural_prefix_boost_multiplier" -> value in 0.0f..3.0f
+            "neural_prefix_boost_max" -> value in 0.0f..10.0f
 
             // Unknown float preference - allow it (version-tolerant)
             else -> true
@@ -715,6 +727,12 @@ class BackupRestoreManager(private val context: Context) {
      * try to read an int as float or vice versa
      */
     private fun isFloatPreference(key: String): Boolean {
+        // Check for per-language prefix boost patterns first
+        if (key.startsWith("neural_prefix_boost_multiplier_") ||
+            key.startsWith("neural_prefix_boost_max_")) {
+            return true
+        }
+
         return when (key) {
             // Character and UI sizing
             "character_size", "key_vertical_margin", "key_horizontal_margin", "custom_border_line_width",
@@ -736,7 +754,9 @@ class BackupRestoreManager(private val context: Context) {
             // Language detection
             "pref_language_detection_sensitivity",
             // Swipe trail appearance
-            "swipe_trail_width", "swipe_trail_glow_radius" -> true
+            "swipe_trail_width", "swipe_trail_glow_radius",
+            // Global prefix boost defaults (fallback)
+            "neural_prefix_boost_multiplier", "neural_prefix_boost_max" -> true
             else -> false
         }
     }
