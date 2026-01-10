@@ -350,9 +350,127 @@ Output: être
 
 ---
 
-## 7. Bundled Languages
+## 7. Prefix Boost Trie (Aho-Corasick)
 
-### 7.1 In APK Assets
+### 7.1 Problem Statement
+
+Even with language-specific vocabulary tries, the neural network is trained primarily on English text. This means the model's logit predictions may unfairly favor English-like character sequences over valid non-English patterns (e.g., "ão" in Portuguese, "ñ" normalized as "n" in Spanish).
+
+### 7.2 Solution: Language-Specific Prefix Boosting
+
+The prefix boost system applies logit adjustments during beam search to boost character sequences that are common in the target language but rare in English.
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                    BEAM SEARCH WITH PREFIX BOOST               │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  For each beam candidate at each decoding step:                │
+│                                                                │
+│  1. Get decoder logits for next token [30 values]              │
+│  2. Apply trie masking (invalid prefixes → -∞)                 │
+│  3. ★ Apply prefix boosts from PrefixBoostTrie:                │
+│       for each char 'a'-'z':                                   │
+│         boost = trie.getBoost(currentState, char)              │
+│         logits[char] += boost * multiplier                     │
+│  4. Select top-k candidates                                    │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### 7.3 Aho-Corasick Trie Implementation
+
+The `PrefixBoostTrie` uses an Aho-Corasick automaton for O(1) amortized state transitions and boost lookups.
+
+**File**: `src/main/kotlin/tribixbite/cleverkeys/onnx/PrefixBoostTrie.kt`
+
+**Binary Format (Version 2 - Sparse)**:
+```
+Header (16 bytes):
+  - Magic: "PBST" (4 bytes)
+  - Version: 2 (4 bytes)
+  - NodeCount: int (4 bytes)
+  - EdgeCount: int (4 bytes)
+
+Data Sections:
+  - Node Offsets: (NodeCount + 1) × 4 bytes
+  - Edge Keys: EdgeCount × 1 byte (char indices 0-25)
+  - Edge Targets: EdgeCount × 4 bytes
+  - Failure Links: NodeCount × 4 bytes
+  - Boost Values: NodeCount × 4 bytes (floats)
+```
+
+**Performance Characteristics**:
+- `getNextState()`: O(k) where k = avg children per node (~4)
+- `getBoost()`: O(k) linear scan over sorted edges
+- Zero heap allocations during lookup (thread-safe local refs)
+- Memory-mapped file doesn't use Java heap
+
+### 7.4 BeamState Tracking
+
+Each beam candidate carries a `boostState: Int` representing the current position in the prefix boost trie:
+
+```kotlin
+data class BeamState(
+    val tokens: ShortArray,
+    val score: Float,
+    val length: Int,
+    val boostState: Int = 0  // Current state in PrefixBoostTrie
+)
+```
+
+When extending a beam with character `c`, the boost state advances:
+```kotlin
+newBoostState = prefixBoostTrie.getNextState(beam.boostState, c)
+```
+
+### 7.5 User Configuration
+
+Per-language prefix boost settings are stored in SharedPreferences:
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `neural_prefix_boost_multiplier_{lang}` | Float | 1.0 | Scale factor for boost values |
+| `neural_prefix_boost_max_{lang}` | Float | 2.0 | Maximum absolute boost applied |
+
+**Fallback Logic** (Config.kt):
+1. Try per-language key: `neural_prefix_boost_multiplier_fr`
+2. Fall back to global key: `neural_prefix_boost_multiplier`
+3. Fall back to default: `Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER`
+
+**UI Location**: Settings → Multi-Language → Prefix Boost Strength / Max Boost
+
+### 7.6 Asset Files
+
+Prefix boost tries are bundled as binary assets:
+
+| File | Language | Description |
+|------|----------|-------------|
+| `prefix_boosts/de.bin` | German | Boosts for ß → ss, ü → u, etc. |
+| `prefix_boosts/es.bin` | Spanish | Boosts for ñ sequences, ll, rr |
+| `prefix_boosts/fr.bin` | French | Boosts for é, è, ê sequences |
+| `prefix_boosts/it.bin` | Italian | Boosts for Italian patterns |
+| `prefix_boosts/pt.bin` | Portuguese | Boosts for ã, ç sequences |
+
+English (`en`) does not need prefix boosts (model already trained on English).
+
+### 7.7 Thread Safety
+
+The `PrefixBoostTrie` class is thread-safe:
+- `loadFromAssets()` and `unload()` are `@Synchronized`
+- Read methods (`getNextState()`, `getBoost()`) capture local buffer references to prevent NPE during concurrent unload
+
+### 7.8 Import/Export
+
+Per-language prefix boost settings are included in profile backup/restore:
+- `BackupRestoreManager.isFloatPreference()` recognizes `neural_prefix_boost_*` patterns
+- Validation ensures values are within valid ranges (0-3 for multiplier, 0-10 for max)
+
+---
+
+## 8. Bundled Languages
+
+### 8.1 In APK Assets
 
 | Language | Code | File | Words | Accented |
 |----------|------|------|-------|----------|
@@ -426,9 +544,9 @@ Some languages use apostrophes for contractions or grammatical constructs. The `
 
 ---
 
-## 8. Performance Characteristics
+## 9. Performance Characteristics
 
-### 8.1 Typical Inference Timing
+### 9.1 Typical Inference Timing
 
 | Stage | Time (ms) | Notes |
 |-------|-----------|-------|
@@ -438,7 +556,7 @@ Some languages use apostrophes for contractions or grammatical constructs. The `
 | Post-processing | 1-5 | Dictionary lookups |
 | **Total** | **30-100** | End-to-end |
 
-### 8.2 Memory Usage
+### 9.2 Memory Usage
 
 | Component | Size | Notes |
 |-----------|------|-------|
@@ -450,9 +568,9 @@ Some languages use apostrophes for contractions or grammatical constructs. The `
 
 ---
 
-## 9. Testing Checklist
+## 10. Testing Checklist
 
-### 9.1 Dictionary Verification (Verified 2026-01-04)
+### 10.1 Dictionary Verification (Verified 2026-01-04)
 - [x] FR: V2 format, 25k canonical, 23.7k normalized (être, café, français ✓)
 - [x] ES: V2 format, 236k canonical, 223k normalized (niño, español, años ✓)
 - [x] PT: V2 format, 25k canonical, 24.5k normalized (você, não, também ✓)
@@ -472,21 +590,21 @@ Some languages use apostrophes for contractions or grammatical constructs. The `
 - [ ] Primary=French, Secondary=None → English words filtered out
 - [ ] Primary=French, Secondary=English → English words allowed
 
-### 9.4 Edge Cases
+### 10.4 Edge Cases
 - [ ] Words in both languages (e.g., "table") display correctly
 - [ ] Short words (2-3 letters) work with accents
 - [ ] Long words (10+ letters) complete successfully
 
 ---
 
-## 10. Known Issues
+## 11. Known Issues
 
 1. ~~**French-only words blocked**: See Section 6 - architectural limitation~~ **RESOLVED** with language-specific tries
 2. **Latency on long words**: Beam search timeout at 20 characters
 3. **Memory pressure**: Loading multiple language dictionaries simultaneously
-4. **English words appear in non-English mode** - See Section 10.1
+4. **English words appear in non-English mode** - See Section 11.1
 
-### 10.1 English Words in Non-English Mode
+### 11.1 English Words in Non-English Mode
 
 **Issue**: Some English words still appear in predictions when Primary=French (or other non-English) and Secondary=None.
 
@@ -524,7 +642,7 @@ Some languages use apostrophes for contractions or grammatical constructs. The `
 - Separate contraction loading by language (no fallback)
 - Visual indicator for cognate/shared words
 
-### 10.2 CRITICAL BUG: English Words Predicted in French-Only Mode
+### 11.2 CRITICAL BUG: English Words Predicted in French-Only Mode
 
 **Symptom**: User types in French-only mode (Primary=French, Secondary=None) but all predictions are English words like "every", "word", "this", "was", "done".
 
@@ -572,7 +690,7 @@ Some languages use apostrophes for contractions or grammatical constructs. The `
 
 ---
 
-## 11. Future Work
+## 12. Future Work
 
 1. ~~**Expand vocabulary trie** to include normalized forms~~ **DONE** - each language has its own trie
 2. **Language-specific neural models** (currently all languages use English model)
