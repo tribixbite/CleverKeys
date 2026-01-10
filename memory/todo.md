@@ -16,42 +16,57 @@ but "vérification" (rank=140) did. Root cause: English-biased NN.
 - Previous approach (LM fusion with word count) FAILED - it boosted "ver" (79 words)
   over "veu" (9 words), making predictions worse
 
-**Solution** (validated by Gemini + GPT-5.2 via PAL MCP):
+**Solution** (validated by Gemini 3 Pro + GPT-5.2 via PAL MCP):
 Log-odds prefix boosting - boost prefixes where P_target >> P_english:
 ```
 delta = log(P_fr(c|prefix)) - log(P_en(c|prefix))
-boost = C * delta (clamped to max B)
+boost = C * delta (clamped to max B), threshold 1.5
 ```
 
 Key insight: We need to boost prefixes that are RARE in English but COMMON in French,
 not prefixes with more reachable words.
 
-**Implementation**:
-- [x] `scripts/compute_prefix_boosts.py`: Offline script to compute conditional
-      continuation probabilities and log-odds differences between French and English
-- [x] `assets/prefix_boosts/fr.json`: Pre-computed boosts (9655 prefixes, 13323 boosts)
-      - "ve" + "u" boost = 8.135 (exactly what's needed for "veux")
-      - "ve" + "q" boost = 5.203 (for "veq*" words)
-- [x] `PrefixBoostLoader.kt`: Loads prefix boost JSON at runtime, applies longest-match
-- [x] `BeamSearchEngine.kt`: Add prefixBoostLoader, multiplier, max params
-      - `applyPrefixBoosts()` method applies additive boosts to logits before softmax
+**Implementation v2 (Aho-Corasick Trie - Zero Allocation)**:
+Per Gemini 3 Pro consultation: JSON-based lookups caused GC pauses from string allocation
+during beam search. Replaced with memory-mapped Aho-Corasick trie for O(1) lookups.
+
+- [x] `scripts/compute_prefix_boosts.py`: Generates sparse binary Aho-Corasick tries
+      - Aho-Corasick failure links for longest-suffix backoff
+      - Sparse format: ~85% smaller than dense (10MB → 1.5MB per language)
+      - Binary format: PBST v2 (NodeOffsets, EdgeKeys, EdgeTargets, FailureLinks, Boosts)
+- [x] `assets/prefix_boosts/*.bin`: Binary tries for de, es, fr, it, pt
+      - fr.bin: 1.5MB, 90k nodes, threshold 1.5, "ve"+"u" boost = 7.97
+      - es.bin: 2.2MB, 132k nodes
+      - de.bin: 1.7MB, 100k nodes
+      - it.bin: 1.5MB, 88k nodes
+      - pt.bin: 1.5MB, 93k nodes
+- [x] `onnx/PrefixBoostTrie.kt`: Memory-mapped sparse trie loader (NEW)
+      - Zero heap allocation during lookup
+      - `getNextState(state, char)`: O(1) amortized Aho-Corasick traversal
+      - `getBoost(state, char)`: O(1) boost lookup using state
+- [x] `onnx/BeamSearchEngine.kt`: State-based trie integration
+      - Added `boostState: Int = 0` to BeamState for tracking trie position
+      - `applyPrefixBoosts()` now uses beam.boostState for O(1) lookups
+      - Beam expansion advances boostState for child beams
+- [x] `onnx/SwipePredictorOrchestrator.kt`: Updated for PrefixBoostTrie
+- [x] DELETED: `onnx/PrefixBoostLoader.kt` (replaced by trie)
 - [x] `Config.kt`: Add `NEURAL_PREFIX_BOOST_MULTIPLIER` (1.0f) and `NEURAL_PREFIX_BOOST_MAX` (5.0f)
-- [x] `SwipePredictorOrchestrator.kt`: Load boosts when non-English primary language set,
-      pass loader and settings to BeamSearchEngine
 
 **Files Modified/Added**:
-- NEW: `scripts/compute_prefix_boosts.py` - prefix boost computation script
-- NEW: `src/main/assets/prefix_boosts/fr.json` - French prefix boosts (442KB)
-- NEW: `onnx/PrefixBoostLoader.kt` - runtime loader class
-- MOD: `onnx/BeamSearchEngine.kt` - prefix boost application
+- MOD: `scripts/compute_prefix_boosts.py` - sparse binary Aho-Corasick trie generation
+- NEW: `src/main/assets/prefix_boosts/{de,es,fr,it,pt}.bin` - binary tries (~1.5-2.2MB each)
+- NEW: `onnx/PrefixBoostTrie.kt` - zero-allocation memory-mapped trie loader
+- DEL: `onnx/PrefixBoostLoader.kt` - replaced by trie
+- MOD: `onnx/BeamSearchEngine.kt` - state-based prefix boost application
+- MOD: `onnx/SwipePredictorOrchestrator.kt` - trie integration
 - MOD: `Config.kt` - prefix boost settings
-- MOD: `onnx/SwipePredictorOrchestrator.kt` - wiring and loading
 
 **Testing Needed**:
 - [ ] Test French "veux" appears in predictions with prefix boosts enabled
 - [ ] Test other French words with "veu" prefix: veut, veulent
 - [ ] Verify English predictions not affected (boosts only load for non-English primary)
 - [ ] Test boost multiplier tuning if needed (default 1.0)
+- [ ] Verify zero GC pauses during beam search with trie
 
 ---
 
