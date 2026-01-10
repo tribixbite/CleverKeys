@@ -50,6 +50,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     private val trajectoryProcessor = SwipeTrajectoryProcessor() // Move here
     private val versionManager = ModelVersionManager.getInstance(context)
     private val languageDetector = UnigramLanguageDetector(context)
+    private val prefixBoostLoader = PrefixBoostLoader(context) // Language-specific prefix boosts
     private var tensorFactory: TensorFactory? = null
     private var encoderWrapper: EncoderWrapper? = null
     private var decoderWrapper: DecoderWrapper? = null
@@ -81,6 +82,10 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
     private var enableVerboseLogging = false
     private var showRawOutput = false
     private var batchBeams = false
+
+    // Language-specific prefix boost settings
+    private var prefixBoostMultiplier = Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER
+    private var prefixBoostMax = Defaults.NEURAL_PREFIX_BOOST_MAX
     
     // Threading
     private val executor: ExecutorService = Executors.newSingleThreadExecutor { r ->
@@ -111,7 +116,11 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             it.neural_resampling_mode?.let { mode ->
                 trajectoryProcessor.setResamplingMode(SwipeResampler.parseMode(mode))
             }
-            
+
+            // Language-specific prefix boost settings
+            prefixBoostMultiplier = it.neural_prefix_boost_multiplier
+            prefixBoostMax = it.neural_prefix_boost_max
+
             vocabulary.updateConfig(it)
         }
     }
@@ -379,7 +388,11 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                     decoderSession!!, ortEnvironment, tokenizer,
                     trie, beamWidth, maxLength,
                     confidenceThreshold, beamAlpha, beamPruneConfidence, beamScoreGap,
-                    adaptiveWidthStep, scoreGapStep, temperature, activeLogger
+                    adaptiveWidthStep, scoreGapStep, temperature, activeLogger,
+                    // Language-specific prefix boost support
+                    prefixBoostLoader = if (prefixBoostLoader.hasBoosts()) prefixBoostLoader else null,
+                    prefixBoostMultiplier = prefixBoostMultiplier,
+                    prefixBoostMax = prefixBoostMax
                 )
                 val results = engine.search(memory, features.actualLength, batchBeams)
                 results.map { PredictionPostProcessor.Candidate(it.word, it.confidence) }
@@ -475,9 +488,19 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                 } else {
                     Log.w(TAG, "Failed to load primary dictionary: $primaryLang")
                 }
+
+                // Load prefix boosts for non-English primary language
+                val boostsLoaded = prefixBoostLoader.loadBoosts(primaryLang)
+                if (boostsLoaded) {
+                    val stats = prefixBoostLoader.getStats()
+                    Log.i(TAG, "Prefix boosts loaded: ${stats.prefixCount} prefixes, ${stats.boostCount} boosts (max=${stats.maxBoost})")
+                } else {
+                    Log.w(TAG, "No prefix boosts available for $primaryLang")
+                }
             } else {
                 Log.i(TAG, "Primary=English, no accent dictionary needed")
                 vocabulary.unloadPrimaryDictionary()
+                prefixBoostLoader.unloadBoosts() // Unload any existing boosts
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error loading primary dictionary from prefs", e)

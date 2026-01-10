@@ -110,6 +110,10 @@ object Defaults {
     const val NEURAL_FREQUENCY_WEIGHT = 0.57f   // Vocab frequency weight in scoring (0=NN only, 2=heavy freq)
     const val SWIPE_SMOOTHING_WINDOW = 3        // Points for moving average smoothing (1 = disabled, 3 = optimal)
 
+    // Language-specific prefix boost (for non-English primary languages)
+    const val NEURAL_PREFIX_BOOST_MULTIPLIER = 1.0f  // Scaling factor for prefix boosts (0=disabled, 1=default)
+    const val NEURAL_PREFIX_BOOST_MAX = 5.0f         // Maximum boost value (clamping)
+
     const val NEURAL_RESAMPLING_MODE = "discard"
     const val NEURAL_USER_MAX_SEQ_LENGTH = 0
 
@@ -395,6 +399,10 @@ class Config private constructor(
     @JvmField var neural_resampling_mode: String? = null
     // NOTE: Custom encoder/decoder paths removed - feature not implemented
 
+    // Language-specific prefix boost (for non-English primary languages)
+    @JvmField var neural_prefix_boost_multiplier = Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER
+    @JvmField var neural_prefix_boost_max = Defaults.NEURAL_PREFIX_BOOST_MAX
+
     // Dynamically set
     @JvmField var shouldOfferVoiceTyping = false
     @JvmField var actionLabel: String? = null
@@ -611,6 +619,10 @@ class Config private constructor(
 
         neural_user_max_seq_length = safeGetInt(_prefs, "neural_user_max_seq_length", Defaults.NEURAL_USER_MAX_SEQ_LENGTH)
         neural_resampling_mode = safeGetString(_prefs, "neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE)
+
+        // Language-specific prefix boost settings
+        neural_prefix_boost_multiplier = safeGetFloat(_prefs, "neural_prefix_boost_multiplier", Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
+        neural_prefix_boost_max = safeGetFloat(_prefs, "neural_prefix_boost_max", Defaults.NEURAL_PREFIX_BOOST_MAX)
 
         val screen_width_dp = dm.widthPixels / dm.density
         wide_screen = screen_width_dp >= WIDE_DEVICE_THRESHOLD

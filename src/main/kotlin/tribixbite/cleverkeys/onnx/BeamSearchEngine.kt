@@ -41,7 +41,11 @@ class BeamSearchEngine(
     private val adaptiveWidthStep: Int = 12, // When to start adaptive width pruning
     private val scoreGapStep: Int = 10, // When to start score gap early stopping
     private val temperature: Float = 1.0f, // Softmax temperature (lower = sharper, higher = more uniform)
-    private val debugLogger: ((String) -> Unit)? = null
+    private val debugLogger: ((String) -> Unit)? = null,
+    // Language-specific prefix boost support
+    private val prefixBoostLoader: PrefixBoostLoader? = null,
+    private val prefixBoostMultiplier: Float = 1.0f, // Scaling factor for prefix boosts
+    private val prefixBoostMax: Float = 5.0f // Maximum boost value (clamping)
 ) {
 
     companion object {
@@ -242,10 +246,14 @@ class BeamSearchEngine(
                     val currentPos = beam.tokens.size - 1
                     if (currentPos in 0 until DECODER_SEQ_LEN) {
                         val logits = logits3D[0][currentPos]
-                        
+
                         // Apply Trie Masking
                         applyTrieMasking(beam, logits)
-                        
+
+                        // Apply Language-Specific Prefix Boosts (before softmax)
+                        // This boosts prefixes common in target language but rare in English
+                        applyPrefixBoosts(beam, logits)
+
                         // FIX: Log-Softmax for numerical stability and correct scoring
                         val logProbs = logSoftmax(logits)
                         
@@ -351,7 +359,63 @@ class BeamSearchEngine(
             }
         }
     }
-    
+
+    /**
+     * Apply language-specific prefix boosts to logits.
+     *
+     * This compensates for prefixes that are common in the target language (e.g., French)
+     * but rare in English. The English-trained NN assigns low probability to these prefixes,
+     * causing beam search to prune them too early.
+     *
+     * Example: "ve" + "u" gets boosted because "veu" is common in French (veux, veut, veulent)
+     * but rare in English, so the NN gives low P(u|ve).
+     *
+     * Boosts are applied additively to logits (before softmax), which is equivalent to
+     * multiplicative scaling of probabilities.
+     */
+    private fun applyPrefixBoosts(beam: BeamState, logits: FloatArray) {
+        if (prefixBoostLoader == null || !prefixBoostLoader.hasBoosts() || prefixBoostMultiplier == 0f) {
+            return
+        }
+
+        // Build current prefix from beam tokens
+        val partialWord = StringBuilder()
+        for (token in beam.tokens) {
+            val idx = token.toInt()
+            if (idx != SOS_IDX && idx != EOS_IDX && idx != PAD_IDX) {
+                val ch = tokenizer.indexToChar(idx)
+                if (ch != '?' && !ch.toString().startsWith("<")) {
+                    partialWord.append(ch.lowercaseChar())
+                }
+            }
+        }
+
+        val prefix = partialWord.toString()
+        if (prefix.isEmpty()) return
+
+        // Apply boosts using the loader's logic (longest-match-only)
+        var boostsApplied = 0
+        for (i in logits.indices) {
+            if (logits[i] == Float.NEGATIVE_INFINITY) continue  // Skip masked tokens
+
+            val c = tokenizer.indexToChar(i)
+            if (!c.isLetter()) continue
+
+            val boost = prefixBoostLoader.getBoost(prefix, c)
+            if (boost > 0f) {
+                // Scale and clamp the boost
+                val scaledBoost = (boost * prefixBoostMultiplier).coerceIn(-prefixBoostMax, prefixBoostMax)
+                logits[i] += scaledBoost
+                boostsApplied++
+            }
+        }
+
+        // Log first few boost applications for debugging
+        if (boostsApplied > 0 && prefix.length <= 3 && debugLogger != null) {
+            Log.d(TAG, "  PREFIX BOOST: '$prefix' → $boostsApplied chars boosted (mult=$prefixBoostMultiplier)")
+        }
+    }
+
     // FIX #3: Numerically stable log-softmax with temperature scaling
     // Temperature < 1.0: sharper distribution (more confident)
     // Temperature > 1.0: more uniform distribution (more diverse)
