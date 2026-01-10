@@ -1,47 +1,57 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-09
-**Status**: v1.2.1 - Language toggles + text menu + multilanguage swipe typing + LM fusion
+**Last Updated**: 2026-01-10
+**Status**: v1.2.1 - Language toggles + text menu + multilanguage swipe typing + prefix boosts
 
 ---
 
-## v1.2.1 LM Fusion Vocabulary Coverage Boost - COMPLETE
+## v1.2.1 Language-Specific Prefix Boosts - COMPLETE
 
-**Feature**: Language Model fusion for multilanguage swipe prediction improvement
+**Feature**: Boost prefixes common in target language but rare in English
 
 **Problem**: French word "veux" (rank=79, very common) never appeared in predictions,
-but "vérification" (rank=140) did. Root cause: Trie branch imbalance + English-biased NN.
-- 79 words start with "ver/vér" vs only 9 words start with "veu"
-- NN gives low probability to "u" after "ve" (not common in English)
+but "vérification" (rank=140) did. Root cause: English-biased NN.
+- NN gives low P(u|ve) because "veu" is rare in English training data
 - Beam width of 6 prunes the "veu" path before it can reach "veux"
+- Previous approach (LM fusion with word count) FAILED - it boosted "ver" (79 words)
+  over "veu" (9 words), making predictions worse
 
-**Solution** (recommended by Gemini via Zen MCP):
-Prefix-based LM fusion - boost paths with more reachable words:
+**Solution** (validated by Gemini + GPT-5.2 via PAL MCP):
+Log-odds prefix boosting - boost prefixes where P_target >> P_english:
 ```
-new_score = current_score + log(P_nn) + (λ * log(word_count))
+delta = log(P_fr(c|prefix)) - log(P_en(c|prefix))
+boost = C * delta (clamped to max B)
 ```
+
+Key insight: We need to boost prefixes that are RARE in English but COMMON in French,
+not prefixes with more reachable words.
 
 **Implementation**:
-- [x] VocabularyTrie: Add `subtreeWordCount` to TrieNode, pre-calculated during insert()
-- [x] VocabularyTrie: Add `getSubtreeWordCount(prefix)` and `getAllowedNextCharsWithCounts(prefix)`
-- [x] BeamSearchEngine: Add `vocabBoostLambda` parameter (default 0.0f = off)
-- [x] BeamSearchEngine: Add `applyVocabBoost()` method, applied before softmax
-- [x] Config/Defaults: Add `NEURAL_VOCAB_BOOST_LAMBDA = 0.3f`
-- [x] NeuralPreset: Add vocabBoostLambda to presets (Speed=0.2, Balanced=0.3, Accuracy=0.4)
-- [x] NeuralSettingsActivity: Add "Vocabulary Coverage Boost" slider (0-1 range)
-- [x] SwipePredictorOrchestrator: Wire vocabBoostLambda from config to BeamSearchEngine
+- [x] `scripts/compute_prefix_boosts.py`: Offline script to compute conditional
+      continuation probabilities and log-odds differences between French and English
+- [x] `assets/prefix_boosts/fr.json`: Pre-computed boosts (9655 prefixes, 13323 boosts)
+      - "ve" + "u" boost = 8.135 (exactly what's needed for "veux")
+      - "ve" + "q" boost = 5.203 (for "veq*" words)
+- [x] `PrefixBoostLoader.kt`: Loads prefix boost JSON at runtime, applies longest-match
+- [x] `BeamSearchEngine.kt`: Add prefixBoostLoader, multiplier, max params
+      - `applyPrefixBoosts()` method applies additive boosts to logits before softmax
+- [x] `Config.kt`: Add `NEURAL_PREFIX_BOOST_MULTIPLIER` (1.0f) and `NEURAL_PREFIX_BOOST_MAX` (5.0f)
+- [x] `SwipePredictorOrchestrator.kt`: Load boosts when non-English primary language set,
+      pass loader and settings to BeamSearchEngine
 
-**Files Modified**:
-- `VocabularyTrie.kt`: Node subtree counts + new methods
-- `BeamSearchEngine.kt`: vocabBoostLambda param + applyVocabBoost()
-- `Config.kt`: Defaults + field + refresh() + NeuralPreset enum
-- `NeuralSettingsActivity.kt`: State + UI slider + load/save/detect
-- `SwipePredictorOrchestrator.kt`: Wire config to engine
+**Files Modified/Added**:
+- NEW: `scripts/compute_prefix_boosts.py` - prefix boost computation script
+- NEW: `src/main/assets/prefix_boosts/fr.json` - French prefix boosts (442KB)
+- NEW: `onnx/PrefixBoostLoader.kt` - runtime loader class
+- MOD: `onnx/BeamSearchEngine.kt` - prefix boost application
+- MOD: `Config.kt` - prefix boost settings
+- MOD: `onnx/SwipePredictorOrchestrator.kt` - wiring and loading
 
 **Testing Needed**:
-- [ ] Test French "veux" appears in predictions with vocabBoostLambda=0.3
-- [ ] Test slider in Neural Settings (0 = off, 0.3 = balanced, 0.5 = strong)
-- [ ] Verify English predictions not degraded by boost
+- [ ] Test French "veux" appears in predictions with prefix boosts enabled
+- [ ] Test other French words with "veu" prefix: veut, veulent
+- [ ] Verify English predictions not affected (boosts only load for non-English primary)
+- [ ] Test boost multiplier tuning if needed (default 1.0)
 
 ---
 
