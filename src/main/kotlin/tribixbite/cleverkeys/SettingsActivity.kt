@@ -3704,11 +3704,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     /**
      * Load per-language prefix boost settings.
      * Called when primary language changes to load that language's specific boost values.
+     * Uses same fallback logic as Config.kt: per-language → global → defaults
      */
     private fun loadPrefixBoostForLanguage(langCode: String) {
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        prefixBoostMultiplier = Config.safeGetFloat(prefs, "neural_prefix_boost_multiplier_$langCode", Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
-        prefixBoostMax = Config.safeGetFloat(prefs, "neural_prefix_boost_max_$langCode", Defaults.NEURAL_PREFIX_BOOST_MAX)
+        // Match Config.kt fallback logic: per-language key -> global key -> defaults
+        prefixBoostMultiplier = Config.safeGetFloat(prefs, "neural_prefix_boost_multiplier_$langCode",
+            Config.safeGetFloat(prefs, "neural_prefix_boost_multiplier", Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER))
+        prefixBoostMax = Config.safeGetFloat(prefs, "neural_prefix_boost_max_$langCode",
+            Config.safeGetFloat(prefs, "neural_prefix_boost_max", Defaults.NEURAL_PREFIX_BOOST_MAX))
     }
 
     private fun loadVersionInfo(): Properties {

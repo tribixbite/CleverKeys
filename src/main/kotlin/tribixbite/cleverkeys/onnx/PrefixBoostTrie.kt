@@ -32,6 +32,10 @@ import java.nio.channels.FileChannel
  * - getBoost: O(k) linear scan over sorted edges
  * - Zero heap allocations during lookup
  * - Memory-mapped file doesn't use Java heap
+ *
+ * Thread safety:
+ * - loadFromAssets() and unload() are synchronized
+ * - Read methods capture local buffer references to avoid NPE during concurrent unload
  */
 class PrefixBoostTrie(private val context: Context) {
 
@@ -59,6 +63,7 @@ class PrefixBoostTrie(private val context: Context) {
      * @param langCode Language code (e.g., "fr", "de", "es")
      * @return true if loaded successfully
      */
+    @Synchronized
     fun loadFromAssets(langCode: String): Boolean {
         if (langCode == loadedLanguage && isLoaded) {
             return true  // Already loaded
@@ -154,6 +159,7 @@ class PrefixBoostTrie(private val context: Context) {
     /**
      * Unload current trie to free memory.
      */
+    @Synchronized
     fun unload() {
         nodeOffsets = null
         edgeKeys = null
@@ -177,7 +183,14 @@ class PrefixBoostTrie(private val context: Context) {
      * @return New state index
      */
     fun getNextState(currentState: Int, char: Char): Int {
-        if (!isLoaded) return 0
+        // Capture local references to avoid NPE during concurrent unload
+        val localNodeOffsets = nodeOffsets
+        val localEdgeKeys = edgeKeys
+        val localEdgeTargets = edgeTargets
+        val localFailureLinks = failureLinks
+
+        if (!isLoaded || localNodeOffsets == null || localEdgeKeys == null ||
+            localEdgeTargets == null || localFailureLinks == null) return 0
         if (char < 'a' || char > 'z') return 0  // Reset on non-alpha
 
         val charIdx = (char - 'a').toByte()
@@ -185,7 +198,7 @@ class PrefixBoostTrie(private val context: Context) {
 
         // Follow failure links until we find a transition or hit root
         while (true) {
-            val nextState = findTransition(state, charIdx)
+            val nextState = findTransitionSafe(state, charIdx, localNodeOffsets, localEdgeKeys, localEdgeTargets)
             if (nextState != -1) {
                 return nextState
             }
@@ -195,27 +208,33 @@ class PrefixBoostTrie(private val context: Context) {
             }
 
             // Follow failure link to longest proper suffix
-            state = failureLinks!!.get(state)
+            state = localFailureLinks.get(state)
         }
     }
 
     /**
-     * Find transition from state for given character index.
+     * Find transition from state for given character index (thread-safe version).
      *
-     * Uses binary search over sorted edges for O(log k) lookup.
+     * Uses linear scan over sorted edges for O(k) lookup.
+     * For small fan-out (~4 edges avg), linear scan is faster than binary search.
      *
      * @return Target state or -1 if no transition exists
      */
-    private fun findTransition(state: Int, charIdx: Byte): Int {
-        val startIdx = nodeOffsets!!.get(state)
-        val endIdx = nodeOffsets!!.get(state + 1)
+    private fun findTransitionSafe(
+        state: Int,
+        charIdx: Byte,
+        localNodeOffsets: IntBuffer,
+        localEdgeKeys: ByteBuffer,
+        localEdgeTargets: IntBuffer
+    ): Int {
+        val startIdx = localNodeOffsets.get(state)
+        val endIdx = localNodeOffsets.get(state + 1)
 
         // Linear scan over edges (edges are sorted by key)
-        // For small fan-out (~4 edges avg), linear scan is faster than binary search
         for (i in startIdx until endIdx) {
-            val key = edgeKeys!!.get(i)
+            val key = localEdgeKeys.get(i)
             if (key == charIdx) {
-                return edgeTargets!!.get(i)
+                return localEdgeTargets.get(i)
             }
             if (key > charIdx) {
                 break  // Keys are sorted, no need to continue
@@ -236,19 +255,26 @@ class PrefixBoostTrie(private val context: Context) {
      * @return Boost value to add to logit, or 0.0 if none
      */
     fun getBoost(currentState: Int, char: Char): Float {
-        if (!isLoaded) return 0f
+        // Capture local references to avoid NPE during concurrent unload
+        val localNodeOffsets = nodeOffsets
+        val localEdgeKeys = edgeKeys
+        val localEdgeTargets = edgeTargets
+        val localBoostValues = boostValues
+
+        if (!isLoaded || localNodeOffsets == null || localEdgeKeys == null ||
+            localEdgeTargets == null || localBoostValues == null) return 0f
         if (char < 'a' || char > 'z') return 0f
 
         val charIdx = (char - 'a').toByte()
 
         // Find the target node for this transition
-        val nextState = findTransition(currentState, charIdx)
+        val nextState = findTransitionSafe(currentState, charIdx, localNodeOffsets, localEdgeKeys, localEdgeTargets)
         if (nextState == -1) {
             return 0f
         }
 
         // Return the boost stored at the target node
-        return boostValues!!.get(nextState)
+        return localBoostValues.get(nextState)
     }
 
     /**
@@ -265,7 +291,12 @@ class PrefixBoostTrie(private val context: Context) {
      * Get statistics about loaded trie.
      */
     fun getStats(): TrieStats {
-        if (!isLoaded) {
+        // Capture local references to avoid NPE during concurrent unload
+        val localBoostValues = boostValues
+        val localNodeCount = nodeCount
+        val localEdgeCount = edgeCount
+
+        if (!isLoaded || localBoostValues == null) {
             return TrieStats(0, 0, 0f, 0f)
         }
 
@@ -273,8 +304,8 @@ class PrefixBoostTrie(private val context: Context) {
         var sumBoost = 0f
         var boostCount = 0
 
-        for (i in 0 until nodeCount) {
-            val boost = boostValues!!.get(i)
+        for (i in 0 until localNodeCount) {
+            val boost = localBoostValues.get(i)
             if (boost > 0f) {
                 maxBoost = maxOf(maxBoost, boost)
                 sumBoost += boost
@@ -283,8 +314,8 @@ class PrefixBoostTrie(private val context: Context) {
         }
 
         return TrieStats(
-            nodeCount = nodeCount,
-            edgeCount = edgeCount,
+            nodeCount = localNodeCount,
+            edgeCount = localEdgeCount,
             maxBoost = maxBoost,
             avgBoost = if (boostCount > 0) sumBoost / boostCount else 0f
         )
