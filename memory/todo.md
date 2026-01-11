@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-10
-**Status**: v1.2.1 - Language toggles + text menu + multilanguage swipe typing + prefix boosts
+**Last Updated**: 2026-01-11
+**Status**: v1.2.1 - Language toggles + text menu + multilanguage swipe typing + prefix boosts + cumulative cap
 
 ---
 
@@ -51,6 +51,13 @@ during beam search. Replaced with memory-mapped Aho-Corasick trie for O(1) looku
 - [x] `onnx/SwipePredictorOrchestrator.kt`: Updated for PrefixBoostTrie
 - [x] DELETED: `onnx/PrefixBoostLoader.kt` (replaced by trie)
 - [x] `Config.kt`: Add `NEURAL_PREFIX_BOOST_MULTIPLIER` (1.0f) and `NEURAL_PREFIX_BOOST_MAX` (5.0f)
+- [x] **Cumulative Boost Cap** (2026-01-11): Prevent runaway boosting on long words
+      - Added `cumulativeBoost` field to BeamState for tracking total boost per beam path
+      - Added `MAX_CUMULATIVE_BOOST = 15.0f` constant (e.g., 10 chars × 1.5 boost average)
+      - `applyPrefixBoosts()` now returns applied boosts array and respects remaining budget
+      - Individual boosts capped to `MAX_CUMULATIVE_BOOST - beam.cumulativeBoost`
+      - English latency unaffected (prefix boosts not loaded for "en")
+      - Validated by expert analysis via PAL MCP (Gemini 2.5 Pro)
 
 **Files Modified/Added**:
 - MOD: `scripts/compute_prefix_boosts.py` - sparse binary Aho-Corasick trie generation
