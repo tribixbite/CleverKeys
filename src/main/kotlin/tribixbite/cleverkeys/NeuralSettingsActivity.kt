@@ -290,34 +290,6 @@ class NeuralSettingsActivity : ComponentActivity() {
                 )
             }
 
-            // Prefix Boost Safety Section (for non-English languages)
-            ParameterSection("Multilingual Safety") {
-                // Max Cumulative Boost
-                ParameterSlider(
-                    title = "Max Cumulative Boost",
-                    description = "Maximum total prefix boost across all chars. Lower = more conservative, prevents long words from dominating.",
-                    value = maxCumulativeBoost,
-                    valueRange = 5f..30f,
-                    steps = 25,
-                    onValueChange = {
-                        maxCumulativeBoost = it
-                        updateNeuralParameters()
-                    },
-                    displayValue = "%.1f".format(maxCumulativeBoost)
-                )
-
-                // Strict Start Char Toggle
-                ParameterToggle(
-                    title = "Strict Start Character",
-                    description = "Only keep predictions starting with detected first key. Helps short swipes.",
-                    checked = strictStartChar,
-                    onCheckedChange = {
-                        strictStartChar = it
-                        updateNeuralParameters()
-                    }
-                )
-            }
-
             // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),

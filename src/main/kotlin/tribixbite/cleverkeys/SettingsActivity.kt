@@ -265,6 +265,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var secondaryPredictionWeight by mutableStateOf(0.9f) // v1.1.94: Secondary dictionary weight
     private var prefixBoostMultiplier by mutableStateOf(Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
     private var prefixBoostMax by mutableStateOf(Defaults.NEURAL_PREFIX_BOOST_MAX)
+    private var maxCumulativeBoost by mutableStateOf(Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
+    private var strictStartChar by mutableStateOf(Defaults.NEURAL_STRICT_START_CHAR)
     private var primaryLanguageAlt by mutableStateOf("es") // v1.2.0: Alternate primary for quick toggle
     private var secondaryLanguageAlt by mutableStateOf("none") // v1.2.0: Alternate secondary for quick toggle
     private var availableSecondaryLanguages by mutableStateOf(listOf<String>()) // V2 dictionaries
@@ -2470,6 +2472,29 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             },
                             displayValue = "%.1f".format(prefixBoostMax)
                         )
+
+                        SettingsSlider(
+                            title = "Max Cumulative Boost",
+                            description = "Total boost cap across all chars. Lower = more conservative, prevents long words from dominating.",
+                            value = maxCumulativeBoost,
+                            valueRange = 5f..30f,
+                            steps = 25,
+                            onValueChange = {
+                                maxCumulativeBoost = it
+                                saveSetting("neural_max_cumulative_boost", maxCumulativeBoost)
+                            },
+                            displayValue = "%.1f".format(maxCumulativeBoost)
+                        )
+
+                        SettingsSwitch(
+                            title = "Strict Start Character",
+                            description = "Only keep predictions starting with detected first key. Helps short swipes.",
+                            checked = strictStartChar,
+                            onCheckedChange = {
+                                strictStartChar = it
+                                saveSetting("neural_strict_start_char", strictStartChar)
+                            }
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -3541,6 +3566,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Load per-language prefix boost values (falls back to global default if not set)
         prefixBoostMultiplier = Config.safeGetFloat(prefs, "neural_prefix_boost_multiplier_$primaryLanguage", Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER)
         prefixBoostMax = Config.safeGetFloat(prefs, "neural_prefix_boost_max_$primaryLanguage", Defaults.NEURAL_PREFIX_BOOST_MAX)
+        // Prefix boost safety settings (global, not per-language)
+        maxCumulativeBoost = Config.safeGetFloat(prefs, "neural_max_cumulative_boost", Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
+        strictStartChar = prefs.getSafeBoolean("neural_strict_start_char", Defaults.NEURAL_STRICT_START_CHAR)
         primaryLanguageAlt = prefs.getSafeString("pref_primary_language_alt", "es")
         secondaryLanguageAlt = prefs.getSafeString("pref_secondary_language_alt", "none")
 
