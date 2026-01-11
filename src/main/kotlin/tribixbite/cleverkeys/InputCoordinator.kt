@@ -336,8 +336,9 @@ class InputCoordinator(
         // CRITICAL: Save swipe flag before resetting for use in spacing logic below
         val isSwipeAutoInsert = contextTracker.wasLastInputSwipe()
 
-        // Store ML data if this was a swipe prediction selection
-        if (isSwipeAutoInsert && currentSwipeData != null) {
+        // Store ML data if this was a swipe prediction selection (respects privacy setting)
+        val canCollectSwipe = PrivacyManager.getInstance(context).canCollectSwipeData()
+        if (isSwipeAutoInsert && currentSwipeData != null && canCollectSwipe) {
             predictionCoordinator.getMlDataStore()?.let { dataStore ->
                 // Create a new ML data object with the selected word
                 val metrics = resources.displayMetrics
