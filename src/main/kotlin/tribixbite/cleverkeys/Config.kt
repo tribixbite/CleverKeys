@@ -112,7 +112,9 @@ object Defaults {
 
     // Language-specific prefix boost (for non-English primary languages)
     const val NEURAL_PREFIX_BOOST_MULTIPLIER = 1.0f  // Scaling factor for prefix boosts (0=disabled, 1=default)
-    const val NEURAL_PREFIX_BOOST_MAX = 5.0f         // Maximum boost value (clamping)
+    const val NEURAL_PREFIX_BOOST_MAX = 5.0f         // Maximum boost value per character (clamping)
+    const val NEURAL_MAX_CUMULATIVE_BOOST = 15.0f    // Maximum total boost across all chars (prevents runaway)
+    const val NEURAL_STRICT_START_CHAR = false       // If true, only keep beams matching first detected key
 
     const val NEURAL_RESAMPLING_MODE = "discard"
     const val NEURAL_USER_MAX_SEQ_LENGTH = 0
@@ -402,6 +404,8 @@ class Config private constructor(
     // Language-specific prefix boost (for non-English primary languages)
     @JvmField var neural_prefix_boost_multiplier = Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER
     @JvmField var neural_prefix_boost_max = Defaults.NEURAL_PREFIX_BOOST_MAX
+    @JvmField var neural_max_cumulative_boost = Defaults.NEURAL_MAX_CUMULATIVE_BOOST
+    @JvmField var neural_strict_start_char = Defaults.NEURAL_STRICT_START_CHAR
 
     // Dynamically set
     @JvmField var shouldOfferVoiceTyping = false
@@ -626,6 +630,10 @@ class Config private constructor(
             safeGetFloat(_prefs, "neural_prefix_boost_multiplier", Defaults.NEURAL_PREFIX_BOOST_MULTIPLIER))
         neural_prefix_boost_max = safeGetFloat(_prefs, "neural_prefix_boost_max_$primary_language",
             safeGetFloat(_prefs, "neural_prefix_boost_max", Defaults.NEURAL_PREFIX_BOOST_MAX))
+        neural_max_cumulative_boost = safeGetFloat(_prefs, "neural_max_cumulative_boost",
+            Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
+        neural_strict_start_char = _prefs.getBoolean("neural_strict_start_char",
+            Defaults.NEURAL_STRICT_START_CHAR)
 
         val screen_width_dp = dm.widthPixels / dm.density
         wide_screen = screen_width_dp >= WIDE_DEVICE_THRESHOLD

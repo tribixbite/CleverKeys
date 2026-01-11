@@ -49,6 +49,10 @@ class NeuralSettingsActivity : ComponentActivity() {
     // Model Configuration - MUST match Defaults in Config.kt
     private var resamplingMode by mutableStateOf(Defaults.NEURAL_RESAMPLING_MODE)
 
+    // Prefix Boost Safety - MUST match Defaults in Config.kt
+    private var maxCumulativeBoost by mutableStateOf(Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
+    private var strictStartChar by mutableStateOf(Defaults.NEURAL_STRICT_START_CHAR)
+
     // Currently selected preset (null = custom settings)
     private var selectedPreset by mutableStateOf<NeuralPreset?>(null)
 
@@ -286,6 +290,34 @@ class NeuralSettingsActivity : ComponentActivity() {
                 )
             }
 
+            // Prefix Boost Safety Section (for non-English languages)
+            ParameterSection("Multilingual Safety") {
+                // Max Cumulative Boost
+                ParameterSlider(
+                    title = "Max Cumulative Boost",
+                    description = "Maximum total prefix boost across all chars. Lower = more conservative, prevents long words from dominating.",
+                    value = maxCumulativeBoost,
+                    valueRange = 5f..30f,
+                    steps = 25,
+                    onValueChange = {
+                        maxCumulativeBoost = it
+                        updateNeuralParameters()
+                    },
+                    displayValue = "%.1f".format(maxCumulativeBoost)
+                )
+
+                // Strict Start Char Toggle
+                ParameterToggle(
+                    title = "Strict Start Character",
+                    description = "Only keep predictions starting with detected first key. Helps short swipes.",
+                    checked = strictStartChar,
+                    onCheckedChange = {
+                        strictStartChar = it
+                        updateNeuralParameters()
+                    }
+                )
+            }
+
             // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -438,6 +470,38 @@ class NeuralSettingsActivity : ComponentActivity() {
         }
     }
 
+    @Composable
+    private fun ParameterToggle(
+        title: String,
+        description: String,
+        checked: Boolean,
+        onCheckedChange: (Boolean) -> Unit
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 16.sp
+                )
+                Text(
+                    text = description,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange
+            )
+        }
+    }
+
     private fun updateNeuralParameters() {
         lifecycleScope.launch {
             try {
@@ -455,6 +519,8 @@ class NeuralSettingsActivity : ComponentActivity() {
                 config.neural_temperature = temperature
                 config.neural_frequency_weight = frequencyWeight
                 config.swipe_smoothing_window = smoothingWindow
+                config.neural_max_cumulative_boost = maxCumulativeBoost
+                config.neural_strict_start_char = strictStartChar
 
                 // Re-detect preset: if values were manually changed, this clears the preset
                 // If values match a preset (including after applyPreset), it stays selected
@@ -512,6 +578,8 @@ class NeuralSettingsActivity : ComponentActivity() {
         temperature = Config.safeGetFloat(prefs, "neural_temperature", Defaults.NEURAL_TEMPERATURE)
         frequencyWeight = Config.safeGetFloat(prefs, "neural_frequency_weight", Defaults.NEURAL_FREQUENCY_WEIGHT)
         smoothingWindow = Config.safeGetInt(prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
+        maxCumulativeBoost = Config.safeGetFloat(prefs, "neural_max_cumulative_boost", Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
+        strictStartChar = prefs.getBoolean("neural_strict_start_char", Defaults.NEURAL_STRICT_START_CHAR)
 
         // Detect if current settings match any preset
         selectedPreset = detectCurrentPreset()
@@ -535,6 +603,8 @@ class NeuralSettingsActivity : ComponentActivity() {
         editor.putFloat("neural_temperature", temperature)
         editor.putFloat("neural_frequency_weight", frequencyWeight)
         editor.putInt("swipe_smoothing_window", smoothingWindow)
+        editor.putFloat("neural_max_cumulative_boost", maxCumulativeBoost)
+        editor.putBoolean("neural_strict_start_char", strictStartChar)
 
         // Save selected preset name (or "custom" if manually tweaked)
         editor.putString("neural_preset", selectedPreset?.name ?: "custom")
@@ -615,6 +685,9 @@ class NeuralSettingsActivity : ComponentActivity() {
         scoreGapStep = preset.scoreGapStep
         temperature = preset.temperature
         frequencyWeight = preset.frequencyWeight
+        // Reset multilingual safety to defaults (not part of preset)
+        maxCumulativeBoost = Defaults.NEURAL_MAX_CUMULATIVE_BOOST
+        strictStartChar = Defaults.NEURAL_STRICT_START_CHAR
 
         selectedPreset = preset
 

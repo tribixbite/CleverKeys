@@ -45,7 +45,11 @@ class BeamSearchEngine(
     // Language-specific prefix boost support (Aho-Corasick trie for O(1) lookups)
     private val prefixBoostTrie: PrefixBoostTrie? = null,
     private val prefixBoostMultiplier: Float = 1.0f, // Scaling factor for prefix boosts
-    private val prefixBoostMax: Float = 5.0f // Maximum boost value (clamping)
+    private val prefixBoostMax: Float = 5.0f, // Maximum boost value per character (clamping)
+    private val maxCumulativeBoost: Float = 15.0f, // Maximum total boost across all chars
+    // Strict start char: only keep beams matching first detected key
+    private val strictStartChar: Boolean = false,
+    private val firstDetectedKey: Char? = null // First key detected from swipe trace
 ) {
 
     companion object {
@@ -66,10 +70,6 @@ class BeamSearchEngine(
 
         // Diversity parameters (4D: Diverse Beam Search)
         private const val DIVERSITY_LAMBDA = 0.5f // Penalty weight for similar beams
-
-        // Maximum cumulative boost across all characters in a word
-        // Prevents runaway boosting on long words (e.g., 10 chars × 1.5 boost = 15.0 total cap)
-        private const val MAX_CUMULATIVE_BOOST = 15.0f
     }
 
     data class BeamSearchCandidate(val word: String, val confidence: Float, val score: Float)
@@ -139,7 +139,23 @@ class BeamSearchEngine(
                 // SEQUENTIAL PROCESSING (Robust default)
                 val nextBeams = processSequential(activeBeams, memory, actualSrcLength, step)
                 candidates.addAll(nextBeams)
-                
+
+                // Strict start char filtering: after step 0, remove beams whose first char
+                // doesn't match the detected starting key from the swipe trace
+                if (step == 0 && strictStartChar && firstDetectedKey != null) {
+                    val targetChar = firstDetectedKey.lowercaseChar()
+                    candidates.removeIf { beam ->
+                        // Get first non-SOS token
+                        val firstCharToken = beam.tokens.getOrNull(1)?.toInt()
+                        if (firstCharToken == null || firstCharToken == EOS_IDX) {
+                            false // Keep EOS beams (finished words)
+                        } else {
+                            val beamFirstChar = tokenizer.indexToChar(firstCharToken)
+                            beamFirstChar != targetChar
+                        }
+                    }
+                }
+
                 totalInferenceTime += (System.nanoTime() - startInf) / 1_000_000
                 
             } catch (e: Exception) {
@@ -411,7 +427,7 @@ class BeamSearchEngine(
         }
 
         // Calculate remaining boost budget before hitting the cap
-        val remainingBudget = MAX_CUMULATIVE_BOOST - beam.cumulativeBoost
+        val remainingBudget = maxCumulativeBoost - beam.cumulativeBoost
 
         // If we've already hit the cap, don't apply any more boosts
         if (remainingBudget <= 0f) {

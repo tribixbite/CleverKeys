@@ -378,6 +378,15 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             // Only pass debugLogger to child components when debug mode is active
             val activeLogger = if (debugModeActive) debugLogger else null
 
+            // Extract first detected key for strict start char filtering
+            val firstDetectedKey: Char? = features.nearestKeys
+                .firstOrNull { it in 4..29 }
+                ?.let { 'a' + (it - 4) }
+
+            // Get config settings for prefix boost safety measures
+            val maxCumulativeBoost = config?.neural_max_cumulative_boost ?: 15.0f
+            val strictStartChar = config?.neural_strict_start_char ?: false
+
             val candidates = if (config?.neural_greedy_search == true) {
                 val engine = GreedySearchEngine(decoderSession!!, ortEnvironment, tokenizer, maxLength, activeLogger)
                 val results = engine.search(memory, features.actualLength)
@@ -393,7 +402,11 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                     // Language-specific prefix boost support (Aho-Corasick trie for O(1) lookups)
                     prefixBoostTrie = if (prefixBoostTrie.hasBoosts()) prefixBoostTrie else null,
                     prefixBoostMultiplier = prefixBoostMultiplier,
-                    prefixBoostMax = prefixBoostMax
+                    prefixBoostMax = prefixBoostMax,
+                    maxCumulativeBoost = maxCumulativeBoost,
+                    // Strict start char: only keep beams matching first detected key
+                    strictStartChar = strictStartChar,
+                    firstDetectedKey = firstDetectedKey
                 )
                 val results = engine.search(memory, features.actualLength, batchBeams)
                 results.map { PredictionPostProcessor.Candidate(it.word, it.confidence) }
