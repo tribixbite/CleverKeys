@@ -63,7 +63,7 @@ during beam search. Replaced with memory-mapped Aho-Corasick trie for O(1) looku
       - When enabled, filters beams after step 0 to only keep those matching detected first key
       - First key extracted from `features.nearestKeys` in SwipePredictorOrchestrator
       - Addresses issue where short swipes with boosted prefixes yield extra long words
-      - Configurable via Neural Settings UI "Multilingual Safety" section
+      - Configurable via main Settings > Multi-Language > Prefix Boost section
 
 **Files Modified/Added**:
 - MOD: `scripts/compute_prefix_boosts.py` - sparse binary Aho-Corasick trie generation
