@@ -22,7 +22,7 @@
 
 **Swipe Data Export (fixed OOM):**
 - JSON/NDJSON exports now stream from DB cursor (no memory buildup)
-- View dialog limited to 100 most recent entries
+- View dialog: search, pagination (20/page), tap to copy trace JSON
 
 ---
 
