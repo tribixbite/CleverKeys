@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-11
-**Status**: v1.2.1 - Language toggles + text menu + multilanguage swipe typing + prefix boosts + cumulative cap
+**Status**: v1.2.2 - Multilingual safety settings + new language prefix boosts (id, ms, tl, sw)
 
 ---
 

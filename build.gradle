@@ -51,7 +51,7 @@ dependencies {
 // UPDATE ONLY THESE THREE VALUES FOR A NEW RELEASE:
 ext.VERSION_MAJOR = 1
 ext.VERSION_MINOR = 2
-ext.VERSION_PATCH = 1
+ext.VERSION_PATCH = 2
 // =============================================================================
 // DERIVED VALUES (auto-calculated, do not edit):
 // - versionCode = MAJOR*10000 + MINOR*100 + PATCH
