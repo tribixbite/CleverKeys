@@ -2709,15 +2709,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     }
                 )
 
-                SettingsSwitch(
-                    title = "Error Reports",
-                    description = "Store crash logs locally for debugging",
-                    checked = privacyCollectErrors,
-                    onCheckedChange = {
-                        privacyCollectErrors = it
-                        saveSetting("privacy_collect_errors", it)
-                    }
-                )
+                // TODO: Error Reports toggle hidden - no actual logging implementation yet
+                // When implemented, should use async file logging to avoid latency impact
 
                 // Collected Data Stats and Export
                 Text(
