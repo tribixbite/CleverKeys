@@ -219,6 +219,84 @@ class SwipeMLDataStore private constructor(context: Context) :
     }
 
     /**
+     * Search data by word with pagination
+     * @param query Search query (matches word containing this string)
+     * @param limit Max results per page
+     * @param offset Offset for pagination
+     * @return List of matching SwipeMLData
+     */
+    fun searchByWord(query: String, limit: Int, offset: Int): List<SwipeMLData> {
+        val dataList = mutableListOf<SwipeMLData>()
+        val db = readableDatabase
+
+        val cursor = db.query(
+            TABLE_SWIPES, arrayOf(COL_JSON_DATA),
+            "$COL_TARGET_WORD LIKE ?", arrayOf("%$query%"),
+            null, null,
+            "$COL_TIMESTAMP DESC", "$offset, $limit"
+        )
+
+        while (cursor.moveToNext()) {
+            try {
+                val jsonStr = cursor.getString(0)
+                val json = JSONObject(jsonStr)
+                dataList.add(SwipeMLData(json))
+            } catch (e: Exception) {
+                Log.e(TAG, "Error parsing stored JSON", e)
+            }
+        }
+        cursor.close()
+
+        return dataList
+    }
+
+    /**
+     * Count total results for a search query
+     */
+    fun countSearchResults(query: String): Int {
+        val db = readableDatabase
+        val cursor = if (query.isEmpty()) {
+            db.rawQuery("SELECT COUNT(*) FROM $TABLE_SWIPES", null)
+        } else {
+            db.rawQuery("SELECT COUNT(*) FROM $TABLE_SWIPES WHERE $COL_TARGET_WORD LIKE ?", arrayOf("%$query%"))
+        }
+
+        var count = 0
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0)
+        }
+        cursor.close()
+        return count
+    }
+
+    /**
+     * Load paginated data (no search filter)
+     */
+    fun loadPaginatedData(limit: Int, offset: Int): List<SwipeMLData> {
+        val dataList = mutableListOf<SwipeMLData>()
+        val db = readableDatabase
+
+        val cursor = db.query(
+            TABLE_SWIPES, arrayOf(COL_JSON_DATA),
+            null, null, null, null,
+            "$COL_TIMESTAMP DESC", "$offset, $limit"
+        )
+
+        while (cursor.moveToNext()) {
+            try {
+                val jsonStr = cursor.getString(0)
+                val json = JSONObject(jsonStr)
+                dataList.add(SwipeMLData(json))
+            } catch (e: Exception) {
+                Log.e(TAG, "Error parsing stored JSON", e)
+            }
+        }
+        cursor.close()
+
+        return dataList
+    }
+
+    /**
      * Delete a specific swipe entry from the database
      */
     fun deleteEntry(data: SwipeMLData?) {

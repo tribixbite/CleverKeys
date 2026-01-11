@@ -319,6 +319,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var showCollectedDataViewer by mutableStateOf(false)
     private var collectedDataList by mutableStateOf<List<tribixbite.cleverkeys.ml.SwipeMLData>>(emptyList())
     private var collectedDataStats by mutableStateOf<tribixbite.cleverkeys.ml.SwipeMLDataStore.DataStatistics?>(null)
+    private var collectedDataSearchQuery by mutableStateOf("")
+    private var collectedDataCurrentPage by mutableStateOf(0)
+    private var collectedDataTotalCount by mutableStateOf(0)
+    private val collectedDataPageSize = 20
 
     // Performance stats viewer dialog state
     private var showPerfStatsViewer by mutableStateOf(false)
@@ -3276,7 +3280,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     /**
-     * Dialog to view collected swipe data
+     * Dialog to view collected swipe data with search and pagination
      */
     @Composable
     private fun CollectedDataViewerDialog(
@@ -3284,37 +3288,110 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         stats: tribixbite.cleverkeys.ml.SwipeMLDataStore.DataStatistics?,
         onDismiss: () -> Unit
     ) {
+        val clipboardManager = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val totalPages = if (collectedDataTotalCount > 0) {
+            (collectedDataTotalCount + collectedDataPageSize - 1) / collectedDataPageSize
+        } else 0
+
         AlertDialog(
-            onDismissRequest = onDismiss,
+            onDismissRequest = {
+                // Reset search state on dismiss
+                collectedDataSearchQuery = ""
+                collectedDataCurrentPage = 0
+                onDismiss()
+            },
             title = {
-                Text("Collected Swipe Data")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Swipe Data")
+                    IconButton(
+                        onClick = {
+                            collectedDataSearchQuery = ""
+                            collectedDataCurrentPage = 0
+                            loadCollectedDataPage()
+                        }
+                    ) {
+                        Text("↺", fontSize = 18.sp)
+                    }
+                }
             },
             text = {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 400.dp)
+                        .heightIn(max = 450.dp)
                 ) {
+                    // Search field
+                    OutlinedTextField(
+                        value = collectedDataSearchQuery,
+                        onValueChange = { query ->
+                            collectedDataSearchQuery = query
+                            collectedDataCurrentPage = 0
+                            loadCollectedDataPage()
+                        },
+                        placeholder = { Text("Search words...", fontSize = 13.sp) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        singleLine = true,
+                        textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
+                    )
+
                     // Stats summary
                     if (stats != null) {
                         Text(
-                            text = "Total: ${stats.totalCount} swipes • ${stats.uniqueWords} unique words",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        Text(
-                            text = "User: ${stats.userSelectionCount} • Calibration: ${stats.calibrationCount}",
+                            text = "Showing ${dataList.size} of $collectedDataTotalCount • ${stats.uniqueWords} unique words",
                             fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 12.dp)
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(bottom = 4.dp)
                         )
+                    }
+
+                    // Pagination controls
+                    if (totalPages > 1) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    if (collectedDataCurrentPage > 0) {
+                                        collectedDataCurrentPage--
+                                        loadCollectedDataPage()
+                                    }
+                                },
+                                enabled = collectedDataCurrentPage > 0
+                            ) {
+                                Text("◀", fontSize = 16.sp)
+                            }
+                            Text(
+                                text = "${collectedDataCurrentPage + 1} / $totalPages",
+                                fontSize = 13.sp,
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+                            IconButton(
+                                onClick = {
+                                    if (collectedDataCurrentPage < totalPages - 1) {
+                                        collectedDataCurrentPage++
+                                        loadCollectedDataPage()
+                                    }
+                                },
+                                enabled = collectedDataCurrentPage < totalPages - 1
+                            ) {
+                                Text("▶", fontSize = 16.sp)
+                            }
+                        }
                     }
 
                     if (dataList.isEmpty()) {
                         Text(
-                            text = "No data collected yet.",
+                            text = if (collectedDataSearchQuery.isNotEmpty()) "No results for \"$collectedDataSearchQuery\"" else "No data collected yet.",
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -3325,9 +3402,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             modifier = Modifier
                                 .verticalScroll(listScrollState)
                                 .fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            dataList.forEachIndexed { index, data ->
+                            dataList.forEach { data ->
                                 val dateFormat = java.text.SimpleDateFormat(
                                     "MM/dd HH:mm",
                                     java.util.Locale.getDefault()
@@ -3337,7 +3414,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                                 val points = data.getTracePoints().size
 
                                 Card(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            // Copy full trace data to clipboard
+                                            val traceJson = data.toJSON().toString(2)
+                                            val clip = android.content.ClipData.newPlainText("Swipe Trace", traceJson)
+                                            clipboardManager.setPrimaryClip(clip)
+                                            Toast.makeText(this@SettingsActivity, "Trace copied to clipboard", Toast.LENGTH_SHORT).show()
+                                        },
                                     colors = CardDefaults.cardColors(
                                         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                     )
@@ -3368,10 +3453,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                                             Text(
                                                 text = "Keys: $keys",
                                                 fontSize = 11.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1
                                             )
                                             Text(
-                                                text = "$points pts • ${data.collectionSource}",
+                                                text = "$points pts",
                                                 fontSize = 10.sp,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                             )
@@ -3384,7 +3470,11 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 }
             },
             confirmButton = {
-                TextButton(onClick = onDismiss) {
+                TextButton(onClick = {
+                    collectedDataSearchQuery = ""
+                    collectedDataCurrentPage = 0
+                    onDismiss()
+                }) {
                     Text("Close")
                 }
             }
@@ -4221,16 +4311,38 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     /**
-     * View collected swipe data in a dialog (limited to prevent OOM)
+     * View collected swipe data in a dialog with pagination
      */
     private fun viewCollectedData() {
+        collectedDataSearchQuery = ""
+        collectedDataCurrentPage = 0
+        loadCollectedDataPage()
+        showCollectedDataViewer = true
+    }
+
+    /**
+     * Load a page of collected data based on current search/pagination state
+     */
+    private fun loadCollectedDataPage() {
         lifecycleScope.launch {
             try {
                 val dataStore = tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(this@SettingsActivity)
-                // Load only recent entries to prevent OOM with large datasets
-                collectedDataList = dataStore.loadRecentData(100)
-                collectedDataStats = dataStore.getStatistics()
-                showCollectedDataViewer = true
+                val offset = collectedDataCurrentPage * collectedDataPageSize
+
+                // Get total count for pagination
+                collectedDataTotalCount = dataStore.countSearchResults(collectedDataSearchQuery)
+
+                // Load page data
+                collectedDataList = if (collectedDataSearchQuery.isEmpty()) {
+                    dataStore.loadPaginatedData(collectedDataPageSize, offset)
+                } else {
+                    dataStore.searchByWord(collectedDataSearchQuery, collectedDataPageSize, offset)
+                }
+
+                // Update stats (only on first load)
+                if (collectedDataStats == null) {
+                    collectedDataStats = dataStore.getStatistics()
+                }
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, "Error loading data: ${e.message}", Toast.LENGTH_SHORT).show()
             }
