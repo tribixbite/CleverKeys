@@ -92,6 +92,40 @@ class PrefixBoostTrie(private val context: Context) {
     }
 
     /**
+     * Load prefix boost trie from a file path (for imported language packs).
+     *
+     * @param file File containing the prefix boost trie
+     * @param langCode Language code for logging
+     * @return true if loaded successfully
+     */
+    @Synchronized
+    fun loadFromFile(file: java.io.File, langCode: String): Boolean {
+        if (langCode == loadedLanguage && isLoaded) {
+            return true  // Already loaded
+        }
+
+        // English doesn't need boosts
+        if (langCode == "en") {
+            unload()
+            loadedLanguage = "en"
+            return true
+        }
+
+        return try {
+            FileInputStream(file).use { inputStream ->
+                loadFromStream(inputStream)
+            }
+            loadedLanguage = langCode
+            Log.i(TAG, "Loaded prefix boosts from file for $langCode: $nodeCount nodes, $edgeCount edges")
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load prefix boosts from file for $langCode: ${e.message}")
+            unload()
+            false
+        }
+    }
+
+    /**
      * Load trie from an input stream.
      */
     private fun loadFromStream(inputStream: InputStream) {

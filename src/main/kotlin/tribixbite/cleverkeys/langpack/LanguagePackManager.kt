@@ -13,10 +13,11 @@ import java.util.zip.ZipInputStream
  * Language Pack Manager - handles import, validation, and storage of language packs.
  *
  * Language packs are ZIP files containing:
- * - manifest.json: metadata (language code, name, version)
+ * - manifest.json: metadata (language code, name, version, hasPrefixBoost)
  * - dictionary.bin: V2 binary dictionary with accent normalization
  * - unigrams.txt: word frequency list for language detection
  * - contractions.json: optional apostrophe word mappings (e.g., "cest" -> "c'est")
+ * - prefix_boost.bin: optional Aho-Corasick trie for prefix boosting (non-English)
  *
  * Packs are imported via Storage Access Framework (no internet permission needed).
  * Stored in app internal storage: files/langpacks/{code}/
@@ -30,6 +31,7 @@ class LanguagePackManager(private val context: Context) {
         private const val DICTIONARY_FILE = "dictionary.bin"
         private const val UNIGRAMS_FILE = "unigrams.txt"
         private const val CONTRACTIONS_FILE = "contractions.json"
+        private const val PREFIX_BOOST_FILE = "prefix_boost.bin"
 
         // V2 dictionary magic number: "CKDT"
         private const val DICT_MAGIC = 0x54444B43
@@ -136,6 +138,13 @@ class LanguagePackManager(private val context: Context) {
                 Log.d(TAG, "Copied contractions.json for ${manifest.code}")
             }
 
+            // Copy prefix boost trie if present
+            val prefixBoostFile = File(tempDir, PREFIX_BOOST_FILE)
+            if (prefixBoostFile.exists()) {
+                prefixBoostFile.copyTo(File(packDir, PREFIX_BOOST_FILE), overwrite = true)
+                Log.d(TAG, "Copied prefix_boost.bin for ${manifest.code} (${prefixBoostFile.length() / 1024}KB)")
+            }
+
             Log.i(TAG, "Successfully imported language pack: ${manifest.name} (${manifest.code})")
             return ImportResult.Success(manifest)
 
@@ -156,7 +165,8 @@ class LanguagePackManager(private val context: Context) {
                 name = obj.getString("name"),
                 version = obj.optInt("version", 1),
                 author = obj.optString("author", ""),
-                wordCount = obj.optInt("wordCount", 0)
+                wordCount = obj.optInt("wordCount", 0),
+                hasPrefixBoost = obj.optBoolean("hasPrefixBoost", false)
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to parse manifest", e)
@@ -243,6 +253,15 @@ class LanguagePackManager(private val context: Context) {
     }
 
     /**
+     * Get prefix boost trie file path for a language code.
+     * Returns null if not available.
+     */
+    fun getPrefixBoostPath(code: String): File? {
+        val prefixBoostFile = File(langpacksDir, "$code/$PREFIX_BOOST_FILE")
+        return if (prefixBoostFile.exists()) prefixBoostFile else null
+    }
+
+    /**
      * Check if a language pack is installed.
      */
     fun isInstalled(code: String): Boolean {
@@ -287,11 +306,12 @@ class LanguagePackManager(private val context: Context) {
  * Language pack manifest data.
  */
 data class LanguagePackManifest(
-    val code: String,        // ISO 639-1 code (e.g., "fr", "de")
-    val name: String,        // Display name (e.g., "French", "German")
-    val version: Int = 1,    // Pack version
-    val author: String = "", // Pack author
-    val wordCount: Int = 0   // Number of words in dictionary
+    val code: String,              // ISO 639-1 code (e.g., "fr", "de")
+    val name: String,              // Display name (e.g., "French", "German")
+    val version: Int = 1,          // Pack version
+    val author: String = "",       // Pack author
+    val wordCount: Int = 0,        // Number of words in dictionary
+    val hasPrefixBoost: Boolean = false  // Whether pack includes prefix boost trie
 )
 
 /**

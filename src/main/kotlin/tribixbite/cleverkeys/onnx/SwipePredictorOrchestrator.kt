@@ -18,6 +18,7 @@ import tribixbite.cleverkeys.SwipeResampler
 import tribixbite.cleverkeys.SwipeTokenizer
 import tribixbite.cleverkeys.SwipeTrajectoryProcessor
 import tribixbite.cleverkeys.UnigramLanguageDetector
+import tribixbite.cleverkeys.langpack.LanguagePackManager
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -490,10 +491,20 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                 }
 
                 // Load prefix boosts for non-English primary language (Aho-Corasick trie)
-                val boostsLoaded = prefixBoostTrie.loadFromAssets(primaryLang)
+                // First try imported language pack, then fall back to bundled assets
+                val langPackManager = LanguagePackManager.getInstance(context)
+                val prefixBoostFile = langPackManager.getPrefixBoostPath(primaryLang)
+
+                val boostsLoaded = if (prefixBoostFile != null) {
+                    prefixBoostTrie.loadFromFile(prefixBoostFile, primaryLang)
+                } else {
+                    prefixBoostTrie.loadFromAssets(primaryLang)
+                }
+
                 if (boostsLoaded) {
                     val stats = prefixBoostTrie.getStats()
-                    Log.i(TAG, "Prefix boosts loaded: ${stats.nodeCount} nodes, ${stats.edgeCount} edges (max=${stats.maxBoost})")
+                    val source = if (prefixBoostFile != null) "langpack" else "assets"
+                    Log.i(TAG, "Prefix boosts loaded ($source): ${stats.nodeCount} nodes, ${stats.edgeCount} edges (max=${stats.maxBoost})")
                 } else {
                     Log.w(TAG, "No prefix boosts available for $primaryLang")
                 }
