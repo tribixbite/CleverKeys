@@ -117,6 +117,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         uri?.let { performSwipeDataNdjsonExport(it) }
     }
 
+    // Performance metrics export launcher
+    private val perfStatsExportLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri: Uri? ->
+        uri?.let { performPerfStatsExport(it) }
+    }
+
     // Language pack import launcher
     private val languagePackImportLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -312,6 +319,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var showCollectedDataViewer by mutableStateOf(false)
     private var collectedDataList by mutableStateOf<List<tribixbite.cleverkeys.ml.SwipeMLData>>(emptyList())
     private var collectedDataStats by mutableStateOf<tribixbite.cleverkeys.ml.SwipeMLDataStore.DataStatistics?>(null)
+
+    // Performance stats viewer dialog state
+    private var showPerfStatsViewer by mutableStateOf(false)
+    private var perfStatsSummary by mutableStateOf("")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -596,6 +607,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 dataList = collectedDataList,
                 stats = collectedDataStats,
                 onDismiss = { showCollectedDataViewer = false }
+            )
+        }
+
+        // Performance Stats Viewer Dialog
+        if (showPerfStatsViewer) {
+            PerfStatsViewerDialog(
+                summary = perfStatsSummary,
+                onDismiss = { showPerfStatsViewer = false }
             )
         }
 
@@ -2786,6 +2805,55 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
+
+                // Performance Metrics Section
+                Text(
+                    text = "Performance Metrics",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                )
+
+                val perfStats = remember {
+                    try {
+                        NeuralPerformanceStats.getInstance(this@SettingsActivity)
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+
+                if (perfStats != null && perfStats.hasStats()) {
+                    Text(
+                        text = "Predictions: ${perfStats.getTotalPredictions()} • Avg: ${perfStats.getAverageInferenceTime()}ms • Top-1: ${perfStats.getTop1Accuracy()}%",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { viewPerfStats() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("View")
+                        }
+                        OutlinedButton(
+                            onClick = { exportPerfStats() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Export")
+                        }
+                    }
+                } else {
+                    Text(
+                        text = "No performance data collected yet. Enable collection above and use swipe typing.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
             }
 
             // Advanced Section (Collapsible)
@@ -3313,6 +3381,45 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             }
                         }
                     }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onDismiss) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
+    /**
+     * Dialog to view performance statistics
+     */
+    @Composable
+    private fun PerfStatsViewerDialog(
+        summary: String,
+        onDismiss: () -> Unit
+    ) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text("Performance Statistics")
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 400.dp)
+                ) {
+                    val scrollState = rememberScrollState()
+                    Text(
+                        text = summary,
+                        fontSize = 13.sp,
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .verticalScroll(scrollState)
+                            .fillMaxWidth()
+                    )
                 }
             },
             confirmButton = {
@@ -4114,18 +4221,45 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     }
 
     /**
-     * View collected swipe data in a dialog
+     * View collected swipe data in a dialog (limited to prevent OOM)
      */
     private fun viewCollectedData() {
         lifecycleScope.launch {
             try {
                 val dataStore = tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(this@SettingsActivity)
-                collectedDataList = dataStore.loadAllData()
+                // Load only recent entries to prevent OOM with large datasets
+                collectedDataList = dataStore.loadRecentData(100)
                 collectedDataStats = dataStore.getStatistics()
                 showCollectedDataViewer = true
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, "Error loading data: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    /**
+     * View performance statistics in a dialog
+     */
+    private fun viewPerfStats() {
+        try {
+            val stats = NeuralPerformanceStats.getInstance(this)
+            perfStatsSummary = stats.formatSummary()
+            showPerfStatsViewer = true
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error loading stats: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Export performance statistics to JSON file
+     */
+    private fun exportPerfStats() {
+        try {
+            val sdf = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US)
+            val filename = "perf_stats_${sdf.format(java.util.Date())}.json"
+            perfStatsExportLauncher.launch(filename)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open file picker: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -4205,6 +4339,44 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     Toast.makeText(
                         this@SettingsActivity,
                         "Exported $count swipe entries to NDJSON",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } ?: throw Exception("Could not open file for writing")
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@SettingsActivity,
+                    "Export failed: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private fun performPerfStatsExport(uri: Uri) {
+        lifecycleScope.launch {
+            try {
+                contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    val stats = NeuralPerformanceStats.getInstance(this@SettingsActivity)
+                    val json = org.json.JSONObject().apply {
+                        put("export_timestamp", System.currentTimeMillis())
+                        put("total_predictions", stats.getTotalPredictions())
+                        put("total_inference_time_ms", stats.getTotalInferenceTime())
+                        put("average_inference_time_ms", stats.getAverageInferenceTime())
+                        put("total_selections", stats.getTotalSelections())
+                        put("top1_selections", stats.getTop1Selections())
+                        put("top3_selections", stats.getTop3Selections())
+                        put("top1_accuracy_pct", stats.getTop1Accuracy())
+                        put("top3_accuracy_pct", stats.getTop3Accuracy())
+                        put("model_load_time_ms", stats.getModelLoadTime())
+                        put("days_tracked", stats.getDaysSinceStart())
+                        put("first_stat_timestamp", stats.getFirstStatTimestamp())
+                    }
+                    java.io.OutputStreamWriter(outputStream, Charsets.UTF_8).use { writer ->
+                        writer.write(json.toString(2))
+                    }
+                    Toast.makeText(
+                        this@SettingsActivity,
+                        "Performance stats exported",
                         Toast.LENGTH_SHORT
                     ).show()
                 } ?: throw Exception("Could not open file for writing")

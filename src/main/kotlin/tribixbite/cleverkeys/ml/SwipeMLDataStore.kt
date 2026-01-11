@@ -324,61 +324,79 @@ class SwipeMLDataStore private constructor(context: Context) :
 
     /**
      * Export all data to JSON via OutputStream (for SAF file picker)
+     * Uses streaming to avoid OOM with large datasets
      */
     fun exportToJSON(outputStream: OutputStream): Int {
-        val allData = loadAllData()
+        val db = readableDatabase
+        var count = 0
 
-        // Build JSON array
-        val jsonArray = JSONArray()
-        for (data in allData) {
-            jsonArray.put(data.toJSON())
-        }
-
-        // Add metadata
-        val root = JSONObject().apply {
-            put("export_version", "1.0")
-            put("export_timestamp", System.currentTimeMillis())
-            put("total_samples", allData.size)
-            put("database_version", DATABASE_VERSION)
-            put("data", jsonArray)
-        }
-
-        // Add statistics
-        val prefs = _context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        val stats = JSONObject().apply {
-            put("total_swipes", prefs.getInt(PREF_TOTAL_COUNT, 0))
-            put("calibration_swipes", prefs.getInt(PREF_CALIBRATION_COUNT, 0))
-            put("user_swipes", prefs.getInt(PREF_USER_COUNT, 0))
-        }
-        root.put("statistics", stats)
-
-        // Write to stream
         OutputStreamWriter(outputStream, Charsets.UTF_8).use { writer ->
-            writer.write(root.toString(2)) // Pretty print with 2-space indent
+            // Write opening - metadata will be at the end to include accurate count
+            writer.write("{\n")
+            writer.write("  \"export_version\": \"1.0\",\n")
+            writer.write("  \"export_timestamp\": ${System.currentTimeMillis()},\n")
+            writer.write("  \"database_version\": $DATABASE_VERSION,\n")
+            writer.write("  \"data\": [\n")
+
+            // Stream data entries directly from database cursor
+            db.rawQuery("SELECT $COL_JSON_DATA FROM $TABLE_SWIPES ORDER BY $COL_TIMESTAMP DESC", null).use { cursor ->
+                var first = true
+                while (cursor.moveToNext()) {
+                    if (!first) {
+                        writer.write(",\n")
+                    }
+                    first = false
+
+                    val jsonData = cursor.getString(0)
+                    // Indent each entry
+                    writer.write("    ")
+                    writer.write(jsonData)
+                    count++
+                }
+            }
+
+            // Close data array and add statistics
+            writer.write("\n  ],\n")
+            writer.write("  \"total_samples\": $count,\n")
+
+            val prefs = _context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            writer.write("  \"statistics\": {\n")
+            writer.write("    \"total_swipes\": ${prefs.getInt(PREF_TOTAL_COUNT, 0)},\n")
+            writer.write("    \"calibration_swipes\": ${prefs.getInt(PREF_CALIBRATION_COUNT, 0)},\n")
+            writer.write("    \"user_swipes\": ${prefs.getInt(PREF_USER_COUNT, 0)}\n")
+            writer.write("  }\n")
+            writer.write("}\n")
         }
 
         // Mark all as exported
         markAllAsExported()
 
-        Log.i(TAG, "Exported ${allData.size} entries to JSON stream")
-        return allData.size
+        Log.i(TAG, "Exported $count entries to JSON stream (streamed)")
+        return count
     }
 
     /**
      * Export to NDJSON via OutputStream (for SAF file picker)
+     * Uses streaming to avoid OOM with large datasets
      */
     fun exportToNDJSON(outputStream: OutputStream): Int {
-        val allData = loadAllData()
+        val db = readableDatabase
+        var count = 0
 
         OutputStreamWriter(outputStream, Charsets.UTF_8).use { writer ->
-            for (data in allData) {
-                writer.write(data.toJSON().toString())
-                writer.write("\n")
+            // Stream directly from database cursor
+            db.rawQuery("SELECT $COL_JSON_DATA FROM $TABLE_SWIPES ORDER BY $COL_TIMESTAMP DESC", null).use { cursor ->
+                while (cursor.moveToNext()) {
+                    val jsonData = cursor.getString(0)
+                    writer.write(jsonData)
+                    writer.write("\n")
+                    count++
+                }
             }
         }
 
-        Log.i(TAG, "Exported ${allData.size} entries to NDJSON stream")
-        return allData.size
+        Log.i(TAG, "Exported $count entries to NDJSON stream (streamed)")
+        return count
     }
 
     /**
