@@ -5,6 +5,16 @@
 
 ---
 
+## Privacy Settings Status
+
+| Setting | Works? | Notes |
+|---------|--------|-------|
+| Swipe Pattern Data | ✅ | Fixed in InputCoordinator to check setting |
+| Performance Metrics | ✅ | NeuralPerformanceStats checks setting |
+| Error Reports | ❌ | No actual logging code uses this toggle |
+
+---
+
 ## v1.2.1 Language-Specific Prefix Boosts - COMPLETE
 
 **Feature**: Boost prefixes common in target language but rare in English
