@@ -41,8 +41,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 SCRIPT_DIR = Path(__file__).parent
 
 # All supported languages with display names and word counts
-# NOTE: Only languages properly supported by wordfreq are included.
-# Swahili (sw) uses separate wiki corpus workflow - see parse_swahili_ods.py
+# Languages with 'wordlist' use pre-existing word lists instead of wordfreq
 SUPPORTED_LANGUAGES = {
     'en': {'name': 'English', 'words': 50000, 'bundle': True},
     'es': {'name': 'Spanish', 'words': 50000, 'bundle': True},
@@ -54,6 +53,8 @@ SUPPORTED_LANGUAGES = {
     'id': {'name': 'Indonesian', 'words': 20000, 'bundle': False},
     'ms': {'name': 'Malay', 'words': 20000, 'bundle': False},
     'tl': {'name': 'Tagalog', 'words': 20000, 'bundle': False},
+    # Swahili uses wiki corpus word list (wordfreq falls back to English)
+    'sw': {'name': 'Swahili', 'words': 20000, 'bundle': False, 'wordlist': 'sw_words.txt'},
 }
 
 # Minimum word count for language detection unigrams
@@ -187,11 +188,19 @@ def build_language(lang: str, info: dict, output_dir: Path) -> dict:
     lang_dir = output_dir / lang
     lang_dir.mkdir(parents=True, exist_ok=True)
 
-    # Step 1: Get word list
-    wordlist_file = lang_dir / f'{lang}_words.txt'
-    print(f"  [1/5] Extracting word list...")
-    if not get_wordlist(lang, wordlist_file, word_count):
-        return result
+    # Step 1: Get word list (use pre-existing if specified)
+    existing_wordlist = info.get('wordlist')
+    if existing_wordlist:
+        wordlist_file = SCRIPT_DIR / existing_wordlist
+        if not wordlist_file.exists():
+            print(f"  ERROR: Word list not found: {wordlist_file}")
+            return result
+        print(f"  [1/5] Using existing word list: {existing_wordlist}")
+    else:
+        wordlist_file = lang_dir / f'{lang}_words.txt'
+        print(f"  [1/5] Extracting word list...")
+        if not get_wordlist(lang, wordlist_file, word_count):
+            return result
     result['wordlist'] = wordlist_file
 
     # Step 2: Build dictionary
@@ -204,7 +213,19 @@ def build_language(lang: str, info: dict, output_dir: Path) -> dict:
     # Step 3: Generate unigrams
     unigrams_file = lang_dir / 'unigrams.txt'
     print(f"  [3/5] Generating unigrams...")
-    build_unigrams(lang, unigrams_file)  # Optional, don't fail if it doesn't work
+    if existing_wordlist:
+        # For languages with pre-existing word lists, use top N words from the list
+        # (wordfreq falls back to English for unsupported languages)
+        try:
+            with open(wordlist_file, 'r') as f:
+                lines = f.readlines()[:UNIGRAM_COUNT]
+            with open(unigrams_file, 'w') as f:
+                f.writelines(lines)
+            print(f"    Using top {len(lines)} words from word list")
+        except Exception as e:
+            print(f"    Warning: Could not create unigrams: {e}")
+    else:
+        build_unigrams(lang, unigrams_file)  # Optional, don't fail if it doesn't work
     if unigrams_file.exists():
         result['unigrams'] = unigrams_file
 
