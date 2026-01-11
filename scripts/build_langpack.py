@@ -7,6 +7,7 @@ Creates a language pack ZIP file containing:
 - dictionary.bin: V2 binary dictionary with accent normalization
 - unigrams.txt: word frequency list for language detection
 - contractions.json: apostrophe word mappings (optional, for languages that use them)
+- prefix_boost.bin: Aho-Corasick trie for prefix boosting (optional, for non-English)
 
 Usage:
     python3 build_langpack.py --lang fr --name "French" --input french_words.txt --output langpack-fr.zip
@@ -75,6 +76,27 @@ def run_generate_unigrams(lang: str, output_file: Path, count: int = 5000) -> bo
     return True
 
 
+def run_compute_prefix_boosts(lang: str, output_dir: Path) -> bool:
+    """Run compute_prefix_boosts.py to generate prefix boost trie."""
+    if lang == "en":
+        return False  # English doesn't need prefix boosts
+
+    cmd = [
+        sys.executable,
+        str(SCRIPT_DIR / "compute_prefix_boosts.py"),
+        "--langs", lang,
+        "--threshold", "1.5"
+    ]
+
+    print(f"Running: {' '.join(cmd)}")
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"Error generating prefix boosts:\n{result.stderr}")
+        return False
+    print(result.stdout)
+    return True
+
+
 def count_words_in_dictionary(dict_file: Path) -> int:
     """Read word count from V2 dictionary header."""
     try:
@@ -89,15 +111,17 @@ def count_words_in_dictionary(dict_file: Path) -> int:
         return 0
 
 
-def create_manifest(lang: str, name: str, version: int, author: str, word_count: int) -> dict:
+def create_manifest(lang: str, name: str, version: int, author: str, word_count: int, has_prefix_boost: bool = False) -> dict:
     """Create manifest.json content."""
-    return {
+    manifest = {
         "code": lang,
         "name": name,
         "version": version,
         "author": author,
-        "wordCount": word_count
+        "wordCount": word_count,
+        "hasPrefixBoost": has_prefix_boost
     }
+    return manifest
 
 
 def build_langpack(
@@ -144,8 +168,18 @@ def build_langpack(
         word_count = count_words_in_dictionary(final_dict)
         print(f"\nDictionary contains {word_count} words")
 
+        # Look for prefix boost file in assets (for non-English languages)
+        prefix_boost_file = SCRIPT_DIR.parent / f"src/main/assets/prefix_boosts/{lang}.bin"
+        has_prefix_boost = prefix_boost_file.exists() and lang != "en"
+
+        # Generate prefix boosts if not present and not English
+        if not has_prefix_boost and lang != "en":
+            print(f"\n=== Generating prefix boosts for {lang} ===")
+            run_compute_prefix_boosts(lang, SCRIPT_DIR.parent / "src/main/assets/prefix_boosts")
+            has_prefix_boost = prefix_boost_file.exists()
+
         # Create manifest
-        manifest = create_manifest(lang, name, version, author, word_count)
+        manifest = create_manifest(lang, name, version, author, word_count, has_prefix_boost)
         manifest_file = temp_path / "manifest.json"
         with open(manifest_file, 'w', encoding='utf-8') as f:
             json.dump(manifest, f, indent=2, ensure_ascii=False)
@@ -170,6 +204,11 @@ def build_langpack(
                         print(f"  + contractions.json")
                     else:
                         print(f"  (no contractions - language doesn't use apostrophes)")
+            # Include prefix boost trie (for non-English languages)
+            if has_prefix_boost and prefix_boost_file.exists():
+                zf.write(prefix_boost_file, "prefix_boost.bin")
+                boost_size = prefix_boost_file.stat().st_size / 1024
+                print(f"  + prefix_boost.bin ({boost_size:.1f} KB)")
 
         # Print summary
         zip_size = output.stat().st_size
@@ -178,6 +217,7 @@ def build_langpack(
         print(f"  Size: {zip_size / 1024:.1f} KB")
         print(f"  Language: {name} ({lang})")
         print(f"  Words: {word_count}")
+        print(f"  Prefix boost: {'Yes' if has_prefix_boost else 'No'}")
         print(f"\nTo install: Copy to your device and import in CleverKeys Settings > Multi-Language")
 
         return True

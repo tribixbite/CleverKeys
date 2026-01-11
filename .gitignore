@@ -107,3 +107,12 @@ scripts/dictionaries/*/
 !scripts/dictionaries/*.zip
 scripts/norvig_missing.txt
 scripts/opensub_missing.txt
+
+# Language pack build output (root level)
+/dictionaries/
+
+# Prefix boost debug JSON files (binary .bin files are tracked)
+src/main/assets/prefix_boosts/*.json
+
+# MCP tool generated code
+pal_generated.code
