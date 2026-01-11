@@ -53,11 +53,17 @@ during beam search. Replaced with memory-mapped Aho-Corasick trie for O(1) looku
 - [x] `Config.kt`: Add `NEURAL_PREFIX_BOOST_MULTIPLIER` (1.0f) and `NEURAL_PREFIX_BOOST_MAX` (5.0f)
 - [x] **Cumulative Boost Cap** (2026-01-11): Prevent runaway boosting on long words
       - Added `cumulativeBoost` field to BeamState for tracking total boost per beam path
-      - Added `MAX_CUMULATIVE_BOOST = 15.0f` constant (e.g., 10 chars × 1.5 boost average)
-      - `applyPrefixBoosts()` now returns applied boosts array and respects remaining budget
-      - Individual boosts capped to `MAX_CUMULATIVE_BOOST - beam.cumulativeBoost`
+      - Now configurable via `neural_max_cumulative_boost` setting (5-30 range, default 15.0)
+      - `applyPrefixBoosts()` returns applied boosts array and respects remaining budget
+      - Individual boosts capped to `maxCumulativeBoost - beam.cumulativeBoost`
       - English latency unaffected (prefix boosts not loaded for "en")
       - Validated by expert analysis via PAL MCP (Gemini 2.5 Pro)
+- [x] **Strict Start Character Toggle** (2026-01-11): Helps short swipes return accurate predictions
+      - Added `neural_strict_start_char` toggle (default: false)
+      - When enabled, filters beams after step 0 to only keep those matching detected first key
+      - First key extracted from `features.nearestKeys` in SwipePredictorOrchestrator
+      - Addresses issue where short swipes with boosted prefixes yield extra long words
+      - Configurable via Neural Settings UI "Multilingual Safety" section
 
 **Files Modified/Added**:
 - MOD: `scripts/compute_prefix_boosts.py` - sparse binary Aho-Corasick trie generation
