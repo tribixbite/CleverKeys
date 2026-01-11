@@ -66,6 +66,10 @@ class BeamSearchEngine(
 
         // Diversity parameters (4D: Diverse Beam Search)
         private const val DIVERSITY_LAMBDA = 0.5f // Penalty weight for similar beams
+
+        // Maximum cumulative boost across all characters in a word
+        // Prevents runaway boosting on long words (e.g., 10 chars × 1.5 boost = 15.0 total cap)
+        private const val MAX_CUMULATIVE_BOOST = 15.0f
     }
 
     data class BeamSearchCandidate(val word: String, val confidence: Float, val score: Float)
@@ -75,13 +79,15 @@ class BeamSearchEngine(
         var score: Float, // Accumulated negative log-likelihood
         var finished: Boolean,
         val parentBeam: BeamState? = null, // For diversity tracking (optional)
-        var boostState: Int = 0 // Aho-Corasick trie state for O(1) prefix boost lookups
+        var boostState: Int = 0, // Aho-Corasick trie state for O(1) prefix boost lookups
+        var cumulativeBoost: Float = 0f // Total prefix boost applied (for capping)
     ) {
         constructor(startToken: Int, startScore: Float) : this(
             tokens = ArrayList(listOf(startToken.toLong())),
             score = startScore,
             finished = false,
-            boostState = 0
+            boostState = 0,
+            cumulativeBoost = 0f
         )
 
         // Copy constructor
@@ -90,7 +96,8 @@ class BeamSearchEngine(
             score = other.score,
             finished = other.finished,
             parentBeam = other.parentBeam,
-            boostState = other.boostState
+            boostState = other.boostState,
+            cumulativeBoost = other.cumulativeBoost
         )
     }
 
@@ -255,14 +262,15 @@ class BeamSearchEngine(
 
                         // Apply Language-Specific Prefix Boosts (before softmax)
                         // This boosts prefixes common in target language but rare in English
-                        applyPrefixBoosts(beam, logits)
+                        // Returns array of applied boosts for cumulative tracking
+                        val appliedBoosts = applyPrefixBoosts(beam, logits)
 
                         // FIX: Log-Softmax for numerical stability and correct scoring
                         val logProbs = logSoftmax(logits)
-                        
+
                         // Get Top K
                         val topIndices = getTopKIndices(logProbs, beamWidth)
-                        
+
                         for (idx in topIndices) {
                             // FIX: SOS and PAD should never be selected - skip entirely
                             // (Trie masking sets them to -inf, but be safe if trie is disabled)
@@ -279,6 +287,7 @@ class BeamSearchEngine(
                                 newBeam.score += -logProbs[idx]
                                 newBeam.finished = true
                                 // boostState stays the same (EOS doesn't advance trie)
+                                // cumulativeBoost stays the same (no boost for EOS)
                                 newCandidates.add(newBeam)
                                 continue
                             }
@@ -288,6 +297,9 @@ class BeamSearchEngine(
                             newBeam.tokens.add(idx.toLong())
                             newBeam.score += -logProbs[idx]
                             newBeam.finished = false
+
+                            // Track cumulative boost for this path (for capping)
+                            newBeam.cumulativeBoost = beam.cumulativeBoost + appliedBoosts[idx]
 
                             // Advance the Aho-Corasick trie state for prefix boost lookups
                             // This is O(1) amortized and handles failure links automatically
@@ -385,15 +397,29 @@ class BeamSearchEngine(
      *
      * OPTIMIZATION: Uses beam.boostState for O(1) trie lookups with zero string allocation.
      * The boostState tracks the current position in the Aho-Corasick automaton.
+     *
+     * SAFETY: Boosts are capped to prevent cumulative boosting from exceeding MAX_CUMULATIVE_BOOST.
+     * This prevents long words from getting arbitrarily high scores.
+     *
+     * @return FloatArray of applied boosts per token index (for cumulative tracking)
      */
-    private fun applyPrefixBoosts(beam: BeamState, logits: FloatArray) {
+    private fun applyPrefixBoosts(beam: BeamState, logits: FloatArray): FloatArray {
+        val appliedBoosts = FloatArray(logits.size)
+
         if (prefixBoostTrie == null || !prefixBoostTrie.hasBoosts() || prefixBoostMultiplier == 0f) {
-            return
+            return appliedBoosts
+        }
+
+        // Calculate remaining boost budget before hitting the cap
+        val remainingBudget = MAX_CUMULATIVE_BOOST - beam.cumulativeBoost
+
+        // If we've already hit the cap, don't apply any more boosts
+        if (remainingBudget <= 0f) {
+            return appliedBoosts
         }
 
         // Use the beam's trie state for O(1) lookups - no string building needed!
         val currentState = beam.boostState
-        var boostsApplied = 0
 
         for (i in logits.indices) {
             if (logits[i] == Float.NEGATIVE_INFINITY) continue  // Skip masked tokens
@@ -404,15 +430,16 @@ class BeamSearchEngine(
             // O(1) lookup: get boost for transitioning to this character from current state
             val boost = prefixBoostTrie.getBoost(currentState, c)
             if (boost > 0f) {
-                // Scale and clamp the boost
-                val scaledBoost = (boost * prefixBoostMultiplier).coerceIn(-prefixBoostMax, prefixBoostMax)
+                // Scale, clamp per-token, AND cap to remaining budget
+                val scaledBoost = (boost * prefixBoostMultiplier)
+                    .coerceIn(-prefixBoostMax, prefixBoostMax)
+                    .coerceAtMost(remainingBudget)
                 logits[i] += scaledBoost
-                boostsApplied++
+                appliedBoosts[i] = scaledBoost
             }
         }
 
-        // Removed per-call logging - too frequent in hot path
-        // Use debugLogger at end of search() for summary if needed
+        return appliedBoosts
     }
 
     // FIX #3: Numerically stable log-softmax with temperature scaling
