@@ -18,6 +18,11 @@
 - Path: `/data/user_de/0/tribixbite.cleverkeys/shared_prefs/neural_performance_stats.xml`
 - Data: prediction counts, inference times, top-1/top-3 accuracy, model load time
 - Access: `NeuralPerformanceStats.getInstance(context).formatSummary()`
+- UI: Settings > Privacy > Performance Metrics (View/Export buttons)
+
+**Swipe Data Export (fixed OOM):**
+- JSON/NDJSON exports now stream from DB cursor (no memory buildup)
+- View dialog limited to 100 most recent entries
 
 ---
 
