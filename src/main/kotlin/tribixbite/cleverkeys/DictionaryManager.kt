@@ -24,8 +24,80 @@ class DictionaryManager(private val context: Context) {
     private var currentPredictor: WordPredictor? = null
 
     init {
+        // Migrate legacy custom words BEFORE loading (one-time migration)
+        migrateLegacyCustomWords()
         setLanguage(Locale.getDefault().language)
         loadUserWords()
+    }
+
+    /**
+     * Migrate custom words from legacy storage format to new format.
+     *
+     * Legacy format (pre-v1.2.2):
+     *   - SharedPreferences file: "user_dictionary"
+     *   - Key: "user_words"
+     *   - Format: StringSet
+     *
+     * New format (v1.2.2+):
+     *   - SharedPreferences: DirectBootAwarePreferences
+     *   - Key: "custom_words_{lang}" (e.g., "custom_words_en")
+     *   - Format: JSON map {"word": frequency}
+     *
+     * This migration runs once and clears the legacy data after successful migration.
+     */
+    private fun migrateLegacyCustomWords() {
+        try {
+            val legacyPrefs = context.getSharedPreferences("user_dictionary", Context.MODE_PRIVATE)
+            val legacyWords = legacyPrefs.getStringSet("user_words", null)
+
+            if (legacyWords.isNullOrEmpty()) {
+                // No legacy data to migrate
+                return
+            }
+
+            Log.i(TAG, "Found ${legacyWords.size} legacy custom words to migrate")
+
+            // Migrate to the default language (usually "en", but use system locale)
+            val migrationLang = Locale.getDefault().language
+            val targetKey = LanguagePreferenceKeys.customWordsKey(migrationLang)
+
+            // Load any existing words in the new format
+            val existingJson = prefs.getString(targetKey, null)
+            val existingWords: MutableMap<String, Int> = if (existingJson != null) {
+                try {
+                    val type = object : TypeToken<MutableMap<String, Int>>() {}.type
+                    gson.fromJson(existingJson, type) ?: mutableMapOf()
+                } catch (e: Exception) {
+                    mutableMapOf()
+                }
+            } else {
+                mutableMapOf()
+            }
+
+            // Merge legacy words (don't overwrite existing words with same key)
+            var migratedCount = 0
+            for (word in legacyWords) {
+                if (!existingWords.containsKey(word)) {
+                    existingWords[word] = 100 // Default frequency
+                    migratedCount++
+                }
+            }
+
+            // Save merged words to new format
+            prefs.edit()
+                .putString(targetKey, gson.toJson(existingWords))
+                .apply()
+
+            // Clear legacy data after successful migration
+            legacyPrefs.edit()
+                .remove("user_words")
+                .apply()
+
+            Log.i(TAG, "Migrated $migratedCount legacy words to '$targetKey' (${existingWords.size} total)")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to migrate legacy custom words", e)
+        }
     }
 
     /**
