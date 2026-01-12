@@ -530,8 +530,14 @@ class SuggestionHandler(
         // Add to user dictionary
         predictionCoordinator.getDictionaryManager()?.addUserWord(wordToAdd)
 
+        // Refresh dictionary so word appears in predictions immediately
+        predictionCoordinator.refreshCustomWords()
+
         // Clear tracking
         contextTracker.clearAutocorrectTracking()
+
+        // Clear saved suggestions so bar clears after confirmation (not restore old prompt)
+        suggestionBar?.clearSavedSuggestions()
 
         // Show confirmation message
         suggestionBar?.showTemporaryMessage("Added '$wordToAdd' to dictionary", 2000L)
@@ -590,10 +596,16 @@ class SuggestionHandler(
             predictionCoordinator.getDictionaryManager()?.addUserWord(tappedWord)
             Log.d(TAG, "AUTOCORRECT UNDO: Added '$tappedWord' to user dictionary")
 
+            // Refresh dictionary so word appears in predictions immediately
+            predictionCoordinator.refreshCustomWords()
+
             // Clear autocorrect tracking
             contextTracker.clearAutocorrectTracking()
             contextTracker.clearLastAutoInsertedWord()
             contextTracker.setLastCommitSource(PredictionSource.CANDIDATE_SELECTION)
+
+            // Clear saved suggestions so bar clears after confirmation (not restore old prompt)
+            suggestionBar?.clearSavedSuggestions()
 
             // Show confirmation message in suggestion bar
             suggestionBar?.showTemporaryMessage("Added '$tappedWord' to dictionary", 2000L)

@@ -363,6 +363,22 @@ class PredictionCoordinator(
     }
 
     /**
+     * Refresh custom words in both touch typing and swipe typing predictors.
+     * Call after adding a new word to the dictionary.
+     *
+     * @since v1.2.2
+     */
+    fun refreshCustomWords() {
+        Log.d(TAG, "Refreshing custom words in all predictors")
+
+        // Reload in touch typing predictor
+        wordPredictor?.reloadCustomAndUserWords()
+
+        // Reload in swipe typing neural engine
+        neuralEngine?.reloadCustomWords()
+    }
+
+    /**
      * Gets the WordPredictor instance.
      *
      * @return WordPredictor for typing predictions, or null if not initialized

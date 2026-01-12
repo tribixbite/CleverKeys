@@ -246,10 +246,14 @@ class SuggestionBar : LinearLayout {
                     addView(createDivider(context))
                 }
 
+                // Check if this is a centered prompt (single dict_add: suggestion)
+                val isDictAddPrompt = suggestion.startsWith("dict_add:")
+                val isCenteredPrompt = isDictAddPrompt && currentSuggestions.size == 1
+
                 // Transform special prefixes for display
                 val displayText = when {
                     // "Add to dictionary?" prompt (dict_add:word -> Add 'word' to dictionary?)
-                    suggestion.startsWith("dict_add:") -> {
+                    isDictAddPrompt -> {
                         val wordToAdd = suggestion.removePrefix("dict_add:")
                         "Add '$wordToAdd' to dictionary?"
                     }
@@ -264,8 +268,18 @@ class SuggestionBar : LinearLayout {
                 val textView = createSuggestionView(context, i).apply {
                     text = displayText
 
+                    // Center the "Add to dictionary?" prompt when it's the only suggestion
+                    if (isCenteredPrompt) {
+                        layoutParams = LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                        gravity = Gravity.CENTER
+                        typeface = Typeface.DEFAULT_BOLD
+                        setTextColor(theme?.activatedColor?.takeIf { it != 0 } ?: Color.CYAN)
+                    }
                     // Highlight first suggestion with activated color
-                    if (i == 0) {
+                    else if (i == 0) {
                         typeface = Typeface.DEFAULT_BOLD
                         setTextColor(theme?.activatedColor?.takeIf { it != 0 } ?: Color.CYAN)
                     } else {
@@ -353,6 +367,17 @@ class SuggestionBar : LinearLayout {
 
         // Schedule restore
         mainHandler.postDelayed(restoreRunnable, durationMs)
+    }
+
+    /**
+     * Clear saved suggestions so they won't be restored after temporary message.
+     * Call this before showTemporaryMessage when you want to clear the bar after the message.
+     *
+     * @since v1.2.2
+     */
+    fun clearSavedSuggestions() {
+        savedSuggestions = emptyList()
+        savedScores = emptyList()
     }
 
     // ==================== Inline Autofill Support ====================

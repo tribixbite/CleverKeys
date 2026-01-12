@@ -237,6 +237,14 @@ class NeuralSwipeTypingEngine(
         neuralPredictor.setDebugModeActive(active)
     }
 
+    /**
+     * Reload custom and user words into vocabulary.
+     * Call after adding a new word to dictionary.
+     */
+    fun reloadCustomWords() {
+        neuralPredictor.reloadVocabulary()
+    }
+
     private fun logDebug(message: String) {
         debugLogger?.log(message)
     }
