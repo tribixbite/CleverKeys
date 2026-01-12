@@ -66,6 +66,19 @@
 - Runs once at init, merges legacy words to new format, clears old data
 - Files Modified: `DictionaryManager.kt`
 
+**Code Review** (2026-01-12): Dictionary management system audit (validated by Gemini 2.5 Pro via PAL MCP)
+
+**Issues Fixed**:
+1. **HIGH**: Removed vestigial `LanguagePreferenceKeys.migrateUserDictionary()` - duplicated
+   DictionaryManager's migration with bugs (hardcoded "en", didn't clear legacy data)
+2. **MEDIUM**: Removed redundant calls to deleted function in OptimizedVocabulary & BackupRestoreManager
+3. **LOW**: Removed dead code - redundant null check in `OptimizedVocabulary.loadDisabledWords()`
+
+**Verified Working**:
+- Autocorrect UX: `dict_add:` prefix, `handleAutocorrectUndo()`, `clearAfter=true`
+- Import/Export: Legacy + new format support, proper merge logic
+- Storage: Consistent use of DirectBootAwarePreferences + `custom_words_{lang}` JSON
+
 ---
 
 ## v1.2.1 Language-Specific Prefix Boosts - COMPLETE
