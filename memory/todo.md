@@ -79,6 +79,26 @@
 - Import/Export: Legacy + new format support, proper merge logic
 - Storage: Consistent use of DirectBootAwarePreferences + `custom_words_{lang}` JSON
 
+**Layout Update** (2026-01-12): QWERTY US layout reorganization
+
+**Changes**:
+- 'a': nw=home, sw=end (navigation keys)
+- 'l': nw=(, ne=) (parentheses moved here)
+- 'p': nw=| (pipe moved from 'l')
+- 'o': nw=_ (underscore moved from 'g')
+- shift: nw=esc, se=tab (from 'a' and 'q')
+- Number row: special chars reorganized to nw positions
+
+**Bug Fix** (2026-01-12): Short swipe over shift causing uppercase display
+
+**Problem**: When doing a short swipe over shift to activate a subkey (esc, tab, capslock),
+the keyboard would display uppercase letters because shift was being included in `getModifiers()`.
+
+**Fix**: Modified `Pointers.getModifiers()` to skip non-latched latchable keys.
+A modifier should only be "active" if it's LATCHED or LOCKED, not just touched/swiped over.
+
+**Files Modified**: `Pointers.kt`, `latn_qwerty_us.xml`, `ExtraKeysPreference.kt`
+
 ---
 
 ## v1.2.1 Language-Specific Prefix Boosts - COMPLETE
