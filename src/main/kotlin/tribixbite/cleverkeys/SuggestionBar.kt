@@ -246,11 +246,19 @@ class SuggestionBar : LinearLayout {
                     addView(createDivider(context))
                 }
 
-                // Add debug score if enabled and available
-                val displayText = if (showDebugScores && i < currentScores.size && currentScores.isNotEmpty()) {
-                    "$suggestion\n${currentScores[i]}"
-                } else {
-                    suggestion
+                // Transform special prefixes for display
+                val displayText = when {
+                    // "Add to dictionary?" prompt (dict_add:word -> Add 'word' to dictionary?)
+                    suggestion.startsWith("dict_add:") -> {
+                        val wordToAdd = suggestion.removePrefix("dict_add:")
+                        "Add '$wordToAdd' to dictionary?"
+                    }
+                    // Debug scores mode
+                    showDebugScores && i < currentScores.size && currentScores.isNotEmpty() -> {
+                        "$suggestion\n${currentScores[i]}"
+                    }
+                    // Normal display
+                    else -> suggestion
                 }
 
                 val textView = createSuggestionView(context, i).apply {

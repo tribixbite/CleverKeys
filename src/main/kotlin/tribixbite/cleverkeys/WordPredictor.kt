@@ -336,6 +336,25 @@ class WordPredictor {
     }
 
     /**
+     * Check if a word exists in the dictionary.
+     * Used for determining whether to offer "Add to dictionary?" prompt.
+     *
+     * @param word The word to check (case-insensitive)
+     * @return true if word is in dictionary, false otherwise
+     */
+    fun isInDictionary(word: String): Boolean {
+        if (word.isEmpty()) return false
+        val lowerWord = word.lowercase()
+        // Check main dictionary
+        if (dictionary.get().containsKey(lowerWord)) {
+            return true
+        }
+        // Check if user has typed it frequently (adaptation manager)
+        val adaptationMultiplier = adaptationManager?.getAdaptationMultiplier(lowerWord) ?: 0f
+        return adaptationMultiplier > 1.0f
+    }
+
+    /**
      * Add a word to the recent words list for language detection
      */
     fun addWordToContext(word: String?) {

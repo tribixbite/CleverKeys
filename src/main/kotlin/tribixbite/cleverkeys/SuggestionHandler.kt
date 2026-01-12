@@ -279,6 +279,23 @@ class SuggestionHandler(
         // Null/empty check
         if (word.isNullOrBlank()) return
 
+        // Check if this is a "Add to dictionary?" tap (dict_add: prefix)
+        if (word.startsWith("dict_add:")) {
+            val wordToAdd = word.removePrefix("dict_add:")
+            handleAddToDictionary(wordToAdd)
+            return
+        }
+
+        // Check if this is an autocorrect undo (user tapped the original word after autocorrect)
+        val lastAutocorrectOriginal = contextTracker.getLastAutocorrectOriginalWord()
+        if (contextTracker.getLastCommitSource() == PredictionSource.AUTOCORRECT &&
+            lastAutocorrectOriginal != null &&
+            word.equals(lastAutocorrectOriginal, ignoreCase = true)
+        ) {
+            handleAutocorrectUndo(word, lastAutocorrectOriginal, ic, editorInfo)
+            return
+        }
+
         var processedWord = word
 
         // Check if this is a raw prediction (user explicitly selected neural network output)
@@ -497,6 +514,95 @@ class SuggestionHandler(
     }
 
     /**
+     * Handle "Add to dictionary?" tap: add the word to user dictionary.
+     * Does not modify the input text since the word is already committed.
+     *
+     * @param wordToAdd The word to add to dictionary
+     */
+    private fun handleAddToDictionary(wordToAdd: String) {
+        if (wordToAdd.isEmpty()) {
+            Log.w(TAG, "ADD TO DICTIONARY: Empty word, ignoring")
+            return
+        }
+
+        Log.d(TAG, "ADD TO DICTIONARY: Adding '$wordToAdd'")
+
+        // Add to user dictionary
+        predictionCoordinator.getDictionaryManager()?.addUserWord(wordToAdd)
+
+        // Clear tracking
+        contextTracker.clearAutocorrectTracking()
+
+        // Show confirmation message
+        suggestionBar?.showTemporaryMessage("Added '$wordToAdd' to dictionary", 2000L)
+    }
+
+    /**
+     * Handle autocorrect undo: replace the autocorrected word with the original.
+     * Also adds the original word to dictionary so it won't be autocorrected again.
+     *
+     * @param tappedWord The word the user tapped (original word before autocorrect)
+     * @param originalWord The original word that was autocorrected (for logging)
+     * @param ic InputConnection for text manipulation
+     * @param editorInfo Editor info for app detection
+     */
+    private fun handleAutocorrectUndo(
+        tappedWord: String,
+        originalWord: String,
+        ic: InputConnection?,
+        editorInfo: EditorInfo?
+    ) {
+        val correctedWord = contextTracker.getLastAutoInsertedWord()
+        if (correctedWord.isNullOrEmpty()) {
+            Log.w(TAG, "AUTOCORRECT UNDO: No corrected word tracked, falling back to normal selection")
+            return
+        }
+
+        Log.d(TAG, "AUTOCORRECT UNDO: Replacing '$correctedWord' with '$tappedWord'")
+
+        ic?.let { inputConnection ->
+            // Detect Termux
+            val inTermuxApp = try {
+                editorInfo?.packageName == "com.termux"
+            } catch (e: Exception) {
+                false
+            }
+
+            // Delete the autocorrected word + trailing space
+            val deleteCount = correctedWord.length + 1 // Word + space
+
+            if (inTermuxApp) {
+                // Termux: Use backspace key events
+                repeat(deleteCount) {
+                    keyeventhandler.send_key_down_up(android.view.KeyEvent.KEYCODE_DEL, 0)
+                }
+            } else {
+                inputConnection.deleteSurroundingText(deleteCount, 0)
+            }
+
+            // Insert the original word with trailing space
+            inputConnection.commitText("$tappedWord ", 1)
+
+            // Update context with the original word
+            updateContext(tappedWord)
+
+            // Add to user dictionary so it won't be autocorrected again
+            predictionCoordinator.getDictionaryManager()?.addUserWord(tappedWord)
+            Log.d(TAG, "AUTOCORRECT UNDO: Added '$tappedWord' to user dictionary")
+
+            // Clear autocorrect tracking
+            contextTracker.clearAutocorrectTracking()
+            contextTracker.clearLastAutoInsertedWord()
+            contextTracker.setLastCommitSource(PredictionSource.CANDIDATE_SELECTION)
+
+            // Show confirmation message in suggestion bar
+            suggestionBar?.showTemporaryMessage("Added '$tappedWord' to dictionary", 2000L)
+
+            // Clear suggestions after brief delay (message will auto-clear)
+        }
+    }
+
+    /**
      * Update context with a completed word.
      *
      * NOTE: This is a legacy helper method. New code should use
@@ -547,11 +653,12 @@ class SuggestionHandler(
         when {
             text.length == 1 && text[0].isLetter() -> {
                 contextTracker.appendToCurrentWord(text)
-                // If just started a new word (first letter), clear auto-insert tracking
+                // If just started a new word (first letter), clear auto-insert and autocorrect tracking
                 // This prevents incorrectly deleting a previously swiped word when
                 // user types a new word then taps a prediction
                 if (contextTracker.getCurrentWordLength() == 1) {
                     contextTracker.clearLastAutoInsertedWord()
+                    contextTracker.clearAutocorrectTracking()
                     contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
                 }
                 updatePredictionsForCurrentWord()
@@ -596,7 +703,15 @@ class SuggestionHandler(
                                 // Clear current word
                                 contextTracker.clearCurrentWord()
 
-                                // Show corrected word as first suggestion for easy undo
+                                // Track autocorrect state for undo functionality
+                                // When user taps original word in suggestions, we can detect and replace
+                                contextTracker.setLastAutoInsertedWord(correctedWord)
+                                contextTracker.setLastCommitSource(PredictionSource.AUTOCORRECT)
+                                contextTracker.setLastAutocorrectOriginalWord(completedWord)
+
+                                Log.d(TAG, "AUTOCORRECT: '$completedWord' → '$correctedWord' (tracking for undo)")
+
+                                // Show original word as first suggestion for easy undo
                                 suggestionBar?.setSuggestionsWithScores(
                                     listOf(completedWord, correctedWord), // Original word first for undo
                                     listOf(0, 0)
@@ -611,6 +726,36 @@ class SuggestionHandler(
                     }
 
                     updateContext(completedWord)
+
+                    // Check if this word is NOT in dictionary - offer to add it
+                    // Only prompt if:
+                    // 1. Word was just completed with space (text == " ")
+                    // 2. Word is at least 3 characters (avoid prompts for short words)
+                    // 3. Word is not in dictionary
+                    if (text == " " && completedWord.length >= 3) {
+                        val wordPredictor = predictionCoordinator.getWordPredictor()
+                        val isInDictionary = wordPredictor?.isInDictionary(completedWord) ?: true
+                        val isUserWord = predictionCoordinator.getDictionaryManager()?.isUserWord(completedWord) ?: false
+
+                        if (!isInDictionary && !isUserWord) {
+                            // Store word for add-to-dictionary handling
+                            contextTracker.setLastAutocorrectOriginalWord(completedWord)
+                            contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
+
+                            // Show "Add to dictionary?" prompt with special prefix
+                            suggestionBar?.setSuggestionsWithScores(
+                                listOf("dict_add:$completedWord"),
+                                listOf(0)
+                            )
+
+                            Log.d(TAG, "UNKNOWN WORD: '$completedWord' - showing add to dictionary prompt")
+
+                            // Skip clearing suggestions below
+                            contextTracker.clearCurrentWord()
+                            predictionCoordinator.getWordPredictor()?.reset()
+                            return
+                        }
+                    }
                 }
 
                 // Reset current word

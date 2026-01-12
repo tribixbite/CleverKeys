@@ -42,6 +42,11 @@ class PredictionContextTracker {
     // Used for context-aware deletion behavior
     private var lastCommitSource = PredictionSource.UNKNOWN
 
+    // Original word that was autocorrected (for undo functionality)
+    // When user types "subkeys" and it's autocorrected to "surveys",
+    // this stores "subkeys" so tapping it can replace "surveys" with "subkeys"
+    private var lastAutocorrectOriginalWord: String? = null
+
     /**
      * Appends text to the current partial word.
      * Used when user types individual characters.
@@ -190,6 +195,35 @@ class PredictionContextTracker {
     }
 
     /**
+     * Gets the original word before autocorrect was applied.
+     * Used for autocorrect undo: when user taps the original word in suggestions,
+     * we can detect it and replace the corrected word.
+     *
+     * @return Original word before autocorrect, or null if no autocorrect occurred
+     */
+    fun getLastAutocorrectOriginalWord(): String? {
+        return lastAutocorrectOriginalWord
+    }
+
+    /**
+     * Sets the original word before autocorrect.
+     * Called when autocorrect replaces a typed word.
+     *
+     * @param word The original word that was autocorrected
+     */
+    fun setLastAutocorrectOriginalWord(word: String?) {
+        lastAutocorrectOriginalWord = word
+    }
+
+    /**
+     * Clears autocorrect tracking.
+     * Called when autocorrect undo is performed or new word is started.
+     */
+    fun clearAutocorrectTracking() {
+        lastAutocorrectOriginalWord = null
+    }
+
+    /**
      * Clears all tracking state.
      * Useful for resetting state when switching input fields.
      */
@@ -199,6 +233,7 @@ class PredictionContextTracker {
         wasLastInputSwipeFlag = false
         lastAutoInsertedWord = null
         lastCommitSource = PredictionSource.UNKNOWN
+        lastAutocorrectOriginalWord = null
     }
 
     /**
@@ -220,6 +255,7 @@ class PredictionContextTracker {
      */
     fun getDebugState(): String {
         return "PredictionContextTracker{currentWord='${getCurrentWord()}', contextWords=$contextWords, " +
-            "wasSwipe=$wasLastInputSwipeFlag, lastAutoInsert='$lastAutoInsertedWord', lastSource=$lastCommitSource}"
+            "wasSwipe=$wasLastInputSwipeFlag, lastAutoInsert='$lastAutoInsertedWord', lastSource=$lastCommitSource, " +
+            "autocorrectOriginal='$lastAutocorrectOriginalWord'}"
     }
 }
