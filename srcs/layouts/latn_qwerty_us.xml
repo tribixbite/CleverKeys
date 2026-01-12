@@ -47,19 +47,19 @@ Useful links.
     <key c="y" ne="6" nw="^"/>
     <key c="u" ne="7" nw="&amp;"/>
     <key c="i" nw="*" ne="8"/>
-    <key c="o" ne="9" nw="_"/>
-    <key c="p" ne="0" nw="|"/>
+    <key c="o" ne="9" se="_" nw="-"/>
+    <key c="p" ne="0" se="|"/>
   </row>
   <row>
     <key shift="0.5" c="a" nw="home" sw="end"/>
     <key c="s" sw="loc ß"/>
     <key c="d"/>
     <key c="f"/>
-    <key c="g" se="-" sw="_"/>
-    <key c="h" se="=" sw="+"/>
-    <key c="j" se="}" sw="{"/>
-    <key c="k" sw="[" se="]"/>
-    <key c="l" nw="(" ne=")" sw="\\" se="/"/>
+    <key c="g"/>
+    <key c="h"/>
+    <key c="j" ne="+" se="="/>
+    <key c="k" ne="}" nw="{" sw="[" se="]"/>
+    <key c="l" nw="(" ne=")" se="\\" sw="/"/>
   </row>
   <row>
     <key width="1.5" c="shift" nw="loc esc" ne="loc capslock" se="loc tab"/>

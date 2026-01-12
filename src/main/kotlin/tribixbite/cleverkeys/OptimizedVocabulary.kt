@@ -772,8 +772,14 @@ class OptimizedVocabulary(private val context: Context) {
                     // Check for non-paired contractions (apostrophe-free form -> contraction)
                     // REPLACE the apostrophe-free form with the contraction
                     // Example: "cant" (not a real word) → "can't" (the actual word)
-                    // Note: Valid words like "well", "were", "id" are NOT in nonPairedContractions
-                    if (nonPairedContractions.containsKey(word)) {
+                    // v1.2.2 FIX: Skip replacement if word is a real vocabulary word:
+                    // - Check contractionPairings (English: "were", "well", "shed")
+                    // - Check vocabulary frequency (French "dans" loaded from dict has freq > 0.6)
+                    // Synthetic contraction keys have frequency=0.6, real words have higher freq
+                    val wordInfo = vocabulary[word]
+                    val isRealVocabWord = wordInfo != null && wordInfo.frequency > 0.65f
+                    val isPairedBase = contractionPairings.containsKey(word)
+                    if (nonPairedContractions.containsKey(word) && !isPairedBase && !isRealVocabWord) {
                         val contraction = nonPairedContractions[word]!!
 
                         // REPLACE the current prediction with the contraction (same score)

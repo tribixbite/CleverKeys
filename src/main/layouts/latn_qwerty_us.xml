@@ -28,13 +28,13 @@ Useful links.
   https://unexpected-keyboard-layout-editor.lixquid.com
 
 - Full guide on how to edit the layout.
-  https://github.com/tribixbite/CleverKeys/tree/main/doc/Custom-layouts.md
+  https://github.com/Julow/Unexpected-Keyboard/tree/master/doc/Custom-layouts.md
 
 - Current definition of the bottom row (for easy importing).
-  https://github.com/tribixbite/CleverKeys/tree/main/res/xml/bottom_row.xml
+  https://github.com/Julow/Unexpected-Keyboard/tree/master/res/xml/bottom_row.xml
 
 - Built-in layouts (for easy importing)
-  https://github.com/tribixbite/CleverKeys/tree/main/src/main/layouts
+  https://github.com/Julow/Unexpected-Keyboard/tree/master/srcs/layouts
 
 -->
 <keyboard name="QWERTY (US)" script="latin">
@@ -47,19 +47,19 @@ Useful links.
     <key c="y" ne="6" nw="^"/>
     <key c="u" ne="7" nw="&amp;"/>
     <key c="i" nw="*" ne="8"/>
-    <key c="o" ne="9" nw="_"/>
-    <key c="p" ne="0" nw="|"/>
+    <key c="o" ne="9" se="_" nw="-"/>
+    <key c="p" ne="0" se="|"/>
   </row>
   <row>
     <key shift="0.5" c="a" nw="home" sw="end"/>
     <key c="s" sw="loc ß"/>
     <key c="d"/>
     <key c="f"/>
-    <key c="g" se="-" sw="_"/>
-    <key c="h" se="=" sw="+"/>
-    <key c="j" se="}" sw="{"/>
-    <key c="k" sw="[" se="]"/>
-    <key c="l" nw="(" ne=")" sw="\\" se="/"/>
+    <key c="g"/>
+    <key c="h"/>
+    <key c="j" ne="+" se="="/>
+    <key c="k" ne="}" nw="{" sw="[" se="]"/>
+    <key c="l" nw="(" ne=")" se="\\" sw="/"/>
   </row>
   <row>
     <key width="1.5" c="shift" nw="loc esc" ne="loc capslock" se="loc tab"/>

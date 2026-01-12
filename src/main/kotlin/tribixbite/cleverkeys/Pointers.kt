@@ -557,10 +557,13 @@ class Pointers(
      * if the selected key didn't change.
      */
     private fun getNearestKeyAtDirection(ptr: Pointer, direction: Int): KeyValue? {
-        // [i] is [0, -1, +1, ..., -3, +3], scanning 43% of the circle's area,
+        // v1.2.2 FIX: Reduced from +/-3 to +/-2 (was scanning 43%, now 31% = ~112°)
+        // This prevents horizontal swipes from accidentally triggering diagonal subkeys
+        // when the exact direction doesn't have a key defined.
+        // [i] is [0, -1, +1, -2, +2], scanning ~31% of the circle's area,
         // centered on the initial swipe direction.
         var i = 0
-        while (i > -4) {
+        while (i > -3) {  // Changed from -4 to -3
             val d = (direction + i + 16) % 16
             // Don't make the difference between a key that doesn't exist and a key
             // that is removed by [_handler]. Triggers side effects.
@@ -1205,10 +1208,13 @@ class Pointers(
         private var uniqueTimeoutWhat = 0
 
         // Maps 16 directions (0-15) to 9 key positions (c=0, nw=1, ne=2, sw=3, se=4, w=5, e=6, n=7, s=8)
-        // Expanded SE (index 4) from dirs 5-6 to 4-6 for 45° hit zone (makes ] and } easier)
+        // Direction wheel: 0=N, 4=E, 8=S, 12=W (each step is 22.5°)
+        // v1.2.2 FIX: Restored dir 4 to E (was SE, causing horizontal swipes to trigger NE subkey)
         @JvmField
         val DIRECTION_TO_INDEX = intArrayOf(
-            7, 2, 2, 6, 4, 4, 4, 8, 8, 3, 3, 5, 5, 1, 1, 7
+            7, 2, 2, 6, 6, 4, 4, 8, 8, 3, 3, 5, 5, 1, 1, 7
+        //  n ne ne  e  e se se  s  s sw sw  w  w nw nw  n
+        //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
         )
 
         // Sliding constants - use Config where available, fallback to defaults
