@@ -57,6 +57,15 @@
 - Clears tracking when new word started (prevents stale undo state)
 - Works with existing DictionaryManager for user word storage
 
+**Problem 3** (2026-01-12): Legacy custom words from older versions wouldn't delete in Dictionary Manager.
+
+**Fix 3**: Storage migration
+- Old format: `user_dictionary` SharedPrefs with `user_words` StringSet
+- New format: DirectBootAwarePreferences with `custom_words_{lang}` JSON map
+- Added `migrateLegacyCustomWords()` to DictionaryManager.kt
+- Runs once at init, merges legacy words to new format, clears old data
+- Files Modified: `DictionaryManager.kt`
+
 ---
 
 ## v1.2.1 Language-Specific Prefix Boosts - COMPLETE
