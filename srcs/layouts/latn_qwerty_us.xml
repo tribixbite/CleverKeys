@@ -40,23 +40,23 @@ Useful links.
 <keyboard name="QWERTY (US)" script="latin">
   <row>
     <key c="q" ne="1" se="loc esc"/>
-    <key c="w" nw="~" ne="2" sw="\@" se="we "/>
+    <key c="w" nw="~" ne="2" sw="\@"/>
     <key c="e" nw="!" ne="3" sw="\#" se="loc €"/>
     <key c="r" ne="4" sw="$"/>
-    <key c="t" ne="5" sw="%" e="to "/>
+    <key c="t" ne="5" sw="%"/>
     <key c="y" ne="6" sw="^"/>
     <key c="u" ne="7" sw="&amp;" n="up "/>
-    <key c="i" nw="*" ne="8" sw="I'd " w="it " se="I'm "/>
-    <key c="o" nw="of " ne="9" sw="(" se=")" s="on " w="or "/>
+    <key c="i" sw="*" ne="8"/>
+    <key c="o" ne="9" sw="(" se=")"/>
     <key c="p" ne="0"/>
   </row>
   <row>
-    <key shift="0.5" c="a" nw="loc tab" ne="`" e="as " w="at "/>
-    <key c="s" ne="so " sw="loc ß"/>
-    <key c="d" ne="do "/>
+    <key shift="0.5" c="a" nw="loc tab" ne="`"/>
+    <key c="s" sw="loc ß"/>
+    <key c="d"/>
     <key c="f"/>
-    <key c="g" nw="-" ne="go " sw="_"/>
-    <key c="h" ne="=" sw="+" e="hi "/>
+    <key c="g" nw="-" sw="_"/>
+    <key c="h" ne="=" sw="+"/>
     <key c="j" se="}" sw="{"/>
     <key c="k" sw="[" se="]"/>
     <key c="l" ne="|" sw="\\"/>
@@ -67,9 +67,9 @@ Useful links.
     <key c="x" ne="loc †"/>
     <key c="c" ne="&lt;" sw="."/>
     <key c="v" ne="&gt;" sw=","/>
-    <key c="b" nw="be " ne="\?" sw="/" n="by "/>
-    <key c="n" ne=":" sw=";" n="no "/>
-    <key c="m" nw="me " ne="&quot;" sw="'"/>
+    <key c="b" ne="\?" sw="/"/>
+    <key c="n" ne=":" sw=";"/>
+    <key c="m" ne="&quot;" sw="'"/>
     <key width="1.5" c="backspace" ne="delete" nw="delete_last_word"/>
   </row>
 </keyboard>
