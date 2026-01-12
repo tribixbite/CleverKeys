@@ -1624,8 +1624,6 @@ class OptimizedVocabulary(private val context: Context) {
      * @since v1.1.86 - Uses language-specific keys for custom words
      */
     private fun loadCustomAndUserWords() {
-        if (context == null) return // Redundant check, context is non-null
-
         // v1.1.94: Collect custom words to add to beam search trie
         val customWordsForTrie = mutableListOf<String>()
 
@@ -1634,8 +1632,7 @@ class OptimizedVocabulary(private val context: Context) {
 
             // v1.1.86: Run migration if needed (copy global keys to English keys)
             LanguagePreferenceKeys.migrateToLanguageSpecific(prefs)
-            // v1.1.88: Also migrate legacy user_dictionary SharedPreferences file
-            LanguagePreferenceKeys.migrateUserDictionary(context, prefs)
+            // NOTE: Legacy user_dictionary migration is now handled by DictionaryManager.migrateLegacyCustomWords()
 
             // 1. Load custom words from SharedPreferences (language-specific key)
             val customWordsKey = LanguagePreferenceKeys.customWordsKey(_primaryLanguageCode)
@@ -1744,11 +1741,6 @@ class OptimizedVocabulary(private val context: Context) {
      * @since v1.1.86 - Uses language-specific keys for disabled words
      */
     private fun loadDisabledWords() {
-        if (context == null) { // Redundant check, context is non-null
-            disabledWords = HashSet()
-            return
-        }
-
         try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
 

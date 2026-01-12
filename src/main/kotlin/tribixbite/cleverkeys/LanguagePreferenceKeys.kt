@@ -94,52 +94,9 @@ object LanguagePreferenceKeys {
         return true
     }
 
-    /**
-     * Migrate legacy "user_dictionary" SharedPreferences file to DirectBootAwarePreferences.
-     *
-     * v1.1.87+: Custom words are stored as JSON Map<String, Int> in DirectBootAwarePreferences
-     * with key `custom_words_${lang}`. This migrates from the legacy location.
-     *
-     * @param context Context to access SharedPreferences
-     * @param prefs DirectBootAwarePreferences to migrate into
-     * @return Number of words migrated, or 0 if no migration needed
-     */
-    fun migrateUserDictionary(context: android.content.Context, prefs: SharedPreferences): Int {
-        val legacyDictPrefs = context.getSharedPreferences("user_dictionary", android.content.Context.MODE_PRIVATE)
-        val legacyUserWords = legacyDictPrefs.getStringSet("user_words", null)
-
-        if (legacyUserWords.isNullOrEmpty()) {
-            return 0
-        }
-
-        val enCustomKey = customWordsKey("en")
-
-        // Load existing custom words (if any)
-        val existingJson = prefs.getString(enCustomKey, "{}")
-        val gson = com.google.gson.Gson()
-        val type = object : com.google.gson.reflect.TypeToken<MutableMap<String, Int>>() {}.type
-        val customWords: MutableMap<String, Int> = try {
-            gson.fromJson(existingJson, type) ?: mutableMapOf()
-        } catch (e: Exception) {
-            mutableMapOf()
-        }
-
-        // Add legacy words with default frequency
-        var migratedCount = 0
-        for (word in legacyUserWords) {
-            if (!customWords.containsKey(word)) {
-                customWords[word] = 100 // Default frequency
-                migratedCount++
-            }
-        }
-
-        if (migratedCount > 0) {
-            prefs.edit().putString(enCustomKey, gson.toJson(customWords)).apply()
-            Log.i(TAG, "Migrated $migratedCount words from user_dictionary to $enCustomKey")
-        }
-
-        return migratedCount
-    }
+    // NOTE: migrateUserDictionary() was removed in v1.2.2 - it was vestigial code that duplicated
+    // DictionaryManager.migrateLegacyCustomWords() but with bugs (hardcoded "en", didn't clear legacy data).
+    // DictionaryManager now handles all legacy migration correctly using Locale.getDefault().language.
 
     /**
      * Get all language codes that have custom words stored.

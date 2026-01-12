@@ -872,7 +872,7 @@ class BackupRestoreManager(private val context: Context) {
 
             // Run migration first to ensure all words are in new format
             LanguagePreferenceKeys.migrateToLanguageSpecific(prefs)
-            LanguagePreferenceKeys.migrateUserDictionary(context, prefs)
+            // NOTE: Legacy user_dictionary migration is handled by DictionaryManager.migrateLegacyCustomWords()
 
             // Export custom words per language (new format)
             val customWordsPerLang = JsonObject()
