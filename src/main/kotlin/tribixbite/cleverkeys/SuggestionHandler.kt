@@ -536,11 +536,8 @@ class SuggestionHandler(
         // Clear tracking
         contextTracker.clearAutocorrectTracking()
 
-        // Clear saved suggestions so bar clears after confirmation (not restore old prompt)
-        suggestionBar?.clearSavedSuggestions()
-
-        // Show confirmation message
-        suggestionBar?.showTemporaryMessage("Added '$wordToAdd' to dictionary", 2000L)
+        // Show confirmation message (clearAfter=true so bar clears instead of restoring prompt)
+        suggestionBar?.showTemporaryMessage("Added '$wordToAdd' to dictionary", 2000L, clearAfter = true)
     }
 
     /**
@@ -604,11 +601,8 @@ class SuggestionHandler(
             contextTracker.clearLastAutoInsertedWord()
             contextTracker.setLastCommitSource(PredictionSource.CANDIDATE_SELECTION)
 
-            // Clear saved suggestions so bar clears after confirmation (not restore old prompt)
-            suggestionBar?.clearSavedSuggestions()
-
-            // Show confirmation message in suggestion bar
-            suggestionBar?.showTemporaryMessage("Added '$tappedWord' to dictionary", 2000L)
+            // Show confirmation message (clearAfter=true so bar clears instead of restoring prompt)
+            suggestionBar?.showTemporaryMessage("Added '$tappedWord' to dictionary", 2000L, clearAfter = true)
 
             // Clear suggestions after brief delay (message will auto-clear)
         }

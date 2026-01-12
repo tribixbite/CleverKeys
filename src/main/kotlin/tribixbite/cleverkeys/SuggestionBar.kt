@@ -329,18 +329,23 @@ class SuggestionBar : LinearLayout {
      *
      * @param message The message to display
      * @param durationMs How long to show the message (default 1500ms)
+     * @param clearAfter If true, clear the bar after message instead of restoring (default false)
      * @since v1.2.0
      */
-    fun showTemporaryMessage(message: String, durationMs: Long = 1500L) {
+    fun showTemporaryMessage(message: String, durationMs: Long = 1500L, clearAfter: Boolean = false) {
         if (isPasswordMode) return  // Don't interrupt password mode
 
         // Cancel any pending restore
         mainHandler.removeCallbacks(restoreRunnable)
 
-        // Save current suggestions if not already showing a temp message
-        if (!isShowingTemporaryMessage) {
+        // Save current suggestions if not already showing a temp message (and not clearing after)
+        if (!isShowingTemporaryMessage && !clearAfter) {
             savedSuggestions = currentSuggestions.toList()
             savedScores = currentScores.toList()
+        } else if (clearAfter) {
+            // Clear saved suggestions so nothing gets restored
+            savedSuggestions = emptyList()
+            savedScores = emptyList()
         }
         isShowingTemporaryMessage = true
 
@@ -363,7 +368,7 @@ class SuggestionBar : LinearLayout {
         }
         addView(messageView)
 
-        Log.d(TAG, "showTemporaryMessage: '$message' for ${durationMs}ms")
+        Log.d(TAG, "showTemporaryMessage: '$message' for ${durationMs}ms, clearAfter=$clearAfter")
 
         // Schedule restore
         mainHandler.postDelayed(restoreRunnable, durationMs)

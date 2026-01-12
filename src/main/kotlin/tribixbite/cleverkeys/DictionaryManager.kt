@@ -3,23 +3,29 @@ package tribixbite.cleverkeys
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.util.Locale
 
 /**
  * Manages word dictionaries for different languages and user custom words
+ *
+ * v1.2.2: Uses same storage as CustomDictionarySource (custom_words_{lang} in DirectBootAwarePreferences)
+ * so words added here appear in Dictionary Manager UI and can be deleted.
  */
 class DictionaryManager(private val context: Context) {
 
-    private val userDictPrefs: SharedPreferences =
-        context.getSharedPreferences(USER_DICT_PREFS, Context.MODE_PRIVATE)
+    // Use DirectBootAwarePreferences for consistency with CustomDictionarySource
+    private val prefs: SharedPreferences = DirectBootAwarePreferences.get_shared_preferences(context)
+    private val gson = Gson()
     private val predictors = mutableMapOf<String, WordPredictor>()
     private val userWords = mutableSetOf<String>()
-    private var currentLanguage: String? = null
+    private var currentLanguage: String = "en"
     private var currentPredictor: WordPredictor? = null
 
     init {
-        loadUserWords()
         setLanguage(Locale.getDefault().language)
+        loadUserWords()
     }
 
     /**
@@ -29,7 +35,13 @@ class DictionaryManager(private val context: Context) {
      */
     fun setLanguage(languageCode: String?) {
         val code = languageCode ?: "en"
+        val languageChanged = currentLanguage != code
         currentLanguage = code
+
+        // Reload user words if language changed
+        if (languageChanged) {
+            loadUserWords()
+        }
 
         // Get or create predictor for this language
         currentPredictor = predictors.getOrPut(code) {
@@ -77,13 +89,15 @@ class DictionaryManager(private val context: Context) {
     }
 
     /**
-     * Add a word to the user dictionary
+     * Add a word to the user dictionary for current language.
+     * Uses same storage as CustomDictionarySource so words appear in Dictionary Manager.
      */
     fun addUserWord(word: String?) {
         if (word.isNullOrEmpty()) return
 
         userWords.add(word)
         saveUserWords()
+        Log.d(TAG, "Added '$word' to custom words for '$currentLanguage'")
     }
 
     /**
@@ -108,20 +122,42 @@ class DictionaryManager(private val context: Context) {
     }
 
     /**
-     * Load user words from preferences
+     * Get the custom words key for current language.
+     * Uses LanguagePreferenceKeys for consistency with CustomDictionarySource.
      */
-    private fun loadUserWords() {
-        val words = userDictPrefs.getStringSet(USER_WORDS_KEY, emptySet()) ?: emptySet()
-        userWords.clear()
-        userWords.addAll(words)
+    private fun getCustomWordsKey(): String {
+        return LanguagePreferenceKeys.customWordsKey(currentLanguage)
     }
 
     /**
-     * Save user words to preferences
+     * Load user words from preferences (JSON format matching CustomDictionarySource)
+     */
+    private fun loadUserWords() {
+        val key = getCustomWordsKey()
+        val jsonString = prefs.getString(key, null)
+        userWords.clear()
+
+        if (jsonString != null) {
+            try {
+                val type = object : TypeToken<MutableMap<String, Int>>() {}.type
+                val wordsMap: MutableMap<String, Int>? = gson.fromJson(jsonString, type)
+                wordsMap?.keys?.let { userWords.addAll(it) }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to parse custom words JSON", e)
+            }
+        }
+        Log.d(TAG, "Loaded ${userWords.size} custom words for '$currentLanguage'")
+    }
+
+    /**
+     * Save user words to preferences (JSON format matching CustomDictionarySource)
      */
     private fun saveUserWords() {
-        userDictPrefs.edit()
-            .putStringSet(USER_WORDS_KEY, userWords.toSet())
+        val key = getCustomWordsKey()
+        // Convert to map with default frequency of 100
+        val wordsMap = userWords.associateWith { 100 }
+        prefs.edit()
+            .putString(key, gson.toJson(wordsMap))
             .apply()
     }
 
@@ -162,7 +198,5 @@ class DictionaryManager(private val context: Context) {
 
     companion object {
         private const val TAG = "DictionaryManager"
-        private const val USER_DICT_PREFS = "user_dictionary"
-        private const val USER_WORDS_KEY = "user_words"
     }
 }
