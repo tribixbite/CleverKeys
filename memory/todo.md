@@ -120,13 +120,16 @@ A modifier should only be "active" if it's LATCHED or LOCKED, not just touched/s
 **Problem**: Swiping "were" only showed "we're" prediction, missing the base word "were".
 Same issue in French: "dans" only showing "d'ans".
 
-**Root Cause**: Valid words like "were", "well", "shed", "dans" were in
-`nonPairedContractions` causing them to be REPLACED with contractions instead
-of showing BOTH forms.
+**Root Cause** (revised after debugging): At line 447, `displayWord` was changed
+from "were" to "we're" BEFORE the prediction was added to validPredictions. So
+"were" was never in the list for the later contraction handling to preserve.
 
-**Fix**: Skip non-paired replacement when word is:
-1. A base in `contractionPairings` (English homographs like "were", "well")
-2. A real vocabulary word (frequency > 0.65, from dictionary not synthetic)
+**Fix** (revised):
+1. **Primary fix (line 449)**: Skip early contraction mapping for paired contraction
+   bases (words in `contractionPairings`). These keep their original form.
+2. **Safety net (line 782)**: Skip non-paired replacement for:
+   - Paired bases (contractionPairings)
+   - Real vocabulary words (frequency > 0.65)
 
 **Files Modified**: `OptimizedVocabulary.kt`
 
