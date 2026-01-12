@@ -443,7 +443,10 @@ class OptimizedVocabulary(private val context: Context) {
             // This happens AFTER vocabulary lookup succeeds - the word is valid, just needs apostrophe
             // Skip contraction mapping for primary dictionary matches (already have accented form)
             // v1.1.88: Also skip if we already set displayWord from contraction check above
-            if (!fromPrimaryDict && displayWord == word) {
+            // v1.2.2 FIX: Also skip if word is a paired contraction base (e.g., "were", "well")
+            // These should show BOTH the base word AND the contraction, not replace one with other
+            val isPairedContractionBase = contractionPairings.containsKey(word)
+            if (!fromPrimaryDict && displayWord == word && !isPairedContractionBase) {
                 displayWord = nonPairedContractions[word] ?: word
             }
 
