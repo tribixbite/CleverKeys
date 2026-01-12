@@ -60,6 +60,16 @@ class Pointers(
             if (p.value != null &&
                 !(skip_latched && p.hasFlagsAny(FLAG_P_LATCHED) &&
                     (p.flags and FLAG_P_LOCKED) == 0)) {
+                // v1.2.2 FIX: Don't include non-latched latchable keys (e.g., shift being swiped over)
+                // A modifier should only be "active" if it's LATCHED or LOCKED, not just touched.
+                // This prevents short swipes over shift from showing uppercase keyboard.
+                val isLatchable = (p.flags and FLAG_P_LATCHABLE) != 0
+                val isLatched = p.hasFlagsAny(FLAG_P_LATCHED)
+                val isLocked = (p.flags and FLAG_P_LOCKED) != 0
+                if (isLatchable && !isLatched && !isLocked) {
+                    // Skip non-latched latchable keys - they're just being touched/swiped
+                    continue
+                }
                 mods[n_mods++] = p.value
             }
         }

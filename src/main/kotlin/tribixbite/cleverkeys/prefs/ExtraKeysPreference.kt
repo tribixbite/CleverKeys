@@ -177,7 +177,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             return when (name) {
                 "voice_typing", "change_method", "switch_clipboard", "compose",
                 "tab", "esc", "f11_placeholder", "f12_placeholder",
-                "cut", "copy", "paste", "undo", "redo",
+                "cut", "copy", "paste", "undo",
                 "home", "end", "page_up", "page_down", "menu" -> true
                 else -> false
             }
@@ -399,6 +399,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "redo" -> mkPreferredPos("y", 0, 5, true)
                 "f11_placeholder" -> mkPreferredPos("9", 0, 8, false)
                 "f12_placeholder" -> mkPreferredPos("0", 0, 9, false)
+                "menu" -> mkPreferredPos("shift", 2, 0, true)              
                 "delete_word" -> mkPreferredPos("backspace", -1, -1, false)
                 "forward_delete_word" -> mkPreferredPos("backspace", -1, -1, true)
                 // Layout switching keys - place near space bar on bottom row
