@@ -107,9 +107,11 @@ A modifier should only be "active" if it's LATCHED or LOCKED, not just touched/s
 1. `DIRECTION_TO_INDEX` mapped direction 4 (E) to SE (4) instead of E (6)
 2. `getNearestKeyAtDirection` searched ±3 directions (135°), too wide for precise direction
 
-**Fix**:
+**Fix** (revised after consensus with Gemini 3 Pro + Gemini 2.5 Pro):
 - Corrected DIRECTION_TO_INDEX: dir 4 now maps to E (6) instead of SE (4)
-- Reduced fallback range from ±3 to ±2 directions (~112° arc)
+- Reduced fallback range from ±3 to ±1 directions (~67° arc)
+  - ±2 was still too wide: dir 4 - 2 = dir 2 (NE)
+- Fixed DIRECTION_TO_SWIPE_DIRECTION[4] from SE to E for consistency
 
 **Files Modified**: `Pointers.kt`
 
