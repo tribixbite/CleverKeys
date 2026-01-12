@@ -557,13 +557,13 @@ class Pointers(
      * if the selected key didn't change.
      */
     private fun getNearestKeyAtDirection(ptr: Pointer, direction: Int): KeyValue? {
-        // v1.2.2 FIX: Reduced from +/-3 to +/-2 (was scanning 43%, now 31% = ~112°)
+        // v1.2.2 FIX: Reduced from +/-3 to +/-1 (was scanning 43%, now 19% = ~67°)
         // This prevents horizontal swipes from accidentally triggering diagonal subkeys
         // when the exact direction doesn't have a key defined.
-        // [i] is [0, -1, +1, -2, +2], scanning ~31% of the circle's area,
-        // centered on the initial swipe direction.
+        // With ±2, direction 4 (E) - 2 = direction 2 (NE), causing 'we' swipe to trigger '2'
+        // [i] is [0, -1, +1], scanning ~19% of the circle's area (3 directions = 67.5°)
         var i = 0
-        while (i > -3) {  // Changed from -4 to -3
+        while (i > -2) {  // Changed from -3 to -2 (±1 range)
             val d = (direction + i + 16) % 16
             // Don't make the difference between a key that doesn't exist and a key
             // that is removed by [_handler]. Triggers side effects.
@@ -1233,12 +1233,13 @@ class Pointers(
          * Direction 0 = top/north, direction 4 = right/east, etc.
          */
         @JvmField
+        // v1.2.2 FIX: Aligned with DIRECTION_TO_INDEX - dir 4 is E not SE
         val DIRECTION_TO_SWIPE_DIRECTION = arrayOf(
             SwipeDirection.N,   // 0 - top
             SwipeDirection.NE,  // 1 - top-right (upper)
             SwipeDirection.NE,  // 2 - top-right (lower)
             SwipeDirection.E,   // 3 - right (upper)
-            SwipeDirection.SE,  // 4 - right (lower)
+            SwipeDirection.E,   // 4 - right (lower) - was SE, now E for consistency
             SwipeDirection.SE,  // 5 - bottom-right (upper)
             SwipeDirection.SE,  // 6 - bottom-right (lower)
             SwipeDirection.S,   // 7 - bottom (right)
