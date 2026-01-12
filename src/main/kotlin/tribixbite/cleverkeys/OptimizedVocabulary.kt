@@ -299,6 +299,15 @@ class OptimizedVocabulary(private val context: Context) {
                 val contractionKeys = nonPairedContractions.keys.toList()
                 vocabularyTrie.insertAll(contractionKeys)
                 Log.d(TAG, "Added ${contractionKeys.size} contraction keys to English vocabularyTrie")
+
+                // v1.2.2 DIAGNOSTIC: Verify critical contraction keys are in trie
+                val testWords = listOf("doesnt", "dont", "cant", "wont", "gesture", "feature")
+                val missing = testWords.filter { !vocabularyTrie.containsWord(it) }
+                if (missing.isNotEmpty()) {
+                    Log.e(TAG, "🚨 TRIE MISSING WORDS: $missing")
+                } else {
+                    Log.d(TAG, "✅ Trie verification passed: all test words present")
+                }
             }
 
             isLoaded = true
