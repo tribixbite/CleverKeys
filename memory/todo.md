@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-11
-**Status**: v1.2.2 - Multilingual safety settings + new language prefix boosts (id, ms, tl, sw)
+**Last Updated**: 2026-01-12
+**Status**: v1.2.2 - Multilingual safety settings + autocorrect UX improvements
 
 ---
 
@@ -23,6 +23,39 @@
 **Swipe Data Export (fixed OOM):**
 - JSON/NDJSON exports now stream from DB cursor (no memory buildup)
 - View dialog: search, pagination (20/page), tap to copy trace JSON
+
+---
+
+## Autocorrect UX Improvements - COMPLETE (2026-01-12)
+
+**Problem 1**: After autocorrect (e.g., "subkeys" → "surveys"), tapping original word in suggestions inserted ANOTHER word instead of replacing.
+
+**Fix 1**: Autocorrect undo functionality
+- Track autocorrect state in PredictionContextTracker (lastAutocorrectOriginalWord)
+- When user taps original word in suggestions, detect autocorrect undo scenario
+- Delete the autocorrected word + space, insert original word + space
+- Automatically add original word to user dictionary (prevents future autocorrection)
+- Show confirmation message "Added 'word' to dictionary"
+
+**Problem 2**: Unknown words typed without triggering autocorrect had no way to add to dictionary.
+
+**Fix 2**: "Add to dictionary?" prompt
+- When unknown word (not in dictionary) is completed with space but not autocorrected
+- Show "Add 'word' to dictionary?" prompt in suggestion bar
+- Tapping prompt adds word to custom dictionary
+- Shows confirmation message "Added 'word' to dictionary"
+
+**Files Modified**:
+- `PredictionContextTracker.kt`: Added autocorrect tracking fields and methods
+- `WordPredictor.kt`: Added `isInDictionary()` method
+- `SuggestionHandler.kt`: Added `handleAutocorrectUndo()` and `handleAddToDictionary()`
+- `SuggestionBar.kt`: Transform `dict_add:` prefix to friendly prompt text
+
+**Technical Details**:
+- `dict_add:word` prefix format for dictionary prompt (hidden from user)
+- Uses existing `showTemporaryMessage()` for confirmations
+- Clears tracking when new word started (prevents stale undo state)
+- Works with existing DictionaryManager for user word storage
 
 ---
 
