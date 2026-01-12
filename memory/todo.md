@@ -5,6 +5,36 @@
 
 ---
 
+## NN Beam Search Accuracy Investigation - IN PROGRESS (2026-01-12)
+
+**Problem**: User reports swiping "doesnt" yields "downstream", "downtrodden" and swiping "gesture" yields "feature", "heating", "gearing".
+
+**Investigation Findings**:
+
+1. **CONFIRMED: Direction changes DON'T affect NN inputs**
+   - `getNearestKeyAtDirection` (Pointers.kt) → short swipe subkey detection ONLY
+   - `KeyboardGrid.getNearestKeyToken()` (SwipeTrajectoryProcessor.kt) → NN swipe input
+   - These are **completely separate code paths**
+
+2. **Recent changes reviewed (no obvious cause found)**:
+   - Strict start char feature (default: false) - shouldn't cause issues
+   - Cumulative boost cap (default: 15.0) - same as before
+   - Contraction preservation changes - post-processing only
+
+3. **Diagnostic logging added** (commit 4d21a12e):
+   - Verifies critical words in trie after loading: `doesnt`, `dont`, `gesture`, `feature`
+   - Will log `🚨 TRIE MISSING WORDS:` if any are missing
+   - Will log `✅ Trie verification passed` if all present
+
+**Next Steps**:
+- Install build with diagnostics and check logcat for trie verification messages
+- Enable debug logging in Neural Settings to see raw beam search output
+- Compare detected key sequences vs expected trajectories
+
+**Files Modified**: `OptimizedVocabulary.kt`
+
+---
+
 ## Privacy Settings Status
 
 | Setting | Works? | Notes |
