@@ -99,6 +99,35 @@ A modifier should only be "active" if it's LATCHED or LOCKED, not just touched/s
 
 **Files Modified**: `Pointers.kt`, `latn_qwerty_us.xml`, `ExtraKeysPreference.kt`
 
+**Bug Fix** (2026-01-12): Horizontal swipe direction detection
+
+**Problem**: Swiping horizontally from 'w' to 'e' triggered NE subkey ('2') instead of swipe typing.
+
+**Root Cause**:
+1. `DIRECTION_TO_INDEX` mapped direction 4 (E) to SE (4) instead of E (6)
+2. `getNearestKeyAtDirection` searched ±3 directions (135°), too wide for precise direction
+
+**Fix**:
+- Corrected DIRECTION_TO_INDEX: dir 4 now maps to E (6) instead of SE (4)
+- Reduced fallback range from ±3 to ±2 directions (~112° arc)
+
+**Files Modified**: `Pointers.kt`
+
+**Bug Fix** (2026-01-12): Contraction system preserving base words
+
+**Problem**: Swiping "were" only showed "we're" prediction, missing the base word "were".
+Same issue in French: "dans" only showing "d'ans".
+
+**Root Cause**: Valid words like "were", "well", "shed", "dans" were in
+`nonPairedContractions` causing them to be REPLACED with contractions instead
+of showing BOTH forms.
+
+**Fix**: Skip non-paired replacement when word is:
+1. A base in `contractionPairings` (English homographs like "were", "well")
+2. A real vocabulary word (frequency > 0.65, from dictionary not synthetic)
+
+**Files Modified**: `OptimizedVocabulary.kt`
+
 ---
 
 ## v1.2.1 Language-Specific Prefix Boosts - COMPLETE
