@@ -12,22 +12,35 @@
 1. **TrackPoint Mode for Navigation Keys**
    - Touch and hold arrow key (↑↓←→) without moving → enter TrackPoint mode
    - Move finger in any direction → cursor moves that direction
-   - Distinct haptic feedback on mode activation (CONFIRM pattern)
+   - Distinct haptic feedback on mode activation (CLOCK_TICK pattern)
    - Short swipe still works for single cursor movement
    - Files Modified: `Pointers.kt`
 
 2. **Granular Haptic Feedback Settings**
    - New HapticEvent enum: KEY_PRESS, PREDICTION_TAP, TRACKPOINT_ACTIVATE, LONG_PRESS, SWIPE_COMPLETE
    - Per-event enable/disable toggles in Settings > Accessibility
-   - Uses system haptic patterns (KEYBOARD_TAP, CONFIRM, GESTURE_END, LONG_PRESS)
+   - Uses system haptic patterns (KEYBOARD_TAP, TEXT_HANDLE_MOVE, CLOCK_TICK, GESTURE_END, LONG_PRESS)
    - Defaults: Key Press, Prediction Tap, TrackPoint, Long Press enabled; Swipe Complete disabled
    - Full backup/restore support
    - Files Modified: `VibratorCompat.kt`, `Config.kt`, `Pointers.kt`, `Keyboard2View.kt`, `SettingsActivity.kt`, `BackupRestoreManager.kt`
+
+3. **Prediction Bar Tap Haptic** (v2 fix: 2026-01-13)
+   - Added `triggerHaptic()` method to Keyboard2View for external components
+   - SuggestionBridge.onSuggestionSelected() now triggers PREDICTION_TAP haptic
+   - Uses TEXT_HANDLE_MOVE constant (lighter tick) to distinguish from typing
+   - Files Modified: `Keyboard2View.kt`, `SuggestionBridge.kt`
 
 **Architecture Changes**:
 - `onPointerFlagsChanged(Boolean)` → `onPointerFlagsChanged(HapticEvent?)`
 - `lockPointer(ptr, Boolean)` → `lockPointer(ptr, HapticEvent?)`
 - VibratorCompat uses modern VibrationEffect API on Android O+, VibratorManager on Android S+
+- API-appropriate haptic constants with fallbacks (O_MR1, LOLLIPOP, R)
+- System haptic settings cached to avoid IPC overhead
+
+**TrackPoint Fixes** (v2: 2026-01-13):
+- Excluded nav keys from short gesture path collection to prevent interference
+- Increased movement tolerance from 15px to 30px for nav keys during hold
+- Files Modified: `Pointers.kt`
 
 ---
 
@@ -69,6 +82,14 @@
    - Activities (Theme, Dictionary, Layout, etc.) navigate directly
    - Section settings expand the appropriate section
    - Added more searchable entries (layout manager, neural settings, etc.)
+   - Files Modified: `SettingsActivity.kt`
+
+6. **Settings Search Scroll Fix** (v3 fix: 2026-01-13)
+   - Replaced fixed 100ms delay with polling mechanism with exponential backoff
+   - Clears stale positions before waiting for new layout
+   - Polls up to 5 times (50ms, 100ms, 150ms, 200ms, 250ms) + 300ms fallback
+   - Improved scroll calculation: centers item at ~1/3 of viewport height
+   - Uses coerceIn(0, maxValue) to handle scroll edge cases
    - Files Modified: `SettingsActivity.kt`
 
 ---
