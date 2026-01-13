@@ -163,6 +163,7 @@ android {
 
   buildFeatures {
     compose true
+    buildConfig true  // Enable BuildConfig generation for ENABLE_VERBOSE_LOGGING
   }
 
   // REPRODUCIBILITY: Compose compiler configuration via native Kotlin 2.0 plugin
@@ -219,6 +220,10 @@ android {
   }
 
   buildTypes {
+    // LOCAL_BUILD env var enables verbose logging for local development
+    // Set by build-on-termux.sh, not set by GitHub Actions
+    def isLocalBuild = System.env.LOCAL_BUILD == "true"
+
     release {
       // REPRODUCIBILITY: Disable VCS info to prevent version-control-info.textproto (AGP 8.3+)
       vcsInfo.include = false
@@ -228,6 +233,8 @@ android {
       debuggable false
       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
       resValue "string", "app_name", "CleverKeys"
+      // Verbose logging: enabled for local builds, disabled for CI/production
+      buildConfigField "boolean", "ENABLE_VERBOSE_LOGGING", isLocalBuild ? "true" : "false"
       // REPRODUCIBILITY: Only sign during build if non-empty keystore provided
       // When unset/empty, build unsigned APK for post-processing and manual signing
       def keystorePath = System.env.RELEASE_KEYSTORE
@@ -242,6 +249,7 @@ android {
       debuggable true
       resValue "string", "app_name", "CleverKeys (Debug)"
       resValue "bool", "debug_logs", "true"
+      buildConfigField "boolean", "ENABLE_VERBOSE_LOGGING", "true"
       signingConfig signingConfigs.debug
     }
   }

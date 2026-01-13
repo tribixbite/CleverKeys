@@ -28,6 +28,9 @@ export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-too
 export TZ=UTC
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
+# LOCAL_BUILD: Enable verbose logging for local development builds
+# GitHub Actions/CI builds don't set this, so logging is disabled in production
+export LOCAL_BUILD=true
 
 echo "Step 1: Checking prerequisites..."
 
