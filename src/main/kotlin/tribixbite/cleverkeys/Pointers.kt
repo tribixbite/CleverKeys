@@ -409,28 +409,8 @@ class Pointers(
                                 return
                             }
 
-                            // Non-latchable key - check for navigation hold-to-repeat
-                            if (_config.keyrepeat_enabled && isNavigationKey(gestureValue)) {
-                                // Navigation key: trigger first press, then set up hold-to-repeat
-                                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "NAV_HOLD_REPEAT: Starting for ${gestureValue}")
-                                _handler.onPointerDown(gestureValue, false)
-                                _handler.onPointerUp(gestureValue, ptr.modifiers)
-                                // Update pointer for hold-to-repeat mode
-                                ptr.value = gestureValue
-                                ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_NAV_HOLD_REPEAT
-                                // Store activation point for movement threshold check
-                                ptr.downX = ptr.lastX
-                                ptr.downY = ptr.lastY
-                                clearLatched()
-                                _swipeRecognizer.reset()
-                                // Start the repeat timer (like regular key repeat)
-                                _longpress_handler.sendEmptyMessageDelayed(
-                                    ptr.timeoutWhat,
-                                    _config.longPressInterval.toLong()
-                                )
-                                return
-                            }
-                            // Regular non-navigation key - trigger normally
+                            // Non-latchable key - trigger normally
+                            // Note: Navigation keys are handled during onTouchMove (hold-to-repeat mode)
                             _handler.onPointerDown(gestureValue, false)
                             _handler.onPointerUp(gestureValue, ptr.modifiers)
                             clearLatched() // Clear shift after gesture completes
@@ -708,6 +688,28 @@ class Pointers(
                         ptr.flags = pointer_flags_of_kv(subkeyValue)
                         _handler.onPointerDown(subkeyValue, true)
                         return
+                    }
+                    KeyValue.Kind.Keyevent -> {
+                        // Check for navigation keys that support hold-to-repeat
+                        if (_config.keyrepeat_enabled && isNavigationKey(subkeyValue)) {
+                            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "NAV_HOLD_REPEAT: Detected nav key at direction $direction during move")
+                            // Trigger first cursor move
+                            _handler.onPointerDown(subkeyValue, true)
+                            _handler.onPointerUp(subkeyValue, ptr.modifiers)
+                            // Set up hold-to-repeat mode
+                            ptr.gesture = Gesture(direction)
+                            ptr.value = subkeyValue
+                            ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_NAV_HOLD_REPEAT
+                            ptr.downX = x  // Store activation point for movement threshold
+                            ptr.downY = y
+                            clearLatched()
+                            stopLongPress(ptr)
+                            // Start repeat timer
+                            val what = uniqueTimeoutWhat++
+                            ptr.timeoutWhat = what
+                            _longpress_handler.sendEmptyMessageDelayed(what, _config.longPressInterval.toLong())
+                            return
+                        }
                     }
                     else -> {
                         // Other key types - let normal processing handle them

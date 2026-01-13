@@ -325,25 +325,31 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var showSearchResults by mutableStateOf(false)
 
     /**
-     * Searchable settings index. Each entry maps a setting name to its section expander.
-     * Format: title -> (keywords, section name, expander function)
+     * Searchable settings index. Each entry maps a setting name to its action.
+     * activityClass: if not null, clicking navigates to that activity
+     * expandSection: if activityClass is null, clicking expands this section
      */
     private data class SearchableSetting(
         val title: String,
         val keywords: List<String>,
         val sectionName: String,
-        val expandSection: () -> Unit
+        val activityClass: Class<*>? = null,
+        val expandSection: () -> Unit = {}
     )
 
     private val searchableSettings: List<SearchableSetting> by lazy {
         listOf(
-            // Activities
-            SearchableSetting("Theme Manager", listOf("color", "dark mode", "light", "appearance"), "Activities") { activitiesSectionExpanded = true },
-            SearchableSetting("Dictionary Manager", listOf("words", "custom", "disabled", "vocabulary"), "Activities") { activitiesSectionExpanded = true },
-            SearchableSetting("Clipboard Manager", listOf("copy", "paste", "history"), "Activities") { activitiesSectionExpanded = true },
-            SearchableSetting("Keyboard Calibration", listOf("height", "size", "foldable"), "Activities") { activitiesSectionExpanded = true },
-            SearchableSetting("Per-Key Customization", listOf("short swipe", "gesture", "actions", "commands"), "Activities") { activitiesSectionExpanded = true },
+            // Activities - navigate to activity
+            SearchableSetting("Theme Manager", listOf("color", "dark mode", "light", "appearance", "theme"), "Activities", ThemeSettingsActivity::class.java),
+            SearchableSetting("Dictionary Manager", listOf("words", "custom", "disabled", "vocabulary"), "Activities", DictionaryManagerActivity::class.java),
+            SearchableSetting("Layout Manager", listOf("keyboard layout", "qwerty", "azerty"), "Activities", LayoutManagerActivity::class.java),
+            SearchableSetting("Keyboard Calibration", listOf("height", "size", "foldable"), "Activities", SwipeCalibrationActivity::class.java),
+            SearchableSetting("Per-Key Customization", listOf("short swipe", "gesture", "actions", "commands"), "Activities", ShortSwipeCustomizationActivity::class.java),
+            SearchableSetting("Short Swipe Calibration", listOf("calibrate", "practice", "tutorial", "test"), "Gesture Tuning", ShortSwipeCalibrationActivity::class.java),
+            SearchableSetting("Extra Keys", listOf("toolbar", "arrows", "numbers"), "Activities", ExtraKeysConfigActivity::class.java),
+            SearchableSetting("Backup & Restore", listOf("backup", "export", "import", "restore"), "Activities", BackupRestoreActivity::class.java),
             // Neural Prediction
+            SearchableSetting("Neural Settings", listOf("neural", "ai", "prediction", "model"), "Neural Prediction", NeuralSettingsActivity::class.java),
             SearchableSetting("Swipe Typing", listOf("gesture", "neural", "glide"), "Neural Prediction") { neuralSectionExpanded = true },
             SearchableSetting("Beam Width", listOf("accuracy", "prediction", "candidates"), "Neural Prediction") { neuralSectionExpanded = true },
             SearchableSetting("Confidence Threshold", listOf("accuracy", "filter"), "Neural Prediction") { neuralSectionExpanded = true },
@@ -361,7 +367,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Key Repeat", listOf("hold", "backspace", "delete"), "Input") { inputSectionExpanded = true },
             // Gesture Tuning
             SearchableSetting("Short Gestures", listOf("short swipe", "quick", "action"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
-            SearchableSetting("Short Swipe Calibration", listOf("calibrate", "practice", "tutorial", "test"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
             SearchableSetting("Double-Space to Period", listOf("punctuation", "auto", "shortcut"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
             SearchableSetting("Finger Occlusion", listOf("offset", "touch", "compensation"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
             SearchableSetting("Tap Duration", listOf("timing", "sensitivity"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
@@ -373,9 +378,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Spell Check", listOf("correction", "underline", "typo"), "Dictionary") { dictionarySectionExpanded = true },
             // Clipboard
             SearchableSetting("Clipboard History", listOf("copy", "paste", "buffer"), "Clipboard") { clipboardSectionExpanded = true },
-            // Backup
-            SearchableSetting("Export Settings", listOf("backup", "save", "json"), "Backup & Restore") { backupRestoreSectionExpanded = true },
-            SearchableSetting("Import Settings", listOf("restore", "load", "json"), "Backup & Restore") { backupRestoreSectionExpanded = true },
             // Multi-Language
             SearchableSetting("Primary Language", listOf("multilingual", "dictionary", "locale"), "Multi-Language") { multiLangSectionExpanded = true },
             SearchableSetting("Secondary Language", listOf("bilingual", "dual", "alternate"), "Multi-Language") { multiLangSectionExpanded = true },
@@ -385,6 +387,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             // Advanced
             SearchableSetting("Debug Logging", listOf("log", "developer", "verbose"), "Advanced") { advancedSectionExpanded = true }
         )
+    }
+
+    /** Execute search result action - either navigate to activity or expand section */
+    private fun executeSearchAction(setting: SearchableSetting) {
+        if (setting.activityClass != null) {
+            startActivity(Intent(this, setting.activityClass))
+        } else {
+            setting.expandSection()
+        }
     }
 
     private fun getFilteredSettings(query: String): List<SearchableSetting> {
@@ -728,85 +739,95 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 lineHeight = 20.sp
             )
 
-            // Settings Search Bar with proper dropdown anchoring
-            var searchExpanded by remember { mutableStateOf(false) }
+            // Settings Search Bar
             val filteredSettings = getFilteredSettings(settingsSearchQuery)
+            val showResults = settingsSearchQuery.isNotBlank() && filteredSettings.isNotEmpty()
 
-            ExposedDropdownMenuBox(
-                expanded = searchExpanded && filteredSettings.isNotEmpty(),
-                onExpandedChange = { /* Controlled by text input */ }
+            OutlinedTextField(
+                value = settingsSearchQuery,
+                onValueChange = { query ->
+                    settingsSearchQuery = query
+                },
+                label = { Text("Search settings...") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search"
+                    )
+                },
+                trailingIcon = {
+                    if (settingsSearchQuery.isNotBlank()) {
+                        IconButton(onClick = {
+                            settingsSearchQuery = ""
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Clear"
+                            )
+                        }
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            // Search Results - always below search field, scrollable
+            AnimatedVisibility(
+                visible = showResults,
+                enter = expandVertically(),
+                exit = shrinkVertically()
             ) {
-                OutlinedTextField(
-                    value = settingsSearchQuery,
-                    onValueChange = { query ->
-                        settingsSearchQuery = query
-                        searchExpanded = query.isNotBlank()
-                    },
-                    label = { Text("Search settings...") },
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor(),
-                    singleLine = true,
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search"
-                        )
-                    },
-                    trailingIcon = {
-                        if (settingsSearchQuery.isNotBlank()) {
-                            IconButton(onClick = {
-                                settingsSearchQuery = ""
-                                searchExpanded = false
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Default.Clear,
-                                    contentDescription = "Clear"
-                                )
-                            }
-                        }
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                // Search Results Dropdown - properly anchored below TextField
-                ExposedDropdownMenu(
-                    expanded = searchExpanded && filteredSettings.isNotEmpty(),
-                    onDismissRequest = { searchExpanded = false },
-                    modifier = Modifier.heightIn(max = 300.dp)
+                        .heightIn(max = 200.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 ) {
-                    filteredSettings.forEach { setting ->
-                        DropdownMenuItem(
-                            text = {
-                                Column {
+                    Column(
+                        modifier = Modifier
+                            .verticalScroll(rememberScrollState())
+                            .padding(4.dp)
+                    ) {
+                        filteredSettings.forEach { setting ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        executeSearchAction(setting)
+                                        settingsSearchQuery = ""
+                                    }
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowRight,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = setting.title,
-                                        fontWeight = FontWeight.Medium
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 14.sp
                                     )
                                     Text(
                                         text = "in ${setting.sectionName}",
-                                        fontSize = 12.sp,
+                                        fontSize = 11.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                            },
-                            onClick = {
-                                setting.expandSection()
-                                settingsSearchQuery = ""
-                                searchExpanded = false
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.KeyboardArrowRight,
-                                    contentDescription = null
-                                )
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                        )
+                            }
+                        }
                     }
                 }
             }
