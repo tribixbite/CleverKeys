@@ -660,6 +660,35 @@ class Pointers(
         val dx = x - ptr.downX
         val dy = adjustedY - ptr.downY
         val dist = abs(dx) + abs(dy)
+        val euclideanDist = sqrt(dx * dx + dy * dy)
+
+        // NAV KEY EARLY DETECTION: Use lower threshold (10% key width) for navigation keys
+        // This ensures fast swipes still trigger nav hold-to-repeat mode
+        val navKeyThreshold = _handler.getKeyWidth(ptr.key) * 0.10f
+        if (_config.keyrepeat_enabled && euclideanDist >= navKeyThreshold && ptr.gesture == null) {
+            val a = atan2(dy, dx) + Math.PI
+            val direction = ((a * 8 / Math.PI).toInt() + 12) % 16
+            val subkeyValue = getNearestKeyAtDirection(ptr, direction)
+            if (subkeyValue != null && isNavigationKey(subkeyValue)) {
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "NAV_HOLD_REPEAT: Early detection at dist=$euclideanDist (threshold=$navKeyThreshold)")
+                // Trigger first cursor move
+                _handler.onPointerDown(subkeyValue, true)
+                _handler.onPointerUp(subkeyValue, ptr.modifiers)
+                // Set up hold-to-repeat mode
+                ptr.gesture = Gesture(direction)
+                ptr.value = subkeyValue
+                ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_NAV_HOLD_REPEAT
+                ptr.downX = x  // Store activation point for movement threshold
+                ptr.downY = y
+                clearLatched()
+                stopLongPress(ptr)
+                // Start repeat timer
+                val what = uniqueTimeoutWhat++
+                ptr.timeoutWhat = what
+                _longpress_handler.sendEmptyMessageDelayed(what, _config.longPressInterval.toLong())
+                return
+            }
+        }
 
         if (dist >= _config.swipe_dist_px && ptr.gesture == null) {
             // Pointer moved significantly - check for special key activation FIRST

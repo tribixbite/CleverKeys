@@ -25,7 +25,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -334,7 +334,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var showSearchResults by mutableStateOf(false)
     private var highlightedSettingId by mutableStateOf<String?>(null)  // For pulse animation
     private var scrollToPosition by mutableStateOf<Int?>(null)  // Scroll target position in pixels
-    private val settingPositions = mutableMapOf<String, Int>()  // Track setting positions
+    private val settingPositions = mutableMapOf<String, Int>()  // Track setting positions (root Y coords)
+    private var scrollContainerRootY by mutableStateOf(0)  // Scroll container's root Y position
 
     /** Collapse all sections */
     private fun collapseAllSections() {
@@ -774,9 +775,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         val scrollState = rememberScrollState()
 
         // Scroll to highlighted setting when scrollToPosition changes
+        // settingPositions stores root Y coordinates; convert to scroll content position
         LaunchedEffect(scrollToPosition) {
-            scrollToPosition?.let { targetY ->
-                scrollState.animateScrollTo(targetY)
+            scrollToPosition?.let { settingRootY ->
+                // Calculate position in scroll content: rootY - containerRootY + currentScroll
+                val contentPosition = settingRootY - scrollContainerRootY + scrollState.value
+                // Scroll with some offset so setting isn't at very top
+                val scrollTarget = (contentPosition - 100).coerceAtLeast(0)
+                scrollState.animateScrollTo(scrollTarget)
                 scrollToPosition = null
             }
         }
@@ -805,6 +811,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .padding(16.dp)
+                .onGloballyPositioned { coords ->
+                    scrollContainerRootY = coords.positionInRoot().y.toInt()
+                }
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -3408,7 +3417,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 .then(
                     if (highlightId != null) {
                         Modifier.onGloballyPositioned { coords ->
-                            settingPositions[highlightId] = coords.positionInParent().y.toInt()
+                            settingPositions[highlightId] = coords.positionInRoot().y.toInt()
                         }
                     } else Modifier
                 )
