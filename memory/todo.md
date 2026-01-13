@@ -1,7 +1,32 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-12
-**Status**: v1.2.2 - Multilingual safety settings + autocorrect UX improvements
+**Last Updated**: 2026-01-13
+**Status**: v1.2.3 - Settings search, short swipe calibration, double-space toggle
+
+---
+
+## Settings Search & Short Swipe Calibration - COMPLETE (2026-01-13)
+
+**Features Implemented**:
+
+1. **Settings Search Bar**
+   - Real-time filtering of ~35 searchable settings
+   - Results shown in dropdown with section indicators
+   - Tapping result expands parent section and scrolls to setting
+   - Keywords include synonyms (e.g., "haptic" matches "vibration")
+   - Files Modified: `SettingsActivity.kt`
+
+2. **Short Swipe Calibration Activity**
+   - Tutorial section with Canvas-drawn graphic showing tap vs short vs long swipe
+   - Configuration section with min/max distance threshold sliders
+   - Interactive practice area with real-time gesture type feedback
+   - Files: `ShortSwipeCalibrationActivity.kt`, `AndroidManifest.xml`
+
+3. **Double-Space-to-Period Toggle**
+   - New `double_space_to_period` setting in Config.kt
+   - Contextual guardrail: only triggers after alphanumeric characters
+   - Fixes rapid space tapping incorrectly inserting periods
+   - Files Modified: `Config.kt`, `KeyEventHandler.kt`, `SettingsActivity.kt`
 
 ---
 
