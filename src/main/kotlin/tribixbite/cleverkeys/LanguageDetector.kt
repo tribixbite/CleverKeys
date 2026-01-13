@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import android.util.Log
+import tribixbite.cleverkeys.BuildConfig
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -179,7 +180,9 @@ class LanguageDetector {
         for (language in languageCharFreqs.keys) {
             val score = calculateLanguageScore(normalizedText, language)
             languageScores[language] = score
-            Log.d(TAG, "Language $language score: $score")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Language $language score: $score")
+            }
         }
 
         // Find the best match
@@ -188,11 +191,15 @@ class LanguageDetector {
 
         // Check if confidence is high enough
         if (bestScore >= MIN_CONFIDENCE_THRESHOLD) {
-            Log.d(TAG, "Detected language: $bestLanguage (confidence: $bestScore)")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Detected language: $bestLanguage (confidence: $bestScore)")
+            }
             return bestLanguage
         }
 
-        Log.d(TAG, "Language detection failed, confidence too low: $bestScore")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.d(TAG, "Language detection failed, confidence too low: $bestScore")
+        }
         return null // Low confidence
     }
 

@@ -220,7 +220,7 @@ class DecoderWrapper(
                 }
             }
 
-            logitsTensor.close()
+            // Only close decoderOutput - it closes all child tensors including logitsTensor
             decoderOutput.close()
 
             if (step >= 0 && enableDetailedLogging && step % 5 == 0) {

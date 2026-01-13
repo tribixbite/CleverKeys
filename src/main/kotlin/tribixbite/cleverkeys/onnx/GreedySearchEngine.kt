@@ -84,10 +84,9 @@ class GreedySearchEngine(
                         }
                         
                         tokens.add(bestToken)
-                        
-                        logitsTensor.close()
+
+                        // Only close result - it closes all child tensors including logitsTensor
                         result.close()
-                        
                     } finally {
                         targetTokensTensor.close()
                     }

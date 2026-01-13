@@ -395,28 +395,33 @@ class WordPredictor {
      * Try to automatically detect and switch language based on recent words
      */
     private fun tryAutoLanguageDetection() {
-        // Phase 8.3: Use MultiLanguageManager for detection and switching if enabled
-        val autoDetectEnabled = config?.auto_detect_language ?: true
-        if (autoDetectEnabled && multiLanguageManager != null) {
+        // Phase 8.3: Skip entirely if auto-detect is disabled
+        val autoDetectEnabled = config?.auto_detect_language ?: false
+        if (!autoDetectEnabled) return
+
+        // Use MultiLanguageManager for detection and switching if available
+        if (multiLanguageManager != null) {
             val sensitivity = config?.language_detection_sensitivity ?: 0.6f
             val detected = multiLanguageManager?.detectAndSwitch(recentWords, sensitivity)
             if (detected != null) {
                 currentLanguage = detected
-                Log.d(TAG, "MultiLanguageManager auto-detected and switched to: $detected")
-                // Also update bigram model
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    Log.d(TAG, "MultiLanguageManager auto-detected and switched to: $detected")
+                }
                 bigramModel?.setLanguage(detected)
                 return
             }
         }
 
-        // Fallback to legacy detection if multi-language disabled
+        // Fallback to legacy detection only if auto-detect enabled but MultiLanguageManager unavailable
         languageDetector ?: return
 
         val detectedLanguage = languageDetector?.detectLanguageFromWords(recentWords)
         if (detectedLanguage != null && detectedLanguage != currentLanguage) {
-            // Only switch if the detected language is supported by our N-gram model
             if (bigramModel?.isLanguageSupported(detectedLanguage) == true) {
-                Log.d(TAG, "Auto-detected language change from $currentLanguage to $detectedLanguage")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    Log.d(TAG, "Auto-detected language change from $currentLanguage to $detectedLanguage")
+                }
                 setLanguage(detectedLanguage)
             }
         }
