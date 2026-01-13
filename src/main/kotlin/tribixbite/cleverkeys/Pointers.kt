@@ -171,20 +171,34 @@ class Pointers(
         // Handle TrackPoint mode completion
         if (ptr.hasFlagsAny(FLAG_P_TRACKPOINT_MODE)) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: TRACKPOINT completion")
+            stopTrackPointRepeat(ptr)
             removePtr(ptr)
+            // Clear visual highlight
+            _handler.onPointerFlagsChanged(null)
             return
         }
 
-        // Handle deferred nav-subkey key tap - user tapped quickly without entering TrackPoint mode
-        // Output the primary key since it was deferred on touch down
+        // Handle deferred nav-subkey key - check if it was a tap or a short swipe
         if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN) && hasNavigationSubkeys(ptr)) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred nav-subkey key tap, outputting primary key")
-            _handler.onPointerDown(ptr.value, false)
+            // Check if user has moved enough for a short swipe
+            val dx = ptr.lastX - ptr.downX
+            val dy = ptr.lastY - ptr.downY
+            val movementDist = sqrt(dx * dx + dy * dy)
+
+            // If barely moved (tap), output the primary key
+            // If moved significantly, fall through to gesture classification for short swipe
+            if (movementDist < _config.short_gesture_min_distance) {
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred nav-subkey key TAP, outputting primary key")
+                _handler.onPointerDown(ptr.value, false)
+                ptr.flags = ptr.flags and FLAG_P_DEFERRED_DOWN.inv()
+                clearLatched()
+                removePtr(ptr)
+                _handler.onPointerUp(ptr.value, ptr.modifiers)
+                return
+            }
+            // User moved - clear deferred flag and let gesture classification handle it
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred nav-subkey key SWIPE, distance=$movementDist, falling through to gesture classification")
             ptr.flags = ptr.flags and FLAG_P_DEFERRED_DOWN.inv()
-            clearLatched()
-            removePtr(ptr)
-            _handler.onPointerUp(ptr.value, ptr.modifiers)
-            return
         }
 
         if (ptr.hasFlagsAny(FLAG_P_SLIDING)) {
@@ -636,28 +650,11 @@ class Pointers(
             return
         }
 
-        // Handle TrackPoint mode: finger movement controls cursor direction
+        // Handle TrackPoint mode: joystick-style - position tracked, timer handles repeating
+        // Just update position, the handleTrackPointRepeat timer will use lastX/lastY
         if (ptr.hasFlagsAny(FLAG_P_TRACKPOINT_MODE)) {
-            val dx = x - ptr.downX
-            val dy = y - ptr.downY
-            val movementDist = sqrt(dx * dx + dy * dy)
-
-            if (movementDist >= TRACKPOINT_MOVEMENT_THRESHOLD) {
-                // Calculate direction and find nav key
-                val a = atan2(dy, dx) + Math.PI
-                val direction = ((a * 8 / Math.PI).toInt() + 12) % 16
-                val navKey = getNavKeyForDirection(ptr, direction)
-
-                if (navKey != null) {
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Moving cursor, direction=$direction, dist=$movementDist")
-                    _handler.onPointerDown(navKey, false)
-                    _handler.onPointerUp(navKey, ptr.modifiers)
-                }
-
-                // Reset reference point for continuous movement
-                ptr.downX = x
-                ptr.downY = y
-            }
+            // Position already updated at start of onTouchMove (ptr.lastX/lastY)
+            // The joystick timer continuously checks finger distance from key center
             return // Don't process other gesture logic in TrackPoint mode
         }
 
@@ -849,6 +846,11 @@ class Pointers(
                 handleLongPress(ptr)
                 return true
             }
+            // Handle TrackPoint joystick repeat
+            if (ptr.trackpointWhat == msg.what) {
+                handleTrackPointRepeat(ptr)
+                return true
+            }
         }
         return false
     }
@@ -866,6 +868,65 @@ class Pointers(
     private fun restartLongPress(ptr: Pointer) {
         stopLongPress(ptr)
         startLongPress(ptr)
+    }
+
+    // TrackPoint joystick repeat handling
+
+    private fun startTrackPointRepeat(ptr: Pointer) {
+        val what = uniqueTimeoutWhat++
+        ptr.trackpointWhat = what
+        // Start with a short initial delay
+        _longpress_handler.sendEmptyMessageDelayed(what, TRACKPOINT_INITIAL_DELAY)
+    }
+
+    private fun stopTrackPointRepeat(ptr: Pointer) {
+        _longpress_handler.removeMessages(ptr.trackpointWhat)
+    }
+
+    /** Handle TrackPoint joystick repeat - send nav key based on finger distance from key center. */
+    private fun handleTrackPointRepeat(ptr: Pointer) {
+        if (!ptr.hasFlagsAny(FLAG_P_TRACKPOINT_MODE)) {
+            return
+        }
+
+        // Calculate distance and direction from key center
+        val dx = ptr.lastX - ptr.keyCenterX
+        val dy = ptr.lastY - ptr.keyCenterY
+        val distance = sqrt(dx * dx + dy * dy)
+
+        // Get key size for normalization (use hypotenuse as max distance)
+        val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
+        val maxDistance = keyHypotenuse * 0.5f  // Half of diagonal is edge from center
+
+        // Only move if finger is displaced from center (dead zone = 15px)
+        if (distance > TRACKPOINT_DEAD_ZONE) {
+            // Calculate direction (16 directions)
+            val a = atan2(dy.toDouble(), dx.toDouble()) + Math.PI
+            val direction = ((a * 8 / Math.PI).toInt() + 12) % 16
+            val navKey = getNavKeyForDirection(ptr, direction)
+
+            if (navKey != null) {
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Joystick move, direction=$direction, dist=$distance")
+                _handler.onPointerDown(navKey, false)
+                _handler.onPointerUp(navKey, ptr.modifiers)
+            }
+
+            // Calculate repeat delay based on distance (farther = faster = shorter delay)
+            // Normalize distance to 0-1 range, clamp to max
+            val normalizedDistance = min(distance / maxDistance, 1.0f)
+            // Delay ranges from TRACKPOINT_MAX_DELAY (at dead zone) to TRACKPOINT_MIN_DELAY (at edge)
+            val repeatDelay = (TRACKPOINT_MAX_DELAY - (normalizedDistance * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))).toLong()
+
+            // Schedule next repeat
+            val what = uniqueTimeoutWhat++
+            ptr.trackpointWhat = what
+            _longpress_handler.sendEmptyMessageDelayed(what, repeatDelay)
+        } else {
+            // Finger is in dead zone - check again after a short delay
+            val what = uniqueTimeoutWhat++
+            ptr.trackpointWhat = what
+            _longpress_handler.sendEmptyMessageDelayed(what, TRACKPOINT_MAX_DELAY)
+        }
     }
 
     /** A pointer is long pressing. */
@@ -901,11 +962,13 @@ class Pointers(
             if (_config.keyrepeat_enabled && hasNavSubkeys) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Entering TrackPoint mode for key with nav subkeys ${ptr.value}")
                 ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_TRACKPOINT_MODE
-                // Store current position as reference for movement detection
-                ptr.downX = ptr.lastX
-                ptr.downY = ptr.lastY
+                // Store key center for joystick reference (use initial touch point as approximation)
+                ptr.keyCenterX = ptr.downX
+                ptr.keyCenterY = ptr.downY
                 // Vibrate to indicate TrackPoint mode activation
                 _handler.onPointerFlagsChanged(HapticEvent.TRACKPOINT_ACTIVATE)
+                // Start joystick repeat timer - will continuously check finger position
+                startTrackPointRepeat(ptr)
                 return
             }
         }
@@ -1089,6 +1152,15 @@ class Pointers(
 
         /** Identify timeout messages. */
         var timeoutWhat: Int = -1
+
+        /** Identify TrackPoint repeat messages. */
+        var trackpointWhat: Int = -1
+
+        /** Key center X for TrackPoint joystick reference. */
+        var keyCenterX: Float = downX
+
+        /** Key center Y for TrackPoint joystick reference. */
+        var keyCenterY: Float = downY
 
         /** [null] when not in sliding mode. */
         var sliding: Sliding? = null
@@ -1372,6 +1444,18 @@ class Pointers(
 
         /** Minimum movement (px) to trigger nav event in TrackPoint mode. */
         const val TRACKPOINT_MOVEMENT_THRESHOLD = 15f
+
+        /** Dead zone radius (px) for TrackPoint joystick - no movement if finger within this distance. */
+        const val TRACKPOINT_DEAD_ZONE = 15f
+
+        /** Initial delay (ms) before first TrackPoint repeat. */
+        const val TRACKPOINT_INITIAL_DELAY = 50L
+
+        /** Minimum repeat delay (ms) when finger at edge of key (fastest movement). */
+        const val TRACKPOINT_MIN_DELAY = 30L
+
+        /** Maximum repeat delay (ms) when finger just outside dead zone (slowest movement). */
+        const val TRACKPOINT_MAX_DELAY = 200L
 
         private var uniqueTimeoutWhat = 0
 
