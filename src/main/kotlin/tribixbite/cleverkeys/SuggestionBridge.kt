@@ -95,6 +95,9 @@ class SuggestionBridge(
      * @param word The selected suggestion word
      */
     fun onSuggestionSelected(word: String) {
+        // Trigger haptic feedback for prediction tap
+        keyboardView.triggerHaptic(HapticEvent.PREDICTION_TAP)
+
         // Store ML data if this was a swipe prediction selection
         val isSwipeAutoInsert = contextTracker.wasLastInputSwipe()
         val currentSwipeData = inputCoordinator.getCurrentSwipeData()

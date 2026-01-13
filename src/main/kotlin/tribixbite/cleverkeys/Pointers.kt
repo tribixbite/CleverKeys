@@ -711,11 +711,13 @@ class Pointers(
         // Short gesture detection should only happen on touch UP, not during MOVE
         // Also collect path for short gestures on non-Char keys (backspace, ctrl, etc.)
         // Use countActivePointers() to handle latched modifiers (Shift) correctly
+        // EXCEPTION: Nav keys use TrackPoint mode instead of short gestures
         val ptrValue = ptr.value
         val activePointers = countActivePointers()
+        val isNavKey = isNavigationKey(ptrValue)
         val isSwipeTypingKey = _config.swipe_typing_enabled && activePointers == 1 &&
             ptrValue != null && ptrValue.getKind() == KeyValue.Kind.Char
-        val isShortGestureKey = _config.short_gestures_enabled && activePointers == 1 && ptrValue != null
+        val isShortGestureKey = _config.short_gestures_enabled && activePointers == 1 && ptrValue != null && !isNavKey
         val shouldCollectPath = isSwipeTypingKey || isShortGestureKey
 
         Log.d(
@@ -868,15 +870,19 @@ class Pointers(
         val movementDist = kotlin.math.sqrt(dx * dx + dy * dy)
 
         if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)) {
-            // Use ~15px as threshold for "hasn't moved" - user can adjust sensitivity via settings
-            // This is less than typical swipe distance but enough to allow minor finger jitter
-            if (movementDist > 15f) {
+            // Check if this is a nav key - use higher tolerance for TrackPoint activation
+            val isNavKey = isNavKeyPressed(ptr)
+            // Nav keys get higher tolerance (30px) to allow for finger jitter during hold
+            // Non-nav keys use stricter threshold (15px) for swipe vs tap detection
+            val movementThreshold = if (isNavKey) 30f else 15f
+
+            if (movementDist > movementThreshold) {
                 // User has moved - don't trigger key repeat, let swipe typing take over
                 return
             }
 
             // TrackPoint mode: If pressed key IS a nav key and user held without moving, enter TrackPoint mode
-            if (_config.keyrepeat_enabled && isNavKeyPressed(ptr)) {
+            if (_config.keyrepeat_enabled && isNavKey) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Entering TrackPoint mode for nav key ${ptr.value}")
                 ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_TRACKPOINT_MODE
                 // Store current position as reference for movement detection

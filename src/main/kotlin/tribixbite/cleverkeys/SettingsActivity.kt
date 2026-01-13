@@ -455,10 +455,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 "multilang" -> multiLangSectionExpanded = true
             }
             highlightedSettingId = targetId
-            // Schedule scroll after section expands
+            // Schedule scroll after section expands - poll until position is available
             lifecycleScope.launch {
-                kotlinx.coroutines.delay(100)  // Allow layout to complete
-                settingPositions[targetId]?.let { scrollToPosition = it }
+                waitForPositionAndScroll(targetId)
                 kotlinx.coroutines.delay(2000)
                 highlightedSettingId = null
             }
@@ -475,13 +474,36 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             if (setting.settingId.isNotEmpty()) {
                 highlightedSettingId = setting.settingId
                 lifecycleScope.launch {
-                    kotlinx.coroutines.delay(100)  // Allow layout to complete
-                    settingPositions[setting.settingId]?.let { scrollToPosition = it }
+                    waitForPositionAndScroll(setting.settingId)
                     kotlinx.coroutines.delay(1500)
                     highlightedSettingId = null
                 }
             }
         }
+    }
+
+    /**
+     * Wait for a setting's position to be laid out and then trigger scroll.
+     * Polls for position availability with exponential backoff.
+     */
+    private suspend fun waitForPositionAndScroll(settingId: String) {
+        // Clear any stale position first
+        settingPositions.remove(settingId)
+
+        // Poll for position with backoff (50ms, 100ms, 150ms, 200ms, 250ms)
+        var attempts = 0
+        val maxAttempts = 5
+        while (attempts < maxAttempts) {
+            kotlinx.coroutines.delay(50L + (attempts * 50L))
+            settingPositions[settingId]?.let { position ->
+                scrollToPosition = position
+                return
+            }
+            attempts++
+        }
+        // Fallback: try one more time after a longer delay for slow layouts
+        kotlinx.coroutines.delay(300)
+        settingPositions[settingId]?.let { scrollToPosition = it }
     }
 
     private fun getFilteredSettings(query: String): List<SearchableSetting> {
@@ -789,8 +811,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             scrollToPosition?.let { settingRootY ->
                 // Calculate position in scroll content: rootY - containerRootY + currentScroll
                 val contentPosition = settingRootY - scrollContainerRootY + scrollState.value
-                // Scroll with some offset so setting isn't at very top
-                val scrollTarget = (contentPosition - 100).coerceAtLeast(0)
+
+                // Get viewport height for centering calculation
+                val displayMetrics = resources.displayMetrics
+                val viewportHeight = displayMetrics.heightPixels
+
+                // Center the item: scroll so item is at ~1/3 from top of viewport
+                // This provides context above the item and visibility below
+                val centeringOffset = viewportHeight / 3
+                val scrollTarget = (contentPosition - centeringOffset).coerceIn(0, scrollState.maxValue)
                 scrollState.animateScrollTo(scrollTarget)
                 scrollToPosition = null
             }

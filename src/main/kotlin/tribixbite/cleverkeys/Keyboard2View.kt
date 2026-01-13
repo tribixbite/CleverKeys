@@ -1158,6 +1158,14 @@ class Keyboard2View @JvmOverloads constructor(
         VibratorCompat.vibrate(this, _config, event)
     }
 
+    /**
+     * Trigger haptic feedback from external components (e.g., SuggestionBridge).
+     * @param event The haptic event type to trigger
+     */
+    fun triggerHaptic(event: HapticEvent) {
+        vibrate(event)
+    }
+
     override fun onMeasure(wSpec: Int, hSpec: Int) {
         val keyboard = _keyboard
         if (keyboard == null) {
