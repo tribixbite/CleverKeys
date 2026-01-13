@@ -121,7 +121,9 @@ class AsyncPredictionHandler(
 
             val duration = System.currentTimeMillis() - startTime
             val postTime = System.currentTimeMillis()
-            Log.e(TAG, "⏱️ PREDICTION COMPLETED in ${duration}ms (ID: ${request.requestId})")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "⏱️ PREDICTION COMPLETED in ${duration}ms (ID: ${request.requestId})")
+            }
 
             // Record performance statistics
             perfStats.recordPrediction(duration)
@@ -131,15 +133,21 @@ class AsyncPredictionHandler(
 
             // Post results to main thread
             mainHandler.post {
-                val callbackDelay = System.currentTimeMillis() - postTime
-                Log.e(TAG, "⏱️ CALLBACK DELAY: ${callbackDelay}ms (time from post to run)")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    val callbackDelay = System.currentTimeMillis() - postTime
+                    Log.d(TAG, "⏱️ CALLBACK DELAY: ${callbackDelay}ms (time from post to run)")
+                }
 
                 // Final check before delivering results
                 if (request.requestId == currentRequestId) {
-                    val callbackStartTime = System.currentTimeMillis()
-                    request.callback.onPredictionsReady(words, scores)
-                    val callbackDuration = System.currentTimeMillis() - callbackStartTime
-                    Log.e(TAG, "⏱️ CALLBACK EXECUTION: ${callbackDuration}ms (onPredictionsReady)")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                        val callbackStartTime = System.currentTimeMillis()
+                        request.callback.onPredictionsReady(words, scores)
+                        val callbackDuration = System.currentTimeMillis() - callbackStartTime
+                        Log.d(TAG, "⏱️ CALLBACK EXECUTION: ${callbackDuration}ms (onPredictionsReady)")
+                    } else {
+                        request.callback.onPredictionsReady(words, scores)
+                    }
                 }
             }
         } catch (e: Exception) {

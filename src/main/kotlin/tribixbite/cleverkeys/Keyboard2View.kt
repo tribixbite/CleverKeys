@@ -1084,7 +1084,7 @@ class Keyboard2View @JvmOverloads constructor(
         var x = currentMarginLeft
 
         if (row == null) {
-            android.util.Log.e("SWIPE_LAG_DEBUG", "❌ No row found for y=$ty (marginTop=${_config.marginTop})")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) android.util.Log.e("SWIPE_LAG_DEBUG", "❌ No row found for y=$ty (marginTop=${_config.marginTop})")
             return null
         }
 

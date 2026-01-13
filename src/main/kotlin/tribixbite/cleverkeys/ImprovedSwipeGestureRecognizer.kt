@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import android.graphics.PointF
+import android.util.Log
 import java.util.ArrayList
 import java.util.LinkedList
 import java.util.Queue
@@ -242,13 +243,13 @@ open class ImprovedSwipeGestureRecognizer {
                 if (probabilisticKeys != null && probabilisticKeys.size >= 2) {
                     finalKeys = probabilisticKeys.toMutableList()
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        android.util.Log.d("SwipeRecognizer", "Using probabilistic keys: ${probabilisticKeys.size}")
+                        Log.d("SwipeRecognizer", "Using probabilistic keys: ${probabilisticKeys.size}")
                     }
                 } else {
                     // Fall back to traditional detection
                     finalKeys = applyFinalFiltering(_touchedKeys)
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        android.util.Log.d("SwipeRecognizer", "Using traditional keys: ${finalKeys.size}")
+                        Log.d("SwipeRecognizer", "Using traditional keys: ${finalKeys.size}")
                     }
                 }
             } else {
@@ -368,15 +369,15 @@ open class ImprovedSwipeGestureRecognizer {
     private fun shouldConsiderSwipeTyping(): Boolean {
         // Add debug logging for swipe detection (only in debug builds for performance)
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-            android.util.Log.d("ImprovedSwipeGestureRecognizer", "🔍 SWIPE DETECTION CHECK:")
-            android.util.Log.d("ImprovedSwipeGestureRecognizer", "- Keys touched: ${_touchedKeys.size}")
-            android.util.Log.d("ImprovedSwipeGestureRecognizer", "- Total distance: ${_totalDistance} (need ${MIN_SWIPE_DISTANCE})")
+            Log.d("ImprovedSwipeGestureRecognizer", "🔍 SWIPE DETECTION CHECK:")
+            Log.d("ImprovedSwipeGestureRecognizer", "- Keys touched: ${_touchedKeys.size}")
+            Log.d("ImprovedSwipeGestureRecognizer", "- Total distance: ${_totalDistance} (need ${MIN_SWIPE_DISTANCE})")
         }
 
         // Need at least 2 alphabetic keys
         if (_touchedKeys.size < 2) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d("ImprovedSwipeGestureRecognizer", "❌ Too few keys: ${_touchedKeys.size} < 2")
+                Log.d("ImprovedSwipeGestureRecognizer", "❌ Too few keys: ${_touchedKeys.size} < 2")
             }
             return false
         }
@@ -384,7 +385,7 @@ open class ImprovedSwipeGestureRecognizer {
         // Check total distance
         if (_totalDistance < MIN_SWIPE_DISTANCE) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                android.util.Log.d("ImprovedSwipeGestureRecognizer", "❌ Distance too short: ${_totalDistance} < ${MIN_SWIPE_DISTANCE}")
+                Log.d("ImprovedSwipeGestureRecognizer", "❌ Distance too short: ${_totalDistance} < ${MIN_SWIPE_DISTANCE}")
             }
             return false
         }
@@ -393,14 +394,14 @@ open class ImprovedSwipeGestureRecognizer {
         for (key in _touchedKeys) {
             if (!isValidAlphabeticKey(key)) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                    android.util.Log.d("ImprovedSwipeGestureRecognizer", "❌ Non-alphabetic key touched")
+                    Log.d("ImprovedSwipeGestureRecognizer", "❌ Non-alphabetic key touched")
                 }
                 return false
             }
         }
 
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-            android.util.Log.d("ImprovedSwipeGestureRecognizer", "✅ SWIPE DETECTED - proceeding with swipe typing")
+            Log.d("ImprovedSwipeGestureRecognizer", "✅ SWIPE DETECTED - proceeding with swipe typing")
         }
         return true
     }

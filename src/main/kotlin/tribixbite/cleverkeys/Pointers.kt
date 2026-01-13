@@ -41,7 +41,7 @@ class Pointers(
         // needing to open the customization activity first
         CoroutineScope(Dispatchers.IO).launch {
             _customSwipeManager.loadMappings()
-            Log.d("Pointers", "Custom short swipe mappings loaded on startup")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Custom short swipe mappings loaded on startup")
         }
     }
 
@@ -157,11 +157,11 @@ class Pointers(
     fun onTouchUp(pointerId: Int) {
         val ptr = getPtr(pointerId) ?: return
 
-        Log.d("Pointers", "=== onTouchUp START: ptr_value=${ptr.value}, flags=0x${ptr.flags.toString(16)}, pointerId=$pointerId ===")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "=== onTouchUp START: ptr_value=${ptr.value}, flags=0x${ptr.flags.toString(16)}, pointerId=$pointerId ===")
 
         // Handle swipe typing completion
         if (_config.swipe_typing_enabled && ptr.hasFlagsAny(FLAG_P_SWIPE_TYPING)) {
-            Log.d("Pointers", "Path: SWIPE_TYPING completion")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: SWIPE_TYPING completion")
             _handler.onSwipeEnd(_swipeRecognizer)
             _swipeRecognizer.reset()
             removePtr(ptr)
@@ -169,7 +169,7 @@ class Pointers(
         }
 
         if (ptr.hasFlagsAny(FLAG_P_SLIDING)) {
-            Log.d("Pointers", "Path: SLIDING")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: SLIDING")
             clearLatched()
             ptr.sliding?.onTouchUp(ptr)
             return
@@ -184,16 +184,16 @@ class Pointers(
         val canSwipeType = _config.swipe_typing_enabled && isCharKey
         val canShortGesture = _config.short_gestures_enabled && ptr_value != null
 
-        Log.d("Pointers", "Gesture check: isCharKey=$isCharKey, canSwipeType=$canSwipeType, canShortGesture=$canShortGesture, " +
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Gesture check: isCharKey=$isCharKey, canSwipeType=$canSwipeType, canShortGesture=$canShortGesture, " +
             "gesture=${ptr.gesture}, hasExcludedFlags=${ptr.hasFlagsAny(FLAG_P_SLIDING or FLAG_P_SWIPE_TYPING or FLAG_P_LATCHED)}, hasKey=${ptr.key != null}")
 
         if ((canSwipeType || canShortGesture) && ptr.gesture == null &&
             !ptr.hasFlagsAny(FLAG_P_SLIDING or FLAG_P_SWIPE_TYPING or FLAG_P_LATCHED) &&
             ptr.key != null
         ) {
-            Log.d("Pointers", "ENTERING gesture classification block")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "ENTERING gesture classification block")
         } else {
-            Log.d("Pointers", "SKIPPING gesture block: canSwipe=$canSwipeType canShort=$canShortGesture " +
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SKIPPING gesture block: canSwipe=$canSwipeType canShort=$canShortGesture " +
                 "gesture=${ptr.gesture} excluded=${ptr.hasFlagsAny(FLAG_P_SLIDING or FLAG_P_SWIPE_TYPING or FLAG_P_LATCHED)} hasKey=${ptr.key != null}")
         }
         if ((canSwipeType || canShortGesture) && ptr.gesture == null &&
@@ -245,7 +245,7 @@ class Pointers(
 
             if (effectiveGestureType == GestureClassifier.GestureType.SWIPE) {
                 // This is a swipe gesture - send to neural predictor
-                Log.d("Pointers", "Sending to neural predictor")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Sending to neural predictor")
                 _handler.onSwipeEnd(_swipeRecognizer)
                 clearLatched() // Clear shift after swipe word completes
                 _swipeRecognizer.reset()
@@ -338,7 +338,7 @@ class Pointers(
                         val customMapping = _customSwipeManager.getMapping(keyCode, swipeDir)
 
                         if (customMapping != null) {
-                            Log.d("Pointers", "CUSTOM_SHORT_SWIPE: Found custom mapping for $keyCode:$swipeDir -> ${customMapping.actionType}:${customMapping.actionValue}")
+                            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "CUSTOM_SHORT_SWIPE: Found custom mapping for $keyCode:$swipeDir -> ${customMapping.actionType}:${customMapping.actionValue}")
                             // Delegate to handler for custom mapping execution
                             // Custom mappings work even with shift active - this is intentional
                             _handler.onCustomShortSwipe(customMapping)
@@ -374,19 +374,19 @@ class Pointers(
                                         } else {
                                             KeyValue.makeStringKey(capitalized)
                                         }
-                                        Log.d("Pointers", "SHORT_GESTURE: Shift active, capitalized word '$str' -> '$capitalized'")
+                                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE: Shift active, capitalized word '$str' -> '$capitalized'")
                                     }
                                 }
                             }
 
-                            Log.d("Pointers", "SHORT_GESTURE SUCCESS: triggering ${gestureValue}")
+                            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE SUCCESS: triggering ${gestureValue}")
 
                             // v1.1.88: Handle latchable keys (modifiers/dead keys) correctly
                             // Dead keys like accent_aigu should LATCH, not output immediately
                             val gestureFlags = pointer_flags_of_kv(gestureValue)
                             if ((gestureFlags and FLAG_P_LATCHABLE) != 0) {
                                 // This is a latchable key (dead key/modifier) - create a latched pointer
-                                Log.d("Pointers", "SHORT_GESTURE: Latchable key detected, creating latched pointer")
+                                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE: Latchable key detected, creating latched pointer")
                                 // Clear existing latched modifiers if this is a non-special latchable key
                                 if ((gestureFlags and FLAG_P_CLEAR_LATCHED) != 0) {
                                     clearLatched()
@@ -409,46 +409,46 @@ class Pointers(
                             removePtr(ptr)
                             return
                         } else {
-                            Log.d("Pointers", "SHORT_GESTURE FAILED: getNearestKeyAtDirection returned null for direction $direction")
+                            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE FAILED: getNearestKeyAtDirection returned null for direction $direction")
                         }
                     } else {
-                        Log.d("Pointers", "SHORT_GESTURE SKIP: distance $distance < minDistance $minDistance")
+                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE SKIP: distance $distance < minDistance $minDistance")
                     }
                 } else {
-                    Log.d("Pointers", "SHORT_GESTURE BLOCKED: short_gestures_enabled=${_config.short_gestures_enabled} " +
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SHORT_GESTURE BLOCKED: short_gestures_enabled=${_config.short_gestures_enabled} " +
                         "hasLeftStartingKey=${ptr.hasLeftStartingKey} allowLeftKey=$allowLeftKey " +
                         "distance=$distance")
                 }
 
                 // Regular TAP - output the key character only if it was deferred
-                Log.d("Pointers", "TAP path: deferred=${ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)}")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TAP path: deferred=${ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)}")
                 if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)) {
                     _handler.onPointerDown(ptr_value, false)
                 }
                 _swipeRecognizer.reset()
             }
         }
-        Log.d("Pointers", "After gesture block, proceeding to latched logic")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "After gesture block, proceeding to latched logic")
         // Log all current pointers to understand state
         val latchedPtrs = _ptrs.filter { it.hasFlagsAny(FLAG_P_LATCHED) }
-        Log.d("Pointers", "Current latched pointers: ${latchedPtrs.map { "${it.value}(flags=0x${it.flags.toString(16)})" }}")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Current latched pointers: ${latchedPtrs.map { "${it.value}(flags=0x${it.flags.toString(16)})" }}")
         // REMOVED: Legacy gesture.pointer_up() call - curved gestures obsolete
         val latched = getLatched(ptr)
-        Log.d("Pointers", "onTouchUp path: latched=$latched, ptr.flags=0x${ptr.flags.toString(16)}, isLatchable=${(ptr.flags and FLAG_P_LATCHABLE) != 0}")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "onTouchUp path: latched=$latched, ptr.flags=0x${ptr.flags.toString(16)}, isLatchable=${(ptr.flags and FLAG_P_LATCHABLE) != 0}")
         if (latched != null) { // Already latched
-            Log.d("Pointers", "Path: Already latched, latched.flags=0x${latched.flags.toString(16)}")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Already latched, latched.flags=0x${latched.flags.toString(16)}")
             removePtr(ptr) // Remove duplicate
             // Toggle lockable key, except if it's a fake pointer
             if ((latched.flags and (FLAG_P_FAKE or FLAG_P_DOUBLE_TAP_LOCK)) == FLAG_P_DOUBLE_TAP_LOCK) {
-                Log.d("Pointers", "Path: Locking pointer (double-tap)")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Locking pointer (double-tap)")
                 lockPointer(latched, false)
             } else { // Otherwise, unlatch
-                Log.d("Pointers", "Path: Unlatching")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Unlatching")
                 removePtr(latched)
                 _handler.onPointerUp(ptr_value, ptr.modifiers)
             }
         } else if ((ptr.flags and FLAG_P_LATCHABLE) != 0) {
-            Log.d("Pointers", "Path: Latchable key - will latch")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Latchable key - will latch")
             // Latchable but non-special keys must clear latched.
             if ((ptr.flags and FLAG_P_CLEAR_LATCHED) != 0) {
                 clearLatched()
@@ -457,9 +457,9 @@ class Pointers(
             ptr.pointerId = -1
             _handler.onPointerFlagsChanged(false)
         } else {
-            Log.d("Pointers", "Regular key up: clearing latched, value=$ptr_value, ptrs_before=${_ptrs.size}")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Regular key up: clearing latched, value=$ptr_value, ptrs_before=${_ptrs.size}")
             clearLatched()
-            Log.d("Pointers", "After clearLatched: ptrs_after=${_ptrs.size}")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "After clearLatched: ptrs_after=${_ptrs.size}")
             removePtr(ptr)
             _handler.onPointerUp(ptr_value, ptr.modifiers)
         }
@@ -646,7 +646,7 @@ class Pointers(
                 when (subkeyValue.getKind()) {
                     KeyValue.Kind.Slider -> {
                         // Slider key detected - enter sliding mode instead of swipe typing
-                        Log.d("Pointers", "Slider detected at direction $direction, starting sliding mode")
+                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Slider detected at direction $direction, starting sliding mode")
                         ptr.gesture = Gesture(direction)
                         ptr.value = subkeyValue
                         ptr.flags = pointer_flags_of_kv(subkeyValue)
@@ -657,7 +657,7 @@ class Pointers(
                     KeyValue.Kind.Event -> {
                         // Event key detected (e.g., switch_forward, switch_backward)
                         // Trigger immediately and prevent swipe typing from intercepting
-                        Log.d("Pointers", "Event key detected at direction $direction: ${subkeyValue.getEvent()}")
+                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Event key detected at direction $direction: ${subkeyValue.getEvent()}")
                         ptr.gesture = Gesture(direction)
                         ptr.value = subkeyValue
                         ptr.flags = pointer_flags_of_kv(subkeyValue)
@@ -694,7 +694,7 @@ class Pointers(
 
         if (shouldCollectPath) {
             // Track swipe movement for path collection
-            Log.d("Pointers", "onTouchMove: collecting point ($x, $y) for potential swipe")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "onTouchMove: collecting point ($x, $y) for potential swipe")
             _handler.onSwipeMove(x, y, _swipeRecognizer)
 
             // Check if this has become a confirmed multi-key swipe typing gesture
@@ -756,7 +756,7 @@ class Pointers(
             val ptr = _ptrs[i]
             // Latched and not locked, remove
             if (ptr.hasFlagsAny(FLAG_P_LATCHED) && (ptr.flags and FLAG_P_LOCKED) == 0) {
-                Log.d("Pointers", "clearLatched: removing latched key ${ptr.value} (flags=0x${ptr.flags.toString(16)})")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "clearLatched: removing latched key ${ptr.value} (flags=0x${ptr.flags.toString(16)})")
                 _ptrs.removeAt(i)
                 clearedCount++
             } else if ((ptr.flags and FLAG_P_LATCHABLE) != 0) {
@@ -764,7 +764,7 @@ class Pointers(
                 ptr.flags = ptr.flags and FLAG_P_LATCHABLE.inv()
             }
         }
-        Log.d("Pointers", "clearLatched: cleared $clearedCount pointers, remaining=${_ptrs.size}")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "clearLatched: cleared $clearedCount pointers, remaining=${_ptrs.size}")
         // Notify handler to update keyboard view when modifiers change
         if (clearedCount > 0) {
             _handler.onPointerFlagsChanged(false)
