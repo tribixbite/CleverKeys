@@ -175,10 +175,10 @@ class Pointers(
             return
         }
 
-        // Handle deferred nav key tap - user tapped quickly without entering TrackPoint mode
-        // Output the nav key event since it was deferred on touch down
-        if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN) && isNavigationKey(ptr.value)) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred nav key tap, outputting key")
+        // Handle deferred nav-subkey key tap - user tapped quickly without entering TrackPoint mode
+        // Output the primary key since it was deferred on touch down
+        if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN) && hasNavigationSubkeys(ptr)) {
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred nav-subkey key tap, outputting primary key")
             _handler.onPointerDown(ptr.value, false)
             ptr.flags = ptr.flags and FLAG_P_DEFERRED_DOWN.inv()
             clearLatched()
@@ -545,10 +545,10 @@ class Pointers(
             key != null && firstKey != null &&
             firstKey.getKind() == KeyValue.Kind.Char
 
-        // Also check if this is a nav key for potential TrackPoint mode
-        val isNavKeyForTrackPoint = _config.keyrepeat_enabled && isNavigationKey(value)
+        // Also check if this key has nav subkeys for potential TrackPoint mode
+        val hasNavSubkeys = _config.keyrepeat_enabled && hasNavigationSubkeys(ptr)
 
-        if (mightBeSwipe || isNavKeyForTrackPoint) {
+        if (mightBeSwipe || hasNavSubkeys) {
             ptr.flags = ptr.flags or FLAG_P_DEFERRED_DOWN
         }
 
@@ -560,10 +560,10 @@ class Pointers(
         }
 
         // Don't output character immediately when swipe typing might start
-        // or when this is a nav key that might enter TrackPoint mode
+        // or when this key has nav subkeys (might enter TrackPoint mode)
         // The character/key will be output in onTouchUp if it turns out not to be a swipe/TrackPoint
         // OR in handleLongPress if key repeat triggers
-        if (!mightBeSwipe && !isNavKeyForTrackPoint) {
+        if (!mightBeSwipe && !hasNavSubkeys) {
             _handler.onPointerDown(value, false)
         }
     }
@@ -727,13 +727,13 @@ class Pointers(
         // Short gesture detection should only happen on touch UP, not during MOVE
         // Also collect path for short gestures on non-Char keys (backspace, ctrl, etc.)
         // Use countActivePointers() to handle latched modifiers (Shift) correctly
-        // EXCEPTION: Nav keys use TrackPoint mode instead of short gestures
+        // NOTE: Keys with nav subkeys CAN have short gestures (e.g., SE for page_down)
+        // TrackPoint mode only activates on HOLD, not short swipe
         val ptrValue = ptr.value
         val activePointers = countActivePointers()
-        val isNavKey = isNavigationKey(ptrValue)
         val isSwipeTypingKey = _config.swipe_typing_enabled && activePointers == 1 &&
             ptrValue != null && ptrValue.getKind() == KeyValue.Kind.Char
-        val isShortGestureKey = _config.short_gestures_enabled && activePointers == 1 && ptrValue != null && !isNavKey
+        val isShortGestureKey = _config.short_gestures_enabled && activePointers == 1 && ptrValue != null
         val shouldCollectPath = isSwipeTypingKey || isShortGestureKey
 
         Log.d(
@@ -886,20 +886,20 @@ class Pointers(
         val movementDist = kotlin.math.sqrt(dx * dx + dy * dy)
 
         if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)) {
-            // Check if this is a nav key - use higher tolerance for TrackPoint activation
-            val isNavKey = isNavKeyPressed(ptr)
-            // Nav keys get higher tolerance (30px) to allow for finger jitter during hold
+            // Check if this key has nav subkeys - use higher tolerance for TrackPoint activation
+            val hasNavSubkeys = hasNavigationSubkeys(ptr)
+            // Keys with nav subkeys get higher tolerance (30px) to allow for finger jitter during hold
             // Non-nav keys use stricter threshold (15px) for swipe vs tap detection
-            val movementThreshold = if (isNavKey) 30f else 15f
+            val movementThreshold = if (hasNavSubkeys) 30f else 15f
 
             if (movementDist > movementThreshold) {
                 // User has moved - don't trigger key repeat, let swipe typing take over
                 return
             }
 
-            // TrackPoint mode: If pressed key IS a nav key and user held without moving, enter TrackPoint mode
-            if (_config.keyrepeat_enabled && isNavKey) {
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Entering TrackPoint mode for nav key ${ptr.value}")
+            // TrackPoint mode: If key has nav subkeys and user held without moving, enter TrackPoint mode
+            if (_config.keyrepeat_enabled && hasNavSubkeys) {
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Entering TrackPoint mode for key with nav subkeys ${ptr.value}")
                 ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_TRACKPOINT_MODE
                 // Store current position as reference for movement detection
                 ptr.downX = ptr.lastX
@@ -999,6 +999,21 @@ class Pointers(
     private fun isNavKeyPressed(ptr: Pointer): Boolean {
         // Check if the primary key value is a navigation key
         return isNavigationKey(ptr.value)
+    }
+
+    /**
+     * Check if the pressed key HAS navigation subkeys (arrow keys in positions 5-8).
+     * This is used for TrackPoint mode - the key itself might be "compose" or other,
+     * but if it has arrow subkeys, TrackPoint mode can be activated.
+     * Subkey positions: 5=left(W), 6=right(E), 7=up(N), 8=down(S)
+     */
+    private fun hasNavigationSubkeys(ptr: Pointer): Boolean {
+        val key = ptr.key ?: return false
+        // Check subkeys at positions 5, 6, 7, 8 for navigation keys
+        return isNavigationKey(key.keys[5]) ||  // West (left)
+               isNavigationKey(key.keys[6]) ||  // East (right)
+               isNavigationKey(key.keys[7]) ||  // North (up)
+               isNavigationKey(key.keys[8])     // South (down)
     }
 
     /** Get any navigation key in the given direction - check subkeys first, then nearby keys. */
