@@ -1,7 +1,33 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-13
-**Status**: v1.2.3 - Settings search, short swipe calibration, double-space toggle
+**Status**: v1.2.3 - TrackPoint mode, granular haptic feedback settings
+
+---
+
+## TrackPoint Mode & Granular Haptics - COMPLETE (2026-01-13)
+
+**Features Implemented**:
+
+1. **TrackPoint Mode for Navigation Keys**
+   - Touch and hold arrow key (↑↓←→) without moving → enter TrackPoint mode
+   - Move finger in any direction → cursor moves that direction
+   - Distinct haptic feedback on mode activation (CONFIRM pattern)
+   - Short swipe still works for single cursor movement
+   - Files Modified: `Pointers.kt`
+
+2. **Granular Haptic Feedback Settings**
+   - New HapticEvent enum: KEY_PRESS, PREDICTION_TAP, TRACKPOINT_ACTIVATE, LONG_PRESS, SWIPE_COMPLETE
+   - Per-event enable/disable toggles in Settings > Accessibility
+   - Uses system haptic patterns (KEYBOARD_TAP, CONFIRM, GESTURE_END, LONG_PRESS)
+   - Defaults: Key Press, Prediction Tap, TrackPoint, Long Press enabled; Swipe Complete disabled
+   - Full backup/restore support
+   - Files Modified: `VibratorCompat.kt`, `Config.kt`, `Pointers.kt`, `Keyboard2View.kt`, `SettingsActivity.kt`, `BackupRestoreManager.kt`
+
+**Architecture Changes**:
+- `onPointerFlagsChanged(Boolean)` → `onPointerFlagsChanged(HapticEvent?)`
+- `lockPointer(ptr, Boolean)` → `lockPointer(ptr, HapticEvent?)`
+- VibratorCompat uses modern VibrationEffect API on Android O+, VibratorManager on Android S+
 
 ---
 
