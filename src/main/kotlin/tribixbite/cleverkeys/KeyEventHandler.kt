@@ -216,16 +216,24 @@ class KeyEventHandler(
         val conn = recv.getCurrentInputConnection() ?: return
 
         // Double-space-to-period: If typing space after space within threshold, replace with ". "
-        // Skip this for key repeats (long press) - only applies to intentional double-tap
+        // Skip if: feature disabled, key repeat (long press), or previous char wasn't alphanumeric
         val currentTime = System.currentTimeMillis()
         var textToCommit = text
-        if (!isKeyRepeat && text.length == 1 && text[0] == ' ' && lastTypedChar == ' ' &&
+        val config = Config.globalConfig()
+        if (config.double_space_to_period && !isKeyRepeat &&
+            text.length == 1 && text[0] == ' ' && lastTypedChar == ' ' &&
             (currentTime - lastTypedTimestamp) < doubleSpaceThresholdMs) {
-            // Delete the previous space and insert ". "
-            conn.deleteSurroundingText(1, 0)
-            textToCommit = ". "
-            // Reset tracking to prevent triple-space weirdness
-            lastTypedChar = '.'
+            // Only trigger if the character before the first space was alphanumeric
+            // This prevents ". ." or ", ." sequences
+            val textBefore = conn.getTextBeforeCursor(2, 0)
+            val charBeforeSpace = textBefore?.getOrNull(0)
+            if (charBeforeSpace != null && charBeforeSpace.isLetterOrDigit()) {
+                // Delete the previous space and insert ". "
+                conn.deleteSurroundingText(1, 0)
+                textToCommit = ". "
+                // Reset tracking to prevent triple-space weirdness
+                lastTypedChar = '.'
+            }
         } else if (text.length == 1) {
             val char = text[0]
 

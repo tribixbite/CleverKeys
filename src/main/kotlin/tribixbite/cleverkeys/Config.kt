@@ -71,6 +71,7 @@ object Defaults {
     const val CIRCLE_SENSITIVITY = "2"
     const val CIRCLE_SENSITIVITY_FALLBACK = 2
     const val TAP_DURATION_THRESHOLD = 150
+    const val DOUBLE_SPACE_TO_PERIOD = true
     const val DOUBLE_SPACE_THRESHOLD = 500
     const val SWIPE_MIN_DISTANCE = 72f
     const val SWIPE_MIN_KEY_DISTANCE = 38f
@@ -357,6 +358,7 @@ class Config private constructor(
 
     // Gesture timing configuration (exposed hardcoded constants)
     @JvmField var tap_duration_threshold = 150L // Max duration for a tap gesture (ms)
+    @JvmField var double_space_to_period = true // Enable double-space-to-period feature
     @JvmField var double_space_threshold = 500L // Max time between spaces for period replacement (ms)
     @JvmField var smart_punctuation = true // Attach punctuation to end of last word (no space before)
     @JvmField var swipe_min_dwell_time = 10L // Min time to register a key during swipe (ms)
@@ -585,6 +587,7 @@ class Config private constructor(
 
         // Gesture timing configuration
         tap_duration_threshold = safeGetInt(_prefs, "tap_duration_threshold", Defaults.TAP_DURATION_THRESHOLD).toLong()
+        double_space_to_period = _prefs.getBoolean("double_space_to_period", Defaults.DOUBLE_SPACE_TO_PERIOD)
         double_space_threshold = safeGetInt(_prefs, "double_space_threshold", Defaults.DOUBLE_SPACE_THRESHOLD).toLong()
         smart_punctuation = _prefs.getBoolean("smart_punctuation", Defaults.SMART_PUNCTUATION)
         swipe_min_dwell_time = safeGetInt(_prefs, "swipe_min_dwell_time", Defaults.SWIPE_MIN_DWELL_TIME).toLong()

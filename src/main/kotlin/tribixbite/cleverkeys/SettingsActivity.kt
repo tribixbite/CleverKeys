@@ -21,8 +21,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -200,6 +203,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Gesture tuning settings
     private var tapDurationThreshold by mutableStateOf(150) // ms
+    private var doubleSpaceToPeriod by mutableStateOf(true) // Enable double-space-to-period
     private var doubleSpaceThreshold by mutableStateOf(500) // ms
     private var swipeMinDistance by mutableStateOf(72f) // pixels
     private var swipeMinKeyDistance by mutableStateOf(38f) // pixels
@@ -315,6 +319,82 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var backupRestoreSectionExpanded by mutableStateOf(false)
     private var advancedSectionExpanded by mutableStateOf(false)
     private var infoSectionExpanded by mutableStateOf(false)
+
+    // Settings search
+    private var settingsSearchQuery by mutableStateOf("")
+    private var showSearchResults by mutableStateOf(false)
+
+    /**
+     * Searchable settings index. Each entry maps a setting name to its section expander.
+     * Format: title -> (keywords, section name, expander function)
+     */
+    private data class SearchableSetting(
+        val title: String,
+        val keywords: List<String>,
+        val sectionName: String,
+        val expandSection: () -> Unit
+    )
+
+    private val searchableSettings: List<SearchableSetting> by lazy {
+        listOf(
+            // Activities
+            SearchableSetting("Theme Manager", listOf("color", "dark mode", "light", "appearance"), "Activities") { activitiesSectionExpanded = true },
+            SearchableSetting("Dictionary Manager", listOf("words", "custom", "disabled", "vocabulary"), "Activities") { activitiesSectionExpanded = true },
+            SearchableSetting("Clipboard Manager", listOf("copy", "paste", "history"), "Activities") { activitiesSectionExpanded = true },
+            SearchableSetting("Keyboard Calibration", listOf("height", "size", "foldable"), "Activities") { activitiesSectionExpanded = true },
+            SearchableSetting("Per-Key Customization", listOf("short swipe", "gesture", "actions", "commands"), "Activities") { activitiesSectionExpanded = true },
+            // Neural Prediction
+            SearchableSetting("Swipe Typing", listOf("gesture", "neural", "glide"), "Neural Prediction") { neuralSectionExpanded = true },
+            SearchableSetting("Beam Width", listOf("accuracy", "prediction", "candidates"), "Neural Prediction") { neuralSectionExpanded = true },
+            SearchableSetting("Confidence Threshold", listOf("accuracy", "filter"), "Neural Prediction") { neuralSectionExpanded = true },
+            // Appearance
+            SearchableSetting("Key Height", listOf("size", "keyboard", "tall", "short"), "Appearance") { appearanceSectionExpanded = true },
+            SearchableSetting("Key Borders", listOf("outline", "visible"), "Appearance") { appearanceSectionExpanded = true },
+            SearchableSetting("Horizontal Margin", listOf("padding", "edge"), "Appearance") { appearanceSectionExpanded = true },
+            SearchableSetting("Number Row", listOf("123", "digits", "top row"), "Appearance") { appearanceSectionExpanded = true },
+            // Swipe Trail
+            SearchableSetting("Swipe Trail", listOf("gesture", "path", "visual", "effect"), "Swipe Trail") { swipeTrailSectionExpanded = true },
+            SearchableSetting("Trail Color", listOf("purple", "rainbow", "glow"), "Swipe Trail") { swipeTrailSectionExpanded = true },
+            // Input
+            SearchableSetting("Autocapitalization", listOf("uppercase", "sentence", "shift"), "Input") { inputSectionExpanded = true },
+            SearchableSetting("Long Press Timeout", listOf("hold", "delay", "duration"), "Input") { inputSectionExpanded = true },
+            SearchableSetting("Key Repeat", listOf("hold", "backspace", "delete"), "Input") { inputSectionExpanded = true },
+            // Gesture Tuning
+            SearchableSetting("Short Gestures", listOf("short swipe", "quick", "action"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
+            SearchableSetting("Short Swipe Calibration", listOf("calibrate", "practice", "tutorial", "test"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
+            SearchableSetting("Double-Space to Period", listOf("punctuation", "auto", "shortcut"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
+            SearchableSetting("Finger Occlusion", listOf("offset", "touch", "compensation"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
+            SearchableSetting("Tap Duration", listOf("timing", "sensitivity"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
+            SearchableSetting("Swipe Distance", listOf("sensitivity", "minimum", "recognition"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
+            // Accessibility
+            SearchableSetting("Vibration", listOf("haptic", "feedback", "tactile"), "Accessibility") { accessibilitySectionExpanded = true },
+            SearchableSetting("Sound on Keypress", listOf("audio", "click", "noise"), "Accessibility") { accessibilitySectionExpanded = true },
+            // Dictionary
+            SearchableSetting("Spell Check", listOf("correction", "underline", "typo"), "Dictionary") { dictionarySectionExpanded = true },
+            // Clipboard
+            SearchableSetting("Clipboard History", listOf("copy", "paste", "buffer"), "Clipboard") { clipboardSectionExpanded = true },
+            // Backup
+            SearchableSetting("Export Settings", listOf("backup", "save", "json"), "Backup & Restore") { backupRestoreSectionExpanded = true },
+            SearchableSetting("Import Settings", listOf("restore", "load", "json"), "Backup & Restore") { backupRestoreSectionExpanded = true },
+            // Multi-Language
+            SearchableSetting("Primary Language", listOf("multilingual", "dictionary", "locale"), "Multi-Language") { multiLangSectionExpanded = true },
+            SearchableSetting("Secondary Language", listOf("bilingual", "dual", "alternate"), "Multi-Language") { multiLangSectionExpanded = true },
+            SearchableSetting("Language Detection", listOf("auto", "detect", "switch"), "Multi-Language") { multiLangSectionExpanded = true },
+            // Privacy
+            SearchableSetting("Incognito Mode", listOf("private", "secret", "hide"), "Privacy") { privacySectionExpanded = true },
+            // Advanced
+            SearchableSetting("Debug Logging", listOf("log", "developer", "verbose"), "Advanced") { advancedSectionExpanded = true }
+        )
+    }
+
+    private fun getFilteredSettings(query: String): List<SearchableSetting> {
+        if (query.isBlank()) return emptyList()
+        val lowerQuery = query.lowercase().trim()
+        return searchableSettings.filter { setting ->
+            setting.title.lowercase().contains(lowerQuery) ||
+            setting.keywords.any { it.lowercase().contains(lowerQuery) }
+        }
+    }
 
     // Collected data viewer dialog state
     private var showCollectedDataViewer by mutableStateOf(false)
@@ -647,6 +727,82 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp
             )
+
+            // Settings Search Bar
+            Box {
+                OutlinedTextField(
+                    value = settingsSearchQuery,
+                    onValueChange = { query ->
+                        settingsSearchQuery = query
+                        showSearchResults = query.isNotBlank()
+                    },
+                    label = { Text("Search settings...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search"
+                        )
+                    },
+                    trailingIcon = {
+                        if (settingsSearchQuery.isNotBlank()) {
+                            IconButton(onClick = {
+                                settingsSearchQuery = ""
+                                showSearchResults = false
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Clear,
+                                    contentDescription = "Clear"
+                                )
+                            }
+                        }
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                // Search Results Dropdown
+                DropdownMenu(
+                    expanded = showSearchResults && getFilteredSettings(settingsSearchQuery).isNotEmpty(),
+                    onDismissRequest = { showSearchResults = false },
+                    modifier = Modifier
+                        .fillMaxWidth(0.92f)
+                        .heightIn(max = 300.dp)
+                ) {
+                    getFilteredSettings(settingsSearchQuery).forEach { setting ->
+                        DropdownMenuItem(
+                            text = {
+                                Column {
+                                    Text(
+                                        text = setting.title,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = "in ${setting.sectionName}",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            },
+                            onClick = {
+                                setting.expandSection()
+                                settingsSearchQuery = ""
+                                showSearchResults = false
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowRight,
+                                    contentDescription = null
+                                )
+                            }
+                        )
+                    }
+                }
+            }
 
             // Activities Section (Special Feature Managers) - at top for quick access
             val activityContext = LocalContext.current
@@ -1927,6 +2083,18 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         },
                         displayValue = if (shortGestureMaxDistance >= 200) "OFF" else "${shortGestureMaxDistance}%"
                     )
+
+                    // Calibration Activity Button
+                    val calibrationContext = LocalContext.current
+                    OutlinedButton(
+                        onClick = {
+                            val intent = Intent(calibrationContext, ShortSwipeCalibrationActivity::class.java)
+                            calibrationContext.startActivity(intent)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("📐 Open Calibration Tool")
+                    }
                     // Customize Per-Key Actions button moved to Activities section at top
                 }
 
@@ -1950,18 +2118,30 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     displayValue = "${tapDurationThreshold}ms"
                 )
 
-                SettingsSlider(
+                SettingsSwitch(
                     title = "Double-Space to Period",
-                    description = "Time between spaces to insert period (ms). Set 0 to disable.",
-                    value = doubleSpaceThreshold.toFloat(),
-                    valueRange = 0f..1000f,
-                    steps = 20,
-                    onValueChange = {
-                        doubleSpaceThreshold = it.toInt()
-                        saveSetting("double_space_threshold", doubleSpaceThreshold)
-                    },
-                    displayValue = "${doubleSpaceThreshold}ms"
+                    description = "Tap space twice quickly to insert period. Only triggers after letters/numbers.",
+                    checked = doubleSpaceToPeriod,
+                    onCheckedChange = {
+                        doubleSpaceToPeriod = it
+                        saveSetting("double_space_to_period", doubleSpaceToPeriod)
+                    }
                 )
+
+                if (doubleSpaceToPeriod) {
+                    SettingsSlider(
+                        title = "Double-Space Timing",
+                        description = "Maximum time between spaces to trigger period (ms)",
+                        value = doubleSpaceThreshold.toFloat(),
+                        valueRange = 200f..800f,
+                        steps = 12,
+                        onValueChange = {
+                            doubleSpaceThreshold = it.toInt()
+                            saveSetting("double_space_threshold", doubleSpaceThreshold)
+                        },
+                        displayValue = "${doubleSpaceThreshold}ms"
+                    )
+                }
 
                 // Swipe Recognition subsection
                 Text(
@@ -3686,6 +3866,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
         // Gesture tuning settings
         tapDurationThreshold = Config.safeGetInt(prefs, "tap_duration_threshold", Defaults.TAP_DURATION_THRESHOLD)
+        doubleSpaceToPeriod = prefs.getSafeBoolean("double_space_to_period", Defaults.DOUBLE_SPACE_TO_PERIOD)
         doubleSpaceThreshold = Config.safeGetInt(prefs, "double_space_threshold", Defaults.DOUBLE_SPACE_THRESHOLD)
         swipeMinDistance = Config.safeGetFloat(prefs, "swipe_min_distance", Defaults.SWIPE_MIN_DISTANCE)
         swipeMinKeyDistance = Config.safeGetFloat(prefs, "swipe_min_key_distance", Defaults.SWIPE_MIN_KEY_DISTANCE)
