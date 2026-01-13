@@ -11,12 +11,21 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -323,18 +332,44 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Settings search
     private var settingsSearchQuery by mutableStateOf("")
     private var showSearchResults by mutableStateOf(false)
+    private var highlightedSettingId by mutableStateOf<String?>(null)  // For pulse animation
+    private var scrollToPosition by mutableStateOf<Int?>(null)  // Scroll target position in pixels
+    private val settingPositions = mutableMapOf<String, Int>()  // Track setting positions
+
+    /** Collapse all sections */
+    private fun collapseAllSections() {
+        activitiesSectionExpanded = false
+        multiLangSectionExpanded = false
+        privacySectionExpanded = false
+        neuralSectionExpanded = false
+        appearanceSectionExpanded = false
+        swipeTrailSectionExpanded = false
+        inputSectionExpanded = false
+        swipeCorrectionsSectionExpanded = false
+        gestureTuningSectionExpanded = false
+        accessibilitySectionExpanded = false
+        dictionarySectionExpanded = false
+        clipboardSectionExpanded = false
+        backupRestoreSectionExpanded = false
+        advancedSectionExpanded = false
+        infoSectionExpanded = false
+    }
 
     /**
      * Searchable settings index. Each entry maps a setting name to its action.
      * activityClass: if not null, clicking navigates to that activity
      * expandSection: if activityClass is null, clicking expands this section
+     * gatedBy: if set, this setting requires another toggle to be enabled first
+     * settingId: unique ID for highlighting
      */
     private data class SearchableSetting(
         val title: String,
         val keywords: List<String>,
         val sectionName: String,
         val activityClass: Class<*>? = null,
-        val expandSection: () -> Unit = {}
+        val expandSection: () -> Unit = {},
+        val gatedBy: String? = null,  // e.g., "swipe_typing" means needs swipe typing enabled
+        val settingId: String = ""    // For highlighting
     )
 
     private val searchableSettings: List<SearchableSetting> by lazy {
@@ -344,57 +379,98 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Dictionary Manager", listOf("words", "custom", "disabled", "vocabulary"), "Activities", DictionaryManagerActivity::class.java),
             SearchableSetting("Layout Manager", listOf("keyboard layout", "qwerty", "azerty"), "Activities", LayoutManagerActivity::class.java),
             SearchableSetting("Keyboard Calibration", listOf("height", "size", "foldable"), "Activities", SwipeCalibrationActivity::class.java),
-            SearchableSetting("Per-Key Customization", listOf("short swipe", "gesture", "actions", "commands"), "Activities", ShortSwipeCustomizationActivity::class.java),
-            SearchableSetting("Short Swipe Calibration", listOf("calibrate", "practice", "tutorial", "test"), "Gesture Tuning", ShortSwipeCalibrationActivity::class.java),
+            SearchableSetting("Per-Key Customization", listOf("short swipe", "gesture", "actions", "commands"), "Activities", ShortSwipeCustomizationActivity::class.java, gatedBy = "short_gestures", settingId = "per_key_customization"),
+            SearchableSetting("Short Swipe Calibration", listOf("calibrate", "practice", "tutorial", "test"), "Gesture Tuning", ShortSwipeCalibrationActivity::class.java, gatedBy = "short_gestures", settingId = "short_swipe_calibration"),
             SearchableSetting("Extra Keys", listOf("toolbar", "arrows", "numbers"), "Activities", ExtraKeysConfigActivity::class.java),
             SearchableSetting("Backup & Restore", listOf("backup", "export", "import", "restore"), "Activities", BackupRestoreActivity::class.java),
             // Neural Prediction
             SearchableSetting("Neural Settings", listOf("neural", "ai", "prediction", "model"), "Neural Prediction", NeuralSettingsActivity::class.java),
-            SearchableSetting("Swipe Typing", listOf("gesture", "neural", "glide"), "Neural Prediction") { neuralSectionExpanded = true },
-            SearchableSetting("Beam Width", listOf("accuracy", "prediction", "candidates"), "Neural Prediction") { neuralSectionExpanded = true },
-            SearchableSetting("Confidence Threshold", listOf("accuracy", "filter"), "Neural Prediction") { neuralSectionExpanded = true },
+            SearchableSetting("Swipe Typing", listOf("gesture", "neural", "glide"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, settingId = "swipe_typing"),
+            SearchableSetting("Beam Width", listOf("accuracy", "prediction", "candidates"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "beam_width"),
+            SearchableSetting("Confidence Threshold", listOf("accuracy", "filter"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "confidence_threshold"),
             // Appearance
-            SearchableSetting("Key Height", listOf("size", "keyboard", "tall", "short"), "Appearance") { appearanceSectionExpanded = true },
-            SearchableSetting("Key Borders", listOf("outline", "visible"), "Appearance") { appearanceSectionExpanded = true },
-            SearchableSetting("Horizontal Margin", listOf("padding", "edge"), "Appearance") { appearanceSectionExpanded = true },
-            SearchableSetting("Number Row", listOf("123", "digits", "top row"), "Appearance") { appearanceSectionExpanded = true },
+            SearchableSetting("Key Height", listOf("size", "keyboard", "tall", "short"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "key_height"),
+            SearchableSetting("Key Borders", listOf("outline", "visible"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "key_borders"),
+            SearchableSetting("Horizontal Margin", listOf("padding", "edge"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "horizontal_margin"),
+            SearchableSetting("Number Row", listOf("123", "digits", "top row"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "number_row"),
             // Swipe Trail
-            SearchableSetting("Swipe Trail", listOf("gesture", "path", "visual", "effect"), "Swipe Trail") { swipeTrailSectionExpanded = true },
-            SearchableSetting("Trail Color", listOf("purple", "rainbow", "glow"), "Swipe Trail") { swipeTrailSectionExpanded = true },
+            SearchableSetting("Swipe Trail", listOf("gesture", "path", "visual", "effect"), "Swipe Trail", expandSection = { swipeTrailSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "swipe_trail"),
+            SearchableSetting("Trail Color", listOf("purple", "rainbow", "glow"), "Swipe Trail", expandSection = { swipeTrailSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "trail_color"),
             // Input
-            SearchableSetting("Autocapitalization", listOf("uppercase", "sentence", "shift"), "Input") { inputSectionExpanded = true },
-            SearchableSetting("Long Press Timeout", listOf("hold", "delay", "duration"), "Input") { inputSectionExpanded = true },
-            SearchableSetting("Key Repeat", listOf("hold", "backspace", "delete"), "Input") { inputSectionExpanded = true },
+            SearchableSetting("Autocapitalization", listOf("uppercase", "sentence", "shift"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "autocap"),
+            SearchableSetting("Long Press Timeout", listOf("hold", "delay", "duration"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "long_press"),
+            SearchableSetting("Key Repeat", listOf("hold", "backspace", "delete"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "key_repeat"),
             // Gesture Tuning
-            SearchableSetting("Short Gestures", listOf("short swipe", "quick", "action"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
-            SearchableSetting("Double-Space to Period", listOf("punctuation", "auto", "shortcut"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
-            SearchableSetting("Finger Occlusion", listOf("offset", "touch", "compensation"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
-            SearchableSetting("Tap Duration", listOf("timing", "sensitivity"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
-            SearchableSetting("Swipe Distance", listOf("sensitivity", "minimum", "recognition"), "Gesture Tuning") { gestureTuningSectionExpanded = true },
+            SearchableSetting("Short Gestures", listOf("short swipe", "quick", "action"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "short_gestures"),
+            SearchableSetting("Double-Space to Period", listOf("punctuation", "auto", "shortcut"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "double_space"),
+            SearchableSetting("Finger Occlusion", listOf("offset", "touch", "compensation"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "finger_occlusion"),
+            SearchableSetting("Tap Duration", listOf("timing", "sensitivity"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "tap_duration"),
+            SearchableSetting("Swipe Distance", listOf("sensitivity", "minimum", "recognition"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "swipe_distance"),
             // Accessibility
-            SearchableSetting("Vibration", listOf("haptic", "feedback", "tactile"), "Accessibility") { accessibilitySectionExpanded = true },
-            SearchableSetting("Sound on Keypress", listOf("audio", "click", "noise"), "Accessibility") { accessibilitySectionExpanded = true },
+            SearchableSetting("Vibration", listOf("haptic", "feedback", "tactile"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "vibration"),
+            SearchableSetting("Sound on Keypress", listOf("audio", "click", "noise"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "sound"),
             // Dictionary
-            SearchableSetting("Spell Check", listOf("correction", "underline", "typo"), "Dictionary") { dictionarySectionExpanded = true },
+            SearchableSetting("Spell Check", listOf("correction", "underline", "typo"), "Dictionary", expandSection = { dictionarySectionExpanded = true }, settingId = "spell_check"),
             // Clipboard
-            SearchableSetting("Clipboard History", listOf("copy", "paste", "buffer"), "Clipboard") { clipboardSectionExpanded = true },
+            SearchableSetting("Clipboard History", listOf("copy", "paste", "buffer"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard"),
             // Multi-Language
-            SearchableSetting("Primary Language", listOf("multilingual", "dictionary", "locale"), "Multi-Language") { multiLangSectionExpanded = true },
-            SearchableSetting("Secondary Language", listOf("bilingual", "dual", "alternate"), "Multi-Language") { multiLangSectionExpanded = true },
-            SearchableSetting("Language Detection", listOf("auto", "detect", "switch"), "Multi-Language") { multiLangSectionExpanded = true },
+            SearchableSetting("Primary Language", listOf("multilingual", "dictionary", "locale"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, settingId = "primary_lang"),
+            SearchableSetting("Secondary Language", listOf("bilingual", "dual", "alternate"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, settingId = "secondary_lang"),
+            SearchableSetting("Language Detection", listOf("auto", "detect", "switch"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, settingId = "lang_detection"),
             // Privacy
-            SearchableSetting("Incognito Mode", listOf("private", "secret", "hide"), "Privacy") { privacySectionExpanded = true },
+            SearchableSetting("Incognito Mode", listOf("private", "secret", "hide"), "Privacy", expandSection = { privacySectionExpanded = true }, settingId = "incognito"),
             // Advanced
-            SearchableSetting("Debug Logging", listOf("log", "developer", "verbose"), "Advanced") { advancedSectionExpanded = true }
+            SearchableSetting("Debug Logging", listOf("log", "developer", "verbose"), "Advanced", expandSection = { advancedSectionExpanded = true }, settingId = "debug_logging")
         )
     }
 
-    /** Execute search result action - either navigate to activity or expand section */
+    /** Check if a gating toggle is enabled */
+    private fun isGateEnabled(gateId: String): Boolean {
+        return when (gateId) {
+            "swipe_typing" -> swipeTypingEnabled
+            "short_gestures" -> shortGesturesEnabled
+            else -> true
+        }
+    }
+
+    /** Execute search result action - collapse others, expand target, handle gating */
     private fun executeSearchAction(setting: SearchableSetting) {
+        // Check if gated by a disabled toggle
+        if (setting.gatedBy != null && !isGateEnabled(setting.gatedBy)) {
+            // Find the gating setting and highlight it
+            collapseAllSections()
+            val targetId = setting.gatedBy
+            when (targetId) {
+                "swipe_typing" -> neuralSectionExpanded = true
+                "short_gestures" -> gestureTuningSectionExpanded = true
+            }
+            highlightedSettingId = targetId
+            // Schedule scroll after section expands
+            lifecycleScope.launch {
+                kotlinx.coroutines.delay(100)  // Allow layout to complete
+                settingPositions[targetId]?.let { scrollToPosition = it }
+                kotlinx.coroutines.delay(2000)
+                highlightedSettingId = null
+            }
+            return
+        }
+
+        // Navigate to activity or expand section
         if (setting.activityClass != null) {
             startActivity(Intent(this, setting.activityClass))
         } else {
+            collapseAllSections()
             setting.expandSection()
+            // Highlight and scroll to target setting
+            if (setting.settingId.isNotEmpty()) {
+                highlightedSettingId = setting.settingId
+                lifecycleScope.launch {
+                    kotlinx.coroutines.delay(100)  // Allow layout to complete
+                    settingPositions[setting.settingId]?.let { scrollToPosition = it }
+                    kotlinx.coroutines.delay(1500)
+                    highlightedSettingId = null
+                }
+            }
         }
     }
 
@@ -696,6 +772,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     @Composable
     private fun SettingsScreen() {
         val scrollState = rememberScrollState()
+
+        // Scroll to highlighted setting when scrollToPosition changes
+        LaunchedEffect(scrollToPosition) {
+            scrollToPosition?.let { targetY ->
+                scrollState.animateScrollTo(targetY)
+                scrollToPosition = null
+            }
+        }
 
         // Collected Data Viewer Dialog
         if (showCollectedDataViewer) {
@@ -1014,7 +1098,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     onCheckedChange = {
                         swipeTypingEnabled = it
                         saveSetting("swipe_typing_enabled", it)
-                    }
+                    },
+                    highlightId = "swipe_typing"
                 )
 
                 if (swipeTypingEnabled) {
@@ -2082,7 +2167,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     onCheckedChange = {
                         shortGesturesEnabled = it
                         saveSetting("short_gestures_enabled", it)
-                    }
+                    },
+                    highlightId = "short_gestures"
                 )
 
                 if (shortGesturesEnabled) {
@@ -3298,13 +3384,43 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         title: String,
         description: String,
         checked: Boolean,
-        onCheckedChange: (Boolean) -> Unit
+        onCheckedChange: (Boolean) -> Unit,
+        highlightId: String? = null
     ) {
+        // Pulse animation for highlighting gated settings
+        val isHighlighted = highlightId != null && highlightedSettingId == highlightId
+        val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+        val pulseAlpha by infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = if (isHighlighted) 1f else 0f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(400),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "pulseAlpha"
+        )
+        val highlightColor = MaterialTheme.colorScheme.primary.copy(alpha = if (isHighlighted) pulseAlpha * 0.3f else 0f)
+        val borderColor = MaterialTheme.colorScheme.primary.copy(alpha = if (isHighlighted) 0.5f + pulseAlpha * 0.5f else 0f)
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .then(
+                    if (highlightId != null) {
+                        Modifier.onGloballyPositioned { coords ->
+                            settingPositions[highlightId] = coords.positionInParent().y.toInt()
+                        }
+                    } else Modifier
+                )
+                .then(
+                    if (isHighlighted) {
+                        Modifier
+                            .background(highlightColor, RoundedCornerShape(8.dp))
+                            .border(2.dp, borderColor, RoundedCornerShape(8.dp))
+                    } else Modifier
+                )
                 .clickable { onCheckedChange(!checked) }
-                .padding(vertical = 8.dp),
+                .padding(vertical = 8.dp, horizontal = if (isHighlighted) 8.dp else 0.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
