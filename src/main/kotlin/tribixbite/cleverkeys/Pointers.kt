@@ -168,10 +168,9 @@ class Pointers(
             return
         }
 
-        // Handle navigation hold-to-repeat completion
-        if (ptr.hasFlagsAny(FLAG_P_NAV_HOLD_REPEAT)) {
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: NAV_HOLD_REPEAT completion")
-            stopLongPress(ptr)
+        // Handle TrackPoint mode completion
+        if (ptr.hasFlagsAny(FLAG_P_TRACKPOINT_MODE)) {
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: TRACKPOINT completion")
             removePtr(ptr)
             return
         }
@@ -621,17 +620,29 @@ class Pointers(
             return
         }
 
-        // Handle navigation hold-to-repeat mode: cancel if movement exceeds threshold
-        if (ptr.hasFlagsAny(FLAG_P_NAV_HOLD_REPEAT)) {
-            val dx = ptr.lastX - ptr.downX
-            val dy = ptr.lastY - ptr.downY
+        // Handle TrackPoint mode: finger movement controls cursor direction
+        if (ptr.hasFlagsAny(FLAG_P_TRACKPOINT_MODE)) {
+            val dx = x - ptr.downX
+            val dy = y - ptr.downY
             val movementDist = sqrt(dx * dx + dy * dy)
-            if (movementDist > NAV_HOLD_MOVEMENT_THRESHOLD) {
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "NAV_HOLD_REPEAT: Cancelled in onTouchMove due to movement")
-                stopLongPress(ptr)
-                ptr.flags = ptr.flags and FLAG_P_NAV_HOLD_REPEAT.inv()
+
+            if (movementDist >= TRACKPOINT_MOVEMENT_THRESHOLD) {
+                // Calculate direction and find nav key
+                val a = atan2(dy, dx) + Math.PI
+                val direction = ((a * 8 / Math.PI).toInt() + 12) % 16
+                val navKey = getNavKeyAtDirection(ptr, direction)
+
+                if (navKey != null) {
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Moving cursor, direction=$direction, dist=$movementDist")
+                    _handler.onPointerDown(navKey, false)
+                    _handler.onPointerUp(navKey, ptr.modifiers)
+                }
+
+                // Reset reference point for continuous movement
+                ptr.downX = x
+                ptr.downY = y
             }
-            return // Don't process other gesture logic while in nav repeat mode
+            return // Don't process other gesture logic in TrackPoint mode
         }
 
         // Track if pointer has left the starting key (for short gesture detection on UP)
@@ -660,35 +671,6 @@ class Pointers(
         val dx = x - ptr.downX
         val dy = adjustedY - ptr.downY
         val dist = abs(dx) + abs(dy)
-        val euclideanDist = sqrt(dx * dx + dy * dy)
-
-        // NAV KEY EARLY DETECTION: Use lower threshold (10% key width) for navigation keys
-        // This ensures fast swipes still trigger nav hold-to-repeat mode
-        val navKeyThreshold = _handler.getKeyWidth(ptr.key) * 0.10f
-        if (_config.keyrepeat_enabled && euclideanDist >= navKeyThreshold && ptr.gesture == null) {
-            val a = atan2(dy, dx) + Math.PI
-            val direction = ((a * 8 / Math.PI).toInt() + 12) % 16
-            val subkeyValue = getNearestKeyAtDirection(ptr, direction)
-            if (subkeyValue != null && isNavigationKey(subkeyValue)) {
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "NAV_HOLD_REPEAT: Early detection at dist=$euclideanDist (threshold=$navKeyThreshold)")
-                // Trigger first cursor move
-                _handler.onPointerDown(subkeyValue, true)
-                _handler.onPointerUp(subkeyValue, ptr.modifiers)
-                // Set up hold-to-repeat mode
-                ptr.gesture = Gesture(direction)
-                ptr.value = subkeyValue
-                ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_NAV_HOLD_REPEAT
-                ptr.downX = x  // Store activation point for movement threshold
-                ptr.downY = y
-                clearLatched()
-                stopLongPress(ptr)
-                // Start repeat timer
-                val what = uniqueTimeoutWhat++
-                ptr.timeoutWhat = what
-                _longpress_handler.sendEmptyMessageDelayed(what, _config.longPressInterval.toLong())
-                return
-            }
-        }
 
         if (dist >= _config.swipe_dist_px && ptr.gesture == null) {
             // Pointer moved significantly - check for special key activation FIRST
@@ -718,30 +700,8 @@ class Pointers(
                         _handler.onPointerDown(subkeyValue, true)
                         return
                     }
-                    KeyValue.Kind.Keyevent -> {
-                        // Check for navigation keys that support hold-to-repeat
-                        if (_config.keyrepeat_enabled && isNavigationKey(subkeyValue)) {
-                            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "NAV_HOLD_REPEAT: Detected nav key at direction $direction during move")
-                            // Trigger first cursor move
-                            _handler.onPointerDown(subkeyValue, true)
-                            _handler.onPointerUp(subkeyValue, ptr.modifiers)
-                            // Set up hold-to-repeat mode
-                            ptr.gesture = Gesture(direction)
-                            ptr.value = subkeyValue
-                            ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_NAV_HOLD_REPEAT
-                            ptr.downX = x  // Store activation point for movement threshold
-                            ptr.downY = y
-                            clearLatched()
-                            stopLongPress(ptr)
-                            // Start repeat timer
-                            val what = uniqueTimeoutWhat++
-                            ptr.timeoutWhat = what
-                            _longpress_handler.sendEmptyMessageDelayed(what, _config.longPressInterval.toLong())
-                            return
-                        }
-                    }
                     else -> {
-                        // Other key types - let normal processing handle them
+                        // Other key types (including Keyevent nav keys) - let short gesture handling in onTouchUp handle them
                     }
                 }
             }
@@ -892,29 +852,8 @@ class Pointers(
 
     /** A pointer is long pressing. */
     private fun handleLongPress(ptr: Pointer) {
-        // Handle navigation hold-to-repeat mode
-        if (ptr.hasFlagsAny(FLAG_P_NAV_HOLD_REPEAT)) {
-            val value = ptr.value
-            if (value != null) {
-                // Check if user has moved beyond threshold - cancel repeat if so
-                val dx = ptr.lastX - ptr.downX
-                val dy = ptr.lastY - ptr.downY
-                val movementDist = sqrt(dx * dx + dy * dy)
-                if (movementDist > NAV_HOLD_MOVEMENT_THRESHOLD) {
-                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "NAV_HOLD_REPEAT: Cancelled due to movement ($movementDist > $NAV_HOLD_MOVEMENT_THRESHOLD)")
-                    ptr.flags = ptr.flags and FLAG_P_NAV_HOLD_REPEAT.inv()
-                    return
-                }
-                // Repeat the navigation key press
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "NAV_HOLD_REPEAT: Repeating ${value}")
-                _handler.onPointerDown(value, false)
-                _handler.onPointerUp(value, ptr.modifiers)
-                // Schedule next repeat with shorter interval for acceleration
-                _longpress_handler.sendEmptyMessageDelayed(
-                    ptr.timeoutWhat,
-                    (_config.longPressInterval * 0.6f).toLong().coerceAtLeast(30L)
-                )
-            }
+        // Skip if already in TrackPoint mode (movement handled in onTouchMove)
+        if (ptr.hasFlagsAny(FLAG_P_TRACKPOINT_MODE)) {
             return
         }
 
@@ -924,16 +863,27 @@ class Pointers(
         }
 
         // For deferred keys (potential swipes), check if user has moved beyond small threshold
-        // Only trigger key repeat if user hasn't moved much (stays mostly on same key)
-        // This allows swipe typing to work even if user starts moving slowly
+        val dx = ptr.lastX - ptr.downX
+        val dy = ptr.lastY - ptr.downY
+        val movementDist = kotlin.math.sqrt(dx * dx + dy * dy)
+
         if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)) {
-            val dx = ptr.lastX - ptr.downX
-            val dy = ptr.lastY - ptr.downY
-            val movementDist = kotlin.math.sqrt(dx * dx + dy * dy)
             // Use ~15px as threshold for "hasn't moved" - user can adjust sensitivity via settings
             // This is less than typical swipe distance but enough to allow minor finger jitter
             if (movementDist > 15f) {
                 // User has moved - don't trigger key repeat, let swipe typing take over
+                return
+            }
+
+            // TrackPoint mode: If key has nav subkeys and user held without moving, enter TrackPoint mode
+            if (_config.keyrepeat_enabled && hasNavigationSubkeys(ptr)) {
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Entering TrackPoint mode for key with nav subkeys")
+                ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_TRACKPOINT_MODE
+                // Store current position as reference for movement detection
+                ptr.downX = ptr.lastX
+                ptr.downY = ptr.lastY
+                // Vibrate to indicate TrackPoint mode activation
+                _handler.onPointerFlagsChanged(true)
                 return
             }
         }
@@ -1010,7 +960,7 @@ class Pointers(
         return flags
     }
 
-    /** Check if a KeyValue is a navigation key that supports hold-to-repeat. */
+    /** Check if a KeyValue is a navigation key (arrow keys). */
     private fun isNavigationKey(kv: KeyValue?): Boolean {
         if (kv == null) return false
         if (kv.getKind() != KeyValue.Kind.Keyevent) return false
@@ -1021,6 +971,26 @@ class Pointers(
             android.view.KeyEvent.KEYCODE_DPAD_RIGHT -> true
             else -> false
         }
+    }
+
+    /** Check if a key has navigation subkeys in any cardinal direction (N/S/E/W). */
+    private fun hasNavigationSubkeys(ptr: Pointer): Boolean {
+        val key = ptr.key ?: return false
+        // Check cardinal directions: N(7), E(6), S(8), W(5) in the 9-position layout
+        val cardinalPositions = listOf(7, 6, 8, 5)  // n, e, s, w
+        for (pos in cardinalPositions) {
+            val subkey = key.keys.getOrNull(pos)
+            if (subkey != null && isNavigationKey(subkey)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /** Get the navigation key at the given direction from a key. */
+    private fun getNavKeyAtDirection(ptr: Pointer, direction: Int): KeyValue? {
+        val subkey = getNearestKeyAtDirection(ptr, direction)
+        return if (subkey != null && isNavigationKey(subkey)) subkey else null
     }
 
     // Gestures
@@ -1346,11 +1316,11 @@ class Pointers(
         /** Key down event was deferred (waiting for gesture classification). */
         const val FLAG_P_DEFERRED_DOWN = 1 shl 9
 
-        /** Navigation key hold-to-repeat mode (activated via short swipe over nav key). */
-        const val FLAG_P_NAV_HOLD_REPEAT = 1 shl 10
+        /** TrackPoint mode - hold on key with nav subkeys, then move finger to move cursor. */
+        const val FLAG_P_TRACKPOINT_MODE = 1 shl 10
 
-        /** Maximum movement (px) before nav hold-to-repeat is cancelled. */
-        const val NAV_HOLD_MOVEMENT_THRESHOLD = 8f
+        /** Minimum movement (px) to trigger nav event in TrackPoint mode. */
+        const val TRACKPOINT_MOVEMENT_THRESHOLD = 15f
 
         private var uniqueTimeoutWhat = 0
 

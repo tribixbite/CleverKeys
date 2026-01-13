@@ -415,9 +415,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             // Clipboard
             SearchableSetting("Clipboard History", listOf("copy", "paste", "buffer"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard"),
             // Multi-Language
-            SearchableSetting("Primary Language", listOf("multilingual", "dictionary", "locale"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, settingId = "primary_lang"),
-            SearchableSetting("Secondary Language", listOf("bilingual", "dual", "alternate"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, settingId = "secondary_lang"),
-            SearchableSetting("Language Detection", listOf("auto", "detect", "switch"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, settingId = "lang_detection"),
+            SearchableSetting("Enable Multi-Language", listOf("multilingual", "bilingual"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, settingId = "multilang"),
+            SearchableSetting("Primary Language", listOf("multilingual", "dictionary", "locale"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, gatedBy = "multilang", settingId = "primary_lang"),
+            SearchableSetting("Secondary Language", listOf("bilingual", "dual", "alternate"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, gatedBy = "multilang", settingId = "secondary_lang"),
+            SearchableSetting("Language Detection", listOf("auto", "detect", "switch"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, gatedBy = "multilang", settingId = "lang_detection"),
             // Privacy
             SearchableSetting("Incognito Mode", listOf("private", "secret", "hide"), "Privacy", expandSection = { privacySectionExpanded = true }, settingId = "incognito"),
             // Advanced
@@ -430,6 +431,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         return when (gateId) {
             "swipe_typing" -> swipeTypingEnabled
             "short_gestures" -> shortGesturesEnabled
+            "multilang" -> multiLangEnabled
             else -> true
         }
     }
@@ -444,6 +446,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             when (targetId) {
                 "swipe_typing" -> neuralSectionExpanded = true
                 "short_gestures" -> gestureTuningSectionExpanded = true
+                "multilang" -> multiLangSectionExpanded = true
             }
             highlightedSettingId = targetId
             // Schedule scroll after section expands
@@ -2671,7 +2674,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     onCheckedChange = {
                         multiLangEnabled = it
                         saveSetting("pref_enable_multilang", it)
-                    }
+                    },
+                    highlightId = "multilang"
                 )
 
                 if (multiLangEnabled) {
