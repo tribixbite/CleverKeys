@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import org.json.JSONArray
+import tribixbite.cleverkeys.BuildConfig
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.File
@@ -46,12 +47,16 @@ class SwipeMLDataStore private constructor(context: Context) :
         db.execSQL("CREATE INDEX idx_source ON $TABLE_SWIPES ($COL_SOURCE)")
         db.execSQL("CREATE INDEX idx_timestamp ON $TABLE_SWIPES ($COL_TIMESTAMP)")
 
-        Log.d(TAG, "Database created with version $DATABASE_VERSION")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.d(TAG, "Database created with version $DATABASE_VERSION")
+        }
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         // Handle future schema upgrades
-        Log.w(TAG, "Upgrading database from version $oldVersion to $newVersion")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.w(TAG, "Upgrading database from version $oldVersion to $newVersion")
+        }
     }
 
     /**
@@ -59,7 +64,9 @@ class SwipeMLDataStore private constructor(context: Context) :
      */
     fun storeSwipeData(data: SwipeMLData) {
         if (!data.isValid()) {
-            Log.w(TAG, "Invalid swipe data, not storing")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.w(TAG, "Invalid swipe data, not storing")
+            }
             return
         }
 
@@ -76,7 +83,9 @@ class SwipeMLDataStore private constructor(context: Context) :
 
                 if (cursor.count > 0) {
                     cursor.close()
-                    Log.w(TAG, "Trace ID already exists: ${data.traceId}")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                        Log.w(TAG, "Trace ID already exists: ${data.traceId}")
+                    }
                     return@execute
                 }
                 cursor.close()
@@ -94,7 +103,9 @@ class SwipeMLDataStore private constructor(context: Context) :
                 val rowId = db.insert(TABLE_SWIPES, null, values)
 
                 if (rowId != -1L) {
-                    Log.d(TAG, "Stored swipe data: ${data.targetWord} (${data.collectionSource})")
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                        Log.d(TAG, "Stored swipe data: ${data.targetWord} (${data.collectionSource})")
+                    }
                     updateStatistics(data.collectionSource)
                 } else {
                     Log.e(TAG, "Failed to store swipe data")
@@ -128,7 +139,9 @@ class SwipeMLDataStore private constructor(context: Context) :
                     db.insertWithOnConflict(TABLE_SWIPES, null, values, SQLiteDatabase.CONFLICT_IGNORE)
                 }
                 db.setTransactionSuccessful()
-                Log.d(TAG, "Stored batch of ${dataList.size} swipe entries")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    Log.d(TAG, "Stored batch of ${dataList.size} swipe entries")
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Error storing batch data", e)
             } finally {
@@ -160,7 +173,9 @@ class SwipeMLDataStore private constructor(context: Context) :
         }
         cursor.close()
 
-        Log.d(TAG, "Loaded ${dataList.size} swipe entries")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.d(TAG, "Loaded ${dataList.size} swipe entries")
+        }
         return dataList
     }
 
@@ -318,7 +333,9 @@ class SwipeMLDataStore private constructor(context: Context) :
             arrayOf(word, minTime.toString(), maxTime.toString())
         )
 
-        Log.d(TAG, "Deleted $deleted entries for word: $word")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.d(TAG, "Deleted $deleted entries for word: $word")
+        }
     }
 
     /**
@@ -370,7 +387,9 @@ class SwipeMLDataStore private constructor(context: Context) :
         // Mark all as exported
         markAllAsExported()
 
-        Log.i(TAG, "Exported ${allData.size} entries to ${exportFile.absolutePath}")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.i(TAG, "Exported ${allData.size} entries to ${exportFile.absolutePath}")
+        }
         return exportFile
     }
 
@@ -396,7 +415,9 @@ class SwipeMLDataStore private constructor(context: Context) :
             }
         }
 
-        Log.i(TAG, "Exported ${allData.size} entries to NDJSON: ${exportFile.absolutePath}")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.i(TAG, "Exported ${allData.size} entries to NDJSON: ${exportFile.absolutePath}")
+        }
         return exportFile
     }
 
@@ -449,7 +470,9 @@ class SwipeMLDataStore private constructor(context: Context) :
         // Mark all as exported
         markAllAsExported()
 
-        Log.i(TAG, "Exported $count entries to JSON stream (streamed)")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.i(TAG, "Exported $count entries to JSON stream (streamed)")
+        }
         return count
     }
 
@@ -473,7 +496,9 @@ class SwipeMLDataStore private constructor(context: Context) :
             }
         }
 
-        Log.i(TAG, "Exported $count entries to NDJSON stream (streamed)")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.i(TAG, "Exported $count entries to NDJSON stream (streamed)")
+        }
         return count
     }
 
@@ -527,7 +552,9 @@ class SwipeMLDataStore private constructor(context: Context) :
         val prefs = _context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         prefs.edit().clear().apply()
 
-        Log.w(TAG, "All swipe data cleared")
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.w(TAG, "All swipe data cleared")
+        }
     }
 
     /**
@@ -587,7 +614,9 @@ class SwipeMLDataStore private constructor(context: Context) :
             }
 
             db.setTransactionSuccessful()
-            Log.d(TAG, "Imported $importedCount swipe records from ${jsonFile.name}")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d(TAG, "Imported $importedCount swipe records from ${jsonFile.name}")
+            }
         } finally {
             db.endTransaction()
         }

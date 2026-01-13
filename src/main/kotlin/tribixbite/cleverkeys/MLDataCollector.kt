@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.util.Log
+import tribixbite.cleverkeys.BuildConfig
 import tribixbite.cleverkeys.ml.SwipeMLData
 import tribixbite.cleverkeys.ml.SwipeMLDataStore
 
@@ -61,7 +62,9 @@ class MLDataCollector(private val context: Context) {
     ): Boolean {
         // Privacy check: Verify consent before collecting
         if (!privacyManager.canCollectSwipeData()) {
-            Log.d("MLDataCollector", "Swipe data collection disabled or no consent")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                Log.d("MLDataCollector", "Swipe data collection disabled or no consent")
+            }
             return false
         }
 
