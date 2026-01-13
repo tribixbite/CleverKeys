@@ -93,11 +93,14 @@
    - Removed all manual polling, position maps, and scroll calculations
    - Files Modified: `SettingsActivity.kt`
 
-7. **TrackPoint Mode Activation Fix** (v2 fix: 2026-01-13)
-   - Set FLAG_P_DEFERRED_DOWN for nav keys (was only set for Char type keys)
-   - Defer nav key output on touch down to allow TrackPoint mode entry
-   - Added explicit handling for nav key tap (quick release without hold)
-   - Nav keys now: hold → TrackPoint mode, tap → output key event
+7. **TrackPoint Mode Activation Fix** (v3 fix: 2026-01-13)
+   - Changed from `isNavigationKey(ptr.value)` to `hasNavigationSubkeys(ptr)`
+   - The "nav key" is actually the compose key with nav subkeys in positions 5-8
+   - bottom_row.xml: `key0="loc compose" key5="left" key6="right" key7="up" key8="down"`
+   - Compose key tap → outputs compose (dead keys latched mode)
+   - Compose key hold → enters TrackPoint mode for cursor navigation
+   - Compose key SE swipe → outputs page_down (short gesture, not broken)
+   - Short gestures still work on keys with nav subkeys (no path exclusion)
    - Files Modified: `Pointers.kt`
 
 ---
