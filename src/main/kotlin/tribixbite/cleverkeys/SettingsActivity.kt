@@ -478,9 +478,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 "short_gestures" -> gestureTuningSectionExpanded = true
                 "multilang" -> multiLangSectionExpanded = true
             }
-            // Set highlighted ID - the setting's LaunchedEffect will handle scroll via BringIntoViewRequester
-            highlightedSettingId = targetId
+            // Set highlighted ID - delay to let section expand before triggering scroll
             lifecycleScope.launch {
+                kotlinx.coroutines.delay(150)
+                highlightedSettingId = targetId
                 kotlinx.coroutines.delay(2000)
                 highlightedSettingId = null
             }
@@ -494,10 +495,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             collapseAllSections()
             setting.expandSection()
             // Set highlighted ID - scroll handled by BringIntoViewRequester in the setting composable
+            // IMPORTANT: Delay setting the highlight to give Compose time to expand the section
+            // and lay out the content before triggering the scroll
             if (setting.settingId.isNotEmpty()) {
-                highlightedSettingId = setting.settingId
                 lifecycleScope.launch {
-                    kotlinx.coroutines.delay(1500)
+                    // Wait for recomposition and layout to complete
+                    kotlinx.coroutines.delay(150)
+                    highlightedSettingId = setting.settingId
+                    // Keep highlighted for visibility, then clear
+                    kotlinx.coroutines.delay(2000)
                     highlightedSettingId = null
                 }
             }
