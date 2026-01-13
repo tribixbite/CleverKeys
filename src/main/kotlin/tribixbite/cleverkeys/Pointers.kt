@@ -630,7 +630,7 @@ class Pointers(
                 // Calculate direction and find nav key
                 val a = atan2(dy, dx) + Math.PI
                 val direction = ((a * 8 / Math.PI).toInt() + 12) % 16
-                val navKey = getNavKeyAtDirection(ptr, direction)
+                val navKey = getNavKeyForDirection(ptr, direction)
 
                 if (navKey != null) {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Moving cursor, direction=$direction, dist=$movementDist")
@@ -875,9 +875,9 @@ class Pointers(
                 return
             }
 
-            // TrackPoint mode: If key has nav subkeys and user held without moving, enter TrackPoint mode
-            if (_config.keyrepeat_enabled && hasNavigationSubkeys(ptr)) {
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Entering TrackPoint mode for key with nav subkeys")
+            // TrackPoint mode: If pressed key IS a nav key and user held without moving, enter TrackPoint mode
+            if (_config.keyrepeat_enabled && isNavKeyPressed(ptr)) {
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Entering TrackPoint mode for nav key ${ptr.value}")
                 ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_TRACKPOINT_MODE
                 // Store current position as reference for movement detection
                 ptr.downX = ptr.lastX
@@ -973,24 +973,37 @@ class Pointers(
         }
     }
 
-    /** Check if a key has navigation subkeys in any cardinal direction (N/S/E/W). */
-    private fun hasNavigationSubkeys(ptr: Pointer): Boolean {
-        val key = ptr.key ?: return false
-        // Check cardinal directions: N(7), E(6), S(8), W(5) in the 9-position layout
-        val cardinalPositions = listOf(7, 6, 8, 5)  // n, e, s, w
-        for (pos in cardinalPositions) {
-            val subkey = key.keys.getOrNull(pos)
-            if (subkey != null && isNavigationKey(subkey)) {
-                return true
-            }
-        }
-        return false
+    /** Check if the pressed key is a navigation key (for TrackPoint mode). */
+    private fun isNavKeyPressed(ptr: Pointer): Boolean {
+        // Check if the primary key value is a navigation key
+        return isNavigationKey(ptr.value)
     }
 
-    /** Get the navigation key at the given direction from a key. */
-    private fun getNavKeyAtDirection(ptr: Pointer, direction: Int): KeyValue? {
+    /** Get any navigation key in the given direction - check subkeys first, then nearby keys. */
+    private fun getNavKeyForDirection(ptr: Pointer, direction: Int): KeyValue? {
+        // First check if there's a nav subkey in this direction
         val subkey = getNearestKeyAtDirection(ptr, direction)
-        return if (subkey != null && isNavigationKey(subkey)) subkey else null
+        if (subkey != null && isNavigationKey(subkey)) {
+            return subkey
+        }
+        // Map direction to a standard nav key if the pressed key itself is nav
+        if (isNavigationKey(ptr.value)) {
+            // Return the appropriate nav key based on direction
+            // Directions: 0=N, 4=E, 8=S, 12=W
+            // Uses symbol codes from KeyValue.kt: up=0xE005, right=0xE006, down=0xE007, left=0xE008
+            return when {
+                direction in 14..15 || direction in 0..2 ->
+                    KeyValue.keyeventKey(0xE005, android.view.KeyEvent.KEYCODE_DPAD_UP, 0)  // N region
+                direction in 2..6 ->
+                    KeyValue.keyeventKey(0xE006, android.view.KeyEvent.KEYCODE_DPAD_RIGHT, 0)  // E region
+                direction in 6..10 ->
+                    KeyValue.keyeventKey(0xE007, android.view.KeyEvent.KEYCODE_DPAD_DOWN, 0)  // S region
+                direction in 10..14 ->
+                    KeyValue.keyeventKey(0xE008, android.view.KeyEvent.KEYCODE_DPAD_LEFT, 0)  // W region
+                else -> null
+            }
+        }
+        return null
     }
 
     // Gestures
