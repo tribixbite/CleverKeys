@@ -37,7 +37,7 @@ Useful links.
   https://github.com/tribixbite/CleverKeys/tree/main/src/main/layouts
 
 -->
-<keyboard name="QWERTY (US)" script="latin">
+<keyboard name="Julow QWERTY (US)" script="latin">
   <row>
     <key c="q" ne="1" se="loc esc"/>
     <key c="w" nw="~" ne="2" sw="\@"/>
