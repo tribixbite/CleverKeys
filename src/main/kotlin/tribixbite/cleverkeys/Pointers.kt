@@ -175,6 +175,18 @@ class Pointers(
             return
         }
 
+        // Handle deferred nav key tap - user tapped quickly without entering TrackPoint mode
+        // Output the nav key event since it was deferred on touch down
+        if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN) && isNavigationKey(ptr.value)) {
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred nav key tap, outputting key")
+            _handler.onPointerDown(ptr.value, false)
+            ptr.flags = ptr.flags and FLAG_P_DEFERRED_DOWN.inv()
+            clearLatched()
+            removePtr(ptr)
+            _handler.onPointerUp(ptr.value, ptr.modifiers)
+            return
+        }
+
         if (ptr.hasFlagsAny(FLAG_P_SLIDING)) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: SLIDING")
             clearLatched()
@@ -533,7 +545,10 @@ class Pointers(
             key != null && firstKey != null &&
             firstKey.getKind() == KeyValue.Kind.Char
 
-        if (mightBeSwipe) {
+        // Also check if this is a nav key for potential TrackPoint mode
+        val isNavKeyForTrackPoint = _config.keyrepeat_enabled && isNavigationKey(value)
+
+        if (mightBeSwipe || isNavKeyForTrackPoint) {
             ptr.flags = ptr.flags or FLAG_P_DEFERRED_DOWN
         }
 
@@ -545,9 +560,10 @@ class Pointers(
         }
 
         // Don't output character immediately when swipe typing might start
-        // The character will be output in onTouchUp if it turns out not to be a swipe
+        // or when this is a nav key that might enter TrackPoint mode
+        // The character/key will be output in onTouchUp if it turns out not to be a swipe/TrackPoint
         // OR in handleLongPress if key repeat triggers
-        if (!mightBeSwipe) {
+        if (!mightBeSwipe && !isNavKeyForTrackPoint) {
             _handler.onPointerDown(value, false)
         }
     }

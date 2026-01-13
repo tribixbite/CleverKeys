@@ -28,6 +28,14 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Clear
@@ -68,7 +76,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
  * - Performance monitoring integration
  * - Accessibility improvements
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
 
     companion object {
@@ -338,10 +346,26 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Settings search
     private var settingsSearchQuery by mutableStateOf("")
     private var showSearchResults by mutableStateOf(false)
-    private var highlightedSettingId by mutableStateOf<String?>(null)  // For pulse animation
-    private var scrollToPosition by mutableStateOf<Int?>(null)  // Scroll target position in pixels
-    private val settingPositions = mutableMapOf<String, Int>()  // Track setting positions (root Y coords)
-    private var scrollContainerRootY by mutableStateOf(0)  // Scroll container's root Y position
+    private var highlightedSettingId by mutableStateOf<String?>(null)  // For pulse animation and scroll trigger
+    // BringIntoViewRequester map - each setting gets its own requester for reliable auto-scroll
+    private val bringIntoViewRequesters = mutableMapOf<String, BringIntoViewRequester>()
+
+    /** Get or create a BringIntoViewRequester for a setting ID */
+    fun getOrCreateRequester(settingId: String): BringIntoViewRequester {
+        return bringIntoViewRequesters.getOrPut(settingId) { BringIntoViewRequester() }
+    }
+
+    /** Nested scroll connection to prevent search results from scrolling parent */
+    private val searchResultsNestedScrollConnection = object : NestedScrollConnection {
+        override fun onPostScroll(
+            consumed: Offset,
+            available: Offset,
+            source: NestedScrollSource
+        ): Offset = available  // Consume all remaining scroll
+
+        override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity =
+            available  // Consume all remaining velocity
+    }
 
     /** Collapse all sections */
     private fun collapseAllSections() {
@@ -454,10 +478,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 "short_gestures" -> gestureTuningSectionExpanded = true
                 "multilang" -> multiLangSectionExpanded = true
             }
+            // Set highlighted ID - the setting's LaunchedEffect will handle scroll via BringIntoViewRequester
             highlightedSettingId = targetId
-            // Schedule scroll after section expands - poll until position is available
             lifecycleScope.launch {
-                waitForPositionAndScroll(targetId)
                 kotlinx.coroutines.delay(2000)
                 highlightedSettingId = null
             }
@@ -470,40 +493,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         } else {
             collapseAllSections()
             setting.expandSection()
-            // Highlight and scroll to target setting
+            // Set highlighted ID - scroll handled by BringIntoViewRequester in the setting composable
             if (setting.settingId.isNotEmpty()) {
                 highlightedSettingId = setting.settingId
                 lifecycleScope.launch {
-                    waitForPositionAndScroll(setting.settingId)
                     kotlinx.coroutines.delay(1500)
                     highlightedSettingId = null
                 }
             }
         }
-    }
-
-    /**
-     * Wait for a setting's position to be laid out and then trigger scroll.
-     * Polls for position availability with exponential backoff.
-     */
-    private suspend fun waitForPositionAndScroll(settingId: String) {
-        // Clear any stale position first
-        settingPositions.remove(settingId)
-
-        // Poll for position with backoff (50ms, 100ms, 150ms, 200ms, 250ms)
-        var attempts = 0
-        val maxAttempts = 5
-        while (attempts < maxAttempts) {
-            kotlinx.coroutines.delay(50L + (attempts * 50L))
-            settingPositions[settingId]?.let { position ->
-                scrollToPosition = position
-                return
-            }
-            attempts++
-        }
-        // Fallback: try one more time after a longer delay for slow layouts
-        kotlinx.coroutines.delay(300)
-        settingPositions[settingId]?.let { scrollToPosition = it }
     }
 
     private fun getFilteredSettings(query: String): List<SearchableSetting> {
@@ -800,30 +798,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
     @Composable
     private fun SettingsScreen() {
         val scrollState = rememberScrollState()
-
-        // Scroll to highlighted setting when scrollToPosition changes
-        // settingPositions stores root Y coordinates; convert to scroll content position
-        LaunchedEffect(scrollToPosition) {
-            scrollToPosition?.let { settingRootY ->
-                // Calculate position in scroll content: rootY - containerRootY + currentScroll
-                val contentPosition = settingRootY - scrollContainerRootY + scrollState.value
-
-                // Get viewport height for centering calculation
-                val displayMetrics = resources.displayMetrics
-                val viewportHeight = displayMetrics.heightPixels
-
-                // Center the item: scroll so item is at ~1/3 from top of viewport
-                // This provides context above the item and visibility below
-                val centeringOffset = viewportHeight / 3
-                val scrollTarget = (contentPosition - centeringOffset).coerceIn(0, scrollState.maxValue)
-                scrollState.animateScrollTo(scrollTarget)
-                scrollToPosition = null
-            }
-        }
 
         // Collected Data Viewer Dialog
         if (showCollectedDataViewer) {
@@ -849,9 +827,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .padding(16.dp)
-                .onGloballyPositioned { coords ->
-                    scrollContainerRootY = coords.positionInRoot().y.toInt()
-                }
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -908,6 +883,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             )
 
             // Search Results - always below search field, scrollable
+            // Uses nestedScroll barrier to prevent scroll propagation to parent
             AnimatedVisibility(
                 visible = showResults,
                 enter = expandVertically(),
@@ -916,7 +892,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 200.dp),
+                        .heightIn(max = 200.dp)
+                        .nestedScroll(searchResultsNestedScrollConnection),
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -3491,6 +3468,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         }
     }
 
+    @OptIn(ExperimentalFoundationApi::class)
     @Composable
     private fun SettingsSwitch(
         title: String,
@@ -3514,16 +3492,22 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         val highlightColor = MaterialTheme.colorScheme.primary.copy(alpha = if (isHighlighted) pulseAlpha * 0.3f else 0f)
         val borderColor = MaterialTheme.colorScheme.primary.copy(alpha = if (isHighlighted) 0.5f + pulseAlpha * 0.5f else 0f)
 
+        // BringIntoViewRequester for auto-scroll when highlighted
+        val bringIntoViewRequester = remember(highlightId) {
+            if (highlightId != null) getOrCreateRequester(highlightId) else BringIntoViewRequester()
+        }
+
+        // Auto-scroll when this setting becomes highlighted
+        LaunchedEffect(isHighlighted) {
+            if (isHighlighted) {
+                bringIntoViewRequester.bringIntoView()
+            }
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .then(
-                    if (highlightId != null) {
-                        Modifier.onGloballyPositioned { coords ->
-                            settingPositions[highlightId] = coords.positionInRoot().y.toInt()
-                        }
-                    } else Modifier
-                )
+                .bringIntoViewRequester(bringIntoViewRequester)
                 .then(
                     if (isHighlighted) {
                         Modifier
