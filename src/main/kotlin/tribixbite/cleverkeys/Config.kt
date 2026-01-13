@@ -77,6 +77,7 @@ object Defaults {
     const val SWIPE_MIN_DWELL_TIME = 7
     const val SWIPE_NOISE_THRESHOLD = 1.26f
     const val SWIPE_HIGH_VELOCITY_THRESHOLD = 1000f
+    const val FINGER_OCCLUSION_OFFSET = 12.5f // Touch Y-offset as % of row height (0-50%)
     const val SLIDER_SPEED_SMOOTHING = 0.6f  // Slightly more responsive smoothing
     const val SLIDER_SPEED_MAX = 6.0f  // Higher max for faster long-distance cursor movement
 
@@ -363,6 +364,7 @@ class Config private constructor(
     @JvmField var swipe_high_velocity_threshold = 1000.0f // Velocity threshold for fast swipes (px/sec)
     @JvmField var swipe_min_distance = 50.0f // Minimum total distance to recognize a swipe (pixels)
     @JvmField var swipe_min_key_distance = 40.0f // Minimum distance between keys during swipe (pixels)
+    @JvmField var finger_occlusion_offset = 12.5f // Touch Y-offset as % of row height (0-50%, default 12.5%)
 
     // Slider speed configuration
     @JvmField var slider_speed_smoothing = 0.7f // Smoothing factor for slider speed (0.0-1.0)
@@ -590,6 +592,7 @@ class Config private constructor(
         swipe_high_velocity_threshold = safeGetFloat(_prefs, "swipe_high_velocity_threshold", Defaults.SWIPE_HIGH_VELOCITY_THRESHOLD)
         swipe_min_distance = safeGetFloat(_prefs, "swipe_min_distance", Defaults.SWIPE_MIN_DISTANCE)
         swipe_min_key_distance = safeGetFloat(_prefs, "swipe_min_key_distance", Defaults.SWIPE_MIN_KEY_DISTANCE)
+        finger_occlusion_offset = safeGetFloat(_prefs, "finger_occlusion_offset", Defaults.FINGER_OCCLUSION_OFFSET)
 
         // Slider speed configuration
         slider_speed_smoothing = safeGetFloat(_prefs, "slider_speed_smoothing", Defaults.SLIDER_SPEED_SMOOTHING)

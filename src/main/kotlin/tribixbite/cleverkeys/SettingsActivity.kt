@@ -206,6 +206,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var swipeMinDwellTime by mutableStateOf(10) // ms
     private var swipeNoiseThreshold by mutableStateOf(2.0f) // pixels
     private var swipeHighVelocityThreshold by mutableStateOf(1000f) // px/sec
+    private var fingerOcclusionOffset by mutableStateOf(12.5f) // % of row height
     private var sliderSpeedSmoothing by mutableStateOf(0.7f) // 0.0-1.0
     private var sliderSpeedMax by mutableStateOf(4.0f) // multiplier
 
@@ -2034,6 +2035,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     displayValue = "%.0f px/s".format(swipeHighVelocityThreshold)
                 )
 
+                SettingsSlider(
+                    title = "Finger Occlusion Compensation",
+                    description = "Y-offset as % of row height to compensate for finger obscuring keys. Higher shifts touch point down toward key centers.",
+                    value = fingerOcclusionOffset,
+                    valueRange = 0f..50f,
+                    steps = 10,
+                    onValueChange = {
+                        fingerOcclusionOffset = it
+                        saveSetting("finger_occlusion_offset", fingerOcclusionOffset)
+                    },
+                    displayValue = "%.1f%%".format(fingerOcclusionOffset)
+                )
+
                 // Slider Key Behavior subsection
                 Text(
                     text = "Slider Key Behavior",
@@ -3678,6 +3692,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         swipeMinDwellTime = Config.safeGetInt(prefs, "swipe_min_dwell_time", Defaults.SWIPE_MIN_DWELL_TIME)
         swipeNoiseThreshold = Config.safeGetFloat(prefs, "swipe_noise_threshold", Defaults.SWIPE_NOISE_THRESHOLD)
         swipeHighVelocityThreshold = Config.safeGetFloat(prefs, "swipe_high_velocity_threshold", Defaults.SWIPE_HIGH_VELOCITY_THRESHOLD)
+        fingerOcclusionOffset = Config.safeGetFloat(prefs, "finger_occlusion_offset", Defaults.FINGER_OCCLUSION_OFFSET)
         sliderSpeedSmoothing = Config.safeGetFloat(prefs, "slider_speed_smoothing", Defaults.SLIDER_SPEED_SMOOTHING)
         sliderSpeedMax = Config.safeGetFloat(prefs, "slider_speed_max", Defaults.SLIDER_SPEED_MAX)
 

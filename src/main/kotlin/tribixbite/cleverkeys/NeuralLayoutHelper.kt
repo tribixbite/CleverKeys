@@ -271,15 +271,16 @@ class NeuralLayoutHelper(
                 )
 
                 // Touch Y-offset for finger occlusion compensation
-                // RE-ENABLED (v1.32.943): Conservative 12.5% offset for better tap target prediction
-                // Previous 37% was too aggressive, 0% had no compensation - 12.5% is balanced
-                val touchYOffset = rowHeight * 0.125f // Conservative value within recommended 10-15% range
+                // User-configurable offset (0-50% of row height) to compensate for finger obscuring keys
+                // Default 12.5% is conservative within recommended 10-15% range
+                val offsetPercent = _config.finger_occlusion_offset / 100.0f
+                val touchYOffset = rowHeight * offsetPercent
                 _predictionCoordinator.getNeuralEngine()!!.setTouchYOffset(touchYOffset)
                 Log.d(
                     TAG,
                     String.format(
-                        "Touch Y-offset: %.0f pixels (12.5%% of row height %.0f)",
-                        touchYOffset, rowHeight
+                        "Touch Y-offset: %.0f pixels (%.1f%% of row height %.0f)",
+                        touchYOffset, _config.finger_occlusion_offset, rowHeight
                     )
                 )
 
