@@ -82,15 +82,18 @@ class MLDataCollector(private val context: Context) {
             )
 
             // Copy trace points from the temporary data
+            // FIX: tDeltaMs values are deltas from PREVIOUS point, not offsets from start
+            // Must accumulate them to reconstruct absolute timestamps
+            var runningTimestamp = System.currentTimeMillis() - 1000
             for (point in currentSwipeData.getTracePoints()) {
                 // Add points with their original normalized values and timestamps
                 // Since they're already normalized, we need to denormalize then renormalize
                 // to ensure proper storage
                 val rawX = point.x * metrics.widthPixels
                 val rawY = point.y * metrics.heightPixels
-                // Reconstruct approximate timestamp (this is a limitation of the current design)
-                val timestamp = System.currentTimeMillis() - 1000 + point.tDeltaMs
-                mlData.addRawPoint(rawX, rawY, timestamp)
+                // Accumulate delta to get correct absolute timestamp
+                runningTimestamp += point.tDeltaMs
+                mlData.addRawPoint(rawX, rawY, runningTimestamp)
             }
 
             // Copy registered keys
