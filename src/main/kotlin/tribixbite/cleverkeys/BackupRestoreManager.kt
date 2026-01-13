@@ -165,6 +165,12 @@ class BackupRestoreManager(private val context: Context) {
         // Input behavior
         "vibrate_custom" to Defaults.VIBRATE_CUSTOM,
         "vibrate_duration" to Defaults.VIBRATE_DURATION,
+        // Per-event haptic feedback
+        "haptic_key_press" to Defaults.HAPTIC_KEY_PRESS,
+        "haptic_prediction_tap" to Defaults.HAPTIC_PREDICTION_TAP,
+        "haptic_trackpoint_activate" to Defaults.HAPTIC_TRACKPOINT_ACTIVATE,
+        "haptic_long_press" to Defaults.HAPTIC_LONG_PRESS,
+        "haptic_swipe_complete" to Defaults.HAPTIC_SWIPE_COMPLETE,
         "longpress_timeout" to Defaults.LONGPRESS_TIMEOUT,
         "longpress_interval" to Defaults.LONGPRESS_INTERVAL,
         "keyrepeat_enabled" to Defaults.KEYREPEAT_ENABLED,

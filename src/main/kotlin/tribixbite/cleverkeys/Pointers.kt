@@ -110,7 +110,7 @@ class Pointers(
         }
         val ptr = Pointer(-1, key, kv, 0f, 0f, Modifiers.EMPTY, flags)
         _ptrs.add(ptr)
-        _handler.onPointerFlagsChanged(false)
+        _handler.onPointerFlagsChanged(null)
     }
 
     /**
@@ -132,7 +132,7 @@ class Pointers(
             // No existing pointer, latch the key.
             if (latched) {
                 add_fake_pointer(key, kv, lock)
-                _handler.onPointerFlagsChanged(false)
+                _handler.onPointerFlagsChanged(null)
             }
         } else if ((ptr.flags and FLAG_P_FAKE) == 0) {
             // Key already latched but not by a fake ptr, do nothing.
@@ -142,13 +142,13 @@ class Pointers(
             if (latched) {
                 add_fake_pointer(key, kv, lock)
             }
-            _handler.onPointerFlagsChanged(false)
+            _handler.onPointerFlagsChanged(null)
         } else if ((ptr.flags and FLAG_P_LOCKED) != 0) {
             // Existing ptr is locked but [lock] is false, do not continue.
         } else if (!latched) {
             // Key is latched by a fake ptr. Unlatch if requested.
             removePtr(ptr)
-            _handler.onPointerFlagsChanged(false)
+            _handler.onPointerFlagsChanged(null)
         }
     }
 
@@ -402,7 +402,7 @@ class Pointers(
                                 val latchedFlags = gestureFlags or FLAG_P_LATCHED
                                 val latchedPtr = Pointer(-1, ptr.key, gestureValue, ptr.downX, ptr.downY, Modifiers.EMPTY, latchedFlags)
                                 _ptrs.add(latchedPtr)
-                                _handler.onPointerFlagsChanged(false)
+                                _handler.onPointerFlagsChanged(null)
                                 _swipeRecognizer.reset()
                                 removePtr(ptr)
                                 return
@@ -449,7 +449,7 @@ class Pointers(
             // Toggle lockable key, except if it's a fake pointer
             if ((latched.flags and (FLAG_P_FAKE or FLAG_P_DOUBLE_TAP_LOCK)) == FLAG_P_DOUBLE_TAP_LOCK) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Locking pointer (double-tap)")
-                lockPointer(latched, false)
+                lockPointer(latched)
             } else { // Otherwise, unlatch
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Unlatching")
                 removePtr(latched)
@@ -463,7 +463,7 @@ class Pointers(
             }
             ptr.flags = ptr.flags or FLAG_P_LATCHED
             ptr.pointerId = -1
-            _handler.onPointerFlagsChanged(false)
+            _handler.onPointerFlagsChanged(null)
         } else {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Regular key up: clearing latched, value=$ptr_value, ptrs_before=${_ptrs.size}")
             clearLatched()
@@ -475,7 +475,7 @@ class Pointers(
 
     fun onTouchCancel() {
         clear()
-        _handler.onPointerFlagsChanged(true)
+        _handler.onPointerFlagsChanged(null)  // No haptic on cancel
     }
 
     /** Whether an other pointer is down on a non-special key. */
@@ -803,14 +803,14 @@ class Pointers(
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "clearLatched: cleared $clearedCount pointers, remaining=${_ptrs.size}")
         // Notify handler to update keyboard view when modifiers change
         if (clearedCount > 0) {
-            _handler.onPointerFlagsChanged(false)
+            _handler.onPointerFlagsChanged(null)
         }
     }
 
     /** Make a pointer into the locked state. */
-    private fun lockPointer(ptr: Pointer, shouldVibrate: Boolean) {
+    private fun lockPointer(ptr: Pointer, hapticEvent: HapticEvent? = null) {
         ptr.flags = (ptr.flags and FLAG_P_DOUBLE_TAP_LOCK.inv()) or FLAG_P_LOCKED
-        _handler.onPointerFlagsChanged(shouldVibrate)
+        _handler.onPointerFlagsChanged(hapticEvent)
     }
 
     internal fun isSliding(): Boolean {
@@ -883,7 +883,7 @@ class Pointers(
                 ptr.downX = ptr.lastX
                 ptr.downY = ptr.lastY
                 // Vibrate to indicate TrackPoint mode activation
-                _handler.onPointerFlagsChanged(true)
+                _handler.onPointerFlagsChanged(HapticEvent.TRACKPOINT_ACTIVATE)
                 return
             }
         }
@@ -891,7 +891,7 @@ class Pointers(
         // Long press toggle lock on modifiers
         if ((ptr.flags and FLAG_P_LATCHABLE) != 0) {
             if (!ptr.hasFlagsAny(FLAG_P_CANT_LOCK)) {
-                lockPointer(ptr, true)
+                lockPointer(ptr, HapticEvent.LONG_PRESS)
             }
             return
         }
@@ -1120,7 +1120,7 @@ class Pointers(
          */
         internal fun onTouchUp(ptr: Pointer) {
             removePtr(ptr)
-            _handler.onPointerFlagsChanged(false)
+            _handler.onPointerFlagsChanged(null)
         }
 
         /**
@@ -1276,8 +1276,9 @@ class Pointers(
          */
         fun onPointerUp(k: KeyValue?, mods: Modifiers)
 
-        /** Flags changed because latched or locked keys or cancelled pointers. */
-        fun onPointerFlagsChanged(shouldVibrate: Boolean)
+        /** Flags changed because latched or locked keys or cancelled pointers.
+         *  @param hapticEvent The haptic event to trigger, or null for no haptic feedback. */
+        fun onPointerFlagsChanged(hapticEvent: HapticEvent?)
 
         /** Key is repeating. */
         fun onPointerHold(k: KeyValue, mods: Modifiers)

@@ -426,11 +426,12 @@ class Keyboard2View @JvmOverloads constructor(
         updateFlags()
     }
 
-    override fun onPointerFlagsChanged(shouldVibrate: Boolean) {
+    override fun onPointerFlagsChanged(hapticEvent: HapticEvent?) {
         updateFlags()
         invalidate()
-        if (shouldVibrate)
-            vibrate()
+        if (hapticEvent != null) {
+            vibrate(hapticEvent)
+        }
     }
 
     private fun updateFlags() {
@@ -1153,8 +1154,8 @@ class Keyboard2View @JvmOverloads constructor(
         return kv.getKind() == KeyValue.Kind.Char && kv.getChar() == character
     }
 
-    private fun vibrate() {
-        VibratorCompat.vibrate(this, _config)
+    private fun vibrate(event: HapticEvent = HapticEvent.KEY_PRESS) {
+        VibratorCompat.vibrate(this, _config, event)
     }
 
     override fun onMeasure(wSpec: Int, hSpec: Int) {

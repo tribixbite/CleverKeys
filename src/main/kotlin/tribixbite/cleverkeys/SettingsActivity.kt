@@ -167,6 +167,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var autoCorrectEnabled by mutableStateOf(true)
     private var termuxModeEnabled by mutableStateOf(false)
     private var vibrationDuration by mutableStateOf(20)
+    // Per-event haptic feedback toggles
+    private var hapticKeyPress by mutableStateOf(Defaults.HAPTIC_KEY_PRESS)
+    private var hapticPredictionTap by mutableStateOf(Defaults.HAPTIC_PREDICTION_TAP)
+    private var hapticTrackpointActivate by mutableStateOf(Defaults.HAPTIC_TRACKPOINT_ACTIVATE)
+    private var hapticLongPress by mutableStateOf(Defaults.HAPTIC_LONG_PRESS)
+    private var hapticSwipeComplete by mutableStateOf(Defaults.HAPTIC_SWIPE_COMPLETE)
     private var swipeDebugEnabled by mutableStateOf(false)
 
     // Adaptive layout settings (percentages of screen dimensions)
@@ -1756,6 +1762,70 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             saveSetting("vibrate_duration", vibrationDuration)
                         },
                         displayValue = "${vibrationDuration}ms"
+                    )
+
+                    // Per-event haptic feedback controls
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Haptic Events",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
+                    )
+
+                    SettingsSwitch(
+                        title = "Key Press",
+                        description = "Vibrate on key tap",
+                        checked = hapticKeyPress,
+                        onCheckedChange = {
+                            hapticKeyPress = it
+                            saveSetting("haptic_key_press", it)
+                            Config.globalConfig().haptic_key_press = it
+                        }
+                    )
+
+                    SettingsSwitch(
+                        title = "Prediction Tap",
+                        description = "Vibrate when selecting a prediction",
+                        checked = hapticPredictionTap,
+                        onCheckedChange = {
+                            hapticPredictionTap = it
+                            saveSetting("haptic_prediction_tap", it)
+                            Config.globalConfig().haptic_prediction_tap = it
+                        }
+                    )
+
+                    SettingsSwitch(
+                        title = "TrackPoint Mode",
+                        description = "Vibrate when entering cursor mode on nav keys",
+                        checked = hapticTrackpointActivate,
+                        onCheckedChange = {
+                            hapticTrackpointActivate = it
+                            saveSetting("haptic_trackpoint_activate", it)
+                            Config.globalConfig().haptic_trackpoint_activate = it
+                        }
+                    )
+
+                    SettingsSwitch(
+                        title = "Long Press",
+                        description = "Vibrate on modifier lock",
+                        checked = hapticLongPress,
+                        onCheckedChange = {
+                            hapticLongPress = it
+                            saveSetting("haptic_long_press", it)
+                            Config.globalConfig().haptic_long_press = it
+                        }
+                    )
+
+                    SettingsSwitch(
+                        title = "Swipe Complete",
+                        description = "Vibrate when swipe gesture finishes",
+                        checked = hapticSwipeComplete,
+                        onCheckedChange = {
+                            hapticSwipeComplete = it
+                            saveSetting("haptic_swipe_complete", it)
+                            Config.globalConfig().haptic_swipe_complete = it
+                        }
                     )
                 }
 
@@ -4054,6 +4124,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         autoCorrectEnabled = prefs.getSafeBoolean("autocorrect_enabled", Defaults.AUTOCORRECT_ENABLED)
         termuxModeEnabled = prefs.getSafeBoolean("termux_mode_enabled", Defaults.TERMUX_MODE_ENABLED)
         vibrationDuration = prefs.getSafeInt("vibrate_duration", Defaults.VIBRATE_DURATION)
+        // Per-event haptic feedback
+        hapticKeyPress = prefs.getSafeBoolean("haptic_key_press", Defaults.HAPTIC_KEY_PRESS)
+        hapticPredictionTap = prefs.getSafeBoolean("haptic_prediction_tap", Defaults.HAPTIC_PREDICTION_TAP)
+        hapticTrackpointActivate = prefs.getSafeBoolean("haptic_trackpoint_activate", Defaults.HAPTIC_TRACKPOINT_ACTIVATE)
+        hapticLongPress = prefs.getSafeBoolean("haptic_long_press", Defaults.HAPTIC_LONG_PRESS)
+        hapticSwipeComplete = prefs.getSafeBoolean("haptic_swipe_complete", Defaults.HAPTIC_SWIPE_COMPLETE)
         swipeDebugEnabled = prefs.getSafeBoolean("swipe_show_debug_scores", Defaults.SWIPE_SHOW_DEBUG_SCORES)
 
         // Swipe Corrections settings

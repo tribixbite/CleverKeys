@@ -56,6 +56,12 @@ object Defaults {
     // Input behavior
     const val VIBRATE_CUSTOM = false
     const val VIBRATE_DURATION = 20
+    // Per-event haptic feedback (all enabled by default)
+    const val HAPTIC_KEY_PRESS = true
+    const val HAPTIC_PREDICTION_TAP = true
+    const val HAPTIC_TRACKPOINT_ACTIVATE = true
+    const val HAPTIC_LONG_PRESS = true
+    const val HAPTIC_SWIPE_COMPLETE = false  // Disabled by default - can be distracting
     const val LONGPRESS_TIMEOUT = 600
     const val LONGPRESS_INTERVAL = 25
     const val KEYREPEAT_ENABLED = true
@@ -275,6 +281,12 @@ class Config private constructor(
     @JvmField var slide_step_px = 0f
     @JvmField var vibrate_custom = false
     @JvmField var vibrate_duration = 0L
+    // Per-event haptic feedback toggles
+    @JvmField var haptic_key_press = Defaults.HAPTIC_KEY_PRESS
+    @JvmField var haptic_prediction_tap = Defaults.HAPTIC_PREDICTION_TAP
+    @JvmField var haptic_trackpoint_activate = Defaults.HAPTIC_TRACKPOINT_ACTIVATE
+    @JvmField var haptic_long_press = Defaults.HAPTIC_LONG_PRESS
+    @JvmField var haptic_swipe_complete = Defaults.HAPTIC_SWIPE_COMPLETE
     @JvmField var longPressTimeout = 0L
     @JvmField var longPressInterval = 0L
     @JvmField var keyrepeat_enabled = false
@@ -477,6 +489,12 @@ class Config private constructor(
 
         vibrate_custom = _prefs.getBoolean("vibrate_custom", Defaults.VIBRATE_CUSTOM)
         vibrate_duration = safeGetInt(_prefs, "vibrate_duration", Defaults.VIBRATE_DURATION).toLong()
+        // Per-event haptic feedback toggles
+        haptic_key_press = _prefs.getBoolean("haptic_key_press", Defaults.HAPTIC_KEY_PRESS)
+        haptic_prediction_tap = _prefs.getBoolean("haptic_prediction_tap", Defaults.HAPTIC_PREDICTION_TAP)
+        haptic_trackpoint_activate = _prefs.getBoolean("haptic_trackpoint_activate", Defaults.HAPTIC_TRACKPOINT_ACTIVATE)
+        haptic_long_press = _prefs.getBoolean("haptic_long_press", Defaults.HAPTIC_LONG_PRESS)
+        haptic_swipe_complete = _prefs.getBoolean("haptic_swipe_complete", Defaults.HAPTIC_SWIPE_COMPLETE)
         longPressTimeout = safeGetInt(_prefs, "longpress_timeout", Defaults.LONGPRESS_TIMEOUT).toLong()
         longPressInterval = safeGetInt(_prefs, "longpress_interval", Defaults.LONGPRESS_INTERVAL).toLong()
         keyrepeat_enabled = _prefs.getBoolean("keyrepeat_enabled", Defaults.KEYREPEAT_ENABLED)
