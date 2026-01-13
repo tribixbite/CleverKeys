@@ -84,13 +84,21 @@
    - Added more searchable entries (layout manager, neural settings, etc.)
    - Files Modified: `SettingsActivity.kt`
 
-6. **Settings Search Scroll Fix** (v3 fix: 2026-01-13)
-   - Replaced fixed 100ms delay with polling mechanism with exponential backoff
-   - Clears stale positions before waiting for new layout
-   - Polls up to 5 times (50ms, 100ms, 150ms, 200ms, 250ms) + 300ms fallback
-   - Improved scroll calculation: centers item at ~1/3 of viewport height
-   - Uses coerceIn(0, maxValue) to handle scroll edge cases
+6. **Settings Search Scroll Fix** (v4 rewrite: 2026-01-13)
+   - Complete rewrite using Compose BringIntoViewRequester API
+   - Replaced manual position tracking with Compose-native scroll handling
+   - LaunchedEffect in SettingsSwitch triggers bringIntoView() when highlighted
+   - Added NestedScrollConnection barrier to search results Card
+   - Prevents search results from scrolling parent settings when list reaches end
+   - Removed all manual polling, position maps, and scroll calculations
    - Files Modified: `SettingsActivity.kt`
+
+7. **TrackPoint Mode Activation Fix** (v2 fix: 2026-01-13)
+   - Set FLAG_P_DEFERRED_DOWN for nav keys (was only set for Char type keys)
+   - Defer nav key output on touch down to allow TrackPoint mode entry
+   - Added explicit handling for nav key tap (quick release without hold)
+   - Nav keys now: hold → TrackPoint mode, tap → output key event
+   - Files Modified: `Pointers.kt`
 
 ---
 
