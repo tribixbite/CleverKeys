@@ -84,23 +84,25 @@
    - Added more searchable entries (layout manager, neural settings, etc.)
    - Files Modified: `SettingsActivity.kt`
 
-6. **Settings Search Scroll Fix** (v4 rewrite: 2026-01-13)
+6. **Settings Search Scroll Fix** (v5 timing fix: 2026-01-13)
    - Complete rewrite using Compose BringIntoViewRequester API
    - Replaced manual position tracking with Compose-native scroll handling
    - LaunchedEffect in SettingsSwitch triggers bringIntoView() when highlighted
    - Added NestedScrollConnection barrier to search results Card
    - Prevents search results from scrolling parent settings when list reaches end
-   - Removed all manual polling, position maps, and scroll calculations
+   - **v5 fix**: Added 150ms delay before setting highlightedSettingId
+   - Delay allows Compose to recompose/layout section before scroll triggers
    - Files Modified: `SettingsActivity.kt`
 
-7. **TrackPoint Mode Activation Fix** (v3 fix: 2026-01-13)
+7. **TrackPoint Joystick Mode** (v4 fix: 2026-01-13)
    - Changed from `isNavigationKey(ptr.value)` to `hasNavigationSubkeys(ptr)`
    - The "nav key" is actually the compose key with nav subkeys in positions 5-8
    - bottom_row.xml: `key0="loc compose" key5="left" key6="right" key7="up" key8="down"`
-   - Compose key tap → outputs compose (dead keys latched mode)
-   - Compose key hold → enters TrackPoint mode for cursor navigation
-   - Compose key SE swipe → outputs page_down (short gesture, not broken)
-   - Short gestures still work on keys with nav subkeys (no path exclusion)
+   - **Joystick-style movement**: speed proportional to distance from key center
+   - Dead zone (15px) at center - no movement when finger near center
+   - Speed: 200ms delay at edge of dead zone, 30ms at key border
+   - Short swipes work: check movement distance before treating as tap
+   - Visual fix: clear highlight on exit via onPointerFlagsChanged(null)
    - Files Modified: `Pointers.kt`
 
 ---
