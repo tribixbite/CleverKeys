@@ -28,6 +28,19 @@
    - Fixes rapid space tapping incorrectly inserting periods
    - Files Modified: `Config.kt`, `KeyEventHandler.kt`, `SettingsActivity.kt`
 
+4. **Navigation Key Hold-to-Repeat**
+   - Short swipe over arrow keys (↑↓←→) activates cursor movement
+   - If finger held still (<8px movement), cursor repeats with acceleration
+   - Moving finger cancels repeat mode
+   - Uses FLAG_P_NAV_HOLD_REPEAT flag and longpress timer
+   - Files Modified: `Pointers.kt`
+
+5. **Settings Search Fix**
+   - Fixed dropdown overlay using ExposedDropdownMenuBox
+   - Dropdown now positions below search field properly
+   - Click handling works correctly
+   - Files Modified: `SettingsActivity.kt`
+
 ---
 
 ## NN Beam Search Accuracy Investigation - IN PROGRESS (2026-01-12)
