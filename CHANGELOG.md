@@ -19,6 +19,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.3] - 2026-01-13
+
+### New Features - Input & UI Improvements
+
+- **Space Key Repeat on Hold**: Long-pressing space now repeats like delete key
+  - Includes movement tolerance (~15px) to distinguish hold from swipe start
+  - Works with swipe-enabled keys (space can still initiate swipe typing)
+  - Uses accelerating repeat rate consistent with other repeating keys
+- **Finger Occlusion Compensation**: New slider in Settings → Swipe Typing
+  - Configurable Y-offset (0-50% of row height)
+  - Compensates for finger obscuring touch target during swipe
+  - Default 12.5% matches recommended range (10-15%)
+- **Julow QWERTY Layout**: New predefined layout option
+  - Compact layout with numbers/symbols on swipe corners
+  - Full programming symbols accessible via corner swipes
+  - Shift and backspace on wider edge keys
+
+### Fixed
+
+- **Double-Space-to-Period**: No longer triggers during key repeat
+  - Holding space now correctly inserts multiple spaces
+  - Period auto-insertion only on discrete space taps
+- **Space Key Not Repeating**: Fixed long-press timer for potential swipe keys
+  - Timer now starts for all keys, movement checked on timeout
+
+### Website
+
+- **New Homepage**: Comprehensive Tailwind CSS dark-mode landing page
+- **Demo Relocated**: Neural swipe demo moved to `/demo/` subfolder
+- **Modern Design**: Purple theme (#9b59b6) with feature grid and language support section
+
+---
+
 ## [1.2.0] - 2026-01-09
 
 ### New Features - Language Toggle & Text Menu

@@ -27,24 +27,36 @@ jobs:
       - name: Ensure LFS files
         run: git lfs install && git lfs pull
 
-      - name: Prepare CleverKeys neural swipe demo
+      - name: Prepare CleverKeys website and demo
         run: |
-          mkdir -p deploy
+          mkdir -p deploy/demo
 
-          # Copy complete web demo with ONNX neural swipe functionality
           if [ -d "web_demo" ]; then
-            echo "📁 Copying CleverKeys neural swipe demo..."
-            cp web_demo/* deploy/ 2>/dev/null || echo "No web demo files"
+            echo "📁 Setting up CleverKeys website..."
 
-            # Rename swipe-onnx.html to index.html for direct access
-            if [ -f "deploy/swipe-onnx.html" ]; then
-              mv deploy/swipe-onnx.html deploy/index.html
-              echo "✅ Set swipe-onnx.html as homepage"
+            # Copy new homepage (index.html stays as-is)
+            if [ -f "web_demo/index.html" ]; then
+              cp web_demo/index.html deploy/
+              echo "✅ Homepage ready"
             fi
+
+            # Move neural swipe demo to /demo/ subfolder
+            echo "📁 Setting up neural swipe demo in /demo/..."
+            if [ -f "web_demo/swipe-onnx.html" ]; then
+              cp web_demo/swipe-onnx.html deploy/demo/index.html
+              echo "✅ Demo page ready at /demo/"
+            fi
+
+            # Copy demo supporting files (ONNX models, JS, JSON)
+            cp web_demo/*.onnx deploy/demo/ 2>/dev/null || echo "No ONNX models"
+            cp web_demo/*.js deploy/demo/ 2>/dev/null || echo "No JS files"
+            cp web_demo/*.json deploy/demo/ 2>/dev/null || echo "No JSON files"
           fi
 
-          echo "✅ Neural swipe demo prepared"
-          ls -la deploy/
+          echo "✅ Website structure prepared:"
+          echo "   / - Homepage"
+          echo "   /demo/ - Neural swipe typing demo"
+          ls -laR deploy/
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

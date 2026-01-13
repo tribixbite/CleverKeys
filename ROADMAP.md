@@ -2,6 +2,16 @@
 
 This document outlines the planned development path for CleverKeys, focusing on expanding device support, improving neural prediction capabilities, and enhancing customization.
 
+## ✅ Recently Completed (v1.2.x)
+
+- [x] **Space Key Repeat on Hold** - Long-press space now repeats like delete key
+- [x] **Finger Occlusion Compensation** - Configurable Y-offset setting (0-50%)
+- [x] **Per-Key Short Swipe Customization** - 204+ commands assignable to any key
+- [x] **Multi-Language Swipe Typing** - 11 languages with accent recovery
+- [x] **Language Quick Toggle** - Swap between primary/secondary languages instantly
+- [x] **Profile System** - Layout import/export with gesture customizations
+- [x] **New Website** - Tailwind dark-mode homepage with demo at `/demo/`
+
 ## 🚀 Core Features & Stability
 
 - [ ] **Expanded Terminal Support**
@@ -9,9 +19,9 @@ This document outlines the planned development path for CleverKeys, focusing on 
     - Support for broad range of terminal emulators: Termius, JuiceSSH, ConnectBot, Android Virtualization Framework (`com.android.virtualization.terminal`), and others.
     - **Custom Package Config:** Allow users to manually designate apps as "Terminal Mode" to force `Ctrl+W` deletion and raw key cursor movement.
 
-- [ ] **Custom Word Handling**
-    - **On-the-fly Dictionary Addition:** Allow users to instantly add swiped words to the dictionary if they aren't recognized.
-    - **Custom Dictionary Weighting:** Ensure user-added words (slang, technical jargon) are prioritized in the neural beam search.
+- [x] **Custom Word Handling** *(Completed v1.1.88)*
+    - ~~On-the-fly Dictionary Addition~~ → Dictionary Manager with 3-tab UI
+    - ~~Custom Dictionary Weighting~~ → Per-language beam search trie with priority
 
 ## 🧠 Neural Network & Prediction
 

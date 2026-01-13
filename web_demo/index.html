@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CleverKeys - Neural Network Gesture Keyboard</title>
+    <meta name="description" content="The only fully open-source neural network gesture keyboard for Android. AI-powered swipe typing, unlimited clipboard, and powerful theming.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'ck-purple': '#9b59b6',
+                        'ck-purple-dark': '#6b21a8',
+                        'ck-purple-light': '#c39bd3',
+                        'ck-silver': '#c0c0c0',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #9b59b6 0%, #c39bd3 50%, #9b59b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .glow-purple {
+            box-shadow: 0 0 30px rgba(155, 89, 182, 0.3);
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(155, 89, 182, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-ck-dark text-gray-100 min-h-screen">
+    <!-- Hero Section -->
+    <header class="relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-ck-purple-dark/20 via-transparent to-ck-purple/10"></div>
+        <nav class="relative container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-10 h-10 rounded-lg">
+                <span class="font-bold text-xl">CleverKeys</span>
+            </div>
+            <div class="flex gap-4">
+                <a href="demo/" class="px-4 py-2 bg-ck-purple hover:bg-ck-purple-dark rounded-lg transition-colors font-medium">Try Demo</a>
+                <a href="https://github.com/tribixbite/CleverKeys" class="px-4 py-2 border border-gray-600 hover:border-ck-purple rounded-lg transition-colors">GitHub</a>
+            </div>
+        </nav>
+
+        <div class="relative container mx-auto px-6 py-20 text-center">
+            <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys Logo" class="w-32 h-32 mx-auto mb-8 rounded-2xl glow-purple">
+            <h1 class="text-5xl md:text-6xl font-bold mb-6">
+                <span class="gradient-text">CleverKeys</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
+                The only fully <strong>open-source neural network</strong> gesture keyboard for Android.
+                AI-powered swipe typing that runs <strong>100% on-device</strong>.
+            </p>
+            <div class="flex flex-wrap justify-center gap-4 mb-12">
+                <a href="https://f-droid.org/packages/tribixbite.cleverkeys" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-medium transition-colors">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    F-Droid
+                </a>
+                <a href="https://github.com/tribixbite/CleverKeys/releases/latest" class="inline-flex items-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-medium transition-colors">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+                    GitHub APK
+                </a>
+                <a href="demo/" class="inline-flex items-center gap-2 px-6 py-3 bg-ck-purple hover:bg-ck-purple-dark rounded-xl font-medium transition-colors">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                    Try Web Demo
+                </a>
+            </div>
+            <div class="flex flex-wrap justify-center gap-3 text-sm">
+                <span class="px-3 py-1 bg-ck-card rounded-full">API 26+</span>
+                <span class="px-3 py-1 bg-ck-card rounded-full">100% Kotlin</span>
+                <span class="px-3 py-1 bg-ck-card rounded-full">ONNX Runtime</span>
+                <span class="px-3 py-1 bg-ck-card rounded-full">GPL-3.0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Features Grid -->
+    <section class="container mx-auto px-6 py-20">
+        <h2 class="text-3xl font-bold text-center mb-4">Why CleverKeys?</h2>
+        <p class="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+            The only open-source keyboard with a public ML training pipeline,
+            sub-200ms neural predictions, and 208 customizable swipe gestures.
+        </p>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Neural Network -->
+            <div class="feature-card bg-ck-surface p-6 rounded-2xl border border-gray-700/50 transition-all duration-300">
+                <div class="w-12 h-12 bg-ck-purple/20 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-ck-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Neural Network Engine</h3>
+                <p class="text-gray-400">Transformer encoder-decoder architecture with beam search decoding. Sub-200ms predictions via XNNPACK hardware acceleration.</p>
+            </div>
+
+            <!-- Open Source -->
+            <div class="feature-card bg-ck-surface p-6 rounded-2xl border border-gray-700/50 transition-all duration-300">
+                <div class="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Fully Open Source</h3>
+                <p class="text-gray-400">App, model architecture, training code, and datasets all publicly available. Verify exactly how the model was trained.</p>
+            </div>
+
+            <!-- Privacy -->
+            <div class="feature-card bg-ck-surface p-6 rounded-2xl border border-gray-700/50 transition-all duration-300">
+                <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Privacy First</h3>
+                <p class="text-gray-400">Zero network permissions. All processing on-device. No analytics, telemetry, or cloud sync. Literally cannot phone home.</p>
+            </div>
+
+            <!-- Clipboard -->
+            <div class="feature-card bg-ck-surface p-6 rounded-2xl border border-gray-700/50 transition-all duration-300">
+                <div class="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Unlimited Clipboard</h3>
+                <p class="text-gray-400">True unlimited clipboard history with pin, search, and export. Persistent across reboots without root access.</p>
+            </div>
+
+            <!-- Termux -->
+            <div class="feature-card bg-ck-surface p-6 rounded-2xl border border-gray-700/50 transition-all duration-300">
+                <div class="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Works in Termux</h3>
+                <p class="text-gray-400">Only open-source keyboard with reliable swipe typing in terminal emulators. Others crash, corrupt, or disable gestures.</p>
+            </div>
+
+            <!-- Customization -->
+            <div class="feature-card bg-ck-surface p-6 rounded-2xl border border-gray-700/50 transition-all duration-300">
+                <div class="w-12 h-12 bg-pink-500/20 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">208 Swipe Gestures</h3>
+                <p class="text-gray-400">8 directions per key with 204+ built-in commands. Custom text macros, function keys, navigation, and more.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Language Support -->
+    <section class="bg-ck-surface/50 py-20">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-bold text-center mb-4">Multi-Language Swipe Typing</h2>
+            <p class="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+                11 languages supported with intelligent primary + secondary language detection.
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="bg-ck-card p-6 rounded-2xl">
+                    <h3 class="text-lg font-semibold mb-4 text-ck-purple">Bundled Languages</h3>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <span class="px-3 py-2 bg-ck-surface rounded">English (52k)</span>
+                        <span class="px-3 py-2 bg-ck-surface rounded">Spanish (50k)</span>
+                        <span class="px-3 py-2 bg-ck-surface rounded">French (25k)</span>
+                        <span class="px-3 py-2 bg-ck-surface rounded">Portuguese (25k)</span>
+                        <span class="px-3 py-2 bg-ck-surface rounded">Italian (25k)</span>
+                        <span class="px-3 py-2 bg-ck-surface rounded">German (25k)</span>
+                    </div>
+                </div>
+                <div class="bg-ck-card p-6 rounded-2xl">
+                    <h3 class="text-lg font-semibold mb-4 text-ck-purple-light">Downloadable Packs</h3>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <span class="px-3 py-2 bg-ck-surface rounded">Dutch (20k)</span>
+                        <span class="px-3 py-2 bg-ck-surface rounded">Indonesian (20k)</span>
+                        <span class="px-3 py-2 bg-ck-surface rounded">Malay (20k)</span>
+                        <span class="px-3 py-2 bg-ck-surface rounded">Tagalog (20k)</span>
+                        <span class="px-3 py-2 bg-ck-surface rounded">Swahili (20k)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo CTA -->
+    <section class="container mx-auto px-6 py-20 text-center">
+        <h2 class="text-3xl font-bold mb-4">Try the Neural Swipe Demo</h2>
+        <p class="text-gray-400 mb-8 max-w-xl mx-auto">
+            Experience the same transformer neural network that powers CleverKeys, running directly in your browser via WebAssembly.
+        </p>
+        <a href="demo/" class="inline-flex items-center gap-2 px-8 py-4 bg-ck-purple hover:bg-ck-purple-dark rounded-xl font-medium text-lg transition-colors glow-purple">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Launch Web Demo
+        </a>
+    </section>
+
+    <!-- Links Section -->
+    <section class="bg-ck-surface/50 py-16">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-8 text-center">
+                <a href="https://github.com/tribixbite/CleverKeys" class="group">
+                    <div class="w-12 h-12 mx-auto mb-3 bg-ck-card rounded-xl flex items-center justify-center group-hover:bg-ck-purple/20 transition-colors">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+                    </div>
+                    <h4 class="font-semibold mb-1">Source Code</h4>
+                    <p class="text-sm text-gray-400">View on GitHub</p>
+                </a>
+                <a href="https://github.com/tribixbite/CleverKeys-ML" class="group">
+                    <div class="w-12 h-12 mx-auto mb-3 bg-ck-card rounded-xl flex items-center justify-center group-hover:bg-ck-purple/20 transition-colors">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </div>
+                    <h4 class="font-semibold mb-1">ML Training</h4>
+                    <p class="text-sm text-gray-400">Model & Training Code</p>
+                </a>
+                <a href="https://github.com/tribixbite/CleverKeys/releases" class="group">
+                    <div class="w-12 h-12 mx-auto mb-3 bg-ck-card rounded-xl flex items-center justify-center group-hover:bg-ck-purple/20 transition-colors">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    </div>
+                    <h4 class="font-semibold mb-1">Releases</h4>
+                    <p class="text-sm text-gray-400">Download APKs</p>
+                </a>
+                <a href="https://f-droid.org/packages/tribixbite.cleverkeys" class="group">
+                    <div class="w-12 h-12 mx-auto mb-3 bg-ck-card rounded-xl flex items-center justify-center group-hover:bg-ck-purple/20 transition-colors">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    </div>
+                    <h4 class="font-semibold mb-1">F-Droid</h4>
+                    <p class="text-sm text-gray-400">Install from F-Droid</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm">
+        <p>CleverKeys is open source software licensed under GPL-3.0</p>
+        <p class="mt-2">Based on <a href="https://github.com/Julow/Unexpected-Keyboard" class="text-ck-purple hover:underline">Unexpected Keyboard</a> by Julow</p>
+    </footer>
+</body>
+</html>
