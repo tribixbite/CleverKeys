@@ -800,7 +800,7 @@ class Config private constructor(
 
     interface IKeyEventHandler {
         fun key_down(key: KeyValue?, isSwipe: Boolean)
-        fun key_up(key: KeyValue?, mods: Pointers.Modifiers)
+        fun key_up(key: KeyValue?, mods: Pointers.Modifiers, isKeyRepeat: Boolean = false)
         fun mods_changed(mods: Pointers.Modifiers)
     }
 

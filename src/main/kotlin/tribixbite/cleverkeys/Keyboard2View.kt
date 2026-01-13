@@ -422,7 +422,7 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     override fun onPointerHold(k: KeyValue, mods: Pointers.Modifiers) {
-        _config.handler?.key_up(k, mods)
+        _config.handler?.key_up(k, mods, isKeyRepeat = true)
         updateFlags()
     }
 

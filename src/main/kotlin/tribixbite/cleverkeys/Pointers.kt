@@ -517,8 +517,8 @@ class Pointers(
         _ptrs.add(ptr)
 
         // CRITICAL FIX: Detect if this might be the start of a swipe gesture
-        // Don't output character or start long press timer if so
-        // This prevents tap/hold events from firing during swipes
+        // Don't output character immediately, but DO start long press timer for key repeat
+        // This allows holding space/letters to repeat while still supporting swipe typing
         // Use countActivePointers() instead of _ptrs.size to handle latched modifiers (Shift)
         val firstKey = key?.keys?.get(0)
         val mightBeSwipe = _config.swipe_typing_enabled && countActivePointers() == 1 &&
@@ -529,13 +529,16 @@ class Pointers(
             ptr.flags = ptr.flags or FLAG_P_DEFERRED_DOWN
         }
 
-        // Don't start long press timer if we might be swipe typing
-        if (!mightBeSwipe && !(_config.swipe_typing_enabled && _swipeRecognizer.isSwipeTyping())) {
+        // Start long press timer for key repeat - even for potential swipe keys
+        // The handleLongPress will check if swipe typing has been activated and skip repeat if so
+        // This allows holding space/letters to trigger key repeat when not moving
+        if (!(_config.swipe_typing_enabled && _swipeRecognizer.isSwipeTyping())) {
             startLongPress(ptr)
         }
 
         // Don't output character immediately when swipe typing might start
         // The character will be output in onTouchUp if it turns out not to be a swipe
+        // OR in handleLongPress if key repeat triggers
         if (!mightBeSwipe) {
             _handler.onPointerDown(value, false)
         }
@@ -816,6 +819,26 @@ class Pointers(
 
     /** A pointer is long pressing. */
     private fun handleLongPress(ptr: Pointer) {
+        // Skip if pointer entered swipe typing mode (moved significantly)
+        if (ptr.hasFlagsAny(FLAG_P_SWIPE_TYPING)) {
+            return
+        }
+
+        // For deferred keys (potential swipes), check if user has moved beyond small threshold
+        // Only trigger key repeat if user hasn't moved much (stays mostly on same key)
+        // This allows swipe typing to work even if user starts moving slowly
+        if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)) {
+            val dx = ptr.lastX - ptr.downX
+            val dy = ptr.lastY - ptr.downY
+            val movementDist = kotlin.math.sqrt(dx * dx + dy * dy)
+            // Use ~15px as threshold for "hasn't moved" - user can adjust sensitivity via settings
+            // This is less than typical swipe distance but enough to allow minor finger jitter
+            if (movementDist > 15f) {
+                // User has moved - don't trigger key repeat, let swipe typing take over
+                return
+            }
+        }
+
         // Long press toggle lock on modifiers
         if ((ptr.flags and FLAG_P_LATCHABLE) != 0) {
             if (!ptr.hasFlagsAny(FLAG_P_CANT_LOCK)) {
@@ -841,6 +864,12 @@ class Pointers(
         }
         // For every other keys, key-repeat
         if (_config.keyrepeat_enabled) {
+            // If this was a deferred down (potential swipe), output the initial character first
+            // This handles holding space/letters without moving - outputs initial char then repeats
+            if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)) {
+                ptr.flags = ptr.flags and FLAG_P_DEFERRED_DOWN.inv()  // Clear deferred flag
+                _handler.onPointerDown(kv, false)  // Output initial character
+            }
             _handler.onPointerHold(kv, ptr.modifiers)
             _longpress_handler.sendEmptyMessageDelayed(
                 ptr.timeoutWhat,

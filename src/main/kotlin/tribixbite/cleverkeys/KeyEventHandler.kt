@@ -80,15 +80,15 @@ class KeyEventHandler(
     }
 
     /** A key has been released. */
-    override fun key_up(key: KeyValue?, mods: Pointers.Modifiers) {
+    override fun key_up(key: KeyValue?, mods: Pointers.Modifiers, isKeyRepeat: Boolean) {
         if (key == null) return
 
         val oldMods = this.mods
         updateMetaState(mods)
 
         when (key.getKind()) {
-            KeyValue.Kind.Char -> sendText(key.getChar().toString())
-            KeyValue.Kind.String -> sendText(key.getString())
+            KeyValue.Kind.Char -> sendText(key.getChar().toString(), isKeyRepeat)
+            KeyValue.Kind.String -> sendText(key.getString(), isKeyRepeat)
             KeyValue.Kind.Event -> recv.handle_event_key(key.getEvent())
             KeyValue.Kind.Keyevent -> {
                 // Handle backspace in clipboard search mode
@@ -206,7 +206,7 @@ class KeyEventHandler(
         }
     }
 
-    private fun sendText(text: CharSequence) {
+    private fun sendText(text: CharSequence, isKeyRepeat: Boolean = false) {
         // Route to clipboard search box if in search mode
         if (recv.isClipboardSearchMode()) {
             recv.appendToClipboardSearch(text.toString())
@@ -216,9 +216,10 @@ class KeyEventHandler(
         val conn = recv.getCurrentInputConnection() ?: return
 
         // Double-space-to-period: If typing space after space within threshold, replace with ". "
+        // Skip this for key repeats (long press) - only applies to intentional double-tap
         val currentTime = System.currentTimeMillis()
         var textToCommit = text
-        if (text.length == 1 && text[0] == ' ' && lastTypedChar == ' ' &&
+        if (!isKeyRepeat && text.length == 1 && text[0] == ' ' && lastTypedChar == ' ' &&
             (currentTime - lastTypedTimestamp) < doubleSpaceThresholdMs) {
             // Delete the previous space and insert ". "
             conn.deleteSurroundingText(1, 0)
