@@ -168,6 +168,14 @@ class Pointers(
             return
         }
 
+        // Handle navigation hold-to-repeat completion
+        if (ptr.hasFlagsAny(FLAG_P_NAV_HOLD_REPEAT)) {
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: NAV_HOLD_REPEAT completion")
+            stopLongPress(ptr)
+            removePtr(ptr)
+            return
+        }
+
         if (ptr.hasFlagsAny(FLAG_P_SLIDING)) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: SLIDING")
             clearLatched()
@@ -401,7 +409,28 @@ class Pointers(
                                 return
                             }
 
-                            // Non-latchable key - trigger normally
+                            // Non-latchable key - check for navigation hold-to-repeat
+                            if (_config.keyrepeat_enabled && isNavigationKey(gestureValue)) {
+                                // Navigation key: trigger first press, then set up hold-to-repeat
+                                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "NAV_HOLD_REPEAT: Starting for ${gestureValue}")
+                                _handler.onPointerDown(gestureValue, false)
+                                _handler.onPointerUp(gestureValue, ptr.modifiers)
+                                // Update pointer for hold-to-repeat mode
+                                ptr.value = gestureValue
+                                ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_NAV_HOLD_REPEAT
+                                // Store activation point for movement threshold check
+                                ptr.downX = ptr.lastX
+                                ptr.downY = ptr.lastY
+                                clearLatched()
+                                _swipeRecognizer.reset()
+                                // Start the repeat timer (like regular key repeat)
+                                _longpress_handler.sendEmptyMessageDelayed(
+                                    ptr.timeoutWhat,
+                                    _config.longPressInterval.toLong()
+                                )
+                                return
+                            }
+                            // Regular non-navigation key - trigger normally
                             _handler.onPointerDown(gestureValue, false)
                             _handler.onPointerUp(gestureValue, ptr.modifiers)
                             clearLatched() // Clear shift after gesture completes
@@ -612,6 +641,19 @@ class Pointers(
             return
         }
 
+        // Handle navigation hold-to-repeat mode: cancel if movement exceeds threshold
+        if (ptr.hasFlagsAny(FLAG_P_NAV_HOLD_REPEAT)) {
+            val dx = ptr.lastX - ptr.downX
+            val dy = ptr.lastY - ptr.downY
+            val movementDist = sqrt(dx * dx + dy * dy)
+            if (movementDist > NAV_HOLD_MOVEMENT_THRESHOLD) {
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "NAV_HOLD_REPEAT: Cancelled in onTouchMove due to movement")
+                stopLongPress(ptr)
+                ptr.flags = ptr.flags and FLAG_P_NAV_HOLD_REPEAT.inv()
+            }
+            return // Don't process other gesture logic while in nav repeat mode
+        }
+
         // Track if pointer has left the starting key (for short gesture detection on UP)
         // Use short_gesture_max_distance to define the boundary (as % of key diagonal)
         // Higher values = more lenient, allows swipes further from key center
@@ -819,6 +861,32 @@ class Pointers(
 
     /** A pointer is long pressing. */
     private fun handleLongPress(ptr: Pointer) {
+        // Handle navigation hold-to-repeat mode
+        if (ptr.hasFlagsAny(FLAG_P_NAV_HOLD_REPEAT)) {
+            val value = ptr.value
+            if (value != null) {
+                // Check if user has moved beyond threshold - cancel repeat if so
+                val dx = ptr.lastX - ptr.downX
+                val dy = ptr.lastY - ptr.downY
+                val movementDist = sqrt(dx * dx + dy * dy)
+                if (movementDist > NAV_HOLD_MOVEMENT_THRESHOLD) {
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "NAV_HOLD_REPEAT: Cancelled due to movement ($movementDist > $NAV_HOLD_MOVEMENT_THRESHOLD)")
+                    ptr.flags = ptr.flags and FLAG_P_NAV_HOLD_REPEAT.inv()
+                    return
+                }
+                // Repeat the navigation key press
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "NAV_HOLD_REPEAT: Repeating ${value}")
+                _handler.onPointerDown(value, false)
+                _handler.onPointerUp(value, ptr.modifiers)
+                // Schedule next repeat with shorter interval for acceleration
+                _longpress_handler.sendEmptyMessageDelayed(
+                    ptr.timeoutWhat,
+                    (_config.longPressInterval * 0.6f).toLong().coerceAtLeast(30L)
+                )
+            }
+            return
+        }
+
         // Skip if pointer entered swipe typing mode (moved significantly)
         if (ptr.hasFlagsAny(FLAG_P_SWIPE_TYPING)) {
             return
@@ -909,6 +977,19 @@ class Pointers(
             flags = flags or FLAG_P_DOUBLE_TAP_LOCK
         }
         return flags
+    }
+
+    /** Check if a KeyValue is a navigation key that supports hold-to-repeat. */
+    private fun isNavigationKey(kv: KeyValue?): Boolean {
+        if (kv == null) return false
+        if (kv.getKind() != KeyValue.Kind.Keyevent) return false
+        return when (kv.getKeyevent()) {
+            android.view.KeyEvent.KEYCODE_DPAD_UP,
+            android.view.KeyEvent.KEYCODE_DPAD_DOWN,
+            android.view.KeyEvent.KEYCODE_DPAD_LEFT,
+            android.view.KeyEvent.KEYCODE_DPAD_RIGHT -> true
+            else -> false
+        }
     }
 
     // Gestures
@@ -1233,6 +1314,12 @@ class Pointers(
 
         /** Key down event was deferred (waiting for gesture classification). */
         const val FLAG_P_DEFERRED_DOWN = 1 shl 9
+
+        /** Navigation key hold-to-repeat mode (activated via short swipe over nav key). */
+        const val FLAG_P_NAV_HOLD_REPEAT = 1 shl 10
+
+        /** Maximum movement (px) before nav hold-to-repeat is cancelled. */
+        const val NAV_HOLD_MOVEMENT_THRESHOLD = 8f
 
         private var uniqueTimeoutWhat = 0
 

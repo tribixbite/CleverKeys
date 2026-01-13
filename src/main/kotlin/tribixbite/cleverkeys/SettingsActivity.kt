@@ -728,16 +728,24 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 lineHeight = 20.sp
             )
 
-            // Settings Search Bar
-            Box {
+            // Settings Search Bar with proper dropdown anchoring
+            var searchExpanded by remember { mutableStateOf(false) }
+            val filteredSettings = getFilteredSettings(settingsSearchQuery)
+
+            ExposedDropdownMenuBox(
+                expanded = searchExpanded && filteredSettings.isNotEmpty(),
+                onExpandedChange = { /* Controlled by text input */ }
+            ) {
                 OutlinedTextField(
                     value = settingsSearchQuery,
                     onValueChange = { query ->
                         settingsSearchQuery = query
-                        showSearchResults = query.isNotBlank()
+                        searchExpanded = query.isNotBlank()
                     },
                     label = { Text("Search settings...") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
                     singleLine = true,
                     leadingIcon = {
                         Icon(
@@ -749,7 +757,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         if (settingsSearchQuery.isNotBlank()) {
                             IconButton(onClick = {
                                 settingsSearchQuery = ""
-                                showSearchResults = false
+                                searchExpanded = false
                             }) {
                                 Icon(
                                     imageVector = Icons.Default.Clear,
@@ -765,15 +773,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     shape = RoundedCornerShape(12.dp)
                 )
 
-                // Search Results Dropdown
-                DropdownMenu(
-                    expanded = showSearchResults && getFilteredSettings(settingsSearchQuery).isNotEmpty(),
-                    onDismissRequest = { showSearchResults = false },
-                    modifier = Modifier
-                        .fillMaxWidth(0.92f)
-                        .heightIn(max = 300.dp)
+                // Search Results Dropdown - properly anchored below TextField
+                ExposedDropdownMenu(
+                    expanded = searchExpanded && filteredSettings.isNotEmpty(),
+                    onDismissRequest = { searchExpanded = false },
+                    modifier = Modifier.heightIn(max = 300.dp)
                 ) {
-                    getFilteredSettings(settingsSearchQuery).forEach { setting ->
+                    filteredSettings.forEach { setting ->
                         DropdownMenuItem(
                             text = {
                                 Column {
@@ -791,14 +797,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             onClick = {
                                 setting.expandSection()
                                 settingsSearchQuery = ""
-                                showSearchResults = false
+                                searchExpanded = false
                             },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.KeyboardArrowRight,
                                     contentDescription = null
                                 )
-                            }
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                         )
                     }
                 }
