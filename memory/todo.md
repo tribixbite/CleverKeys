@@ -28,17 +28,21 @@
    - Fixes rapid space tapping incorrectly inserting periods
    - Files Modified: `Config.kt`, `KeyEventHandler.kt`, `SettingsActivity.kt`
 
-4. **Navigation Key Hold-to-Repeat**
+4. **Navigation Key Hold-to-Repeat** (v2 fix: 2026-01-13)
    - Short swipe over arrow keys (↑↓←→) activates cursor movement
+   - Detection now happens during onTouchMove (not onTouchUp)
    - If finger held still (<8px movement), cursor repeats with acceleration
-   - Moving finger cancels repeat mode
+   - Moving finger or lifting stops repeat correctly
    - Uses FLAG_P_NAV_HOLD_REPEAT flag and longpress timer
    - Files Modified: `Pointers.kt`
 
-5. **Settings Search Fix**
-   - Fixed dropdown overlay using ExposedDropdownMenuBox
-   - Dropdown now positions below search field properly
-   - Click handling works correctly
+5. **Settings Search** (v2 fix: 2026-01-13)
+   - Replaced ExposedDropdownMenu with inline Card + scrollable Column
+   - Results always appear below search field (never overlay)
+   - Max height 200dp with vertical scroll
+   - Activities (Theme, Dictionary, Layout, etc.) navigate directly
+   - Section settings expand the appropriate section
+   - Added more searchable entries (layout manager, neural settings, etc.)
    - Files Modified: `SettingsActivity.kt`
 
 ---
