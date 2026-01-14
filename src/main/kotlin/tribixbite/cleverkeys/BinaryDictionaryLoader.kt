@@ -325,6 +325,78 @@ object BinaryDictionaryLoader {
     }
 
     /**
+     * Load binary dictionary with prefix index from a File (for language packs).
+     * v1.2.5: Added to support WordPredictor loading from installed language packs (issue #63 fix)
+     *
+     * @param file Dictionary file from language pack
+     * @param outDictionary Output map for word -> frequency
+     * @param outPrefixIndex Output map for prefix -> words
+     * @return true if loaded successfully
+     */
+    fun loadDictionaryWithPrefixIndexFromFile(
+        file: java.io.File,
+        outDictionary: MutableMap<String, Int>,
+        outPrefixIndex: MutableMap<String, MutableSet<String>>
+    ): Boolean {
+        android.os.Trace.beginSection("BinaryDictionaryLoader.loadDictionaryWithPrefixIndexFromFile")
+        try {
+            val startTime = System.currentTimeMillis()
+
+            try {
+                val inputStream = java.io.FileInputStream(file)
+                val channel = Channels.newChannel(inputStream)
+
+                val buffer = ByteBuffer.allocate(file.length().toInt()).apply {
+                    order(ByteOrder.LITTLE_ENDIAN)
+                }
+                channel.read(buffer)
+                buffer.flip()
+                channel.close()
+                inputStream.close()
+
+                // Parse header - check magic to determine format version
+                val magic = buffer.int
+                val isV1 = magic == MAGIC_V1
+                val isV2 = magic == MAGIC_V2
+
+                if (!isV1 && !isV2) {
+                    Log.e(TAG, String.format("Invalid magic number for language pack: 0x%08X", magic))
+                    return false
+                }
+
+                val version = buffer.int
+                if (isV1 && version != EXPECTED_VERSION) {
+                    Log.e(TAG, "Unsupported V1 version for language pack: $version")
+                    return false
+                }
+                if (isV2 && version != EXPECTED_VERSION_V2) {
+                    Log.e(TAG, "Unsupported V2 version for language pack: $version")
+                    return false
+                }
+
+                outDictionary.clear()
+                outPrefixIndex.clear()
+
+                if (isV1) {
+                    loadDictionaryWithPrefixIndexV1(buffer, outDictionary, outPrefixIndex)
+                } else {
+                    loadDictionaryWithPrefixIndexV2(buffer, outDictionary, outPrefixIndex)
+                }
+
+                val loadTime = System.currentTimeMillis() - startTime
+                Log.i(TAG, "Loaded ${outDictionary.size} words from language pack ${file.name} in ${loadTime}ms")
+
+                return true
+            } catch (e: IOException) {
+                Log.e(TAG, "Failed to load dictionary from language pack: ${file.absolutePath}", e)
+                return false
+            }
+        } finally {
+            android.os.Trace.endSection()
+        }
+    }
+
+    /**
      * Load V1 format dictionary with pre-built prefix index.
      */
     private fun loadDictionaryWithPrefixIndexV1(

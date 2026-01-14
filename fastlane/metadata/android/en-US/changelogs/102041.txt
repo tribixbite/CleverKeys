@@ -26,3 +26,4 @@ FIXES:
 • Double-space-to-period toggle added
 • Updated US QWERTY layout subkeys
 • Fixed suggestion selection returning wrong word (issue #63)
+• Fixed WordPredictor not loading language pack dictionaries

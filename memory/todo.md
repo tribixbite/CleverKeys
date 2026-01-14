@@ -8,25 +8,49 @@
 ## Issue #63 Fix - Suggestion Selection Bug - COMPLETE (2026-01-14)
 
 **Bug Report**: User swipes "deze" → sees correct suggestions → taps "deze" → gets "dede" instead
-**Root Cause**: Final autocorrect was incorrectly modifying manually selected neural predictions
+
+### Fix 1: Skip Final Autocorrect for Manual Selections
+
+**Root Cause (Surface)**: Final autocorrect was incorrectly modifying manually selected neural predictions
 
 **Analysis**:
-- User @arjenpdevries reported: swipe "deze", see correct suggestion, select → get "dede"
-- Similar: "Arjen" → "Arlen"
 - Final autocorrect feature (v1.33.7) runs on ALL suggestion selections
 - When user explicitly taps a suggestion, final autocorrect found similar dictionary words
 - "deze" vs "dede": 3/4 character match (75%) ≥ 66% threshold → incorrect correction
-- "Arjen" vs "Arlen": 4/5 character match (80%) ≥ 66% threshold → incorrect correction
 
 **Fix**:
 - Added `isManualSelection: Boolean` parameter to `SuggestionHandler.onSuggestionSelected()`
-- Skip final autocorrect when user explicitly taps a suggestion (they're choosing that exact word)
+- Skip final autocorrect when user explicitly taps a suggestion
 - `SuggestionBridge.onSuggestionSelected()` now passes `isManualSelection = true`
-- Auto-insert path (swipe completion) keeps `isManualSelection = false` - may still benefit from correction
 
 **Files Modified**:
 - `SuggestionHandler.kt`: Added parameter, skip logic for manual selections
 - `SuggestionBridge.kt`: Pass `isManualSelection = true` for manual taps
+
+### Fix 2: WordPredictor Language Pack Loading (Root Cause)
+
+**Root Cause (Deep)**: WordPredictor's dictionary didn't load from installed language packs
+
+**Analysis**:
+- `OptimizedVocabulary.loadPrimaryDictionary()` loads from language packs ✓
+- `WordPredictor.loadDictionary()` only loaded from bundled assets ✗
+- For Dutch (nl): no `nl_enhanced.bin` in assets → dictionary empty!
+- Autocorrect checked empty dictionary → word not found → "corrected" to similar English word
+
+**Why autocorrect thought "deze" wasn't valid**:
+1. Neural predictions came from language pack (Dutch vocabulary) ✓
+2. WordPredictor dictionary was empty (no Dutch assets bundled)
+3. `dictionary.containsKey("deze")` = false
+4. Autocorrect ran and found similar word
+
+**Fix**:
+- `WordPredictor.loadDictionary()` now checks `LanguagePackManager.getDictionaryPath()` first
+- Added `BinaryDictionaryLoader.loadDictionaryWithPrefixIndexFromFile()` for file-based loading
+- WordPredictor now correctly loads Dutch/other language pack dictionaries
+
+**Files Modified**:
+- `WordPredictor.kt`: Try language pack before assets
+- `BinaryDictionaryLoader.kt`: Added file-based loading method
 
 ---
 

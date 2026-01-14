@@ -449,22 +449,49 @@ class WordPredictor {
     }
 
     /**
-     * Load dictionary from assets
+     * Load dictionary from language packs or assets.
+     * v1.2.5 FIX: Also checks installed language packs (issue #63 root cause)
      */
     fun loadDictionary(context: Context, language: String) {
         dictionary.get().clear()
         prefixIndex.get().clear()
 
-        // OPTIMIZATION: Try binary format first (5-10x faster than JSON)
-        // Binary format includes pre-built prefix index, eliminating runtime computation
-        val binaryFilename = "dictionaries/${language}_enhanced.bin"
-        val loadedBinary = BinaryDictionaryLoader.loadDictionaryWithPrefixIndex(
-            context, binaryFilename, dictionary.get(), prefixIndex.get()
-        )
+        var loadedBinary = false
 
-        if (loadedBinary) {
-            Log.i(TAG, "Loaded binary dictionary with ${dictionary.get().size} words and ${prefixIndex.get().size} prefixes")
-        } else {
+        // v1.2.5 FIX: First try loading from installed language packs
+        // This fixes autocorrect for languages only available via language pack (e.g., Dutch)
+        // Without this, WordPredictor's dictionary would be empty and autocorrect would
+        // incorrectly "correct" valid neural predictions (issue #63)
+        try {
+            val packManager = LanguagePackManager.getInstance(context)
+            val dictFile = packManager.getDictionaryPath(language)
+            if (dictFile != null) {
+                loadedBinary = BinaryDictionaryLoader.loadDictionaryWithPrefixIndexFromFile(
+                    dictFile, dictionary.get(), prefixIndex.get()
+                )
+                if (loadedBinary) {
+                    Log.i(TAG, "Loaded dictionary from language pack: $language (${dictionary.get().size} words)")
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to load from language pack: $language", e)
+        }
+
+        // Fall back to bundled assets if language pack not available
+        if (!loadedBinary) {
+            // OPTIMIZATION: Try binary format first (5-10x faster than JSON)
+            // Binary format includes pre-built prefix index, eliminating runtime computation
+            val binaryFilename = "dictionaries/${language}_enhanced.bin"
+            loadedBinary = BinaryDictionaryLoader.loadDictionaryWithPrefixIndex(
+                context, binaryFilename, dictionary.get(), prefixIndex.get()
+            )
+
+            if (loadedBinary) {
+                Log.i(TAG, "Loaded binary dictionary from assets with ${dictionary.get().size} words and ${prefixIndex.get().size} prefixes")
+            }
+        }
+
+        if (!loadedBinary) {
             // Fall back to JSON format if binary not available
             Log.d(TAG, "Binary dictionary not available, falling back to JSON")
 
