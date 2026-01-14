@@ -94,7 +94,7 @@
    - 200ms delay after section expand before scroll triggers
    - Files Modified: `SettingsActivity.kt`
 
-7. **TrackPoint Joystick Mode** (v5 diagonal: 2026-01-13)
+7. **TrackPoint Joystick Mode** (v6 long-press activation: 2026-01-14)
    - Changed from `isNavigationKey(ptr.value)` to `hasNavigationSubkeys(ptr)`
    - The "nav key" is actually the compose key with nav subkeys in positions 5-8
    - bottom_row.xml: `key0="loc compose" key5="left" key6="right" key7="up" key8="down"`
@@ -103,8 +103,10 @@
    - Speed: 200ms delay at edge of dead zone, 30ms at key border
    - **v5 diagonal**: X and Y axes tracked independently
    - NE position triggers BOTH up AND right keys in same cycle
-   - Speed on each axis proportional to distance on that axis
-   - Short swipes work: check movement distance before treating as tap
+   - **v6 long-press**: TrackPoint activates on hold regardless of finger movement
+   - Quick swipe + release = short gesture (e.g., SE for page_down)
+   - Hold past longPressTimeout = TrackPoint (even after moving finger)
+   - Center set to CURRENT finger position when activated
    - Visual fix: clear highlight on exit via onPointerFlagsChanged(null)
    - Files Modified: `Pointers.kt`
 
