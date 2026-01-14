@@ -509,7 +509,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             startActivity(Intent(this, setting.activityClass))
         } else if (setting.settingId == "whats_new") {
             // Special handling for What's New - opens external URL
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/AltairGeo/cleverkeys/releases/latest")))
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/tribixbite/CleverKeys/releases/latest")))
         } else {
             collapseAllSections()
             setting.expandSection()
@@ -1178,7 +1178,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/AltairGeo/cleverkeys/releases/latest"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/tribixbite/CleverKeys/releases/latest"))
                             activityContext.startActivity(intent)
                         },
                     colors = CardDefaults.cardColors(

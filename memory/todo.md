@@ -17,7 +17,7 @@
 
 2. **What's New**
    - Card with ✨ icon
-   - Opens external URL: `https://github.com/AltairGeo/cleverkeys/releases/latest`
+   - Opens external URL: `https://github.com/tribixbite/CleverKeys/releases/latest`
    - Description: "See latest features and changelog"
    - Added to searchable settings (keywords: changelog, release, update, features, version)
    - Special handling in `navigateToSetting()` for settingId "whats_new"
