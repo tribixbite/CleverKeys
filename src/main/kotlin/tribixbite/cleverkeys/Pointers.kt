@@ -883,50 +883,84 @@ class Pointers(
         _longpress_handler.removeMessages(ptr.trackpointWhat)
     }
 
-    /** Handle TrackPoint joystick repeat - send nav key based on finger distance from key center. */
+    /** Handle TrackPoint joystick repeat - send nav keys based on X and Y distance from key center independently.
+     *  Supports diagonal movement: if finger is in NE, both up AND right keys fire.
+     *  Speed on each axis is proportional to distance on that axis.
+     */
     private fun handleTrackPointRepeat(ptr: Pointer) {
         if (!ptr.hasFlagsAny(FLAG_P_TRACKPOINT_MODE)) {
             return
         }
 
-        // Calculate distance and direction from key center
+        // Calculate X and Y distances from key center independently
         val dx = ptr.lastX - ptr.keyCenterX
         val dy = ptr.lastY - ptr.keyCenterY
-        val distance = sqrt(dx * dx + dy * dy)
+        val absDx = abs(dx)
+        val absDy = abs(dy)
 
-        // Get key size for normalization (use hypotenuse as max distance)
+        // Get key size for normalization
         val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
         val maxDistance = keyHypotenuse * 0.5f  // Half of diagonal is edge from center
 
-        // Only move if finger is displaced from center (dead zone = 15px)
-        if (distance > TRACKPOINT_DEAD_ZONE) {
-            // Calculate direction (16 directions)
-            val a = atan2(dy.toDouble(), dx.toDouble()) + Math.PI
-            val direction = ((a * 8 / Math.PI).toInt() + 12) % 16
-            val navKey = getNavKeyForDirection(ptr, direction)
+        // Track if any movement happened
+        var moved = false
+        var maxNormalizedDist = 0f
 
-            if (navKey != null) {
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Joystick move, direction=$direction, dist=$distance")
-                _handler.onPointerDown(navKey, false)
-                _handler.onPointerUp(navKey, ptr.modifiers)
+        // Check horizontal movement (X axis)
+        if (absDx > TRACKPOINT_DEAD_ZONE) {
+            // Get left or right nav key from subkeys
+            val key = ptr.key
+            val horizKey = if (dx > 0) {
+                // Moving right - key[6] is East
+                _handler.modifyKey(key.keys[6], ptr.modifiers)
+            } else {
+                // Moving left - key[5] is West
+                _handler.modifyKey(key.keys[5], ptr.modifiers)
             }
 
-            // Calculate repeat delay based on distance (farther = faster = shorter delay)
-            // Normalize distance to 0-1 range, clamp to max
-            val normalizedDistance = min(distance / maxDistance, 1.0f)
-            // Delay ranges from TRACKPOINT_MAX_DELAY (at dead zone) to TRACKPOINT_MIN_DELAY (at edge)
-            val repeatDelay = (TRACKPOINT_MAX_DELAY - (normalizedDistance * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))).toLong()
+            if (horizKey != null && isNavigationKey(horizKey)) {
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: X move ${if (dx > 0) "right" else "left"}, dx=$dx")
+                _handler.onPointerDown(horizKey, false)
+                _handler.onPointerUp(horizKey, ptr.modifiers)
+                moved = true
+                maxNormalizedDist = maxOf(maxNormalizedDist, min(absDx / maxDistance, 1.0f))
+            }
+        }
 
-            // Schedule next repeat
-            val what = uniqueTimeoutWhat++
-            ptr.trackpointWhat = what
-            _longpress_handler.sendEmptyMessageDelayed(what, repeatDelay)
+        // Check vertical movement (Y axis)
+        if (absDy > TRACKPOINT_DEAD_ZONE) {
+            // Get up or down nav key from subkeys
+            val key = ptr.key
+            val vertKey = if (dy > 0) {
+                // Moving down - key[8] is South
+                _handler.modifyKey(key.keys[8], ptr.modifiers)
+            } else {
+                // Moving up - key[7] is North
+                _handler.modifyKey(key.keys[7], ptr.modifiers)
+            }
+
+            if (vertKey != null && isNavigationKey(vertKey)) {
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Y move ${if (dy > 0) "down" else "up"}, dy=$dy")
+                _handler.onPointerDown(vertKey, false)
+                _handler.onPointerUp(vertKey, ptr.modifiers)
+                moved = true
+                maxNormalizedDist = maxOf(maxNormalizedDist, min(absDy / maxDistance, 1.0f))
+            }
+        }
+
+        // Calculate repeat delay based on maximum displacement on either axis
+        val repeatDelay = if (moved) {
+            // Delay ranges from TRACKPOINT_MAX_DELAY (at dead zone) to TRACKPOINT_MIN_DELAY (at edge)
+            (TRACKPOINT_MAX_DELAY - (maxNormalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))).toLong()
         } else {
             // Finger is in dead zone - check again after a short delay
-            val what = uniqueTimeoutWhat++
-            ptr.trackpointWhat = what
-            _longpress_handler.sendEmptyMessageDelayed(what, TRACKPOINT_MAX_DELAY)
+            TRACKPOINT_MAX_DELAY
         }
+
+        // Schedule next repeat
+        val what = uniqueTimeoutWhat++
+        ptr.trackpointWhat = what
+        _longpress_handler.sendEmptyMessageDelayed(what, repeatDelay)
     }
 
     /** A pointer is long pressing. */

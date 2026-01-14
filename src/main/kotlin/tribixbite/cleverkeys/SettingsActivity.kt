@@ -29,8 +29,6 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -346,13 +344,25 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Settings search
     private var settingsSearchQuery by mutableStateOf("")
     private var showSearchResults by mutableStateOf(false)
-    private var highlightedSettingId by mutableStateOf<String?>(null)  // For pulse animation and scroll trigger
-    // BringIntoViewRequester map - each setting gets its own requester for reliable auto-scroll
-    private val bringIntoViewRequesters = mutableMapOf<String, BringIntoViewRequester>()
+    private var highlightedSettingId by mutableStateOf<String?>(null)  // For pulse animation
 
-    /** Get or create a BringIntoViewRequester for a setting ID */
-    fun getOrCreateRequester(settingId: String): BringIntoViewRequester {
-        return bringIntoViewRequesters.getOrPut(settingId) { BringIntoViewRequester() }
+    // Position tracking for scroll-to-top functionality
+    private val settingPositions = mutableMapOf<String, Int>()  // settingId -> Y position in scroll content
+    private var mainScrollState: androidx.compose.foundation.ScrollState? = null
+
+    /** Record the Y position of a setting for scroll targeting */
+    fun recordSettingPosition(settingId: String, yPosition: Int) {
+        settingPositions[settingId] = yPosition
+    }
+
+    /** Scroll to a setting by ID, positioning it at the top of the screen */
+    private fun scrollToSetting(settingId: String) {
+        val position = settingPositions[settingId] ?: return
+        val scrollState = mainScrollState ?: return
+        lifecycleScope.launch {
+            // Scroll to position with some padding from top
+            scrollState.animateScrollTo(maxOf(0, position - 16))
+        }
     }
 
     /** Nested scroll connection to prevent search results from scrolling parent */
@@ -478,9 +488,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 "short_gestures" -> gestureTuningSectionExpanded = true
                 "multilang" -> multiLangSectionExpanded = true
             }
-            // Set highlighted ID - delay to let section expand before triggering scroll
+            // Delay to let section expand, then scroll and highlight
             lifecycleScope.launch {
-                kotlinx.coroutines.delay(150)
+                kotlinx.coroutines.delay(200)  // Wait for layout
+                scrollToSetting(targetId)
                 highlightedSettingId = targetId
                 kotlinx.coroutines.delay(2000)
                 highlightedSettingId = null
@@ -494,15 +505,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         } else {
             collapseAllSections()
             setting.expandSection()
-            // Set highlighted ID - scroll handled by BringIntoViewRequester in the setting composable
-            // IMPORTANT: Delay setting the highlight to give Compose time to expand the section
-            // and lay out the content before triggering the scroll
+            // Delay to let section expand, then scroll to top and highlight
             if (setting.settingId.isNotEmpty()) {
                 lifecycleScope.launch {
-                    // Wait for recomposition and layout to complete
-                    kotlinx.coroutines.delay(150)
+                    kotlinx.coroutines.delay(200)  // Wait for layout
+                    scrollToSetting(setting.settingId)
                     highlightedSettingId = setting.settingId
-                    // Keep highlighted for visibility, then clear
                     kotlinx.coroutines.delay(2000)
                     highlightedSettingId = null
                 }
@@ -808,6 +816,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     @Composable
     private fun SettingsScreen() {
         val scrollState = rememberScrollState()
+        // Store reference for scroll-to-setting functionality
+        mainScrollState = scrollState
 
         // Collected Data Viewer Dialog
         if (showCollectedDataViewer) {
@@ -3498,22 +3508,18 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         val highlightColor = MaterialTheme.colorScheme.primary.copy(alpha = if (isHighlighted) pulseAlpha * 0.3f else 0f)
         val borderColor = MaterialTheme.colorScheme.primary.copy(alpha = if (isHighlighted) 0.5f + pulseAlpha * 0.5f else 0f)
 
-        // BringIntoViewRequester for auto-scroll when highlighted
-        val bringIntoViewRequester = remember(highlightId) {
-            if (highlightId != null) getOrCreateRequester(highlightId) else BringIntoViewRequester()
-        }
-
-        // Auto-scroll when this setting becomes highlighted
-        LaunchedEffect(isHighlighted) {
-            if (isHighlighted) {
-                bringIntoViewRequester.bringIntoView()
-            }
-        }
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .bringIntoViewRequester(bringIntoViewRequester)
+                .onGloballyPositioned { coordinates ->
+                    // Record position for scroll targeting
+                    if (highlightId != null) {
+                        val positionInParent = coordinates.positionInRoot()
+                        val scrollOffset = mainScrollState?.value ?: 0
+                        // Store the position relative to scroll content (add current scroll offset)
+                        recordSettingPosition(highlightId, (positionInParent.y + scrollOffset).toInt())
+                    }
+                }
                 .then(
                     if (isHighlighted) {
                         Modifier
