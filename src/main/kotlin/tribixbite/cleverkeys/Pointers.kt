@@ -943,45 +943,78 @@ class Pointers(
     }
 
     /** Handle selection-delete repeat - send Shift+Arrow keys to extend selection.
-     *  Direction is determined by initial swipe direction.
+     *  Works like TrackPoint joystick: X and Y axes tracked independently.
+     *  Supports diagonal selection (both horizontal and vertical in same cycle).
      */
     private fun handleSelectionDeleteRepeat(ptr: Pointer) {
         if (!ptr.hasFlagsAny(FLAG_P_SELECTION_DELETE_MODE)) {
             return
         }
 
-        // Determine arrow key based on selection direction
-        val arrowKeyCode = if (ptr.selectionDirection > 0) {
-            android.view.KeyEvent.KEYCODE_DPAD_RIGHT
-        } else {
-            android.view.KeyEvent.KEYCODE_DPAD_LEFT
-        }
+        // Calculate X and Y distances from activation center (like TrackPoint)
+        val dx = ptr.lastX - ptr.keyCenterX
+        val dy = ptr.lastY - ptr.keyCenterY
+        val absDx = abs(dx)
+        val absDy = abs(dy)
 
-        // Create arrow key event
-        // Symbol codes from KeyValue.kt: left=0xE008, right=0xE006
-        val symbolCode = if (ptr.selectionDirection > 0) 0xE006 else 0xE008
-        val arrowKey = KeyValue.keyeventKey(symbolCode, arrowKeyCode, 0)
+        // Get key size for normalization
+        val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
+        val maxDistance = keyHypotenuse * 0.5f
 
         // Create modifiers with SHIFT for selection
         val shiftMod = KeyValue.makeInternalModifier(KeyValue.Modifier.SHIFT)
         val shiftedMods = ptr.modifiers.with_extra_mod(shiftMod)
 
-        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SELECTION_DELETE: Sending Shift+${if (ptr.selectionDirection > 0) "Right" else "Left"}")
+        // Track if any movement happened
+        var moved = false
+        var maxNormalizedDist = 0f
 
-        _handler.onPointerDown(arrowKey, false)
-        _handler.onPointerUp(arrowKey, shiftedMods)
+        // Check horizontal movement (X axis) - select left/right
+        if (absDx > TRACKPOINT_DEAD_ZONE) {
+            val arrowKeyCode = if (dx > 0) {
+                android.view.KeyEvent.KEYCODE_DPAD_RIGHT
+            } else {
+                android.view.KeyEvent.KEYCODE_DPAD_LEFT
+            }
+            // Symbol codes from KeyValue.kt: left=0xE008, right=0xE006
+            val symbolCode = if (dx > 0) 0xE006 else 0xE008
+            val arrowKey = KeyValue.keyeventKey(symbolCode, arrowKeyCode, 0)
 
-        // Calculate repeat delay based on distance from center (like TrackPoint)
-        val dx = abs(ptr.lastX - ptr.keyCenterX)
-        val dy = abs(ptr.lastY - ptr.keyCenterY)
-        val dist = sqrt(dx * dx + dy * dy)
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SELECTION_DELETE: X axis Shift+${if (dx > 0) "Right" else "Left"}, dx=$dx")
 
-        val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
-        val maxDistance = keyHypotenuse * 0.5f
-        val normalizedDist = min(dist / maxDistance, 1.0f)
+            _handler.onPointerDown(arrowKey, false)
+            _handler.onPointerUp(arrowKey, shiftedMods)
+            moved = true
+            maxNormalizedDist = maxOf(maxNormalizedDist, min(absDx / maxDistance, 1.0f))
+        }
 
-        // Delay ranges from TRACKPOINT_MAX_DELAY (near center) to TRACKPOINT_MIN_DELAY (at edge)
-        val repeatDelay = (TRACKPOINT_MAX_DELAY - (normalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))).toLong()
+        // Check vertical movement (Y axis) - select up/down (line-by-line)
+        if (absDy > TRACKPOINT_DEAD_ZONE) {
+            val arrowKeyCode = if (dy > 0) {
+                android.view.KeyEvent.KEYCODE_DPAD_DOWN
+            } else {
+                android.view.KeyEvent.KEYCODE_DPAD_UP
+            }
+            // Symbol codes from KeyValue.kt: up=0xE005, down=0xE007
+            val symbolCode = if (dy > 0) 0xE007 else 0xE005
+            val arrowKey = KeyValue.keyeventKey(symbolCode, arrowKeyCode, 0)
+
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SELECTION_DELETE: Y axis Shift+${if (dy > 0) "Down" else "Up"}, dy=$dy")
+
+            _handler.onPointerDown(arrowKey, false)
+            _handler.onPointerUp(arrowKey, shiftedMods)
+            moved = true
+            maxNormalizedDist = maxOf(maxNormalizedDist, min(absDy / maxDistance, 1.0f))
+        }
+
+        // Calculate repeat delay based on maximum displacement on either axis
+        val repeatDelay = if (moved) {
+            // Delay ranges from TRACKPOINT_MAX_DELAY (at dead zone) to TRACKPOINT_MIN_DELAY (at edge)
+            (TRACKPOINT_MAX_DELAY - (maxNormalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))).toLong()
+        } else {
+            // Finger is in dead zone - check again after a short delay
+            TRACKPOINT_MAX_DELAY
+        }
 
         // Schedule next repeat
         val what = uniqueTimeoutWhat++
