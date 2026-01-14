@@ -22,12 +22,20 @@
    - Regular hold (no movement): normal key repeat
    - Files Modified: `Pointers.kt`
 
+2. **Configurable Vertical Selection** (v2: 2026-01-14)
+   - Vertical Threshold setting: % of key height to trigger line selection (20-80%, default 40%)
+   - Vertical Speed setting: multiplier for line selection (0.1x-1.0x, default 0.4x)
+   - Settings UI in Settings > Gesture Tuning > Selection-Delete Mode
+   - Files Modified: `Config.kt`, `SettingsActivity.kt`, `Pointers.kt`
+
 **Implementation Details**:
 - New `FLAG_P_SELECTION_DELETE_MODE` flag for state tracking
 - `selectionDeleteWhat` for timer identification
 - `handleSelectionDeleteRepeat()` tracks X/Y axes independently (like TrackPoint)
 - Uses `makeInternalModifier(Modifier.SHIFT)` + `with_extra_mod()` for shift state
-- Reuses TrackPoint timing constants and dead zone for consistent behavior
+- Vertical dead zone: `keyHeight * (threshold / 100.0f)` - adapts to key size
+- Separate delay calculation for horiz (full speed) vs vert (speed multiplier)
+- Config: `selection_delete_vertical_threshold`, `selection_delete_vertical_speed`
 - Deferred backspace handling in `onTouchDown` for gesture detection
 
 ---
