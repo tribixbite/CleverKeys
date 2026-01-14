@@ -269,12 +269,15 @@ class SuggestionHandler(
      * @param ic InputConnection for text manipulation
      * @param editorInfo Editor info for app detection
      * @param resources Resources for metrics
+     * @param isManualSelection True if user explicitly tapped a suggestion (skip final autocorrect),
+     *                          false for auto-insert after swipe (final autocorrect may apply)
      */
     fun onSuggestionSelected(
         word: String?,
         ic: InputConnection?,
         editorInfo: EditorInfo?,
-        resources: Resources
+        resources: Resources,
+        isManualSelection: Boolean = false
     ) {
         // Null/empty check
         if (word.isNullOrBlank()) return
@@ -313,18 +316,22 @@ class SuggestionHandler(
         // Skip autocorrect for:
         // 1. Known contractions (prevent fuzzy matching)
         // 2. Raw predictions (user explicitly selected this neural output)
-        if (isKnownContraction || isRawPrediction) {
+        // 3. Manual selections (user explicitly tapped a neural prediction - issue #63 fix)
+        if (isKnownContraction || isRawPrediction || isManualSelection) {
             if (isKnownContraction) {
                 Log.d(TAG, "KNOWN CONTRACTION: \"$processedWord\" - skipping autocorrect")
             }
             if (isRawPrediction) {
                 Log.d(TAG, "RAW PREDICTION: \"$processedWord\" - skipping autocorrect")
             }
+            if (isManualSelection) {
+                Log.d(TAG, "MANUAL SELECTION: \"$processedWord\" - skipping autocorrect (user chose this word)")
+            }
         } else {
             // v1.33.7: Final autocorrect - second chance autocorrect after beam search
-            // Applies when user selects/auto-inserts a prediction (even if beam autocorrect was OFF)
+            // Applies when auto-inserting a prediction (even if beam autocorrect was OFF)
             // Useful for correcting vocabulary misses
-            // SKIP for known contractions and raw predictions
+            // SKIP for known contractions, raw predictions, and manual selections
             if (config.swipe_final_autocorrect_enabled && predictionCoordinator.getWordPredictor() != null) {
                 val correctedWord = predictionCoordinator.getWordPredictor()?.autoCorrect(processedWord)
 

@@ -1,7 +1,32 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-14
-**Status**: v1.2.3 - Selection-delete mode, TrackPoint mode, granular haptic feedback settings
+**Status**: v1.2.4 - Bug fix for suggestion selection (issue #63)
+
+---
+
+## Issue #63 Fix - Suggestion Selection Bug - COMPLETE (2026-01-14)
+
+**Bug Report**: User swipes "deze" → sees correct suggestions → taps "deze" → gets "dede" instead
+**Root Cause**: Final autocorrect was incorrectly modifying manually selected neural predictions
+
+**Analysis**:
+- User @arjenpdevries reported: swipe "deze", see correct suggestion, select → get "dede"
+- Similar: "Arjen" → "Arlen"
+- Final autocorrect feature (v1.33.7) runs on ALL suggestion selections
+- When user explicitly taps a suggestion, final autocorrect found similar dictionary words
+- "deze" vs "dede": 3/4 character match (75%) ≥ 66% threshold → incorrect correction
+- "Arjen" vs "Arlen": 4/5 character match (80%) ≥ 66% threshold → incorrect correction
+
+**Fix**:
+- Added `isManualSelection: Boolean` parameter to `SuggestionHandler.onSuggestionSelected()`
+- Skip final autocorrect when user explicitly taps a suggestion (they're choosing that exact word)
+- `SuggestionBridge.onSuggestionSelected()` now passes `isManualSelection = true`
+- Auto-insert path (swipe completion) keeps `isManualSelection = false` - may still benefit from correction
+
+**Files Modified**:
+- `SuggestionHandler.kt`: Added parameter, skip logic for manual selections
+- `SuggestionBridge.kt`: Pass `isManualSelection = true` for manual taps
 
 ---
 

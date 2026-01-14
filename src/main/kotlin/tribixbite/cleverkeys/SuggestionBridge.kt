@@ -116,11 +116,13 @@ class SuggestionBridge(
         inputCoordinator.resetSwipeData()
 
         // Delegate to SuggestionHandler
+        // isManualSelection = true because user explicitly tapped a suggestion (issue #63 fix)
+        // This skips final autocorrect which could incorrectly change the word
         suggestionHandler?.let { handler ->
             val ic = keyboard2.currentInputConnection
             val editorInfo = keyboard2.currentInputEditorInfo
             val resources = keyboard2.resources
-            handler.onSuggestionSelected(word, ic, editorInfo, resources)
+            handler.onSuggestionSelected(word, ic, editorInfo, resources, isManualSelection = true)
         }
     }
 

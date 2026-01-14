@@ -25,3 +25,4 @@ FIXES:
 • Auto-capitalization now works after periods
 • Double-space-to-period toggle added
 • Updated US QWERTY layout subkeys
+• Fixed suggestion selection returning wrong word (issue #63)
