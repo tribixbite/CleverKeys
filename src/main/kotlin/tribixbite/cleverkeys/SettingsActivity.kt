@@ -652,7 +652,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             "clipboard_history_enabled" -> {
                 clipboardHistoryEnabled = prefs.getBoolean(key, Defaults.CLIPBOARD_HISTORY_ENABLED)
             }
-            "auto_capitalization_enabled" -> {
+            "autocapitalisation" -> {
                 autoCapitalizationEnabled = prefs.getBoolean(key, Defaults.AUTOCAPITALISATION)
             }
             "sticky_keys_enabled" -> {
@@ -4140,7 +4140,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         clipboardMaxItemSizeKb = prefs.getSafeString("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK
         clipboardLimitType = prefs.getSafeString("clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
         clipboardSizeLimitMb = prefs.getSafeString("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
-        autoCapitalizationEnabled = prefs.getSafeBoolean("auto_capitalization_enabled", Defaults.AUTOCAPITALISATION)
+        autoCapitalizationEnabled = prefs.getSafeBoolean("autocapitalisation", Defaults.AUTOCAPITALISATION)
 
         // Gesture sensitivity settings
         swipeDistance = prefs.getSafeString("swipe_dist", Defaults.SWIPE_DIST).toIntOrNull() ?: Defaults.SWIPE_DIST_FALLBACK.toInt()
@@ -4506,7 +4506,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     editor.putBoolean("vibration_enabled", false)
                     editor.putBoolean("debug_enabled", false)
                     editor.putBoolean("clipboard_history_enabled", true)
-                    editor.putBoolean("auto_capitalization_enabled", true)
+                    editor.putBoolean("autocapitalisation", true)
                     editor.putBoolean("sticky_keys_enabled", false)
                     editor.putInt("sticky_keys_timeout_ms", 5000)
                     editor.putBoolean("voice_guidance_enabled", false)
