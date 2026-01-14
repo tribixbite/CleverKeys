@@ -178,6 +178,20 @@ class Pointers(
             return
         }
 
+        // Handle selection-delete mode completion - delete selected text
+        if (ptr.hasFlagsAny(FLAG_P_SELECTION_DELETE_MODE)) {
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: SELECTION_DELETE completion - deleting selected text")
+            stopSelectionDeleteRepeat(ptr)
+            // Send DELETE key to delete the selected text
+            val deleteKey = KeyValue.keyeventKey(0xE003, android.view.KeyEvent.KEYCODE_DEL, 0)
+            _handler.onPointerDown(deleteKey, false)
+            _handler.onPointerUp(deleteKey, ptr.modifiers)
+            removePtr(ptr)
+            // Clear visual highlight
+            _handler.onPointerFlagsChanged(null)
+            return
+        }
+
         // Handle deferred nav-subkey key - check if it was a tap or a short swipe
         if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN) && hasNavigationSubkeys(ptr)) {
             // Check if user has moved enough for a short swipe
@@ -198,6 +212,29 @@ class Pointers(
             }
             // User moved - clear deferred flag and let gesture classification handle it
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred nav-subkey key SWIPE, distance=$movementDist, falling through to gesture classification")
+            ptr.flags = ptr.flags and FLAG_P_DEFERRED_DOWN.inv()
+        }
+
+        // Handle deferred backspace key - check if it was a tap or a short swipe
+        // This ensures quick backspace taps work while allowing short swipe + release for subkeys
+        if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN) && isBackspaceKey(ptr.value)) {
+            val dx = ptr.lastX - ptr.downX
+            val dy = ptr.lastY - ptr.downY
+            val movementDist = sqrt(dx * dx + dy * dy)
+
+            // If barely moved (tap), output the backspace key
+            // If moved significantly, fall through to gesture classification for short swipe (e.g., delete_last_word)
+            if (movementDist < _config.short_gesture_min_distance) {
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred backspace TAP, outputting backspace")
+                _handler.onPointerDown(ptr.value, false)
+                ptr.flags = ptr.flags and FLAG_P_DEFERRED_DOWN.inv()
+                clearLatched()
+                removePtr(ptr)
+                _handler.onPointerUp(ptr.value, ptr.modifiers)
+                return
+            }
+            // User moved - clear deferred flag and let gesture classification handle it (for delete_last_word etc.)
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Deferred backspace SWIPE, distance=$movementDist, falling through to gesture classification")
             ptr.flags = ptr.flags and FLAG_P_DEFERRED_DOWN.inv()
         }
 
@@ -562,7 +599,10 @@ class Pointers(
         // Also check if this key has nav subkeys for potential TrackPoint mode
         val hasNavSubkeys = _config.keyrepeat_enabled && hasNavigationSubkeys(ptr)
 
-        if (mightBeSwipe || hasNavSubkeys) {
+        // Check if this is a backspace key for potential selection-delete mode
+        val isBackspace = _config.keyrepeat_enabled && isBackspaceKey(value)
+
+        if (mightBeSwipe || hasNavSubkeys || isBackspace) {
             ptr.flags = ptr.flags or FLAG_P_DEFERRED_DOWN
         }
 
@@ -573,11 +613,12 @@ class Pointers(
             startLongPress(ptr)
         }
 
-        // Don't output character immediately when swipe typing might start
-        // or when this key has nav subkeys (might enter TrackPoint mode)
-        // The character/key will be output in onTouchUp if it turns out not to be a swipe/TrackPoint
+        // Don't output character immediately when swipe typing might start,
+        // when this key has nav subkeys (might enter TrackPoint mode),
+        // or when this is a backspace key (might enter selection-delete mode)
+        // The character/key will be output in onTouchUp if it turns out not to be a swipe/TrackPoint/selection
         // OR in handleLongPress if key repeat triggers
-        if (!mightBeSwipe && !hasNavSubkeys) {
+        if (!mightBeSwipe && !hasNavSubkeys && !isBackspace) {
             _handler.onPointerDown(value, false)
         }
     }
@@ -851,6 +892,11 @@ class Pointers(
                 handleTrackPointRepeat(ptr)
                 return true
             }
+            // Handle selection-delete repeat (Shift+Arrow for text selection)
+            if (ptr.selectionDeleteWhat == msg.what) {
+                handleSelectionDeleteRepeat(ptr)
+                return true
+            }
         }
         return false
     }
@@ -881,6 +927,66 @@ class Pointers(
 
     private fun stopTrackPointRepeat(ptr: Pointer) {
         _longpress_handler.removeMessages(ptr.trackpointWhat)
+    }
+
+    // Selection-delete mode timing functions
+
+    private fun startSelectionDeleteRepeat(ptr: Pointer) {
+        val what = uniqueTimeoutWhat++
+        ptr.selectionDeleteWhat = what
+        // Use same initial delay as TrackPoint for consistency
+        _longpress_handler.sendEmptyMessageDelayed(what, TRACKPOINT_INITIAL_DELAY)
+    }
+
+    private fun stopSelectionDeleteRepeat(ptr: Pointer) {
+        _longpress_handler.removeMessages(ptr.selectionDeleteWhat)
+    }
+
+    /** Handle selection-delete repeat - send Shift+Arrow keys to extend selection.
+     *  Direction is determined by initial swipe direction.
+     */
+    private fun handleSelectionDeleteRepeat(ptr: Pointer) {
+        if (!ptr.hasFlagsAny(FLAG_P_SELECTION_DELETE_MODE)) {
+            return
+        }
+
+        // Determine arrow key based on selection direction
+        val arrowKeyCode = if (ptr.selectionDirection > 0) {
+            android.view.KeyEvent.KEYCODE_DPAD_RIGHT
+        } else {
+            android.view.KeyEvent.KEYCODE_DPAD_LEFT
+        }
+
+        // Create arrow key event
+        // Symbol codes from KeyValue.kt: left=0xE008, right=0xE006
+        val symbolCode = if (ptr.selectionDirection > 0) 0xE006 else 0xE008
+        val arrowKey = KeyValue.keyeventKey(symbolCode, arrowKeyCode, 0)
+
+        // Create modifiers with SHIFT for selection
+        val shiftMod = KeyValue.makeInternalModifier(KeyValue.Modifier.SHIFT)
+        val shiftedMods = ptr.modifiers.with_extra_mod(shiftMod)
+
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SELECTION_DELETE: Sending Shift+${if (ptr.selectionDirection > 0) "Right" else "Left"}")
+
+        _handler.onPointerDown(arrowKey, false)
+        _handler.onPointerUp(arrowKey, shiftedMods)
+
+        // Calculate repeat delay based on distance from center (like TrackPoint)
+        val dx = abs(ptr.lastX - ptr.keyCenterX)
+        val dy = abs(ptr.lastY - ptr.keyCenterY)
+        val dist = sqrt(dx * dx + dy * dy)
+
+        val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
+        val maxDistance = keyHypotenuse * 0.5f
+        val normalizedDist = min(dist / maxDistance, 1.0f)
+
+        // Delay ranges from TRACKPOINT_MAX_DELAY (near center) to TRACKPOINT_MIN_DELAY (at edge)
+        val repeatDelay = (TRACKPOINT_MAX_DELAY - (normalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))).toLong()
+
+        // Schedule next repeat
+        val what = uniqueTimeoutWhat++
+        ptr.selectionDeleteWhat = what
+        _longpress_handler.sendEmptyMessageDelayed(what, repeatDelay)
     }
 
     /** Handle TrackPoint joystick repeat - send nav keys based on X and Y distance from key center independently.
@@ -1000,9 +1106,34 @@ class Pointers(
                 return
             }
 
+            // Selection-delete mode: For backspace, check if user did a short swipe + hold
+            // Short swipe + hold → selection mode (Shift+arrows)
+            // No movement + hold → normal key repeat
+            val isBackspace = isBackspaceKey(ptr.value)
+            if (_config.keyrepeat_enabled && isBackspace) {
+                if (movementDist >= _config.short_gesture_min_distance) {
+                    // User did a short swipe then held - enter selection-delete mode
+                    // Determine direction based on horizontal movement (left/right selection)
+                    val direction = if (dx > 0) 1 else -1  // 1 = right, -1 = left
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SELECTION_DELETE: Entering selection mode, direction=${if (direction > 0) "right" else "left"}, movement=$movementDist")
+                    ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_SELECTION_DELETE_MODE
+                    ptr.selectionDirection = direction
+                    // Store current position as reference for speed calculation
+                    ptr.keyCenterX = ptr.lastX
+                    ptr.keyCenterY = ptr.lastY
+                    // Vibrate to indicate selection mode activation
+                    _handler.onPointerFlagsChanged(HapticEvent.TRACKPOINT_ACTIVATE)
+                    // Start selection repeat timer
+                    startSelectionDeleteRepeat(ptr)
+                    return
+                }
+                // No significant movement - fall through to normal key repeat handling below
+            }
+
             // For regular deferred keys (swipe typing), check movement threshold
-            if (movementDist > 15f) {
+            if (movementDist > 15f && !isBackspace) {
                 // User has moved - don't trigger key repeat, let swipe typing take over
+                // (Backspace is handled above - either selection mode or key repeat)
                 return
             }
         }
@@ -1090,6 +1221,13 @@ class Pointers(
             android.view.KeyEvent.KEYCODE_DPAD_RIGHT -> true
             else -> false
         }
+    }
+
+    /** Check if a KeyValue is a backspace/delete key. */
+    private fun isBackspaceKey(kv: KeyValue?): Boolean {
+        if (kv == null) return false
+        if (kv.getKind() != KeyValue.Kind.Keyevent) return false
+        return kv.getKeyevent() == android.view.KeyEvent.KEYCODE_DEL
     }
 
     /** Check if the pressed key is a navigation key (for TrackPoint mode). */
@@ -1195,6 +1333,12 @@ class Pointers(
 
         /** Key center Y for TrackPoint joystick reference. */
         var keyCenterY: Float = downY
+
+        /** Selection direction for selection-delete mode: -1 = left, 1 = right, 0 = undetermined. */
+        var selectionDirection: Int = 0
+
+        /** Timeout identifier for selection-delete repeat messages. */
+        var selectionDeleteWhat: Int = -1
 
         /** [null] when not in sliding mode. */
         var sliding: Sliding? = null
@@ -1475,6 +1619,9 @@ class Pointers(
 
         /** TrackPoint mode - hold on key with nav subkeys, then move finger to move cursor. */
         const val FLAG_P_TRACKPOINT_MODE = 1 shl 10
+
+        /** Selection-delete mode - short swipe + hold on backspace to select text, delete on release. */
+        const val FLAG_P_SELECTION_DELETE_MODE = 1 shl 11
 
         /** Minimum movement (px) to trigger nav event in TrackPoint mode. */
         const val TRACKPOINT_MOVEMENT_THRESHOLD = 15f
