@@ -39,7 +39,7 @@ Useful links.
 -->
 <keyboard name="QWERTY (US)" script="latin">
   <row>
-    <key c="q" ne="1" nw="~" sw="`"/>
+    <key c="q" ne="1" nw="~" sw="`" se="loc esc"/>
     <key c="w" ne="2" nw="\@"/>
     <key c="e" ne="3" nw="\#" se="loc €"/>
     <key c="r" ne="4" nw="$"/>
@@ -51,7 +51,7 @@ Useful links.
     <key c="p" ne="0" se="|"/>
   </row>
   <row>
-    <key shift="0.5" c="a" nw="home" sw="end"/>
+    <key shift="0.5" c="a"/>
     <key c="s" sw="loc ß"/>
     <key c="d"/>
     <key c="f"/>
@@ -62,14 +62,14 @@ Useful links.
     <key c="l" nw="(" ne=")" se="\\" sw="/"/>
   </row>
   <row>
-    <key width="1.5" c="shift" nw="loc esc" ne="loc capslock" se="loc tab"/>
+    <key width="1.5" c="shift" nw="home" ne="end" se="loc tab" sw="loc capslock"/>
     <key c="z"/>
     <key c="x" ne="loc †"/>
     <key c="c" sw="."/>
     <key c="v" sw=","/>
     <key c="b" se="&gt;" sw="&lt;"/>
     <key c="n" se=":" sw=";"/>
-    <key c="m" se="!" ne="\?" nw="&quot;" sw="'"/>
+    <key c="m" se="!" ne="&quot;" nw="\?" sw="'"/>
     <key width="1.5" c="backspace" ne="delete" nw="delete_last_word"/>
   </row>
 </keyboard>
