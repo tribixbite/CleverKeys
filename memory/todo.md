@@ -1,7 +1,32 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-13
-**Status**: v1.2.3 - TrackPoint mode, granular haptic feedback settings
+**Last Updated**: 2026-01-14
+**Status**: v1.2.3 - Selection-delete mode, TrackPoint mode, granular haptic feedback settings
+
+---
+
+## Selection-Delete Mode for Backspace - COMPLETE (2026-01-14)
+
+**Features Implemented**:
+
+1. **Selection-Delete Gesture Mode**
+   - Short swipe + hold on backspace → activates selection mode
+   - Sends Shift+Arrow keys to extend text selection
+   - Selection extends in swipe direction (left or right)
+   - Speed proportional to finger distance from key center (joystick-style)
+   - On release: deletes all selected text
+   - Short swipe + release: normal subkey action (delete_last_word)
+   - Regular hold (no movement): normal key repeat
+   - Files Modified: `Pointers.kt`
+
+**Implementation Details**:
+- New `FLAG_P_SELECTION_DELETE_MODE` flag for state tracking
+- `selectionDirection` field in Pointer class (-1=left, 1=right)
+- `selectionDeleteWhat` for timer identification
+- `handleSelectionDeleteRepeat()` sends Shift+Arrow via modifiers system
+- Uses `makeInternalModifier(Modifier.SHIFT)` + `with_extra_mod()` for shift state
+- Reuses TrackPoint timing constants for consistent speed/delay behavior
+- Deferred backspace handling in `onTouchDown` for gesture detection
 
 ---
 
