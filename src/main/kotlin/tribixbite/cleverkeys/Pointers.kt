@@ -981,28 +981,28 @@ class Pointers(
         val movementDist = kotlin.math.sqrt(dx * dx + dy * dy)
 
         if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)) {
-            // Check if this key has nav subkeys - use higher tolerance for TrackPoint activation
             val hasNavSubkeys = hasNavigationSubkeys(ptr)
-            // Keys with nav subkeys get higher tolerance (30px) to allow for finger jitter during hold
-            // Non-nav keys use stricter threshold (15px) for swipe vs tap detection
-            val movementThreshold = if (hasNavSubkeys) 30f else 15f
 
-            if (movementDist > movementThreshold) {
-                // User has moved - don't trigger key repeat, let swipe typing take over
-                return
-            }
-
-            // TrackPoint mode: If key has nav subkeys and user held without moving, enter TrackPoint mode
+            // TrackPoint mode: If key has nav subkeys and long press fires, ALWAYS enter TrackPoint
+            // This allows: quick swipe+release = short gesture, hold past longPressTimeout = TrackPoint
+            // Movement doesn't prevent TrackPoint - user can move finger then hold to activate
             if (_config.keyrepeat_enabled && hasNavSubkeys) {
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Entering TrackPoint mode for key with nav subkeys ${ptr.value}")
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "TRACKPOINT: Entering TrackPoint mode for key with nav subkeys ${ptr.value}, movement=$movementDist")
                 ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_TRACKPOINT_MODE
-                // Store key center for joystick reference (use initial touch point as approximation)
-                ptr.keyCenterX = ptr.downX
-                ptr.keyCenterY = ptr.downY
+                // Store CURRENT finger position as joystick center (not initial touch point)
+                // This allows user to move finger to comfortable position before TrackPoint activates
+                ptr.keyCenterX = ptr.lastX
+                ptr.keyCenterY = ptr.lastY
                 // Vibrate to indicate TrackPoint mode activation
                 _handler.onPointerFlagsChanged(HapticEvent.TRACKPOINT_ACTIVATE)
                 // Start joystick repeat timer - will continuously check finger position
                 startTrackPointRepeat(ptr)
+                return
+            }
+
+            // For regular deferred keys (swipe typing), check movement threshold
+            if (movementDist > 15f) {
+                // User has moved - don't trigger key repeat, let swipe typing take over
                 return
             }
         }
