@@ -1,7 +1,36 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-14
-**Status**: v1.2.5 - Language pack autocorrect fix (issue #63)
+**Status**: v1.2.5 - Settings Activities update
+
+---
+
+## Settings Activities Update - COMPLETE (2026-01-14)
+
+**New Activity Shortcuts in Settings > Activities**:
+
+1. **Short Swipe Calibration**
+   - Card with 📐 icon
+   - Launches `ShortSwipeCalibrationActivity`
+   - Description: "Practice and tune gesture sensitivity"
+   - Also added to searchable settings
+
+2. **What's New**
+   - Card with ✨ icon
+   - Opens external URL: `https://github.com/AltairGeo/cleverkeys/releases/latest`
+   - Description: "See latest features and changelog"
+   - Added to searchable settings (keywords: changelog, release, update, features, version)
+   - Special handling in `navigateToSetting()` for settingId "whats_new"
+
+**Release Workflow Update**:
+- Modified `.github/workflows/release.yml` to read from fastlane changelogs
+- Changelog file: `fastlane/metadata/android/en-US/changelogs/{versionCode}.txt`
+- Falls back to commit-based changelog if fastlane file not found
+- GitHub release notes now match F-Droid changelog format
+
+**Files Modified**:
+- `SettingsActivity.kt`: Added two Activity cards, searchable setting, URL handling
+- `.github/workflows/release.yml`: Read from fastlane instead of commits
 
 ---
 
