@@ -317,6 +317,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var shortGestureMinDistance by mutableStateOf(37)
     private var shortGestureMaxDistance by mutableStateOf(141)
 
+    // Selection-delete mode settings (backspace swipe+hold)
+    private var selectionDeleteVerticalThreshold by mutableStateOf(40)
+    private var selectionDeleteVerticalSpeed by mutableStateOf(0.4f)
+
     // Swipe debug advanced settings
     private var swipeDebugDetailedLogging by mutableStateOf(false)
     private var swipeDebugShowRawOutput by mutableStateOf(true)
@@ -2316,6 +2320,45 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     // Customize Per-Key Actions button moved to Activities section at top
                 }
 
+                // Selection-Delete Mode subsection (backspace swipe+hold)
+                Text(
+                    text = "Selection-Delete Mode",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                )
+                Text(
+                    text = "Short swipe + hold on backspace to select text, then release to delete.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                SettingsSlider(
+                    title = "Vertical Threshold",
+                    description = "% of key height finger must move to trigger line selection. Higher = harder to accidentally select lines.",
+                    value = selectionDeleteVerticalThreshold.toFloat(),
+                    valueRange = 20f..80f,
+                    steps = 12,
+                    onValueChange = {
+                        selectionDeleteVerticalThreshold = it.toInt()
+                        saveSetting("selection_delete_vertical_threshold", selectionDeleteVerticalThreshold)
+                    },
+                    displayValue = "${selectionDeleteVerticalThreshold}%"
+                )
+
+                SettingsSlider(
+                    title = "Vertical Speed",
+                    description = "Speed multiplier for line selection (lower = slower). Character selection stays at full speed.",
+                    value = selectionDeleteVerticalSpeed,
+                    valueRange = 0.1f..1.0f,
+                    steps = 18,
+                    onValueChange = {
+                        selectionDeleteVerticalSpeed = it
+                        saveSetting("selection_delete_vertical_speed", selectionDeleteVerticalSpeed)
+                    },
+                    displayValue = String.format("%.1fx", selectionDeleteVerticalSpeed)
+                )
+
                 // Tap and Typing subsection
                 Text(
                     text = "Tap and Typing",
@@ -4231,6 +4274,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         shortGesturesEnabled = prefs.getSafeBoolean("short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)
         shortGestureMinDistance = Config.safeGetInt(prefs, "short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE)
         shortGestureMaxDistance = Config.safeGetInt(prefs, "short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE)
+
+        // Selection-delete mode settings
+        selectionDeleteVerticalThreshold = Config.safeGetInt(prefs, "selection_delete_vertical_threshold", Defaults.SELECTION_DELETE_VERTICAL_THRESHOLD)
+        selectionDeleteVerticalSpeed = Config.safeGetFloat(prefs, "selection_delete_vertical_speed", Defaults.SELECTION_DELETE_VERTICAL_SPEED)
 
         // Swipe debug advanced settings
         swipeDebugDetailedLogging = prefs.getSafeBoolean("swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)

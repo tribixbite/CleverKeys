@@ -93,6 +93,10 @@ object Defaults {
     const val SHORT_GESTURE_MIN_DISTANCE = 37
     const val SHORT_GESTURE_MAX_DISTANCE = 141
 
+    // Selection-delete mode (backspace swipe+hold)
+    const val SELECTION_DELETE_VERTICAL_THRESHOLD = 40  // % of key height - must exceed to trigger vertical
+    const val SELECTION_DELETE_VERTICAL_SPEED = 0.4f    // Speed multiplier for vertical (slower than horizontal)
+
     // Swipe trail
     const val SWIPE_TRAIL_ENABLED = true
     const val SWIPE_TRAIL_EFFECT = "sparkle"
@@ -368,6 +372,10 @@ class Config private constructor(
     @JvmField var short_gesture_min_distance = 0
     @JvmField var short_gesture_max_distance = 100 // Max distance as % of key diagonal (50-200, 200=disabled)
 
+    // Selection-delete mode configuration (backspace swipe+hold)
+    @JvmField var selection_delete_vertical_threshold = 40  // % of key height to trigger vertical selection
+    @JvmField var selection_delete_vertical_speed = 0.4f    // Speed multiplier for vertical (0.1-1.0)
+
     // Gesture timing configuration (exposed hardcoded constants)
     @JvmField var tap_duration_threshold = 150L // Max duration for a tap gesture (ms)
     @JvmField var double_space_to_period = true // Enable double-space-to-period feature
@@ -602,6 +610,10 @@ class Config private constructor(
         short_gestures_enabled = _prefs.getBoolean("short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)
         short_gesture_min_distance = safeGetInt(_prefs, "short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE)
         short_gesture_max_distance = safeGetInt(_prefs, "short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE)
+
+        // Selection-delete mode configuration
+        selection_delete_vertical_threshold = safeGetInt(_prefs, "selection_delete_vertical_threshold", Defaults.SELECTION_DELETE_VERTICAL_THRESHOLD)
+        selection_delete_vertical_speed = safeGetFloat(_prefs, "selection_delete_vertical_speed", Defaults.SELECTION_DELETE_VERTICAL_SPEED)
 
         // Gesture timing configuration
         tap_duration_threshold = safeGetInt(_prefs, "tap_duration_threshold", Defaults.TAP_DURATION_THRESHOLD).toLong()

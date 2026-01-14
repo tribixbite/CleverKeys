@@ -945,6 +945,7 @@ class Pointers(
     /** Handle selection-delete repeat - send Shift+Arrow keys to extend selection.
      *  Works like TrackPoint joystick: X and Y axes tracked independently.
      *  Supports diagonal selection (both horizontal and vertical in same cycle).
+     *  Vertical movement has larger dead zone and slower speed (configurable).
      */
     private fun handleSelectionDeleteRepeat(ptr: Pointer) {
         if (!ptr.hasFlagsAny(FLAG_P_SELECTION_DELETE_MODE)) {
@@ -957,19 +958,27 @@ class Pointers(
         val absDx = abs(dx)
         val absDy = abs(dy)
 
-        // Get key size for normalization
+        // Get key dimensions for thresholds
         val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
+        // Approximate key height from hypotenuse (typical keyboard keys are wider than tall)
+        val keyHeight = keyHypotenuse * 0.7f
         val maxDistance = keyHypotenuse * 0.5f
+
+        // Vertical dead zone is configurable (% of key height)
+        val verticalDeadZone = keyHeight * (_config.selection_delete_vertical_threshold / 100.0f)
 
         // Create modifiers with SHIFT for selection
         val shiftMod = KeyValue.makeInternalModifier(KeyValue.Modifier.SHIFT)
         val shiftedMods = ptr.modifiers.with_extra_mod(shiftMod)
 
-        // Track if any movement happened
-        var moved = false
-        var maxNormalizedDist = 0f
+        // Track movement for delay calculation
+        var movedHorizontal = false
+        var movedVertical = false
+        var maxHorizNormalizedDist = 0f
+        var maxVertNormalizedDist = 0f
 
         // Check horizontal movement (X axis) - select left/right
+        // Uses standard TrackPoint dead zone for responsive horizontal selection
         if (absDx > TRACKPOINT_DEAD_ZONE) {
             val arrowKeyCode = if (dx > 0) {
                 android.view.KeyEvent.KEYCODE_DPAD_RIGHT
@@ -984,12 +993,13 @@ class Pointers(
 
             _handler.onPointerDown(arrowKey, false)
             _handler.onPointerUp(arrowKey, shiftedMods)
-            moved = true
-            maxNormalizedDist = maxOf(maxNormalizedDist, min(absDx / maxDistance, 1.0f))
+            movedHorizontal = true
+            maxHorizNormalizedDist = min(absDx / maxDistance, 1.0f)
         }
 
         // Check vertical movement (Y axis) - select up/down (line-by-line)
-        if (absDy > TRACKPOINT_DEAD_ZONE) {
+        // Uses larger configurable dead zone to prevent accidental line selection
+        if (absDy > verticalDeadZone) {
             val arrowKeyCode = if (dy > 0) {
                 android.view.KeyEvent.KEYCODE_DPAD_DOWN
             } else {
@@ -999,21 +1009,36 @@ class Pointers(
             val symbolCode = if (dy > 0) 0xE007 else 0xE005
             val arrowKey = KeyValue.keyeventKey(symbolCode, arrowKeyCode, 0)
 
-            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SELECTION_DELETE: Y axis Shift+${if (dy > 0) "Down" else "Up"}, dy=$dy")
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "SELECTION_DELETE: Y axis Shift+${if (dy > 0) "Down" else "Up"}, dy=$dy (threshold=$verticalDeadZone)")
 
             _handler.onPointerDown(arrowKey, false)
             _handler.onPointerUp(arrowKey, shiftedMods)
-            moved = true
-            maxNormalizedDist = maxOf(maxNormalizedDist, min(absDy / maxDistance, 1.0f))
+            movedVertical = true
+            maxVertNormalizedDist = min((absDy - verticalDeadZone) / (maxDistance - verticalDeadZone), 1.0f)
         }
 
-        // Calculate repeat delay based on maximum displacement on either axis
-        val repeatDelay = if (moved) {
-            // Delay ranges from TRACKPOINT_MAX_DELAY (at dead zone) to TRACKPOINT_MIN_DELAY (at edge)
-            (TRACKPOINT_MAX_DELAY - (maxNormalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))).toLong()
-        } else {
-            // Finger is in dead zone - check again after a short delay
-            TRACKPOINT_MAX_DELAY
+        // Calculate repeat delay
+        // Horizontal: standard speed based on distance
+        // Vertical: slower speed using configurable multiplier
+        val repeatDelay = when {
+            movedHorizontal && movedVertical -> {
+                // Both axes moved - use faster of the two (horizontal dominates)
+                val horizDelay = TRACKPOINT_MAX_DELAY - (maxHorizNormalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))
+                val vertDelay = (TRACKPOINT_MAX_DELAY - (maxVertNormalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))) / _config.selection_delete_vertical_speed
+                minOf(horizDelay, vertDelay).toLong()
+            }
+            movedHorizontal -> {
+                // Horizontal only - standard speed
+                (TRACKPOINT_MAX_DELAY - (maxHorizNormalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))).toLong()
+            }
+            movedVertical -> {
+                // Vertical only - slower speed using multiplier (lower multiplier = slower)
+                ((TRACKPOINT_MAX_DELAY - (maxVertNormalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))) / _config.selection_delete_vertical_speed).toLong()
+            }
+            else -> {
+                // Finger is in dead zone - check again after a short delay
+                TRACKPOINT_MAX_DELAY
+            }
         }
 
         // Schedule next repeat
