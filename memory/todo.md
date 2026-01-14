@@ -11,9 +11,12 @@
 
 1. **Selection-Delete Gesture Mode**
    - Short swipe + hold on backspace → activates selection mode
-   - Sends Shift+Arrow keys to extend text selection
-   - Selection extends in swipe direction (left or right)
-   - Speed proportional to finger distance from key center (joystick-style)
+   - Works like TrackPoint joystick: bidirectional movement
+   - X axis: move left/right → Shift+Left/Right for character selection
+   - Y axis: move up/down → Shift+Up/Down for line selection
+   - Diagonal movement supported (both axes fire independently)
+   - Direction changes dynamically - can reverse selection by moving opposite
+   - Speed proportional to finger distance from activation center
    - On release: deletes all selected text
    - Short swipe + release: normal subkey action (delete_last_word)
    - Regular hold (no movement): normal key repeat
@@ -21,11 +24,10 @@
 
 **Implementation Details**:
 - New `FLAG_P_SELECTION_DELETE_MODE` flag for state tracking
-- `selectionDirection` field in Pointer class (-1=left, 1=right)
 - `selectionDeleteWhat` for timer identification
-- `handleSelectionDeleteRepeat()` sends Shift+Arrow via modifiers system
+- `handleSelectionDeleteRepeat()` tracks X/Y axes independently (like TrackPoint)
 - Uses `makeInternalModifier(Modifier.SHIFT)` + `with_extra_mod()` for shift state
-- Reuses TrackPoint timing constants for consistent speed/delay behavior
+- Reuses TrackPoint timing constants and dead zone for consistent behavior
 - Deferred backspace handling in `onTouchDown` for gesture detection
 
 ---
