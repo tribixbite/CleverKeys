@@ -201,19 +201,34 @@ jobs:
 
     - name: Generate changelog
       run: |
-        # Extract changelog from recent commits
         echo "## What's New in ${{ env.TAG_NAME }}" > CHANGELOG.md
         echo "" >> CHANGELOG.md
 
-        # Get commits since last tag
-        LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-        if [ -n "$LAST_TAG" ]; then
-          git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --grep="feat\|fix\|perf\|refactor" >> CHANGELOG.md
+        # Read from fastlane changelog (use arm64 versionCode suffix = 2)
+        # VersionCode = VERSION_CODE * 10 + ABI_SUFFIX
+        CHANGELOG_CODE=$((${{ env.VERSION_CODE }} * 10 + 2))
+        CHANGELOG_FILE="fastlane/metadata/android/en-US/changelogs/${CHANGELOG_CODE}.txt"
+
+        if [ -f "$CHANGELOG_FILE" ]; then
+          # Skip the first line (version title) since we already have it in the header
+          tail -n +2 "$CHANGELOG_FILE" >> CHANGELOG.md
+          echo "📋 Read changelog from $CHANGELOG_FILE"
         else
-          echo "- Initial release with neural swipe typing" >> CHANGELOG.md
-          echo "- Complete ONNX transformer integration" >> CHANGELOG.md
-          echo "- Hardware acceleration support" >> CHANGELOG.md
-          echo "- Privacy-first local processing" >> CHANGELOG.md
+          # Fallback: check for base versionCode without ABI suffix
+          CHANGELOG_FILE_ALT="fastlane/metadata/android/en-US/changelogs/${{ env.VERSION_CODE }}.txt"
+          if [ -f "$CHANGELOG_FILE_ALT" ]; then
+            tail -n +2 "$CHANGELOG_FILE_ALT" >> CHANGELOG.md
+            echo "📋 Read changelog from $CHANGELOG_FILE_ALT"
+          else
+            # Final fallback: generate from commits
+            echo "⚠️ No fastlane changelog found, generating from commits"
+            LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+            if [ -n "$LAST_TAG" ]; then
+              git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" >> CHANGELOG.md
+            else
+              echo "- Initial release with neural swipe typing" >> CHANGELOG.md
+            fi
+          fi
         fi
 
         echo "" >> CHANGELOG.md

@@ -428,6 +428,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Short Swipe Calibration", listOf("calibrate", "practice", "tutorial", "test"), "Gesture Tuning", ShortSwipeCalibrationActivity::class.java, gatedBy = "short_gestures", settingId = "short_swipe_calibration"),
             SearchableSetting("Extra Keys", listOf("toolbar", "arrows", "numbers"), "Activities", ExtraKeysConfigActivity::class.java),
             SearchableSetting("Backup & Restore", listOf("backup", "export", "import", "restore"), "Activities", BackupRestoreActivity::class.java),
+            SearchableSetting("What's New", listOf("changelog", "release", "update", "features", "version"), "Activities", settingId = "whats_new"),
             // Neural Prediction
             SearchableSetting("Neural Settings", listOf("neural", "ai", "prediction", "model"), "Neural Prediction", NeuralSettingsActivity::class.java),
             SearchableSetting("Swipe Typing", listOf("gesture", "neural", "glide"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, settingId = "swipe_typing"),
@@ -506,6 +507,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Navigate to activity or expand section
         if (setting.activityClass != null) {
             startActivity(Intent(this, setting.activityClass))
+        } else if (setting.settingId == "whats_new") {
+            // Special handling for What's New - opens external URL
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/AltairGeo/cleverkeys/releases/latest")))
         } else {
             collapseAllSections()
             setting.expandSection()
@@ -1091,6 +1095,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(bottom = 8.dp)
                         .clickable {
                             val intent = Intent(activityContext, LayoutManagerActivity::class.java)
                             activityContext.startActivity(intent)
@@ -1115,6 +1120,87 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                             )
                             Text(
                                 text = "QWERTY, Dvorak, Colemak & more",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                // Short Swipe Calibration Card
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                        .clickable {
+                            val intent = Intent(activityContext, ShortSwipeCalibrationActivity::class.java)
+                            activityContext.startActivity(intent)
+                        },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "📐", fontSize = 28.sp)
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Short Swipe Calibration",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = "Practice and tune gesture sensitivity",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                // What's New Card - opens GitHub releases page
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/AltairGeo/cleverkeys/releases/latest"))
+                            activityContext.startActivity(intent)
+                        },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "✨", fontSize = 28.sp)
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "What's New",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = "See latest features and changelog",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
