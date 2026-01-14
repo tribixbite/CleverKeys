@@ -1,0 +1,27 @@
+v1.2.4 - TrackPoint & Selection-Delete Modes
+
+NEW FEATURES:
+
+• TrackPoint Mode - Hold nav key to enter joystick cursor control
+  - Move finger in any direction, cursor follows proportionally
+  - Diagonal movement support (NE moves up+right)
+  - Speed scales with distance from center
+
+• Selection-Delete Mode - Short swipe + hold backspace
+  - Swipe left/right/up/down to select text
+  - Release to delete selection
+  - Configurable vertical threshold and speed
+
+• Settings Search - Find any setting instantly
+  - Real-time filtering with keyword synonyms
+  - Scrolls to setting with pulse highlight
+
+• Granular Haptic Feedback - Per-event controls
+  - Toggle haptics for: key press, predictions, TrackPoint, etc.
+
+• Short Swipe Calibration - Practice and tune gestures
+
+FIXES:
+• Auto-capitalization now works after periods
+• Double-space-to-period toggle added
+• Updated US QWERTY layout subkeys
