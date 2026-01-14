@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-14
-**Status**: v1.2.4 - Bug fix for suggestion selection (issue #63)
+**Status**: v1.2.5 - Language pack autocorrect fix (issue #63)
 
 ---
 
