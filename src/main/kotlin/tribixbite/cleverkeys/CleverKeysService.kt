@@ -735,6 +735,18 @@ class CleverKeysService : InputMethodService(),
         if ((oldSelStart == oldSelEnd) != (newSelStart == newSelEnd)) {
             _keyboardView.set_selection_state(newSelStart != newSelEnd)
         }
+
+        // v1.2.6: Trigger cursor-aware prediction sync when cursor moves
+        // Only sync when cursor position changes (not selection range change)
+        // and when there's no active selection (newSelStart == newSelEnd)
+        if (newSelStart == newSelEnd && oldSelStart != newSelStart) {
+            _inputCoordinator.onCursorMoved(
+                newPosition = newSelStart,
+                ic = currentInputConnection,
+                language = _config?.primary_language ?: "en",
+                editorInfo = currentInputEditorInfo
+            )
+        }
     }
 
     override fun onFinishInputView(finishingInput: Boolean) {
@@ -743,6 +755,9 @@ class CleverKeysService : InputMethodService(),
 
         // Clear suggestions to prevent stale state/crashes on app switch
         _suggestionBar?.clearSuggestions()
+
+        // v1.2.6: Cancel any pending cursor sync
+        _inputCoordinator.cancelPendingCursorSync()
     }
 
     // ==================== Inline Autofill Support (API 30+) ====================

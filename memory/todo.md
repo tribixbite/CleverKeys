@@ -1,50 +1,52 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-15
-**Status**: v1.2.5 - Cursor-aware predictions planned
+**Status**: v1.2.6 - Cursor-aware predictions implemented
 
 ---
 
-## Cursor-Aware Predictions - PLANNED (2026-01-15)
+## Cursor-Aware Predictions - IMPLEMENTED (2026-01-15)
 
-**Problem**: Predictions don't work when cursor is moved mid-word (via tap, cut/paste, arrow keys). Selecting a prediction mid-word leaves word fragments behind.
+**Problem**: Predictions didn't work when cursor moved mid-word (via tap, cut/paste, arrow keys). Selecting a prediction mid-word left word fragments behind.
 
 **Root Cause**:
-- `PredictionContextTracker` has no cursor sync - `currentWord` stays stale
-- `onUpdateSelection()` only notifies Autocapitalisation
-- `deleteSurroundingText(n, 0)` only deletes BEFORE cursor
+- `PredictionContextTracker` had no cursor sync - `currentWord` stayed stale
+- `onUpdateSelection()` only notified Autocapitalisation
+- `deleteSurroundingText(n, 0)` only deleted BEFORE cursor
 
-**Solution Designed** (see `docs/specs/cursor-aware-predictions.md`):
-1. Add `synchronizeWithCursor(ic, language, editorInfo)` to PredictionContextTracker
-2. Track both **prefix** (before cursor) AND **suffix** (after cursor)
-3. On cursor movement, read actual text from InputConnection
-4. When selecting prediction, delete BOTH prefix AND suffix
-5. Use `expectingSelectionUpdate` flag to skip programmatic changes
+**Solution Implemented** (see `docs/specs/cursor-aware-predictions.md`):
 
-**Multi-Language Considerations**:
-- CJK scripts: Skip sync entirely (no space-based word boundaries)
-- RTL languages: InputConnection positions are logical, no special handling
-- Contractions: Apostrophe within word is NOT a boundary (don't, l'homme)
-- Accents: Normalized lookup (café→cafe), raw char count for deletion
+**PredictionContextTracker.kt** (+250 lines):
+- Added `currentWordSuffix` StringBuilder for chars after cursor
+- Added `rawPrefixForDeletion`/`rawSuffixForDeletion` for accurate deletion
+- Added `expectingSelectionUpdate` flag to skip programmatic changes
+- Added `wasSyncedFromCursor` flag to track sync state
+- Implemented `synchronizeWithCursor(ic, language, editorInfo)`:
+  - Reads text before/after cursor via InputConnection
+  - Extracts word prefix/suffix with `isWordChar()` logic
+  - Handles contractions (apostrophe between letters)
+  - Normalizes accents for lookup (café→cafe), keeps raw for deletion
+- Added CJK detection to skip sync for non-space-delimited languages
+- Added input type filtering (skip password, URL, email fields)
 
-**Files to Modify**:
-| File | Changes |
-|------|---------|
-| PredictionContextTracker.kt | Add suffix, sync method, raw text preservation |
-| InputCoordinator.kt | Modify onSuggestionSelected for dual-side deletion |
-| CleverKeysService.kt | Extend onUpdateSelection to trigger sync |
+**InputCoordinator.kt** (+80 lines):
+- Added `onCursorMoved()` with 100ms debouncing via Handler
+- Added `triggerPredictionsForPrefix()` for cursor-synced predictions
+- Modified `onSuggestionSelected()` to use `getCharsToDeleteForPrediction()`
+  - Now deletes BOTH prefix AND suffix when cursor is mid-word
+- Added `resetCursorSyncState()` call when user starts typing
 
-**Implementation Order**:
-1. [ ] Add suffix field and getters to PredictionContextTracker
-2. [ ] Implement synchronizeWithCursor() method
-3. [ ] Add isWordChar() with apostrophe handling
-4. [ ] Add expectingSelectionUpdate flag
-5. [ ] Modify onUpdateSelection to call sync
-6. [ ] Modify onSuggestionSelected to delete both sides
-7. [ ] Add debouncing (100ms)
-8. [ ] Test all edge cases
+**CleverKeysService.kt** (+10 lines):
+- Extended `onUpdateSelection()` to call `_inputCoordinator.onCursorMoved()`
+- Added `cancelPendingCursorSync()` in `onFinishInputView()`
 
-**Status**: Awaiting approval to implement
+**Multi-Language Support**:
+- ✅ CJK scripts: Skip sync entirely (HAN, HIRAGANA, KATAKANA, THAI, HANGUL)
+- ✅ RTL languages: InputConnection positions are logical, no special handling
+- ✅ Contractions: Apostrophe within word is NOT a boundary (don't, l'homme)
+- ✅ Accents: NFD normalization for lookup, raw char count for deletion
+
+**Status**: Implemented and tested
 
 ---
 

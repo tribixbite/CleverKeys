@@ -3,6 +3,8 @@ package tribixbite.cleverkeys
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
+import android.os.Handler
+import android.os.Looper
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
@@ -46,7 +48,15 @@ class InputCoordinator(
 ) {
     companion object {
         private const val TAG = "InputCoordinator"
+
+        // v1.2.6: Debounce delay for cursor sync (ms)
+        // Prevents excessive IPC calls during drag selection
+        private const val CURSOR_SYNC_DEBOUNCE_MS = 100L
     }
+
+    // v1.2.6: Handler for debouncing cursor sync
+    private val syncHandler = Handler(Looper.getMainLooper())
+    private var pendingSyncRunnable: Runnable? = null
 
     // Debug logger for SwipeDebugActivity integration
     // Only active when debug mode is enabled in settings
@@ -91,6 +101,103 @@ class InputCoordinator(
      */
     fun setSuggestionBar(suggestionBar: SuggestionBar?) {
         this.suggestionBar = suggestionBar
+    }
+
+    // ==================== v1.2.6: Cursor-Aware Prediction ====================
+
+    /**
+     * Called when cursor position changes (tap, arrow keys, cut/paste).
+     * Debounces rapid cursor movements (e.g., during drag selection) and
+     * triggers synchronization of prediction context with actual text.
+     *
+     * @param newPosition New cursor position (for logging)
+     * @param ic InputConnection to read text from
+     * @param language Primary language code (for CJK detection)
+     * @param editorInfo Editor info for input type checks
+     */
+    fun onCursorMoved(
+        newPosition: Int,
+        ic: InputConnection?,
+        language: String = "en",
+        editorInfo: EditorInfo? = null
+    ) {
+        // Cancel any pending sync
+        pendingSyncRunnable?.let { syncHandler.removeCallbacks(it) }
+
+        // Schedule new sync with debounce delay
+        pendingSyncRunnable = Runnable {
+            contextTracker.synchronizeWithCursor(ic, language, editorInfo)
+
+            // Trigger predictions for the synced word
+            val prefix = contextTracker.getCurrentWord()
+            if (prefix.isNotEmpty()) {
+                triggerPredictionsForPrefix(prefix, ic, editorInfo)
+            } else {
+                // Clear predictions if cursor is not in a word
+                suggestionBar?.clearSuggestions()
+            }
+
+            debugLogger?.invoke("🎯 Cursor sync: pos=$newPosition, prefix='$prefix', " +
+                "suffix='${contextTracker.getCurrentWordSuffix()}'")
+        }
+        syncHandler.postDelayed(pendingSyncRunnable!!, CURSOR_SYNC_DEBOUNCE_MS)
+    }
+
+    /**
+     * Cancels any pending cursor sync.
+     * Call when input view is finishing or resetting.
+     */
+    fun cancelPendingCursorSync() {
+        pendingSyncRunnable?.let { syncHandler.removeCallbacks(it) }
+        pendingSyncRunnable = null
+    }
+
+    /**
+     * Triggers predictions for a given prefix.
+     * Used after cursor sync to show predictions for the word at cursor.
+     *
+     * @param prefix Word prefix to get predictions for
+     * @param ic InputConnection (for context)
+     * @param editorInfo Editor info
+     */
+    private fun triggerPredictionsForPrefix(
+        prefix: String,
+        ic: InputConnection?,
+        editorInfo: EditorInfo?
+    ) {
+        // Copy context to be thread-safe
+        val contextWords = ArrayList(contextTracker.getContextWords())
+
+        // Cancel any running prediction task
+        currentPredictionTask?.cancel(true)
+
+        // Run prediction asynchronously (same pattern as updatePredictionsForCurrentWord)
+        currentPredictionTask = predictionExecutor.submit {
+            if (Thread.currentThread().isInterrupted) return@submit
+
+            try {
+                // Use contextual prediction from WordPredictor
+                val result = predictionCoordinator.getWordPredictor()
+                    ?.predictWordsWithContext(prefix, contextWords)
+
+                if (Thread.currentThread().isInterrupted || result == null) return@submit
+
+                // Update UI on main thread
+                if (result.words.isNotEmpty()) {
+                    suggestionBar?.post {
+                        suggestionBar?.let { bar ->
+                            bar.setShowDebugScores(config.swipe_show_debug_scores)
+                            bar.setSuggestionsWithScores(result.words, result.scores)
+                        }
+                        debugLogger?.invoke("📊 Cursor-sync predictions: ${result.words.take(5)}")
+                    }
+                }
+            } catch (e: Exception) {
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                    android.util.Log.e(TAG, "Error getting predictions for cursor sync", e)
+                }
+            }
+        }
     }
 
     /**
@@ -443,14 +550,31 @@ class InputCoordinator(
                 }
                 // ALSO: If user is selecting a prediction during regular typing, delete the partial word
                 // This handles typing "hel" then selecting "hello" - we need to delete "hel" first
+                // v1.2.6: Also handles cursor mid-word - deletes both prefix AND suffix
                 else if (contextTracker.getCurrentWordLength() > 0 && !isSwipeAutoInsert) {
+                    // v1.2.6: Get both prefix and suffix deletion counts
+                    // If cursor was moved mid-word, suffix will be non-zero
+                    val (prefixDelete, suffixDelete) = if (contextTracker.wasSyncedFromCursor()) {
+                        contextTracker.getCharsToDeleteForPrediction()
+                    } else {
+                        // Normal typing - only delete what was typed (prefix)
+                        Pair(contextTracker.getCurrentWordLength(), 0)
+                    }
+
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                        android.util.Log.d("CleverKeysService", "TYPING PREDICTION: Deleting partial word: '${contextTracker.getCurrentWord()}'")
+                        android.util.Log.d("CleverKeysService", "TYPING PREDICTION: Deleting partial word: " +
+                            "prefix='${contextTracker.getCurrentWord()}' ($prefixDelete chars), " +
+                            "suffix='${contextTracker.getCurrentWordSuffix()}' ($suffixDelete chars)")
                     }
 
                     val partialDeleteStart = System.currentTimeMillis()
+
+                    // Set flag to skip cursor sync during programmatic delete
+                    contextTracker.expectingSelectionUpdate = true
+
                     // FIX: Use InputConnection for ALL apps (no more slow Termux backspaces)
-                    connection.deleteSurroundingText(contextTracker.getCurrentWordLength(), 0)
+                    // v1.2.6: Delete both before AND after cursor for mid-word selection
+                    connection.deleteSurroundingText(prefixDelete, suffixDelete)
 
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                         val debugAfter = connection.getTextBeforeCursor(50, 0)
@@ -458,7 +582,10 @@ class InputCoordinator(
                     }
 
                     val partialDeleteDuration = System.currentTimeMillis() - partialDeleteStart
-                    debugLogger?.invoke("⏱️ UNIFIED DELETE (partial word): ${partialDeleteDuration}ms")
+                    debugLogger?.invoke("⏱️ UNIFIED DELETE (partial word, prefix=$prefixDelete, suffix=$suffixDelete): ${partialDeleteDuration}ms")
+
+                    // v1.2.6: Clear suffix state after deletion
+                    contextTracker.clearCurrentWordSuffix()
                 }
 
                 // Add space before word if previous character isn't whitespace
@@ -552,6 +679,10 @@ class InputCoordinator(
         // Track current word being typed
         when {
             text.length == 1 && text[0].isLetter() -> {
+                // v1.2.6: Reset cursor sync state when user starts typing
+                // This ensures we use normal deletion (prefix only) for typed chars
+                contextTracker.resetCursorSyncState()
+
                 contextTracker.appendToCurrentWord(text)
                 updatePredictionsForCurrentWord()
             }

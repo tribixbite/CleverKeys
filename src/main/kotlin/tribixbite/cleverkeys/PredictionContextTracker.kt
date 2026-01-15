@@ -1,14 +1,25 @@
 package tribixbite.cleverkeys
 
+import android.text.InputType
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputConnection
+import java.text.Normalizer
+
 /**
  * Tracks typing context for word predictions.
  *
  * Maintains state about:
- * - Current partial word being typed
+ * - Current partial word being typed (prefix before cursor)
+ * - Current word suffix (after cursor, for mid-word editing)
  * - Previous words for context (n-gram support)
  * - Whether last input was a swipe or tap
  * - Last auto-inserted word (for smart deletion)
  * - Source of last committed text (for context-aware deletion)
+ *
+ * v1.2.6: Added cursor-aware prediction support for mid-word editing.
+ * When cursor moves within existing text, synchronizeWithCursor() reads
+ * the actual text and rebuilds prefix/suffix state for proper prediction
+ * and deletion behavior.
  *
  * This class is extracted from CleverKeysService.java for better separation of concerns
  * and testability (v1.32.342).
@@ -19,11 +30,54 @@ class PredictionContextTracker {
 
         // Maximum number of previous words to track for context
         private const val MAX_CONTEXT_WORDS = 2
+
+        // Maximum chars to read from InputConnection for word detection
+        private const val MAX_TEXT_READ = 50
+
+        // CJK Unicode scripts that don't use space-based word boundaries
+        private val CJK_SCRIPTS = setOf(
+            Character.UnicodeScript.HAN,
+            Character.UnicodeScript.HIRAGANA,
+            Character.UnicodeScript.KATAKANA,
+            Character.UnicodeScript.THAI,
+            Character.UnicodeScript.HANGUL
+        )
+
+        // Word boundary characters (not including apostrophe, which is context-dependent)
+        private val WORD_BOUNDARIES = setOf(
+            ' ', '\t', '\n', '\r',           // Whitespace
+            '.', ',', ';', ':', '!', '?',    // Sentence punctuation
+            '(', ')', '[', ']', '{', '}',    // Brackets
+            '"', '"', '"', '„', '«', '»',    // Quotation marks
+            '-', '—', '–',                   // Dashes (word-breaking)
+            '/', '\\', '@', '#', '$', '%',   // Symbols
+            '&', '*', '+', '=', '<', '>',    // Math/logic
+            '|', '~', '`', '^'               // Technical
+        )
     }
 
     // Current partial word being typed (not yet committed to input)
     // Example: User types "hel" → currentWord = "hel"
+    // v1.2.6: This is the PREFIX (chars before cursor)
     private val currentWord = StringBuilder()
+
+    // v1.2.6: Word suffix (chars after cursor when editing mid-word)
+    // Example: User moves cursor to "hel|lo" → suffix = "lo"
+    private val currentWordSuffix = StringBuilder()
+
+    // v1.2.6: Raw text for deletion (preserves accents/diacritics for accurate char count)
+    // Normalized text is used for prediction lookup, raw for deletion
+    private var rawPrefixForDeletion: String = ""
+    private var rawSuffixForDeletion: String = ""
+
+    // v1.2.6: Flag to skip cursor sync during programmatic text changes
+    // Set to true before deleteSurroundingText/commitText, reset after onUpdateSelection
+    @Volatile
+    var expectingSelectionUpdate = false
+
+    // v1.2.6: Track if current prefix/suffix came from cursor sync (vs typing)
+    // Used to determine deletion behavior in onSuggestionSelected
+    private var wasSyncedFromCursor = false
 
     // Previous completed words for context (n-gram prediction)
     // Example: ["the", "quick"] for predicting next word
@@ -229,11 +283,16 @@ class PredictionContextTracker {
      */
     fun clearAll() {
         clearCurrentWord()
+        clearCurrentWordSuffix()
         contextWords.clear()
         wasLastInputSwipeFlag = false
         lastAutoInsertedWord = null
         lastCommitSource = PredictionSource.UNKNOWN
         lastAutocorrectOriginalWord = null
+        rawPrefixForDeletion = ""
+        rawSuffixForDeletion = ""
+        wasSyncedFromCursor = false
+        expectingSelectionUpdate = false
     }
 
     /**
@@ -254,8 +313,298 @@ class PredictionContextTracker {
      * @return Human-readable state description
      */
     fun getDebugState(): String {
-        return "PredictionContextTracker{currentWord='${getCurrentWord()}', contextWords=$contextWords, " +
-            "wasSwipe=$wasLastInputSwipeFlag, lastAutoInsert='$lastAutoInsertedWord', lastSource=$lastCommitSource, " +
-            "autocorrectOriginal='$lastAutocorrectOriginalWord'}"
+        return "PredictionContextTracker{prefix='${getCurrentWord()}', suffix='${getCurrentWordSuffix()}', " +
+            "contextWords=$contextWords, wasSwipe=$wasLastInputSwipeFlag, " +
+            "lastAutoInsert='$lastAutoInsertedWord', lastSource=$lastCommitSource, " +
+            "autocorrectOriginal='$lastAutocorrectOriginalWord', wasSynced=$wasSyncedFromCursor}"
+    }
+
+    // ==================== v1.2.6: Cursor-Aware Prediction Methods ====================
+
+    /**
+     * Gets the current word suffix (chars after cursor when editing mid-word).
+     *
+     * @return Suffix string (may be empty if cursor at end of word)
+     */
+    fun getCurrentWordSuffix(): String {
+        return currentWordSuffix.toString()
+    }
+
+    /**
+     * Gets the length of current word suffix.
+     *
+     * @return Number of characters after cursor in current word
+     */
+    fun getCurrentWordSuffixLength(): Int {
+        return currentWordSuffix.length
+    }
+
+    /**
+     * Clears the current word suffix.
+     * Called when prediction is selected or word is completed.
+     */
+    fun clearCurrentWordSuffix() {
+        currentWordSuffix.setLength(0)
+    }
+
+    /**
+     * Returns the number of characters to delete for prediction selection.
+     * When cursor is mid-word, returns both prefix and suffix lengths.
+     *
+     * @return Pair of (beforeCursor, afterCursor) delete counts
+     */
+    fun getCharsToDeleteForPrediction(): Pair<Int, Int> {
+        return Pair(rawPrefixForDeletion.length, rawSuffixForDeletion.length)
+    }
+
+    /**
+     * Checks if current state was synchronized from cursor position.
+     * Used to determine if we need dual-side deletion in onSuggestionSelected.
+     *
+     * @return true if prefix/suffix came from cursor sync, false if from typing
+     */
+    fun wasSyncedFromCursor(): Boolean {
+        return wasSyncedFromCursor
+    }
+
+    /**
+     * Synchronizes prediction context with actual cursor position in input field.
+     * Called when cursor moves (tap, arrow keys, cut/paste) to read the word
+     * surrounding the new cursor position.
+     *
+     * This method:
+     * 1. Reads text before and after cursor from InputConnection
+     * 2. Extracts the word prefix (before cursor) and suffix (after cursor)
+     * 3. Updates currentWord and currentWordSuffix
+     * 4. Tracks raw text for accurate deletion character counts
+     *
+     * @param ic InputConnection to read text from
+     * @param language Primary language code (for CJK detection)
+     * @param editorInfo Editor info for input type checks
+     */
+    fun synchronizeWithCursor(
+        ic: InputConnection?,
+        language: String = "en",
+        editorInfo: EditorInfo? = null
+    ) {
+        ic ?: return
+
+        // Skip sync during programmatic text changes
+        if (expectingSelectionUpdate) {
+            expectingSelectionUpdate = false
+            return
+        }
+
+        // Skip for input types where prediction is inappropriate
+        if (!shouldSyncForInputType(editorInfo)) return
+
+        // Skip for CJK text (no space-based word boundaries)
+        if (isCJKLanguage(language)) return
+
+        val beforeText = ic.getTextBeforeCursor(MAX_TEXT_READ, 0)?.toString() ?: ""
+        val afterText = ic.getTextAfterCursor(MAX_TEXT_READ, 0)?.toString() ?: ""
+
+        // Check if we're in CJK text based on surrounding chars
+        if (containsCJKCharacters(beforeText) || containsCJKCharacters(afterText)) {
+            clearCurrentWord()
+            clearCurrentWordSuffix()
+            rawPrefixForDeletion = ""
+            rawSuffixForDeletion = ""
+            wasSyncedFromCursor = false
+            return
+        }
+
+        // Extract word prefix (before cursor)
+        val (normalizedPrefix, rawPrefix) = extractWordPrefix(beforeText)
+        // Extract word suffix (after cursor)
+        val (normalizedSuffix, rawSuffix) = extractWordSuffix(afterText)
+
+        // Update state
+        currentWord.clear()
+        currentWord.append(normalizedPrefix)
+        currentWordSuffix.clear()
+        currentWordSuffix.append(normalizedSuffix)
+        rawPrefixForDeletion = rawPrefix
+        rawSuffixForDeletion = rawSuffix
+        wasSyncedFromCursor = true
+
+        // Clear autocorrect tracking since cursor moved
+        clearAutocorrectTracking()
+
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            android.util.Log.d(TAG, "synchronizeWithCursor: prefix='$normalizedPrefix', suffix='$normalizedSuffix', " +
+                "rawPrefix='$rawPrefix', rawSuffix='$rawSuffix'")
+        }
+    }
+
+    /**
+     * Resets the cursor sync flag.
+     * Called when user starts typing normally (not from cursor movement).
+     */
+    fun resetCursorSyncState() {
+        wasSyncedFromCursor = false
+        rawSuffixForDeletion = ""
+        currentWordSuffix.setLength(0)
+    }
+
+    /**
+     * Extracts the word prefix from text before cursor.
+     * Walks backwards from end of text until a word boundary is found.
+     *
+     * @param beforeText Text before cursor
+     * @return Pair of (normalizedPrefix, rawPrefix) - normalized for lookup, raw for deletion
+     */
+    private fun extractWordPrefix(beforeText: String): Pair<String, String> {
+        if (beforeText.isEmpty()) return Pair("", "")
+
+        var startIndex = beforeText.length
+        for (i in beforeText.length - 1 downTo 0) {
+            val char = beforeText[i]
+            if (isWordChar(char, beforeText, i)) {
+                startIndex = i
+            } else {
+                break
+            }
+        }
+
+        val rawPrefix = beforeText.substring(startIndex)
+        val normalizedPrefix = normalizeForPrediction(rawPrefix)
+        return Pair(normalizedPrefix, rawPrefix)
+    }
+
+    /**
+     * Extracts the word suffix from text after cursor.
+     * Walks forwards from start of text until a word boundary is found.
+     *
+     * @param afterText Text after cursor
+     * @return Pair of (normalizedSuffix, rawSuffix) - normalized for lookup, raw for deletion
+     */
+    private fun extractWordSuffix(afterText: String): Pair<String, String> {
+        if (afterText.isEmpty()) return Pair("", "")
+
+        var endIndex = 0
+        for (i in afterText.indices) {
+            val char = afterText[i]
+            if (isWordChar(char, afterText, i)) {
+                endIndex = i + 1
+            } else {
+                break
+            }
+        }
+
+        val rawSuffix = afterText.substring(0, endIndex)
+        val normalizedSuffix = normalizeForPrediction(rawSuffix)
+        return Pair(normalizedSuffix, rawSuffix)
+    }
+
+    /**
+     * Checks if a character is part of a word (not a boundary).
+     * Handles apostrophes specially: they're word chars only when between letters.
+     *
+     * @param char Character to check
+     * @param text Full text for context (apostrophe checking)
+     * @param pos Position of char in text
+     * @return true if char is part of a word
+     */
+    private fun isWordChar(char: Char, text: String, pos: Int): Boolean {
+        // Letters are always word characters
+        if (char.isLetter()) return true
+
+        // Digits break words (test|123 → prefix="test", suffix="")
+        if (char.isDigit()) return false
+
+        // Apostrophe is word char only when between letters (for contractions)
+        // Examples: don't, l'homme, dell'anno
+        // Check straight apostrophe (') and curly quotes (' U+2019, ' U+2018)
+        if (char == '\'' || char == '\u2019' || char == '\u2018') {
+            val before = text.getOrNull(pos - 1)
+            val after = text.getOrNull(pos + 1)
+            return before?.isLetter() == true && after?.isLetter() == true
+        }
+
+        // Check against explicit word boundaries
+        return char !in WORD_BOUNDARIES && !char.isWhitespace()
+    }
+
+    /**
+     * Normalizes text for prediction lookup.
+     * Removes diacritics/accents so "café" matches "cafe" in dictionary.
+     *
+     * @param text Text to normalize
+     * @return Normalized text (lowercase, no diacritics)
+     */
+    private fun normalizeForPrediction(text: String): String {
+        // NFD decomposition separates base chars from combining diacritics
+        val normalized = Normalizer.normalize(text, Normalizer.Form.NFD)
+        // Remove combining diacritical marks (Unicode category Mn)
+        return normalized.replace(Regex("\\p{Mn}"), "").lowercase()
+    }
+
+    /**
+     * Checks if sync should be skipped for this input type.
+     * Skip for passwords, URLs, emails, and other non-predictable fields.
+     *
+     * @param editorInfo Editor info with input type
+     * @return true if sync is appropriate, false to skip
+     */
+    private fun shouldSyncForInputType(editorInfo: EditorInfo?): Boolean {
+        editorInfo ?: return true
+
+        val inputType = editorInfo.inputType
+        val inputClass = inputType and InputType.TYPE_MASK_CLASS
+        val variation = inputType and InputType.TYPE_MASK_VARIATION
+
+        // Skip password fields
+        if (inputClass == InputType.TYPE_CLASS_TEXT) {
+            when (variation) {
+                InputType.TYPE_TEXT_VARIATION_PASSWORD,
+                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
+                InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD -> return false
+
+                // Skip URL/email (special character patterns)
+                InputType.TYPE_TEXT_VARIATION_URI,
+                InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
+                InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS -> return false
+            }
+        }
+
+        // Skip number input
+        if (inputClass == InputType.TYPE_CLASS_NUMBER ||
+            inputClass == InputType.TYPE_CLASS_PHONE) {
+            return false
+        }
+
+        return true
+    }
+
+    /**
+     * Checks if language uses CJK script (no space-based word boundaries).
+     *
+     * @param language Language code (e.g., "zh", "ja", "ko", "th")
+     * @return true if language is CJK/Thai
+     */
+    private fun isCJKLanguage(language: String): Boolean {
+        val langLower = language.lowercase()
+        return langLower.startsWith("zh") ||  // Chinese
+               langLower.startsWith("ja") ||  // Japanese
+               langLower.startsWith("ko") ||  // Korean
+               langLower.startsWith("th")     // Thai
+    }
+
+    /**
+     * Checks if text contains CJK characters.
+     * Used as secondary check even when language setting is non-CJK.
+     *
+     * @param text Text to check
+     * @return true if text contains CJK characters
+     */
+    private fun containsCJKCharacters(text: String): Boolean {
+        return text.any { char ->
+            try {
+                Character.UnicodeScript.of(char.code) in CJK_SCRIPTS
+            } catch (e: Exception) {
+                false
+            }
+        }
     }
 }
