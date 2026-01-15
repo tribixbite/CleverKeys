@@ -1,5 +1,7 @@
 v1.2.5 - Language Pack Autocorrect Fix
 
+LAYOUT NOTE: The default US QWERTY layout has repositioned some subkeys to the keyboard perimeter. This reduces conflicts between short swipe gestures and word swipes (e.g., east subkey on 'W' vs swiping 'we'). To restore the classic layout, go to Settings > Layout Manager and select "QWERTY Latin US (Julow)".
+
 NEW FEATURES (since v1.2.2):
 
 • TrackPoint Mode - Hold nav key to enter joystick cursor control
