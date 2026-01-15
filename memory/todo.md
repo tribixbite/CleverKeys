@@ -5,6 +5,44 @@
 
 ---
 
+## Web Demo & Spec Documentation System - COMPLETE (2026-01-14)
+
+**Web Demo Updates**:
+1. **Under Construction Page** (`web_demo/demo/index.html`)
+   - Replaced broken neural demo with styled placeholder
+   - Explains demo is being rebuilt with new architecture
+   - Links to F-Droid and GitHub releases for app download
+
+**Spec Documentation System**:
+1. **New Specs Created**:
+   - `selection-delete-mode.md`: Backspace swipe-hold text selection
+   - `trackpoint-navigation-mode.md`: Nav key joystick cursor control
+
+2. **Webpage Automation** (`web_demo/generate-specs.js`):
+   - Node.js script generates HTML pages from markdown specs
+   - Creates category-organized index page
+   - Consistent dark theme styling matching main site
+
+3. **Configuration** (`web_demo/specs-config.json`):
+   - Defines which specs are reviewed and published
+   - Category colors and metadata for each spec
+   - Easy to add new specs by editing JSON
+
+4. **Generated Pages** (`web_demo/specs/`):
+   - 8 spec detail pages + 1 index page
+   - Responsive design with breadcrumb navigation
+   - Syntax-highlighted code blocks
+
+**Files Created**:
+- `web_demo/demo/index.html`: Under construction page
+- `web_demo/specs-config.json`: Spec publishing config
+- `web_demo/generate-specs.js`: Page generation script
+- `web_demo/specs/*.html`: Generated spec pages
+- `docs/specs/selection-delete-mode.md`: New spec
+- `docs/specs/trackpoint-navigation-mode.md`: New spec
+
+---
+
 ## Settings Activities Update - COMPLETE (2026-01-14)
 
 **New Activity Shortcuts in Settings > Activities**:
