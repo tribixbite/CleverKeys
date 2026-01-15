@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle Gestures - CleverKeys Wiki</title>
+    <meta name="description" content="Circular swipes for quick actions">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wiki-primary': '#10b981',
+                        'wiki-primary-light': '#34d399',
+                        'wiki-accent': '#3b82f6',
+                        'wiki-dark': '#0d1117',
+                        'wiki-surface': '#161b22',
+                        'wiki-card': '#21262d',
+                        'wiki-border': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-wiki-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <span>/</span>
+            <span class="text-gray-300">Circle Gestures</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #8b5cf620; color: #8b5cf6">Gestures</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">advanced</span>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">Circle Gestures</h1>
+        <p class="text-xl text-gray-400">Circular swipes for quick actions</p>
+        
+        <div class="flex flex-wrap gap-2 mt-4">
+            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#circle</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#gesture</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#undo</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#redo</span>
+        </div>
+    
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="flex gap-8">
+            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
+                <h1 class="text-3xl font-bold mb-6 text-white">Circle Gestures</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Circle gestures allow you to perform actions like undo and redo by drawing circular patterns on the keyboard.</p>
+
+<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Quick access to undo/redo and other actions</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Gesture</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Draw a circle on the keyboard</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Direction</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Counter-clockwise = Undo, Clockwise = Redo</td></tr></tbody></table></div>
+<h2 id="current-status" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Current Status</h2>
+
+<div class="callout callout-note bg-blue-900/20 border-l-4 border-blue-500 p-4 my-4 rounded-r">
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-blue-400 mb-1">Note</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Circle gestures are a planned feature. The core gesture detection infrastructure exists, but dedicated circle actions are not yet fully implemented in the current release.</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
+<h2 id="planned-functionality" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Planned Functionality</h2>
+
+<h3 id="undo-gesture" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Undo Gesture</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Start anywhere on the keyboard</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Draw a <strong class="font-semibold text-white">counter-clockwise</strong> circle</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Last action is undone</li>
+
+</ul><h3 id="redo-gesture" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Redo Gesture</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Start anywhere on the keyboard</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Draw a <strong class="font-semibold text-white">clockwise</strong> circle</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Last undone action is redone</li>
+
+</ul><h2 id="alternative-current-undo-redo-access" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Alternative: Current Undo/Redo Access</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Until circle gestures are implemented, use these methods:</p>
+
+<h3 id="method-1-subkeys" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 1: Subkeys</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Undo</strong>: Short swipe on designated key (layout-dependent)</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Redo</strong>: Short swipe in opposite direction</li>
+
+</ul><h3 id="method-2-symbol-keyboard" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 2: Symbol Keyboard</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Switch to symbol keyboard (?123)</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Look for undo/redo buttons</li>
+
+</ul><h3 id="method-3-ctrl-z-ctrl-y" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 3: Ctrl+Z / Ctrl+Y</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">If your layout supports modifiers:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Hold Ctrl modifier</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap Z for Undo</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap Y for Redo</li>
+
+</ul><h2 id="gesture-detection-concepts" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Gesture Detection Concepts</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">When implemented, circle detection will work as follows:</p>
+
+<h3 id="detection-algorithm" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Detection Algorithm</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Track finger path as sequence of points</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Calculate cumulative angle change</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> If total angle >= 360° (or -360°), circle detected</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Direction determined by sign of angle sum</li>
+
+</ul><h3 id="parameters" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Parameters</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Parameter</th><th class="px-4 py-2 text-left border-b border-wiki-border">Value</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Min Points</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">20</td><td class="px-4 py-2 border-b border-wiki-border/50">Minimum touch points for valid circle</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Min Angle</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">300°</td><td class="px-4 py-2 border-b border-wiki-border/50">Minimum rotation for detection</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Max Time</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">1000ms</td><td class="px-4 py-2 border-b border-wiki-border/50">Maximum time to complete circle</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Min Radius</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">30px</td><td class="px-4 py-2 border-b border-wiki-border/50">Minimum circle size</td></tr></tbody></table></div>
+<h2 id="tips-for-when-implemented" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips for When Implemented</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Smooth motion</strong>: Draw a fluid circle, not a polygon</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Size matters</strong>: Medium-sized circles work best</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Speed</strong>: Not too fast, not too slow</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Complete the circle</strong>: Ensure at least 300° rotation</li>
+
+</ul><h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="short-swipes.md" class="text-wiki-accent hover:underline">Short Swipes</a> - Quick gesture access</li>
+<li class="ml-4 py-1">&#8226; <a href="cursor-navigation.md" class="text-wiki-accent hover:underline">Cursor Navigation</a> - Text navigation</li>
+<li class="ml-4 py-1">&#8226; <a href="../clipboard/text-selection.md" class="text-wiki-accent hover:underline">Text Selection</a> - Select and edit text</li>
+
+</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/gestures/circle-gestures-spec.md" class="text-wiki-accent hover:underline">Circle Gestures Technical Specification</a>.</p>
+
+                
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
+            
+                <a href="gestures/trackpoint-mode.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500">Previous</div>
+                        <div class="font-medium">TrackPoint Mode</div>
+                    </div>
+                </a>
+            
+            
+                <a href="customization/per-key-actions.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <div>
+                        <div class="text-xs uppercase text-gray-500">Next</div>
+                        <div class="font-medium">Per-Key Actions</div>
+                    </div>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            
+        </div>
+    
+            </article>
+            
+        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
+            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
+            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
+                
+                    <li class="">
+                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#current-status" class="text-gray-400 hover:text-wiki-primary transition-colors">Current Status</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#planned-functionality" class="text-gray-400 hover:text-wiki-primary transition-colors">Planned Functionality</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#undo-gesture" class="text-gray-400 hover:text-wiki-primary transition-colors">Undo Gesture</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#redo-gesture" class="text-gray-400 hover:text-wiki-primary transition-colors">Redo Gesture</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#alternative-current-undo-redo-access" class="text-gray-400 hover:text-wiki-primary transition-colors">Alternative: Current Undo/Redo Access</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#method-1-subkeys" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 1: Subkeys</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#method-2-symbol-keyboard" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 2: Symbol Keyboard</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#method-3-ctrl-z-ctrl-y" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 3: Ctrl+Z / Ctrl+Y</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#gesture-detection-concepts" class="text-gray-400 hover:text-wiki-primary transition-colors">Gesture Detection Concepts</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#detection-algorithm" class="text-gray-400 hover:text-wiki-primary transition-colors">Detection Algorithm</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#parameters" class="text-gray-400 hover:text-wiki-primary transition-colors">Parameters</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#tips-for-when-implemented" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips for When Implemented</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
+                    </li>
+                
+            </ul>
+        </nav>
+    
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>

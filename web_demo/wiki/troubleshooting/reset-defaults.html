@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset to Defaults - CleverKeys Wiki</title>
+    <meta name="description" content="Restore factory settings">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wiki-primary': '#10b981',
+                        'wiki-primary-light': '#34d399',
+                        'wiki-accent': '#3b82f6',
+                        'wiki-dark': '#0d1117',
+                        'wiki-surface': '#161b22',
+                        'wiki-card': '#21262d',
+                        'wiki-border': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-wiki-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <span>/</span>
+            <span class="text-gray-300">Reset to Defaults</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #ef444420; color: #ef4444">Troubleshooting</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">beginner</span>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">Reset to Defaults</h1>
+        <p class="text-xl text-gray-400">Restore factory settings</p>
+        
+        <div class="flex flex-wrap gap-2 mt-4">
+            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#reset</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#defaults</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#factory</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#restore</span>
+        </div>
+    
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="flex gap-8">
+            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
+                <h1 class="text-3xl font-bold mb-6 text-white">Reset to Defaults</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Restore CleverKeys settings to their original state when troubleshooting issues or wanting a fresh start.</p>
+
+<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Reset Type</th><th class="px-4 py-2 text-left border-b border-wiki-border">What's Affected</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Settings Only</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Preferences, keeps dictionary</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Customizations</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Per-key actions, extra keys</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Full Reset</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Everything except app installation</td></tr></tbody></table></div>
+<h2 id="reset-options" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Reset Options</h2>
+
+<h3 id="option-1-reset-settings-only" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Option 1: Reset Settings Only</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Restores preference settings to defaults:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Affected</th><th class="px-4 py-2 text-left border-b border-wiki-border">Not Affected</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50">Appearance settings</td><td class="px-4 py-2 border-b border-wiki-border/50">Personal dictionary</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Input behavior</td><td class="px-4 py-2 border-b border-wiki-border/50">Clipboard history</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Haptics</td><td class="px-4 py-2 border-b border-wiki-border/50">Profiles</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Gestures</td><td class="px-4 py-2 border-b border-wiki-border/50">Customizations</td></tr></tbody></table></div>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">How to:</strong></p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open <strong class="font-semibold text-white">Settings</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Scroll to <strong class="font-semibold text-white">Reset</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap <strong class="font-semibold text-white">Reset Settings</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Confirm</li>
+
+</ul><h3 id="option-2-reset-customizations" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Option 2: Reset Customizations</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Restores per-key customizations:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Affected</th><th class="px-4 py-2 text-left border-b border-wiki-border">Not Affected</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50">Per-key actions</td><td class="px-4 py-2 border-b border-wiki-border/50">Settings</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Extra keys setup</td><td class="px-4 py-2 border-b border-wiki-border/50">Dictionary</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Subkey customizations</td><td class="px-4 py-2 border-b border-wiki-border/50">Profiles</td></tr></tbody></table></div>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">How to:</strong></p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open <strong class="font-semibold text-white">Settings</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Go to <strong class="font-semibold text-white">Customization</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap <strong class="font-semibold text-white">Reset All Customizations</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Confirm</li>
+
+</ul><h3 id="option-3-reset-layouts" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Option 3: Reset Layouts</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Restores layout configuration:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Affected</th><th class="px-4 py-2 text-left border-b border-wiki-border">Not Affected</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50">Installed layouts</td><td class="px-4 py-2 border-b border-wiki-border/50">Settings</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Layout order</td><td class="px-4 py-2 border-b border-wiki-border/50">Dictionary</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Custom layouts</td><td class="px-4 py-2 border-b border-wiki-border/50">Customizations</td></tr></tbody></table></div>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">How to:</strong></p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open <strong class="font-semibold text-white">Settings > Layouts</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Reset Layouts</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Confirm</li>
+
+</ul><h3 id="option-4-clear-dictionary" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Option 4: Clear Dictionary</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Removes learned words:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Affected</th><th class="px-4 py-2 text-left border-b border-wiki-border">Not Affected</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50">Personal dictionary</td><td class="px-4 py-2 border-b border-wiki-border/50">Settings</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Learned patterns</td><td class="px-4 py-2 border-b border-wiki-border/50">Layouts</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Word frequency</td><td class="px-4 py-2 border-b border-wiki-border/50">Customizations</td></tr></tbody></table></div>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">How to:</strong></p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open <strong class="font-semibold text-white">Settings > Privacy</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Clear Personal Dictionary</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Confirm</li>
+
+</ul><h3 id="option-5-full-reset" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Option 5: Full Reset</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Restores everything to factory state:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Affected</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50">All settings</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">All customizations</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Personal dictionary</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Clipboard history</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Profiles</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Learned patterns</td></tr></tbody></table></div>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">How to:</strong></p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open <strong class="font-semibold text-white">Settings</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Scroll to <strong class="font-semibold text-white">Reset</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap <strong class="font-semibold text-white">Reset Everything</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Type "RESET" to confirm</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">5.</span> Keyboard returns to factory state</li>
+
+</ul><div class="callout callout-warning bg-amber-900/20 border-l-4 border-amber-500 p-4 my-4 rounded-r">
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-amber-400 mb-1">Warning</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Full reset cannot be undone. Export your profile first if you want to restore later.</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
+<h2 id="before-resetting" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Before Resetting</h2>
+
+<h3 id="backup-first" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Backup First</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Before any reset, consider backing up:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Export Profile</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Profiles > Export</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Saves all settings and customizations</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Export Dictionary</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Privacy > Export Dictionary</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Saves personal words</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="backup-restore.md" class="text-wiki-accent hover:underline">Backup & Restore</a> for details.</p>
+
+<h3 id="try-less-drastic-options" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Try Less Drastic Options</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Before full reset:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Clear app cache</strong> (doesn't delete data)</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Android Settings > Apps > CleverKeys > Storage > Clear Cache</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Reset single category</strong> instead of everything</li>
+
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Force stop</strong> the app</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Android Settings > Apps > CleverKeys > Force Stop</p>
+
+<h2 id="after-resetting" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">After Resetting</h2>
+
+<h3 id="first-time-setup" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">First-Time Setup</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">After reset, go through setup:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Enable keyboard</strong> in system settings if needed</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Set as default</strong> keyboard</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Choose layout</strong> preference</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> <strong class="font-semibold text-white">Configure settings</strong> as desired</li>
+
+</ul><h3 id="restore-from-backup" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Restore from Backup</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">If you exported a profile:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Go to <strong class="font-semibold text-white">Settings > Profiles</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Import Profile</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Select your backup file</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Settings are restored</li>
+
+</ul><h2 id="reset-for-specific-issues" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Reset for Specific Issues</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Issue</th><th class="px-4 py-2 text-left border-b border-wiki-border">Recommended Reset</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Wrong corrections</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Clear Dictionary</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Gesture issues</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Reset Settings</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Layout problems</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Reset Layouts</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Visual glitches</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Reset Settings</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">General weirdness</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Full Reset</td></tr></tbody></table></div>
+<h2 id="individual-setting-reset" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Individual Setting Reset</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">For single settings:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Go to the setting category</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Long-press the specific setting</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Select <strong class="font-semibold text-white">Reset to Default</strong></li>
+
+</ul><p class="mb-4 text-gray-300 leading-relaxed">Or:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open setting</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Look for <strong class="font-semibold text-white">Default</strong> button</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap to reset that setting only</li>
+
+</ul><h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
+
+<h3 id="q-will-reset-delete-my-downloaded-language-packs-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Will reset delete my downloaded language packs?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: No, language packs are preserved. Only personalization is reset.</p>
+
+<h3 id="q-can-i-undo-a-reset-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I undo a reset?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: No, but you can restore from a profile backup if you made one.</p>
+
+<h3 id="q-will-reset-fix-my-keyboard-not-appearing-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Will reset fix my keyboard not appearing?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Maybe. If the issue is configuration, yes. If it's a system issue, you may also need to re-enable in Android settings.</p>
+
+<h3 id="q-does-uninstalling-and-reinstalling-do-the-same-thing-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Does uninstalling and reinstalling do the same thing?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, but reinstalling is slower and may require you to re-enable the keyboard in system settings.</p>
+
+<h2 id="related-topics" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Topics</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="backup-restore.md" class="text-wiki-accent hover:underline">Backup & Restore</a> - Save before reset</li>
+<li class="ml-4 py-1">&#8226; <a href="common-issues.md" class="text-wiki-accent hover:underline">Common Issues</a> - Try fixes first</li>
+<li class="ml-4 py-1">&#8226; <a href="../layouts/profiles.md" class="text-wiki-accent hover:underline">Profiles</a> - Profile management</li>
+</ul>
+                
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
+            
+                <a href="troubleshooting/common-issues.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500">Previous</div>
+                        <div class="font-medium">Common Issues</div>
+                    </div>
+                </a>
+            
+            
+                <a href="troubleshooting/backup-restore.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <div>
+                        <div class="text-xs uppercase text-gray-500">Next</div>
+                        <div class="font-medium">Backup & Restore</div>
+                    </div>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            
+        </div>
+    
+            </article>
+            
+        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
+            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
+            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
+                
+                    <li class="">
+                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#reset-options" class="text-gray-400 hover:text-wiki-primary transition-colors">Reset Options</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#option-1-reset-settings-only" class="text-gray-400 hover:text-wiki-primary transition-colors">Option 1: Reset Settings Only</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#option-2-reset-customizations" class="text-gray-400 hover:text-wiki-primary transition-colors">Option 2: Reset Customizations</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#option-3-reset-layouts" class="text-gray-400 hover:text-wiki-primary transition-colors">Option 3: Reset Layouts</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#option-4-clear-dictionary" class="text-gray-400 hover:text-wiki-primary transition-colors">Option 4: Clear Dictionary</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#option-5-full-reset" class="text-gray-400 hover:text-wiki-primary transition-colors">Option 5: Full Reset</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#before-resetting" class="text-gray-400 hover:text-wiki-primary transition-colors">Before Resetting</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#backup-first" class="text-gray-400 hover:text-wiki-primary transition-colors">Backup First</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#try-less-drastic-options" class="text-gray-400 hover:text-wiki-primary transition-colors">Try Less Drastic Options</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#after-resetting" class="text-gray-400 hover:text-wiki-primary transition-colors">After Resetting</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#first-time-setup" class="text-gray-400 hover:text-wiki-primary transition-colors">First-Time Setup</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#restore-from-backup" class="text-gray-400 hover:text-wiki-primary transition-colors">Restore from Backup</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#reset-for-specific-issues" class="text-gray-400 hover:text-wiki-primary transition-colors">Reset for Specific Issues</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#individual-setting-reset" class="text-gray-400 hover:text-wiki-primary transition-colors">Individual Setting Reset</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-will-reset-delete-my-downloaded-language-packs-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Will reset delete my downloaded language packs?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-can-i-undo-a-reset-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I undo a reset?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-will-reset-fix-my-keyboard-not-appearing-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Will reset fix my keyboard not appearing?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-does-uninstalling-and-reinstalling-do-the-same-thing-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Does uninstalling and reinstalling do the same thing?</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#related-topics" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Topics</a>
+                    </li>
+                
+            </ul>
+        </nav>
+    
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profiles - CleverKeys Wiki</title>
+    <meta name="description" content="Save and restore keyboard configurations">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wiki-primary': '#10b981',
+                        'wiki-primary-light': '#34d399',
+                        'wiki-accent': '#3b82f6',
+                        'wiki-dark': '#0d1117',
+                        'wiki-surface': '#161b22',
+                        'wiki-card': '#21262d',
+                        'wiki-border': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-wiki-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <span>/</span>
+            <span class="text-gray-300">Profiles</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #ec489920; color: #ec4899">Layouts</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">intermediate</span>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">Profiles</h1>
+        <p class="text-xl text-gray-400">Save and restore keyboard configurations</p>
+        
+        <div class="flex flex-wrap gap-2 mt-4">
+            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#profiles</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#backup</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#restore</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#export</span>
+        </div>
+    
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="flex gap-8">
+            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
+                <h1 class="text-3xl font-bold mb-6 text-white">Profiles</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Save complete keyboard configurations as profiles and switch between them instantly. Back up your settings and share configurations.</p>
+
+<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Save/restore full configurations</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings > Profiles</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Features</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Multiple profiles, import/export, sharing</td></tr></tbody></table></div>
+<h2 id="what-s-saved-in-a-profile" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">What's Saved in a Profile</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Component</th><th class="px-4 py-2 text-left border-b border-wiki-border">Included</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Layouts</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Active layouts and order</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Customizations</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Per-key actions, subkeys</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Theme</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Colors and appearance</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Settings</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">All preferences</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Languages</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Language configuration</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Extra Keys</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Bottom row setup</td></tr></tbody></table></div>
+<h2 id="creating-a-profile" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Creating a Profile</h2>
+
+<h3 id="step-1-configure-keyboard" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 1: Configure Keyboard</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Set up your keyboard exactly how you want it:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Add desired layouts</li>
+<li class="ml-4 py-1">&#8226; Configure customizations</li>
+<li class="ml-4 py-1">&#8226; Choose theme</li>
+<li class="ml-4 py-1">&#8226; Set all preferences</li>
+
+</ul><h3 id="step-2-save-profile" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 2: Save Profile</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open <strong class="font-semibold text-white">Settings > Profiles</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Save Current as Profile</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Enter a profile name</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Tap <strong class="font-semibold text-white">Save</strong></li>
+
+</ul><h3 id="step-3-profile-saved" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 3: Profile Saved</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Your configuration is now saved. You can:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Switch to other configurations</li>
+<li class="ml-4 py-1">&#8226; Make changes without worry</li>
+<li class="ml-4 py-1">&#8226; Return to this profile anytime</li>
+
+</ul><h2 id="managing-profiles" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Managing Profiles</h2>
+
+<h3 id="view-profiles" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">View Profiles</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open <strong class="font-semibold text-white">Settings > Profiles</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> See list of saved profiles</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Current profile is highlighted</li>
+
+</ul><h3 id="switch-profiles" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Switch Profiles</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Go to <strong class="font-semibold text-white">Settings > Profiles</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap the profile to activate</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Keyboard configuration changes immediately</li>
+
+</ul><h3 id="edit-profile" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Edit Profile</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Long-press on a profile</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Select <strong class="font-semibold text-white">Rename</strong> or <strong class="font-semibold text-white">Delete</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Confirm your action</li>
+
+</ul><h3 id="update-profile" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Update Profile</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">To save changes to an existing profile:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Make your changes</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Go to <strong class="font-semibold text-white">Settings > Profiles</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Long-press the profile</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Select <strong class="font-semibold text-white">Update with Current Settings</strong></li>
+
+</ul><h2 id="import-and-export" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Import and Export</h2>
+
+<h3 id="export-profile" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Export Profile</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Share your configuration:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open <strong class="font-semibold text-white">Settings > Profiles</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap the profile to export</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap <strong class="font-semibold text-white">Export</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Choose destination (file, share)</li>
+
+</ul><h3 id="import-profile" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Import Profile</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Load a shared profile:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open <strong class="font-semibold text-white">Settings > Profiles</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Import Profile</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Select the profile file</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Profile appears in list</li>
+
+</ul><h3 id="export-format" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Export Format</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Profiles are saved as JSON:</p>
+
+<pre class="bg-wiki-dark p-4 rounded-lg overflow-x-auto my-4"><code class="language-json">{
+<p class="mb-4 text-gray-300 leading-relaxed">  "name": "My Profile",</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  "version": 1,</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  "layouts": [...],</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  "theme": {...},</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  "customizations": {...},</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  "settings": {...}</p>
+<p class="mb-4 text-gray-300 leading-relaxed">}</code></pre></p>
+
+<h2 id="profile-use-cases" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Profile Use Cases</h2>
+
+<h3 id="work-vs-personal" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Work vs Personal</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Profile</th><th class="px-4 py-2 text-left border-b border-wiki-border">Configuration</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Work</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Professional theme, English only, no emoji</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Personal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Fun theme, multiple languages, full customization</td></tr></tbody></table></div>
+<h3 id="languages" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Languages</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Profile</th><th class="px-4 py-2 text-left border-b border-wiki-border">Configuration</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">English</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">QWERTY, English dictionary</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Multilingual</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Multiple layouts, all languages</td></tr></tbody></table></div>
+<h3 id="device-modes" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Device Modes</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Profile</th><th class="px-4 py-2 text-left border-b border-wiki-border">Configuration</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">One-Handed</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Compact layout, large keys</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Two-Handed</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Full layout, normal keys</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Tablet</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Wide layout, split keyboard</td></tr></tbody></table></div>
+<h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Name clearly</strong>: Use descriptive profile names</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Backup regularly</strong>: Export profiles for safety</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Share useful profiles</strong>: Help others with good configurations</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Default profile</strong>: Keep one profile as your baseline</li>
+
+</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Before making major changes, save your current configuration as a profile so you can return to it.</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
+<h2 id="quick-switch" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Switch</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Enable quick profile switching:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Go to <strong class="font-semibold text-white">Settings > Profiles > Quick Switch</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Enable the feature</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Triple-tap globe key to show profile picker</li>
+
+</ul><h2 id="settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Settings</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Profiles</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings</td><td class="px-4 py-2 border-b border-wiki-border/50">Manage profiles</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Quick Switch</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Profiles</td><td class="px-4 py-2 border-b border-wiki-border/50">Enable fast switching</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Auto-Backup</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Profiles</td><td class="px-4 py-2 border-b border-wiki-border/50">Automatic backups</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Cloud Sync</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Profiles</td><td class="px-4 py-2 border-b border-wiki-border/50">Sync across devices</td></tr></tbody></table></div>
+<h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
+
+<h3 id="q-how-many-profiles-can-i-have-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How many profiles can I have?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: You can create up to 20 profiles.</p>
+
+<h3 id="q-what-happens-if-i-delete-a-profile-i-m-using-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: What happens if I delete a profile I'm using?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: CleverKeys switches to the Default profile automatically.</p>
+
+<h3 id="q-can-i-sync-profiles-between-devices-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I sync profiles between devices?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Export profiles and import on other devices. Cloud sync may be available in future updates.</p>
+
+<h3 id="q-do-profiles-include-personal-dictionary-words-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Do profiles include personal dictionary words?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Optional. When exporting, you can choose to include or exclude personal dictionary.</p>
+
+<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="custom-layouts.md" class="text-wiki-accent hover:underline">Custom Layouts</a> - Create custom layouts</li>
+<li class="ml-4 py-1">&#8226; <a href="../customization/themes.md" class="text-wiki-accent hover:underline">Themes</a> - Customize appearance</li>
+<li class="ml-4 py-1">&#8226; <a href="../troubleshooting/backup-restore.md" class="text-wiki-accent hover:underline">Backup & Restore</a> - Full backup options</li>
+</ul>
+                
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
+            
+                <a href="layouts/custom-layouts.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500">Previous</div>
+                        <div class="font-medium">Custom Layouts</div>
+                    </div>
+                </a>
+            
+            
+                <a href="settings/appearance.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <div>
+                        <div class="text-xs uppercase text-gray-500">Next</div>
+                        <div class="font-medium">Appearance Settings</div>
+                    </div>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            
+        </div>
+    
+            </article>
+            
+        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
+            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
+            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
+                
+                    <li class="">
+                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#what-s-saved-in-a-profile" class="text-gray-400 hover:text-wiki-primary transition-colors">What's Saved in a Profile</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#creating-a-profile" class="text-gray-400 hover:text-wiki-primary transition-colors">Creating a Profile</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-1-configure-keyboard" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 1: Configure Keyboard</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-2-save-profile" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 2: Save Profile</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-3-profile-saved" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 3: Profile Saved</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#managing-profiles" class="text-gray-400 hover:text-wiki-primary transition-colors">Managing Profiles</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#view-profiles" class="text-gray-400 hover:text-wiki-primary transition-colors">View Profiles</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#switch-profiles" class="text-gray-400 hover:text-wiki-primary transition-colors">Switch Profiles</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#edit-profile" class="text-gray-400 hover:text-wiki-primary transition-colors">Edit Profile</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#update-profile" class="text-gray-400 hover:text-wiki-primary transition-colors">Update Profile</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#import-and-export" class="text-gray-400 hover:text-wiki-primary transition-colors">Import and Export</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#export-profile" class="text-gray-400 hover:text-wiki-primary transition-colors">Export Profile</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#import-profile" class="text-gray-400 hover:text-wiki-primary transition-colors">Import Profile</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#export-format" class="text-gray-400 hover:text-wiki-primary transition-colors">Export Format</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#profile-use-cases" class="text-gray-400 hover:text-wiki-primary transition-colors">Profile Use Cases</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#work-vs-personal" class="text-gray-400 hover:text-wiki-primary transition-colors">Work vs Personal</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#languages" class="text-gray-400 hover:text-wiki-primary transition-colors">Languages</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#device-modes" class="text-gray-400 hover:text-wiki-primary transition-colors">Device Modes</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#quick-switch" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Switch</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Settings</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-how-many-profiles-can-i-have-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How many profiles can I have?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-what-happens-if-i-delete-a-profile-i-m-using-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: What happens if I delete a profile I'm using?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-can-i-sync-profiles-between-devices-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I sync profiles between devices?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-do-profiles-include-personal-dictionary-words-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Do profiles include personal dictionary words?</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
+                    </li>
+                
+            </ul>
+        </nav>
+    
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>

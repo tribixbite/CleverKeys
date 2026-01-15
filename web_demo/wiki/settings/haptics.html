@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haptic Feedback - CleverKeys Wiki</title>
+    <meta name="description" content="Configure vibration settings">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wiki-primary': '#10b981',
+                        'wiki-primary-light': '#34d399',
+                        'wiki-accent': '#3b82f6',
+                        'wiki-dark': '#0d1117',
+                        'wiki-surface': '#161b22',
+                        'wiki-card': '#21262d',
+                        'wiki-border': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-wiki-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <span>/</span>
+            <span class="text-gray-300">Haptic Feedback</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #6366f120; color: #6366f1">Settings</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">beginner</span>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">Haptic Feedback</h1>
+        <p class="text-xl text-gray-400">Configure vibration settings</p>
+        
+        <div class="flex flex-wrap gap-2 mt-4">
+            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#haptics</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#vibration</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#feedback</span>
+        </div>
+    
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="flex gap-8">
+            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
+                <h1 class="text-3xl font-bold mb-6 text-white">Haptics Settings</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Configure vibration feedback for key presses, gestures, and special events.</p>
+
+<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Control vibration feedback</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings > Haptics</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Options</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Intensity, events, patterns</td></tr></tbody></table></div>
+<h2 id="haptic-feedback" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Haptic Feedback</h2>
+
+<h3 id="master-toggle" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Master Toggle</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Effect</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">On</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Haptics enabled</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Off</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">All haptics disabled</td></tr></tbody></table></div>
+<h3 id="vibration-intensity" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Vibration Intensity</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Level</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Light</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Subtle feedback</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Medium</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Noticeable but not strong</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Strong</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Pronounced vibration</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">System</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Uses system haptic settings</td></tr></tbody></table></div>
+<h2 id="per-event-haptics" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Per-Event Haptics</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Configure vibration for specific events:</p>
+
+<h3 id="key-press" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Key Press</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">When</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Enabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Vibrate on every key tap</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Disabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">No key press vibration</td></tr></tbody></table></div>
+<h3 id="special-keys" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Special Keys</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Key Type</th><th class="px-4 py-2 text-left border-b border-wiki-border">Default</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Backspace</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">On</td><td class="px-4 py-2 border-b border-wiki-border/50">Delete feedback</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Space</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Off</td><td class="px-4 py-2 border-b border-wiki-border/50">Space bar tap</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Enter</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">On</td><td class="px-4 py-2 border-b border-wiki-border/50">Return/submit</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Shift</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">On</td><td class="px-4 py-2 border-b border-wiki-border/50">Modifier activation</td></tr></tbody></table></div>
+<h3 id="gesture-events" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Gesture Events</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Gesture</th><th class="px-4 py-2 text-left border-b border-wiki-border">Default</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Short Swipe</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">On</td><td class="px-4 py-2 border-b border-wiki-border/50">Subkey activation</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Long Press</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">On</td><td class="px-4 py-2 border-b border-wiki-border/50">Long press detected</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Mode Activation</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Strong</td><td class="px-4 py-2 border-b border-wiki-border/50">TrackPoint/Selection mode</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Circle Gesture</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">On</td><td class="px-4 py-2 border-b border-wiki-border/50">Undo/redo circle</td></tr></tbody></table></div>
+<h3 id="text-events" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Text Events</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Event</th><th class="px-4 py-2 text-left border-b border-wiki-border">Default</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Autocorrect</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Light</td><td class="px-4 py-2 border-b border-wiki-border/50">Word corrected</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Prediction Selected</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Light</td><td class="px-4 py-2 border-b border-wiki-border/50">Tap on prediction</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Word Completed</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Off</td><td class="px-4 py-2 border-b border-wiki-border/50">Swipe word finished</td></tr></tbody></table></div>
+<h2 id="haptic-patterns" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Haptic Patterns</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Different vibration patterns for different events:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Pattern</th><th class="px-4 py-2 text-left border-b border-wiki-border">Used For</th><th class="px-4 py-2 text-left border-b border-wiki-border">Feel</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Click</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Key press</td><td class="px-4 py-2 border-b border-wiki-border/50">Short, sharp</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Tick</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Subtle events</td><td class="px-4 py-2 border-b border-wiki-border/50">Very brief</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Heavy</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Mode changes</td><td class="px-4 py-2 border-b border-wiki-border/50">Longer, stronger</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Double</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Confirmations</td><td class="px-4 py-2 border-b border-wiki-border/50">Two quick pulses</td></tr></tbody></table></div>
+<h2 id="oled-protection" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">OLED Protection</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">For OLED screens, some users prefer haptics to confirm key presses without visual feedback:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Enable haptics for all key events</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Consider disabling key pop-up</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Reduce key press animation</li>
+
+</ul><h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Battery saving</strong>: Disable or reduce haptics intensity</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Silent environments</strong>: Disable haptics to avoid noise</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Accessibility</strong>: Haptics help confirm input without looking</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Learning gestures</strong>: Enable gesture haptics while learning</li>
+
+</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Use "Strong" haptics for mode activations (TrackPoint, Selection) to clearly feel when modes engage.</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
+<h2 id="haptic-events-reference" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Haptic Events Reference</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Event</th><th class="px-4 py-2 text-left border-b border-wiki-border">Setting Key</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Key Press</strong></td><td class="px-4 py-2 border-b border-wiki-border/50"><code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">haptic_key</code></td><td class="px-4 py-2 border-b border-wiki-border/50">Regular key tap</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Backspace</strong></td><td class="px-4 py-2 border-b border-wiki-border/50"><code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">haptic_backspace</code></td><td class="px-4 py-2 border-b border-wiki-border/50">Delete key</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Enter</strong></td><td class="px-4 py-2 border-b border-wiki-border/50"><code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">haptic_enter</code></td><td class="px-4 py-2 border-b border-wiki-border/50">Submit/return</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Space</strong></td><td class="px-4 py-2 border-b border-wiki-border/50"><code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">haptic_space</code></td><td class="px-4 py-2 border-b border-wiki-border/50">Spacebar</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Shift</strong></td><td class="px-4 py-2 border-b border-wiki-border/50"><code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">haptic_shift</code></td><td class="px-4 py-2 border-b border-wiki-border/50">Shift/caps</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Short Swipe</strong></td><td class="px-4 py-2 border-b border-wiki-border/50"><code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">haptic_short_swipe</code></td><td class="px-4 py-2 border-b border-wiki-border/50">Subkey access</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Long Press</strong></td><td class="px-4 py-2 border-b border-wiki-border/50"><code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">haptic_long_press</code></td><td class="px-4 py-2 border-b border-wiki-border/50">Hold gesture</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">TrackPoint</strong></td><td class="px-4 py-2 border-b border-wiki-border/50"><code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">haptic_trackpoint</code></td><td class="px-4 py-2 border-b border-wiki-border/50">Mode activation</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Selection</strong></td><td class="px-4 py-2 border-b border-wiki-border/50"><code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">haptic_selection</code></td><td class="px-4 py-2 border-b border-wiki-border/50">Selection mode</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Circle</strong></td><td class="px-4 py-2 border-b border-wiki-border/50"><code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">haptic_circle</code></td><td class="px-4 py-2 border-b border-wiki-border/50">Circle gesture</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Autocorrect</strong></td><td class="px-4 py-2 border-b border-wiki-border/50"><code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">haptic_autocorrect</code></td><td class="px-4 py-2 border-b border-wiki-border/50">Word correction</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Prediction</strong></td><td class="px-4 py-2 border-b border-wiki-border/50"><code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">haptic_prediction</code></td><td class="px-4 py-2 border-b border-wiki-border/50">Tap prediction</td></tr></tbody></table></div>
+<h2 id="intensity-levels" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Intensity Levels</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Level</th><th class="px-4 py-2 text-left border-b border-wiki-border">Amplitude</th><th class="px-4 py-2 text-left border-b border-wiki-border">Duration</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Off</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">0</td><td class="px-4 py-2 border-b border-wiki-border/50">0ms</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Light</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">50</td><td class="px-4 py-2 border-b border-wiki-border/50">10ms</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Medium</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">128</td><td class="px-4 py-2 border-b border-wiki-border/50">15ms</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Strong</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">255</td><td class="px-4 py-2 border-b border-wiki-border/50">25ms</td></tr></tbody></table></div>
+<h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
+
+<h3 id="q-why-don-t-i-feel-any-haptics-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Why don't I feel any haptics?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Check system haptics settings first, then CleverKeys haptics settings. Some devices require system haptics enabled.</p>
+
+<h3 id="q-do-haptics-drain-battery-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Do haptics drain battery?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, but minimally. If concerned, reduce intensity or disable for frequent events like key press.</p>
+
+<h3 id="q-can-i-have-different-haptics-for-different-layouts-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I have different haptics for different layouts?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Haptic settings apply globally. Per-layout haptics may be added in future.</p>
+
+<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="appearance.md" class="text-wiki-accent hover:underline">Appearance</a> - Visual feedback options</li>
+<li class="ml-4 py-1">&#8226; <a href="accessibility.md" class="text-wiki-accent hover:underline">Accessibility</a> - Alternative feedback</li>
+<li class="ml-4 py-1">&#8226; <a href="input-behavior.md" class="text-wiki-accent hover:underline">Input Behavior</a> - Touch sensitivity</li>
+
+</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/settings/haptics-spec.md" class="text-wiki-accent hover:underline">Haptics Technical Specification</a>.</p>
+
+                
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
+            
+                <a href="settings/input-behavior.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500">Previous</div>
+                        <div class="font-medium">Input Behavior</div>
+                    </div>
+                </a>
+            
+            
+                <a href="settings/neural-settings.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <div>
+                        <div class="text-xs uppercase text-gray-500">Next</div>
+                        <div class="font-medium">Neural Settings</div>
+                    </div>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            
+        </div>
+    
+            </article>
+            
+        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
+            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
+            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
+                
+                    <li class="">
+                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#haptic-feedback" class="text-gray-400 hover:text-wiki-primary transition-colors">Haptic Feedback</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#master-toggle" class="text-gray-400 hover:text-wiki-primary transition-colors">Master Toggle</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#vibration-intensity" class="text-gray-400 hover:text-wiki-primary transition-colors">Vibration Intensity</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#per-event-haptics" class="text-gray-400 hover:text-wiki-primary transition-colors">Per-Event Haptics</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#key-press" class="text-gray-400 hover:text-wiki-primary transition-colors">Key Press</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#special-keys" class="text-gray-400 hover:text-wiki-primary transition-colors">Special Keys</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#gesture-events" class="text-gray-400 hover:text-wiki-primary transition-colors">Gesture Events</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#text-events" class="text-gray-400 hover:text-wiki-primary transition-colors">Text Events</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#haptic-patterns" class="text-gray-400 hover:text-wiki-primary transition-colors">Haptic Patterns</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#oled-protection" class="text-gray-400 hover:text-wiki-primary transition-colors">OLED Protection</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#haptic-events-reference" class="text-gray-400 hover:text-wiki-primary transition-colors">Haptic Events Reference</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#intensity-levels" class="text-gray-400 hover:text-wiki-primary transition-colors">Intensity Levels</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-why-don-t-i-feel-any-haptics-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Why don't I feel any haptics?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-do-haptics-drain-battery-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Do haptics drain battery?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-can-i-have-different-haptics-for-different-layouts-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I have different haptics for different layouts?</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
+                    </li>
+                
+            </ul>
+        </nav>
+    
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>

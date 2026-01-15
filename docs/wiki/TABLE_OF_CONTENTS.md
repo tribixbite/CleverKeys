@@ -68,7 +68,7 @@ Welcome to the CleverKeys Wiki! This guide covers everything you need to know to
 | [Custom Layouts](layouts/custom-layouts.md) | Create your own layouts |
 | [Profiles](layouts/profiles.md) | Save and restore settings |
 
-**Technical Specs**: [Layouts](specs/layouts/layouts-spec.md) | [Switching](specs/layouts/switching-spec.md) | [Multi-Language](specs/layouts/multi-language-spec.md) | [Language Packs](specs/layouts/language-packs-spec.md)
+**Technical Specs**: [Adding Layouts](specs/layouts/adding-layouts-spec.md) | [Switching](specs/layouts/switching-layouts-spec.md) | [Multi-Language](specs/layouts/multi-language-spec.md) | [Language Packs](specs/layouts/language-packs-spec.md)
 
 ---
 
@@ -93,7 +93,7 @@ Welcome to the CleverKeys Wiki! This guide covers everything you need to know to
 | [Text Selection](clipboard/text-selection.md) | Select, copy, and paste |
 | [Shortcuts](clipboard/shortcuts.md) | Common text shortcuts |
 
-**Technical Specs**: [Clipboard](specs/clipboard/clipboard-spec.md) | [Text Selection](specs/clipboard/text-selection-spec.md)
+**Technical Specs**: [Clipboard History](specs/clipboard/clipboard-history-spec.md) | [Text Selection](specs/clipboard/text-selection-spec.md)
 
 ---
 
@@ -105,7 +105,7 @@ Welcome to the CleverKeys Wiki! This guide covers everything you need to know to
 | [Backup & Restore](troubleshooting/backup-restore.md) | Export and import settings |
 | [Performance](troubleshooting/performance.md) | Speed optimization tips |
 
-**Technical Specs**: [Troubleshooting](specs/troubleshooting/troubleshooting-spec.md)
+**Technical Specs**: [Common Issues](specs/troubleshooting/common-issues-spec.md)
 
 ---
 

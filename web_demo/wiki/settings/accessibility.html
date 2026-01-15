@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility - CleverKeys Wiki</title>
+    <meta name="description" content="Configure accessibility features">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wiki-primary': '#10b981',
+                        'wiki-primary-light': '#34d399',
+                        'wiki-accent': '#3b82f6',
+                        'wiki-dark': '#0d1117',
+                        'wiki-surface': '#161b22',
+                        'wiki-card': '#21262d',
+                        'wiki-border': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-wiki-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <span>/</span>
+            <span class="text-gray-300">Accessibility</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #6366f120; color: #6366f1">Settings</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">beginner</span>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">Accessibility</h1>
+        <p class="text-xl text-gray-400">Configure accessibility features</p>
+        
+        <div class="flex flex-wrap gap-2 mt-4">
+            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#accessibility</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#large keys</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#slow mode</span>
+        </div>
+    
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="flex gap-8">
+            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
+                <h1 class="text-3xl font-bold mb-6 text-white">Accessibility Settings</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys includes accessibility features for users with visual, motor, or cognitive accessibility needs.</p>
+
+<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Accessibility accommodations</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings > Accessibility</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Features</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">High contrast, large keys, TalkBack</td></tr></tbody></table></div>
+<h2 id="visual-accessibility" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Visual Accessibility</h2>
+
+<h3 id="high-contrast-mode" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">High Contrast Mode</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Enhanced visual contrast:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Effect</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Enabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Bold borders, increased contrast</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Disabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Standard appearance</td></tr></tbody></table></div>
+<h3 id="font-size" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Font Size</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Adjust key label size:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Size</th><th class="px-4 py-2 text-left border-b border-wiki-border">Use Case</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Small</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">More keys visible</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Normal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Default</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Large</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Easier reading</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Extra Large</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Low vision</td></tr></tbody></table></div>
+<h3 id="key-label-style" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Key Label Style</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Style</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Standard</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Regular labels</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Bold</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Thicker font weight</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Uppercase</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">All caps labels</td></tr></tbody></table></div>
+<h2 id="screen-reader-support" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Screen Reader Support</h2>
+
+<h3 id="talkback-integration" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">TalkBack Integration</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys is compatible with Android TalkBack:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Feature</th><th class="px-4 py-2 text-left border-b border-wiki-border">Behavior</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Key Announcement</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Speaks key on focus</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Input Feedback</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Announces typed text</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Navigation</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Supports explore by touch</td></tr></tbody></table></div>
+<h3 id="using-with-talkback" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Using with TalkBack</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Enable TalkBack in Android settings</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> CleverKeys automatically adapts</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Explore keyboard by touch</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Double-tap to type</li>
+
+</ul><h3 id="spoken-feedback" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Spoken Feedback</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Speak Keys</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Announce key on press</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Speak Words</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Announce completed words</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Speak Predictions</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Announce suggestions</td></tr></tbody></table></div>
+<h2 id="motor-accessibility" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Motor Accessibility</h2>
+
+<h3 id="touch-accommodation" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Touch Accommodation</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">For users with motor difficulties:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Touch Duration</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Required hold time</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Ignore Repeat</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Prevent accidental repeats</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Touch Slop</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Movement tolerance</td></tr></tbody></table></div>
+<h3 id="large-touch-targets" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Large Touch Targets</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Effect</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Increased Padding</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Bigger tap areas</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Reduced Keys</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Fewer, larger keys</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Extra Large Height</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Maximum keyboard height</td></tr></tbody></table></div>
+<h3 id="sticky-modifiers" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Sticky Modifiers</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">For users who can't hold two keys:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Enabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Tap shift, then letter</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Disabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Must hold shift</td></tr></tbody></table></div>
+<h2 id="timing-settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Timing Settings</h2>
+
+<h3 id="long-press-delay" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Long Press Delay</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Adjust time for long press:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Duration</th><th class="px-4 py-2 text-left border-b border-wiki-border">Use Case</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Short (200ms)</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Quick access</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Default (400ms)</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Standard</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Long (800ms)</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Prevent accidental</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Extra Long (1200ms)</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Significant delay</td></tr></tbody></table></div>
+<h3 id="key-repeat-delay" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Key Repeat Delay</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">If holding a key:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Slow</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Longer before repeat</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Normal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Standard repeat</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Fast</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Quick repeat</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Disabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">No repeat on hold</td></tr></tbody></table></div>
+<h2 id="cognitive-accessibility" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Cognitive Accessibility</h2>
+
+<h3 id="simplified-mode" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Simplified Mode</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Reduce complexity:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Feature</th><th class="px-4 py-2 text-left border-b border-wiki-border">Simplified</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Gestures</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Disabled</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Subkeys</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Disabled</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Predictions</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Single row</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Layout</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Basic QWERTY only</td></tr></tbody></table></div>
+<h3 id="consistent-layout" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Consistent Layout</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Lock Layout</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Prevent accidental switches</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Hide Globe</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Remove layout switcher</td></tr></tbody></table></div>
+<h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Low vision</strong>: Enable high contrast + large font</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Motor difficulties</strong>: Increase touch duration, enable sticky keys</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Screen reader</strong>: Use TalkBack with spoken feedback</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Cognitive</strong>: Try simplified mode</li>
+
+</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Android's accessibility settings work alongside CleverKeys. Enable both for best results.</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
+<h2 id="all-accessibility-settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">All Accessibility Settings</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Default</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">High Contrast</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Accessibility</td><td class="px-4 py-2 border-b border-wiki-border/50">Off</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Font Size</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Accessibility</td><td class="px-4 py-2 border-b border-wiki-border/50">Normal</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Bold Labels</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Accessibility</td><td class="px-4 py-2 border-b border-wiki-border/50">Off</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Speak Keys</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Accessibility</td><td class="px-4 py-2 border-b border-wiki-border/50">System</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Touch Duration</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Accessibility</td><td class="px-4 py-2 border-b border-wiki-border/50">0ms</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Long Press Delay</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Accessibility</td><td class="px-4 py-2 border-b border-wiki-border/50">400ms</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Sticky Modifiers</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Accessibility</td><td class="px-4 py-2 border-b border-wiki-border/50">Off</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Simplified Mode</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Accessibility</td><td class="px-4 py-2 border-b border-wiki-border/50">Off</td></tr></tbody></table></div>
+<h2 id="system-integration" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">System Integration</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys respects Android accessibility settings:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Android Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">CleverKeys Response</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Large Text</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Larger key labels</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Bold Text</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Bold key labels</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">High Contrast</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">High contrast theme</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">TalkBack</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Screen reader mode</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Touch & Hold Delay</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Adjusted long press</td></tr></tbody></table></div>
+<h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
+
+<h3 id="q-how-do-i-use-cleverkeys-with-talkback-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How do I use CleverKeys with TalkBack?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Enable TalkBack in Android settings. CleverKeys automatically provides spoken feedback and explore-by-touch navigation.</p>
+
+<h3 id="q-can-i-make-just-the-letters-bigger-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I make just the letters bigger?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, adjust Font Size in Accessibility settings. This affects key labels without changing keyboard size.</p>
+
+<h3 id="q-how-do-i-prevent-accidental-key-presses-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How do I prevent accidental key presses?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Increase Touch Duration to require holding keys longer, or enable Simplified Mode.</p>
+
+<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="appearance.md" class="text-wiki-accent hover:underline">Appearance</a> - Visual customization</li>
+<li class="ml-4 py-1">&#8226; <a href="haptics.md" class="text-wiki-accent hover:underline">Haptics</a> - Tactile feedback</li>
+<li class="ml-4 py-1">&#8226; <a href="input-behavior.md" class="text-wiki-accent hover:underline">Input Behavior</a> - Touch settings</li>
+</ul>
+                
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
+            
+                <a href="settings/privacy.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500">Previous</div>
+                        <div class="font-medium">Privacy Settings</div>
+                    </div>
+                </a>
+            
+            
+                <a href="clipboard/clipboard-history.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <div>
+                        <div class="text-xs uppercase text-gray-500">Next</div>
+                        <div class="font-medium">Clipboard History</div>
+                    </div>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            
+        </div>
+    
+            </article>
+            
+        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
+            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
+            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
+                
+                    <li class="">
+                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#visual-accessibility" class="text-gray-400 hover:text-wiki-primary transition-colors">Visual Accessibility</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#high-contrast-mode" class="text-gray-400 hover:text-wiki-primary transition-colors">High Contrast Mode</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#font-size" class="text-gray-400 hover:text-wiki-primary transition-colors">Font Size</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#key-label-style" class="text-gray-400 hover:text-wiki-primary transition-colors">Key Label Style</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#screen-reader-support" class="text-gray-400 hover:text-wiki-primary transition-colors">Screen Reader Support</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#talkback-integration" class="text-gray-400 hover:text-wiki-primary transition-colors">TalkBack Integration</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#using-with-talkback" class="text-gray-400 hover:text-wiki-primary transition-colors">Using with TalkBack</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#spoken-feedback" class="text-gray-400 hover:text-wiki-primary transition-colors">Spoken Feedback</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#motor-accessibility" class="text-gray-400 hover:text-wiki-primary transition-colors">Motor Accessibility</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#touch-accommodation" class="text-gray-400 hover:text-wiki-primary transition-colors">Touch Accommodation</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#large-touch-targets" class="text-gray-400 hover:text-wiki-primary transition-colors">Large Touch Targets</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#sticky-modifiers" class="text-gray-400 hover:text-wiki-primary transition-colors">Sticky Modifiers</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#timing-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Timing Settings</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#long-press-delay" class="text-gray-400 hover:text-wiki-primary transition-colors">Long Press Delay</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#key-repeat-delay" class="text-gray-400 hover:text-wiki-primary transition-colors">Key Repeat Delay</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#cognitive-accessibility" class="text-gray-400 hover:text-wiki-primary transition-colors">Cognitive Accessibility</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#simplified-mode" class="text-gray-400 hover:text-wiki-primary transition-colors">Simplified Mode</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#consistent-layout" class="text-gray-400 hover:text-wiki-primary transition-colors">Consistent Layout</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#all-accessibility-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">All Accessibility Settings</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#system-integration" class="text-gray-400 hover:text-wiki-primary transition-colors">System Integration</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-how-do-i-use-cleverkeys-with-talkback-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How do I use CleverKeys with TalkBack?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-can-i-make-just-the-letters-bigger-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I make just the letters bigger?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-how-do-i-prevent-accidental-key-presses-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How do I prevent accidental key presses?</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
+                    </li>
+                
+            </ul>
+        </nav>
+    
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>

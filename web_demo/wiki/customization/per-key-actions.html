@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Per-Key Actions - CleverKeys Wiki</title>
+    <meta name="description" content="Customize what each swipe direction does">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wiki-primary': '#10b981',
+                        'wiki-primary-light': '#34d399',
+                        'wiki-accent': '#3b82f6',
+                        'wiki-dark': '#0d1117',
+                        'wiki-surface': '#161b22',
+                        'wiki-card': '#21262d',
+                        'wiki-border': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-wiki-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <span>/</span>
+            <span class="text-gray-300">Per-Key Actions</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #f59e0b20; color: #f59e0b">Customization</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">advanced</span>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">Per-Key Actions</h1>
+        <p class="text-xl text-gray-400">Customize what each swipe direction does</p>
+        
+        <div class="flex flex-wrap gap-2 mt-4">
+            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#customize</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#actions</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#swipe</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#directions</span>
+        </div>
+    
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="flex gap-8">
+            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
+                <h1 class="text-3xl font-bold mb-6 text-white">Per-Key Actions</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Customize what happens when you swipe in each of the 8 directions from any key. Assign characters, actions, or macros to each swipe direction.</p>
+
+<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Customize subkey actions per direction</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings > Customization > Per-Key Actions</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Directions</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">8 directions (N, NE, E, SE, S, SW, W, NW)</td></tr></tbody></table></div>
+<h2 id="understanding-subkeys" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Understanding Subkeys</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Each key has up to 8 subkey positions:</p>
+
+<pre class="bg-wiki-dark p-4 rounded-lg overflow-x-auto my-4"><code class="language-text">NW   N   NE
+<p class="mb-4 text-gray-300 leading-relaxed">      \  |  /</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   W -- KEY -- E</p>
+<p class="mb-4 text-gray-300 leading-relaxed">      /  |  \</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    SW   S   SE</code></pre></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">When you short swipe in a direction, the corresponding subkey is activated.</p>
+
+<h2 id="how-to-customize" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">How to Customize</h2>
+
+<h3 id="step-1-open-customization" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 1: Open Customization</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open CleverKeys Settings (gear icon)</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Navigate to <strong class="font-semibold text-white">Customization</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Select <strong class="font-semibold text-white">Per-Key Actions</strong> or <strong class="font-semibold text-white">Subkey Editor</strong></li>
+
+</ul><h3 id="step-2-select-a-key" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 2: Select a Key</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> The keyboard layout is displayed</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Tap the key</strong> you want to customize</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> A detail panel opens showing all 8 directions</li>
+
+</ul><h3 id="step-3-edit-a-direction" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 3: Edit a Direction</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Tap the direction you want to change</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Choose from:</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - <strong class="font-semibold text-white">Character</strong>: Type a letter, symbol, or emoji</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - <strong class="font-semibold text-white">Action</strong>: Select from built-in actions</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - <strong class="font-semibold text-white">Remove</strong>: Clear the subkey</p>
+
+<h3 id="step-4-save-changes" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 4: Save Changes</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Changes are saved automatically. Tap <strong class="font-semibold text-white">Done</strong> to return.</p>
+
+<h2 id="available-actions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Available Actions</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Characters</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Any Unicode character</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Delete Word</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Delete previous word</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Cursor Left/Right</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Move cursor</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Home/End</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Jump to line start/end</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Tab</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Insert tab character</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Escape</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Send escape key</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Undo/Redo</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Undo or redo action</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Copy/Cut/Paste</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Clipboard operations</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Select All</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Select all text</td></tr></tbody></table></div>
+<h2 id="common-customizations" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Customizations</h2>
+
+<h3 id="adding-frequently-used-symbols" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Adding Frequently Used Symbols</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Place symbols you use often in easy-to-reach positions:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Key</th><th class="px-4 py-2 text-left border-b border-wiki-border">Direction</th><th class="px-4 py-2 text-left border-b border-wiki-border">Suggestion</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">e</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">South</td><td class="px-4 py-2 border-b border-wiki-border/50">@ (email)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">s</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">East</td><td class="px-4 py-2 border-b border-wiki-border/50">$ (currency)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">p</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">North</td><td class="px-4 py-2 border-b border-wiki-border/50">% (percent)</td></tr></tbody></table></div>
+<h3 id="programming-shortcuts" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Programming Shortcuts</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">For developers:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Key</th><th class="px-4 py-2 text-left border-b border-wiki-border">Direction</th><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Shift</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">NW</td><td class="px-4 py-2 border-b border-wiki-border/50">Escape</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Shift</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">SE</td><td class="px-4 py-2 border-b border-wiki-border/50">Tab</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">a</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">NW</td><td class="px-4 py-2 border-b border-wiki-border/50">Home</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">a</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">SW</td><td class="px-4 py-2 border-b border-wiki-border/50">End</td></tr></tbody></table></div>
+<h3 id="navigation-optimization" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Navigation Optimization</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Put navigation actions where you can reach them:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Key</th><th class="px-4 py-2 text-left border-b border-wiki-border">Direction</th><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Backspace</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">West</td><td class="px-4 py-2 border-b border-wiki-border/50">Delete Word</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Space</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Subkeys</td><td class="px-4 py-2 border-b border-wiki-border/50">Cursor movement</td></tr></tbody></table></div>
+<h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Start small</strong>: Customize a few keys first, learn them, then add more</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Muscle memory</strong>: Keep frequently used actions in consistent positions</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Backup</strong>: Export your customizations before making major changes</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Per-layout</strong>: Customizations can be layout-specific</li>
+
+</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Consider your typing patterns. If you frequently type certain symbols, put them in easy-to-swipe positions.</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
+<h2 id="resetting-customizations" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Resetting Customizations</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">To restore defaults for a key:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open Per-Key Actions</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Select the key</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap <strong class="font-semibold text-white">Reset to Default</strong></li>
+
+</ul><p class="mb-4 text-gray-300 leading-relaxed">To reset all customizations:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Go to Settings > Reset</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Choose <strong class="font-semibold text-white">Reset Customizations Only</strong></li>
+
+</ul><h2 id="import-export" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Import/Export</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Save and share your customizations:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Go to Settings > <strong class="font-semibold text-white">Profiles</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Select <strong class="font-semibold text-white">Export Profile</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Choose to include customizations</li>
+
+</ul><p class="mb-4 text-gray-300 leading-relaxed">See <a href="../layouts/profiles.md" class="text-wiki-accent hover:underline">Profiles</a> for details.</p>
+
+<h2 id="settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Settings</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Per-Key Editor</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Customization</td><td class="px-4 py-2 border-b border-wiki-border/50">Visual subkey editor</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Reset Key</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Per-key detail</td><td class="px-4 py-2 border-b border-wiki-border/50">Reset single key</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Reset All</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings > Reset</td><td class="px-4 py-2 border-b border-wiki-border/50">Reset all customizations</td></tr></tbody></table></div>
+<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="../gestures/short-swipes.md" class="text-wiki-accent hover:underline">Short Swipes</a> - How to trigger subkeys</li>
+<li class="ml-4 py-1">&#8226; <a href="../layouts/profiles.md" class="text-wiki-accent hover:underline">Profiles</a> - Save customizations</li>
+<li class="ml-4 py-1">&#8226; <a href="extra-keys.md" class="text-wiki-accent hover:underline">Extra Keys</a> - Add custom keys to bottom row</li>
+
+</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/customization/per-key-actions-spec.md" class="text-wiki-accent hover:underline">Per-Key Actions Technical Specification</a>.</p>
+
+                
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
+            
+                <a href="gestures/circle-gestures.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500">Previous</div>
+                        <div class="font-medium">Circle Gestures</div>
+                    </div>
+                </a>
+            
+            
+                <a href="customization/extra-keys.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <div>
+                        <div class="text-xs uppercase text-gray-500">Next</div>
+                        <div class="font-medium">Extra Keys</div>
+                    </div>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            
+        </div>
+    
+            </article>
+            
+        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
+            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
+            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
+                
+                    <li class="">
+                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#understanding-subkeys" class="text-gray-400 hover:text-wiki-primary transition-colors">Understanding Subkeys</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#how-to-customize" class="text-gray-400 hover:text-wiki-primary transition-colors">How to Customize</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-1-open-customization" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 1: Open Customization</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-2-select-a-key" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 2: Select a Key</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-3-edit-a-direction" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 3: Edit a Direction</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-4-save-changes" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 4: Save Changes</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#available-actions" class="text-gray-400 hover:text-wiki-primary transition-colors">Available Actions</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#common-customizations" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Customizations</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#adding-frequently-used-symbols" class="text-gray-400 hover:text-wiki-primary transition-colors">Adding Frequently Used Symbols</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#programming-shortcuts" class="text-gray-400 hover:text-wiki-primary transition-colors">Programming Shortcuts</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#navigation-optimization" class="text-gray-400 hover:text-wiki-primary transition-colors">Navigation Optimization</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#resetting-customizations" class="text-gray-400 hover:text-wiki-primary transition-colors">Resetting Customizations</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#import-export" class="text-gray-400 hover:text-wiki-primary transition-colors">Import/Export</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Settings</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
+                    </li>
+                
+            </ul>
+        </nav>
+    
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>

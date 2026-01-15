@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appearance Settings - CleverKeys Wiki</title>
+    <meta name="description" content="Configure keyboard height, margins, and colors">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wiki-primary': '#10b981',
+                        'wiki-primary-light': '#34d399',
+                        'wiki-accent': '#3b82f6',
+                        'wiki-dark': '#0d1117',
+                        'wiki-surface': '#161b22',
+                        'wiki-card': '#21262d',
+                        'wiki-border': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-wiki-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <span>/</span>
+            <span class="text-gray-300">Appearance Settings</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #6366f120; color: #6366f1">Settings</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">beginner</span>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">Appearance Settings</h1>
+        <p class="text-xl text-gray-400">Configure keyboard height, margins, and colors</p>
+        
+        <div class="flex flex-wrap gap-2 mt-4">
+            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#appearance</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#height</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#margins</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#colors</span>
+        </div>
+    
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="flex gap-8">
+            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
+                <h1 class="text-3xl font-bold mb-6 text-white">Appearance Settings</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Configure how the keyboard looks on screen, including size, margins, key shapes, and visual effects.</p>
+
+<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Customize keyboard appearance</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings > Appearance</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Options</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Height, margins, key shape, effects</td></tr></tbody></table></div>
+<h2 id="keyboard-height" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Keyboard Height</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Adjust the overall keyboard height:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Extra Small</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Compact keyboard for small screens</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Small</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Reduced height</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Normal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Default height</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Large</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Increased height</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Extra Large</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Maximum height for easier tapping</td></tr></tbody></table></div>
+<h3 id="how-to-change" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">How to Change</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open <strong class="font-semibold text-white">Settings > Appearance</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Find <strong class="font-semibold text-white">Keyboard Height</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Drag slider or select preset</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Preview shows change immediately</li>
+
+</ul><h2 id="bottom-margin" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Bottom Margin</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Add space between keyboard and screen edge:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Effect</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">0</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Keyboard touches screen edge</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Small</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Minimal gap</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Medium</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Comfortable gap</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Large</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Significant gap (for gestures)</td></tr></tbody></table></div>
+<p class="mb-4 text-gray-300 leading-relaxed">Useful for phones with gesture navigation.</p>
+
+<h2 id="horizontal-margins" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Horizontal Margins</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Add space on left and right sides:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Use Case</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">None</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Full-width keyboard</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Small</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Slight inset</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Medium</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">One-handed reaching</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Large</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Centered narrow keyboard</td></tr></tbody></table></div>
+<h2 id="key-shape" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Key Shape</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Customize individual key appearance:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Option</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Rounded</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Smooth rounded corners</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Square</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Sharp corners</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Pill</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Highly rounded (oval)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Minimal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Very subtle key borders</td></tr></tbody></table></div>
+<h3 id="key-gap" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Key Gap</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Space between keys:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Gap</th><th class="px-4 py-2 text-left border-b border-wiki-border">Effect</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">None</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Keys touch each other</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Tight</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Minimal separation</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Normal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Default spacing</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Wide</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Clear separation</td></tr></tbody></table></div>
+<h2 id="visual-effects" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Visual Effects</h2>
+
+<h3 id="key-press-animation" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Key Press Animation</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Option</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">None</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">No visual feedback</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Highlight</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Key brightens on press</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Scale</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Key slightly enlarges</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Both</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Highlight + scale</td></tr></tbody></table></div>
+<h3 id="key-pop-up" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Key Pop-up</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Show character preview on press:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Behavior</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Enabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Shows pop-up above pressed key</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Disabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">No pop-up preview</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">On Hold Only</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Pop-up for long press only</td></tr></tbody></table></div>
+<h2 id="prediction-bar" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Prediction Bar</h2>
+
+<h3 id="bar-height" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Bar Height</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Hidden</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">No prediction bar</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Compact</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Single-row, small</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Normal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Standard height</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Expanded</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Taller, easier to tap</td></tr></tbody></table></div>
+<h3 id="suggestion-count" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Suggestion Count</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Number of visible suggestions:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Count</th><th class="px-4 py-2 text-left border-b border-wiki-border">Layout</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">3</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Three evenly spaced</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">5</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Five suggestions</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Auto</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Adapts to screen width</td></tr></tbody></table></div>
+<h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Large screens</strong>: Use larger height and keys</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Small screens</strong>: Reduce margins and gaps</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">One-handed</strong>: Add horizontal margin on one side</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Gesture nav</strong>: Add bottom margin</li>
+
+</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Use "Preview" mode in settings to see changes before applying.</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
+<h2 id="all-appearance-settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">All Appearance Settings</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Options</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Height</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Appearance</td><td class="px-4 py-2 border-b border-wiki-border/50">XS/S/M/L/XL or slider</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Bottom Margin</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Appearance</td><td class="px-4 py-2 border-b border-wiki-border/50">0-48dp</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Side Margins</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Appearance</td><td class="px-4 py-2 border-b border-wiki-border/50">0-32dp</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Key Shape</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Appearance</td><td class="px-4 py-2 border-b border-wiki-border/50">Rounded/Square/Pill/Minimal</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Key Gap</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Appearance</td><td class="px-4 py-2 border-b border-wiki-border/50">None/Tight/Normal/Wide</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Press Animation</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Appearance</td><td class="px-4 py-2 border-b border-wiki-border/50">None/Highlight/Scale/Both</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Key Pop-up</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Appearance</td><td class="px-4 py-2 border-b border-wiki-border/50">On/Off/Hold Only</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Bar Height</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Predictions</td><td class="px-4 py-2 border-b border-wiki-border/50">Hidden/Compact/Normal/Expanded</td></tr></tbody></table></div>
+<h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
+
+<h3 id="q-how-do-i-make-the-keyboard-smaller-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How do I make the keyboard smaller?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Reduce keyboard height and add side margins for a narrower, shorter keyboard.</p>
+
+<h3 id="q-why-does-my-keyboard-look-different-in-some-apps-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Why does my keyboard look different in some apps?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Some apps apply their own styling. CleverKeys tries to maintain your settings.</p>
+
+<h3 id="q-can-i-have-different-sizes-for-portrait-and-landscape-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I have different sizes for portrait and landscape?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, configure separate height settings for each orientation in Settings > Appearance > Orientation.</p>
+
+<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="../customization/themes.md" class="text-wiki-accent hover:underline">Themes</a> - Colors and styling</li>
+<li class="ml-4 py-1">&#8226; <a href="accessibility.md" class="text-wiki-accent hover:underline">Accessibility</a> - High contrast options</li>
+<li class="ml-4 py-1">&#8226; <a href="../layouts/profiles.md" class="text-wiki-accent hover:underline">Profiles</a> - Save appearance settings</li>
+
+</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/settings/appearance-spec.md" class="text-wiki-accent hover:underline">Appearance Technical Specification</a>.</p>
+
+                
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
+            
+                <a href="layouts/profiles.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500">Previous</div>
+                        <div class="font-medium">Profiles</div>
+                    </div>
+                </a>
+            
+            
+                <a href="settings/input-behavior.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <div>
+                        <div class="text-xs uppercase text-gray-500">Next</div>
+                        <div class="font-medium">Input Behavior</div>
+                    </div>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            
+        </div>
+    
+            </article>
+            
+        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
+            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
+            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
+                
+                    <li class="">
+                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#keyboard-height" class="text-gray-400 hover:text-wiki-primary transition-colors">Keyboard Height</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#how-to-change" class="text-gray-400 hover:text-wiki-primary transition-colors">How to Change</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#bottom-margin" class="text-gray-400 hover:text-wiki-primary transition-colors">Bottom Margin</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#horizontal-margins" class="text-gray-400 hover:text-wiki-primary transition-colors">Horizontal Margins</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#key-shape" class="text-gray-400 hover:text-wiki-primary transition-colors">Key Shape</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#key-gap" class="text-gray-400 hover:text-wiki-primary transition-colors">Key Gap</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#visual-effects" class="text-gray-400 hover:text-wiki-primary transition-colors">Visual Effects</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#key-press-animation" class="text-gray-400 hover:text-wiki-primary transition-colors">Key Press Animation</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#key-pop-up" class="text-gray-400 hover:text-wiki-primary transition-colors">Key Pop-up</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#prediction-bar" class="text-gray-400 hover:text-wiki-primary transition-colors">Prediction Bar</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#bar-height" class="text-gray-400 hover:text-wiki-primary transition-colors">Bar Height</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#suggestion-count" class="text-gray-400 hover:text-wiki-primary transition-colors">Suggestion Count</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#all-appearance-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">All Appearance Settings</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-how-do-i-make-the-keyboard-smaller-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How do I make the keyboard smaller?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-why-does-my-keyboard-look-different-in-some-apps-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Why does my keyboard look different in some apps?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-can-i-have-different-sizes-for-portrait-and-landscape-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I have different sizes for portrait and landscape?</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
+                    </li>
+                
+            </ul>
+        </nav>
+    
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Themes - CleverKeys Wiki</title>
+    <meta name="description" content="Change keyboard appearance and colors">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wiki-primary': '#10b981',
+                        'wiki-primary-light': '#34d399',
+                        'wiki-accent': '#3b82f6',
+                        'wiki-dark': '#0d1117',
+                        'wiki-surface': '#161b22',
+                        'wiki-card': '#21262d',
+                        'wiki-border': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-wiki-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <span>/</span>
+            <span class="text-gray-300">Themes</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #f59e0b20; color: #f59e0b">Customization</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">beginner</span>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">Themes</h1>
+        <p class="text-xl text-gray-400">Change keyboard appearance and colors</p>
+        
+        <div class="flex flex-wrap gap-2 mt-4">
+            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#themes</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#colors</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#appearance</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#dark mode</span>
+        </div>
+    
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="flex gap-8">
+            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
+                <h1 class="text-3xl font-bold mb-6 text-white">Themes</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Customize the appearance of your keyboard with different color themes, from dark modes to vibrant colors.</p>
+
+<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Change keyboard colors and appearance</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings > Theme</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Options</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Built-in themes + custom colors</td></tr></tbody></table></div>
+<h2 id="built-in-themes" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Built-in Themes</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys includes several pre-designed themes:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Theme</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">CleverKeys Dark</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Default dark purple theme</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Midnight</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Pure black with subtle accents</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Ocean</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Deep blue tones</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Forest</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Green nature-inspired</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Sunset</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Warm orange and red</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Snow</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Light theme for bright environments</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">System</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Follows Android dark/light mode</td></tr></tbody></table></div>
+<h2 id="how-to-change-theme" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">How to Change Theme</h2>
+
+<h3 id="step-1-open-theme-settings" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 1: Open Theme Settings</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open CleverKeys Settings (gear icon)</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Theme</strong> or <strong class="font-semibold text-white">Appearance</strong></li>
+
+</ul><h3 id="step-2-preview-themes" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 2: Preview Themes</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Scroll through available themes</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Each theme shows a preview</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap to select</li>
+
+</ul><h3 id="step-3-apply" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 3: Apply</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">The theme applies immediately. No restart required.</p>
+
+<h2 id="custom-colors" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Custom Colors</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">For fine-tuned control:</p>
+
+<h3 id="background-color" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Background Color</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Go to Theme settings</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Background Color</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Use the color picker or enter hex code</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Tap <strong class="font-semibold text-white">Apply</strong></li>
+
+</ul><h3 id="key-colors" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Key Colors</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Element</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Key Background</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Main key color</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Key Text</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Letter color</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Key Border</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Optional border</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Accent</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Highlights and active states</td></tr></tbody></table></div>
+<h3 id="prediction-bar" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Prediction Bar</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Element</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Bar Background</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Suggestion bar color</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Suggestion Text</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Prediction text color</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Active Suggestion</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Selected prediction</td></tr></tbody></table></div>
+<h2 id="theme-elements" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Theme Elements</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">What each theme affects:</p>
+
+<pre class="bg-wiki-dark p-4 rounded-lg overflow-x-auto my-4"><code class="language-text">┌─────────────────────────────────┐
+<p class="mb-4 text-gray-300 leading-relaxed">│   Prediction Bar Background     │ ← Bar color</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│   [word1] [word2] [word3]       │ ← Suggestion colors</p>
+<p class="mb-4 text-gray-300 leading-relaxed">├─────────────────────────────────┤</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ │ Q │ │ W │ │ E │ │ R │ │ T │ │ ← Key bg + text</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ └───┘ └───┘ └───┘ └───┘ └───┘ │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│         Keyboard Background     │ ← Main background</p>
+<p class="mb-4 text-gray-300 leading-relaxed">└─────────────────────────────────┘</code></pre></p>
+
+<h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">OLED screens</strong>: Use pure black themes to save battery</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Readability</strong>: Ensure good contrast between keys and text</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Eye strain</strong>: Dark themes are easier on eyes in low light</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Consistency</strong>: Match your system theme for visual harmony</li>
+
+</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">The "System" theme automatically switches between light and dark based on your Android settings.</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
+<h2 id="opacity-settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Opacity Settings</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Adjust transparency:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Range</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Key Opacity</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">0-100%</td><td class="px-4 py-2 border-b border-wiki-border/50">Transparency of key backgrounds</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Background Opacity</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">0-100%</td><td class="px-4 py-2 border-b border-wiki-border/50">Overall keyboard transparency</td></tr></tbody></table></div>
+<h2 id="settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Settings</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Theme</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Appearance</td><td class="px-4 py-2 border-b border-wiki-border/50">Select theme</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Custom Colors</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Theme > Custom</td><td class="px-4 py-2 border-b border-wiki-border/50">Individual colors</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Key Opacity</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Appearance</td><td class="px-4 py-2 border-b border-wiki-border/50">Transparency</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Border Style</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Appearance</td><td class="px-4 py-2 border-b border-wiki-border/50">Key borders</td></tr></tbody></table></div>
+<h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
+
+<h3 id="q-can-i-create-my-own-theme-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I create my own theme?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, use Custom Colors to define each element's color.</p>
+
+<h3 id="q-how-do-i-share-my-theme-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How do I share my theme?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Export your profile (Settings > Profiles > Export) which includes theme settings.</p>
+
+<h3 id="q-why-does-my-keyboard-look-different-in-some-apps-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Why does my keyboard look different in some apps?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Some apps force their own keyboard styling. CleverKeys tries to maintain your theme, but app overrides may occur.</p>
+
+<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="../settings/appearance.md" class="text-wiki-accent hover:underline">Appearance Settings</a> - Height, margins</li>
+<li class="ml-4 py-1">&#8226; <a href="../layouts/profiles.md" class="text-wiki-accent hover:underline">Profiles</a> - Save theme with settings</li>
+<li class="ml-4 py-1">&#8226; <a href="../settings/accessibility.md" class="text-wiki-accent hover:underline">Accessibility</a> - High contrast options</li>
+
+</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/customization/themes-spec.md" class="text-wiki-accent hover:underline">Themes Technical Specification</a>.</p>
+
+                
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
+            
+                <a href="customization/extra-keys.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500">Previous</div>
+                        <div class="font-medium">Extra Keys</div>
+                    </div>
+                </a>
+            
+            
+                <a href="customization/command-palette.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <div>
+                        <div class="text-xs uppercase text-gray-500">Next</div>
+                        <div class="font-medium">Command Palette</div>
+                    </div>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            
+        </div>
+    
+            </article>
+            
+        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
+            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
+            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
+                
+                    <li class="">
+                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#built-in-themes" class="text-gray-400 hover:text-wiki-primary transition-colors">Built-in Themes</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#how-to-change-theme" class="text-gray-400 hover:text-wiki-primary transition-colors">How to Change Theme</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-1-open-theme-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 1: Open Theme Settings</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-2-preview-themes" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 2: Preview Themes</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-3-apply" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 3: Apply</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#custom-colors" class="text-gray-400 hover:text-wiki-primary transition-colors">Custom Colors</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#background-color" class="text-gray-400 hover:text-wiki-primary transition-colors">Background Color</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#key-colors" class="text-gray-400 hover:text-wiki-primary transition-colors">Key Colors</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#prediction-bar" class="text-gray-400 hover:text-wiki-primary transition-colors">Prediction Bar</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#theme-elements" class="text-gray-400 hover:text-wiki-primary transition-colors">Theme Elements</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#opacity-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Opacity Settings</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Settings</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-can-i-create-my-own-theme-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I create my own theme?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-how-do-i-share-my-theme-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How do I share my theme?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-why-does-my-keyboard-look-different-in-some-apps-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Why does my keyboard look different in some apps?</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
+                    </li>
+                
+            </ul>
+        </nav>
+    
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>

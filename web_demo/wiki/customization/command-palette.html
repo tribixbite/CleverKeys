@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Palette - CleverKeys Wiki</title>
+    <meta name="description" content="Quick access to all keyboard actions">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wiki-primary': '#10b981',
+                        'wiki-primary-light': '#34d399',
+                        'wiki-accent': '#3b82f6',
+                        'wiki-dark': '#0d1117',
+                        'wiki-surface': '#161b22',
+                        'wiki-card': '#21262d',
+                        'wiki-border': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-wiki-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <span>/</span>
+            <span class="text-gray-300">Command Palette</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #f59e0b20; color: #f59e0b">Customization</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">intermediate</span>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">Command Palette</h1>
+        <p class="text-xl text-gray-400">Quick access to all keyboard actions</p>
+        
+        <div class="flex flex-wrap gap-2 mt-4">
+            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#command</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#palette</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#actions</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#quick</span>
+        </div>
+    
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="flex gap-8">
+            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
+                <h1 class="text-3xl font-bold mb-6 text-white">Command Palette</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">The command palette provides quick access to keyboard actions, settings, and features through a searchable interface.</p>
+
+<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Quick access to any keyboard action</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Long-press settings key or designated shortcut</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Features</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Search, recent actions, categorized list</td></tr></tbody></table></div>
+<h2 id="accessing-command-palette" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Accessing Command Palette</h2>
+
+<h3 id="method-1-long-press-settings" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 1: Long-Press Settings</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Long-press</strong> the settings/gear key</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Command palette opens</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Type to search or browse</li>
+
+</ul><h3 id="method-2-keyboard-shortcut" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 2: Keyboard Shortcut</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">If configured:</p>
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Press the designated key combination</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Command palette opens</li>
+
+</ul><h3 id="method-3-from-settings" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 3: From Settings</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open Settings</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Navigate to <strong class="font-semibold text-white">Command Palette</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Browse all available actions</li>
+
+</ul><h2 id="using-the-palette" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Using the Palette</h2>
+
+<h3 id="search" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Search</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Start typing when palette opens</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Results filter in real-time</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap any result to execute</li>
+
+</ul><h3 id="browse-categories" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Browse Categories</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Actions are organized into categories:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Category</th><th class="px-4 py-2 text-left border-b border-wiki-border">Contents</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Text</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Copy, paste, select all, undo</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Navigation</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Cursor movement, home, end</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Input</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Switch layout, language, emoji</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Settings</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Quick toggles, open settings</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Clipboard</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">History, clear, pin</td></tr></tbody></table></div>
+<h3 id="recent-actions" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Recent Actions</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">The palette remembers your frequently used actions and shows them first.</p>
+
+<h2 id="available-actions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Available Actions</h2>
+
+<h3 id="text-actions" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Text Actions</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Copy</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Copy selected text</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Cut</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Cut selected text</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Paste</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Paste from clipboard</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Select All</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Select all text</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Undo</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Undo last action</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Redo</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Redo undone action</td></tr></tbody></table></div>
+<h3 id="navigation-actions" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Navigation Actions</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Home</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Jump to line start</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">End</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Jump to line end</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Page Up</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Scroll up</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Page Down</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Scroll down</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Word Left</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Move cursor word left</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Word Right</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Move cursor word right</td></tr></tbody></table></div>
+<h3 id="input-actions" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Input Actions</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Switch Layout</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Change keyboard layout</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Switch Language</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Change input language</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Open Emoji</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Show emoji keyboard</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Open Symbols</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Show symbol keyboard</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Voice Input</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Start voice typing</td></tr></tbody></table></div>
+<h3 id="settings-actions" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Settings Actions</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Toggle Haptics</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Enable/disable vibration</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Toggle Autocorrect</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Enable/disable autocorrect</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Toggle Predictions</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Show/hide predictions</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Open Settings</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Go to full settings</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Theme Picker</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Quick theme change</td></tr></tbody></table></div>
+<h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Learn shortcuts</strong>: Frequently used actions are faster via shortcuts</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Search keywords</strong>: Actions match multiple keywords (e.g., "vibration" finds "Toggle Haptics")</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Recent first</strong>: Your most-used actions appear at the top</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Keyboard stays open</strong>: Palette operates without closing keyboard</li>
+
+</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Use the command palette to discover features you didn't know existed!</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
+<h2 id="customization" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Customization</h2>
+
+<h3 id="reorder-actions" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Reorder Actions</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Go to Settings > Command Palette</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Edit Order</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Drag actions to reorder</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Tap <strong class="font-semibold text-white">Done</strong></li>
+
+</ul><h3 id="add-to-favorites" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Add to Favorites</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Long-press any action in palette</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Select <strong class="font-semibold text-white">Add to Favorites</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Action appears in Favorites category</li>
+
+</ul><h3 id="hide-actions" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Hide Actions</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Go to Settings > Command Palette</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap action to toggle visibility</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Hidden actions won't appear in palette</li>
+
+</ul><h2 id="settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Settings</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Palette Trigger</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Command Palette</td><td class="px-4 py-2 border-b border-wiki-border/50">Set activation method</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Show Recent</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Command Palette</td><td class="px-4 py-2 border-b border-wiki-border/50">Enable recent actions</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Categories</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Command Palette</td><td class="px-4 py-2 border-b border-wiki-border/50">Show/hide categories</td></tr></tbody></table></div>
+<h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
+
+<h3 id="q-can-i-add-custom-actions-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I add custom actions?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Currently, the palette includes built-in actions. Custom macros may be added in future updates.</p>
+
+<h3 id="q-how-do-i-close-the-palette-without-selecting-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How do I close the palette without selecting?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Tap outside the palette, press back, or tap the close button.</p>
+
+<h3 id="q-why-don-t-i-see-certain-actions-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Why don't I see certain actions?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Some actions only appear in specific contexts (e.g., "Paste" when clipboard has content).</p>
+
+<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="../clipboard/shortcuts.md" class="text-wiki-accent hover:underline">Shortcuts</a> - Keyboard shortcuts</li>
+<li class="ml-4 py-1">&#8226; <a href="per-key-actions.md" class="text-wiki-accent hover:underline">Per-Key Actions</a> - Assign actions to swipes</li>
+<li class="ml-4 py-1">&#8226; <a href="extra-keys.md" class="text-wiki-accent hover:underline">Extra Keys</a> - Add action keys</li>
+
+</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/customization/command-palette-spec.md" class="text-wiki-accent hover:underline">Command Palette Technical Specification</a>.</p>
+
+                
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
+            
+                <a href="customization/themes.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500">Previous</div>
+                        <div class="font-medium">Themes</div>
+                    </div>
+                </a>
+            
+            
+                <a href="layouts/adding-layouts.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <div>
+                        <div class="text-xs uppercase text-gray-500">Next</div>
+                        <div class="font-medium">Adding Layouts</div>
+                    </div>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            
+        </div>
+    
+            </article>
+            
+        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
+            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
+            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
+                
+                    <li class="">
+                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#accessing-command-palette" class="text-gray-400 hover:text-wiki-primary transition-colors">Accessing Command Palette</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#method-1-long-press-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 1: Long-Press Settings</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#method-2-keyboard-shortcut" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 2: Keyboard Shortcut</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#method-3-from-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 3: From Settings</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#using-the-palette" class="text-gray-400 hover:text-wiki-primary transition-colors">Using the Palette</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#search" class="text-gray-400 hover:text-wiki-primary transition-colors">Search</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#browse-categories" class="text-gray-400 hover:text-wiki-primary transition-colors">Browse Categories</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#recent-actions" class="text-gray-400 hover:text-wiki-primary transition-colors">Recent Actions</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#available-actions" class="text-gray-400 hover:text-wiki-primary transition-colors">Available Actions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#text-actions" class="text-gray-400 hover:text-wiki-primary transition-colors">Text Actions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#navigation-actions" class="text-gray-400 hover:text-wiki-primary transition-colors">Navigation Actions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#input-actions" class="text-gray-400 hover:text-wiki-primary transition-colors">Input Actions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#settings-actions" class="text-gray-400 hover:text-wiki-primary transition-colors">Settings Actions</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#customization" class="text-gray-400 hover:text-wiki-primary transition-colors">Customization</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#reorder-actions" class="text-gray-400 hover:text-wiki-primary transition-colors">Reorder Actions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#add-to-favorites" class="text-gray-400 hover:text-wiki-primary transition-colors">Add to Favorites</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#hide-actions" class="text-gray-400 hover:text-wiki-primary transition-colors">Hide Actions</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Settings</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-can-i-add-custom-actions-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I add custom actions?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-how-do-i-close-the-palette-without-selecting-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How do I close the palette without selecting?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-why-don-t-i-see-certain-actions-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Why don't I see certain actions?</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
+                    </li>
+                
+            </ul>
+        </nav>
+    
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>

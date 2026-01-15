@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backup & Restore - CleverKeys Wiki</title>
+    <meta name="description" content="Export and import your settings">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wiki-primary': '#10b981',
+                        'wiki-primary-light': '#34d399',
+                        'wiki-accent': '#3b82f6',
+                        'wiki-dark': '#0d1117',
+                        'wiki-surface': '#161b22',
+                        'wiki-card': '#21262d',
+                        'wiki-border': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-wiki-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <span>/</span>
+            <span class="text-gray-300">Backup & Restore</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #ef444420; color: #ef4444">Troubleshooting</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">intermediate</span>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">Backup & Restore</h1>
+        <p class="text-xl text-gray-400">Export and import your settings</p>
+        
+        <div class="flex flex-wrap gap-2 mt-4">
+            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#backup</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#restore</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#export</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#import</span>
+        </div>
+    
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="flex gap-8">
+            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
+                <h1 class="text-3xl font-bold mb-6 text-white">Backup & Restore</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Protect your keyboard configuration by creating backups that can be restored later or transferred to another device.</p>
+
+<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">How</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Backup</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings > Profiles > Export</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Restore</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings > Profiles > Import</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Format</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">JSON file</td></tr></tbody></table></div>
+<h2 id="what-gets-backed-up" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">What Gets Backed Up</h2>
+
+<h3 id="full-profile-backup" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Full Profile Backup</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Component</th><th class="px-4 py-2 text-left border-b border-wiki-border">Included</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Settings</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">All preferences</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Theme</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Colors, appearance</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Customizations</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Per-key actions</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Extra Keys</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Bottom row setup</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Layouts</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Installed layouts, order</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Personal Dictionary</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Optional</td></tr></tbody></table></div>
+<h3 id="backup-contents" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Backup Contents</h3>
+
+<pre class="bg-wiki-dark p-4 rounded-lg overflow-x-auto my-4"><code class="language-json">{
+<p class="mb-4 text-gray-300 leading-relaxed">  "version": 1,</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  "exported": "2024-12-15T10:30:00Z",</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  "profile": {</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    "name": "My Profile",</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    "settings": { ... },</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    "theme": { ... },</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    "customizations": { ... },</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    "layouts": [ ... ],</p>
+<p class="mb-4 text-gray-300 leading-relaxed">    "dictionary": [ ... ]  // If included</p>
+<p class="mb-4 text-gray-300 leading-relaxed">  }</p>
+<p class="mb-4 text-gray-300 leading-relaxed">}</code></pre></p>
+
+<h2 id="creating-a-backup" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Creating a Backup</h2>
+
+<h3 id="step-1-open-profiles" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 1: Open Profiles</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open <strong class="font-semibold text-white">Settings</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Navigate to <strong class="font-semibold text-white">Profiles</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap <strong class="font-semibold text-white">Export Profile</strong></li>
+
+</ul><h3 id="step-2-choose-what-to-include" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 2: Choose What to Include</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Option</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Include Dictionary</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Personal words</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Include History</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Clipboard history</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Include Language Packs</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Downloaded packs</td></tr></tbody></table></div>
+<h3 id="step-3-save-file" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 3: Save File</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Choose location (Downloads, Cloud, etc.)</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Enter filename</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap <strong class="font-semibold text-white">Save</strong></li>
+
+</ul><h3 id="step-4-verify-backup" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 4: Verify Backup</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Check file exists in chosen location</li>
+<li class="ml-4 py-1">&#8226; File should be several KB to MB depending on contents</li>
+
+</ul><h2 id="restoring-from-backup" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Restoring from Backup</h2>
+
+<h3 id="step-1-access-import" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 1: Access Import</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open <strong class="font-semibold text-white">Settings > Profiles</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Import Profile</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Browse to backup file</li>
+
+</ul><h3 id="step-2-choose-what-to-restore" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 2: Choose What to Restore</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Option</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Replace All</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Overwrite current config</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Merge</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Add to existing config</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Preview</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">See contents first</td></tr></tbody></table></div>
+<h3 id="step-3-confirm-import" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 3: Confirm Import</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Review what will be changed</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Import</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Restart keyboard if prompted</li>
+
+</ul><h2 id="automatic-backups" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Automatic Backups</h2>
+
+<h3 id="enable-auto-backup" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Enable Auto-Backup</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Go to <strong class="font-semibold text-white">Settings > Profiles</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Enable <strong class="font-semibold text-white">Auto-Backup</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Choose frequency:</li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Daily</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Weekly</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - On change</p>
+
+<h3 id="backup-location" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Backup Location</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Auto-backups are stored in:</p>
+
+<pre class="bg-wiki-dark p-4 rounded-lg overflow-x-auto my-4"><code class="language-text">/storage/emulated/0/Android/data/app.cleverkeys/backups/</code></pre>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Or cloud location if configured.</p>
+
+<h3 id="manage-auto-backups" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Manage Auto-Backups</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Options</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Keep</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Last 5, 10, 20 backups</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Location</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Local, Google Drive</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Include Dictionary</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Yes/No</td></tr></tbody></table></div>
+<h2 id="transfer-to-new-device" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Transfer to New Device</h2>
+
+<h3 id="method-1-file-transfer" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 1: File Transfer</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Export profile on old device</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Transfer file (USB, email, cloud)</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Import on new device</li>
+
+</ul><h3 id="method-2-cloud-storage" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 2: Cloud Storage</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Export to Google Drive</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> On new device, import from Drive</li>
+
+</ul><h3 id="method-3-qr-code" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 3: QR Code</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Generate QR code from profile</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Scan on new device</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Profile imports automatically</li>
+
+</ul><h2 id="backup-best-practices" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Backup Best Practices</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Regular backups</strong>: Weekly or after major changes</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Multiple copies</strong>: Keep backups in different locations</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Test restores</strong>: Occasionally verify backups work</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Before updates</strong>: Backup before app updates</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Before reset</strong>: Always backup before resetting</li>
+
+</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Enable auto-backup to ensure you always have a recent backup available.</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
+<h2 id="troubleshooting-backups" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Troubleshooting Backups</h2>
+
+<h3 id="import-fails" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Import Fails</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Issue</th><th class="px-4 py-2 text-left border-b border-wiki-border">Solution</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">File corrupt</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Try different backup</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Version mismatch</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Update app first</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Permission denied</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Grant storage permission</td></tr></tbody></table></div>
+<h3 id="settings-not-applied" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Settings Not Applied</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Force stop keyboard</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Re-enable in system settings</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Try import again</li>
+
+</ul><h3 id="partial-restore" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Partial Restore</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">If only some settings restored:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Check what was included in backup</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Try <strong class="font-semibold text-white">Replace All</strong> instead of <strong class="font-semibold text-white">Merge</strong></li>
+
+</ul><h2 id="export-individual-components" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Export Individual Components</h2>
+
+<h3 id="dictionary-only" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Dictionary Only</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Settings > Privacy</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Export Dictionary</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Imports as separate file</li>
+
+</ul><h3 id="theme-only" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Theme Only</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Settings > Theme</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Export Theme</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Share with others</li>
+
+</ul><h3 id="customizations-only" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Customizations Only</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Settings > Customization</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Export Customizations</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Apply to other profiles</li>
+
+</ul><h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
+
+<h3 id="q-how-large-are-backup-files-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How large are backup files?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Typically 10KB-1MB without dictionary, up to 5MB with large dictionary.</p>
+
+<h3 id="q-can-i-share-backups-with-others-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I share backups with others?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, but personal dictionary may contain private words.</p>
+
+<h3 id="q-will-backup-work-across-app-versions-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Will backup work across app versions?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, backups include version info for compatibility.</p>
+
+<h3 id="q-can-i-edit-backup-files-manually-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I edit backup files manually?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, they're JSON. But be careful not to corrupt the format.</p>
+
+<h2 id="related-topics" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Topics</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="../layouts/profiles.md" class="text-wiki-accent hover:underline">Profiles</a> - Profile management</li>
+<li class="ml-4 py-1">&#8226; <a href="reset-defaults.md" class="text-wiki-accent hover:underline">Reset Defaults</a> - When backup isn't enough</li>
+<li class="ml-4 py-1">&#8226; <a href="../settings/privacy.md" class="text-wiki-accent hover:underline">Privacy</a> - What data is stored</li>
+</ul>
+                
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
+            
+                <a href="troubleshooting/reset-defaults.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500">Previous</div>
+                        <div class="font-medium">Reset to Defaults</div>
+                    </div>
+                </a>
+            
+            
+                <a href="troubleshooting/performance.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <div>
+                        <div class="text-xs uppercase text-gray-500">Next</div>
+                        <div class="font-medium">Performance Tips</div>
+                    </div>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            
+        </div>
+    
+            </article>
+            
+        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
+            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
+            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
+                
+                    <li class="">
+                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#what-gets-backed-up" class="text-gray-400 hover:text-wiki-primary transition-colors">What Gets Backed Up</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#full-profile-backup" class="text-gray-400 hover:text-wiki-primary transition-colors">Full Profile Backup</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#backup-contents" class="text-gray-400 hover:text-wiki-primary transition-colors">Backup Contents</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#creating-a-backup" class="text-gray-400 hover:text-wiki-primary transition-colors">Creating a Backup</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-1-open-profiles" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 1: Open Profiles</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-2-choose-what-to-include" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 2: Choose What to Include</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-3-save-file" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 3: Save File</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-4-verify-backup" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 4: Verify Backup</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#restoring-from-backup" class="text-gray-400 hover:text-wiki-primary transition-colors">Restoring from Backup</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-1-access-import" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 1: Access Import</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-2-choose-what-to-restore" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 2: Choose What to Restore</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-3-confirm-import" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 3: Confirm Import</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#automatic-backups" class="text-gray-400 hover:text-wiki-primary transition-colors">Automatic Backups</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#enable-auto-backup" class="text-gray-400 hover:text-wiki-primary transition-colors">Enable Auto-Backup</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#backup-location" class="text-gray-400 hover:text-wiki-primary transition-colors">Backup Location</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#manage-auto-backups" class="text-gray-400 hover:text-wiki-primary transition-colors">Manage Auto-Backups</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#transfer-to-new-device" class="text-gray-400 hover:text-wiki-primary transition-colors">Transfer to New Device</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#method-1-file-transfer" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 1: File Transfer</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#method-2-cloud-storage" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 2: Cloud Storage</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#method-3-qr-code" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 3: QR Code</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#backup-best-practices" class="text-gray-400 hover:text-wiki-primary transition-colors">Backup Best Practices</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#troubleshooting-backups" class="text-gray-400 hover:text-wiki-primary transition-colors">Troubleshooting Backups</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#import-fails" class="text-gray-400 hover:text-wiki-primary transition-colors">Import Fails</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#settings-not-applied" class="text-gray-400 hover:text-wiki-primary transition-colors">Settings Not Applied</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#partial-restore" class="text-gray-400 hover:text-wiki-primary transition-colors">Partial Restore</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#export-individual-components" class="text-gray-400 hover:text-wiki-primary transition-colors">Export Individual Components</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#dictionary-only" class="text-gray-400 hover:text-wiki-primary transition-colors">Dictionary Only</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#theme-only" class="text-gray-400 hover:text-wiki-primary transition-colors">Theme Only</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#customizations-only" class="text-gray-400 hover:text-wiki-primary transition-colors">Customizations Only</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-how-large-are-backup-files-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How large are backup files?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-can-i-share-backups-with-others-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I share backups with others?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-will-backup-work-across-app-versions-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Will backup work across app versions?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-can-i-edit-backup-files-manually-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I edit backup files manually?</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#related-topics" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Topics</a>
+                    </li>
+                
+            </ul>
+        </nav>
+    
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>

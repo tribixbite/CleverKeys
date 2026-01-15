@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Tips - CleverKeys Wiki</title>
+    <meta name="description" content="Optimize keyboard speed and responsiveness">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wiki-primary': '#10b981',
+                        'wiki-primary-light': '#34d399',
+                        'wiki-accent': '#3b82f6',
+                        'wiki-dark': '#0d1117',
+                        'wiki-surface': '#161b22',
+                        'wiki-card': '#21262d',
+                        'wiki-border': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-wiki-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <span>/</span>
+            <span class="text-gray-300">Performance Tips</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #ef444420; color: #ef4444">Troubleshooting</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">intermediate</span>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">Performance Tips</h1>
+        <p class="text-xl text-gray-400">Optimize keyboard speed and responsiveness</p>
+        
+        <div class="flex flex-wrap gap-2 mt-4">
+            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#performance</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#speed</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#lag</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#optimization</span>
+        </div>
+    
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="flex gap-8">
+            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
+                <h1 class="text-3xl font-bold mb-6 text-white">Performance</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Optimize CleverKeys for better speed, responsiveness, and battery efficiency.</p>
+
+<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Issue</th><th class="px-4 py-2 text-left border-b border-wiki-border">Common Cause</th><th class="px-4 py-2 text-left border-b border-wiki-border">Solution</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Slow typing</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Neural predictions</td><td class="px-4 py-2 border-b border-wiki-border/50">Reduce beam width</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Lag on open</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Large dictionary</td><td class="px-4 py-2 border-b border-wiki-border/50">Reduce history</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Battery drain</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Haptics, animations</td><td class="px-4 py-2 border-b border-wiki-border/50">Reduce feedback</td></tr></tbody></table></div>
+<h2 id="typing-speed-issues" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Typing Speed Issues</h2>
+
+<h3 id="issue-predictions-appear-slowly" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Predictions appear slowly</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Causes:</strong></p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Cause</th><th class="px-4 py-2 text-left border-b border-wiki-border">Impact</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50">High beam width</td><td class="px-4 py-2 border-b border-wiki-border/50">More processing</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Many languages</td><td class="px-4 py-2 border-b border-wiki-border/50">Multiple dictionaries</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Large vocabulary</td><td class="px-4 py-2 border-b border-wiki-border/50">Longer search</td></tr></tbody></table></div>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Reduce beam width</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Neural > Beam Width</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Try 3-5 instead of 8-10</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Reduce prediction count</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Predictions > Count</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Show fewer suggestions</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Disable unused languages</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Languages</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Keep only languages you use</p>
+
+<h3 id="issue-key-press-feels-delayed" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Key press feels delayed</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Reduce animations</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Appearance > Press Animation</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Set to "None" or "Highlight"</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Disable key popup</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Appearance > Key Pop-up</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Set to "Off"</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Check haptic timing</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Haptic feedback adds slight delay</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Try reducing intensity</p>
+
+<h2 id="startup-performance" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Startup Performance</h2>
+
+<h3 id="issue-keyboard-slow-to-appear" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Keyboard slow to appear</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Reduce clipboard history</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Privacy > History Size</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Use smaller limit</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Clear unused profiles</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Profiles</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Delete unused profiles</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Reduce installed layouts</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Layouts</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Remove layouts you don't use</p>
+
+<h3 id="issue-first-swipe-word-slow" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: First swipe word slow</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Explanation:</strong></p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Neural model loads on first use. This is normal.</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Enable background loading</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Neural > Background Processing</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Model preloads during idle time</p>
+
+<h2 id="memory-usage" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Memory Usage</h2>
+
+<h3 id="factors-affecting-memory" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Factors Affecting Memory</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Factor</th><th class="px-4 py-2 text-left border-b border-wiki-border">Memory Impact</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Language packs</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">5-30 MB each</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Clipboard history</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Varies with content</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Neural model</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">~10 MB</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Personal dictionary</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Usually < 1 MB</td></tr></tbody></table></div>
+<h3 id="reduce-memory-usage" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Reduce Memory Usage</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Remove unused language packs</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Language Packs > Downloaded</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Delete unneeded packs</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Reduce clipboard history</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Privacy > History Size</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Smaller = less memory</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Clear cache periodically</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Android Settings > Apps > CleverKeys > Storage</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Clear Cache</p>
+
+<h2 id="battery-optimization" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Battery Optimization</h2>
+
+<h3 id="battery-impact-factors" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Battery Impact Factors</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Feature</th><th class="px-4 py-2 text-left border-b border-wiki-border">Battery Impact</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Haptics</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Medium</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Animations</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Low-Medium</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Neural predictions</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Medium</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Background processing</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Low</td></tr></tbody></table></div>
+<h3 id="reduce-battery-usage" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Reduce Battery Usage</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Reduce haptics</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Haptics > Intensity</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Use "Light" or disable</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Disable unneeded haptic events</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Haptics</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Turn off events you don't need</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Reduce animations</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Appearance > Press Animation</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Set to "None"</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> <strong class="font-semibold text-white">Disable background processing</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Neural > Background Processing</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Turn off if battery is critical</p>
+
+<h2 id="performance-settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Performance Settings</h2>
+
+<h3 id="quick-performance-profile" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Quick Performance Profile</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">For maximum speed:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Value</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50">Beam Width</td><td class="px-4 py-2 border-b border-wiki-border/50">3</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Prediction Count</td><td class="px-4 py-2 border-b border-wiki-border/50">3</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Press Animation</td><td class="px-4 py-2 border-b border-wiki-border/50">None</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Key Pop-up</td><td class="px-4 py-2 border-b border-wiki-border/50">Off</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Haptics</td><td class="px-4 py-2 border-b border-wiki-border/50">Off or Light</td></tr></tbody></table></div>
+<h3 id="quality-vs-speed" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Quality vs Speed</h3>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Priority</th><th class="px-4 py-2 text-left border-b border-wiki-border">Settings</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Speed</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Lower beam, fewer predictions, no animations</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Quality</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Higher beam, more predictions</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Balanced</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Default settings</td></tr></tbody></table></div>
+<h2 id="device-specific-tips" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Device-Specific Tips</h2>
+
+<h3 id="older-devices" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Older Devices</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Use lower neural settings</li>
+<li class="ml-4 py-1">&#8226; Disable animations</li>
+<li class="ml-4 py-1">&#8226; Keep fewer layouts installed</li>
+<li class="ml-4 py-1">&#8226; Use compact keyboard height</li>
+
+</ul><h3 id="low-memory-devices" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Low-Memory Devices</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Remove unused language packs</li>
+<li class="ml-4 py-1">&#8226; Reduce clipboard history to 10 items</li>
+<li class="ml-4 py-1">&#8226; Clear cache weekly</li>
+<li class="ml-4 py-1">&#8226; Disable background processing</li>
+
+</ul><h3 id="high-performance-devices" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">High-Performance Devices</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Can use maximum neural settings</li>
+<li class="ml-4 py-1">&#8226; Enable all animations</li>
+<li class="ml-4 py-1">&#8226; Keep many languages</li>
+
+</ul><h2 id="monitoring-performance" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Monitoring Performance</h2>
+
+<h3 id="check-response-time" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Check Response Time</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Settings > About > Show Debug Info</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Shows:</p>
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Prediction time</li>
+<li class="ml-4 py-1">&#8226; Render time</li>
+<li class="ml-4 py-1">&#8226; Memory usage</li>
+
+</ul><h3 id="identify-issues" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Identify Issues</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">If prediction time > 100ms:</p>
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Reduce beam width</li>
+<li class="ml-4 py-1">&#8226; Disable unused languages</li>
+
+</ul><p class="mb-4 text-gray-300 leading-relaxed">If render time > 16ms:</p>
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Reduce animations</li>
+<li class="ml-4 py-1">&#8226; Simplify theme</li>
+
+</ul><h2 id="tips-for-best-performance" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips for Best Performance</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Regular cleanup</strong>: Clear cache monthly</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Update regularly</strong>: Updates often include performance improvements</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Report issues</strong>: Unexpected slowness may be a bug</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Test changes</strong>: After adjusting, test typing feel</li>
+
+</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">If keyboard suddenly becomes slow, try clearing cache first. Many issues resolve with a cache clear.</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
+<h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
+
+<h3 id="q-will-disabling-predictions-make-typing-faster-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Will disabling predictions make typing faster?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, but you lose a key feature. Try reducing instead of disabling.</p>
+
+<h3 id="q-does-keyboard-size-affect-performance-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Does keyboard size affect performance?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Minimally. Render time is slightly higher for larger keyboards.</p>
+
+<h3 id="q-why-is-swipe-typing-slower-than-tap-typing-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Why is swipe typing slower than tap typing?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Swipe requires neural processing. This is expected behavior.</p>
+
+<h3 id="q-should-i-use-battery-optimization-for-cleverkeys-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Should I use battery optimization for CleverKeys?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: No. Battery optimization may cause keyboard to be killed, making it slow to appear.</p>
+
+<h2 id="related-topics" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Topics</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="../settings/neural-settings.md" class="text-wiki-accent hover:underline">Neural Settings</a> - Prediction configuration</li>
+<li class="ml-4 py-1">&#8226; <a href="../settings/appearance.md" class="text-wiki-accent hover:underline">Appearance</a> - Animation settings</li>
+<li class="ml-4 py-1">&#8226; <a href="../settings/haptics.md" class="text-wiki-accent hover:underline">Haptics</a> - Vibration settings</li>
+</ul>
+                
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
+            
+                <a href="troubleshooting/backup-restore.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500">Previous</div>
+                        <div class="font-medium">Backup & Restore</div>
+                    </div>
+                </a>
+            
+            <div></div>
+        </div>
+    
+            </article>
+            
+        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
+            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
+            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
+                
+                    <li class="">
+                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#typing-speed-issues" class="text-gray-400 hover:text-wiki-primary transition-colors">Typing Speed Issues</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#issue-predictions-appear-slowly" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Predictions appear slowly</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#issue-key-press-feels-delayed" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Key press feels delayed</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#startup-performance" class="text-gray-400 hover:text-wiki-primary transition-colors">Startup Performance</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#issue-keyboard-slow-to-appear" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Keyboard slow to appear</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#issue-first-swipe-word-slow" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: First swipe word slow</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#memory-usage" class="text-gray-400 hover:text-wiki-primary transition-colors">Memory Usage</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#factors-affecting-memory" class="text-gray-400 hover:text-wiki-primary transition-colors">Factors Affecting Memory</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#reduce-memory-usage" class="text-gray-400 hover:text-wiki-primary transition-colors">Reduce Memory Usage</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#battery-optimization" class="text-gray-400 hover:text-wiki-primary transition-colors">Battery Optimization</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#battery-impact-factors" class="text-gray-400 hover:text-wiki-primary transition-colors">Battery Impact Factors</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#reduce-battery-usage" class="text-gray-400 hover:text-wiki-primary transition-colors">Reduce Battery Usage</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#performance-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Performance Settings</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#quick-performance-profile" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Performance Profile</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#quality-vs-speed" class="text-gray-400 hover:text-wiki-primary transition-colors">Quality vs Speed</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#device-specific-tips" class="text-gray-400 hover:text-wiki-primary transition-colors">Device-Specific Tips</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#older-devices" class="text-gray-400 hover:text-wiki-primary transition-colors">Older Devices</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#low-memory-devices" class="text-gray-400 hover:text-wiki-primary transition-colors">Low-Memory Devices</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#high-performance-devices" class="text-gray-400 hover:text-wiki-primary transition-colors">High-Performance Devices</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#monitoring-performance" class="text-gray-400 hover:text-wiki-primary transition-colors">Monitoring Performance</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#check-response-time" class="text-gray-400 hover:text-wiki-primary transition-colors">Check Response Time</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#identify-issues" class="text-gray-400 hover:text-wiki-primary transition-colors">Identify Issues</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#tips-for-best-performance" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips for Best Performance</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-will-disabling-predictions-make-typing-faster-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Will disabling predictions make typing faster?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-does-keyboard-size-affect-performance-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Does keyboard size affect performance?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-why-is-swipe-typing-slower-than-tap-typing-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Why is swipe typing slower than tap typing?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-should-i-use-battery-optimization-for-cleverkeys-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Should I use battery optimization for CleverKeys?</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#related-topics" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Topics</a>
+                    </li>
+                
+            </ul>
+        </nav>
+    
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>

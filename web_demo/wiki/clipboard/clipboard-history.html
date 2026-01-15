@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clipboard History - CleverKeys Wiki</title>
+    <meta name="description" content="Access recently copied text">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wiki-primary': '#10b981',
+                        'wiki-primary-light': '#34d399',
+                        'wiki-accent': '#3b82f6',
+                        'wiki-dark': '#0d1117',
+                        'wiki-surface': '#161b22',
+                        'wiki-card': '#21262d',
+                        'wiki-border': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-wiki-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <span>/</span>
+            <span class="text-gray-300">Clipboard History</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #14b8a620; color: #14b8a6">Clipboard</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">beginner</span>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">Clipboard History</h1>
+        <p class="text-xl text-gray-400">Access recently copied text</p>
+        
+        <div class="flex flex-wrap gap-2 mt-4">
+            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#clipboard</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#history</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#copy</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#paste</span>
+        </div>
+    
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="flex gap-8">
+            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
+                <h1 class="text-3xl font-bold mb-6 text-white">Clipboard History</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys maintains a history of text you've copied, making it easy to paste items from earlier.</p>
+
+<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Access previous clipboard items</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Long-press paste key or clipboard icon</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Capacity</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Up to 25 items</td></tr></tbody></table></div>
+<h2 id="accessing-clipboard-history" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Accessing Clipboard History</h2>
+
+<h3 id="method-1-long-press-paste" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 1: Long-Press Paste</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Long-press</strong> the paste key</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Clipboard history panel opens</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap any item to paste</li>
+
+</ul><h3 id="method-2-clipboard-icon" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 2: Clipboard Icon</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">If clipboard icon is shown:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Tap the <strong class="font-semibold text-white">clipboard icon</strong> in toolbar</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> History panel opens</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap item to paste</li>
+
+</ul><h3 id="method-3-command-palette" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 3: Command Palette</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open command palette</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Type "clipboard" or "history"</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Select <strong class="font-semibold text-white">Clipboard History</strong></li>
+
+</ul><h2 id="using-clipboard-history" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Using Clipboard History</h2>
+
+<h3 id="paste-from-history" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Paste from History</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open clipboard history</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Tap</strong> any item</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Item is pasted at cursor position</li>
+
+</ul><h3 id="copy-item-again" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Copy Item Again</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open clipboard history</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Long-press</strong> item</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Select <strong class="font-semibold text-white">Copy</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Item moves to top of history</li>
+
+</ul><h3 id="delete-item" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Delete Item</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open clipboard history</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Swipe left</strong> on item</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Or long-press and select <strong class="font-semibold text-white">Delete</strong></li>
+
+</ul><h2 id="pin-items" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Pin Items</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Keep important items from being removed:</p>
+
+<h3 id="pin-an-item" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Pin an Item</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open clipboard history</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Long-press</strong> item</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Select <strong class="font-semibold text-white">Pin</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Item shows pin icon</li>
+
+</ul><h3 id="unpin-item" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Unpin Item</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Long-press</strong> pinned item</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Select <strong class="font-semibold text-white">Unpin</strong></li>
+
+</ul><p class="mb-4 text-gray-300 leading-relaxed">Pinned items:</p>
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Stay at top of list</li>
+<li class="ml-4 py-1">&#8226; Don't auto-expire</li>
+<li class="ml-4 py-1">&#8226; Don't count toward limit</li>
+
+</ul><h2 id="search-history" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Search History</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Find items in your clipboard:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open clipboard history</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">search icon</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Type search term</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Matching items shown</li>
+
+</ul><h2 id="history-panel-layout" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">History Panel Layout</h2>
+
+<pre class="bg-wiki-dark p-4 rounded-lg overflow-x-auto my-4"><code class="language-text">┌─────────────────────────────────────┐
+<p class="mb-4 text-gray-300 leading-relaxed">│ Clipboard History           [🔍] [X]│</p>
+<p class="mb-4 text-gray-300 leading-relaxed">├─────────────────────────────────────┤</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ 📌 Pinned item text...              │ ← Pinned</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ 📌 Another pinned item...           │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">├─────────────────────────────────────┤</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ Recently copied text here...        │ ← Recent</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ Another clipboard item...           │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ More text from earlier...           │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ ...                                 │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">├─────────────────────────────────────┤</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ [Clear All]      [Settings]         │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">└─────────────────────────────────────┘</code></pre></p>
+
+<h2 id="privacy-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Privacy Features</h2>
+
+<h3 id="auto-expiry" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Auto-Expiry</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Items automatically expire based on your settings:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Behavior</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">1 hour</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Items deleted after 1 hour</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">24 hours</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Items deleted after 1 day</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">7 days</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Items deleted after 1 week</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Never</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Items kept until manually deleted</td></tr></tbody></table></div>
+<h3 id="password-protection" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Password Protection</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys automatically detects password fields:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Behavior</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Don't save</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Password field text not saved to history</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Mask display</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Sensitive items show as "••••"</td></tr></tbody></table></div>
+<h3 id="incognito-mode" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Incognito Mode</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">When incognito is active:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Nothing saved to clipboard history</li>
+<li class="ml-4 py-1">&#8226; Existing history still accessible</li>
+<li class="ml-4 py-1">&#8226; New copies are temporary only</li>
+
+</ul><h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Pin frequently used</strong>: Pin items you paste often</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Clear sensitive data</strong>: Regularly clear history with sensitive info</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Search long history</strong>: Use search for older items</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Quick access</strong>: Enable clipboard icon for one-tap access</li>
+
+</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Double-tap the paste key as a shortcut to open clipboard history.</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
+<h2 id="settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Settings</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Enable History</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Privacy</td><td class="px-4 py-2 border-b border-wiki-border/50">Turn history on/off</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">History Size</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Clipboard</td><td class="px-4 py-2 border-b border-wiki-border/50">Maximum items</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Auto-Expiry</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Privacy</td><td class="px-4 py-2 border-b border-wiki-border/50">Automatic deletion</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Show Icon</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Toolbar</td><td class="px-4 py-2 border-b border-wiki-border/50">Clipboard icon visibility</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Password Detection</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Privacy</td><td class="px-4 py-2 border-b border-wiki-border/50">Detect password fields</td></tr></tbody></table></div>
+<h2 id="clear-history" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Clear History</h2>
+
+<h3 id="clear-all-items" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Clear All Items</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open clipboard history</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Clear All</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Confirm deletion</li>
+
+</ul><h3 id="clear-unpinned-only" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Clear Unpinned Only</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Long-press <strong class="font-semibold text-white">Clear All</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Select <strong class="font-semibold text-white">Clear Unpinned</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Pinned items preserved</li>
+
+</ul><h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
+
+<h3 id="q-why-don-t-i-see-clipboard-history-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Why don't I see clipboard history?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Check that it's enabled in Settings > Privacy > Clipboard History.</p>
+
+<h3 id="q-why-wasn-t-my-copied-text-saved-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Why wasn't my copied text saved?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: It may have been from a password field, or incognito mode was active.</p>
+
+<h3 id="q-can-i-recover-deleted-items-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I recover deleted items?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: No, deleted items cannot be recovered. Pin important items.</p>
+
+<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="text-selection.md" class="text-wiki-accent hover:underline">Text Selection</a> - Select text efficiently</li>
+<li class="ml-4 py-1">&#8226; <a href="shortcuts.md" class="text-wiki-accent hover:underline">Shortcuts</a> - Keyboard shortcuts for clipboard</li>
+<li class="ml-4 py-1">&#8226; <a href="../settings/privacy.md" class="text-wiki-accent hover:underline">Privacy</a> - Privacy settings</li>
+
+</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/clipboard/clipboard-history-spec.md" class="text-wiki-accent hover:underline">Clipboard History Technical Specification</a>.</p>
+
+                
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
+            
+                <a href="settings/accessibility.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500">Previous</div>
+                        <div class="font-medium">Accessibility</div>
+                    </div>
+                </a>
+            
+            
+                <a href="clipboard/text-selection.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <div>
+                        <div class="text-xs uppercase text-gray-500">Next</div>
+                        <div class="font-medium">Text Selection</div>
+                    </div>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            
+        </div>
+    
+            </article>
+            
+        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
+            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
+            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
+                
+                    <li class="">
+                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#accessing-clipboard-history" class="text-gray-400 hover:text-wiki-primary transition-colors">Accessing Clipboard History</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#method-1-long-press-paste" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 1: Long-Press Paste</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#method-2-clipboard-icon" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 2: Clipboard Icon</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#method-3-command-palette" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 3: Command Palette</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#using-clipboard-history" class="text-gray-400 hover:text-wiki-primary transition-colors">Using Clipboard History</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#paste-from-history" class="text-gray-400 hover:text-wiki-primary transition-colors">Paste from History</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#copy-item-again" class="text-gray-400 hover:text-wiki-primary transition-colors">Copy Item Again</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#delete-item" class="text-gray-400 hover:text-wiki-primary transition-colors">Delete Item</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#pin-items" class="text-gray-400 hover:text-wiki-primary transition-colors">Pin Items</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#pin-an-item" class="text-gray-400 hover:text-wiki-primary transition-colors">Pin an Item</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#unpin-item" class="text-gray-400 hover:text-wiki-primary transition-colors">Unpin Item</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#search-history" class="text-gray-400 hover:text-wiki-primary transition-colors">Search History</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#history-panel-layout" class="text-gray-400 hover:text-wiki-primary transition-colors">History Panel Layout</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#privacy-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Privacy Features</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#auto-expiry" class="text-gray-400 hover:text-wiki-primary transition-colors">Auto-Expiry</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#password-protection" class="text-gray-400 hover:text-wiki-primary transition-colors">Password Protection</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#incognito-mode" class="text-gray-400 hover:text-wiki-primary transition-colors">Incognito Mode</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Settings</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#clear-history" class="text-gray-400 hover:text-wiki-primary transition-colors">Clear History</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#clear-all-items" class="text-gray-400 hover:text-wiki-primary transition-colors">Clear All Items</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#clear-unpinned-only" class="text-gray-400 hover:text-wiki-primary transition-colors">Clear Unpinned Only</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-why-don-t-i-see-clipboard-history-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Why don't I see clipboard history?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-why-wasn-t-my-copied-text-saved-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Why wasn't my copied text saved?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-can-i-recover-deleted-items-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I recover deleted items?</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
+                    </li>
+                
+            </ul>
+        </nav>
+    
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>
