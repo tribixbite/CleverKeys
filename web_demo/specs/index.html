@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - CleverKeys</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'ck-purple': '#9b59b6',
+                        'ck-purple-dark': '#6b21a8',
+                        'ck-purple-light': '#c39bd3',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #9b59b6 0%, #c39bd3 50%, #9b59b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-ck-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 py-12 text-center">
+        <h1 class="text-4xl font-bold gradient-text mb-4">CleverKeys Documentation</h1>
+        <p class="text-xl text-gray-400 max-w-2xl mx-auto">Feature specifications and technical documentation</p>
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20 max-w-4xl">
+        
+        <section class="mb-12">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full" style="background: #9b59b6"></span>
+                Core
+            </h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                
+            <a href="neural-prediction.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-purple/30">
+                <h3 class="font-semibold mb-1">Neural Prediction</h3>
+                <p class="text-sm text-gray-400">ONNX transformer-based swipe typing engine</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="text-xs px-2 py-0.5 rounded bg-ck-dark text-gray-500">v1.0.0</span>
+                </div>
+            </a>
+        
+            <a href="gesture-system.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-purple/30">
+                <h3 class="font-semibold mb-1">Gesture System</h3>
+                <p class="text-sm text-gray-400">Swipe detection, multi-touch, and gesture trails</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="text-xs px-2 py-0.5 rounded bg-ck-dark text-gray-500">v1.0.0</span>
+                </div>
+            </a>
+        
+            </div>
+        </section>
+        <section class="mb-12">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full" style="background: #3498db"></span>
+                Gestures
+            </h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                
+            <a href="selection-delete-mode.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-purple/30">
+                <h3 class="font-semibold mb-1">Selection-Delete Mode</h3>
+                <p class="text-sm text-gray-400">Text selection via backspace swipe-hold gesture</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="text-xs px-2 py-0.5 rounded bg-ck-dark text-gray-500">v1.2.4</span>
+                </div>
+            </a>
+        
+            <a href="trackpoint-navigation-mode.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-purple/30">
+                <h3 class="font-semibold mb-1">TrackPoint Navigation</h3>
+                <p class="text-sm text-gray-400">Joystick-style cursor control on navigation keys</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="text-xs px-2 py-0.5 rounded bg-ck-dark text-gray-500">v1.2.4</span>
+                </div>
+            </a>
+        
+            </div>
+        </section>
+        <section class="mb-12">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full" style="background: #2ecc71"></span>
+                Navigation
+            </h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                
+            <a href="cursor-navigation-system.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-purple/30">
+                <h3 class="font-semibold mb-1">Cursor Navigation</h3>
+                <p class="text-sm text-gray-400">Spacebar slider and arrow key navigation</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="text-xs px-2 py-0.5 rounded bg-ck-dark text-gray-500">v1.1.0</span>
+                </div>
+            </a>
+        
+            </div>
+        </section>
+        <section class="mb-12">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full" style="background: #e74c3c"></span>
+                Customization
+            </h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                
+            <a href="short-swipe-customization.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-purple/30">
+                <h3 class="font-semibold mb-1">Short Swipe Customization</h3>
+                <p class="text-sm text-gray-400">Per-key gesture customization with 8 directions</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="text-xs px-2 py-0.5 rounded bg-ck-dark text-gray-500">v1.2.0</span>
+                </div>
+            </a>
+        
+            </div>
+        </section>
+        <section class="mb-12">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full" style="background: #f39c12"></span>
+                Settings
+            </h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                
+            <a href="settings-system.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-purple/30">
+                <h3 class="font-semibold mb-1">Settings System</h3>
+                <p class="text-sm text-gray-400">User preferences and keyboard configuration</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="text-xs px-2 py-0.5 rounded bg-ck-dark text-gray-500">v1.0.0</span>
+                </div>
+            </a>
+        
+            </div>
+        </section>
+        <section class="mb-12">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full" style="background: #1abc9c"></span>
+                Languages
+            </h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                
+            <a href="dictionary-and-language-system.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-purple/30">
+                <h3 class="font-semibold mb-1">Dictionary & Languages</h3>
+                <p class="text-sm text-gray-400">Multi-language support and language packs</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="text-xs px-2 py-0.5 rounded bg-ck-dark text-gray-500">v1.1.84</span>
+                </div>
+            </a>
+        
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>

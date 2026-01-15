@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Short Swipe Customization - CleverKeys Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'ck-purple': '#9b59b6',
+                        'ck-purple-dark': '#6b21a8',
+                        'ck-purple-light': '#c39bd3',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #9b59b6 0%, #c39bd3 50%, #9b59b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-ck-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-gray-400 hover:text-white transition-colors">All Specs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-ck-purple">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-ck-purple">Specs</a>
+            <span>/</span>
+            <span class="text-gray-300">Short Swipe Customization</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-8">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #e74c3c20; color: #e74c3c">Customization</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">v1.2.0</span>
+        </div>
+        <h1 class="text-4xl font-bold gradient-text mb-2">Short Swipe Customization</h1>
+        <p class="text-xl text-gray-400">Per-key gesture customization with 8 directions</p>
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <h1 class="text-3xl font-bold mb-6 gradient-text">Short Swipe Customization Feature Specification</h1>
+
+<p class="mb-4 text-gray-300"><strong>Status</strong>: Complete ✅</p>
+<p class="mb-4 text-gray-300"><strong>Branch</strong>: <code class="bg-ck-dark px-1 rounded">main</code> (merged)</p>
+<p class="mb-4 text-gray-300"><strong>Created</strong>: 2025-12-05</p>
+<p class="mb-4 text-gray-300"><strong>Updated</strong>: 2025-12-23</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
+
+<p class="mb-4 text-gray-300">Allow users to fully customize short swipe gestures for every key on the keyboard through a dedicated settings UI.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">User Flow</h2>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">Settings -&gt; Short Swipe Customization
+<p class="mb-4 text-gray-300">    |</p>
+<p class="mb-4 text-gray-300">    v</p>
+<p class="mb-4 text-gray-300">+------------------------------------------+</p>
+<p class="mb-4 text-gray-300">|  [Interactive Keyboard Preview]          |</p>
+<p class="mb-4 text-gray-300">|                                          |</p>
+<p class="mb-4 text-gray-300">|   q  w  e  r  t  y  u  i  o  p           |</p>
+<p class="mb-4 text-gray-300">|   a  s  d  f  g  h  j  k  l              |</p>
+<p class="mb-4 text-gray-300">|   z  x  c  v  b  n  m                    |</p>
+<p class="mb-4 text-gray-300">|                                          |</p>
+<p class="mb-4 text-gray-300">|  +------------------------------------+  |</p>
+<p class="mb-4 text-gray-300">|  |   Press a key to customize         |  |</p>
+<p class="mb-4 text-gray-300">|  +------------------------------------+  |</p>
+<p class="mb-4 text-gray-300">+------------------------------------------+</p>
+<p class="mb-4 text-gray-300">    |</p>
+<p class="mb-4 text-gray-300">    | (user taps 'e' key)</p>
+<p class="mb-4 text-gray-300">    v</p>
+<p class="mb-4 text-gray-300">+------------------------------------------+</p>
+<p class="mb-4 text-gray-300">|         Key Customization Modal          |</p>
+<p class="mb-4 text-gray-300">|                                          |</p>
+<p class="mb-4 text-gray-300">|              [NW] [N] [NE]               |</p>
+<p class="mb-4 text-gray-300">|               \   |   /                  |</p>
+<p class="mb-4 text-gray-300">|          [W] - [E] - [E]                 |</p>
+<p class="mb-4 text-gray-300">|               /   |   \                  |</p>
+<p class="mb-4 text-gray-300">|              [SW] [S] [SE]               |</p>
+<p class="mb-4 text-gray-300">|                                          |</p>
+<p class="mb-4 text-gray-300">|  Tap a direction to edit binding         |</p>
+<p class="mb-4 text-gray-300">|  [Reset Key] [Close]                     |</p>
+<p class="mb-4 text-gray-300">+------------------------------------------+</p>
+<p class="mb-4 text-gray-300">    |</p>
+<p class="mb-4 text-gray-300">    | (user taps NE position)</p>
+<p class="mb-4 text-gray-300">    v</p>
+<p class="mb-4 text-gray-300">+------------------------------------------+</p>
+<p class="mb-4 text-gray-300">|         Direction Editor                 |</p>
+<p class="mb-4 text-gray-300">|                                          |</p>
+<p class="mb-4 text-gray-300">|  Direction: Northeast (NE)               |</p>
+<p class="mb-4 text-gray-300">|                                          |</p>
+<p class="mb-4 text-gray-300">|  Display Text: [____] (max 4 chars)      |</p>
+<p class="mb-4 text-gray-300">|                                          |</p>
+<p class="mb-4 text-gray-300">|  Action Type: [Text v]                   |</p>
+<p class="mb-4 text-gray-300">|    - Text Input                          |</p>
+<p class="mb-4 text-gray-300">|    - Command                             |</p>
+<p class="mb-4 text-gray-300">|    - Key Event                           |</p>
+<p class="mb-4 text-gray-300">|                                          |</p>
+<p class="mb-4 text-gray-300">|  Action Value: [________________]        |</p>
+<p class="mb-4 text-gray-300">|  (up to 100 characters for text)         |</p>
+<p class="mb-4 text-gray-300">|                                          |</p>
+<p class="mb-4 text-gray-300">|  [Delete] [Cancel] [Save]                |</p>
+<p class="mb-4 text-gray-300">+------------------------------------------+</code></pre></p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Data Model</h2>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// SwipeDirection.kt
+<p class="mb-4 text-gray-300">enum class SwipeDirection {</p>
+<p class="mb-4 text-gray-300">    N,   // North (up)</p>
+<p class="mb-4 text-gray-300">    NE,  // Northeast</p>
+<p class="mb-4 text-gray-300">    E,   // East (right)</p>
+<p class="mb-4 text-gray-300">    SE,  // Southeast</p>
+<p class="mb-4 text-gray-300">    S,   // South (down)</p>
+<p class="mb-4 text-gray-300">    SW,  // Southwest</p>
+<p class="mb-4 text-gray-300">    W,   // West (left)</p>
+<p class="mb-4 text-gray-300">    NW   // Northwest</p>
+<p class="mb-4 text-gray-300">}</p>
+
+<p class="mb-4 text-gray-300">// ActionType.kt</p>
+<p class="mb-4 text-gray-300">enum class ActionType {</p>
+<p class="mb-4 text-gray-300">    TEXT,     // Insert text string</p>
+<p class="mb-4 text-gray-300">    COMMAND,  // Execute editing command</p>
+<p class="mb-4 text-gray-300">    KEY_EVENT // Send key event</p>
+<p class="mb-4 text-gray-300">}</p>
+
+<p class="mb-4 text-gray-300">// ShortSwipeMapping.kt</p>
+<p class="mb-4 text-gray-300">data class ShortSwipeMapping(</p>
+<p class="mb-4 text-gray-300">    val keyCode: String,           // Key identifier</p>
+<p class="mb-4 text-gray-300">    val direction: SwipeDirection,</p>
+<p class="mb-4 text-gray-300">    val displayText: String,       // Max 4 chars for display (icon or text)</p>
+<p class="mb-4 text-gray-300">    val actionType: ActionType,</p>
+<p class="mb-4 text-gray-300">    val actionValue: String,       // Text or command name</p>
+<p class="mb-4 text-gray-300">    val useKeyFont: Boolean = false // Use special_font.ttf for icons</p>
+<p class="mb-4 text-gray-300">)</code></pre></p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Available Commands</h2>
+
+<p class="mb-4 text-gray-300">Commands are organized in 18 categories with 200+ total commands. See <code class="bg-ck-dark px-1 rounded">CommandRegistry.kt</code> for the complete list.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Core Categories</h3>
+
+<p class="mb-4 text-gray-300">| Category | Description | Example Commands |</p>
+<p class="mb-4 text-gray-300">|----------|-------------|------------------|</p>
+<p class="mb-4 text-gray-300">| CLIPBOARD | Clipboard operations | copy, paste, cut, paste_plain |</p>
+<p class="mb-4 text-gray-300">| EDITING | Edit operations | undo, redo, select_all |</p>
+<p class="mb-4 text-gray-300">| CURSOR | Cursor movement | cursor_left, cursor_right, home, end |</p>
+<p class="mb-4 text-gray-300">| NAVIGATION | Document navigation | page_up, page_down, doc_home, doc_end |</p>
+<p class="mb-4 text-gray-300">| SELECTION | Selection operations | select_all, selection_mode |</p>
+<p class="mb-4 text-gray-300">| DELETE | Delete operations | delete_word, forward_delete_word |</p>
+<p class="mb-4 text-gray-300">| MODIFIERS | Modifier keys | shift, ctrl, alt, meta, fn |</p>
+<p class="mb-4 text-gray-300">| FUNCTION_KEYS | Function keys | f1-f12 |</p>
+<p class="mb-4 text-gray-300">| SPECIAL_KEYS | Special keyboard keys | escape, tab, insert, print_screen |</p>
+<p class="mb-4 text-gray-300">| EVENTS | Keyboard events | config, change_method, action, caps_lock |</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Character & Symbol Categories</h3>
+
+<p class="mb-4 text-gray-300">| Category | Description | Example Commands |</p>
+<p class="mb-4 text-gray-300">|----------|-------------|------------------|</p>
+<p class="mb-4 text-gray-300">| SPACES | Space & formatting | nbsp (non-breaking space), zwj, zwnj |</p>
+<p class="mb-4 text-gray-300">| DIACRITICS | Combining diacritics | combining_grave, combining_acute, etc. |</p>
+<p class="mb-4 text-gray-300">| DIACRITICS_SLAVONIC | Slavonic combining marks | combining_titlo, combining_palatalization, etc. |</p>
+<p class="mb-4 text-gray-300">| DIACRITICS_ARABIC | Arabic combining marks | arabic_fatha, arabic_kasra, arabic_sukun, etc. |</p>
+<p class="mb-4 text-gray-300">| HEBREW | Hebrew niqqud marks | hebrew_dagesh, hebrew_qamats, hebrew_tsere, etc. |</p>
+<p class="mb-4 text-gray-300">| TEXT | Text input | Various character keys |</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Media & System Categories (New 2025-12-21)</h3>
+
+<p class="mb-4 text-gray-300">| Category | Description | Example Commands |</p>
+<p class="mb-4 text-gray-300">|----------|-------------|------------------|</p>
+<p class="mb-4 text-gray-300">| MEDIA | Media playback controls | media_play_pause, media_next, media_previous, volume_up, volume_down, volume_mute |</p>
+<p class="mb-4 text-gray-300">| SYSTEM | System/app launcher keys | search, calculator, calendar, contacts, explorer, notification, brightness_up, brightness_down, zoom_in, zoom_out |</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Most Used Commands</h3>
+
+<p class="mb-4 text-gray-300">| Command | Description |</p>
+<p class="mb-4 text-gray-300">|---------|-------------|</p>
+<p class="mb-4 text-gray-300">| copy | Copy selected text |</p>
+<p class="mb-4 text-gray-300">| paste | Paste from clipboard |</p>
+<p class="mb-4 text-gray-300">| cut | Cut selected text |</p>
+<p class="mb-4 text-gray-300">| select_all | Select all text |</p>
+<p class="mb-4 text-gray-300">| undo | Undo last action |</p>
+<p class="mb-4 text-gray-300">| redo | Redo last action |</p>
+<p class="mb-4 text-gray-300">| cursor_left | Move cursor left |</p>
+<p class="mb-4 text-gray-300">| cursor_right | Move cursor right |</p>
+<p class="mb-4 text-gray-300">| home | Move to line start |</p>
+<p class="mb-4 text-gray-300">| end | Move to line end |</p>
+<p class="mb-4 text-gray-300">| doc_home | Move to document start (Ctrl+Home) |</p>
+<p class="mb-4 text-gray-300">| doc_end | Move to document end (Ctrl+End) |</p>
+<p class="mb-4 text-gray-300">| page_up | Scroll/move page up |</p>
+<p class="mb-4 text-gray-300">| page_down | Scroll/move page down |</p>
+<p class="mb-4 text-gray-300">| delete_word | Delete word before cursor |</p>
+<p class="mb-4 text-gray-300">| selection_mode | Toggle selection mode |</p>
+<p class="mb-4 text-gray-300">| change_method | Switch input method |</p>
+<p class="mb-4 text-gray-300">| voice_typing | Activate voice input |</p>
+<p class="mb-4 text-gray-300">| media_play_pause | Toggle media playback |</p>
+<p class="mb-4 text-gray-300">| volume_up | Increase volume |</p>
+<p class="mb-4 text-gray-300">| volume_down | Decrease volume |</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Storage Format</h2>
+
+<p class="mb-4 text-gray-300">File: <code class="bg-ck-dark px-1 rounded">short_swipe_customizations.json</code></p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-json">{
+<p class="mb-4 text-gray-300">  "version": 1,</p>
+<p class="mb-4 text-gray-300">  "mappings": {</p>
+<p class="mb-4 text-gray-300">    "a": {</p>
+<p class="mb-4 text-gray-300">      "N": { "displayText": "@", "actionType": "TEXT", "actionValue": "@" },</p>
+<p class="mb-4 text-gray-300">      "NE": { "displayText": "sel", "actionType": "COMMAND", "actionValue": "SELECT_ALL" }</p>
+<p class="mb-4 text-gray-300">    },</p>
+<p class="mb-4 text-gray-300">    "e": {</p>
+<p class="mb-4 text-gray-300">      "NW": { "displayText": "!", "actionType": "TEXT", "actionValue": "!" }</p>
+<p class="mb-4 text-gray-300">    }</p>
+<p class="mb-4 text-gray-300">  }</p>
+<p class="mb-4 text-gray-300">}</code></pre></p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Integration Points</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>Pointers.kt</strong> - <code class="bg-ck-dark px-1 rounded">handleShortGesture()</code> checks custom mappings first</li>
+<li class="ml-4">2. <strong>KeyEventHandler.kt</strong> - Executes custom commands</li>
+<li class="ml-4">3. <strong>KeyboardView.kt</strong> - Renders custom sub-labels (future enhancement)</li>
+<li class="ml-4">4. <strong>BackupRestoreManager.kt</strong> - Export/import custom mappings</li>
+<li class="ml-4">5. <strong>XmlAttributeMapper.kt</strong> - Converts ShortSwipeMapping to XML attribute values for layout export</li>
+<li class="ml-4">6. <strong>KeyValue.kt</strong> - Source of truth for all key definitions (300+ keys, 12 kinds)</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">File Structure</h2>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">src/main/kotlin/tribixbite/cleverkeys/
+<p class="mb-4 text-gray-300">├── customization/</p>
+<p class="mb-4 text-gray-300">│   ├── SwipeDirection.kt</p>
+<p class="mb-4 text-gray-300">│   ├── ActionType.kt</p>
+<p class="mb-4 text-gray-300">│   ├── ShortSwipeMapping.kt</p>
+<p class="mb-4 text-gray-300">│   ├── ShortSwipeCustomizationManager.kt</p>
+<p class="mb-4 text-gray-300">│   ├── CustomShortSwipeExecutor.kt    # Executes commands via InputConnection</p>
+<p class="mb-4 text-gray-300">│   ├── CommandRegistry.kt             # 200+ searchable commands by category</p>
+<p class="mb-4 text-gray-300">│   ├── CommandPaletteDialog.kt        # UI for command selection</p>
+<p class="mb-4 text-gray-300">│   └── XmlAttributeMapper.kt          # JSON→XML export support</p>
+<p class="mb-4 text-gray-300">├── KeyValue.kt                        # Key definitions (source of truth)</p>
+<p class="mb-4 text-gray-300">└── ui/customization/</p>
+<p class="mb-4 text-gray-300">    ├── ShortSwipeCustomizationActivity.kt</p>
+<p class="mb-4 text-gray-300">    ├── InteractiveKeyboardPreview.kt</p>
+<p class="mb-4 text-gray-300">    ├── KeyCustomizationModal.kt</p>
+<p class="mb-4 text-gray-300">    └── DirectionEditorDialog.kt</code></pre></p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Phases</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 1: Data Layer ✅</h3>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Data models (SwipeDirection.kt, ActionType.kt, ShortSwipeMapping.kt)</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> ShortSwipeCustomizationManager with JSON persistence</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Backup/restore integration</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> MappingSelection data class for separate label/action control</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 2: Integration ✅</h3>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Pointers.kt integration</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> CustomShortSwipeExecutor supporting 200+ commands</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> KeyEventHandler integration</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> CommandRegistry with searchable keywords</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 3: UI ✅</h3>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> ShortSwipeCustomizationActivity (v4 with actual keyboard)</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> KeyMagnifierView showing existing layout + custom mappings</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> KeyCustomizationDialog with 8-direction selector</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> CommandPaletteDialog with search filter</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> LabelConfirmationDialog for custom display labels</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> DirectionTouchOverlay (Compose 3x3 grid) for reliable touch detection</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Settings navigation</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 4: Polish ✅</h3>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Reset to defaults (delete individual mappings)</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Edge case handling (command name validation)</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Touch event handling fix (AndroidView interop)</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Colored direction zones with labels (8 distinct colors + direction labels)</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Shift+custom swipe support (custom mappings work even with shift active)</li>
+<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Manual device testing (ongoing)</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 5: Modifier Key Support ✅ (2025-12-07)</h3>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Custom short swipe mappings bypass modifier blocking check</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Built-in sublabel gestures still blocked when shift/fn/ctrl active</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Restructured Pointers.kt gesture handling logic</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Renamed <code class="bg-ck-dark px-1 rounded">shouldBlockGesture</code> → <code class="bg-ck-dark px-1 rounded">shouldBlockBuiltInGesture</code> for clarity</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 6: UI Enhancement ✅ (2025-12-07)</h3>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> DirectionZone colored backgrounds for visual identification:</li>
+</ul><p class="mb-4 text-gray-300">  - NW: Red (#FF6B6B), N: Teal (#4ECDC4), NE: Yellow (#FFE66D)</p>
+<p class="mb-4 text-gray-300">  - W: Mint (#95E1D3), E: Coral (#F38181)</p>
+<p class="mb-4 text-gray-300">  - SW: Purple (#AA96DA), S: Cyan (#72D4E8), SE: Pink (#FCBAD3)</p>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Direction labels (NW, N, NE, W, E, SW, S, SE) displayed in each zone</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Center zone transparent (no action)</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 7: Bug Fixes ✅ (2025-12-07)</h3>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Fixed LazyColumn crash when scrolling command palette</li>
+</ul><p class="mb-4 text-gray-300">  - Root cause: Duplicate command names in CommandRegistry.kt</p>
+<p class="mb-4 text-gray-300">  - Removed 6 duplicates: compose, compose_cancel, doc_home, doc_end, zwj, zwnj</p>
+<p class="mb-4 text-gray-300">  - Commands reduced from 143 to 137 (all unique)</p>
+<p class="mb-4 text-gray-300">  - Error: <code class="bg-ck-dark px-1 rounded">IllegalArgumentException: Key was already used</code></p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 8: Command Expansion ✅ (2025-12-21)</h3>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Audited KeyValue.kt vs CommandRegistry.kt to identify 51 missing commands</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Added 32 new Android KeyEvent codes to KeyValue.kt:</li>
+</ul><p class="mb-4 text-gray-300">  - Media keys: play_pause, play, pause, stop, next, previous, rewind, fast_forward, record</p>
+<p class="mb-4 text-gray-300">  - Volume keys: volume_up, volume_down, volume_mute</p>
+<p class="mb-4 text-gray-300">  - Brightness keys: brightness_up, brightness_down</p>
+<p class="mb-4 text-gray-300">  - Zoom keys: zoom_in, zoom_out</p>
+<p class="mb-4 text-gray-300">  - System/app keys: search, calculator, calendar, contacts, explorer, notification</p>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Added 75+ new commands to CommandRegistry.kt:</li>
+</ul><p class="mb-4 text-gray-300">  - 5 new categories: MEDIA, SYSTEM, DIACRITICS_SLAVONIC, DIACRITICS_ARABIC, HEBREW</p>
+<p class="mb-4 text-gray-300">  - 10 Slavonic combining marks (titlo, palatalization, pokrytie, etc.)</p>
+<p class="mb-4 text-gray-300">  - 14 Arabic vowel marks (fatha, kasra, damma, sukun, shadda, etc.)</p>
+<p class="mb-4 text-gray-300">  - 20 Hebrew niqqud marks (dagesh, qamats, patah, tsere, etc.)</p>
+<p class="mb-4 text-gray-300">  - Media/system/navigation commands</p>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Updated CustomShortSwipeExecutor with fallback handler for character-based commands</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Updated XmlAttributeMapper to support CommandRegistry names directly for XML export</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Updated CommandPaletteDialog with icons for new categories</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Total commands now: 200+ (up from 137)</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 9: Icon Font Support ✅ (2025-12-22)</h3>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Added <code class="bg-ck-dark px-1 rounded">useKeyFont</code> field to ShortSwipeMapping data model</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Updated DirectionMapping storage to v2 schema with useKeyFont field</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Added CommandRegistry.getDisplayInfo() to extract icon + font flag from KeyValue</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Updated KeyMagnifierView to render custom mappings with special_font.ttf</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Updated Keyboard2View.drawCustomSubLabel() to use theme's sublabel_paint</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Updated CommandPaletteDialog to auto-detect icon mode:</li>
+</ul><p class="mb-4 text-gray-300">  - If command has KeyValue with FLAG_KEY_FONT, use icon mode by default</p>
+<p class="mb-4 text-gray-300">  - If user customizes label text, switch to text mode</p>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Custom mappings now match font size/style of layout's default subkeys</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 10: Color & Preview Fixes ✅ (2025-12-23)</h3>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Fixed custom sublabel color: use <code class="bg-ck-dark px-1 rounded">subLabelColor</code> instead of <code class="bg-ck-dark px-1 rounded">activatedColor</code></li>
+</ul><p class="mb-4 text-gray-300">  - Keyboard2View.drawCustomMappings() now uses theme's subLabelColor</p>
+<p class="mb-4 text-gray-300">  - KeyMagnifierView.drawSubLabelForDirection() uses consistent subLabelColor</p>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Improved icon preview in LabelConfirmationDialog:</li>
+</ul><p class="mb-4 text-gray-300">  - PUA characters (Private Use Area) can't render in Compose UI</p>
+<p class="mb-4 text-gray-300">  - Now shows readable description like [Tab], [Home] instead of boxes</p>
+<p class="mb-4 text-gray-300">  - Clear UX: "Leave blank to use default icon. Type text for a custom label."</p>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Added isIconMode and iconPreviewText parameters to LabelConfirmationDialog</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Performance Requirements</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Custom mapping lookup: < 1ms</li>
+<li class="ml-4">&#8226; UI response time: < 16ms (60fps)</li>
+<li class="ml-4">&#8226; Storage load time: < 100ms</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Testing Strategy</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4">1. Unit tests for data layer</li>
+<li class="ml-4">2. Integration tests for gesture handling</li>
+<li class="ml-4">3. UI tests for customization flow</li>
+<li class="ml-4">4. Manual device testing</li>
+</ul>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys Documentation - Generated from specs</p>
+    </footer>
+</body>
+</html>

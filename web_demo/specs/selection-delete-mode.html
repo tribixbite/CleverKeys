@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selection-Delete Mode - CleverKeys Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'ck-purple': '#9b59b6',
+                        'ck-purple-dark': '#6b21a8',
+                        'ck-purple-light': '#c39bd3',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #9b59b6 0%, #c39bd3 50%, #9b59b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-ck-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-gray-400 hover:text-white transition-colors">All Specs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-ck-purple">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-ck-purple">Specs</a>
+            <span>/</span>
+            <span class="text-gray-300">Selection-Delete Mode</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-8">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #3498db20; color: #3498db">Gestures</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">v1.2.4</span>
+        </div>
+        <h1 class="text-4xl font-bold gradient-text mb-2">Selection-Delete Mode</h1>
+        <p class="text-xl text-gray-400">Text selection via backspace swipe-hold gesture</p>
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <h1 class="text-3xl font-bold mb-6 gradient-text">Selection-Delete Mode Specification</h1>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Feature Overview</h2>
+<p class="mb-4 text-gray-300"><strong>Feature Name</strong>: Selection-Delete Mode</p>
+<p class="mb-4 text-gray-300"><strong>Priority</strong>: P1</p>
+<p class="mb-4 text-gray-300"><strong>Status</strong>: Complete</p>
+<p class="mb-4 text-gray-300"><strong>Target Version</strong>: v1.2.4</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Summary</h3>
+<p class="mb-4 text-gray-300">A gesture mode that enables text selection via swipe-hold on the backspace key, with automatic deletion on release.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Motivation</h3>
+<p class="mb-4 text-gray-300">Traditional text selection on mobile keyboards is cumbersome, requiring switching to cursor mode or long-pressing. This feature enables rapid text selection and deletion with a single fluid gesture on the backspace key.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Requirements</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Functional Requirements</h3>
+<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>FR-1</strong>: Short swipe + hold on backspace key activates selection-delete mode</li>
+<li class="ml-4">2. <strong>FR-2</strong>: Horizontal finger movement selects characters (left/right)</li>
+<li class="ml-4">3. <strong>FR-3</strong>: Vertical finger movement selects lines (up/down)</li>
+<li class="ml-4">4. <strong>FR-4</strong>: Releasing finger deletes all selected text</li>
+<li class="ml-4">5. <strong>FR-5</strong>: Short swipe + immediate release performs normal subkey action (delete_last_word)</li>
+<li class="ml-4">6. <strong>FR-6</strong>: Regular hold without movement triggers normal key repeat</li>
+<li class="ml-4">7. <strong>FR-7</strong>: Bidirectional movement - direction changes dynamically with finger position</li>
+<li class="ml-4">8. <strong>FR-8</strong>: Diagonal movement supported (X and Y axes fire independently)</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Non-Functional Requirements</h3>
+<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>NFR-1</strong>: Performance - Selection speed proportional to finger distance from activation center</li>
+<li class="ml-4">2. <strong>NFR-2</strong>: Usability - Configurable vertical threshold and speed via Settings</li>
+<li class="ml-4">3. <strong>NFR-3</strong>: Reliability - Must not interfere with normal backspace operations</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">User Stories</h3>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>As a</strong> power user, <strong>I want</strong> to select and delete multiple words quickly, <strong>so that</strong> I can correct mistakes efficiently</li>
+<li class="ml-4">&#8226; <strong>As a</strong> user, <strong>I want</strong> to select entire lines, <strong>so that</strong> I can delete paragraphs without switching modes</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Technical Design</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Architecture</h3>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">User Input (backspace key)
+<p class="mb-4 text-gray-300">       |</p>
+<p class="mb-4 text-gray-300">       v</p>
+<p class="mb-4 text-gray-300">+------------------+</p>
+<p class="mb-4 text-gray-300">| onTouchDown()    | -- Defers backspace handling for gesture detection</p>
+<p class="mb-4 text-gray-300">+------------------+</p>
+<p class="mb-4 text-gray-300">       |</p>
+<p class="mb-4 text-gray-300">       v</p>
+<p class="mb-4 text-gray-300">+------------------+</p>
+<p class="mb-4 text-gray-300">| Short Swipe      | -- Detects initial swipe direction</p>
+<p class="mb-4 text-gray-300">| Detection        |</p>
+<p class="mb-4 text-gray-300">+------------------+</p>
+<p class="mb-4 text-gray-300">       |</p>
+<p class="mb-4 text-gray-300">       v (if hold detected)</p>
+<p class="mb-4 text-gray-300">+------------------+</p>
+<p class="mb-4 text-gray-300">| FLAG_P_SELECTION | -- Activates selection-delete mode</p>
+<p class="mb-4 text-gray-300">| _DELETE_MODE     |</p>
+<p class="mb-4 text-gray-300">+------------------+</p>
+<p class="mb-4 text-gray-300">       |</p>
+<p class="mb-4 text-gray-300">       v</p>
+<p class="mb-4 text-gray-300">+------------------+</p>
+<p class="mb-4 text-gray-300">| handleSelection  | -- Repeating handler for continuous selection</p>
+<p class="mb-4 text-gray-300">| DeleteRepeat()   |</p>
+<p class="mb-4 text-gray-300">+------------------+</p>
+<p class="mb-4 text-gray-300">       |</p>
+<p class="mb-4 text-gray-300">       v (on release)</p>
+<p class="mb-4 text-gray-300">+------------------+</p>
+<p class="mb-4 text-gray-300">| Delete selected  | -- Sends DEL key to remove selection</p>
+<p class="mb-4 text-gray-300">| text             |</p>
+<p class="mb-4 text-gray-300">+------------------+</code></pre></p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Component Breakdown</h3>
+<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>Pointers.kt</strong>: Handles touch input, gesture detection, and selection state</li>
+<li class="ml-4">2. <strong>Config.kt</strong>: Stores vertical threshold and speed settings</li>
+<li class="ml-4">3. <strong>SettingsActivity.kt</strong>: UI for configuring threshold and speed</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Data Structures</h3>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// State flag for mode tracking
+<p class="mb-4 text-gray-300">private const val FLAG_P_SELECTION_DELETE_MODE = 128</p>
+
+<p class="mb-4 text-gray-300">// Timer identifier</p>
+<p class="mb-4 text-gray-300">private val selectionDeleteWhat = Any()</p>
+
+<p class="mb-4 text-gray-300">// Configuration settings</p>
+<p class="mb-4 text-gray-300">selection_delete_vertical_threshold: Int  // 20-80%, default 40%</p>
+<p class="mb-4 text-gray-300">selection_delete_vertical_speed: Float    // 0.1x-1.0x, default 0.4x</code></pre></p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">API/Interface Design</h3>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Selection handling in Pointers.kt
+<p class="mb-4 text-gray-300">private fun handleSelectionDeleteRepeat(ptr: Pointer) {</p>
+<p class="mb-4 text-gray-300">    // Track X/Y axes independently</p>
+<p class="mb-4 text-gray-300">    val dx = ptr.currentX - ptr.selectionCenterX</p>
+<p class="mb-4 text-gray-300">    val dy = ptr.currentY - ptr.selectionCenterY</p>
+
+<p class="mb-4 text-gray-300">    // Horizontal: Shift+Left or Shift+Right</p>
+<p class="mb-4 text-gray-300">    // Vertical: Shift+Up or Shift+Down (with threshold)</p>
+<p class="mb-4 text-gray-300">}</p>
+
+<p class="mb-4 text-gray-300">// Shift state management</p>
+<p class="mb-4 text-gray-300">private fun makeInternalModifier(mod: Modifier): KeyValue</p>
+<p class="mb-4 text-gray-300">private fun with_extra_mod(value: KeyValue, extra: Modifier): KeyValue</code></pre></p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">State Management</h3>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">FLAG_P_SELECTION_DELETE_MODE</code> flag tracks active state</li>
+<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">selectionCenterX/Y</code> stores activation point for distance calculation</li>
+<li class="ml-4">&#8226; Timer-based repeat with speed scaling based on finger distance</li>
+<li class="ml-4">&#8226; Shift modifier held during selection via <code class="bg-ck-dark px-1 rounded">with_extra_mod()</code></li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Plan</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 1: Core Selection Mode</h3>
+<p class="mb-4 text-gray-300"><strong>Status</strong>: Complete</p>
+<p class="mb-4 text-gray-300"><strong>Deliverables</strong>:</p>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Short swipe + hold detection on backspace</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Horizontal selection (character-by-character)</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Release-to-delete functionality</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Bidirectional movement support</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 2: Vertical Selection & Configuration</h3>
+<p class="mb-4 text-gray-300"><strong>Status</strong>: Complete</p>
+<p class="mb-4 text-gray-300"><strong>Deliverables</strong>:</p>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Vertical line selection (up/down)</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Configurable vertical threshold setting</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Configurable vertical speed multiplier</li>
+<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Settings UI integration</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Testing Strategy</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Unit Tests</h3>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Test case 1: Short swipe triggers subkey action, not selection mode</li>
+<li class="ml-4">&#8226; Test case 2: Hold without movement triggers key repeat</li>
+<li class="ml-4">&#8226; Test case 3: Selection mode activates after threshold time</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Integration Tests</h3>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Test case 1: Text selection works across app boundaries</li>
+<li class="ml-4">&#8226; Test case 2: Shift state properly maintained during selection</li>
+<li class="ml-4">&#8226; Test case 3: Settings changes take effect immediately</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">UI/UX Tests</h3>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Test case 1: Vertical threshold slider responds correctly</li>
+<li class="ml-4">&#8226; Test case 2: Speed setting affects selection rate proportionally</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Dependencies</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Internal Dependencies</h3>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">Pointers.kt</code> touch handling system</li>
+<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">Config.kt</code> settings storage</li>
+<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">KeyValue</code> and <code class="bg-ck-dark px-1 rounded">Modifier</code> from layout system</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">External Dependencies</h3>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Android InputConnection for selection manipulation</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Breaking Changes</h3>
+<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> This feature introduces breaking changes</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Error Handling</h2>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Invalid threshold values: Clamped to valid range (20-80%)</li>
+<li class="ml-4">&#8226; Invalid speed values: Clamped to valid range (0.1-1.0)</li>
+<li class="ml-4">&#8226; No text to select: Mode still activates, selection commands sent harmlessly</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Success Metrics</h2>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Metric 1: Users can select and delete multiple words in <2 seconds</li>
+<li class="ml-4">&#8226; Metric 2: Vertical selection triggers reliably within threshold</li>
+<li class="ml-4">&#8226; Acceptance criteria: All test cases pass, no reported regressions</li>
+</ul>
+<hr class="border-gray-700 my-6">
+
+<p class="mb-4 text-gray-300"><strong>Created</strong>: 2026-01-14</p>
+<p class="mb-4 text-gray-300"><strong>Last Updated</strong>: 2026-01-14</p>
+<p class="mb-4 text-gray-300"><strong>Owner</strong>: CleverKeys Development</p>
+<p class="mb-4 text-gray-300"><strong>Reviewers</strong>: tribixbite</p>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys Documentation - Generated from specs</p>
+    </footer>
+</body>
+</html>

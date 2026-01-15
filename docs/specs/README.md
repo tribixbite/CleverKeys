@@ -1,7 +1,7 @@
 # CleverKeys Feature Specifications
 
-**Last Updated**: 2026-01-04
-**Total Specs**: 14 (core) + 4 (optional enhancements)
+**Last Updated**: 2026-01-14
+**Total Specs**: 16 (core) + 4 (optional enhancements)
 
 This directory contains feature specifications and architectural decision records (ADRs) for CleverKeys. All specifications follow the template in `SPEC_TEMPLATE.md`.
 
@@ -102,7 +102,21 @@ This directory contains feature specifications and architectural decision record
     - Key Concepts: swipe_scaling calculation, speed smoothing, distance accumulation
     - Outstanding: None
 
-14. **[SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md)** - Template
+14. **[Selection-Delete Mode](./selection-delete-mode.md)** - P1
+    - Status: ✅ Complete (v1.2.4 - 2026-01-14)
+    - Covers: Text selection via backspace swipe-hold, bidirectional movement, auto-delete
+    - Components: `Pointers.kt` (FLAG_P_SELECTION_DELETE_MODE), `Config.kt` (threshold/speed settings)
+    - Key Concepts: Short swipe + hold activation, X/Y axis independent, configurable vertical threshold
+    - Outstanding: None
+
+15. **[TrackPoint Navigation Mode](./trackpoint-navigation-mode.md)** - P1
+    - Status: ✅ Complete (v1.2.4 - 2026-01-14)
+    - Covers: Joystick-style cursor control on nav keys, 8-direction movement, haptic feedback
+    - Components: `Pointers.kt` (FLAG_P_TRACKPOINT_MODE), `VibratorCompat.kt` (CLOCK_TICK pattern)
+    - Key Concepts: Hold activation, distance-based speed scaling, diagonal support
+    - Outstanding: None
+
+16. **[SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md)** - Template
     - Template for creating new feature specifications
     - Use this when creating new specs
 

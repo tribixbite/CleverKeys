@@ -1,0 +1,88 @@
+{
+  "title": "CleverKeys Documentation",
+  "description": "Feature specifications and technical documentation",
+  "specs_directory": "../docs/specs",
+  "output_directory": "./specs",
+  "reviewed_specs": [
+    {
+      "file": "selection-delete-mode.md",
+      "title": "Selection-Delete Mode",
+      "description": "Text selection via backspace swipe-hold gesture",
+      "category": "Gestures",
+      "icon": "delete",
+      "reviewed": true,
+      "version": "v1.2.4"
+    },
+    {
+      "file": "trackpoint-navigation-mode.md",
+      "title": "TrackPoint Navigation",
+      "description": "Joystick-style cursor control on navigation keys",
+      "category": "Gestures",
+      "icon": "navigation",
+      "reviewed": true,
+      "version": "v1.2.4"
+    },
+    {
+      "file": "short-swipe-customization.md",
+      "title": "Short Swipe Customization",
+      "description": "Per-key gesture customization with 8 directions",
+      "category": "Customization",
+      "icon": "swipe",
+      "reviewed": true,
+      "version": "v1.2.0"
+    },
+    {
+      "file": "neural-prediction.md",
+      "title": "Neural Prediction",
+      "description": "ONNX transformer-based swipe typing engine",
+      "category": "Core",
+      "icon": "brain",
+      "reviewed": true,
+      "version": "v1.0.0"
+    },
+    {
+      "file": "gesture-system.md",
+      "title": "Gesture System",
+      "description": "Swipe detection, multi-touch, and gesture trails",
+      "category": "Core",
+      "icon": "gesture",
+      "reviewed": true,
+      "version": "v1.0.0"
+    },
+    {
+      "file": "cursor-navigation-system.md",
+      "title": "Cursor Navigation",
+      "description": "Spacebar slider and arrow key navigation",
+      "category": "Navigation",
+      "icon": "cursor",
+      "reviewed": true,
+      "version": "v1.1.0"
+    },
+    {
+      "file": "settings-system.md",
+      "title": "Settings System",
+      "description": "User preferences and keyboard configuration",
+      "category": "Settings",
+      "icon": "settings",
+      "reviewed": true,
+      "version": "v1.0.0"
+    },
+    {
+      "file": "dictionary-and-language-system.md",
+      "title": "Dictionary & Languages",
+      "description": "Multi-language support and language packs",
+      "category": "Languages",
+      "icon": "language",
+      "reviewed": true,
+      "version": "v1.1.84"
+    }
+  ],
+  "categories": [
+    { "name": "Core", "color": "#9b59b6" },
+    { "name": "Gestures", "color": "#3498db" },
+    { "name": "Navigation", "color": "#2ecc71" },
+    { "name": "Customization", "color": "#e74c3c" },
+    { "name": "Settings", "color": "#f39c12" },
+    { "name": "Languages", "color": "#1abc9c" }
+  ]
+}
