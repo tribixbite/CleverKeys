@@ -71,6 +71,11 @@ class SuggestionHandler(
     private val predictionExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private var currentPredictionTask: Future<*>? = null
 
+    // v1.2.6: Flag to prevent async prediction task from overwriting special prompts
+    // (autocorrect undo, add-to-dictionary)
+    @Volatile
+    private var specialPromptActive = false
+
     // Password mode tracking
     private var isPasswordMode = false
 
@@ -542,6 +547,8 @@ class SuggestionHandler(
 
         // Clear tracking
         contextTracker.clearAutocorrectTracking()
+        // v1.2.6: Clear special prompt flag
+        specialPromptActive = false
 
         // Show confirmation message (clearAfter=true so bar clears instead of restoring prompt)
         suggestionBar?.showTemporaryMessage("Added '$wordToAdd' to dictionary", 2000L, clearAfter = true)
@@ -607,6 +614,8 @@ class SuggestionHandler(
             contextTracker.clearAutocorrectTracking()
             contextTracker.clearLastAutoInsertedWord()
             contextTracker.setLastCommitSource(PredictionSource.CANDIDATE_SELECTION)
+            // v1.2.6: Clear special prompt flag
+            specialPromptActive = false
 
             // Show confirmation message (clearAfter=true so bar clears instead of restoring prompt)
             suggestionBar?.showTemporaryMessage("Added '$tappedWord' to dictionary", 2000L, clearAfter = true)
@@ -673,6 +682,8 @@ class SuggestionHandler(
                     contextTracker.clearLastAutoInsertedWord()
                     contextTracker.clearAutocorrectTracking()
                     contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
+                    // v1.2.6: Clear special prompt flag - user is typing a new word
+                    specialPromptActive = false
                 }
                 updatePredictionsForCurrentWord()
             }
@@ -724,6 +735,10 @@ class SuggestionHandler(
 
                                 Log.d(TAG, "AUTOCORRECT: '$completedWord' → '$correctedWord' (tracking for undo)")
 
+                                // v1.2.6 FIX: Cancel pending prediction task and set flag to prevent overwriting
+                                currentPredictionTask?.cancel(true)
+                                specialPromptActive = true
+
                                 // Show original word as first suggestion for easy undo
                                 suggestionBar?.setSuggestionsWithScores(
                                     listOf(completedWord, correctedWord), // Original word first for undo
@@ -751,6 +766,10 @@ class SuggestionHandler(
                         val isUserWord = predictionCoordinator.getDictionaryManager()?.isUserWord(completedWord) ?: false
 
                         if (!isInDictionary && !isUserWord) {
+                            // v1.2.6 FIX: Cancel pending prediction task and set flag to prevent overwriting
+                            currentPredictionTask?.cancel(true)
+                            specialPromptActive = true
+
                             // Store word for add-to-dictionary handling
                             contextTracker.setLastAutocorrectOriginalWord(completedWord)
                             contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
@@ -860,8 +879,13 @@ class SuggestionHandler(
                 }
 
                 // Post result to UI thread
-                if (transformedWords.isNotEmpty() && suggestionBar != null) {
+                // v1.2.6 FIX: Check if task was cancelled or special prompt is active
+                if (transformedWords.isNotEmpty() && suggestionBar != null &&
+                    !Thread.currentThread().isInterrupted && !specialPromptActive) {
                     suggestionBar?.post {
+                        // v1.2.6: Skip if special prompt became active while queued
+                        if (specialPromptActive) return@post
+
                         // Verify context hasn't changed drastically (optional, but good practice)
                         suggestionBar?.let { bar ->
                             bar.setShowDebugScores(config.swipe_show_debug_scores)

@@ -46,6 +46,13 @@
 - ✅ Contractions: Apostrophe within word is NOT a boundary (don't, l'homme)
 - ✅ Accents: NFD normalization for lookup, raw char count for deletion
 
+**Bug Fixes (v1.2.6)**:
+1. ✅ Mid-word selection left fragments - fixed immediate sync in `onSuggestionSelected()`
+2. ✅ Autocorrect undo/add-to-dict prompt disappeared - fixed race condition in SuggestionHandler:
+   - Added `specialPromptActive` flag to prevent async prediction task from overwriting
+   - Cancel pending task before showing special prompts
+   - Check flag in async task before posting to UI
+
 **Status**: Implemented and tested
 
 ---

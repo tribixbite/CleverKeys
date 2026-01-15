@@ -1,9 +1,16 @@
 # Cursor-Aware Predictions System Specification
 
 **Status:** Implemented
-**Version:** 1.0
+**Version:** 1.1
 **Author:** Claude Opus 4.5
 **Date:** 2026-01-15
+
+## Changelog
+
+### v1.1 (2026-01-15)
+- Fixed race condition: async prediction task could overwrite special prompts (autocorrect undo, add-to-dictionary)
+- Added `specialPromptActive` flag to prevent prediction task from overwriting important UI states
+- Fixed immediate cursor sync in `onSuggestionSelected` to handle debounce timing issue
 
 ---
 

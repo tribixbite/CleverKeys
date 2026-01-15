@@ -428,8 +428,10 @@ class PredictionContextTracker {
         rawSuffixForDeletion = rawSuffix
         wasSyncedFromCursor = true
 
-        // Clear autocorrect tracking since cursor moved
-        clearAutocorrectTracking()
+        // NOTE: Do NOT clear autocorrect tracking here!
+        // Autocorrect tracking must persist after cursor moves (e.g., after space insertion)
+        // so the suggestion bar can still show the original word for undo/add-to-dictionary.
+        // Autocorrect tracking is cleared separately when user starts typing a new word.
 
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
             android.util.Log.d(TAG, "synchronizeWithCursor: prefix='$normalizedPrefix', suffix='$normalizedSuffix', " +

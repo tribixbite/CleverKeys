@@ -133,8 +133,15 @@ class InputCoordinator(
             if (prefix.isNotEmpty()) {
                 triggerPredictionsForPrefix(prefix, ic, editorInfo)
             } else {
-                // Clear predictions if cursor is not in a word
-                suggestionBar?.clearSuggestions()
+                // v1.2.6 FIX: Don't clear suggestions if showing autocorrect undo options
+                // After autocorrect, cursor moves to after space (prefix empty), but we want
+                // to keep showing the original word for undo/add-to-dictionary
+                val hasAutocorrectUndo = contextTracker.getLastAutocorrectOriginalWord() != null
+                if (!hasAutocorrectUndo) {
+                    suggestionBar?.clearSuggestions()
+                } else {
+                    debugLogger?.invoke("🔄 Preserving autocorrect undo suggestions")
+                }
             }
 
             debugLogger?.invoke("🎯 Cursor sync: pos=$newPosition, prefix='$prefix', " +
