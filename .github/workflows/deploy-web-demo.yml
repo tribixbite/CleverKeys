@@ -3,7 +3,7 @@ name: Deploy CleverKeys Web Demo
 on:
   push:
     branches: [ main ]
-    paths: [ 'web_demo/**', 'README.md' ]
+    paths: [ 'web_demo/**', 'README.md', 'docs/wiki/**' ]
   workflow_dispatch:
 
 permissions:
@@ -58,6 +58,14 @@ jobs:
               echo "✅ Specs documentation ready"
             fi
 
+            # Copy wiki user guide
+            echo "📁 Setting up wiki user guide in /wiki/..."
+            if [ -d "web_demo/wiki" ]; then
+              mkdir -p deploy/wiki
+              cp -r web_demo/wiki/* deploy/wiki/
+              echo "✅ Wiki user guide ready"
+            fi
+
             # Copy demo supporting files (for when demo is restored)
             cp web_demo/*.onnx deploy/demo/ 2>/dev/null || echo "No ONNX models"
             cp web_demo/*.js deploy/demo/ 2>/dev/null || echo "No JS files"
@@ -66,7 +74,8 @@ jobs:
           echo "✅ Website structure prepared:"
           echo "   / - Homepage"
           echo "   /demo/ - Demo (under construction)"
-          echo "   /specs/ - Documentation"
+          echo "   /specs/ - Technical specifications"
+          echo "   /wiki/ - User guide wiki"
           ls -laR deploy/
 
       - name: Configure Pages
