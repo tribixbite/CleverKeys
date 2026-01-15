@@ -150,11 +150,11 @@ class WordListFragment : Fragment() {
         }
     }
 
-    private var currentSourceFilter: WordSource? = null
+    private var currentSortType: DictionaryManagerActivity.SortType = DictionaryManagerActivity.SortType.FREQ
 
-    fun filter(query: String, sourceFilter: WordSource? = null) {
+    fun filter(query: String, sortType: DictionaryManagerActivity.SortType = DictionaryManagerActivity.SortType.FREQ) {
         if (!::adapter.isInitialized) return
-        currentSourceFilter = sourceFilter
+        currentSortType = sortType
 
         // Cancel previous search to prevent multiple concurrent operations
         searchJob?.cancel()
@@ -166,25 +166,51 @@ class WordListFragment : Fragment() {
                 // Normalize query: trim whitespace and treat pure whitespace as blank
                 val normalizedQuery = query.trim()
 
-                val words = if (normalizedQuery.isBlank() && sourceFilter == null) {
-                    // No search, no filter - show all words from this tab's data source
+                val words = if (normalizedQuery.isBlank()) {
+                    // No search - show all words from this tab's data source
                     dataSource.getAllWords()
-                } else if (normalizedQuery.isBlank() && sourceFilter != null) {
-                    // No search query, but source filter applied - get all and filter by source
-                    dataSource.getAllWords().filter { it.source == sourceFilter }
                 } else {
                     // Has search query - use prefix indexing
-                    val searchResults = dataSource.searchWords(normalizedQuery)
+                    dataSource.searchWords(normalizedQuery)
+                }
 
-                    // Apply source filter if needed
-                    if (sourceFilter != null) {
-                        searchResults.filter { it.source == sourceFilter }
-                    } else {
-                        searchResults
+                // v1.2.7: Apply sorting based on sort type
+                val sortedWords = when (sortType) {
+                    DictionaryManagerActivity.SortType.FREQ -> {
+                        // Sort by frequency (highest first) - default
+                        words.sortedByDescending { it.frequency }
+                    }
+                    DictionaryManagerActivity.SortType.MATCH -> {
+                        // Sort by match quality: exact match first, then prefix match, then by frequency
+                        if (normalizedQuery.isNotBlank()) {
+                            words.sortedWith(compareBy(
+                                // Exact match gets priority 0, prefix match gets 1, others get 2
+                                { word ->
+                                    when {
+                                        word.word.equals(normalizedQuery, ignoreCase = true) -> 0
+                                        word.word.startsWith(normalizedQuery, ignoreCase = true) -> 1
+                                        else -> 2
+                                    }
+                                },
+                                // Secondary sort by frequency (descending, so negate)
+                                { -it.frequency }
+                            ))
+                        } else {
+                            // No query, fall back to frequency sort
+                            words.sortedByDescending { it.frequency }
+                        }
+                    }
+                    DictionaryManagerActivity.SortType.A_Z -> {
+                        // Alphabetical ascending
+                        words.sortedBy { it.word.lowercase() }
+                    }
+                    DictionaryManagerActivity.SortType.Z_A -> {
+                        // Alphabetical descending
+                        words.sortedByDescending { it.word.lowercase() }
                     }
                 }
 
-                adapter.setWords(words)
+                adapter.setWords(sortedWords)
                 updateEmptyState()
                 // Notify activity to update tab counts after filter completes
                 (activity as? DictionaryManagerActivity)?.onFragmentDataLoaded()

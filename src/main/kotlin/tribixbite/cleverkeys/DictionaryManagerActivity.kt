@@ -89,11 +89,15 @@ class DictionaryManagerActivity : AppCompatActivity() {
     // Dynamic tab titles based on active languages
     private var tabTitles = mutableListOf<String>()
 
-    enum class FilterType {
-        ALL, MAIN, USER, CUSTOM
+    // v1.2.7: Changed from FilterType to SortType for dictionary sorting
+    enum class SortType {
+        FREQ,   // Sort by frequency (highest first) - default
+        MATCH,  // Sort by match quality/relevance to search query
+        A_Z,    // Alphabetical ascending
+        Z_A     // Alphabetical descending
     }
 
-    private var currentFilter: FilterType = FilterType.ALL
+    private var currentSort: SortType = SortType.FREQ
 
     // Active languages for tab generation
     private var primaryLanguage = "en"
@@ -117,11 +121,11 @@ class DictionaryManagerActivity : AppCompatActivity() {
         // Restore state after configuration change (e.g., rotation)
         if (savedInstanceState != null) {
             currentSearchQuery = savedInstanceState.getString("searchQuery", "")
-            currentFilter = FilterType.values()[savedInstanceState.getInt("filterType", 0)]
+            currentSort = SortType.values()[savedInstanceState.getInt("sortType", 0)]
             searchInput.setText(currentSearchQuery)
-            filterSpinner.setSelection(currentFilter.ordinal)
+            filterSpinner.setSelection(currentSort.ordinal)
 
-            // Reapply search/filter after all fragments load
+            // Reapply search/sort after all fragments load
             searchHandler.postDelayed({
                 performSearch(currentSearchQuery)
             }, 400)
@@ -149,7 +153,7 @@ class DictionaryManagerActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString("searchQuery", currentSearchQuery)
-        outState.putInt("filterType", currentFilter.ordinal)
+        outState.putInt("sortType", currentSort.ordinal)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -327,14 +331,15 @@ class DictionaryManagerActivity : AppCompatActivity() {
     }
 
     private fun setupFilter() {
-        val filterOptions = FilterType.values().map { it.name.lowercase().capitalize() }
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, filterOptions)
+        // v1.2.7: Changed to sort options instead of filter options
+        val sortOptions = listOf("Freq", "Match", "A-Z", "Z-A")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, sortOptions)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         filterSpinner.adapter = adapter
 
         filterSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                applyFilter(FilterType.values()[position])
+                applySort(SortType.values()[position])
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -348,15 +353,8 @@ class DictionaryManagerActivity : AppCompatActivity() {
     }
 
     private fun performSearch(query: String) {
-        val sourceFilter = when (currentFilter) {
-            FilterType.ALL -> null
-            FilterType.MAIN -> WordSource.MAIN
-            FilterType.USER -> WordSource.USER
-            FilterType.CUSTOM -> WordSource.CUSTOM
-        }
-
-        // Apply search to all fragments with source filter
-        fragments.forEach { it.filter(query, sourceFilter) }
+        // v1.2.7: Apply search to all fragments with sort type
+        fragments.forEach { it.filter(query, currentSort) }
 
         // Update tab counts after search completes
         // Small delay to ensure fragments have updated their counts
@@ -390,14 +388,14 @@ class DictionaryManagerActivity : AppCompatActivity() {
         }, 50)
     }
 
-    private fun applyFilter(filterType: FilterType) {
-        currentFilter = filterType
+    private fun applySort(sortType: SortType) {
+        currentSort = sortType
         performSearch(currentSearchQuery)
     }
 
     private fun resetSearch() {
         searchInput.setText("")
-        filterSpinner.setSelection(0)  // Reset to "All"
+        filterSpinner.setSelection(0)  // Reset to "Freq" (default sort)
         currentSearchQuery = ""
         performSearch("")
     }

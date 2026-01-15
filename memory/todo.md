@@ -76,6 +76,11 @@
     - `onCursorMoved()` now uses PREFIX ONLY for prediction lookup, not prefix+suffix
     - When cursor at "per|fect", predictions show "person", "perhaps", etc. (prefix matches)
     - Suffix still tracked for deletion when prediction is selected
+14. ✅ Dictionary Manager dropdown changed from filter to sort mechanism:
+    - Options: Freq (default), Match, A-Z, Z-A
+    - Freq: Sort by frequency (highest first)
+    - Match: Sort by match quality (exact > prefix > other), then by frequency
+    - A-Z/Z-A: Alphabetical ascending/descending
 
 **Settings UI Changes**:
 - Removed redundant Dictionary section (Dictionary Manager accessible from Activities section)
