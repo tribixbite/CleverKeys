@@ -1,7 +1,50 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-15
-**Status**: v1.2.5 - Defaults fix release
+**Status**: v1.2.5 - Cursor-aware predictions planned
+
+---
+
+## Cursor-Aware Predictions - PLANNED (2026-01-15)
+
+**Problem**: Predictions don't work when cursor is moved mid-word (via tap, cut/paste, arrow keys). Selecting a prediction mid-word leaves word fragments behind.
+
+**Root Cause**:
+- `PredictionContextTracker` has no cursor sync - `currentWord` stays stale
+- `onUpdateSelection()` only notifies Autocapitalisation
+- `deleteSurroundingText(n, 0)` only deletes BEFORE cursor
+
+**Solution Designed** (see `docs/specs/cursor-aware-predictions.md`):
+1. Add `synchronizeWithCursor(ic, language, editorInfo)` to PredictionContextTracker
+2. Track both **prefix** (before cursor) AND **suffix** (after cursor)
+3. On cursor movement, read actual text from InputConnection
+4. When selecting prediction, delete BOTH prefix AND suffix
+5. Use `expectingSelectionUpdate` flag to skip programmatic changes
+
+**Multi-Language Considerations**:
+- CJK scripts: Skip sync entirely (no space-based word boundaries)
+- RTL languages: InputConnection positions are logical, no special handling
+- Contractions: Apostrophe within word is NOT a boundary (don't, l'homme)
+- Accents: Normalized lookup (café→cafe), raw char count for deletion
+
+**Files to Modify**:
+| File | Changes |
+|------|---------|
+| PredictionContextTracker.kt | Add suffix, sync method, raw text preservation |
+| InputCoordinator.kt | Modify onSuggestionSelected for dual-side deletion |
+| CleverKeysService.kt | Extend onUpdateSelection to trigger sync |
+
+**Implementation Order**:
+1. [ ] Add suffix field and getters to PredictionContextTracker
+2. [ ] Implement synchronizeWithCursor() method
+3. [ ] Add isWordChar() with apostrophe handling
+4. [ ] Add expectingSelectionUpdate flag
+5. [ ] Modify onUpdateSelection to call sync
+6. [ ] Modify onSuggestionSelected to delete both sides
+7. [ ] Add debouncing (100ms)
+8. [ ] Test all edge cases
+
+**Status**: Awaiting approval to implement
 
 ---
 
