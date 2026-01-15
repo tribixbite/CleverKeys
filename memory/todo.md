@@ -5,43 +5,47 @@
 
 ---
 
-## User Guide Wiki System - IN PROGRESS (2026-01-15)
+## User Guide Wiki System - COMPLETE (2026-01-15)
 
 **Goal**: Create comprehensive user guide wiki with paired technical specs.
 
-**Completed**:
+**Completed** (61 pages total):
 - ✅ Wiki directory structure (`docs/wiki/[8 categories]/`)
-- ✅ TABLE_OF_CONTENTS.md with 61 planned pages
+- ✅ TABLE_OF_CONTENTS.md with all 61 pages
 - ✅ wiki-config.json with categories, search, navigation
 - ✅ generate-wiki.js with callouts, TOC sidebar, prev/next nav, search
 - ✅ Main site updated with Wiki link (green button)
+- ✅ GitHub Pages deployment workflow updated
 
-**User Guides Created (9/36)**:
-- Getting Started: installation, enabling-keyboard, first-time-setup, basic-typing
-- Typing: swipe-typing, autocorrect
-- Gestures: short-swipes, trackpoint-mode, selection-delete
+**User Guides Created (36/36)**:
+- Getting Started (4): installation, enabling-keyboard, first-time-setup, basic-typing
+- Typing (4): swipe-typing, autocorrect, special-characters, emoji
+- Gestures (5): short-swipes, cursor-navigation, selection-delete, trackpoint-mode, circle-gestures
+- Customization (4): per-key-actions, extra-keys, themes, command-palette
+- Layouts (6): adding-layouts, switching-layouts, multi-language, language-packs, custom-layouts, profiles
+- Settings (6): appearance, input-behavior, haptics, neural-settings, privacy, accessibility
+- Clipboard (3): clipboard-history, text-selection, shortcuts
+- Troubleshooting (4): common-issues, reset-defaults, backup-restore, performance
 
-**Tech Specs Created (4/25)**:
-- getting-started: installation-spec, setup-spec
-- typing: swipe-typing-spec
-- gestures: trackpoint-mode-spec
-
-**Remaining** (27 user guides + 21 tech specs):
-- typing: special-characters, emoji
-- gestures: cursor-navigation, circle-gestures
-- customization: per-key-actions, extra-keys, themes, command-palette
-- layouts: adding-layouts, switching-layouts, multi-language, language-packs, custom-layouts, profiles
-- settings: appearance, input-behavior, haptics, neural-settings, privacy, accessibility
-- clipboard: clipboard-history, text-selection, shortcuts
-- troubleshooting: common-issues, reset-defaults, backup-restore, performance
+**Tech Specs Created (25/25)**:
+- getting-started (2): installation-spec, setup-spec
+- typing (4): swipe-typing-spec, autocorrect-spec, special-characters-spec, emoji-spec
+- gestures (5): short-swipes-spec, cursor-navigation-spec, selection-delete-spec, trackpoint-mode-spec, circle-gestures-spec
+- customization (4): per-key-actions-spec, extra-keys-spec, themes-spec, command-palette-spec
+- layouts (4): adding-layouts-spec, switching-layouts-spec, multi-language-spec, language-packs-spec
+- settings (3): appearance-spec, input-behavior-spec, haptics-spec
+- clipboard (2): clipboard-history-spec, text-selection-spec
+- troubleshooting (1): common-issues-spec
 
 **Files Created**:
 - `docs/wiki/TABLE_OF_CONTENTS.md`
-- `docs/wiki/[category]/*.md` (user guides)
-- `docs/wiki/specs/[category]/*-spec.md` (tech specs)
+- `docs/wiki/[category]/*.md` (36 user guides)
+- `docs/wiki/specs/[category]/*-spec.md` (25 tech specs)
 - `web_demo/wiki-config.json`
 - `web_demo/generate-wiki.js`
-- `web_demo/wiki/*.html` (generated)
+- `web_demo/wiki/*.html` (38 generated files including index and search)
+
+**URL**: https://tribixbite.github.io/CleverKeys/wiki/
 
 ---
 
