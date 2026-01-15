@@ -71,7 +71,11 @@
     - `loadPrimaryContractionKeys()` adds apostrophe-free forms to prefix index (e.g., "cant" → "can't")
     - `loadContractionKeysIntoMaps()` for async loading path
     - Both sync and async dictionary loading now include contraction keys
-12. ✅ Dictionary Manager Card missing from Settings UI - Card already present in Activities section (lines 1134-1170)
+12. ✅ Dictionary Manager Card moved to TOP of Activities section
+13. ✅ Cursor mid-word showed wrong predictions (per|fect → "perfect" instead of "per" words):
+    - `onCursorMoved()` now uses PREFIX ONLY for prediction lookup, not prefix+suffix
+    - When cursor at "per|fect", predictions show "person", "perhaps", etc. (prefix matches)
+    - Suffix still tracked for deletion when prediction is selected
 
 **Settings UI Changes**:
 - Removed redundant Dictionary section (Dictionary Manager accessible from Activities section)

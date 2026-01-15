@@ -129,14 +129,15 @@ class InputCoordinator(
             contextTracker.synchronizeWithCursor(ic, language, editorInfo)
 
             // Trigger predictions for the synced word
-            // v1.2.6: Use both prefix AND suffix for full word lookup (handles mid-word cursor)
+            // v1.2.7 FIX: Use PREFIX ONLY for prediction lookup, not fullWord
+            // When cursor is at "per|fect", we want "per" matches (person, perhaps), not "perfect" matches
+            // The suffix is only used for deletion when a prediction is selected
             val prefix = contextTracker.getCurrentWord()
             val suffix = contextTracker.getCurrentWordSuffix()
             val rawPrefix = contextTracker.getRawPrefix()
-            val fullWord = prefix + suffix
 
-            if (fullWord.isNotEmpty()) {
-                triggerPredictionsForPrefix(fullWord, rawPrefix, ic, editorInfo)
+            if (prefix.isNotEmpty()) {
+                triggerPredictionsForPrefix(prefix, rawPrefix, ic, editorInfo)
             } else {
                 // v1.2.6 FIX: Don't clear suggestions if showing special prompts or swipe corrections
                 // After autocorrect/swipe, cursor moves to after space (prefix empty), but we want
@@ -151,8 +152,7 @@ class InputCoordinator(
                 }
             }
 
-            debugLogger?.invoke("🎯 Cursor sync: pos=$newPosition, prefix='$prefix', " +
-                "suffix='$suffix', fullWord='$fullWord'")
+            debugLogger?.invoke("🎯 Cursor sync: pos=$newPosition, prefix='$prefix', suffix='$suffix'")
         }
         syncHandler.postDelayed(pendingSyncRunnable!!, CURSOR_SYNC_DEBOUNCE_MS)
     }
@@ -167,19 +167,20 @@ class InputCoordinator(
     }
 
     /**
-     * Triggers predictions for a given word (prefix+suffix combined).
-     * Used after cursor sync to show predictions for the word at cursor.
+     * Triggers predictions for the prefix (chars before cursor).
+     * Used after cursor sync to show predictions for the word being typed.
      *
-     * v1.2.6: Now accepts full word (prefix+suffix) and raw prefix for proper handling
-     * of mid-word cursor positions and capitalization.
+     * v1.2.7: Uses PREFIX ONLY for prediction lookup, not fullWord.
+     * When cursor is at "per|fect", we search for "per" words, not "perfect".
+     * The suffix is only used for deletion when a prediction is selected.
      *
-     * @param fullWord Complete word to get predictions for (prefix + suffix)
+     * @param prefix Prefix to search for predictions (chars before cursor)
      * @param rawPrefix Raw (non-normalized) prefix for capitalization check
      * @param ic InputConnection (for context)
      * @param editorInfo Editor info
      */
     private fun triggerPredictionsForPrefix(
-        fullWord: String,
+        prefix: String,
         rawPrefix: String,
         ic: InputConnection?,
         editorInfo: EditorInfo?
@@ -198,11 +199,11 @@ class InputCoordinator(
             if (Thread.currentThread().isInterrupted) return@submit
 
             try {
-                // v1.2.6: For contractions like "don't", also try searching without apostrophe
-                // Dictionary stores "dont" which gets mapped to "don't" by contraction manager
-                val searchTerms = mutableListOf(fullWord)
-                val noApostrophe = fullWord.replace("'", "").replace("\u2019", "")
-                if (noApostrophe != fullWord && noApostrophe.isNotEmpty()) {
+                // v1.2.7: Search using PREFIX only (chars before cursor)
+                // For contractions like "don't", also try searching without apostrophe
+                val searchTerms = mutableListOf(prefix)
+                val noApostrophe = prefix.replace("'", "").replace("\u2019", "")
+                if (noApostrophe != prefix && noApostrophe.isNotEmpty()) {
                     searchTerms.add(noApostrophe)
                 }
 
