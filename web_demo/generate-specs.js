@@ -102,7 +102,7 @@ function generateSpecPage(spec, markdown, config) {
     </nav>
 
     <!-- Breadcrumb -->
-    <div class="container mx-auto px-6 py-4">
+    <div class="container mx-auto px-6 py-4 pt-20">
         <div class="flex items-center gap-2 text-sm text-gray-500">
             <a href="../" class="hover:text-ck-purple">Home</a>
             <span>/</span>
@@ -219,7 +219,7 @@ function generateIndexPage(config) {
     </nav>
 
     <!-- Header -->
-    <header class="container mx-auto px-6 py-12 text-center">
+    <header class="container mx-auto px-6 py-12 pt-20 text-center">
         <h1 class="text-4xl font-bold gradient-text mb-4">${config.title}</h1>
         <p class="text-xl text-gray-400 max-w-2xl mx-auto">${config.description}</p>
     </header>

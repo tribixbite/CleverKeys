@@ -30,32 +30,43 @@ jobs:
       - name: Prepare CleverKeys website and demo
         run: |
           mkdir -p deploy/demo
+          mkdir -p deploy/specs
 
           if [ -d "web_demo" ]; then
             echo "📁 Setting up CleverKeys website..."
 
-            # Copy new homepage (index.html stays as-is)
+            # Copy new homepage
             if [ -f "web_demo/index.html" ]; then
               cp web_demo/index.html deploy/
               echo "✅ Homepage ready"
             fi
 
-            # Move neural swipe demo to /demo/ subfolder
-            echo "📁 Setting up neural swipe demo in /demo/..."
-            if [ -f "web_demo/swipe-onnx.html" ]; then
+            # Copy demo page (use demo/index.html if exists, otherwise under construction)
+            echo "📁 Setting up demo in /demo/..."
+            if [ -f "web_demo/demo/index.html" ]; then
+              cp web_demo/demo/index.html deploy/demo/index.html
+              echo "✅ Demo page ready (under construction)"
+            elif [ -f "web_demo/swipe-onnx.html" ]; then
               cp web_demo/swipe-onnx.html deploy/demo/index.html
-              echo "✅ Demo page ready at /demo/"
+              echo "✅ Demo page ready (neural swipe)"
             fi
 
-            # Copy demo supporting files (ONNX models, JS, JSON)
+            # Copy specs documentation
+            echo "📁 Setting up specs documentation in /specs/..."
+            if [ -d "web_demo/specs" ]; then
+              cp -r web_demo/specs/* deploy/specs/
+              echo "✅ Specs documentation ready"
+            fi
+
+            # Copy demo supporting files (for when demo is restored)
             cp web_demo/*.onnx deploy/demo/ 2>/dev/null || echo "No ONNX models"
             cp web_demo/*.js deploy/demo/ 2>/dev/null || echo "No JS files"
-            cp web_demo/*.json deploy/demo/ 2>/dev/null || echo "No JSON files"
           fi
 
           echo "✅ Website structure prepared:"
           echo "   / - Homepage"
-          echo "   /demo/ - Neural swipe typing demo"
+          echo "   /demo/ - Demo (under construction)"
+          echo "   /specs/ - Documentation"
           ls -laR deploy/
 
       - name: Configure Pages
