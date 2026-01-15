@@ -1,7 +1,47 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-15
-**Status**: v1.2.7 - Cursor-aware prediction fixes
+**Status**: v1.2.7 - Cursor-aware prediction fixes + Wiki System
+
+---
+
+## User Guide Wiki System - IN PROGRESS (2026-01-15)
+
+**Goal**: Create comprehensive user guide wiki with paired technical specs.
+
+**Completed**:
+- ✅ Wiki directory structure (`docs/wiki/[8 categories]/`)
+- ✅ TABLE_OF_CONTENTS.md with 61 planned pages
+- ✅ wiki-config.json with categories, search, navigation
+- ✅ generate-wiki.js with callouts, TOC sidebar, prev/next nav, search
+- ✅ Main site updated with Wiki link (green button)
+
+**User Guides Created (9/36)**:
+- Getting Started: installation, enabling-keyboard, first-time-setup, basic-typing
+- Typing: swipe-typing, autocorrect
+- Gestures: short-swipes, trackpoint-mode, selection-delete
+
+**Tech Specs Created (4/25)**:
+- getting-started: installation-spec, setup-spec
+- typing: swipe-typing-spec
+- gestures: trackpoint-mode-spec
+
+**Remaining** (27 user guides + 21 tech specs):
+- typing: special-characters, emoji
+- gestures: cursor-navigation, circle-gestures
+- customization: per-key-actions, extra-keys, themes, command-palette
+- layouts: adding-layouts, switching-layouts, multi-language, language-packs, custom-layouts, profiles
+- settings: appearance, input-behavior, haptics, neural-settings, privacy, accessibility
+- clipboard: clipboard-history, text-selection, shortcuts
+- troubleshooting: common-issues, reset-defaults, backup-restore, performance
+
+**Files Created**:
+- `docs/wiki/TABLE_OF_CONTENTS.md`
+- `docs/wiki/[category]/*.md` (user guides)
+- `docs/wiki/specs/[category]/*-spec.md` (tech specs)
+- `web_demo/wiki-config.json`
+- `web_demo/generate-wiki.js`
+- `web_demo/wiki/*.html` (generated)
 
 ---
 
