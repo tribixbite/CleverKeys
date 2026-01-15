@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First Time Setup - CleverKeys Wiki</title>
+    <meta name="description" content="Configure CleverKeys after installation">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wiki-primary': '#10b981',
+                        'wiki-primary-light': '#34d399',
+                        'wiki-accent': '#3b82f6',
+                        'wiki-dark': '#0d1117',
+                        'wiki-surface': '#161b22',
+                        'wiki-card': '#21262d',
+                        'wiki-border': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-wiki-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <span>/</span>
+            <span class="text-gray-300">First Time Setup</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #10b98120; color: #10b981">Getting Started</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">beginner</span>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">First Time Setup</h1>
+        <p class="text-xl text-gray-400">Configure CleverKeys after installation</p>
+        
+        <div class="flex flex-wrap gap-2 mt-4">
+            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#setup</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#wizard</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#configuration</span>
+        </div>
+    
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="flex gap-8">
+            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
+                <h1 class="text-3xl font-bold mb-6 text-white">First Time Setup</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">When you first use CleverKeys, a setup wizard guides you through initial configuration.</p>
+
+<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Configure keyboard layout and language</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Automatic on first launch</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Time</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">2-3 minutes</td></tr></tbody></table></div>
+<h2 id="setup-steps" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Setup Steps</h2>
+
+<h3 id="step-1-welcome-screen" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 1: Welcome Screen</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">The first screen introduces CleverKeys features:</p>
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Neural swipe typing</li>
+<li class="ml-4 py-1">&#8226; Customizable gestures</li>
+<li class="ml-4 py-1">&#8226; Privacy-focused design</li>
+
+</ul><p class="mb-4 text-gray-300 leading-relaxed">Tap <strong class="font-semibold text-white">Get Started</strong> to continue.</p>
+
+<h3 id="step-2-select-layout" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 2: Select Layout</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Choose your keyboard layout:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Layout</th><th class="px-4 py-2 text-left border-b border-wiki-border">Best For</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">QWERTY</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">English, most languages</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">AZERTY</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">French</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">QWERTZ</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">German</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Dvorak</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Alternative English</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Colemak</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Ergonomic typing</td></tr></tbody></table></div>
+<div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">You can add more layouts later in Settings > Layouts.</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
+<h3 id="step-3-download-language-pack" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 3: Download Language Pack</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">For accurate swipe typing, download a language pack:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Select your primary language</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Download</strong> (requires internet)</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Wait for download to complete (~2-5 MB)</li>
+
+</ul><p class="mb-4 text-gray-300 leading-relaxed">The language pack includes:</p>
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Neural prediction model</li>
+<li class="ml-4 py-1">&#8226; Dictionary with 50,000+ words</li>
+<li class="ml-4 py-1">&#8226; Autocorrect rules</li>
+
+</ul><h3 id="step-4-customize-appearance" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 4: Customize Appearance</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Choose your preferences:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Theme</strong>: Dark (default), Light, or System</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Keyboard height</strong>: Compact, Normal, or Tall</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Haptic feedback</strong>: Enable or disable vibration</li>
+
+</ul><h3 id="step-5-try-it-out" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 5: Try It Out</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">The setup wizard includes a practice area:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Try <strong class="font-semibold text-white">tap typing</strong> a few words</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Try <strong class="font-semibold text-white">swipe typing</strong> by drawing through letters</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Experiment with <strong class="font-semibold text-white">short swipes</strong> for special characters</li>
+
+</ul><h2 id="after-setup" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">After Setup</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">You can change any setting later:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Settings gear</strong>: Tap the gear icon on the keyboard</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Long-press comma</strong>: Opens settings menu</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">App settings</strong>: Open CleverKeys from your app drawer</li>
+
+</ul><h2 id="recommended-next-steps" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Recommended Next Steps</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <a href="basic-typing.md" class="text-wiki-accent hover:underline">Basic Typing</a> - Master the fundamentals</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <a href="../typing/swipe-typing.md" class="text-wiki-accent hover:underline">Swipe Typing</a> - Learn neural predictions</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <a href="../gestures/short-swipes.md" class="text-wiki-accent hover:underline">Short Swipes</a> - Access special characters quickly</li>
+
+</ul><h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Skip steps</strong>: You can skip and configure later</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Multiple languages</strong>: Add secondary language in Settings > Languages</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Reset</strong>: Settings > Reset to Defaults to start fresh</li>
+
+</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/getting-started/setup-spec.md" class="text-wiki-accent hover:underline">Setup Technical Specification</a>.</p>
+
+                
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
+            
+                <a href="getting-started/installation.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500">Previous</div>
+                        <div class="font-medium">Installation</div>
+                    </div>
+                </a>
+            
+            
+                <a href="getting-started/basic-typing.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <div>
+                        <div class="text-xs uppercase text-gray-500">Next</div>
+                        <div class="font-medium">Basic Typing</div>
+                    </div>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            
+        </div>
+    
+            </article>
+            
+        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
+            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
+            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
+                
+                    <li class="">
+                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#setup-steps" class="text-gray-400 hover:text-wiki-primary transition-colors">Setup Steps</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-1-welcome-screen" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 1: Welcome Screen</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-2-select-layout" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 2: Select Layout</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-3-download-language-pack" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 3: Download Language Pack</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-4-customize-appearance" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 4: Customize Appearance</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#step-5-try-it-out" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 5: Try It Out</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#after-setup" class="text-gray-400 hover:text-wiki-primary transition-colors">After Setup</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#recommended-next-steps" class="text-gray-400 hover:text-wiki-primary transition-colors">Recommended Next Steps</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
+                    </li>
+                
+            </ul>
+        </nav>
+    
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>

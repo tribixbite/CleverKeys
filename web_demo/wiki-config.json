@@ -1,0 +1,325 @@
+{
+  "title": "CleverKeys Wiki",
+  "description": "User guides, tutorials, and how-to articles",
+  "wiki_directory": "../docs/wiki",
+  "output_directory": "./wiki",
+  "base_url": "../",
+  "primary_color": "#10b981",
+
+  "categories": [
+    { "name": "Getting Started", "slug": "getting-started", "color": "#10b981", "icon": "rocket", "order": 1 },
+    { "name": "Typing", "slug": "typing", "color": "#3b82f6", "icon": "keyboard", "order": 2 },
+    { "name": "Gestures", "slug": "gestures", "color": "#8b5cf6", "icon": "hand", "order": 3 },
+    { "name": "Customization", "slug": "customization", "color": "#f59e0b", "icon": "settings", "order": 4 },
+    { "name": "Layouts", "slug": "layouts", "color": "#ec4899", "icon": "grid", "order": 5 },
+    { "name": "Settings", "slug": "settings", "color": "#6366f1", "icon": "sliders", "order": 6 },
+    { "name": "Clipboard", "slug": "clipboard", "color": "#14b8a6", "icon": "clipboard", "order": 7 },
+    { "name": "Troubleshooting", "slug": "troubleshooting", "color": "#ef4444", "icon": "help", "order": 8 }
+  ],
+
+  "wiki_pages": [
+    {
+      "file": "getting-started/installation.md",
+      "title": "Installation",
+      "description": "Download CleverKeys from F-Droid or GitHub",
+      "category": "Getting Started",
+      "difficulty": "beginner",
+      "featured": true,
+      "tags": ["install", "download", "f-droid", "github"]
+    },
+    {
+      "file": "getting-started/first-time-setup.md",
+      "title": "First Time Setup",
+      "description": "Configure CleverKeys after installation",
+      "category": "Getting Started",
+      "difficulty": "beginner",
+      "tags": ["setup", "wizard", "configuration"]
+    },
+    {
+      "file": "getting-started/basic-typing.md",
+      "title": "Basic Typing",
+      "description": "Learn tap typing and basic shortcuts",
+      "category": "Getting Started",
+      "difficulty": "beginner",
+      "tags": ["typing", "basics", "shortcuts"]
+    },
+    {
+      "file": "getting-started/enabling-keyboard.md",
+      "title": "Enabling the Keyboard",
+      "description": "Set CleverKeys as your default keyboard",
+      "category": "Getting Started",
+      "difficulty": "beginner",
+      "tags": ["enable", "input method", "android"]
+    },
+    {
+      "file": "typing/swipe-typing.md",
+      "title": "Swipe Typing",
+      "description": "Draw paths through letters to type words",
+      "category": "Typing",
+      "difficulty": "beginner",
+      "featured": true,
+      "tags": ["swipe", "glide", "neural", "predictions"]
+    },
+    {
+      "file": "typing/autocorrect.md",
+      "title": "Autocorrect",
+      "description": "Automatic spelling corrections and undo",
+      "category": "Typing",
+      "difficulty": "beginner",
+      "tags": ["autocorrect", "spelling", "dictionary"]
+    },
+    {
+      "file": "typing/special-characters.md",
+      "title": "Special Characters",
+      "description": "Type symbols, accents, and currency",
+      "category": "Typing",
+      "difficulty": "intermediate",
+      "tags": ["symbols", "accents", "diacritics", "currency"]
+    },
+    {
+      "file": "typing/emoji.md",
+      "title": "Emoji",
+      "description": "Access emoji keyboard and shortcuts",
+      "category": "Typing",
+      "difficulty": "beginner",
+      "tags": ["emoji", "emoticons", "symbols"]
+    },
+    {
+      "file": "gestures/short-swipes.md",
+      "title": "Short Swipes",
+      "description": "Quick flick gestures to access subkeys",
+      "category": "Gestures",
+      "difficulty": "intermediate",
+      "featured": true,
+      "tags": ["swipe", "flick", "subkeys", "shortcuts"]
+    },
+    {
+      "file": "gestures/cursor-navigation.md",
+      "title": "Cursor Navigation",
+      "description": "Move cursor with spacebar or arrow keys",
+      "category": "Gestures",
+      "difficulty": "intermediate",
+      "tags": ["cursor", "navigation", "spacebar", "arrow"]
+    },
+    {
+      "file": "gestures/selection-delete.md",
+      "title": "Selection Delete",
+      "description": "Select and delete text with backspace gesture",
+      "category": "Gestures",
+      "difficulty": "advanced",
+      "tags": ["selection", "delete", "backspace", "text"]
+    },
+    {
+      "file": "gestures/trackpoint-mode.md",
+      "title": "TrackPoint Mode",
+      "description": "Joystick-style cursor control on navigation keys",
+      "category": "Gestures",
+      "difficulty": "advanced",
+      "tags": ["trackpoint", "joystick", "cursor", "navigation"]
+    },
+    {
+      "file": "gestures/circle-gestures.md",
+      "title": "Circle Gestures",
+      "description": "Circular swipes for quick actions",
+      "category": "Gestures",
+      "difficulty": "advanced",
+      "tags": ["circle", "gesture", "undo", "redo"]
+    },
+    {
+      "file": "customization/per-key-actions.md",
+      "title": "Per-Key Actions",
+      "description": "Customize what each swipe direction does",
+      "category": "Customization",
+      "difficulty": "advanced",
+      "tags": ["customize", "actions", "swipe", "directions"]
+    },
+    {
+      "file": "customization/extra-keys.md",
+      "title": "Extra Keys",
+      "description": "Add custom keys to the bottom row",
+      "category": "Customization",
+      "difficulty": "intermediate",
+      "tags": ["extra", "keys", "bottom row", "customize"]
+    },
+    {
+      "file": "customization/themes.md",
+      "title": "Themes",
+      "description": "Change keyboard appearance and colors",
+      "category": "Customization",
+      "difficulty": "beginner",
+      "tags": ["themes", "colors", "appearance", "dark mode"]
+    },
+    {
+      "file": "customization/command-palette.md",
+      "title": "Command Palette",
+      "description": "Quick access to all keyboard actions",
+      "category": "Customization",
+      "difficulty": "intermediate",
+      "tags": ["command", "palette", "actions", "quick"]
+    },
+    {
+      "file": "layouts/adding-layouts.md",
+      "title": "Adding Layouts",
+      "description": "Download and install keyboard layouts",
+      "category": "Layouts",
+      "difficulty": "beginner",
+      "tags": ["layouts", "download", "install"]
+    },
+    {
+      "file": "layouts/switching-layouts.md",
+      "title": "Switching Layouts",
+      "description": "Change between different keyboard layouts",
+      "category": "Layouts",
+      "difficulty": "beginner",
+      "tags": ["switch", "layouts", "language"]
+    },
+    {
+      "file": "layouts/multi-language.md",
+      "title": "Multi-Language Typing",
+      "description": "Type in multiple languages simultaneously",
+      "category": "Layouts",
+      "difficulty": "intermediate",
+      "tags": ["multi-language", "bilingual", "secondary"]
+    },
+    {
+      "file": "layouts/language-packs.md",
+      "title": "Language Packs",
+      "description": "Download prediction dictionaries",
+      "category": "Layouts",
+      "difficulty": "intermediate",
+      "tags": ["language", "packs", "dictionary", "download"]
+    },
+    {
+      "file": "layouts/custom-layouts.md",
+      "title": "Custom Layouts",
+      "description": "Create your own keyboard layouts",
+      "category": "Layouts",
+      "difficulty": "advanced",
+      "tags": ["custom", "layouts", "create", "xml"]
+    },
+    {
+      "file": "layouts/profiles.md",
+      "title": "Profiles",
+      "description": "Save and restore keyboard configurations",
+      "category": "Layouts",
+      "difficulty": "intermediate",
+      "tags": ["profiles", "backup", "restore", "export"]
+    },
+    {
+      "file": "settings/appearance.md",
+      "title": "Appearance Settings",
+      "description": "Configure keyboard height, margins, and colors",
+      "category": "Settings",
+      "difficulty": "beginner",
+      "tags": ["appearance", "height", "margins", "colors"]
+    },
+    {
+      "file": "settings/input-behavior.md",
+      "title": "Input Behavior",
+      "description": "Configure autocorrect, autocapitalize, and more",
+      "category": "Settings",
+      "difficulty": "intermediate",
+      "tags": ["input", "autocorrect", "autocapitalize", "double-space"]
+    },
+    {
+      "file": "settings/haptics.md",
+      "title": "Haptic Feedback",
+      "description": "Configure vibration settings",
+      "category": "Settings",
+      "difficulty": "beginner",
+      "tags": ["haptics", "vibration", "feedback"]
+    },
+    {
+      "file": "settings/neural-settings.md",
+      "title": "Neural Settings",
+      "description": "Tune prediction accuracy and performance",
+      "category": "Settings",
+      "difficulty": "advanced",
+      "tags": ["neural", "prediction", "beam width", "performance"]
+    },
+    {
+      "file": "settings/privacy.md",
+      "title": "Privacy Settings",
+      "description": "Control data collection and storage",
+      "category": "Settings",
+      "difficulty": "intermediate",
+      "tags": ["privacy", "data", "collection", "storage"]
+    },
+    {
+      "file": "settings/accessibility.md",
+      "title": "Accessibility",
+      "description": "Configure accessibility features",
+      "category": "Settings",
+      "difficulty": "beginner",
+      "tags": ["accessibility", "large keys", "slow mode"]
+    },
+    {
+      "file": "clipboard/clipboard-history.md",
+      "title": "Clipboard History",
+      "description": "Access recently copied text",
+      "category": "Clipboard",
+      "difficulty": "beginner",
+      "tags": ["clipboard", "history", "copy", "paste"]
+    },
+    {
+      "file": "clipboard/text-selection.md",
+      "title": "Text Selection",
+      "description": "Select, copy, cut, and paste text",
+      "category": "Clipboard",
+      "difficulty": "intermediate",
+      "tags": ["selection", "copy", "cut", "paste"]
+    },
+    {
+      "file": "clipboard/shortcuts.md",
+      "title": "Text Shortcuts",
+      "description": "Common text editing shortcuts",
+      "category": "Clipboard",
+      "difficulty": "intermediate",
+      "tags": ["shortcuts", "undo", "redo", "select all"]
+    },
+    {
+      "file": "troubleshooting/common-issues.md",
+      "title": "Common Issues",
+      "description": "Solutions to frequently reported problems",
+      "category": "Troubleshooting",
+      "difficulty": "beginner",
+      "tags": ["issues", "problems", "solutions", "fix"]
+    },
+    {
+      "file": "troubleshooting/reset-defaults.md",
+      "title": "Reset to Defaults",
+      "description": "Restore factory settings",
+      "category": "Troubleshooting",
+      "difficulty": "beginner",
+      "tags": ["reset", "defaults", "factory", "restore"]
+    },
+    {
+      "file": "troubleshooting/backup-restore.md",
+      "title": "Backup & Restore",
+      "description": "Export and import your settings",
+      "category": "Troubleshooting",
+      "difficulty": "intermediate",
+      "tags": ["backup", "restore", "export", "import"]
+    },
+    {
+      "file": "troubleshooting/performance.md",
+      "title": "Performance Tips",
+      "description": "Optimize keyboard speed and responsiveness",
+      "category": "Troubleshooting",
+      "difficulty": "intermediate",
+      "tags": ["performance", "speed", "lag", "optimization"]
+    }
+  ],
+
+  "search": {
+    "enabled": true,
+    "placeholder": "Search wiki...",
+    "min_chars": 2
+  },
+
+  "navigation": {
+    "show_breadcrumbs": true,
+    "show_prev_next": true,
+    "show_related": true
+  }
+}

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autocorrect - CleverKeys Wiki</title>
+    <meta name="description" content="Automatic spelling corrections and undo">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wiki-primary': '#10b981',
+                        'wiki-primary-light': '#34d399',
+                        'wiki-accent': '#3b82f6',
+                        'wiki-dark': '#0d1117',
+                        'wiki-surface': '#161b22',
+                        'wiki-card': '#21262d',
+                        'wiki-border': '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-wiki-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <span>/</span>
+            <span class="text-gray-300">Autocorrect</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #3b82f620; color: #3b82f6">Typing</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">beginner</span>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">Autocorrect</h1>
+        <p class="text-xl text-gray-400">Automatic spelling corrections and undo</p>
+        
+        <div class="flex flex-wrap gap-2 mt-4">
+            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#autocorrect</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#spelling</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#dictionary</span>
+        </div>
+    
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="flex gap-8">
+            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
+                <h1 class="text-3xl font-bold mb-6 text-white">Autocorrect</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys automatically corrects common spelling mistakes as you type. You can undo corrections and add words to your personal dictionary.</p>
+
+<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Fix spelling mistakes automatically</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Automatic while typing</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Undo</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Tap original word in predictions</td></tr></tbody></table></div>
+<h2 id="how-autocorrect-works" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">How Autocorrect Works</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">When you finish typing a word (by pressing space):</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> CleverKeys checks if the word is in the dictionary</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> If not found, it searches for similar words</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> If a close match exists, it automatically replaces your word</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> The original word appears in the prediction bar</li>
+
+</ul><h2 id="undoing-autocorrect" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Undoing Autocorrect</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">If autocorrect changes a word you didn't want changed:</p>
+
+<h3 id="method-1-tap-the-original-word" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 1: Tap the Original Word</h3>
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Look at the prediction bar immediately after correction</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Your original word appears as a suggestion</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap it to restore the original spelling</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> The word is automatically added to your dictionary</li>
+
+</ul><h3 id="method-2-backspace-and-retype" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 2: Backspace and Retype</h3>
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Press backspace to delete the corrected word</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Retype your intended word</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Press space again (it won't be corrected twice)</li>
+
+</ul><h2 id="adding-words-to-dictionary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Adding Words to Dictionary</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">When you type a word not in the dictionary:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Type the word and press space</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> If not autocorrected, a prompt appears: "Add 'word' to dictionary?"</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap the prompt to add it</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> The word will be suggested in future and won't be autocorrected</li>
+
+</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Added words appear in your predictions when you start typing them.</div></p>
+<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
+<h2 id="managing-your-dictionary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Managing Your Dictionary</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Access your personal dictionary:</p>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open Settings (gear icon on keyboard)</li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Go to <strong class="font-semibold text-white">Activities > Dictionary Manager</strong></li>
+<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> View, edit, or delete custom words</li>
+
+</ul><div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Tab</th><th class="px-4 py-2 text-left border-b border-wiki-border">Contents</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Active</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Words from main dictionary</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Disabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Words you've turned off</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">User</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">System user dictionary</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Custom</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Words you've added</td></tr></tbody></table></div>
+<h2 id="autocorrect-settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Autocorrect Settings</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Customize autocorrect behavior in Settings:</p>
+
+<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Autocorrect</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Enable/disable automatic corrections</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Autocorrect Threshold</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">How similar words must be to trigger</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Suggest Contact Names</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Include contact names in suggestions</td></tr></tbody></table></div>
+<h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Proper nouns</strong>: Add names and places to prevent miscorrection</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Technical terms</strong>: Add jargon and abbreviations to your dictionary</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Disable for a word</strong>: Tap a prediction twice to never autocorrect it</li>
+<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Language-specific</strong>: Each language has its own dictionary</li>
+
+</ul><h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
+
+<h3 id="q-why-was-my-word-corrected-to-something-wrong-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Why was my word corrected to something wrong?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: The similar word had higher frequency. Add your word to dictionary to prevent this.</p>
+
+<h3 id="q-can-i-turn-off-autocorrect-completely-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I turn off autocorrect completely?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, in Settings > Input Behavior > Autocorrect.</p>
+
+<h3 id="q-does-autocorrect-work-with-swipe-typing-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Does autocorrect work with swipe typing?</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Swipe typing uses neural predictions instead of autocorrect.</p>
+
+<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="swipe-typing.md" class="text-wiki-accent hover:underline">Swipe Typing</a> - Neural word prediction</li>
+<li class="ml-4 py-1">&#8226; <a href="special-characters.md" class="text-wiki-accent hover:underline">Special Characters</a> - Symbols and accents</li>
+
+</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/typing/autocorrect-spec.md" class="text-wiki-accent hover:underline">Autocorrect Technical Specification</a>.</p>
+
+                
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
+            
+                <a href="typing/swipe-typing.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500">Previous</div>
+                        <div class="font-medium">Swipe Typing</div>
+                    </div>
+                </a>
+            
+            
+                <a href="typing/special-characters.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
+                    <div>
+                        <div class="text-xs uppercase text-gray-500">Next</div>
+                        <div class="font-medium">Special Characters</div>
+                    </div>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            
+        </div>
+    
+            </article>
+            
+        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
+            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
+            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
+                
+                    <li class="">
+                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#how-autocorrect-works" class="text-gray-400 hover:text-wiki-primary transition-colors">How Autocorrect Works</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#undoing-autocorrect" class="text-gray-400 hover:text-wiki-primary transition-colors">Undoing Autocorrect</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#method-1-tap-the-original-word" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 1: Tap the Original Word</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#method-2-backspace-and-retype" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 2: Backspace and Retype</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#adding-words-to-dictionary" class="text-gray-400 hover:text-wiki-primary transition-colors">Adding Words to Dictionary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#managing-your-dictionary" class="text-gray-400 hover:text-wiki-primary transition-colors">Managing Your Dictionary</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#autocorrect-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Autocorrect Settings</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-why-was-my-word-corrected-to-something-wrong-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Why was my word corrected to something wrong?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-can-i-turn-off-autocorrect-completely-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I turn off autocorrect completely?</a>
+                    </li>
+                
+                    <li class="ml-3">
+                        <a href="#q-does-autocorrect-work-with-swipe-typing-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Does autocorrect work with swipe typing?</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
+                    </li>
+                
+                    <li class="">
+                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
+                    </li>
+                
+            </ul>
+        </nav>
+    
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    </footer>
+</body>
+</html>
