@@ -52,6 +52,10 @@
    - Added `specialPromptActive` flag to prevent async prediction task from overwriting
    - Cancel pending task before showing special prompts
    - Check flag in async task before posting to UI
+3. ✅ Mid-word suffix not deleted - SuggestionHandler now calls `synchronizeWithCursor()` before deletion
+   and uses `deleteSurroundingText(prefixDelete, suffixDelete)` for both-sided deletion
+4. ✅ Swipe predictions disappeared quickly - InputCoordinator now checks `lastCommitSource == NEURAL_SWIPE`
+   before clearing suggestions on cursor move
 
 **Status**: Implemented and tested
 

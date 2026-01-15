@@ -445,18 +445,35 @@ class SuggestionHandler(
                 }
                 // ALSO: If user is selecting a prediction during regular typing, delete the partial word
                 // This handles typing "hel" then selecting "hello" - we need to delete "hel" first
+                // v1.2.6: Also handles cursor mid-word - need to delete BOTH prefix AND suffix
                 else if (contextTracker.getCurrentWordLength() > 0 && !isSwipeAutoInsert) {
-                    Log.d(TAG, "TYPING PREDICTION: Deleting partial word: '${contextTracker.getCurrentWord()}'")
+                    // v1.2.6 FIX: Do immediate cursor sync to get accurate prefix/suffix
+                    // The debounced sync may not have completed yet
+                    contextTracker.synchronizeWithCursor(
+                        inputConnection,
+                        config.primary_language,
+                        editorInfo
+                    )
+
+                    val (prefixDelete, suffixDelete) = contextTracker.getCharsToDeleteForPrediction()
+                    Log.d(TAG, "TYPING PREDICTION: Deleting partial word - prefix=$prefixDelete, suffix=$suffixDelete")
 
                     if (inTermuxApp) {
                         // TERMUX: Use backspace key events
-                        Log.d(TAG, "TERMUX: Using backspace key events to delete ${contextTracker.getCurrentWordLength()} chars")
-                        repeat(contextTracker.getCurrentWordLength()) {
+                        // First delete suffix (move right then backspace), then delete prefix
+                        if (suffixDelete > 0) {
+                            // Move cursor to end of word
+                            repeat(suffixDelete) {
+                                keyeventhandler.send_key_down_up(KeyEvent.KEYCODE_DPAD_RIGHT, 0)
+                            }
+                        }
+                        // Delete entire word (prefix + suffix)
+                        repeat(prefixDelete + suffixDelete) {
                             keyeventhandler.send_key_down_up(KeyEvent.KEYCODE_DEL, 0)
                         }
                     } else {
-                        // NORMAL APPS: Use InputConnection
-                        inputConnection.deleteSurroundingText(contextTracker.getCurrentWordLength(), 0)
+                        // NORMAL APPS: Use InputConnection with both prefix AND suffix deletion
+                        inputConnection.deleteSurroundingText(prefixDelete, suffixDelete)
 
                         val debugAfter = inputConnection.getTextBeforeCursor(50, 0)
                         Log.d(TAG, "TYPING PREDICTION: After deleting partial, text before cursor: '$debugAfter'")

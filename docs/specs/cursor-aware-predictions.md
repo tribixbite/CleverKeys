@@ -11,6 +11,8 @@
 - Fixed race condition: async prediction task could overwrite special prompts (autocorrect undo, add-to-dictionary)
 - Added `specialPromptActive` flag to prevent prediction task from overwriting important UI states
 - Fixed immediate cursor sync in `onSuggestionSelected` to handle debounce timing issue
+- Fixed mid-word cursor suffix deletion: now deletes BOTH prefix AND suffix when selecting prediction
+- Fixed swipe predictions disappearing: preserve suggestions when lastCommitSource is NEURAL_SWIPE
 
 ---
 

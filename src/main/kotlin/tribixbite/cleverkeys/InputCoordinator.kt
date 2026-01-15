@@ -133,14 +133,16 @@ class InputCoordinator(
             if (prefix.isNotEmpty()) {
                 triggerPredictionsForPrefix(prefix, ic, editorInfo)
             } else {
-                // v1.2.6 FIX: Don't clear suggestions if showing autocorrect undo options
-                // After autocorrect, cursor moves to after space (prefix empty), but we want
-                // to keep showing the original word for undo/add-to-dictionary
+                // v1.2.6 FIX: Don't clear suggestions if showing special prompts or swipe corrections
+                // After autocorrect/swipe, cursor moves to after space (prefix empty), but we want
+                // to keep showing suggestions for undo/correction/add-to-dictionary
                 val hasAutocorrectUndo = contextTracker.getLastAutocorrectOriginalWord() != null
-                if (!hasAutocorrectUndo) {
+                val hasSwipeCorrections = contextTracker.getLastCommitSource() == PredictionSource.NEURAL_SWIPE
+
+                if (!hasAutocorrectUndo && !hasSwipeCorrections) {
                     suggestionBar?.clearSuggestions()
                 } else {
-                    debugLogger?.invoke("🔄 Preserving autocorrect undo suggestions")
+                    debugLogger?.invoke("🔄 Preserving suggestions (autocorrect=$hasAutocorrectUndo, swipe=$hasSwipeCorrections)")
                 }
             }
 
