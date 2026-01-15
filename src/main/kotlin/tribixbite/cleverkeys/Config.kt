@@ -17,8 +17,8 @@ import tribixbite.cleverkeys.prefs.LayoutsPreference
 object Defaults {
     // Appearance
     const val THEME = "cleverkeysdark"
-    const val KEYBOARD_HEIGHT_PORTRAIT = 28
-    const val KEYBOARD_HEIGHT_LANDSCAPE = 50
+    const val KEYBOARD_HEIGHT_PORTRAIT = 30
+    const val KEYBOARD_HEIGHT_LANDSCAPE = 40
     const val LABEL_BRIGHTNESS = 100
     const val KEYBOARD_OPACITY = 81
     const val KEY_OPACITY = 100
@@ -38,8 +38,8 @@ object Defaults {
 
     // Margin settings (percentages of screen dimension)
     // Bottom margin as % of screen height
-    const val MARGIN_BOTTOM_PORTRAIT = 2      // ~2% of screen height
-    const val MARGIN_BOTTOM_LANDSCAPE = 2     // ~2% of screen height
+    const val MARGIN_BOTTOM_PORTRAIT = 0      // No bottom margin
+    const val MARGIN_BOTTOM_LANDSCAPE = 0     // No bottom margin
     // Left/Right margins as % of screen width
     const val MARGIN_LEFT_PORTRAIT = 1        // ~1% of screen width
     const val MARGIN_LEFT_LANDSCAPE = 5       // ~5% of screen width
@@ -90,7 +90,7 @@ object Defaults {
 
     // Short gestures
     const val SHORT_GESTURES_ENABLED = true
-    const val SHORT_GESTURE_MIN_DISTANCE = 37
+    const val SHORT_GESTURE_MIN_DISTANCE = 28
     const val SHORT_GESTURE_MAX_DISTANCE = 141
 
     // Selection-delete mode (backspace swipe+hold)
