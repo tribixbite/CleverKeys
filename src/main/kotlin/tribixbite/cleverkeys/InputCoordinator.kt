@@ -617,6 +617,9 @@ class InputCoordinator(
                     // The debounced sync may not have completed if user taps prediction quickly
                     // This ensures we have accurate prefix/suffix counts for mid-word editing
                     cancelPendingCursorSync()
+                    // v1.2.7: Clear expectingSelectionUpdate to ensure sync isn't skipped
+                    // A stale flag from previous deletion could block the sync
+                    contextTracker.expectingSelectionUpdate = false
                     contextTracker.synchronizeWithCursor(
                         connection,
                         config.primary_language,

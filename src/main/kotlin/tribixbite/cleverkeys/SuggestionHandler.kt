@@ -449,6 +449,10 @@ class SuggestionHandler(
                 else if (contextTracker.getCurrentWordLength() > 0 && !isSwipeAutoInsert) {
                     // v1.2.6 FIX: Do immediate cursor sync to get accurate prefix/suffix
                     // The debounced sync may not have completed yet
+                    // v1.2.7: CRITICAL - Clear expectingSelectionUpdate flag first!
+                    // If a previous deletion set this flag and onUpdateSelection hasn't fired yet,
+                    // the sync would be skipped, causing suffix deletion to fail (e.g., "ca|n't" → "canteen n't")
+                    contextTracker.expectingSelectionUpdate = false
                     contextTracker.synchronizeWithCursor(
                         inputConnection,
                         config.primary_language,

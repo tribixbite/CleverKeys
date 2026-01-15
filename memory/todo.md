@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-15
-**Status**: v1.2.6 - Cursor-aware predictions implemented
+**Status**: v1.2.7 - Cursor-aware prediction fixes
 
 ---
 
@@ -62,6 +62,16 @@
 8. ✅ Contractions cursor past apostrophe no suggestions - InputCoordinator combines prefix+suffix for full word lookup,
    also searches de-apostrophed form (e.g., "dont" finds "don't")
 9. ✅ Secondary language contractions not showing - WordPredictor now loads contraction keys into secondary NormalizedPrefixIndex
+
+**Bug Fixes (v1.2.7)**:
+10. ✅ Suffix not deleted when cursor mid-word (ca|n't → canteen n't) - CRITICAL fix:
+    - SuggestionHandler and InputCoordinator now clear `expectingSelectionUpdate` flag before calling `synchronizeWithCursor()`
+    - Stale flag from previous deletion could cause sync to skip, leaving `rawSuffixForDeletion` empty
+11. ✅ Contraction predictions not showing for PRIMARY language - WordPredictor now loads:
+    - `loadPrimaryContractionKeys()` adds apostrophe-free forms to prefix index (e.g., "cant" → "can't")
+    - `loadContractionKeysIntoMaps()` for async loading path
+    - Both sync and async dictionary loading now include contraction keys
+12. ✅ Dictionary Manager Card missing from Settings UI - Card already present in Activities section (lines 1134-1170)
 
 **Settings UI Changes**:
 - Removed redundant Dictionary section (Dictionary Manager accessible from Activities section)

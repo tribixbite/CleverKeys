@@ -562,6 +562,13 @@ class WordPredictor {
             }
         }
 
+        // v1.2.7: Load contraction keys (apostrophe-free forms) into primary dictionary
+        // This allows typing "dont" or "cant" to find "don't" or "can't" in predictions
+        val contractionKeysAdded = loadPrimaryContractionKeys(context, language)
+        if (contractionKeysAdded > 0) {
+            Log.i(TAG, "Added $contractionKeysAdded contraction keys to primary prefix index for '$language'")
+        }
+
         // Set the N-gram model language to match the dictionary
         setLanguage(language)
     }
@@ -603,6 +610,13 @@ class WordPredictor {
                 // Add custom words to prefix index
                 if (customWords.isNotEmpty()) {
                     addToPrefixIndexForMap(customWords, prefixIndex)
+                }
+
+                // v1.2.7: Load contraction keys (apostrophe-free forms) for primary language
+                // This allows typing "dont" or "cant" to find "don't" or "can't"
+                val contractionKeys = loadContractionKeysIntoMaps(ctx, dictionary, prefixIndex, language)
+                if (contractionKeys > 0) {
+                    Log.d(TAG, "Added $contractionKeys contraction keys during async load for '$language'")
                 }
 
                 return customWords
@@ -764,6 +778,148 @@ class WordPredictor {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load secondary custom words for '$language'", e)
+        }
+        return count
+    }
+
+    /**
+     * v1.2.7: Load contraction keys into provided maps (for async loading path).
+     * This variant accepts maps as parameters instead of using instance fields.
+     *
+     * @param context Android context
+     * @param targetDict Dictionary map to add contraction aliases to
+     * @param targetPrefixIndex Prefix index to add lookup keys to
+     * @param language Language code
+     * @return Number of contraction keys added
+     */
+    private fun loadContractionKeysIntoMaps(
+        context: Context,
+        targetDict: MutableMap<String, Int>,
+        targetPrefixIndex: MutableMap<String, MutableSet<String>>,
+        language: String
+    ): Int {
+        var count = 0
+        try {
+            val packManager = LanguagePackManager.getInstance(context)
+            val packFile = packManager.getContractionsPath(language)
+
+            val inputStream = if (packFile != null) {
+                packFile.inputStream()
+            } else {
+                try {
+                    context.assets.open("dictionaries/contractions_$language.json")
+                } catch (e: Exception) {
+                    return 0
+                }
+            }
+
+            inputStream.use { stream ->
+                val reader = java.io.BufferedReader(java.io.InputStreamReader(stream))
+                val jsonBuilder = StringBuilder()
+                var line: String?
+                while (reader.readLine().also { line = it } != null) {
+                    jsonBuilder.append(line)
+                }
+
+                val jsonObj = org.json.JSONObject(jsonBuilder.toString())
+                val keys = jsonObj.keys()
+
+                while (keys.hasNext()) {
+                    val withoutApostrophe = keys.next().lowercase(java.util.Locale.ROOT)
+                    val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(java.util.Locale.ROOT)
+
+                    if (targetDict.containsKey(withApostrophe)) {
+                        targetDict[withoutApostrophe] = targetDict[withApostrophe] ?: 5000
+
+                        val maxLen = min(PREFIX_INDEX_MAX_LENGTH, withoutApostrophe.length)
+                        for (len in 1..maxLen) {
+                            val prefix = withoutApostrophe.substring(0, len)
+                            targetPrefixIndex.getOrPut(prefix) { mutableSetOf() }.add(withoutApostrophe)
+                        }
+                        count++
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load contraction keys for '$language' (async)", e)
+        }
+        return count
+    }
+
+    /**
+     * v1.2.7: Load contraction keys (apostrophe-free forms) into PRIMARY dictionary's prefix index.
+     * This allows typing "dont" or "cant" to find "don't" or "can't" in typing predictions.
+     *
+     * The dictionary stores words with apostrophes ("can't"), but the prefix index is keyed
+     * by actual prefixes. When user types "cant", prefix lookup can't find "can't" because
+     * "cant" is not a prefix of "can'" (the apostrophe breaks the match).
+     *
+     * This method adds the apostrophe-free form as an alias in the prefix index.
+     *
+     * @param context Android context
+     * @param language Language code
+     * @return Number of contraction keys added
+     */
+    private fun loadPrimaryContractionKeys(context: Context, language: String): Int {
+        var count = 0
+        try {
+            // Try language pack first
+            val packManager = LanguagePackManager.getInstance(context)
+            val packFile = packManager.getContractionsPath(language)
+
+            val inputStream = if (packFile != null) {
+                packFile.inputStream()
+            } else {
+                // Try bundled assets
+                try {
+                    context.assets.open("dictionaries/contractions_$language.json")
+                } catch (e: Exception) {
+                    // No contractions file for this language - that's OK
+                    Log.d(TAG, "No contractions file for primary language '$language'")
+                    return 0
+                }
+            }
+
+            inputStream.use { stream ->
+                val reader = java.io.BufferedReader(java.io.InputStreamReader(stream))
+                val jsonBuilder = StringBuilder()
+                var line: String?
+                while (reader.readLine().also { line = it } != null) {
+                    jsonBuilder.append(line)
+                }
+
+                val jsonObj = org.json.JSONObject(jsonBuilder.toString())
+                val keys = jsonObj.keys()
+
+                val currentDict = dictionary.get()
+                val currentPrefixIndex = prefixIndex.get()
+
+                while (keys.hasNext()) {
+                    val withoutApostrophe = keys.next().lowercase(java.util.Locale.ROOT)
+                    val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(java.util.Locale.ROOT)
+
+                    // Only add if the contraction exists in the dictionary
+                    if (currentDict.containsKey(withApostrophe)) {
+                        // Add apostrophe-free form to dictionary (high frequency for common contractions)
+                        currentDict[withoutApostrophe] = currentDict[withApostrophe] ?: 5000
+
+                        // Add to prefix index: map the apostrophe-free form to the actual contraction
+                        val maxLen = min(PREFIX_INDEX_MAX_LENGTH, withoutApostrophe.length)
+                        for (len in 1..maxLen) {
+                            val prefix = withoutApostrophe.substring(0, len)
+                            currentPrefixIndex.getOrPut(prefix) { mutableSetOf() }.add(withoutApostrophe)
+                        }
+
+                        count++
+                    }
+                }
+            }
+
+            if (count > 0) {
+                Log.d(TAG, "Added $count contraction keys to primary prefix index for '$language'")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load primary contraction keys for '$language'", e)
         }
         return count
     }
