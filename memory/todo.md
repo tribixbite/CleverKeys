@@ -1,7 +1,30 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-14
-**Status**: v1.2.5 - Settings Activities update
+**Last Updated**: 2026-01-15
+**Status**: v1.2.5 - Defaults fix release
+
+---
+
+## Defaults & Reset Settings Fix - COMPLETE (2026-01-15)
+
+**Config.kt Default Changes**:
+- `SHORT_GESTURE_MIN_DISTANCE`: 37 → 28%
+- `KEYBOARD_HEIGHT_PORTRAIT`: 28 → 30%
+- `KEYBOARD_HEIGHT_LANDSCAPE`: 50 → 40%
+- `MARGIN_BOTTOM_PORTRAIT`: 2 → 0%
+- `MARGIN_BOTTOM_LANDSCAPE`: 2 → 0%
+
+**resetAllSettings() Fix** (`SettingsActivity.kt:4576`):
+- Now uses `Defaults.*` constants instead of hardcoded values
+- Applies BALANCED neural profile (beam_width=6, maxLength=20, etc.)
+- Sets correct theme (`cleverkeysdark` instead of `jewel`)
+- Sets all margin, haptic, and input behavior defaults properly
+
+**Release Recreation**:
+- Deleted old v1.2.5 release and tag
+- Created new tag pointing to fix commit (07142bf4)
+- Uploaded new APKs with fix
+- Updated release notes with new Default Settings section
 
 ---
 
