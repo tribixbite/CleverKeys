@@ -495,6 +495,15 @@ class SuggestionHandler(
                     false
                 }
 
+                // v1.2.6 FIX: Check if there's already a space after cursor (mid-sentence replacement)
+                // Don't add trailing space if one already exists to avoid double spaces
+                val hasSpaceAfter = try {
+                    val textAfter = inputConnection.getTextAfterCursor(1, 0)
+                    textAfter != null && textAfter.isNotEmpty() && textAfter[0].isWhitespace()
+                } catch (e: Exception) {
+                    false
+                }
+
                 // Apply capitalization if user was typing with shift (first letter uppercase)
                 val currentWord = contextTracker.getCurrentWord()
                 val shouldCapitalize = currentWord.isNotEmpty() && currentWord[0].isUpperCase()
@@ -508,10 +517,16 @@ class SuggestionHandler(
 
                 // Commit the selected word
                 // Only skip trailing space if actually IN Termux app (not just termux_mode_enabled)
+                // v1.2.6: Also skip trailing space if there's already a space after cursor
                 val textToInsert = if (config.termux_mode_enabled && !isSwipeAutoInsert && inTermuxApp) {
                     // Termux app: Insert word without automatic space for terminal compatibility
                     if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord.also {
                         Log.d(TAG, "TERMUX APP (non-swipe): textToInsert = '$it'")
+                    }
+                } else if (hasSpaceAfter) {
+                    // v1.2.6: Mid-sentence replacement - don't add trailing space (already exists)
+                    if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord.also {
+                        Log.d(TAG, "MID-SENTENCE: textToInsert = '$it' (hasSpaceAfter=true)")
                     }
                 } else {
                     // Normal apps (even with Termux mode) or swipe: Insert word with space after
@@ -880,9 +895,18 @@ class SuggestionHandler(
                     contractionScores.add(result.scores.firstOrNull()?.plus(1000) ?: 10000)
                 }
 
-                // Merge contraction with predictions (contraction first, then original predictions)
-                val mergedWords = contractionWords + result.words.filter { it.lowercase() != contractionMapping?.lowercase() }
-                val mergedScores = contractionScores + result.scores.take(result.words.size - contractionWords.size.coerceAtMost(1))
+                // v1.2.6 FIX: Transform ALL predictions through contraction manager
+                // e.g., if predictor suggests "cant", transform to "can't"
+                val transformedPredictions = result.words.map { word ->
+                    contractionManager.getNonPairedMapping(word) ?: word
+                }
+
+                // Merge contraction with predictions (contraction first, then transformed predictions)
+                // Filter out duplicates (contraction might already be in transformed list)
+                val mergedWords = contractionWords + transformedPredictions.filter {
+                    it.lowercase() != contractionMapping?.lowercase()
+                }
+                val mergedScores = contractionScores + result.scores.take(transformedPredictions.size - contractionWords.size.coerceAtMost(1))
 
                 // Apply capitalization transformation if user started with uppercase
                 val transformedWords = if (shouldCapitalize) {

@@ -339,7 +339,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var swipeCorrectionsSectionExpanded by mutableStateOf(false)
     private var gestureTuningSectionExpanded by mutableStateOf(false)
     private var accessibilitySectionExpanded by mutableStateOf(false)
-    private var dictionarySectionExpanded by mutableStateOf(false)
+    // v1.2.6: dictionarySectionExpanded removed - Dictionary Manager moved to Activities
     private var clipboardSectionExpanded by mutableStateOf(false)
     private var backupRestoreSectionExpanded by mutableStateOf(false)
     private var advancedSectionExpanded by mutableStateOf(false)
@@ -393,7 +393,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         swipeCorrectionsSectionExpanded = false
         gestureTuningSectionExpanded = false
         accessibilitySectionExpanded = false
-        dictionarySectionExpanded = false
+        // v1.2.6: dictionarySectionExpanded removed
         clipboardSectionExpanded = false
         backupRestoreSectionExpanded = false
         advancedSectionExpanded = false
@@ -455,8 +455,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             // Accessibility
             SearchableSetting("Vibration", listOf("haptic", "feedback", "tactile"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "vibration"),
             SearchableSetting("Sound on Keypress", listOf("audio", "click", "noise"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "sound"),
-            // Dictionary
-            SearchableSetting("Spell Check", listOf("correction", "underline", "typo"), "Dictionary", expandSection = { dictionarySectionExpanded = true }, settingId = "spell_check"),
+            // v1.2.6: Dictionary searchable entries removed - use Dictionary Manager in Activities
             // Clipboard
             SearchableSetting("Clipboard History", listOf("copy", "paste", "buffer"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard"),
             // Multi-Language
@@ -2672,26 +2671,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
             }
 
-            // Dictionary Section (Collapsible)
-            CollapsibleSettingsSection(
-                title = stringResource(R.string.settings_section_dictionary),
-                expanded = dictionarySectionExpanded,
-                onExpandChange = { dictionarySectionExpanded = it }
-            ) {
-                Button(
-                    onClick = { openDictionaryManager() },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.settings_dictionary_manage_button))
-                }
-
-                Text(
-                    text = stringResource(R.string.settings_dictionary_desc),
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
+            // v1.2.6: Dictionary section removed - Dictionary Manager is now accessible
+            // from the Activities section at the top of settings for better UX.
 
             // Clipboard Section (Collapsible)
             CollapsibleSettingsSection(

@@ -358,6 +358,22 @@ class PredictionContextTracker {
     }
 
     /**
+     * Gets the raw (non-normalized) prefix for capitalization checks.
+     * v1.2.6: Used to preserve original capitalization in cursor-synced predictions.
+     *
+     * @return Raw prefix as extracted from text (preserves case and apostrophes)
+     */
+    fun getRawPrefix(): String = rawPrefixForDeletion
+
+    /**
+     * Gets the raw (non-normalized) suffix.
+     * v1.2.6: Used for full word reconstruction in cursor-synced predictions.
+     *
+     * @return Raw suffix as extracted from text
+     */
+    fun getRawSuffix(): String = rawSuffixForDeletion
+
+    /**
      * Checks if current state was synchronized from cursor position.
      * Used to determine if we need dual-side deletion in onSuggestionSelected.
      *
@@ -414,10 +430,11 @@ class PredictionContextTracker {
             return
         }
 
-        // Extract word prefix (before cursor)
-        val (normalizedPrefix, rawPrefix) = extractWordPrefix(beforeText)
-        // Extract word suffix (after cursor)
-        val (normalizedSuffix, rawSuffix) = extractWordSuffix(afterText)
+        // Extract word prefix (before cursor) and suffix (after cursor)
+        // v1.2.6: Pass afterText to prefix extraction and beforeText to suffix extraction
+        // to properly handle apostrophes at cursor boundary (e.g., "don'|t")
+        val (normalizedPrefix, rawPrefix) = extractWordPrefix(beforeText, afterText)
+        val (normalizedSuffix, rawSuffix) = extractWordSuffix(afterText, beforeText)
 
         // Update state
         currentWord.clear()
@@ -454,14 +471,27 @@ class PredictionContextTracker {
      * Walks backwards from end of text until a word boundary is found.
      *
      * @param beforeText Text before cursor
+     * @param afterText Text after cursor (for apostrophe boundary check)
      * @return Pair of (normalizedPrefix, rawPrefix) - normalized for lookup, raw for deletion
      */
-    private fun extractWordPrefix(beforeText: String): Pair<String, String> {
+    private fun extractWordPrefix(beforeText: String, afterText: String = ""): Pair<String, String> {
         if (beforeText.isEmpty()) return Pair("", "")
 
         var startIndex = beforeText.length
         for (i in beforeText.length - 1 downTo 0) {
             val char = beforeText[i]
+            // v1.2.6: Special handling for apostrophe at cursor boundary
+            // If char is apostrophe at end of beforeText, check afterText for letter
+            if (isApostrophe(char) && i == beforeText.length - 1) {
+                val before = beforeText.getOrNull(i - 1)
+                val after = afterText.getOrNull(0) // First char after cursor
+                if (before?.isLetter() == true && after?.isLetter() == true) {
+                    startIndex = i
+                    continue
+                } else {
+                    break
+                }
+            }
             if (isWordChar(char, beforeText, i)) {
                 startIndex = i
             } else {
@@ -479,14 +509,27 @@ class PredictionContextTracker {
      * Walks forwards from start of text until a word boundary is found.
      *
      * @param afterText Text after cursor
+     * @param beforeText Text before cursor (for apostrophe boundary check)
      * @return Pair of (normalizedSuffix, rawSuffix) - normalized for lookup, raw for deletion
      */
-    private fun extractWordSuffix(afterText: String): Pair<String, String> {
+    private fun extractWordSuffix(afterText: String, beforeText: String = ""): Pair<String, String> {
         if (afterText.isEmpty()) return Pair("", "")
 
         var endIndex = 0
         for (i in afterText.indices) {
             val char = afterText[i]
+            // v1.2.6: Special handling for apostrophe at cursor boundary
+            // If char is apostrophe at start of afterText, check beforeText for letter
+            if (isApostrophe(char) && i == 0) {
+                val before = beforeText.lastOrNull() // Last char before cursor
+                val after = afterText.getOrNull(1)
+                if (before?.isLetter() == true && after?.isLetter() == true) {
+                    endIndex = 1
+                    continue
+                } else {
+                    break
+                }
+            }
             if (isWordChar(char, afterText, i)) {
                 endIndex = i + 1
             } else {
@@ -497,6 +540,13 @@ class PredictionContextTracker {
         val rawSuffix = afterText.substring(0, endIndex)
         val normalizedSuffix = normalizeForPrediction(rawSuffix)
         return Pair(normalizedSuffix, rawSuffix)
+    }
+
+    /**
+     * Checks if character is an apostrophe (straight or curly).
+     */
+    private fun isApostrophe(char: Char): Boolean {
+        return char == '\'' || char == '\u2019' || char == '\u2018'
     }
 
     /**

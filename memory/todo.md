@@ -56,8 +56,17 @@
    and uses `deleteSurroundingText(prefixDelete, suffixDelete)` for both-sided deletion
 4. ✅ Swipe predictions disappeared quickly - InputCoordinator now checks `lastCommitSource == NEURAL_SWIPE`
    before clearing suggestions on cursor move
+5. ✅ Toast "Added to dictionary" too fast - SuggestionBar now checks `isShowingTemporaryMessage` before clearing/overwriting
+6. ✅ Double space on mid-sentence replacement - SuggestionHandler checks `hasSpaceAfter` cursor to skip trailing space
+7. ✅ Capitalized words cursor-synced not capitalized - InputCoordinator now uses `rawPrefix` (not normalized) for case check
+8. ✅ Contractions cursor past apostrophe no suggestions - InputCoordinator combines prefix+suffix for full word lookup,
+   also searches de-apostrophed form (e.g., "dont" finds "don't")
+9. ✅ Secondary language contractions not showing - WordPredictor now loads contraction keys into secondary NormalizedPrefixIndex
 
-**Status**: Implemented and tested
+**Settings UI Changes**:
+- Removed redundant Dictionary section (Dictionary Manager accessible from Activities section)
+
+**Status**: Implemented and testing
 
 ---
 

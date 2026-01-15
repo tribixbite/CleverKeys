@@ -129,9 +129,14 @@ class InputCoordinator(
             contextTracker.synchronizeWithCursor(ic, language, editorInfo)
 
             // Trigger predictions for the synced word
+            // v1.2.6: Use both prefix AND suffix for full word lookup (handles mid-word cursor)
             val prefix = contextTracker.getCurrentWord()
-            if (prefix.isNotEmpty()) {
-                triggerPredictionsForPrefix(prefix, ic, editorInfo)
+            val suffix = contextTracker.getCurrentWordSuffix()
+            val rawPrefix = contextTracker.getRawPrefix()
+            val fullWord = prefix + suffix
+
+            if (fullWord.isNotEmpty()) {
+                triggerPredictionsForPrefix(fullWord, rawPrefix, ic, editorInfo)
             } else {
                 // v1.2.6 FIX: Don't clear suggestions if showing special prompts or swipe corrections
                 // After autocorrect/swipe, cursor moves to after space (prefix empty), but we want
@@ -147,7 +152,7 @@ class InputCoordinator(
             }
 
             debugLogger?.invoke("🎯 Cursor sync: pos=$newPosition, prefix='$prefix', " +
-                "suffix='${contextTracker.getCurrentWordSuffix()}'")
+                "suffix='$suffix', fullWord='$fullWord'")
         }
         syncHandler.postDelayed(pendingSyncRunnable!!, CURSOR_SYNC_DEBOUNCE_MS)
     }
@@ -162,20 +167,28 @@ class InputCoordinator(
     }
 
     /**
-     * Triggers predictions for a given prefix.
+     * Triggers predictions for a given word (prefix+suffix combined).
      * Used after cursor sync to show predictions for the word at cursor.
      *
-     * @param prefix Word prefix to get predictions for
+     * v1.2.6: Now accepts full word (prefix+suffix) and raw prefix for proper handling
+     * of mid-word cursor positions and capitalization.
+     *
+     * @param fullWord Complete word to get predictions for (prefix + suffix)
+     * @param rawPrefix Raw (non-normalized) prefix for capitalization check
      * @param ic InputConnection (for context)
      * @param editorInfo Editor info
      */
     private fun triggerPredictionsForPrefix(
-        prefix: String,
+        fullWord: String,
+        rawPrefix: String,
         ic: InputConnection?,
         editorInfo: EditorInfo?
     ) {
         // Copy context to be thread-safe
         val contextWords = ArrayList(contextTracker.getContextWords())
+
+        // v1.2.6 FIX: Use RAW prefix for capitalization check (normalized is always lowercase)
+        val shouldCapitalize = rawPrefix.isNotEmpty() && rawPrefix[0].isUpperCase()
 
         // Cancel any running prediction task
         currentPredictionTask?.cancel(true)
@@ -185,20 +198,59 @@ class InputCoordinator(
             if (Thread.currentThread().isInterrupted) return@submit
 
             try {
-                // Use contextual prediction from WordPredictor
-                val result = predictionCoordinator.getWordPredictor()
-                    ?.predictWordsWithContext(prefix, contextWords)
+                // v1.2.6: For contractions like "don't", also try searching without apostrophe
+                // Dictionary stores "dont" which gets mapped to "don't" by contraction manager
+                val searchTerms = mutableListOf(fullWord)
+                val noApostrophe = fullWord.replace("'", "").replace("\u2019", "")
+                if (noApostrophe != fullWord && noApostrophe.isNotEmpty()) {
+                    searchTerms.add(noApostrophe)
+                }
 
-                if (Thread.currentThread().isInterrupted || result == null) return@submit
+                val allResults = mutableListOf<String>()
+                val allScores = mutableListOf<Int>()
+
+                // Search for each term and combine results
+                for (term in searchTerms) {
+                    val result = predictionCoordinator.getWordPredictor()
+                        ?.predictWordsWithContext(term, contextWords)
+
+                    if (result != null && result.words.isNotEmpty()) {
+                        result.words.forEachIndexed { index, word ->
+                            if (word !in allResults) {
+                                allResults.add(word)
+                                allScores.add(result.scores.getOrElse(index) { 0 })
+                            }
+                        }
+                    }
+                }
+
+                if (Thread.currentThread().isInterrupted || allResults.isEmpty()) return@submit
+
+                // v1.2.6: Transform predictions through contraction manager
+                // e.g., "cant" -> "can't", "dont" -> "don't"
+                val contractionTransformed = allResults.map { word ->
+                    contractionManager.getNonPairedMapping(word) ?: word
+                }
+
+                // v1.2.6: Apply capitalization if prefix was capitalized
+                val transformedWords = if (shouldCapitalize) {
+                    contractionTransformed.map { word ->
+                        word.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
+                        }
+                    }
+                } else {
+                    contractionTransformed
+                }
 
                 // Update UI on main thread
-                if (result.words.isNotEmpty()) {
+                if (transformedWords.isNotEmpty()) {
                     suggestionBar?.post {
                         suggestionBar?.let { bar ->
                             bar.setShowDebugScores(config.swipe_show_debug_scores)
-                            bar.setSuggestionsWithScores(result.words, result.scores)
+                            bar.setSuggestionsWithScores(transformedWords, allScores)
                         }
-                        debugLogger?.invoke("📊 Cursor-sync predictions: ${result.words.take(5)}")
+                        debugLogger?.invoke("📊 Cursor-sync predictions: ${transformedWords.take(5)}")
                     }
                 }
             } catch (e: Exception) {

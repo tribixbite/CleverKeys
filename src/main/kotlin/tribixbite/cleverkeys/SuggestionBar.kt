@@ -60,6 +60,12 @@ class SuggestionBar : LinearLayout {
     }
 
     /**
+     * Check if currently showing a temporary message.
+     * v1.2.6: Used to prevent cursor sync from overwriting feedback messages.
+     */
+    fun isShowingMessage(): Boolean = isShowingTemporaryMessage
+
+    /**
      * Interface for providing InputConnection to read actual field content.
      */
     fun interface InputConnectionProvider {
@@ -224,6 +230,12 @@ class SuggestionBar : LinearLayout {
             return
         }
 
+        // v1.2.6: Don't overwrite temporary messages (e.g., "Added to dictionary")
+        if (isShowingTemporaryMessage) {
+            Log.d(TAG, "setSuggestionsWithScores: skipped - temporary message is showing")
+            return
+        }
+
         currentSuggestions.clear()
         currentScores.clear()
 
@@ -312,6 +324,12 @@ class SuggestionBar : LinearLayout {
     fun clearSuggestions() {
         // Don't clear password mode views
         if (isPasswordMode) {
+            return
+        }
+
+        // v1.2.6: Don't clear if showing temporary message (e.g., "Added to dictionary")
+        if (isShowingTemporaryMessage) {
+            Log.d(TAG, "clearSuggestions: skipped - temporary message is showing")
             return
         }
 

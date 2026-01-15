@@ -703,9 +703,13 @@ class WordPredictor {
                 // v1.1.94: Also load custom words for secondary language
                 val customWordsAdded = loadSecondaryCustomWords(ctx, index, language)
 
+                // v1.2.6: Also add contraction keys (apostrophe-free forms) for secondary language
+                // This allows typing "dont" to find "don't" in secondary English dictionary
+                val contractionsAdded = loadSecondaryContractionKeys(ctx, index, language)
+
                 secondaryIndex = index
                 secondaryLanguageCode = language
-                Log.i(TAG, "Secondary dictionary loaded: $language (${index.size()} words, +$customWordsAdded custom)")
+                Log.i(TAG, "Secondary dictionary loaded: $language (${index.size()} words, +$customWordsAdded custom, +$contractionsAdded contractions)")
                 return true
             } else {
                 Log.w(TAG, "Failed to load secondary dictionary: $language")
@@ -760,6 +764,75 @@ class WordPredictor {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load secondary custom words for '$language'", e)
+        }
+        return count
+    }
+
+    /**
+     * v1.2.6: Load contraction keys (apostrophe-free forms) into secondary dictionary.
+     * This allows typing "dont" to find "don't" in secondary English dictionary.
+     *
+     * The NormalizedPrefixIndex stores words with apostrophes intact, so prefix search
+     * for "dont" won't find "don't". By adding the apostrophe-free form as an alias,
+     * both searches will work.
+     *
+     * @param context Android context
+     * @param index The NormalizedPrefixIndex to add keys to
+     * @param language Language code
+     * @return Number of contraction keys added
+     */
+    private fun loadSecondaryContractionKeys(
+        context: Context,
+        index: NormalizedPrefixIndex,
+        language: String
+    ): Int {
+        var count = 0
+        try {
+            // Try language pack first
+            val packManager = LanguagePackManager.getInstance(context)
+            val packFile = packManager.getContractionsPath(language)
+
+            val inputStream = if (packFile != null) {
+                packFile.inputStream()
+            } else {
+                // Try bundled assets
+                try {
+                    context.assets.open("dictionaries/contractions_$language.json")
+                } catch (e: Exception) {
+                    // No contractions file for this language - that's OK
+                    Log.d(TAG, "No contractions file for secondary language '$language'")
+                    return 0
+                }
+            }
+
+            inputStream.use { stream ->
+                val reader = java.io.BufferedReader(java.io.InputStreamReader(stream))
+                val jsonBuilder = StringBuilder()
+                var line: String?
+                while (reader.readLine().also { line = it } != null) {
+                    jsonBuilder.append(line)
+                }
+
+                val jsonObj = org.json.JSONObject(jsonBuilder.toString())
+                val keys = jsonObj.keys()
+
+                while (keys.hasNext()) {
+                    val withoutApostrophe = keys.next().lowercase(java.util.Locale.ROOT)
+                    val withApostrophe = jsonObj.getString(withoutApostrophe).lowercase(java.util.Locale.ROOT)
+
+                    // Add the apostrophe-free form as an alias pointing to the contraction
+                    // Use high frequency (low rank = common word) so it shows up in predictions
+                    index.addWord(withoutApostrophe, 50) // rank 50 = common
+
+                    count++
+                }
+            }
+
+            if (count > 0) {
+                Log.d(TAG, "Added $count contraction keys to secondary index for '$language'")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load secondary contraction keys for '$language'", e)
         }
         return count
     }
