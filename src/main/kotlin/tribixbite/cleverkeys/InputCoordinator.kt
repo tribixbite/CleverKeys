@@ -552,14 +552,18 @@ class InputCoordinator(
                 // This handles typing "hel" then selecting "hello" - we need to delete "hel" first
                 // v1.2.6: Also handles cursor mid-word - deletes both prefix AND suffix
                 else if (contextTracker.getCurrentWordLength() > 0 && !isSwipeAutoInsert) {
-                    // v1.2.6: Get both prefix and suffix deletion counts
-                    // If cursor was moved mid-word, suffix will be non-zero
-                    val (prefixDelete, suffixDelete) = if (contextTracker.wasSyncedFromCursor()) {
-                        contextTracker.getCharsToDeleteForPrediction()
-                    } else {
-                        // Normal typing - only delete what was typed (prefix)
-                        Pair(contextTracker.getCurrentWordLength(), 0)
-                    }
+                    // v1.2.6: CRITICAL FIX - Always do immediate sync before deletion
+                    // The debounced sync may not have completed if user taps prediction quickly
+                    // This ensures we have accurate prefix/suffix counts for mid-word editing
+                    cancelPendingCursorSync()
+                    contextTracker.synchronizeWithCursor(
+                        connection,
+                        config.primary_language,
+                        editorInfo
+                    )
+
+                    // v1.2.6: Get both prefix and suffix deletion counts from fresh sync
+                    val (prefixDelete, suffixDelete) = contextTracker.getCharsToDeleteForPrediction()
 
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                         android.util.Log.d("CleverKeysService", "TYPING PREDICTION: Deleting partial word: " +
