@@ -25,6 +25,15 @@
   - Rows scale up to fill full keyboard height for easier tapping
   - Theme.kt modified row_height calculation logic
 
+### Settings Theme + Intent Automation (9213de83)
+- ✅ Fixed #35: Settings now follow system dark/light mode
+  - Removed hardcoded `darkTheme=true` from 6 activities
+  - LauncherActivity intentionally stays dark (matrix aesthetic)
+- ✅ Fixed #70: Programmatic backup/restore via Intent
+  - 6 Intent actions: EXPORT_SETTINGS, IMPORT_SETTINGS, EXPORT_DICTIONARIES,
+    IMPORT_DICTIONARIES, EXPORT_CLIPBOARD, IMPORT_CLIPBOARD
+  - Usage: `am start -a tribixbite.cleverkeys.action.EXPORT_SETTINGS -d file:///path/to/backup.json`
+
 ### Greek Language Pack + Keyboard Command Routing (0fb56dc0)
 - ✅ Created Greek (Ελληνικά) language pack (langpack-el.zip, 46k words, 632KB)
 - ✅ Improved CustomShortSwipeExecutor command routing (#30)
@@ -97,6 +106,7 @@
 - ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `9213de83` feat: settings follow system theme + Intent automation (#35, #70)
 - `0fb56dc0` feat: add Greek language pack + improve keyboard command routing (#68, #30)
 - `a9dbc7fb` fix: add TIMESTAMP case to CommandPaletteDialog when expression
 - `ba53b955` feat: add timestamp commands to UI + Turkish/Swedish language packs
@@ -149,6 +159,8 @@
 - #52 MessageEase layout contribution - Provided gesture tuning tips, offered to add layout
 
 **Recently Fixed**:
+- #70 ✅ Programmatic Intent automation - Added 6 backup/restore Intent actions (9213de83)
+- #35 ✅ Settings dark mode - Now follows system theme (9213de83)
 - #68 ✅ Greek language support - CREATED langpack-el.zip (0fb56dc0)
 - #50 ✅ Swedish language support - CREATED langpack-sv.zip (ba53b955)
 - #49 ✅ Turkish language support - CREATED langpack-tr.zip (ba53b955)
