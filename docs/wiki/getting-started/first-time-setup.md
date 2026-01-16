@@ -79,6 +79,8 @@ Try these to verify your setup:
 3. **Gesture test**: Swipe up on any letter
 4. **Backspace test**: Long-press backspace to delete multiple characters
 
+> **Tip**: Use the built-in test keyboard field in Settings to test without leaving the app. Look for "⌨️ Test Keyboard" at the top of the settings screen.
+
 ## Troubleshooting
 
 ### Keyboard is too small/large
