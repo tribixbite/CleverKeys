@@ -19,8 +19,10 @@
 - ✅ Regenerated wiki HTML pages (7f9c92de)
 - ✅ Updated specs README with v1.2.x status (136325a8)
 - ✅ Updated README.md with v1.2.x features and documentation section (b68b8b19)
+- ✅ Added quick-settings-tile and clipboard-privacy to specs HTML (457644ef)
 
 **Recent Commits**:
+- `457644ef` docs: add quick-settings-tile and clipboard-privacy to specs
 - `b68b8b19` docs: add v1.2.x features and documentation section to README
 - `136325a8` docs: update specs README with v1.2.x status
 - `7f9c92de` docs: regenerate wiki HTML pages
