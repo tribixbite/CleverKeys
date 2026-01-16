@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timestamp Keys - CleverKeys User Guide</title>
+    <meta name="description" content="Insert formatted date and time">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-ck-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-ck-green">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Customization" class="hover:text-ck-green">Customization</a>
+            <span>/</span>
+            <span class="text-gray-300">Timestamp Keys</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-6">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #f59e0b20; color: #f59e0b">Customization</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P1</span>
+        </div>
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Timestamp Keys</h1>
+        <p class="text-xl text-gray-400">Insert formatted date and time</p>
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Timestamp Keys</h1>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Insert the current date or time with a single key press. Perfect for journaling, note-taking, and timestamping documents.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">What Are Timestamp Keys?</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Timestamp keys are special keys that insert formatted date and time when pressed. Instead of manually typing "2026-01-15" or "14:30", you can press a single key.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Start</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Using Pre-defined Keys</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys includes 8 ready-to-use timestamp keys:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">Key Name</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Display</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Output Example</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp_date</code></td><td class="px-4 py-2 border-t border-gray-700">📅</td><td class="px-4 py-2 border-t border-gray-700">2026-01-15</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp_time</code></td><td class="px-4 py-2 border-t border-gray-700">🕐</td><td class="px-4 py-2 border-t border-gray-700">14:30</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp_datetime</code></td><td class="px-4 py-2 border-t border-gray-700">📆</td><td class="px-4 py-2 border-t border-gray-700">2026-01-15 14:30</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp_time_seconds</code></td><td class="px-4 py-2 border-t border-gray-700">⏱</td><td class="px-4 py-2 border-t border-gray-700">14:30:45</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp_date_short</code></td><td class="px-4 py-2 border-t border-gray-700">📅</td><td class="px-4 py-2 border-t border-gray-700">01/15/26</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp_date_long</code></td><td class="px-4 py-2 border-t border-gray-700">🗓</td><td class="px-4 py-2 border-t border-gray-700">Wednesday, January 15, 2026</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp_time_12h</code></td><td class="px-4 py-2 border-t border-gray-700">🕐</td><td class="px-4 py-2 border-t border-gray-700">2:30 PM</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp_iso</code></td><td class="px-4 py-2 border-t border-gray-700">📋</td><td class="px-4 py-2 border-t border-gray-700">2026-01-15T14:30:45</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Adding to Extra Keys</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings → Layout → Extra Keys</strong></li>
+<li class="ml-4 text-gray-300">2. Add any of the key names above (e.g., <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp_date</code>)</li>
+<li class="ml-4 text-gray-300">3. The key will appear in your extra keys row</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Custom Patterns</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Create your own timestamp format using the pattern syntax:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">timestamp:'pattern'</code></pre>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Or with a custom symbol:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">📅:timestamp:'yyyy-MM-dd'</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Pattern Characters</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Pattern</td><td class="px-4 py-2 border-t border-gray-700">Meaning</td><td class="px-4 py-2 border-t border-gray-700">Example</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">yyyy</code></td><td class="px-4 py-2 border-t border-gray-700">4-digit year</td><td class="px-4 py-2 border-t border-gray-700">2026</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">yy</code></td><td class="px-4 py-2 border-t border-gray-700">2-digit year</td><td class="px-4 py-2 border-t border-gray-700">26</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">MM</code></td><td class="px-4 py-2 border-t border-gray-700">Month (01-12)</td><td class="px-4 py-2 border-t border-gray-700">01</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">MMM</code></td><td class="px-4 py-2 border-t border-gray-700">Month abbreviation</td><td class="px-4 py-2 border-t border-gray-700">Jan</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">MMMM</code></td><td class="px-4 py-2 border-t border-gray-700">Full month name</td><td class="px-4 py-2 border-t border-gray-700">January</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">dd</code></td><td class="px-4 py-2 border-t border-gray-700">Day of month (01-31)</td><td class="px-4 py-2 border-t border-gray-700">15</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">HH</code></td><td class="px-4 py-2 border-t border-gray-700">Hour, 24-hour (00-23)</td><td class="px-4 py-2 border-t border-gray-700">14</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hh</code></td><td class="px-4 py-2 border-t border-gray-700">Hour, 12-hour (01-12)</td><td class="px-4 py-2 border-t border-gray-700">02</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">mm</code></td><td class="px-4 py-2 border-t border-gray-700">Minutes (00-59)</td><td class="px-4 py-2 border-t border-gray-700">30</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">ss</code></td><td class="px-4 py-2 border-t border-gray-700">Seconds (00-59)</td><td class="px-4 py-2 border-t border-gray-700">45</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">a</code></td><td class="px-4 py-2 border-t border-gray-700">AM/PM marker</td><td class="px-4 py-2 border-t border-gray-700">PM</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">E</code></td><td class="px-4 py-2 border-t border-gray-700">Day of week</td><td class="px-4 py-2 border-t border-gray-700">Wed</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">EEEE</code></td><td class="px-4 py-2 border-t border-gray-700">Full day name</td><td class="px-4 py-2 border-t border-gray-700">Wednesday</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Custom Pattern Examples</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Pattern</td><td class="px-4 py-2 border-t border-gray-700">Output</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp:'dd/MM/yyyy'</code></td><td class="px-4 py-2 border-t border-gray-700">15/01/2026</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp:'HH:mm:ss'</code></td><td class="px-4 py-2 border-t border-gray-700">14:30:45</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp:'MMM d, yyyy'</code></td><td class="px-4 py-2 border-t border-gray-700">Jan 15, 2026</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp:'yyyy-MM-dd HH:mm'</code></td><td class="px-4 py-2 border-t border-gray-700">2026-01-15 14:30</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp:'EEEE h:mm a'</code></td><td class="px-4 py-2 border-t border-gray-700">Wednesday 2:30 PM</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Use Cases</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Journaling</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Add <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp_datetime</code> to quickly date your entries:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Press key → "2026-01-15 14:30"</li>
+<li class="ml-4 text-gray-300">&#8226; Start typing your journal entry</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Meeting Notes</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Use <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp_time</code> for timestamps during meetings:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; "14:30 - Discussion started"</li>
+<li class="ml-4 text-gray-300">&#8226; "14:45 - Action items reviewed"</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">File Naming</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Use <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp_iso</code> for sortable filenames:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; "2026-01-15T14:30:45"</li>
+<li class="ml-4 text-gray-300">&#8226; Works great with note-taking apps</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Quick Date Entry</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Use <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp_date_short</code> for forms:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; 01/15/26 format works for most date fields</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Per-Key Customization</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">You can also assign timestamp keys to any key's short swipe:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings → Per-Key Customization</strong></li>
+<li class="ml-4 text-gray-300">2. Select a key</li>
+<li class="ml-4 text-gray-300">3. Choose a direction</li>
+<li class="ml-4 text-gray-300">4. Enter <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp:'yyyy-MM-dd'</code> or a pre-defined key name</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Troubleshooting</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Wrong Date Format</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Make sure your pattern uses the correct characters. Common mistakes:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">YYYY</code> should be <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">yyyy</code> (lowercase)</li>
+<li class="ml-4 text-gray-300">&#8226; <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">DD</code> should be <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">dd</code> (lowercase)</li>
+<li class="ml-4 text-gray-300">&#8226; <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">HH</code> is 24-hour, <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">hh</code> is 12-hour</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Pattern Shows Instead of Date</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">If the pattern text appears instead of the formatted date:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Check for typos in the pattern</li>
+<li class="ml-4 text-gray-300">&#8226; Ensure quotes are correct: <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">timestamp:'pattern'</code></li>
+<li class="ml-4 text-gray-300">&#8226; Invalid patterns fall back to showing the pattern text</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">For technical implementation details, see the <a href="../../specs/timestamp-keys.html" class="text-green-400 hover:underline">Timestamp Keys Specification</a>.</p>
+
+        </div>
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="customization/command-palette.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Command Palette</span>
+            </a>
+            <a href="layouts/adding-layouts.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Adding Layouts</span>
+                <span>&rarr;</span>
+            </a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
+    </footer>
+</body>
+</html>

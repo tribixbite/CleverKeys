@@ -135,6 +135,13 @@
       "priority": "P1"
     },
     {
+      "file": "customization/timestamp-keys.md",
+      "title": "Timestamp Keys",
+      "description": "Insert formatted date and time",
+      "category": "Customization",
+      "priority": "P1"
+    },
+    {
       "file": "layouts/adding-layouts.md",
       "title": "Adding Layouts",
       "description": "Install AZERTY, Dvorak, Colemak, etc.",
