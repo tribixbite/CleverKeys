@@ -272,8 +272,16 @@ class Keyboard2View @JvmOverloads constructor(
         // This is required for truly transparent nav bar in InputMethodService
         androidx.core.view.WindowCompat.setDecorFitsSystemWindows(w, false)
 
-        // Set transparent navigation bar color
-        w.navigationBarColor = android.graphics.Color.TRANSPARENT
+        // FIX #1116: On Android 8-9 (API 26-28), transparent nav bar with light theme
+        // causes white-on-white icons. Use theme's nav bar color instead.
+        if (VERSION.SDK_INT < 29 && _theme.isLightNavBar) {
+            // Use the theme's nav bar color (usually light gray or white)
+            // The system will automatically use dark icons on light backgrounds
+            w.navigationBarColor = _theme.colorNavBar
+        } else {
+            // Set transparent navigation bar color
+            w.navigationBarColor = android.graphics.Color.TRANSPARENT
+        }
 
         // Disable navigation bar contrast enforcement on API 29+
         if (VERSION.SDK_INT >= 29) {
