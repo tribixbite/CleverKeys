@@ -48,6 +48,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | [Per-Key Actions](./customization/per-key-actions.md) | Customize swipe actions per key |
 | [Extra Keys](./customization/extra-keys.md) | Add function keys, arrows, Tab, Ctrl |
 | [Themes](./customization/themes.md) | Color schemes and appearance |
+| [Command Palette](./customization/command-palette.md) | Quick access to keyboard commands |
 | [Timestamp Keys](./customization/timestamp-keys.md) | Insert formatted date/time |
 
 ### 5. Layouts and Languages (P1)
