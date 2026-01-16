@@ -22,8 +22,10 @@
 - ✅ Added quick-settings-tile and clipboard-privacy to specs HTML (457644ef)
 - ✅ Added Android version fixes and test keyboard to troubleshooting (680f3ea8)
 - ✅ Improved circumflex and accents documentation for all layouts (935dd25b)
+- ✅ Fixed GitHub repo references to tribixbite/CleverKeys (026dd719)
 
 **Recent Commits**:
+- `026dd719` fix: correct GitHub repo references to tribixbite/CleverKeys
 - `935dd25b` docs: improve circumflex and accents documentation
 - `680f3ea8` docs: add Android version fixes and test keyboard to troubleshooting
 - `457644ef` docs: add quick-settings-tile and clipboard-privacy to specs
@@ -42,34 +44,24 @@
 
 ## GitHub Issue Triage (2026-01-15)
 
-**Issues Addressed**:
-- #51 ✅ Transparent background on Android 16 - User guidance (opacity setting)
-- #55 ✅ Crashes on Nexus 6 - User guidance (disable swipe, older device)
-- #56 ✅ First-time user tutorial - Pointed to new wiki documentation
-- #67 ✅ Script error (build_all_languages.py) - User error, provided fix
+**CleverKeys Issues (tribixbite/CleverKeys)**:
+- #51 ✅ Transparent background - User guidance (opacity setting)
+- #55 ✅ Crashes on older devices - User guidance
+- #56 ✅ First-time user tutorial - Wiki documentation available
+- #59 ✅ Clipboard delete option - IMPLEMENTED (v1.2.8)
+- #62 ✅ Password manager clipboard exclusion - IMPLEMENTED (v1.2.8)
+- #67 ✅ Script error - User error, provided fix
 - #68 ✅ Greek dictionary request - Engaged with contributor
 
-**Completed Feature Requests** (GitHub comments added 2026-01-15):
-- #62 ✅ Password manager clipboard exclusion - IMPLEMENTED (2026-01-15)
-- #1134 ✅ Test keyboard field in settings - IMPLEMENTED (2026-01-15) - Comment added
-- #940 ✅ Clipboard delete individual items - IMPLEMENTED (2026-01-15)
-- #1113 ✅ Quick Settings tile for keyboard - IMPLEMENTED (2026-01-15) - Comment added
-- #1107 ✅ Monet theme crash fix (Android < 12) - FIXED (2026-01-15) - Comment added
-- #1131 ✅ Clipboard/emoji nav bar overlap (Android 15) - FIXED (2026-01-15) - Comment added
-- #1116 ✅ White nav bar buttons (Android 9) - FIXED (2026-01-15) - Comment added
-- #1103 ✅ Insert timestamp key - IMPLEMENTED (2026-01-15)
-
-**Open Feature Requests** (for future consideration):
-- #1153 Floating keyboard - Larger feature, needs design
-- #1151 Vertical gradient button theme - Design decision
-- #1145 Fast typer overlay - Larger feature
-- #1142 Space while selected = Space not Esc - Discussed, PR #1141 merged
-- #1122 Image pasting - Complex feature
-- #1121 Smart key hit detection - Algorithm enhancement
-- #1109 Keyboard under nav bar - Android system race condition, not code bug
+**Open CleverKeys Issues**:
 - #61 Active multi-language switching
 - #58 Scaling number keyboard
 - #52 MessageEase layout contribution
+- #50 Swedish language support
+- #49 Turkish language support
+- #48 Password Manager autofill support
+- #46 Vibration feedback toggle
+- #42 Integrate add-to-dictionary to typing
 
 ---
 
