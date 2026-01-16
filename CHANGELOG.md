@@ -19,6 +19,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.9] - 2026-01-15
+
+### New Features - Timestamp Keys
+
+- **Timestamp Key Type**: New key kind for inserting formatted date/time
+  - Syntax: `📅:timestamp:'yyyy-MM-dd'` or `timestamp:'HH:mm:ss'`
+  - Uses Java DateTimeFormatter patterns
+  - API 26+ uses java.time.LocalDateTime, older devices use SimpleDateFormat
+  - Invalid patterns fall back to inserting the pattern string
+- **Pre-defined Timestamp Keys**: 8 ready-to-use timestamp shortcuts:
+  - `timestamp_date` → 📅 2026-01-15
+  - `timestamp_time` → 🕐 14:30
+  - `timestamp_datetime` → 📆 2026-01-15 14:30
+  - `timestamp_time_seconds` → ⏱ 14:30:45
+  - `timestamp_date_short` → 📅 01/15/26
+  - `timestamp_date_long` → 🗓 Wednesday, January 15, 2026
+  - `timestamp_time_12h` → 🕐 2:30 PM
+  - `timestamp_iso` → 📋 2026-01-15T14:30:45
+
+### Documentation
+
+- New spec: `docs/specs/timestamp-keys.md`
+- Added to web documentation generator
+
+---
+
+## [1.2.8] - 2026-01-15
+
+### New Features - Quick Settings & Privacy
+
+- **Quick Settings Tile**: Add keyboard to Android Quick Settings panel
+  - Tap tile to open input method picker
+  - Active state indicates CleverKeys is current keyboard
+  - Service: `KeyboardTileService.kt`
+- **Password Manager Clipboard Exclusion**: Exclude apps from clipboard history
+  - Auto-detects foreground app package name
+  - Settings UI with text field for comma-separated package names
+  - Default excludes: 1Password, Bitwarden, LastPass, KeePass, Dashlane
+- **Test Keyboard Field**: Built-in text field in Settings for testing keyboard
+  - Opens keyboard without leaving settings app
+  - Useful for testing gestures and features
+
+### Fixed
+
+- **Android 15 Edge-to-Edge**: Navigation bar no longer covers keyboard
+  - Fixed in `Keyboard2View.kt` - proper inset handling
+- **Android 9 Navigation Bar**: Bottom of keyboard no longer clipped
+  - Fixed cutoff on older devices with gesture navigation
+- **Monet Theme Crash on Tablets**: Fixed dynamic color extraction crash
+  - Added null checks for Monet color extraction
+  - Falls back to default theme on failure
+- **Clipboard Delete Button**: Added delete button to clipboard history items
+  - Each item shows X button on long-press or always-visible option
+
+---
+
+## [1.2.4] - 2026-01-14
+
+### New Features - Navigation Modes
+
+- **Selection-Delete Mode**: Text selection via backspace swipe-hold
+  - Short swipe then hold on backspace activates mode
+  - Move finger horizontally to select text (like phone selection handles)
+  - Move vertically to select lines
+  - Lift finger to delete selected text
+  - Bidirectional support (left and right from activation point)
+  - Configurable vertical threshold and speed settings
+- **TrackPoint Navigation Mode**: Joystick-style cursor control on nav keys
+  - Hold any arrow key to enter TrackPoint mode
+  - Move finger in 8 directions for cursor movement
+  - Distance-based speed scaling (faster swipes = more movement)
+  - Haptic feedback on direction changes (CLOCK_TICK pattern)
+  - Works on all navigation keys (left, right, up, down)
+
+### Technical
+
+- `FLAG_P_SELECTION_DELETE_MODE` in Pointers.kt
+- `FLAG_P_TRACKPOINT_MODE` in Pointers.kt
+- New Config settings: `selection_delete_vertical_threshold`, `selection_delete_speed`
+
+### Documentation
+
+- New spec: `docs/specs/selection-delete-mode.md`
+- New spec: `docs/specs/trackpoint-navigation-mode.md`
+
+---
+
 ## [1.2.3] - 2026-01-13
 
 ### New Features - Input & UI Improvements
@@ -587,5 +674,5 @@ CleverKeys is licensed under [GPL-3.0](LICENSE), same as Unexpected-Keyboard.
 ---
 
 **Changelog Version**: 1.0
-**Last Updated**: 2025-11-16
+**Last Updated**: 2026-01-15
 **Maintained By**: CleverKeys Team
