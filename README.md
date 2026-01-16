@@ -207,8 +207,13 @@ Inherited from Unexpected Keyboard:
 
 ### 🛠️ Power User Features
 - **Terminal mode** — Ctrl/Meta/Fn keys for Termux users
-- **Short swipe gestures** — Swipe keys for symbols, navigation, clipboard, and function keys (inherited from Unexpected Keyboard)
-- **Backup & Restore** — Export all settings and custom data
+- **Short swipe gestures** — Swipe keys for symbols, navigation, clipboard, and function keys
+- **Selection-Delete mode** — Hold backspace and swipe to select text, then delete on release
+- **TrackPoint navigation** — Joystick-style cursor control on nav keys (hold to activate)
+- **Timestamp keys** — Insert formatted date/time with custom patterns (8 pre-defined shortcuts)
+- **Quick Settings tile** — Switch keyboards from Android Quick Settings
+- **Password manager privacy** — Exclude clipboard from password managers (1Password, Bitwarden, etc.)
+- **Backup & Restore** — Export all settings and custom data as profiles
 
 <div align="center">
 
@@ -299,6 +304,17 @@ Available in [`scripts/dictionaries/`](./scripts/dictionaries/) for testing, or 
 #
 
 <img src="./docs/banners/social_preview.png" width="99%" />
+
+# 📖 Documentation
+
+</div>
+
+- **[User Guide Wiki](https://tribixbite.github.io/CleverKeys/wiki/)** — 38-page comprehensive documentation
+- **[Feature Specifications](./docs/specs/)** — Technical documentation for developers
+- **[Changelog](./CHANGELOG.md)** — Version history and release notes
+- **[Roadmap](./ROADMAP.md)** — Planned features and development path
+
+<div align="center">
 
 # 📚 Tech Stack & Open-source Libraries
 
