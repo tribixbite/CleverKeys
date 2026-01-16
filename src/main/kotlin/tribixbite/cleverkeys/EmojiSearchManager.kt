@@ -1,153 +1,214 @@
 package tribixbite.cleverkeys
 
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
+import android.view.View
+import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.TextView
 
 /**
- * Manages emoji search mode and query state.
+ * Manages emoji search with a visible EditText input field.
  *
- * #41: Redesigned emoji search to use the suggestion bar instead of separate EditText.
- * Features:
- * - Auto-detects word before cursor when opening emoji pane
- * - Shows "Type to search" or "Search results for '[query]':" in suggestion bar
- * - Routes keyboard input to search query when in search mode
- * - Fuzzy matching with lowercase normalization
+ * #41 v4: Complete redesign with proper search UI:
+ * - Visible EditText for search input (user sees what they type)
+ * - Clear button (X) to reset search
+ * - "No results" message when search returns empty
+ * - Focus-based routing (typing goes to EditText only when focused)
+ * - Auto-detect word before cursor for initial query
  *
- * This class follows the same pattern as ClipboardManager for search functionality.
- *
- * @since v1.33.0
+ * @since v1.2.10
  */
-class EmojiSearchManager(
-    private val suggestionBarProvider: () -> SuggestionBar?,
-    private val emojiGridProvider: () -> EmojiGridView?
-) {
-    // Search state
-    private var searchMode = false
-    private var searchQuery = StringBuilder()
+class EmojiSearchManager {
+
+    private var searchInput: EditText? = null
+    private var clearButton: ImageButton? = null
+    private var noResultsView: TextView? = null
+    private var emojiGrid: EmojiGridView? = null
+    private var groupButtonsBar: EmojiGroupButtonsBar? = null
+
+    private var isInitialized = false
+    private var textWatcher: TextWatcher? = null
 
     /**
-     * Checks if emoji search mode is active.
-     * When active, keyboard input is routed to the search query.
+     * Initialize the search manager with views from the emoji pane.
+     * Call this when the emoji pane is inflated.
      */
-    fun isInSearchMode(): Boolean = searchMode
+    fun initialize(emojiPane: ViewGroup) {
+        searchInput = emojiPane.findViewById(R.id.emoji_search_input)
+        clearButton = emojiPane.findViewById(R.id.emoji_search_clear)
+        noResultsView = emojiPane.findViewById(R.id.emoji_no_results)
+        emojiGrid = emojiPane.findViewById(R.id.emoji_grid)
+        groupButtonsBar = emojiPane.findViewById(R.id.emoji_group_buttons)
 
-    /**
-     * Gets the current search query.
-     */
-    fun getSearchQuery(): String = searchQuery.toString()
+        setupTextWatcher()
+        setupClearButton()
 
-    /**
-     * Enters emoji search mode with an optional initial query.
-     * Called when emoji pane is opened (SWITCH_EMOJI).
-     *
-     * @param initialQuery Optional initial search query (auto-detected word before cursor)
-     */
-    fun enterSearchMode(initialQuery: String? = null) {
-        searchMode = true
-        searchQuery.clear()
-
-        if (!initialQuery.isNullOrBlank()) {
-            // Start with pre-detected query from text before cursor
-            searchQuery.append(initialQuery)
-            updateSearchDisplay()
-            performSearch(initialQuery)
-            Log.d(TAG, "Entered emoji search with initial query: '$initialQuery'")
-        } else {
-            // No initial query - show "Type to search" prompt
-            showTypeToSearchPrompt()
-            // Show last used emojis when no query
-            emojiGridProvider()?.setEmojiGroup(EmojiGridView.GROUP_LAST_USE)
-            Log.d(TAG, "Entered emoji search (no initial query)")
-        }
+        isInitialized = true
+        Log.d(TAG, "EmojiSearchManager initialized")
     }
 
     /**
-     * Exits emoji search mode and clears query.
+     * Set up text change listener for search input.
      */
-    fun exitSearchMode() {
-        searchMode = false
-        searchQuery.clear()
-        // Clear the suggestion bar emoji search status
-        suggestionBarProvider()?.clearEmojiSearchStatus()
-        Log.d(TAG, "Exited emoji search mode")
-    }
+    private fun setupTextWatcher() {
+        textWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
-    /**
-     * Appends text to the search query.
-     * Called when user types while emoji pane is visible.
-     */
-    fun appendToSearch(text: String) {
-        if (!searchMode) return
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
-        searchQuery.append(text)
-        updateSearchDisplay()
-        performSearch(searchQuery.toString())
-        Log.d(TAG, "Appended to emoji search: '$text', query now: '$searchQuery'")
-    }
-
-    /**
-     * Deletes last character from search query.
-     * Called when user presses backspace while emoji pane is visible.
-     */
-    fun deleteFromSearch() {
-        if (!searchMode) return
-
-        if (searchQuery.isNotEmpty()) {
-            searchQuery.deleteCharAt(searchQuery.length - 1)
-            updateSearchDisplay()
-
-            if (searchQuery.isEmpty()) {
-                // Show "Type to search" when query becomes empty
-                showTypeToSearchPrompt()
-                emojiGridProvider()?.setEmojiGroup(EmojiGridView.GROUP_LAST_USE)
-            } else {
-                performSearch(searchQuery.toString())
+            override fun afterTextChanged(s: Editable?) {
+                val query = s?.toString() ?: ""
+                onSearchQueryChanged(query)
             }
-            Log.d(TAG, "Deleted from emoji search, query now: '$searchQuery'")
+        }
+        searchInput?.addTextChangedListener(textWatcher)
+    }
+
+    /**
+     * Set up clear button click listener.
+     */
+    private fun setupClearButton() {
+        clearButton?.setOnClickListener {
+            clearSearch()
         }
     }
 
     /**
-     * Clears search query and exits search mode.
+     * Handle search query changes.
+     */
+    private fun onSearchQueryChanged(query: String) {
+        Log.d(TAG, "Search query changed: '$query'")
+
+        // Show/hide clear button
+        clearButton?.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
+
+        if (query.isBlank()) {
+            // Empty query - show last used emojis
+            showGrid()
+            emojiGrid?.setEmojiGroup(EmojiGridView.GROUP_LAST_USE)
+        } else {
+            // Perform search
+            val results = emojiGrid?.searchEmojis(query)
+
+            // Show/hide no results message
+            if (results == 0) {
+                showNoResults(query)
+            } else {
+                showGrid()
+            }
+        }
+    }
+
+    /**
+     * Show the emoji grid, hide no results message.
+     */
+    private fun showGrid() {
+        emojiGrid?.visibility = View.VISIBLE
+        noResultsView?.visibility = View.GONE
+    }
+
+    /**
+     * Show "no results" message, hide emoji grid.
+     */
+    private fun showNoResults(query: String) {
+        emojiGrid?.visibility = View.GONE
+        noResultsView?.text = "No emoji found for \"$query\""
+        noResultsView?.visibility = View.VISIBLE
+    }
+
+    /**
+     * Clear the search and reset to default state.
      */
     fun clearSearch() {
-        searchQuery.clear()
-        exitSearchMode()
+        searchInput?.setText("")
+        searchInput?.clearFocus()
+        clearButton?.visibility = View.GONE
+        showGrid()
+        emojiGrid?.setEmojiGroup(EmojiGridView.GROUP_LAST_USE)
+        Log.d(TAG, "Search cleared")
     }
 
     /**
-     * Shows "Type to search" prompt in the suggestion bar.
+     * Called when emoji pane is opened.
+     * Optionally pre-fills search with detected word before cursor.
      */
-    private fun showTypeToSearchPrompt() {
-        suggestionBarProvider()?.showEmojiSearchStatus("Type to search emoji...")
-    }
+    fun onPaneOpened(initialQuery: String? = null) {
+        if (!isInitialized) {
+            Log.w(TAG, "onPaneOpened called before initialization")
+            return
+        }
 
-    /**
-     * Updates suggestion bar to show current search status.
-     */
-    private fun updateSearchDisplay() {
-        if (searchQuery.isEmpty()) {
-            showTypeToSearchPrompt()
+        // Reset state
+        showGrid()
+        noResultsView?.visibility = View.GONE
+
+        if (!initialQuery.isNullOrBlank()) {
+            // Pre-fill search with detected word
+            searchInput?.setText(initialQuery)
+            searchInput?.setSelection(initialQuery.length)
+            searchInput?.requestFocus()
+            Log.d(TAG, "Pane opened with initial query: '$initialQuery'")
         } else {
-            suggestionBarProvider()?.showEmojiSearchStatus("Search: \"${searchQuery}\"")
+            // No initial query - show last used, don't focus search
+            searchInput?.setText("")
+            clearButton?.visibility = View.GONE
+            emojiGrid?.setEmojiGroup(EmojiGridView.GROUP_LAST_USE)
+            Log.d(TAG, "Pane opened (no initial query)")
         }
     }
 
     /**
-     * Performs emoji search and updates the grid.
+     * Called when emoji pane is closed.
      */
-    private fun performSearch(query: String) {
-        emojiGridProvider()?.searchEmojis(query)
+    fun onPaneClosed() {
+        // Clear search state when pane closes
+        searchInput?.setText("")
+        searchInput?.clearFocus()
+        clearButton?.visibility = View.GONE
+        showGrid()
+        Log.d(TAG, "Pane closed, search reset")
+    }
+
+    /**
+     * Called when a category button is tapped.
+     * Clears the search to show the selected category.
+     */
+    fun onCategorySelected() {
+        if (searchInput?.text?.isNotEmpty() == true) {
+            searchInput?.setText("")
+            clearButton?.visibility = View.GONE
+            showGrid()
+            Log.d(TAG, "Category selected, search cleared")
+        }
+    }
+
+    /**
+     * Check if the search input has focus.
+     * Used to determine if keyboard input should go to search.
+     */
+    fun isSearchFocused(): Boolean {
+        return searchInput?.hasFocus() == true
+    }
+
+    /**
+     * Request focus on search input.
+     */
+    fun focusSearch() {
+        searchInput?.requestFocus()
+    }
+
+    /**
+     * Clear focus from search input.
+     */
+    fun unfocusSearch() {
+        searchInput?.clearFocus()
     }
 
     /**
      * Extracts the word immediately before cursor (for auto-detecting search query).
-     * Returns null if:
-     * - Text ends with whitespace/symbol
-     * - No text before cursor
-     * - Text contains only whitespace
-     *
-     * @param textBeforeCursor Text retrieved from InputConnection.getTextBeforeCursor()
-     * @return Word to use as initial search query, or null
      */
     fun extractWordBeforeCursor(textBeforeCursor: CharSequence?): String? {
         if (textBeforeCursor.isNullOrEmpty()) return null
@@ -158,7 +219,7 @@ class EmojiSearchManager(
         val lastChar = text.lastOrNull() ?: return null
         if (lastChar.isWhitespace() || !lastChar.isLetterOrDigit()) return null
 
-        // Find the start of the last word (go back until whitespace or start)
+        // Find the start of the last word
         var wordStart = text.length - 1
         while (wordStart > 0 && text[wordStart - 1].isLetterOrDigit()) {
             wordStart--
@@ -166,6 +227,21 @@ class EmojiSearchManager(
 
         val word = text.substring(wordStart)
         return if (word.isNotBlank()) word else null
+    }
+
+    /**
+     * Clean up resources.
+     */
+    fun cleanup() {
+        textWatcher?.let { searchInput?.removeTextChangedListener(it) }
+        textWatcher = null
+        searchInput = null
+        clearButton = null
+        noResultsView = null
+        emojiGrid = null
+        groupButtonsBar = null
+        isInitialized = false
+        Log.d(TAG, "EmojiSearchManager cleaned up")
     }
 
     companion object {

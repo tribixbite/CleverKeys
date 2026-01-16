@@ -116,13 +116,18 @@ class KeyboardReceiver(
                     }
                 }
 
-                // #41: Enter emoji search mode with auto-detected context word
-                emojiSearchManager?.let { manager ->
-                    // Get text before cursor to detect context word
+                // #41 v4: Initialize emoji search manager with the pane and notify pane opened
+                emojiPane?.let { pane ->
+                    emojiSearchManager?.initialize(pane)
+                    // Auto-detect context word for initial search query
                     val textBeforeCursor = keyboard2.currentInputConnection
                         ?.getTextBeforeCursor(100, 0)
-                    val contextWord = manager.extractWordBeforeCursor(textBeforeCursor)
-                    manager.enterSearchMode(contextWord)
+                    val contextWord = emojiSearchManager?.extractWordBeforeCursor(textBeforeCursor)
+                    emojiSearchManager?.onPaneOpened(contextWord)
+
+                    // Wire up search manager to category buttons
+                    pane.findViewById<EmojiGroupButtonsBar>(R.id.emoji_group_buttons)
+                        ?.setSearchManager(emojiSearchManager!!)
                 }
             }
 
@@ -157,8 +162,8 @@ class KeyboardReceiver(
                 // Exit clipboard search mode when switching back
                 clipboardManager.resetSearchOnHide()
 
-                // #41: Exit emoji search mode when switching back
-                emojiSearchManager?.exitSearchMode()
+                // #41 v4: Notify emoji search manager pane is closing
+                emojiSearchManager?.onPaneClosed()
 
                 // Hide content pane (keyboard remains visible)
                 contentPaneContainer?.let {
@@ -298,20 +303,5 @@ class KeyboardReceiver(
         clipboardManager.clearSearch()
     }
 
-    // #41: Emoji search mode IReceiver implementations
-    override fun isEmojiSearchMode(): Boolean {
-        return emojiSearchManager?.isInSearchMode() ?: false
-    }
-
-    override fun appendToEmojiSearch(text: String) {
-        emojiSearchManager?.appendToSearch(text)
-    }
-
-    override fun backspaceEmojiSearch() {
-        emojiSearchManager?.deleteFromSearch()
-    }
-
-    override fun exitEmojiSearchMode() {
-        emojiSearchManager?.exitSearchMode()
-    }
+    // #41 v4: Emoji search now uses EditText in emoji pane - no IReceiver methods needed
 }

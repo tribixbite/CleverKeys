@@ -39,14 +39,16 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
     /**
      * #41: Search emojis by name and display results.
      * @param query The search query
+     * @return Number of results found
      */
-    fun searchEmojis(query: String) {
+    fun searchEmojis(query: String): Int {
         emojiArray = if (query.isBlank()) {
             getLastEmojis() // Show last used when empty
         } else {
             Emoji.searchByName(query)
         }
         adapter = EmojiViewAdapter(context, emojiArray)
+        return emojiArray.size
     }
 
     override fun onItemClick(parent: AdapterView<*>?, v: View, pos: Int, id: Long) {

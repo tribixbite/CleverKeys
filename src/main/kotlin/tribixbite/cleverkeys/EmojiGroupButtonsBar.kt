@@ -12,12 +12,11 @@ import android.widget.LinearLayout
 /**
  * Horizontal bar displaying emoji group category buttons.
  *
- * #41: Removed EditText search UI - search is now handled via suggestion bar.
- * When emoji pane opens, search mode is activated automatically with context word detection.
- * Typing on keyboard updates the search query displayed in suggestion bar.
+ * #41 v4: Category selection now clears search query via EmojiSearchManager.
  */
 class EmojiGroupButtonsBar(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
     private var emojiGrid: EmojiGridView? = null
+    private var searchManager: EmojiSearchManager? = null
 
     init {
         orientation = HORIZONTAL
@@ -37,6 +36,13 @@ class EmojiGroupButtonsBar(context: Context, attrs: AttributeSet) : LinearLayout
                 LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
             )
         }
+    }
+
+    /**
+     * Set the search manager for clearing search on category selection.
+     */
+    fun setSearchManager(manager: EmojiSearchManager) {
+        this.searchManager = manager
     }
 
     private fun getEmojiGrid(): EmojiGridView {
@@ -63,6 +69,8 @@ class EmojiGroupButtonsBar(context: Context, attrs: AttributeSet) : LinearLayout
             if (event.action != MotionEvent.ACTION_DOWN) {
                 return false
             }
+            // Clear search when category is selected
+            searchManager?.onCategorySelected()
             getEmojiGrid().setEmojiGroup(groupId)
             return true
         }
