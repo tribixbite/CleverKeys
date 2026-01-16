@@ -525,6 +525,7 @@ private fun CategoryHeader(category: CommandRegistry.Category, commandCount: Int
             CommandRegistry.Category.TEXT -> Icons.Filled.Create           // Text
             CommandRegistry.Category.LANGUAGE -> Icons.Filled.Refresh      // Language toggle
             CommandRegistry.Category.TEXT_ACTIONS -> Icons.Filled.Menu     // Text actions
+            CommandRegistry.Category.TIMESTAMP -> Icons.Filled.DateRange   // Timestamps
         }
 
         Icon(
