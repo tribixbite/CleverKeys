@@ -15,6 +15,16 @@
 - Fixed SettingsActivity defaults from VIBRATE_CUSTOM to HAPTIC_ENABLED
 - Added to BackupRestoreManager for backup/restore support
 
+### Numpad Scaling Fix (#58)
+- ✅ Fixed "keyboard for number input has same size as letter input" complaint
+- **Horizontal scaling** (be23db40): Removed explicit `width="6.0"` from pin.xml
+  - Layout auto-computes to 5.0 units (4 keys + 1 shift margin)
+  - Keys are now 20% wider (eliminating right-side padding)
+- **Vertical scaling** (74580c22): Added `scale_numpad_height` setting
+  - When enabled and `bottom_row=false`, uses actual `keysHeight` as divisor
+  - Rows scale up to fill full keyboard height for easier tapping
+  - Theme.kt modified row_height calculation logic
+
 ### Specs Rewrite for LLM Agents
 - ✅ Rewrote 25 docs/specs files for LLM coding agent consumption
 - ✅ Removed: dates, TODOs, sprints, bugs, verification checklists
@@ -59,6 +69,8 @@
 - ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `74580c22` feat: add numpad height scaling for larger keys (#58)
+- `be23db40` fix: enlarge PIN keyboard keys by 20% (#58)
 - `ef7369a0` fix: vibration feedback toggle now properly disables all haptics (#46)
 - `f697f528` docs(specs): complete spec rewrite for LLM agents
 - `3603fc01` docs(specs): rewrite 4 more specs for LLM agent audience
@@ -103,11 +115,15 @@
 
 **Open CleverKeys Issues**:
 - #61 Active multi-language switching
-- #58 Scaling number keyboard
 - #52 MessageEase layout contribution
 - #50 Swedish language support
 - #49 Turkish language support
 - #42 Integrate add-to-dictionary to typing
+
+**Recently Fixed**:
+- #58 ✅ Scaling number keyboard - FIXED (be23db40, 74580c22)
+  - Horizontal: PIN keys 20% wider via auto-width calculation
+  - Vertical: numpad rows scale to fill keyboard height
 
 **Already Implemented (needs user documentation)**:
 - #48 ✅ Password Manager autofill - ALREADY IMPLEMENTED (b769b0fc)
