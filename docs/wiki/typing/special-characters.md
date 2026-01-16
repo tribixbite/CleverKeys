@@ -106,9 +106,10 @@ For languages requiring diacritics:
 - Long-press the base letter
 - Select from popup
 
-### Circumflex (ê)
-- Long-press the base letter
-- Select from popup
+### Circumflex (ê, î, ô, û, â)
+- Long-press the base letter (e, i, o, u, a)
+- Select the circumflex variant from popup
+- Works on all layouts (QWERTY, AZERTY, etc.)
 
 ### Umlaut/Diaeresis (ë)
 - Long-press the base letter
@@ -128,6 +129,7 @@ For languages requiring diacritics:
 - **Speed**: Short swipes are faster than long-press once learned
 - **Customize**: You can change subkey assignments in Settings
 - **Language packs**: Some accents only appear with language pack installed
+- **All layouts supported**: Long-press works on QWERTY, AZERTY, Dvorak, etc.
 
 > [!TIP]
 > If you frequently use certain special characters, consider customizing subkey positions to place them in easier-to-reach directions.
