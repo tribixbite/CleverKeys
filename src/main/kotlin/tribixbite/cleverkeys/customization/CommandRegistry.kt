@@ -61,7 +61,8 @@ object CommandRegistry {
         HEBREW("Hebrew Marks", 16),
         TEXT("Text Input", 17),
         LANGUAGE("Language", 18),
-        TEXT_ACTIONS("Text Actions", 19)
+        TEXT_ACTIONS("Text Actions", 19),
+        TIMESTAMP("Timestamps", 20)
     }
 
     /**
@@ -537,7 +538,33 @@ object CommandRegistry {
         Command("replaceText", "Replace Text", "Replace selected text with alternatives", Category.TEXT_ACTIONS,
             keywords = listOf("replace", "text", "substitute", "change")),
         Command("showTextMenu", "Show Text Menu", "Select word at cursor and show native toolbar", Category.TEXT_ACTIONS,
-            keywords = listOf("text", "menu", "toolbar", "cut", "copy", "paste", "translate", "select"))
+            keywords = listOf("text", "menu", "toolbar", "cut", "copy", "paste", "translate", "select")),
+
+        // ========== TIMESTAMPS ==========
+        Command("timestamp_date", "Date (ISO)", "Insert current date (YYYY-MM-DD)", Category.TIMESTAMP,
+            symbol = "📅",
+            keywords = listOf("timestamp", "date", "iso", "today", "current")),
+        Command("timestamp_time", "Time (24h)", "Insert current time (HH:mm)", Category.TIMESTAMP,
+            symbol = "🕐",
+            keywords = listOf("timestamp", "time", "clock", "now", "24h")),
+        Command("timestamp_datetime", "Date & Time", "Insert date and time (YYYY-MM-DD HH:mm)", Category.TIMESTAMP,
+            symbol = "📆",
+            keywords = listOf("timestamp", "datetime", "date", "time", "now")),
+        Command("timestamp_time_seconds", "Time with Seconds", "Insert time with seconds (HH:mm:ss)", Category.TIMESTAMP,
+            symbol = "⏱",
+            keywords = listOf("timestamp", "time", "seconds", "precise")),
+        Command("timestamp_date_short", "Date (Short)", "Insert short date (MM/dd/yy)", Category.TIMESTAMP,
+            symbol = "📅",
+            keywords = listOf("timestamp", "date", "short", "american")),
+        Command("timestamp_date_long", "Date (Long)", "Insert long date (Day, Month DD, YYYY)", Category.TIMESTAMP,
+            symbol = "🗓",
+            keywords = listOf("timestamp", "date", "long", "full", "weekday")),
+        Command("timestamp_time_12h", "Time (12h)", "Insert 12-hour time (h:mm AM/PM)", Category.TIMESTAMP,
+            symbol = "🕐",
+            keywords = listOf("timestamp", "time", "12h", "am", "pm")),
+        Command("timestamp_iso", "ISO 8601", "Insert ISO 8601 timestamp (YYYY-MM-DDTHH:mm:ss)", Category.TIMESTAMP,
+            symbol = "📋",
+            keywords = listOf("timestamp", "iso", "8601", "full", "standard"))
     )
 
     /**
