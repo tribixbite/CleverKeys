@@ -7,6 +7,19 @@
 
 ## Session Progress (2026-01-16)
 
+### Wiki Documentation Audit & Fixes
+- ✅ Fixed clipboard-history.md: removed non-existent "paste key", fixed access method
+- ✅ Fixed themes.md: removed non-existent "System" theme, corrected theme names
+- ✅ Fixed first-time-setup.md: corrected all Settings navigation paths
+- ✅ Fixed switching-layouts.md: removed non-existent "globe key"
+- ✅ Fixed command-palette.md: clarified it only exists in per-key customization
+- ✅ Fixed haptics.md: corrected to show only 5 actual haptic events (not 12+)
+- ✅ Fixed neural-settings.md: corrected beam width default (6, not 5)
+- ✅ Fixed adding-layouts.md: removed non-existent visual editor, QR code features
+- ✅ Fixed multi-language.md: accurate description of dual-dictionary system
+- ✅ Regenerated wiki HTML with all corrections (4e1afd78, 93cbfb27)
+
+### Earlier Today
 - ✅ Updated CHANGELOG.md with v1.2.4, v1.2.8, v1.2.9 releases (315d8662)
 - ✅ Regenerated wiki pages with improved generator (37 pages)
 - ✅ Fixed wiki-config.json to match existing content files
@@ -31,6 +44,8 @@
 - ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `93cbfb27` chore: regenerate wiki HTML with corrected documentation
+- `4e1afd78` fix: correct wiki documentation errors
 - `72411d3d` docs: add custom language pack creation instructions to wiki
 - `afa2c49c` chore: update copyright year to 2026
 - `5126256a` docs: regenerate common-issues HTML with older device fix
