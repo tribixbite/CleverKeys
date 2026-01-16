@@ -152,6 +152,8 @@
 - ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `8c9770a6` docs: update emoji spec with search architecture (#41)
+- `d9a2a3f1` docs: update emoji wiki with new search feature (#41)
 - `5bc83f97` fix: white navbar icons on Android 8-9 with light themes (#1116)
 - `4b5e016f` fix: space key now types space when text selected (#1142)
 - `252d72a6` feat: expand emoji search to 500+ name mappings (#41)
