@@ -169,28 +169,28 @@ These specs would document existing features that don't have formal documentatio
 
 ---
 
-## 🎯 Current Focus (2026-01-04)
+## 🎯 Current Focus (2026-01-15)
 
-### Session Progress (2025-12-04) ✅
-- **Spec Audit Complete**: All 10 core specs reviewed and verified
-- **Architecture Documentation**: `ARCHITECTURE_MASTER.md` created with all parameters
-- **Questions Resolved**: `questions.md` updated (7 items resolved/analyzed)
-- **Performance Audit**: No blocking operations found
-- **Settings Verification**: Privacy/AB-test/rollback all fully implemented
+### v1.2.x Feature Releases ✅
+- **v1.2.9**: Timestamp keys with custom patterns
+- **v1.2.8**: Quick Settings tile, password manager clipboard exclusion, Android 15 fixes
+- **v1.2.4**: Selection-Delete mode, TrackPoint navigation mode
+- **v1.2.0-1.2.3**: Per-key customization, multi-language swipe, profiles, wiki
 
 ### All Critical Systems Complete ✅
 - ✅ Neural prediction pipeline (ONNX transformer + beam search)
 - ✅ Gesture recognition system (swipe detection + trails)
 - ✅ Settings system (100% UK parity + CK enhancements)
-- ✅ Privacy controls (PrivacyManager.kt - Phase 6.5)
-- ✅ A/B testing framework (ABTestManager.kt - Phase 6.3)
-- ✅ Model versioning/rollback (ModelVersionManager.kt - Phase 6.4)
+- ✅ Selection-Delete mode (bidirectional, configurable threshold)
+- ✅ TrackPoint navigation (8-direction joystick cursor)
+- ✅ Clipboard privacy (password manager exclusion)
+- ✅ Timestamp keys (DateTimeFormatter, 8 pre-defined patterns)
 
-### Remaining Work (All Non-Blocking)
-1. **CI/CD Setup**: ✅ Complete (7 workflows: ci.yml, build.yml, ui-testing.yml, release.yml, nightly.yml, etc.)
-2. **Theme Creation**: ✅ Complete (ThemeSettingsActivity with HSL color picker, custom themes, export/import)
-3. **Swipe Trail Themes**: ✅ Complete (KeyboardColorScheme includes swipeTrail, integrated in ThemeSettingsActivity)
-4. **Device Testing**: Manual validation (ongoing)
+### Documentation Complete ✅
+1. **User Guide Wiki**: 38 pages across 8 categories
+2. **Feature Specs**: 19 core specs + 4 optional
+3. **CHANGELOG/ROADMAP**: Updated with v1.2.x releases
+4. **Device Testing**: Pending ADB connection
 
 ---
 
@@ -199,25 +199,32 @@ These specs would document existing features that don't have formal documentatio
 ### By Priority
 - **P0 (Critical)**: 3 specs (Core, Gesture, Neural)
   - Core: ✅ Implemented
-  - Gesture: ✅ Implemented (Bug #267 resolved)
-  - Neural: ✅ Implemented (Bug #273 resolved)
+  - Gesture: ✅ Implemented
+  - Neural: ✅ Implemented
 
-- **P1 (High)**: 3 specs (Layout, Settings, Short Swipe Customization)
-  - Layout: ✅ Implemented (Bug #266 resolved)
-  - Settings: ✅ Complete ✅ **100% PARITY (45/45 settings)**
-  - Short Swipe Customization: ✅ Complete (shift+swipe, colored zones)
+- **P1 (High)**: 7 specs
+  - Layout: ✅ Implemented
+  - Settings: ✅ Complete (100% parity)
+  - Short Swipe Customization: ✅ Complete
+  - Cursor Navigation: ✅ Complete
+  - Selection-Delete Mode: ✅ Complete (v1.2.4)
+  - TrackPoint Navigation: ✅ Complete (v1.2.4)
+  - Secondary Language: ✅ Complete
 
-- **P2 (Medium)**: 3 specs (UI, Performance, Testing)
-  - UI: ✅ Implemented
-  - Performance: ✅ Verified (2025-11-16)
-  - Testing: 🟡 Partially (automated script ✅ complete, device testing pending)
+- **P2 (Medium)**: 6 specs
+  - UI/Material 3: ✅ Implemented
+  - Performance: ✅ Verified
+  - Quick Settings Tile: ✅ Complete (v1.2.8)
+  - Clipboard Privacy: ✅ Complete (v1.2.8)
+  - Timestamp Keys: ✅ Complete (v1.2.9)
+  - Testing: 🟡 Partially (device testing pending)
 
 ### By Status
-- ✅ **Fully Implemented**: 9 (Core, Gesture, Layout, Neural, Settings, UI, Performance, Architectural, Short Swipe Customization)
-- 🟡 **Partially Implemented**: 1 (Testing - automated script ready, device testing pending)
+- ✅ **Fully Implemented**: 18 specs
+- 🟡 **Partially Implemented**: 1 (Testing - device testing pending)
 - 🔴 **Not Started**: 0
 
-**Production Readiness**: ✅ **ALL CRITICAL SPECS COMPLETE** (Score: 86/100, Grade A)
+**Production Readiness**: ✅ **ALL CRITICAL SPECS COMPLETE** (Score: 95/100, Grade A)
 
 ---
 
