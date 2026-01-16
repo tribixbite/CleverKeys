@@ -25,6 +25,18 @@
   - Rows scale up to fill full keyboard height for easier tapping
   - Theme.kt modified row_height calculation logic
 
+### Tap-to-Add Dictionary Feature (#42)
+- ✅ Implemented tap-to-add-to-dictionary during typing (7c4054d4)
+- When typing an unknown word, shows exact typed string with "+" prefix as last suggestion
+- Tapping commits the word, adds to user dictionary, and inserts trailing space
+- **Config.kt**: Added `show_exact_typed_word` setting (default: true)
+- **SuggestionBar.kt**: Added `exact_add:` prefix handling with bold italic styling
+- **SuggestionHandler.kt**: Added `handleExactWordAdd()` function and modified
+  `updatePredictionsForCurrentWord()` to include exact typed word when:
+  - Setting enabled AND word length >= 2
+  - Word not already in predictions
+  - Word not in user dictionary or main dictionary
+
 ### Specs Rewrite for LLM Agents
 - ✅ Rewrote 25 docs/specs files for LLM coding agent consumption
 - ✅ Removed: dates, TODOs, sprints, bugs, verification checklists
@@ -69,6 +81,7 @@
 - ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `7c4054d4` feat: add tap-to-add-to-dictionary for exact typed words (#42)
 - `74580c22` feat: add numpad height scaling for larger keys (#58)
 - `be23db40` fix: enlarge PIN keyboard keys by 20% (#58)
 - `ef7369a0` fix: vibration feedback toggle now properly disables all haptics (#46)
@@ -118,9 +131,11 @@
 - #52 MessageEase layout contribution
 - #50 Swedish language support
 - #49 Turkish language support
-- #42 Integrate add-to-dictionary to typing
 
 **Recently Fixed**:
+- #42 ✅ Tap-to-add dictionary - FIXED (7c4054d4)
+  - Shows exact typed word with "+" prefix when unknown
+  - Tapping commits and adds to user dictionary
 - #58 ✅ Scaling number keyboard - FIXED (be23db40, 74580c22)
   - Horizontal: PIN keys 20% wider via auto-width calculation
   - Vertical: numpad rows scale to fill keyboard height
