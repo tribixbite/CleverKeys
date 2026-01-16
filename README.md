@@ -439,7 +439,7 @@ If you want a lightweight keyboard without gesture typing, we recommend the orig
 
 ```
 CleverKeys - Neural Gesture Keyboard for Android
-Copyright (C) 2024-2025 tribixbite
+Copyright (C) 2024-2026 tribixbite
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
