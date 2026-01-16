@@ -1,7 +1,7 @@
 # CleverKeys Feature Specifications
 
 **Last Updated**: 2026-01-15
-**Total Specs**: 17 (core) + 4 (optional enhancements)
+**Total Specs**: 18 (core) + 4 (optional enhancements)
 
 This directory contains feature specifications and architectural decision records (ADRs) for CleverKeys. All specifications follow the template in `SPEC_TEMPLATE.md`.
 
@@ -123,7 +123,14 @@ This directory contains feature specifications and architectural decision record
     - Key Concepts: TileService, input method picker, active/inactive state
     - Outstanding: None
 
-17. **[SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md)** - Template
+17. **[Clipboard Privacy](./clipboard-privacy.md)** - P2
+    - Status: ✅ Complete (v1.2.8 - 2026-01-15)
+    - Covers: Password manager exclusion, clipboard security
+    - Components: `ClipboardHistoryService.kt`, `Config.kt`, `SettingsActivity.kt`
+    - Key Concepts: Foreground app detection, package exclusion list
+    - Outstanding: None
+
+18. **[SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md)** - Template
     - Template for creating new feature specifications
     - Use this when creating new specs
 
