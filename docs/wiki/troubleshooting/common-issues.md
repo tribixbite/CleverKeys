@@ -178,6 +178,26 @@ Some apps override keyboard behavior:
 2. Check app cleaner:
    - If using RAM cleaner, whitelist CleverKeys
 
+## Android Version-Specific Issues
+
+### Issue: Navigation bar covers keyboard (Android 15)
+
+**Status:** ✅ Fixed in v1.2.8
+
+If you see this issue, update to v1.2.8 or later. The keyboard now properly handles Android 15's edge-to-edge display mode.
+
+### Issue: White navigation buttons (Android 8-9)
+
+**Status:** ✅ Fixed in v1.2.8
+
+Update to v1.2.8 or later. Navigation button colors now properly adapt to theme.
+
+### Issue: Monet theme crash on tablets
+
+**Status:** ✅ Fixed in v1.2.8
+
+Tablets running Android 12+ with limited color extraction now fall back gracefully to default themes.
+
 ## Visual Issues
 
 ### Issue: Keyboard too small/large
@@ -230,6 +250,14 @@ Some apps override keyboard behavior:
 
 - Settings > Haptics > Intensity
 - Adjust to preference
+
+## Testing Your Keyboard
+
+Use the built-in test field to troubleshoot without switching apps:
+
+1. Open CleverKeys Settings
+2. Look for "⌨️ Test Keyboard" at the top
+3. Tap to expand and test gestures, layouts, and features
 
 ## Still Having Issues?
 
