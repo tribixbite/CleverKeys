@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Installation - CleverKeys Wiki</title>
-    <meta name="description" content="Download CleverKeys from F-Droid or GitHub">
+    <title>Installation - CleverKeys User Guide</title>
+    <meta name="description" content="Download and install CleverKeys">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,30 +12,37 @@
             theme: {
                 extend: {
                     colors: {
-                        'wiki-primary': '#10b981',
-                        'wiki-primary-light': '#34d399',
-                        'wiki-accent': '#3b82f6',
-                        'wiki-dark': '#0d1117',
-                        'wiki-surface': '#161b22',
-                        'wiki-card': '#21262d',
-                        'wiki-border': '#30363d',
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-wiki-dark text-gray-100 min-h-screen">
+<body class="bg-ck-dark text-gray-100 min-h-screen">
     <!-- Nav -->
-    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="../" class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
                 <span class="font-bold">CleverKeys</span>
             </a>
             <div class="flex gap-4">
-                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
-                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
                 <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
             </div>
         </div>
@@ -44,9 +51,11 @@
     <!-- Breadcrumb -->
     <div class="container mx-auto px-6 py-4">
         <div class="flex items-center gap-2 text-sm text-gray-500">
-            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <a href="../" class="hover:text-ck-green">Home</a>
             <span>/</span>
-            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Getting%20Started" class="hover:text-ck-green">Getting Started</a>
             <span>/</span>
             <span class="text-gray-300">Installation</span>
         </div>
@@ -54,147 +63,100 @@
 
     <!-- Header -->
     <header class="container mx-auto px-6 pb-6">
-        <div class="flex items-center gap-3 mb-3">
+        <div class="flex items-center gap-3 mb-4">
             <span class="px-3 py-1 text-sm rounded-full" style="background: #10b98120; color: #10b981">Getting Started</span>
-            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">beginner</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P0</span>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-2">Installation</h1>
-        <p class="text-xl text-gray-400">Download CleverKeys from F-Droid or GitHub</p>
-        
-        <div class="flex flex-wrap gap-2 mt-4">
-            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#install</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#download</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#f-droid</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#github</span>
-        </div>
-    
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Installation</h1>
+        <p class="text-xl text-gray-400">Download and install CleverKeys</p>
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-6 pb-20">
-        <div class="flex gap-8">
-            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
-                <h1 class="text-3xl font-bold mb-6 text-white">Installation</h1>
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Installation</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys is available for free from F-Droid and GitHub. Choose your preferred installation method below.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Getting CleverKeys on your Android device is quick and easy.</p>
 
-<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Requirements</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Install CleverKeys on your Android device</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Requirements</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Android 7.0+ (API 24)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Size</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">~15 MB</td></tr></tbody></table></div>
-<h2 id="installation-methods" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Installation Methods</h2>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Android 8.0 (Oreo)</strong> or higher</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">50 MB</strong> of storage space</li>
+<li class="ml-4 text-gray-300">&#8226; No internet connection required after installation</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Installation Methods</h2>
 
-<h3 id="option-1-f-droid-recommended-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Option 1: F-Droid (Recommended)</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 1: GitHub Releases (Recommended)</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">F-Droid is an open-source app store that provides verified, privacy-respecting apps.</p>
-
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Install the <a href="https://f-droid.org/" class="text-wiki-accent hover:underline">F-Droid app</a> if you don't have it</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Open F-Droid and search for "CleverKeys"</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap <strong class="font-semibold text-white">Install</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Once installed, proceed to <a href="enabling-keyboard.md" class="text-wiki-accent hover:underline">Enabling the Keyboard</a></li>
-
-</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">F-Droid automatically notifies you when updates are available.</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
-<h3 id="option-2-github-releases" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Option 2: GitHub Releases</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Download the APK directly from GitHub:</p>
-
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Visit <a href="https://github.com/tribixbite/CleverKeys/releases/latest" class="text-wiki-accent hover:underline">CleverKeys Releases</a></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Download <code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">CleverKeys-vX.X.X.apk</code></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Open the downloaded file</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> If prompted, allow installation from unknown sources</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">5.</span> Tap <strong class="font-semibold text-white">Install</strong></li>
-
-</ul><h3 id="option-3-build-from-source" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Option 3: Build from Source</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Visit the <a href="https://github.com/tribixbite/CleverKeys/releases" class="text-green-400 hover:underline">CleverKeys Releases</a> page</li>
+<li class="ml-4 text-gray-300">2. Download the latest <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">cleverkeys-vX.X.X.apk</code> file</li>
+<li class="ml-4 text-gray-300">3. Open the APK file on your device</li>
+<li class="ml-4 text-gray-300">4. If prompted, allow installation from unknown sources</li>
+<li class="ml-4 text-gray-300">5. Tap <strong class="text-white">Install</strong></li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Build from Source</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">For developers who want to build from source:</p>
 
-<pre class="bg-wiki-dark p-4 rounded-lg overflow-x-auto my-4"><code class="language-bash">git clone https://github.com/tribixbite/CleverKeys.git
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-bash">git clone https://github.com/tribixbite/CleverKeys.git
 <p class="mb-4 text-gray-300 leading-relaxed">cd CleverKeys</p>
-<p class="mb-4 text-gray-300 leading-relaxed">./gradlew assembleDebug</code></pre></p>
+<p class="mb-4 text-gray-300 leading-relaxed">./gradlew assembleRelease</code></pre></p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">The APK will be at <code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">app/build/outputs/apk/debug/</code>.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">The APK will be in <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">app/build/outputs/apk/release/</code>.</p>
 
-<h2 id="after-installation" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">After Installation</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">After Installation</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Once installed, you need to:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">After installing CleverKeys, you need to:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <a href="enabling-keyboard.md" class="text-wiki-accent hover:underline">Enable CleverKeys</a> as your input method</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <a href="first-time-setup.md" class="text-wiki-accent hover:underline">Complete first-time setup</a></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Enable the keyboard</strong> in Android Settings</li>
+<li class="ml-4 text-gray-300">2. <strong class="text-white">Set as default</strong> keyboard</li>
+<li class="ml-4 text-gray-300">3. <strong class="text-white">Configure</strong> your preferences</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="./enabling-keyboard.html" class="text-green-400 hover:underline">Enabling the Keyboard</a> for detailed steps.</p>
 
-</ul><h2 id="troubleshooting" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Troubleshooting</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Permissions</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">"App not installed" error</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Ensure you have enough storage space</li>
-<li class="ml-4 py-1">&#8226; Uninstall any previous version first</li>
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys requests minimal permissions:</p>
 
-</ul><p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">"Unknown sources" blocked</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Go to Settings > Security > Enable "Unknown sources"</li>
-<li class="ml-4 py-1">&#8226; Or: Settings > Apps > Special access > Install unknown apps</li>
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">Permission</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Purpose</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Vibration</td><td class="px-4 py-2 border-t border-gray-700">Haptic feedback on key presses</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700">Storage</td><td class="px-4 py-2 border-t border-gray-700">Saving user dictionary and preferences</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">No internet permission</strong> - CleverKeys never sends data to any server.</p>
 
-</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Troubleshooting</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/getting-started/installation-spec.md" class="text-wiki-accent hover:underline">Installation Technical Specification</a>.</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">APK won't install</h3>
 
-                
-        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
-            <div></div>
-            
-                <a href="getting-started/first-time-setup.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <div>
-                        <div class="text-xs uppercase text-gray-500">Next</div>
-                        <div class="font-medium">First Time Setup</div>
-                    </div>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-            
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Check that "Install from unknown sources" is enabled for your file manager</li>
+<li class="ml-4 text-gray-300">&#8226; Ensure you have enough storage space (50 MB)</li>
+<li class="ml-4 text-gray-300">&#8226; Try downloading the APK again (file may be corrupted)</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">App crashes on first launch</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Ensure you're running Android 8.0 or higher</li>
+<li class="ml-4 text-gray-300">&#8226; Try clearing app data: Settings → Apps → CleverKeys → Clear Data</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Next Steps</h2>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="./first-time-setup.html" class="text-green-400 hover:underline">First-Time Setup</a> - Complete your keyboard setup</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="./basic-typing.html" class="text-green-400 hover:underline">Basic Typing</a> - Learn the fundamentals</li>
+</ul>
         </div>
-    
-            </article>
-            
-        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
-            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
-            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
-                
-                    <li class="">
-                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#installation-methods" class="text-gray-400 hover:text-wiki-primary transition-colors">Installation Methods</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#option-1-f-droid-recommended-" class="text-gray-400 hover:text-wiki-primary transition-colors">Option 1: F-Droid (Recommended)</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#option-2-github-releases" class="text-gray-400 hover:text-wiki-primary transition-colors">Option 2: GitHub Releases</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#option-3-build-from-source" class="text-gray-400 hover:text-wiki-primary transition-colors">Option 3: Build from Source</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#after-installation" class="text-gray-400 hover:text-wiki-primary transition-colors">After Installation</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#troubleshooting" class="text-gray-400 hover:text-wiki-primary transition-colors">Troubleshooting</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
-                    </li>
-                
-            </ul>
-        </nav>
-    
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <div></div>
+            <a href="getting-started/first-time-setup.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">First-Time Setup</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
-        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
     </footer>
 </body>
 </html>

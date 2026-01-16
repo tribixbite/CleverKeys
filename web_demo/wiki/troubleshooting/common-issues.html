@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Common Issues - CleverKeys Wiki</title>
-    <meta name="description" content="Solutions to frequently reported problems">
+    <title>Common Issues - CleverKeys User Guide</title>
+    <meta name="description" content="FAQ and quick fixes">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,30 +12,37 @@
             theme: {
                 extend: {
                     colors: {
-                        'wiki-primary': '#10b981',
-                        'wiki-primary-light': '#34d399',
-                        'wiki-accent': '#3b82f6',
-                        'wiki-dark': '#0d1117',
-                        'wiki-surface': '#161b22',
-                        'wiki-card': '#21262d',
-                        'wiki-border': '#30363d',
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-wiki-dark text-gray-100 min-h-screen">
+<body class="bg-ck-dark text-gray-100 min-h-screen">
     <!-- Nav -->
-    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="../" class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
                 <span class="font-bold">CleverKeys</span>
             </a>
             <div class="flex gap-4">
-                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
-                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
                 <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
             </div>
         </div>
@@ -44,9 +51,11 @@
     <!-- Breadcrumb -->
     <div class="container mx-auto px-6 py-4">
         <div class="flex items-center gap-2 text-sm text-gray-500">
-            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <a href="../" class="hover:text-ck-green">Home</a>
             <span>/</span>
-            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Troubleshooting" class="hover:text-ck-green">Troubleshooting</a>
             <span>/</span>
             <span class="text-gray-300">Common Issues</span>
         </div>
@@ -54,396 +63,293 @@
 
     <!-- Header -->
     <header class="container mx-auto px-6 pb-6">
-        <div class="flex items-center gap-3 mb-3">
+        <div class="flex items-center gap-3 mb-4">
             <span class="px-3 py-1 text-sm rounded-full" style="background: #ef444420; color: #ef4444">Troubleshooting</span>
-            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">beginner</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P2</span>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-2">Common Issues</h1>
-        <p class="text-xl text-gray-400">Solutions to frequently reported problems</p>
-        
-        <div class="flex flex-wrap gap-2 mt-4">
-            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#issues</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#problems</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#solutions</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#fix</span>
-        </div>
-    
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Common Issues</h1>
+        <p class="text-xl text-gray-400">FAQ and quick fixes</p>
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-6 pb-20">
-        <div class="flex gap-8">
-            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
-                <h1 class="text-3xl font-bold mb-6 text-white">Common Issues</h1>
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300 leading-relaxed">title: Common Issues</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Solutions for frequently encountered problems</p>
+<p class="mb-4 text-gray-300 leading-relaxed">category: Troubleshooting</p>
+<p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
+<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/troubleshooting/common-issues-spec.md</p>
+<hr class="border-gray-700 my-6">
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Common Issues</h1>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Solutions for the most frequently encountered problems with CleverKeys.</p>
 
-<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Issue Type</th><th class="px-4 py-2 text-left border-b border-wiki-border">Common Causes</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Keyboard not showing</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Not enabled in system settings</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Typing issues</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings misconfiguration</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Gesture problems</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Threshold settings</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">App compatibility</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">App-specific behavior</td></tr></tbody></table></div>
-<h2 id="keyboard-not-appearing" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Keyboard Not Appearing</h2>
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">Issue Type</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Common Causes</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Keyboard not showing</strong></td><td class="px-4 py-2 border-t border-gray-700">Not enabled in system settings</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Typing issues</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings misconfiguration</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Gesture problems</strong></td><td class="px-4 py-2 border-t border-gray-700">Threshold settings</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">App compatibility</strong></td><td class="px-4 py-2 border-t border-gray-700">App-specific behavior</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Keyboard Not Appearing</h2>
 
-<h3 id="issue-keyboard-doesn-t-show-when-tapping-text-field" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Keyboard doesn't show when tapping text field</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Keyboard doesn't show when tapping text field</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Check if enabled</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Check if enabled</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Go to Android Settings > System > Languages & input</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Tap "On-screen keyboard" or "Virtual keyboard"</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Ensure CleverKeys is enabled</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Set as default</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Set as default</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > System > Languages & input</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Tap "Default keyboard"</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Select CleverKeys</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Force stop and restart</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. <strong class="text-white">Force stop and restart</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Apps > CleverKeys</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Tap "Force Stop"</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Try again</p>
 
-<h3 id="issue-keyboard-shows-briefly-then-disappears" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Keyboard shows briefly then disappears</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Keyboard shows briefly then disappears</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Clear app cache:</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Clear app cache:</li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Apps > CleverKeys > Storage</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Tap "Clear Cache"</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Check for conflicts:</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. Check for conflicts:</li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Temporarily disable other keyboards</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Disable accessibility services one by one</p>
 
-<h2 id="typing-issues" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Typing Issues</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Typing Issues</h2>
 
-<h3 id="issue-wrong-characters-appear" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Wrong characters appear</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Wrong characters appear</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Possible causes:</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Possible causes:</strong></p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Cause</th><th class="px-4 py-2 text-left border-b border-wiki-border">Solution</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50">Wrong layout</td><td class="px-4 py-2 border-b border-wiki-border/50">Check active layout in settings</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Auto-correct</td><td class="px-4 py-2 border-b border-wiki-border/50">Adjust autocorrect settings</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50">Language mismatch</td><td class="px-4 py-2 border-b border-wiki-border/50">Check language configuration</td></tr></tbody></table></div>
-<h3 id="issue-autocorrect-making-wrong-corrections" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Autocorrect making wrong corrections</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Cause</td><td class="px-4 py-2 border-t border-gray-700">Solution</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Wrong layout</td><td class="px-4 py-2 border-t border-gray-700">Check active layout in settings</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700">Auto-correct</td><td class="px-4 py-2 border-t border-gray-700">Adjust autocorrect settings</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Language mismatch</td><td class="px-4 py-2 border-t border-gray-700">Check language configuration</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Autocorrect making wrong corrections</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Adjust autocorrect strength</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Adjust autocorrect strength</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Input > Autocorrect</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Choose a lower level</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Add words to dictionary</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Add words to dictionary</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - When corrected wrongly, tap suggestion bar</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Select the word you intended</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - It will be learned</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Disable for certain apps</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. <strong class="text-white">Disable for certain apps</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Some apps (code editors) should have autocorrect off</p>
 
-<h3 id="issue-no-predictions-showing" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: No predictions showing</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: No predictions showing</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Check if predictions enabled:</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Check if predictions enabled:</li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Predictions > Enable Predictions</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Check prediction bar visibility:</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. Check prediction bar visibility:</li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Appearance > Prediction Bar Height</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Ensure not set to "Hidden"</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Check language pack:</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. Check language pack:</li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Predictions require language pack</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Go to Settings > Language Packs</p>
 
-<h2 id="gesture-issues" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Gesture Issues</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Gesture Issues</h2>
 
-<h3 id="issue-short-swipes-not-working" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Short swipes not working</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Short swipes not working</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Adjust swipe distance</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Adjust swipe distance</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Gestures > Short Swipe Distance</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Try "Short" setting</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Check if enabled</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Check if enabled</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Gestures > Enable Short Swipes</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Practice technique</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. <strong class="text-white">Practice technique</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Swipe must be from key center, not edge</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Movement should be quick, not slow drag</p>
 
-<h3 id="issue-trackpoint-mode-won-t-activate" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: TrackPoint mode won't activate</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: TrackPoint mode won't activate</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Check gesture</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Check gesture</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Long swipe (not tap) from spacebar</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Continue holding after swipe</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Adjust threshold</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Adjust threshold</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Gestures > Long Swipe Threshold</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Try lower value</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Wait for feedback</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. <strong class="text-white">Wait for feedback</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Haptic vibration indicates activation</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Ensure haptics are enabled</p>
 
-<h3 id="issue-circle-gestures-not-recognized" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Circle gestures not recognized</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Circle gestures not recognized</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Circle must be complete</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Circle must be complete</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Draw full circle, not arc</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - End near start point</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Adjust sensitivity</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Adjust sensitivity</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Gestures > Circle Sensitivity</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Practice size</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. <strong class="text-white">Practice size</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Circle should span 2-3 keys</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Too small or too large won't register</p>
 
-<h2 id="app-compatibility" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">App Compatibility</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">App Compatibility</h2>
 
-<h3 id="issue-keyboard-behaves-differently-in-certain-apps" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Keyboard behaves differently in certain apps</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Keyboard behaves differently in certain apps</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Explanation:</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Explanation:</strong></p>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Some apps override keyboard behavior:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">App Type</th><th class="px-4 py-2 text-left border-b border-wiki-border">Common Issues</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Terminal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">May need special key settings</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Games</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">May block keyboard</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Password managers</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">May show own keyboard</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Some social apps</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Custom input handling</td></tr></tbody></table></div>
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">App Type</td><td class="px-4 py-2 border-t border-gray-700">Common Issues</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Terminal</strong></td><td class="px-4 py-2 border-t border-gray-700">May need special key settings</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Games</strong></td><td class="px-4 py-2 border-t border-gray-700">May block keyboard</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Password managers</strong></td><td class="px-4 py-2 border-t border-gray-700">May show own keyboard</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Some social apps</strong></td><td class="px-4 py-2 border-t border-gray-700">Custom input handling</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Add extra keys for terminals</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Add extra keys for terminals</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Extra Keys</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Add Ctrl, Tab, Escape</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Check app permissions</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Check app permissions</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Some apps require explicit keyboard permission</p>
 
-<h3 id="issue-keyboard-keeps-getting-deselected" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Keyboard keeps getting deselected</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Keyboard keeps getting deselected</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Check Android battery optimization:</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Check Android battery optimization:</li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Apps > CleverKeys > Battery</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Select "Don't optimize" or "Unrestricted"</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Check app cleaner:</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. Check app cleaner:</li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - If using RAM cleaner, whitelist CleverKeys</p>
 
-<h2 id="visual-issues" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Visual Issues</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Visual Issues</h2>
 
-<h3 id="issue-keyboard-too-small-large" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Keyboard too small/large</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Keyboard too small/large</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solution:</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solution:</strong></p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Settings > Appearance > Keyboard Height</li>
-<li class="ml-4 py-1">&#8226; Adjust to preference</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Settings > Appearance > Keyboard Height</li>
+<li class="ml-4 text-gray-300">&#8226; Adjust to preference</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Keys hard to see</h3>
 
-</ul><h3 id="issue-keys-hard-to-see" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Keys hard to see</h3>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
-
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Try different theme</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Try different theme</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Theme</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Choose high contrast theme</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Increase font size</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Increase font size</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Accessibility > Font Size</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Enable high contrast</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. <strong class="text-white">Enable high contrast</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Accessibility > High Contrast</p>
 
-<h3 id="issue-theme-not-applying" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Theme not applying</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Theme not applying</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Force stop and restart keyboard</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Check if custom colors override theme</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Reset to default theme first</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Force stop and restart keyboard</li>
+<li class="ml-4 text-gray-300">2. Check if custom colors override theme</li>
+<li class="ml-4 text-gray-300">3. Reset to default theme first</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Sound/Haptic Issues</h2>
 
-</ul><h2 id="sound-haptic-issues" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Sound/Haptic Issues</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: No haptic feedback</h3>
 
-<h3 id="issue-no-haptic-feedback" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: No haptic feedback</h3>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solutions:</strong></p>
-
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Check CleverKeys setting</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Check CleverKeys setting</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Haptics > Enable</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Check system setting</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Check system setting</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Android Settings > Sound > Vibration</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Check device capability</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. <strong class="text-white">Check device capability</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Some tablets lack haptic motor</p>
 
-<h3 id="issue-haptics-too-weak-strong" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Issue: Haptics too weak/strong</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Haptics too weak/strong</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Solution:</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solution:</strong></p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Settings > Haptics > Intensity</li>
-<li class="ml-4 py-1">&#8226; Adjust to preference</li>
-
-</ul><h2 id="still-having-issues-" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Still Having Issues?</h2>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Settings > Haptics > Intensity</li>
+<li class="ml-4 text-gray-300">&#8226; Adjust to preference</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Still Having Issues?</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">If problems persist:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Check for updates</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Check for updates</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - App store may have newer version</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Try reset</strong></li>
-</ul><p class="mb-4 text-gray-300 leading-relaxed">   - See <a href="reset-defaults.md" class="text-wiki-accent hover:underline">Reset Defaults</a></p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Try reset</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - See <a href="reset-defaults.html" class="text-green-400 hover:underline">Reset Defaults</a></p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Collect logs</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. <strong class="text-white">Collect logs</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > About > Export Debug Info</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Include with bug report</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> <strong class="font-semibold text-white">Report issue</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">4. <strong class="text-white">Report issue</strong></li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Include device model, Android version</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Describe exact steps to reproduce</p>
 
-<h2 id="related-topics" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Topics</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Topics</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="reset-defaults.md" class="text-wiki-accent hover:underline">Reset Defaults</a> - Start fresh</li>
-<li class="ml-4 py-1">&#8226; <a href="backup-restore.md" class="text-wiki-accent hover:underline">Backup & Restore</a> - Preserve settings</li>
-<li class="ml-4 py-1">&#8226; <a href="performance.md" class="text-wiki-accent hover:underline">Performance</a> - Speed issues</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="reset-defaults.html" class="text-green-400 hover:underline">Reset Defaults</a> - Start fresh</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="backup-restore.html" class="text-green-400 hover:underline">Backup & Restore</a> - Preserve settings</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="performance.html" class="text-green-400 hover:underline">Performance</a> - Speed issues</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
 
-</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/troubleshooting/common-issues-spec.html" class="text-green-400 hover:underline">Common Issues Technical Specification</a>.</p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/troubleshooting/common-issues-spec.md" class="text-wiki-accent hover:underline">Common Issues Technical Specification</a>.</p>
-
-                
-        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
-            
-                <a href="clipboard/shortcuts.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <div class="text-right">
-                        <div class="text-xs uppercase text-gray-500">Previous</div>
-                        <div class="font-medium">Text Shortcuts</div>
-                    </div>
-                </a>
-            
-            
-                <a href="troubleshooting/reset-defaults.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <div>
-                        <div class="text-xs uppercase text-gray-500">Next</div>
-                        <div class="font-medium">Reset to Defaults</div>
-                    </div>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-            
         </div>
-    
-            </article>
-            
-        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
-            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
-            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
-                
-                    <li class="">
-                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#keyboard-not-appearing" class="text-gray-400 hover:text-wiki-primary transition-colors">Keyboard Not Appearing</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-keyboard-doesn-t-show-when-tapping-text-field" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Keyboard doesn't show when tapping text field</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-keyboard-shows-briefly-then-disappears" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Keyboard shows briefly then disappears</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#typing-issues" class="text-gray-400 hover:text-wiki-primary transition-colors">Typing Issues</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-wrong-characters-appear" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Wrong characters appear</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-autocorrect-making-wrong-corrections" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Autocorrect making wrong corrections</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-no-predictions-showing" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: No predictions showing</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#gesture-issues" class="text-gray-400 hover:text-wiki-primary transition-colors">Gesture Issues</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-short-swipes-not-working" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Short swipes not working</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-trackpoint-mode-won-t-activate" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: TrackPoint mode won't activate</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-circle-gestures-not-recognized" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Circle gestures not recognized</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#app-compatibility" class="text-gray-400 hover:text-wiki-primary transition-colors">App Compatibility</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-keyboard-behaves-differently-in-certain-apps" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Keyboard behaves differently in certain apps</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-keyboard-keeps-getting-deselected" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Keyboard keeps getting deselected</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#visual-issues" class="text-gray-400 hover:text-wiki-primary transition-colors">Visual Issues</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-keyboard-too-small-large" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Keyboard too small/large</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-keys-hard-to-see" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Keys hard to see</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-theme-not-applying" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Theme not applying</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#sound-haptic-issues" class="text-gray-400 hover:text-wiki-primary transition-colors">Sound/Haptic Issues</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-no-haptic-feedback" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: No haptic feedback</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#issue-haptics-too-weak-strong" class="text-gray-400 hover:text-wiki-primary transition-colors">Issue: Haptics too weak/strong</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#still-having-issues-" class="text-gray-400 hover:text-wiki-primary transition-colors">Still Having Issues?</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#related-topics" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Topics</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
-                    </li>
-                
-            </ul>
-        </nav>
-    
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="clipboard/shortcuts.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Clipboard Shortcuts</span>
+            </a>
+            <a href="troubleshooting/performance.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Performance</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
-        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
     </footer>
 </body>
 </html>

@@ -1,325 +1,271 @@
 {
-  "title": "CleverKeys Wiki",
-  "description": "User guides, tutorials, and how-to articles",
+  "title": "CleverKeys User Guide",
+  "description": "User documentation and how-to guides",
   "wiki_directory": "../docs/wiki",
   "output_directory": "./wiki",
-  "base_url": "../",
   "primary_color": "#10b981",
-
   "categories": [
-    { "name": "Getting Started", "slug": "getting-started", "color": "#10b981", "icon": "rocket", "order": 1 },
-    { "name": "Typing", "slug": "typing", "color": "#3b82f6", "icon": "keyboard", "order": 2 },
-    { "name": "Gestures", "slug": "gestures", "color": "#8b5cf6", "icon": "hand", "order": 3 },
-    { "name": "Customization", "slug": "customization", "color": "#f59e0b", "icon": "settings", "order": 4 },
-    { "name": "Layouts", "slug": "layouts", "color": "#ec4899", "icon": "grid", "order": 5 },
-    { "name": "Settings", "slug": "settings", "color": "#6366f1", "icon": "sliders", "order": 6 },
-    { "name": "Clipboard", "slug": "clipboard", "color": "#14b8a6", "icon": "clipboard", "order": 7 },
-    { "name": "Troubleshooting", "slug": "troubleshooting", "color": "#ef4444", "icon": "help", "order": 8 }
+    { "name": "Getting Started", "slug": "getting-started", "color": "#10b981", "icon": "rocket" },
+    { "name": "Typing", "slug": "typing", "color": "#3b82f6", "icon": "keyboard" },
+    { "name": "Gestures", "slug": "gestures", "color": "#8b5cf6", "icon": "hand" },
+    { "name": "Customization", "slug": "customization", "color": "#f59e0b", "icon": "palette" },
+    { "name": "Layouts", "slug": "layouts", "color": "#ec4899", "icon": "grid" },
+    { "name": "Settings", "slug": "settings", "color": "#6b7280", "icon": "cog" },
+    { "name": "Clipboard", "slug": "clipboard", "color": "#14b8a6", "icon": "clipboard" },
+    { "name": "Troubleshooting", "slug": "troubleshooting", "color": "#ef4444", "icon": "wrench" }
   ],
-
-  "wiki_pages": [
+  "pages": [
     {
       "file": "getting-started/installation.md",
       "title": "Installation",
-      "description": "Download CleverKeys from F-Droid or GitHub",
+      "description": "Download and install CleverKeys",
       "category": "Getting Started",
-      "difficulty": "beginner",
-      "featured": true,
-      "tags": ["install", "download", "f-droid", "github"]
+      "priority": "P0"
     },
     {
       "file": "getting-started/first-time-setup.md",
-      "title": "First Time Setup",
-      "description": "Configure CleverKeys after installation",
+      "title": "First-Time Setup",
+      "description": "Enable keyboard and basic configuration",
       "category": "Getting Started",
-      "difficulty": "beginner",
-      "tags": ["setup", "wizard", "configuration"]
+      "priority": "P0"
     },
     {
       "file": "getting-started/basic-typing.md",
       "title": "Basic Typing",
-      "description": "Learn tap typing and basic shortcuts",
+      "description": "Tap and swipe typing fundamentals",
       "category": "Getting Started",
-      "difficulty": "beginner",
-      "tags": ["typing", "basics", "shortcuts"]
+      "priority": "P0"
     },
     {
       "file": "getting-started/enabling-keyboard.md",
       "title": "Enabling the Keyboard",
-      "description": "Set CleverKeys as your default keyboard",
+      "description": "Android keyboard activation steps",
       "category": "Getting Started",
-      "difficulty": "beginner",
-      "tags": ["enable", "input method", "android"]
+      "priority": "P0"
     },
     {
       "file": "typing/swipe-typing.md",
       "title": "Swipe Typing",
-      "description": "Draw paths through letters to type words",
+      "description": "How neural swipe prediction works",
       "category": "Typing",
-      "difficulty": "beginner",
-      "featured": true,
-      "tags": ["swipe", "glide", "neural", "predictions"]
+      "priority": "P0"
     },
     {
       "file": "typing/autocorrect.md",
-      "title": "Autocorrect",
-      "description": "Automatic spelling corrections and undo",
+      "title": "Autocorrect & Predictions",
+      "description": "Smart text correction settings",
       "category": "Typing",
-      "difficulty": "beginner",
-      "tags": ["autocorrect", "spelling", "dictionary"]
+      "priority": "P0"
     },
     {
       "file": "typing/special-characters.md",
       "title": "Special Characters",
-      "description": "Type symbols, accents, and currency",
+      "description": "Symbols, accents, and compose key",
       "category": "Typing",
-      "difficulty": "intermediate",
-      "tags": ["symbols", "accents", "diacritics", "currency"]
+      "priority": "P0"
     },
     {
       "file": "typing/emoji.md",
-      "title": "Emoji",
-      "description": "Access emoji keyboard and shortcuts",
+      "title": "Emoji & Symbols",
+      "description": "Emoji picker and symbol input",
       "category": "Typing",
-      "difficulty": "beginner",
-      "tags": ["emoji", "emoticons", "symbols"]
+      "priority": "P0"
     },
     {
       "file": "gestures/short-swipes.md",
       "title": "Short Swipes",
-      "description": "Quick flick gestures to access subkeys",
+      "description": "Quick swipe actions on any key",
       "category": "Gestures",
-      "difficulty": "intermediate",
-      "featured": true,
-      "tags": ["swipe", "flick", "subkeys", "shortcuts"]
+      "priority": "P0"
     },
     {
       "file": "gestures/cursor-navigation.md",
       "title": "Cursor Navigation",
-      "description": "Move cursor with spacebar or arrow keys",
+      "description": "Spacebar slider and arrow keys",
       "category": "Gestures",
-      "difficulty": "intermediate",
-      "tags": ["cursor", "navigation", "spacebar", "arrow"]
+      "priority": "P0"
     },
     {
       "file": "gestures/selection-delete.md",
-      "title": "Selection Delete",
-      "description": "Select and delete text with backspace gesture",
+      "title": "Selection-Delete Mode",
+      "description": "Select text by holding backspace",
       "category": "Gestures",
-      "difficulty": "advanced",
-      "tags": ["selection", "delete", "backspace", "text"]
+      "priority": "P0"
     },
     {
       "file": "gestures/trackpoint-mode.md",
       "title": "TrackPoint Mode",
-      "description": "Joystick-style cursor control on navigation keys",
+      "description": "Joystick-style cursor on nav keys",
       "category": "Gestures",
-      "difficulty": "advanced",
-      "tags": ["trackpoint", "joystick", "cursor", "navigation"]
+      "priority": "P0"
     },
     {
       "file": "gestures/circle-gestures.md",
       "title": "Circle Gestures",
-      "description": "Circular swipes for quick actions",
+      "description": "Loop for double letters",
       "category": "Gestures",
-      "difficulty": "advanced",
-      "tags": ["circle", "gesture", "undo", "redo"]
+      "priority": "P0"
     },
     {
       "file": "customization/per-key-actions.md",
       "title": "Per-Key Actions",
-      "description": "Customize what each swipe direction does",
+      "description": "Customize swipe actions per key",
       "category": "Customization",
-      "difficulty": "advanced",
-      "tags": ["customize", "actions", "swipe", "directions"]
+      "priority": "P1"
     },
     {
       "file": "customization/extra-keys.md",
       "title": "Extra Keys",
-      "description": "Add custom keys to the bottom row",
+      "description": "Add function keys, arrows, Tab, Ctrl",
       "category": "Customization",
-      "difficulty": "intermediate",
-      "tags": ["extra", "keys", "bottom row", "customize"]
+      "priority": "P1"
     },
     {
       "file": "customization/themes.md",
       "title": "Themes",
-      "description": "Change keyboard appearance and colors",
+      "description": "Color schemes and appearance",
       "category": "Customization",
-      "difficulty": "beginner",
-      "tags": ["themes", "colors", "appearance", "dark mode"]
+      "priority": "P1"
     },
     {
       "file": "customization/command-palette.md",
       "title": "Command Palette",
-      "description": "Quick access to all keyboard actions",
+      "description": "Quick access to keyboard commands",
       "category": "Customization",
-      "difficulty": "intermediate",
-      "tags": ["command", "palette", "actions", "quick"]
+      "priority": "P1"
     },
     {
       "file": "layouts/adding-layouts.md",
       "title": "Adding Layouts",
-      "description": "Download and install keyboard layouts",
+      "description": "Install AZERTY, Dvorak, Colemak, etc.",
       "category": "Layouts",
-      "difficulty": "beginner",
-      "tags": ["layouts", "download", "install"]
+      "priority": "P1"
     },
     {
       "file": "layouts/switching-layouts.md",
       "title": "Switching Layouts",
-      "description": "Change between different keyboard layouts",
+      "description": "Quick layout switching methods",
       "category": "Layouts",
-      "difficulty": "beginner",
-      "tags": ["switch", "layouts", "language"]
+      "priority": "P1"
     },
     {
       "file": "layouts/multi-language.md",
       "title": "Multi-Language Typing",
-      "description": "Type in multiple languages simultaneously",
+      "description": "Bilingual swipe typing",
       "category": "Layouts",
-      "difficulty": "intermediate",
-      "tags": ["multi-language", "bilingual", "secondary"]
+      "priority": "P1"
     },
     {
       "file": "layouts/language-packs.md",
       "title": "Language Packs",
-      "description": "Download prediction dictionaries",
+      "description": "Download additional dictionaries",
       "category": "Layouts",
-      "difficulty": "intermediate",
-      "tags": ["language", "packs", "dictionary", "download"]
+      "priority": "P1"
     },
     {
       "file": "layouts/custom-layouts.md",
       "title": "Custom Layouts",
-      "description": "Create your own keyboard layouts",
+      "description": "Create your own layout XML",
       "category": "Layouts",
-      "difficulty": "advanced",
-      "tags": ["custom", "layouts", "create", "xml"]
+      "priority": "P1"
     },
     {
       "file": "layouts/profiles.md",
       "title": "Profiles",
-      "description": "Save and restore keyboard configurations",
+      "description": "Save and restore configurations",
       "category": "Layouts",
-      "difficulty": "intermediate",
-      "tags": ["profiles", "backup", "restore", "export"]
+      "priority": "P1"
     },
     {
       "file": "settings/appearance.md",
-      "title": "Appearance Settings",
-      "description": "Configure keyboard height, margins, and colors",
+      "title": "Appearance",
+      "description": "Height, opacity, key borders",
       "category": "Settings",
-      "difficulty": "beginner",
-      "tags": ["appearance", "height", "margins", "colors"]
+      "priority": "P1"
     },
     {
       "file": "settings/input-behavior.md",
       "title": "Input Behavior",
-      "description": "Configure autocorrect, autocapitalize, and more",
+      "description": "Autocorrect, autocaps, double-space",
       "category": "Settings",
-      "difficulty": "intermediate",
-      "tags": ["input", "autocorrect", "autocapitalize", "double-space"]
+      "priority": "P1"
     },
     {
       "file": "settings/haptics.md",
-      "title": "Haptic Feedback",
-      "description": "Configure vibration settings",
+      "title": "Haptics & Sound",
+      "description": "Vibration and key press sounds",
       "category": "Settings",
-      "difficulty": "beginner",
-      "tags": ["haptics", "vibration", "feedback"]
+      "priority": "P1"
     },
     {
       "file": "settings/neural-settings.md",
       "title": "Neural Settings",
-      "description": "Tune prediction accuracy and performance",
+      "description": "Beam width, prediction profiles",
       "category": "Settings",
-      "difficulty": "advanced",
-      "tags": ["neural", "prediction", "beam width", "performance"]
+      "priority": "P1"
     },
     {
       "file": "settings/privacy.md",
-      "title": "Privacy Settings",
-      "description": "Control data collection and storage",
+      "title": "Privacy",
+      "description": "Data collection and clipboard settings",
       "category": "Settings",
-      "difficulty": "intermediate",
-      "tags": ["privacy", "data", "collection", "storage"]
+      "priority": "P1"
     },
     {
       "file": "settings/accessibility.md",
       "title": "Accessibility",
-      "description": "Configure accessibility features",
+      "description": "Switch Access, TalkBack, large keys",
       "category": "Settings",
-      "difficulty": "beginner",
-      "tags": ["accessibility", "large keys", "slow mode"]
+      "priority": "P1"
     },
     {
       "file": "clipboard/clipboard-history.md",
       "title": "Clipboard History",
-      "description": "Access recently copied text",
+      "description": "Recent clips, pins, search",
       "category": "Clipboard",
-      "difficulty": "beginner",
-      "tags": ["clipboard", "history", "copy", "paste"]
+      "priority": "P2"
     },
     {
       "file": "clipboard/text-selection.md",
       "title": "Text Selection",
-      "description": "Select, copy, cut, and paste text",
+      "description": "Select, cut, copy, paste text",
       "category": "Clipboard",
-      "difficulty": "intermediate",
-      "tags": ["selection", "copy", "cut", "paste"]
+      "priority": "P2"
     },
     {
       "file": "clipboard/shortcuts.md",
-      "title": "Text Shortcuts",
-      "description": "Common text editing shortcuts",
+      "title": "Clipboard Shortcuts",
+      "description": "Quick clipboard actions",
       "category": "Clipboard",
-      "difficulty": "intermediate",
-      "tags": ["shortcuts", "undo", "redo", "select all"]
+      "priority": "P2"
     },
     {
       "file": "troubleshooting/common-issues.md",
       "title": "Common Issues",
-      "description": "Solutions to frequently reported problems",
+      "description": "FAQ and quick fixes",
       "category": "Troubleshooting",
-      "difficulty": "beginner",
-      "tags": ["issues", "problems", "solutions", "fix"]
+      "priority": "P2"
+    },
+    {
+      "file": "troubleshooting/performance.md",
+      "title": "Performance",
+      "description": "Speed and battery optimization",
+      "category": "Troubleshooting",
+      "priority": "P2"
     },
     {
       "file": "troubleshooting/reset-defaults.md",
       "title": "Reset to Defaults",
-      "description": "Restore factory settings",
+      "description": "Restore default settings",
       "category": "Troubleshooting",
-      "difficulty": "beginner",
-      "tags": ["reset", "defaults", "factory", "restore"]
+      "priority": "P2"
     },
     {
       "file": "troubleshooting/backup-restore.md",
       "title": "Backup & Restore",
-      "description": "Export and import your settings",
+      "description": "Export and import settings",
       "category": "Troubleshooting",
-      "difficulty": "intermediate",
-      "tags": ["backup", "restore", "export", "import"]
-    },
-    {
-      "file": "troubleshooting/performance.md",
-      "title": "Performance Tips",
-      "description": "Optimize keyboard speed and responsiveness",
-      "category": "Troubleshooting",
-      "difficulty": "intermediate",
-      "tags": ["performance", "speed", "lag", "optimization"]
+      "priority": "P2"
     }
-  ],
-
-  "search": {
-    "enabled": true,
-    "placeholder": "Search wiki...",
-    "min_chars": 2
-  },
-
-  "navigation": {
-    "show_breadcrumbs": true,
-    "show_prev_next": true,
-    "show_related": true
-  }
+  ]
 }

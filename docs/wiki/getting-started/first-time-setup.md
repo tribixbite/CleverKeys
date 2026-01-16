@@ -1,98 +1,104 @@
----
-title: First Time Setup
-description: Configure CleverKeys after installation
-category: Getting Started
-difficulty: beginner
-related_spec: ../specs/getting-started/setup-spec.md
----
+# First-Time Setup
 
-# First Time Setup
+After enabling CleverKeys, take a few minutes to configure it for your preferences.
 
-When you first use CleverKeys, a setup wizard guides you through initial configuration.
+## Initial Configuration
 
-## Quick Summary
+When you first use CleverKeys, we recommend:
 
-| What | Description |
-|------|-------------|
-| **Purpose** | Configure keyboard layout and language |
-| **Access** | Automatic on first launch |
-| **Time** | 2-3 minutes |
+1. **Test the keyboard** by typing in any app
+2. **Adjust the height** if keys feel too small/large
+3. **Choose your theme** (light, dark, or system)
+4. **Select your language** for swipe predictions
 
-## Setup Steps
+## Accessing Settings
 
-### Step 1: Welcome Screen
+Open CleverKeys settings:
 
-The first screen introduces CleverKeys features:
-- Neural swipe typing
-- Customizable gestures
-- Privacy-focused design
+1. Find **CleverKeys** in your app drawer
+2. Or go to **Android Settings → System → CleverKeys**
+3. Or long-press the **gear icon** on the keyboard
 
-Tap **Get Started** to continue.
+## Recommended First Settings
 
-### Step 2: Select Layout
+### Keyboard Height
 
-Choose your keyboard layout:
+- Path: Settings → Appearance → Keyboard Height
+- Default: 100%
+- Tip: Try 90-110% based on your hand size
 
-| Layout | Best For |
-|--------|----------|
-| **QWERTY** | English, most languages |
-| **AZERTY** | French |
-| **QWERTZ** | German |
-| **Dvorak** | Alternative English |
-| **Colemak** | Ergonomic typing |
+### Theme
 
-> [!TIP]
-> You can add more layouts later in Settings > Layouts.
+- Path: Settings → Appearance → Theme
+- Options: Light, Dark, Auto (follows system)
+- Tip: Dark theme works best for OLED screens
 
-### Step 3: Download Language Pack
+### Haptic Feedback
 
-For accurate swipe typing, download a language pack:
+- Path: Settings → Haptics
+- Enable vibration for tactile key response
+- Adjust vibration strength (light to strong)
 
-1. Select your primary language
-2. Tap **Download** (requires internet)
-3. Wait for download to complete (~2-5 MB)
+### Primary Language
 
-The language pack includes:
-- Neural prediction model
-- Dictionary with 50,000+ words
-- Autocorrect rules
+- Path: Settings → Languages → Primary Language
+- Select your main typing language
+- This affects swipe predictions and autocorrect
 
-### Step 4: Customize Appearance
+## Optional Customizations
 
-Choose your preferences:
+### Extra Keys Row
 
-- **Theme**: Dark (default), Light, or System
-- **Keyboard height**: Compact, Normal, or Tall
-- **Haptic feedback**: Enable or disable vibration
+Add a row of function keys above the keyboard:
 
-### Step 5: Try It Out
+- Path: Settings → Layout → Extra Keys
+- Popular additions: Tab, Ctrl, Arrow keys
 
-The setup wizard includes a practice area:
+### Swipe Sensitivity
 
-1. Try **tap typing** a few words
-2. Try **swipe typing** by drawing through letters
-3. Experiment with **short swipes** for special characters
+Adjust how sensitive swipe detection is:
 
-## After Setup
+- Path: Settings → Swipe Typing → Swipe Sensitivity
+- Lower: More precise but slower
+- Higher: Faster but may misread
 
-You can change any setting later:
+### Prediction Bar
 
-- **Settings gear**: Tap the gear icon on the keyboard
-- **Long-press comma**: Opens settings menu
-- **App settings**: Open CleverKeys from your app drawer
+Configure word suggestions:
 
-## Recommended Next Steps
+- Path: Settings → Input → Predictions
+- Enable/disable prediction bar
+- Adjust number of suggestions
 
-1. [Basic Typing](basic-typing.md) - Master the fundamentals
-2. [Swipe Typing](../typing/swipe-typing.md) - Learn neural predictions
-3. [Short Swipes](../gestures/short-swipes.md) - Access special characters quickly
+## Quick Test
 
-## Tips and Tricks
+Try these to verify your setup:
 
-- **Skip steps**: You can skip and configure later
-- **Multiple languages**: Add secondary language in Settings > Languages
-- **Reset**: Settings > Reset to Defaults to start fresh
+1. **Tap test**: Type "hello" by tapping each letter
+2. **Swipe test**: Swipe "keyboard" without lifting
+3. **Gesture test**: Swipe up on any letter
+4. **Backspace test**: Long-press backspace to delete multiple characters
 
-## Technical Details
+## Troubleshooting
 
-See [Setup Technical Specification](../specs/getting-started/setup-spec.md).
+### Keyboard is too small/large
+
+Adjust keyboard height in Settings → Appearance
+
+### Predictions are inaccurate
+
+- Set correct primary language
+- Type more words to train the neural model
+- Increase beam width in Neural Settings
+
+### Haptics don't work
+
+- Check that vibration is enabled
+- Grant vibration permission if prompted
+- Verify device vibration is not disabled system-wide
+
+## Next Steps
+
+- [Swipe Typing](../typing/swipe-typing.md) - Master the neural prediction
+- [Themes](../customization/themes.md) - Customize appearance
+- [Per-Key Actions](../customization/per-key-actions.md) - Customize gestures

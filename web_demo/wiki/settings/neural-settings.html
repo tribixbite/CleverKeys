@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neural Settings - CleverKeys Wiki</title>
-    <meta name="description" content="Tune prediction accuracy and performance">
+    <title>Neural Settings - CleverKeys User Guide</title>
+    <meta name="description" content="Beam width, prediction profiles">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,30 +12,37 @@
             theme: {
                 extend: {
                     colors: {
-                        'wiki-primary': '#10b981',
-                        'wiki-primary-light': '#34d399',
-                        'wiki-accent': '#3b82f6',
-                        'wiki-dark': '#0d1117',
-                        'wiki-surface': '#161b22',
-                        'wiki-card': '#21262d',
-                        'wiki-border': '#30363d',
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-wiki-dark text-gray-100 min-h-screen">
+<body class="bg-ck-dark text-gray-100 min-h-screen">
     <!-- Nav -->
-    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="../" class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
                 <span class="font-bold">CleverKeys</span>
             </a>
             <div class="flex gap-4">
-                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
-                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
                 <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
             </div>
         </div>
@@ -44,9 +51,11 @@
     <!-- Breadcrumb -->
     <div class="container mx-auto px-6 py-4">
         <div class="flex items-center gap-2 text-sm text-gray-500">
-            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <a href="../" class="hover:text-ck-green">Home</a>
             <span>/</span>
-            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Settings" class="hover:text-ck-green">Settings</a>
             <span>/</span>
             <span class="text-gray-300">Neural Settings</span>
         </div>
@@ -54,283 +63,203 @@
 
     <!-- Header -->
     <header class="container mx-auto px-6 pb-6">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="px-3 py-1 text-sm rounded-full" style="background: #6366f120; color: #6366f1">Settings</span>
-            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">advanced</span>
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #6b728020; color: #6b7280">Settings</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P1</span>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-2">Neural Settings</h1>
-        <p class="text-xl text-gray-400">Tune prediction accuracy and performance</p>
-        
-        <div class="flex flex-wrap gap-2 mt-4">
-            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#neural</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#prediction</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#beam width</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#performance</span>
-        </div>
-    
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Neural Settings</h1>
+        <p class="text-xl text-gray-400">Beam width, prediction profiles</p>
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-6 pb-20">
-        <div class="flex gap-8">
-            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
-                <h1 class="text-3xl font-bold mb-6 text-white">Neural Prediction Settings</h1>
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300 leading-relaxed">title: Neural Prediction Settings</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Configure AI-powered swipe predictions</p>
+<p class="mb-4 text-gray-300 leading-relaxed">category: Settings</p>
+<p class="mb-4 text-gray-300 leading-relaxed">difficulty: advanced</p>
+<hr class="border-gray-700 my-6">
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Neural Prediction Settings</h1>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Fine-tune the neural network-based swipe typing predictions for accuracy and performance.</p>
 
-<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Optimize neural predictions</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings > Neural/Predictions</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Options</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Beam width, thresholds, vocabulary</td></tr></tbody></table></div>
-<h2 id="understanding-neural-predictions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Understanding Neural Predictions</h2>
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Optimize neural predictions</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Neural/Predictions</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Options</strong></td><td class="px-4 py-2 border-t border-gray-700">Beam width, thresholds, vocabulary</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Understanding Neural Predictions</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">CleverKeys uses an ONNX neural network to predict words from swipe gestures. These settings control how the network processes your input.</p>
 
-<h2 id="prediction-settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Prediction Settings</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Prediction Settings</h2>
 
-<h3 id="prediction-count" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Prediction Count</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Prediction Count</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">How many suggestions to show:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Count</th><th class="px-4 py-2 text-left border-b border-wiki-border">Trade-off</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">3</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Faster, less choice</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">5</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Balanced</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">7</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">More options, slightly slower</td></tr></tbody></table></div>
-<h3 id="beam-width" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Beam Width</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Count</td><td class="px-4 py-2 border-t border-gray-700">Trade-off</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">3</strong></td><td class="px-4 py-2 border-t border-gray-700">Faster, less choice</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">5</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">7</strong></td><td class="px-4 py-2 border-t border-gray-700">More options, slightly slower</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Beam Width</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Controls prediction search breadth:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Width</th><th class="px-4 py-2 text-left border-b border-wiki-border">Effect</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">3</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Faster, may miss some words</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">5</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Balanced (default)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">8</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">More thorough, slightly slower</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">10</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Most accurate, slower</td></tr></tbody></table></div>
-<div class="callout callout-note bg-blue-900/20 border-l-4 border-blue-500 p-4 my-4 rounded-r">
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-blue-400 mb-1">Note</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Higher beam width finds more word candidates but uses more processing time.</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
-<h2 id="threshold-settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Threshold Settings</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Width</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">3</strong></td><td class="px-4 py-2 border-t border-gray-700">Faster, may miss some words</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">5</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced (default)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">8</strong></td><td class="px-4 py-2 border-t border-gray-700">More thorough, slightly slower</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">10</strong></td><td class="px-4 py-2 border-t border-gray-700">Most accurate, slower</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Higher beam width finds more word candidates but uses more processing time.</blockquote>
 
-<h3 id="minimum-score" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Minimum Score</h3>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Threshold Settings</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Minimum Score</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Predictions below this score are filtered:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Threshold</th><th class="px-4 py-2 text-left border-b border-wiki-border">Effect</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Low (0.1)</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">More suggestions, some poor</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Medium (0.3)</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Balanced filtering</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">High (0.5)</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Only confident predictions</td></tr></tbody></table></div>
-<h3 id="distance-threshold" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Distance Threshold</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Threshold</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Low (0.1)</strong></td><td class="px-4 py-2 border-t border-gray-700">More suggestions, some poor</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Medium (0.3)</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced filtering</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">High (0.5)</strong></td><td class="px-4 py-2 border-t border-gray-700">Only confident predictions</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Distance Threshold</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Maximum gesture-to-key distance:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Effect</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Loose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Accept approximate swipes</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Normal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Standard tolerance</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Strict</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Require precise swipes</td></tr></tbody></table></div>
-<h2 id="vocabulary-settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Vocabulary Settings</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Loose</strong></td><td class="px-4 py-2 border-t border-gray-700">Accept approximate swipes</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Normal</strong></td><td class="px-4 py-2 border-t border-gray-700">Standard tolerance</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Strict</strong></td><td class="px-4 py-2 border-t border-gray-700">Require precise swipes</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Vocabulary Settings</h2>
 
-<h3 id="personal-words" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Personal Words</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Personal Words</h3>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Include Personal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Add your words to predictions</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Personal Priority</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Boost score for personal words</td></tr></tbody></table></div>
-<h3 id="technical-terms" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Technical Terms</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Include Personal</strong></td><td class="px-4 py-2 border-t border-gray-700">Add your words to predictions</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Personal Priority</strong></td><td class="px-4 py-2 border-t border-gray-700">Boost score for personal words</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Technical Terms</h3>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Enable Tech Vocab</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Include programming terms</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Camelcase</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Support camelCase words</td></tr></tbody></table></div>
-<h2 id="performance-settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Performance Settings</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enable Tech Vocab</strong></td><td class="px-4 py-2 border-t border-gray-700">Include programming terms</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Camelcase</strong></td><td class="px-4 py-2 border-t border-gray-700">Support camelCase words</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Performance Settings</h2>
 
-<h3 id="processing-mode" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Processing Mode</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Processing Mode</h3>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Mode</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Balanced</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Good accuracy and speed</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Performance</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Faster, reduced accuracy</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Quality</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Best accuracy, slower</td></tr></tbody></table></div>
-<h3 id="background-processing" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Background Processing</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Mode</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Balanced</strong></td><td class="px-4 py-2 border-t border-gray-700">Good accuracy and speed</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Performance</strong></td><td class="px-4 py-2 border-t border-gray-700">Faster, reduced accuracy</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Quality</strong></td><td class="px-4 py-2 border-t border-gray-700">Best accuracy, slower</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Background Processing</h3>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Effect</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Enabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Pre-process during pauses</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Disabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Process only on demand</td></tr></tbody></table></div>
-<h2 id="learning-settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Learning Settings</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Pre-process during pauses</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Disabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Process only on demand</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Learning Settings</h2>
 
-<h3 id="adaptive-learning" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Adaptive Learning</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Adaptive Learning</h3>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Enabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Learn from your typing</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Disabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Use base model only</td></tr></tbody></table></div>
-<h3 id="learn-rate" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Learn Rate</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Learn from your typing</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Disabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Use base model only</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Learn Rate</h3>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Rate</th><th class="px-4 py-2 text-left border-b border-wiki-border">Effect</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Slow</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Gradual adaptation</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Normal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Balanced learning</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Fast</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Quick adaptation</td></tr></tbody></table></div>
-<h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Rate</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Slow</strong></td><td class="px-4 py-2 border-t border-gray-700">Gradual adaptation</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Normal</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced learning</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Fast</strong></td><td class="px-4 py-2 border-t border-gray-700">Quick adaptation</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Accuracy issues</strong>: Increase beam width</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Slow predictions</strong>: Reduce beam width, enable performance mode</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Missing words</strong>: Lower minimum score threshold</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Personal words</strong>: Add frequently used terms to dictionary</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Accuracy issues</strong>: Increase beam width</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Slow predictions</strong>: Reduce beam width, enable performance mode</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Missing words</strong>: Lower minimum score threshold</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Personal words</strong>: Add frequently used terms to dictionary</li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">If predictions feel "off," try resetting neural settings to defaults and gradually adjusting.</blockquote>
 
-</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">If predictions feel "off," try resetting neural settings to defaults and gradually adjusting.</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
-<h2 id="all-neural-settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">All Neural Settings</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">All Neural Settings</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Default</th><th class="px-4 py-2 text-left border-b border-wiki-border">Range</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Prediction Count</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">5</td><td class="px-4 py-2 border-b border-wiki-border/50">3-7</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Beam Width</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">5</td><td class="px-4 py-2 border-b border-wiki-border/50">3-10</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Min Score</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">0.3</td><td class="px-4 py-2 border-b border-wiki-border/50">0.1-0.7</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Distance Threshold</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Normal</td><td class="px-4 py-2 border-b border-wiki-border/50">Loose/Normal/Strict</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Personal Priority</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">1.2x</td><td class="px-4 py-2 border-b border-wiki-border/50">1.0-2.0x</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Processing Mode</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Balanced</td><td class="px-4 py-2 border-b border-wiki-border/50">Performance/Balanced/Quality</td></tr></tbody></table></div>
-<h2 id="advanced-diagnostics" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Advanced Diagnostics</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Default</td><td class="px-4 py-2 border-t border-gray-700">Range</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Prediction Count</strong></td><td class="px-4 py-2 border-t border-gray-700">5</td><td class="px-4 py-2 border-t border-gray-700">3-7</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Beam Width</strong></td><td class="px-4 py-2 border-t border-gray-700">5</td><td class="px-4 py-2 border-t border-gray-700">3-10</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Min Score</strong></td><td class="px-4 py-2 border-t border-gray-700">0.3</td><td class="px-4 py-2 border-t border-gray-700">0.1-0.7</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Distance Threshold</strong></td><td class="px-4 py-2 border-t border-gray-700">Normal</td><td class="px-4 py-2 border-t border-gray-700">Loose/Normal/Strict</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Personal Priority</strong></td><td class="px-4 py-2 border-t border-gray-700">1.2x</td><td class="px-4 py-2 border-t border-gray-700">1.0-2.0x</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Processing Mode</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced</td><td class="px-4 py-2 border-t border-gray-700">Performance/Balanced/Quality</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Advanced Diagnostics</h2>
 
-<h3 id="debug-mode" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Debug Mode</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Debug Mode</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Enable to see prediction scores:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Settings > Neural > Show Debug Info</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Predictions show score values</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Helps understand prediction ranking</li>
-
-</ul><h3 id="reset-neural-data" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Reset Neural Data</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Settings > Neural > Show Debug Info</li>
+<li class="ml-4 text-gray-300">2. Predictions show score values</li>
+<li class="ml-4 text-gray-300">3. Helps understand prediction ranking</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Reset Neural Data</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Start fresh:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Settings > Neural > Reset</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Clears learned patterns</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Returns to base model</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Settings > Neural > Reset</li>
+<li class="ml-4 text-gray-300">2. Clears learned patterns</li>
+<li class="ml-4 text-gray-300">3. Returns to base model</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
-</ul><h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
-
-<h3 id="q-why-are-predictions-slow-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Why are predictions slow?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why are predictions slow?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Reduce beam width or switch to Performance mode. Also check if many languages are enabled.</p>
 
-<h3 id="q-why-does-it-suggest-wrong-words-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Why does it suggest wrong words?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why does it suggest wrong words?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Increase beam width for more thorough search, or adjust distance threshold for your swipe style.</p>
 
-<h3 id="q-how-do-i-make-it-learn-my-vocabulary-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How do I make it learn my vocabulary?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I make it learn my vocabulary?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Enable Adaptive Learning and add words to personal dictionary. They'll be prioritized.</p>
 
-<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="../typing/swipe-typing.md" class="text-wiki-accent hover:underline">Swipe Typing</a> - How to swipe type</li>
-<li class="ml-4 py-1">&#8226; <a href="../typing/autocorrect.md" class="text-wiki-accent hover:underline">Autocorrect</a> - Text correction</li>
-<li class="ml-4 py-1">&#8226; <a href="../layouts/multi-language.md" class="text-wiki-accent hover:underline">Multi-Language</a> - Multi-language predictions</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../typing/swipe-typing.html" class="text-green-400 hover:underline">Swipe Typing</a> - How to swipe type</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../typing/autocorrect.html" class="text-green-400 hover:underline">Autocorrect</a> - Text correction</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../layouts/multi-language.html" class="text-green-400 hover:underline">Multi-Language</a> - Multi-language predictions</li>
 </ul>
-                
-        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
-            
-                <a href="settings/haptics.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <div class="text-right">
-                        <div class="text-xs uppercase text-gray-500">Previous</div>
-                        <div class="font-medium">Haptic Feedback</div>
-                    </div>
-                </a>
-            
-            
-                <a href="settings/privacy.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <div>
-                        <div class="text-xs uppercase text-gray-500">Next</div>
-                        <div class="font-medium">Privacy Settings</div>
-                    </div>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-            
         </div>
-    
-            </article>
-            
-        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
-            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
-            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
-                
-                    <li class="">
-                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#understanding-neural-predictions" class="text-gray-400 hover:text-wiki-primary transition-colors">Understanding Neural Predictions</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#prediction-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Prediction Settings</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#prediction-count" class="text-gray-400 hover:text-wiki-primary transition-colors">Prediction Count</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#beam-width" class="text-gray-400 hover:text-wiki-primary transition-colors">Beam Width</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#threshold-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Threshold Settings</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#minimum-score" class="text-gray-400 hover:text-wiki-primary transition-colors">Minimum Score</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#distance-threshold" class="text-gray-400 hover:text-wiki-primary transition-colors">Distance Threshold</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#vocabulary-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Vocabulary Settings</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#personal-words" class="text-gray-400 hover:text-wiki-primary transition-colors">Personal Words</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#technical-terms" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Terms</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#performance-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Performance Settings</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#processing-mode" class="text-gray-400 hover:text-wiki-primary transition-colors">Processing Mode</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#background-processing" class="text-gray-400 hover:text-wiki-primary transition-colors">Background Processing</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#learning-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Learning Settings</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#adaptive-learning" class="text-gray-400 hover:text-wiki-primary transition-colors">Adaptive Learning</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#learn-rate" class="text-gray-400 hover:text-wiki-primary transition-colors">Learn Rate</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#all-neural-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">All Neural Settings</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#advanced-diagnostics" class="text-gray-400 hover:text-wiki-primary transition-colors">Advanced Diagnostics</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#debug-mode" class="text-gray-400 hover:text-wiki-primary transition-colors">Debug Mode</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#reset-neural-data" class="text-gray-400 hover:text-wiki-primary transition-colors">Reset Neural Data</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-why-are-predictions-slow-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Why are predictions slow?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-why-does-it-suggest-wrong-words-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Why does it suggest wrong words?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-how-do-i-make-it-learn-my-vocabulary-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How do I make it learn my vocabulary?</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
-                    </li>
-                
-            </ul>
-        </nav>
-    
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="settings/haptics.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Haptics & Sound</span>
+            </a>
+            <a href="settings/privacy.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Privacy</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
-        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
     </footer>
 </body>
 </html>

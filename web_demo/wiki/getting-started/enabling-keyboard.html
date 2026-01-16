@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enabling the Keyboard - CleverKeys Wiki</title>
-    <meta name="description" content="Set CleverKeys as your default keyboard">
+    <title>Enabling the Keyboard - CleverKeys User Guide</title>
+    <meta name="description" content="Android keyboard activation steps">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,30 +12,37 @@
             theme: {
                 extend: {
                     colors: {
-                        'wiki-primary': '#10b981',
-                        'wiki-primary-light': '#34d399',
-                        'wiki-accent': '#3b82f6',
-                        'wiki-dark': '#0d1117',
-                        'wiki-surface': '#161b22',
-                        'wiki-card': '#21262d',
-                        'wiki-border': '#30363d',
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-wiki-dark text-gray-100 min-h-screen">
+<body class="bg-ck-dark text-gray-100 min-h-screen">
     <!-- Nav -->
-    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="../" class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
                 <span class="font-bold">CleverKeys</span>
             </a>
             <div class="flex gap-4">
-                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
-                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
                 <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
             </div>
         </div>
@@ -44,9 +51,11 @@
     <!-- Breadcrumb -->
     <div class="container mx-auto px-6 py-4">
         <div class="flex items-center gap-2 text-sm text-gray-500">
-            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <a href="../" class="hover:text-ck-green">Home</a>
             <span>/</span>
-            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Getting%20Started" class="hover:text-ck-green">Getting Started</a>
             <span>/</span>
             <span class="text-gray-300">Enabling the Keyboard</span>
         </div>
@@ -54,173 +63,105 @@
 
     <!-- Header -->
     <header class="container mx-auto px-6 pb-6">
-        <div class="flex items-center gap-3 mb-3">
+        <div class="flex items-center gap-3 mb-4">
             <span class="px-3 py-1 text-sm rounded-full" style="background: #10b98120; color: #10b981">Getting Started</span>
-            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">beginner</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P0</span>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-2">Enabling the Keyboard</h1>
-        <p class="text-xl text-gray-400">Set CleverKeys as your default keyboard</p>
-        
-        <div class="flex flex-wrap gap-2 mt-4">
-            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#enable</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#input method</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#android</span>
-        </div>
-    
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Enabling the Keyboard</h1>
+        <p class="text-xl text-gray-400">Android keyboard activation steps</p>
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-6 pb-20">
-        <div class="flex gap-8">
-            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
-                <h1 class="text-3xl font-bold mb-6 text-white">Enabling the Keyboard</h1>
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Enabling the Keyboard</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">After installing CleverKeys, you need to enable it in Android settings and set it as your default keyboard.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">After installing CleverKeys, you need to enable it in Android Settings and set it as your default keyboard.</p>
 
-<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Steps</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Enable CleverKeys as your input method</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings > System > Keyboard</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Time</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">1-2 minutes</td></tr></tbody></table></div>
-<h2 id="how-to-enable" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">How to Enable</h2>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings → System → Languages & Input → On-screen keyboard</strong></li>
+<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Manage on-screen keyboards</strong></li>
+<li class="ml-4 text-gray-300">3. Enable <strong class="text-white">CleverKeys</strong></li>
+<li class="ml-4 text-gray-300">4. Go back and tap <strong class="text-white">Default keyboard</strong></li>
+<li class="ml-4 text-gray-300">5. Select <strong class="text-white">CleverKeys</strong></li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Detailed Instructions</h2>
 
-<h3 id="step-1-open-language-input-settings" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 1: Open Language & Input Settings</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 1: Open Settings</h3>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open <strong class="font-semibold text-white">Settings</strong> on your device</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">System</strong> (or search for "keyboard")</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap <strong class="font-semibold text-white">Languages & input</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Tap <strong class="font-semibold text-white">On-screen keyboard</strong> or <strong class="font-semibold text-white">Virtual keyboard</strong></li>
+<p class="mb-4 text-gray-300 leading-relaxed">Open the Android Settings app (gear icon in your app drawer or notification shade).</p>
 
-</ul><div class="callout callout-note bg-blue-900/20 border-l-4 border-blue-500 p-4 my-4 rounded-r">
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-blue-400 mb-1">Note</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Menu names vary by device manufacturer. Look for "keyboard" or "input" settings.</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
-<h3 id="step-2-enable-cleverkeys" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 2: Enable CleverKeys</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 2: Find Keyboard Settings</h3>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Tap <strong class="font-semibold text-white">Manage keyboards</strong> or the <strong class="font-semibold text-white">+</strong> button</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Find <strong class="font-semibold text-white">CleverKeys</strong> in the list</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Toggle it <strong class="font-semibold text-white">ON</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Accept the security warning (all keyboards show this)</li>
+<p class="mb-4 text-gray-300 leading-relaxed">Navigate to: <strong class="text-white">System → Languages & Input → On-screen keyboard</strong></p>
 
-</ul><h3 id="step-3-set-as-default" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 3: Set as Default</h3>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Note: The exact path varies by Android version and manufacturer. You can also search for "keyboard" in Settings.</blockquote>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Tap <strong class="font-semibold text-white">Default keyboard</strong> or <strong class="font-semibold text-white">Current keyboard</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Select <strong class="font-semibold text-white">CleverKeys</strong></li>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 3: Enable CleverKeys</h3>
 
-</ul><p class="mb-4 text-gray-300 leading-relaxed">Alternatively, when typing in any app:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Tap the keyboard icon in the navigation bar</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Select <strong class="font-semibold text-white">CleverKeys</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap <strong class="text-white">Manage on-screen keyboards</strong></li>
+<li class="ml-4 text-gray-300">2. Find <strong class="text-white">CleverKeys</strong> in the list</li>
+<li class="ml-4 text-gray-300">3. Toggle it <strong class="text-white">ON</strong></li>
+<li class="ml-4 text-gray-300">4. Accept the warning about input method security</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 4: Set as Default</h3>
 
-</ul><h2 id="quick-switch-method" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Switch Method</h2>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go back to <strong class="text-white">On-screen keyboard</strong></li>
+<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Default keyboard</strong> (or similar)</li>
+<li class="ml-4 text-gray-300">3. Select <strong class="text-white">CleverKeys</strong></li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Alternative: Quick Switch</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Once enabled, you can quickly switch keyboards:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">You can also switch keyboards when any text field is active:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Navigation bar</strong>: Tap the keyboard icon (usually bottom-right)</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Notification</strong>: Swipe down and tap "Change keyboard"</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Long-press space</strong>: In some apps, long-press spacebar to switch</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap any text input field</li>
+<li class="ml-4 text-gray-300">2. Look for the keyboard icon in your navigation bar</li>
+<li class="ml-4 text-gray-300">3. Tap it and select <strong class="text-white">CleverKeys</strong></li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Verification</h2>
 
-</ul><h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+<p class="mb-4 text-gray-300 leading-relaxed">To verify CleverKeys is working:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">First launch</strong>: CleverKeys will guide you through initial setup</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Permissions</strong>: Grant notification access for clipboard features</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Default keyboard</strong>: Make CleverKeys default to avoid switching each time</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open any app with a text field (Notes, Messages, etc.)</li>
+<li class="ml-4 text-gray-300">2. Tap the text field</li>
+<li class="ml-4 text-gray-300">3. You should see the CleverKeys keyboard appear</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Troubleshooting</h2>
 
-</ul><h2 id="troubleshooting" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Troubleshooting</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Keyboard doesn't appear</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">CleverKeys not appearing in keyboard list</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Restart your device after installation</li>
-<li class="ml-4 py-1">&#8226; Reinstall the app</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Restart your device</li>
+<li class="ml-4 text-gray-300">&#8226; Make sure CleverKeys is enabled AND set as default</li>
+<li class="ml-4 text-gray-300">&#8226; Check if another keyboard is overriding it</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Can't find keyboard settings</h3>
 
-</ul><p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Keyboard won't show up when typing</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Ensure CleverKeys is enabled in keyboard settings</li>
-<li class="ml-4 py-1">&#8226; Tap the keyboard icon to manually select it</li>
+<p class="mb-4 text-gray-300 leading-relaxed">Search for "keyboard" or "input" in your Settings app. Different manufacturers place this in different locations.</p>
 
-</ul><p class="mb-4 text-gray-300 leading-relaxed"><strong class="font-semibold text-white">Security warning about keyboard</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; This is normal for all third-party keyboards</li>
-<li class="ml-4 py-1">&#8226; CleverKeys is open source and doesn't transmit your typing data</li>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Next Steps</h2>
 
-</ul><h2 id="next-steps" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Next Steps</h2>
-
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="first-time-setup.md" class="text-wiki-accent hover:underline">First Time Setup</a> - Configure your preferences</li>
-<li class="ml-4 py-1">&#8226; <a href="basic-typing.md" class="text-wiki-accent hover:underline">Basic Typing</a> - Learn keyboard basics</li>
-
-</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/getting-started/setup-spec.md" class="text-wiki-accent hover:underline">Setup Technical Specification</a>.</p>
-
-                
-        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
-            
-                <a href="getting-started/basic-typing.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <div class="text-right">
-                        <div class="text-xs uppercase text-gray-500">Previous</div>
-                        <div class="font-medium">Basic Typing</div>
-                    </div>
-                </a>
-            
-            
-                <a href="typing/swipe-typing.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <div>
-                        <div class="text-xs uppercase text-gray-500">Next</div>
-                        <div class="font-medium">Swipe Typing</div>
-                    </div>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-            
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="./basic-typing.html" class="text-green-400 hover:underline">Basic Typing</a> - Learn tap and swipe typing</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../typing/swipe-typing.html" class="text-green-400 hover:underline">Swipe Typing</a> - Master neural prediction</li>
+</ul>
         </div>
-    
-            </article>
-            
-        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
-            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
-            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
-                
-                    <li class="">
-                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#how-to-enable" class="text-gray-400 hover:text-wiki-primary transition-colors">How to Enable</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-1-open-language-input-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 1: Open Language & Input Settings</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-2-enable-cleverkeys" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 2: Enable CleverKeys</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-3-set-as-default" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 3: Set as Default</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#quick-switch-method" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Switch Method</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#troubleshooting" class="text-gray-400 hover:text-wiki-primary transition-colors">Troubleshooting</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#next-steps" class="text-gray-400 hover:text-wiki-primary transition-colors">Next Steps</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
-                    </li>
-                
-            </ul>
-        </nav>
-    
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="getting-started/basic-typing.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Basic Typing</span>
+            </a>
+            <a href="typing/swipe-typing.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Swipe Typing</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
-        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
     </footer>
 </body>
 </html>

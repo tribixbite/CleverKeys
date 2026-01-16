@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swipe Typing - CleverKeys Wiki</title>
-    <meta name="description" content="Draw paths through letters to type words">
+    <title>Swipe Typing - CleverKeys User Guide</title>
+    <meta name="description" content="How neural swipe prediction works">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,30 +12,37 @@
             theme: {
                 extend: {
                     colors: {
-                        'wiki-primary': '#10b981',
-                        'wiki-primary-light': '#34d399',
-                        'wiki-accent': '#3b82f6',
-                        'wiki-dark': '#0d1117',
-                        'wiki-surface': '#161b22',
-                        'wiki-card': '#21262d',
-                        'wiki-border': '#30363d',
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-wiki-dark text-gray-100 min-h-screen">
+<body class="bg-ck-dark text-gray-100 min-h-screen">
     <!-- Nav -->
-    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="../" class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
                 <span class="font-bold">CleverKeys</span>
             </a>
             <div class="flex gap-4">
-                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
-                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
                 <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
             </div>
         </div>
@@ -44,9 +51,11 @@
     <!-- Breadcrumb -->
     <div class="container mx-auto px-6 py-4">
         <div class="flex items-center gap-2 text-sm text-gray-500">
-            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <a href="../" class="hover:text-ck-green">Home</a>
             <span>/</span>
-            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Typing" class="hover:text-ck-green">Typing</a>
             <span>/</span>
             <span class="text-gray-300">Swipe Typing</span>
         </div>
@@ -54,191 +63,134 @@
 
     <!-- Header -->
     <header class="container mx-auto px-6 pb-6">
-        <div class="flex items-center gap-3 mb-3">
+        <div class="flex items-center gap-3 mb-4">
             <span class="px-3 py-1 text-sm rounded-full" style="background: #3b82f620; color: #3b82f6">Typing</span>
-            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">beginner</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P0</span>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-2">Swipe Typing</h1>
-        <p class="text-xl text-gray-400">Draw paths through letters to type words</p>
-        
-        <div class="flex flex-wrap gap-2 mt-4">
-            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#swipe</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#glide</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#neural</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#predictions</span>
-        </div>
-    
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Swipe Typing</h1>
+        <p class="text-xl text-gray-400">How neural swipe prediction works</p>
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-6 pb-20">
-        <div class="flex gap-8">
-            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
-                <h1 class="text-3xl font-bold mb-6 text-white">Swipe Typing</h1>
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300 leading-relaxed">title: Swipe Typing</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Draw paths through letters to type words</p>
+<p class="mb-4 text-gray-300 leading-relaxed">category: Typing</p>
+<p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
+<p class="mb-4 text-gray-300 leading-relaxed">featured: true</p>
+<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/typing/swipe-typing-spec.md</p>
+<hr class="border-gray-700 my-6">
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Swipe Typing</h1>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Swipe typing lets you type words by drawing a continuous path through letters. CleverKeys uses a neural AI model to predict words from your swipe patterns.</p>
 
-<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Type words faster by swiping</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Gesture</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Draw path through letters without lifting finger</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">AI Model</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">ONNX transformer neural network</td></tr></tbody></table></div>
-<h2 id="how-it-works" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">How It Works</h2>
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Type words faster by swiping</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Gesture</strong></td><td class="px-4 py-2 border-t border-gray-700">Draw path through letters without lifting finger</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">AI Model</strong></td><td class="px-4 py-2 border-t border-gray-700">ONNX transformer neural network</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How It Works</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Instead of tapping each letter:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Touch the first letter</strong> of your word</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Slide your finger</strong> through each letter in order</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Lift your finger</strong> at the last letter</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> The word appears in the text</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Touch the first letter</strong> of your word</li>
+<li class="ml-4 text-gray-300">2. <strong class="text-white">Slide your finger</strong> through each letter in order</li>
+<li class="ml-4 text-gray-300">3. <strong class="text-white">Lift your finger</strong> at the last letter</li>
+<li class="ml-4 text-gray-300">4. The word appears in the text</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">For example, to type "hello":</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Touch <strong class="text-white">h</strong> → slide to <strong class="text-white">e</strong> → slide to <strong class="text-white">l</strong> → slide to <strong class="text-white">l</strong> → lift at <strong class="text-white">o</strong></li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How to Use</h2>
 
-</ul><p class="mb-4 text-gray-300 leading-relaxed">For example, to type "hello":</p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Touch <strong class="font-semibold text-white">h</strong> → slide to <strong class="font-semibold text-white">e</strong> → slide to <strong class="font-semibold text-white">l</strong> → slide to <strong class="font-semibold text-white">l</strong> → lift at <strong class="font-semibold text-white">o</strong></li>
-
-</ul><h2 id="how-to-use" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">How to Use</h2>
-
-<h3 id="step-1-start-on-the-first-letter" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 1: Start on the First Letter</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 1: Start on the First Letter</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Touch and hold the first letter of your word. A trail appears showing your path.</p>
 
-<h3 id="step-2-draw-through-letters" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 2: Draw Through Letters</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 2: Draw Through Letters</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Without lifting your finger, slide through each letter in sequence. You don't need to be perfectly accurate - the AI predicts your intended word.</p>
 
-<h3 id="step-3-lift-to-complete" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 3: Lift to Complete</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 3: Lift to Complete</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Lift your finger when you reach the last letter. The predicted word appears in your text.</p>
 
-<h3 id="step-4-choose-from-predictions" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 4: Choose from Predictions</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 4: Choose from Predictions</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">If the wrong word appears:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Check the prediction bar for alternatives</li>
-<li class="ml-4 py-1">&#8226; Tap the correct word to replace it</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Check the prediction bar for alternatives</li>
+<li class="ml-4 text-gray-300">&#8226; Tap the correct word to replace it</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips for Better Accuracy</h2>
 
-</ul><h2 id="tips-for-better-accuracy" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips for Better Accuracy</h2>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Start and end precisely</strong>: Begin and end on the correct letters</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Hit key letters</strong>: Pass through distinctive letters in the word</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Maintain steady speed</strong>: Don't rush or pause mid-word</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Use longer swipes</strong>: Longer words are easier to predict than short ones</li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Double letters (like 'll' in 'hello') can be swiped in a small loop or just passed through once.</blockquote>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Start and end precisely</strong>: Begin and end on the correct letters</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Hit key letters</strong>: Pass through distinctive letters in the word</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Maintain steady speed</strong>: Don't rush or pause mid-word</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Use longer swipes</strong>: Longer words are easier to predict than short ones</li>
-
-</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Double letters (like 'll' in 'hello') can be swiped in a small loop or just passed through once.</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
-<h2 id="prediction-bar" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Prediction Bar</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Prediction Bar</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">After swiping, three predictions appear:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Position</th><th class="px-4 py-2 text-left border-b border-wiki-border">Meaning</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Center</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Best match (auto-inserted)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Left</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Second best match</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Right</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Third best match</td></tr></tbody></table></div>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Position</td><td class="px-4 py-2 border-t border-gray-700">Meaning</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Center</strong></td><td class="px-4 py-2 border-t border-gray-700">Best match (auto-inserted)</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Left</strong></td><td class="px-4 py-2 border-t border-gray-700">Second best match</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Right</strong></td><td class="px-4 py-2 border-t border-gray-700">Third best match</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <p class="mb-4 text-gray-300 leading-relaxed">Tap any prediction to use it instead.</p>
 
-<h2 id="settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Settings</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Tune swipe typing in Settings > Neural:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Beam Width</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">More candidates = more accurate but slower</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Neural Profile</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Balanced, Fast, or Accurate presets</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Prediction Count</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Number of suggestions to show</td></tr></tbody></table></div>
-<h2 id="when-swipe-typing-doesn-t-work" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">When Swipe Typing Doesn't Work</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Beam Width</strong></td><td class="px-4 py-2 border-t border-gray-700">More candidates = more accurate but slower</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Neural Profile</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced, Fast, or Accurate presets</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Prediction Count</strong></td><td class="px-4 py-2 border-t border-gray-700">Number of suggestions to show</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">When Swipe Typing Doesn't Work</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Swipe typing may not activate when:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Typing in password fields</li>
-<li class="ml-4 py-1">&#8226; The swipe is too short (detected as tap)</li>
-<li class="ml-4 py-1">&#8226; No language pack is downloaded</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Typing in password fields</li>
+<li class="ml-4 text-gray-300">&#8226; The swipe is too short (detected as tap)</li>
+<li class="ml-4 text-gray-300">&#8226; No language pack is downloaded</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
-</ul><h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="autocorrect.html" class="text-green-400 hover:underline">Autocorrect</a> - Fix mistakes automatically</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../gestures/short-swipes.html" class="text-green-400 hover:underline">Short Swipes</a> - Quick access to subkeys</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../settings/neural-settings.html" class="text-green-400 hover:underline">Neural Settings</a> - Tune prediction</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="autocorrect.md" class="text-wiki-accent hover:underline">Autocorrect</a> - Fix mistakes automatically</li>
-<li class="ml-4 py-1">&#8226; <a href="../gestures/short-swipes.md" class="text-wiki-accent hover:underline">Short Swipes</a> - Quick access to subkeys</li>
-<li class="ml-4 py-1">&#8226; <a href="../settings/neural-settings.md" class="text-wiki-accent hover:underline">Neural Settings</a> - Tune prediction</li>
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/typing/swipe-typing-spec.html" class="text-green-400 hover:underline">Swipe Typing Technical Specification</a> for details on the ONNX model and beam search algorithm.</p>
 
-</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/typing/swipe-typing-spec.md" class="text-wiki-accent hover:underline">Swipe Typing Technical Specification</a> for details on the ONNX model and beam search algorithm.</p>
-
-                
-        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
-            
-                <a href="getting-started/enabling-keyboard.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <div class="text-right">
-                        <div class="text-xs uppercase text-gray-500">Previous</div>
-                        <div class="font-medium">Enabling the Keyboard</div>
-                    </div>
-                </a>
-            
-            
-                <a href="typing/autocorrect.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <div>
-                        <div class="text-xs uppercase text-gray-500">Next</div>
-                        <div class="font-medium">Autocorrect</div>
-                    </div>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-            
         </div>
-    
-            </article>
-            
-        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
-            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
-            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
-                
-                    <li class="">
-                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#how-it-works" class="text-gray-400 hover:text-wiki-primary transition-colors">How It Works</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#how-to-use" class="text-gray-400 hover:text-wiki-primary transition-colors">How to Use</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-1-start-on-the-first-letter" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 1: Start on the First Letter</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-2-draw-through-letters" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 2: Draw Through Letters</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-3-lift-to-complete" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 3: Lift to Complete</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-4-choose-from-predictions" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 4: Choose from Predictions</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#tips-for-better-accuracy" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips for Better Accuracy</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#prediction-bar" class="text-gray-400 hover:text-wiki-primary transition-colors">Prediction Bar</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Settings</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#when-swipe-typing-doesn-t-work" class="text-gray-400 hover:text-wiki-primary transition-colors">When Swipe Typing Doesn't Work</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
-                    </li>
-                
-            </ul>
-        </nav>
-    
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="getting-started/enabling-keyboard.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Enabling the Keyboard</span>
+            </a>
+            <a href="typing/autocorrect.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Autocorrect & Predictions</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
-        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
     </footer>
 </body>
 </html>

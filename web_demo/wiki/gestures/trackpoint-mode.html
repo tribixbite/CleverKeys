@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrackPoint Mode - CleverKeys Wiki</title>
-    <meta name="description" content="Joystick-style cursor control on navigation keys">
+    <title>TrackPoint Mode - CleverKeys User Guide</title>
+    <meta name="description" content="Joystick-style cursor on nav keys">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,30 +12,37 @@
             theme: {
                 extend: {
                     colors: {
-                        'wiki-primary': '#10b981',
-                        'wiki-primary-light': '#34d399',
-                        'wiki-accent': '#3b82f6',
-                        'wiki-dark': '#0d1117',
-                        'wiki-surface': '#161b22',
-                        'wiki-card': '#21262d',
-                        'wiki-border': '#30363d',
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-wiki-dark text-gray-100 min-h-screen">
+<body class="bg-ck-dark text-gray-100 min-h-screen">
     <!-- Nav -->
-    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="../" class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
                 <span class="font-bold">CleverKeys</span>
             </a>
             <div class="flex gap-4">
-                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
-                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
                 <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
             </div>
         </div>
@@ -44,9 +51,11 @@
     <!-- Breadcrumb -->
     <div class="container mx-auto px-6 py-4">
         <div class="flex items-center gap-2 text-sm text-gray-500">
-            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <a href="../" class="hover:text-ck-green">Home</a>
             <span>/</span>
-            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Gestures" class="hover:text-ck-green">Gestures</a>
             <span>/</span>
             <span class="text-gray-300">TrackPoint Mode</span>
         </div>
@@ -54,205 +63,153 @@
 
     <!-- Header -->
     <header class="container mx-auto px-6 pb-6">
-        <div class="flex items-center gap-3 mb-3">
+        <div class="flex items-center gap-3 mb-4">
             <span class="px-3 py-1 text-sm rounded-full" style="background: #8b5cf620; color: #8b5cf6">Gestures</span>
-            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">advanced</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P0</span>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-2">TrackPoint Mode</h1>
-        <p class="text-xl text-gray-400">Joystick-style cursor control on navigation keys</p>
-        
-        <div class="flex flex-wrap gap-2 mt-4">
-            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#trackpoint</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#joystick</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#cursor</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#navigation</span>
-        </div>
-    
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">TrackPoint Mode</h1>
+        <p class="text-xl text-gray-400">Joystick-style cursor on nav keys</p>
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-6 pb-20">
-        <div class="flex gap-8">
-            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
-                <h1 class="text-3xl font-bold mb-6 text-white">TrackPoint Mode</h1>
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300 leading-relaxed">title: TrackPoint Mode</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Joystick-style cursor control on navigation keys</p>
+<p class="mb-4 text-gray-300 leading-relaxed">category: Gestures</p>
+<p class="mb-4 text-gray-300 leading-relaxed">difficulty: advanced</p>
+<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/gestures/trackpoint-mode-spec.md</p>
+<hr class="border-gray-700 my-6">
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">TrackPoint Mode</h1>
 
 <p class="mb-4 text-gray-300 leading-relaxed">TrackPoint mode turns your arrow keys into a virtual joystick for continuous cursor movement. Hold the navigation key and move your finger to control the cursor like a laptop TrackPoint.</p>
 
-<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Precise, continuous cursor movement</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Activation</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Hold any arrow key past long-press timeout</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Movement</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Move finger in desired direction</td></tr></tbody></table></div>
-<h2 id="how-it-works" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">How It Works</h2>
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Precise, continuous cursor movement</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Activation</strong></td><td class="px-4 py-2 border-t border-gray-700">Hold any arrow key past long-press timeout</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Movement</strong></td><td class="px-4 py-2 border-t border-gray-700">Move finger in desired direction</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How It Works</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">When you hold an arrow key:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> After the long-press timeout (~400ms), TrackPoint mode activates</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> A distinct haptic pulse indicates activation</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Your finger position becomes the "center" of the joystick</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Moving your finger away from center moves the cursor</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">5.</span> The further from center, the faster the cursor moves</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. After the long-press timeout (~400ms), TrackPoint mode activates</li>
+<li class="ml-4 text-gray-300">2. A distinct haptic pulse indicates activation</li>
+<li class="ml-4 text-gray-300">3. Your finger position becomes the "center" of the joystick</li>
+<li class="ml-4 text-gray-300">4. Moving your finger away from center moves the cursor</li>
+<li class="ml-4 text-gray-300">5. The further from center, the faster the cursor moves</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How to Use</h2>
 
-</ul><h2 id="how-to-use" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">How to Use</h2>
-
-<h3 id="step-1-access-navigation-keys" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 1: Access Navigation Keys</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 1: Access Navigation Keys</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">The navigation keys (arrows) are typically accessed via:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Short swipe on the compose key (bottom row)</li>
-<li class="ml-4 py-1">&#8226; Or directly if you've added them to your layout</li>
-
-</ul><h3 id="step-2-hold-the-arrow-key" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 2: Hold the Arrow Key</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Short swipe on the compose key (bottom row)</li>
+<li class="ml-4 text-gray-300">&#8226; Or directly if you've added them to your layout</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 2: Hold the Arrow Key</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Touch and hold any arrow key. Wait for the haptic pulse indicating TrackPoint activation.</p>
 
-<h3 id="step-3-move-your-finger" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 3: Move Your Finger</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 3: Move Your Finger</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Without lifting, move your finger:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Direction</th><th class="px-4 py-2 text-left border-b border-wiki-border">Cursor Movement</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Up</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Cursor moves up</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Down</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Cursor moves down</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Left</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Cursor moves left</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Right</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Cursor moves right</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Diagonal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Both directions simultaneously</td></tr></tbody></table></div>
-<h3 id="step-4-release" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 4: Release</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Direction</td><td class="px-4 py-2 border-t border-gray-700">Cursor Movement</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Up</strong></td><td class="px-4 py-2 border-t border-gray-700">Cursor moves up</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Down</strong></td><td class="px-4 py-2 border-t border-gray-700">Cursor moves down</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Left</strong></td><td class="px-4 py-2 border-t border-gray-700">Cursor moves left</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Right</strong></td><td class="px-4 py-2 border-t border-gray-700">Cursor moves right</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Diagonal</strong></td><td class="px-4 py-2 border-t border-gray-700">Both directions simultaneously</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 4: Release</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Lift your finger to exit TrackPoint mode.</p>
 
-<h2 id="speed-control" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Speed Control</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Speed Control</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Cursor speed depends on finger distance from center:</p>
 
-<pre class="bg-wiki-dark p-4 rounded-lg overflow-x-auto my-4"><code class="language-text">Slow
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">Slow
 <p class="mb-4 text-gray-300 leading-relaxed">            |</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   Slow ----+---- Fast</p>
 <p class="mb-4 text-gray-300 leading-relaxed">            |</p>
 <p class="mb-4 text-gray-300 leading-relaxed">           Fast</code></pre></p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Near center</strong>: Dead zone (no movement)</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Edge of key</strong>: Medium speed</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Beyond key</strong>: Maximum speed</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Near center</strong>: Dead zone (no movement)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Edge of key</strong>: Medium speed</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Beyond key</strong>: Maximum speed</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
-</ul><h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Precise positioning</strong>: Stay near center for fine control</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Quick jumps</strong>: Move to edge of key for fast movement</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Diagonal movement</strong>: X and Y axes work independently</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Center reset</strong>: Your finger position when activated becomes the center</li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">The center point is set where your finger is when TrackPoint activates, not the key center.</blockquote>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Precise positioning</strong>: Stay near center for fine control</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Quick jumps</strong>: Move to edge of key for fast movement</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Diagonal movement</strong>: X and Y axes work independently</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Center reset</strong>: Your finger position when activated becomes the center</li>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Difference from Regular Arrow Keys</h2>
 
-</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">The center point is set where your finger is when TrackPoint activates, not the key center.</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
-<h2 id="difference-from-regular-arrow-keys" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Difference from Regular Arrow Keys</h2>
-
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Feature</th><th class="px-4 py-2 text-left border-b border-wiki-border">Regular</th><th class="px-4 py-2 text-left border-b border-wiki-border">TrackPoint</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Activation</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Short swipe or tap</td><td class="px-4 py-2 border-b border-wiki-border/50">Long hold</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Movement</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">One step per input</td><td class="px-4 py-2 border-b border-wiki-border/50">Continuous</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Speed</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Fixed</td><td class="px-4 py-2 border-b border-wiki-border/50">Variable (distance-based)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Direction</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">One at a time</td><td class="px-4 py-2 border-b border-wiki-border/50">Any, including diagonal</td></tr></tbody></table></div>
-<h2 id="haptic-feedback" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Haptic Feedback</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Feature</td><td class="px-4 py-2 border-t border-gray-700">Regular</td><td class="px-4 py-2 border-t border-gray-700">TrackPoint</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Activation</strong></td><td class="px-4 py-2 border-t border-gray-700">Short swipe or tap</td><td class="px-4 py-2 border-t border-gray-700">Long hold</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Movement</strong></td><td class="px-4 py-2 border-t border-gray-700">One step per input</td><td class="px-4 py-2 border-t border-gray-700">Continuous</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Speed</strong></td><td class="px-4 py-2 border-t border-gray-700">Fixed</td><td class="px-4 py-2 border-t border-gray-700">Variable (distance-based)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Direction</strong></td><td class="px-4 py-2 border-t border-gray-700">One at a time</td><td class="px-4 py-2 border-t border-gray-700">Any, including diagonal</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Haptic Feedback</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">TrackPoint mode uses distinct haptic patterns:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Event</th><th class="px-4 py-2 text-left border-b border-wiki-border">Feedback</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Activation</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Clock tick pattern</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Each cursor move</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Light tick (optional)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Exit</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">None</td></tr></tbody></table></div>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Event</td><td class="px-4 py-2 border-t border-gray-700">Feedback</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Activation</strong></td><td class="px-4 py-2 border-t border-gray-700">Clock tick pattern</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Each cursor move</strong></td><td class="px-4 py-2 border-t border-gray-700">Light tick (optional)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Exit</strong></td><td class="px-4 py-2 border-t border-gray-700">None</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <p class="mb-4 text-gray-300 leading-relaxed">Configure in Settings > Haptics > TrackPoint Activate.</p>
 
-<h2 id="settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Settings</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Long Press Timeout</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Input Behavior</td><td class="px-4 py-2 border-b border-wiki-border/50">Time to activate TrackPoint</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">TrackPoint Haptic</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Haptics</td><td class="px-4 py-2 border-b border-wiki-border/50">Enable/disable activation feedback</td></tr></tbody></table></div>
-<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long Press Timeout</strong></td><td class="px-4 py-2 border-t border-gray-700">Input Behavior</td><td class="px-4 py-2 border-t border-gray-700">Time to activate TrackPoint</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">TrackPoint Haptic</strong></td><td class="px-4 py-2 border-t border-gray-700">Haptics</td><td class="px-4 py-2 border-t border-gray-700">Enable/disable activation feedback</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="cursor-navigation.md" class="text-wiki-accent hover:underline">Cursor Navigation</a> - Basic cursor movement</li>
-<li class="ml-4 py-1">&#8226; <a href="selection-delete.md" class="text-wiki-accent hover:underline">Selection Delete</a> - Similar joystick for text selection</li>
-<li class="ml-4 py-1">&#8226; <a href="short-swipes.md" class="text-wiki-accent hover:underline">Short Swipes</a> - Quick access to arrow keys</li>
-
-</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/gestures/trackpoint-mode-spec.md" class="text-wiki-accent hover:underline">TrackPoint Mode Technical Specification</a> for implementation details including:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; FLAG_P_TRACKPOINT_MODE flag</li>
-<li class="ml-4 py-1">&#8226; Joystick dead zone calculation</li>
-<li class="ml-4 py-1">&#8226; Speed interpolation algorithm</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="cursor-navigation.html" class="text-green-400 hover:underline">Cursor Navigation</a> - Basic cursor movement</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="selection-delete.html" class="text-green-400 hover:underline">Selection Delete</a> - Similar joystick for text selection</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="short-swipes.html" class="text-green-400 hover:underline">Short Swipes</a> - Quick access to arrow keys</li>
 </ul>
-                
-        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
-            
-                <a href="gestures/selection-delete.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <div class="text-right">
-                        <div class="text-xs uppercase text-gray-500">Previous</div>
-                        <div class="font-medium">Selection Delete</div>
-                    </div>
-                </a>
-            
-            
-                <a href="gestures/circle-gestures.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <div>
-                        <div class="text-xs uppercase text-gray-500">Next</div>
-                        <div class="font-medium">Circle Gestures</div>
-                    </div>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-            
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/gestures/trackpoint-mode-spec.html" class="text-green-400 hover:underline">TrackPoint Mode Technical Specification</a> for implementation details including:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; FLAG_P_TRACKPOINT_MODE flag</li>
+<li class="ml-4 text-gray-300">&#8226; Joystick dead zone calculation</li>
+<li class="ml-4 text-gray-300">&#8226; Speed interpolation algorithm</li>
+</ul>
         </div>
-    
-            </article>
-            
-        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
-            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
-            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
-                
-                    <li class="">
-                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#how-it-works" class="text-gray-400 hover:text-wiki-primary transition-colors">How It Works</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#how-to-use" class="text-gray-400 hover:text-wiki-primary transition-colors">How to Use</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-1-access-navigation-keys" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 1: Access Navigation Keys</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-2-hold-the-arrow-key" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 2: Hold the Arrow Key</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-3-move-your-finger" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 3: Move Your Finger</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-4-release" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 4: Release</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#speed-control" class="text-gray-400 hover:text-wiki-primary transition-colors">Speed Control</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#difference-from-regular-arrow-keys" class="text-gray-400 hover:text-wiki-primary transition-colors">Difference from Regular Arrow Keys</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#haptic-feedback" class="text-gray-400 hover:text-wiki-primary transition-colors">Haptic Feedback</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Settings</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
-                    </li>
-                
-            </ul>
-        </nav>
-    
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="gestures/selection-delete.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Selection-Delete Mode</span>
+            </a>
+            <a href="gestures/circle-gestures.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Circle Gestures</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
-        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
     </footer>
 </body>
 </html>

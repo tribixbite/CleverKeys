@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Settings - CleverKeys Wiki</title>
-    <meta name="description" content="Control data collection and storage">
+    <title>Privacy - CleverKeys User Guide</title>
+    <meta name="description" content="Data collection and clipboard settings">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,30 +12,37 @@
             theme: {
                 extend: {
                     colors: {
-                        'wiki-primary': '#10b981',
-                        'wiki-primary-light': '#34d399',
-                        'wiki-accent': '#3b82f6',
-                        'wiki-dark': '#0d1117',
-                        'wiki-surface': '#161b22',
-                        'wiki-card': '#21262d',
-                        'wiki-border': '#30363d',
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-wiki-dark text-gray-100 min-h-screen">
+<body class="bg-ck-dark text-gray-100 min-h-screen">
     <!-- Nav -->
-    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="../" class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
                 <span class="font-bold">CleverKeys</span>
             </a>
             <div class="flex gap-4">
-                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
-                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
                 <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
             </div>
         </div>
@@ -44,297 +51,217 @@
     <!-- Breadcrumb -->
     <div class="container mx-auto px-6 py-4">
         <div class="flex items-center gap-2 text-sm text-gray-500">
-            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <a href="../" class="hover:text-ck-green">Home</a>
             <span>/</span>
-            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
             <span>/</span>
-            <span class="text-gray-300">Privacy Settings</span>
+            <a href="./?category=Settings" class="hover:text-ck-green">Settings</a>
+            <span>/</span>
+            <span class="text-gray-300">Privacy</span>
         </div>
     </div>
 
     <!-- Header -->
     <header class="container mx-auto px-6 pb-6">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="px-3 py-1 text-sm rounded-full" style="background: #6366f120; color: #6366f1">Settings</span>
-            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">intermediate</span>
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #6b728020; color: #6b7280">Settings</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P1</span>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-2">Privacy Settings</h1>
-        <p class="text-xl text-gray-400">Control data collection and storage</p>
-        
-        <div class="flex flex-wrap gap-2 mt-4">
-            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#privacy</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#data</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#collection</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#storage</span>
-        </div>
-    
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Privacy</h1>
+        <p class="text-xl text-gray-400">Data collection and clipboard settings</p>
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-6 pb-20">
-        <div class="flex gap-8">
-            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
-                <h1 class="text-3xl font-bold mb-6 text-white">Privacy Settings</h1>
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300 leading-relaxed">title: Privacy Settings</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Control data collection and storage</p>
+<p class="mb-4 text-gray-300 leading-relaxed">category: Settings</p>
+<p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
+<hr class="border-gray-700 my-6">
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Privacy Settings</h1>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Control what data CleverKeys collects, stores, and how your information is handled.</p>
 
-<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Manage privacy and data</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings > Privacy</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Principle</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Local-first, no cloud by default</td></tr></tbody></table></div>
-<h2 id="privacy-philosophy" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Privacy Philosophy</h2>
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Manage privacy and data</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Privacy</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Principle</strong></td><td class="px-4 py-2 border-t border-gray-700">Local-first, no cloud by default</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Privacy Philosophy</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">CleverKeys is designed with privacy as a core principle:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Local processing</strong>: All AI runs on your device</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">No cloud upload</strong>: Data never leaves your device by default</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">No analytics</strong>: No usage tracking or telemetry</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">You control data</strong>: Export or delete anytime</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Local processing</strong>: All AI runs on your device</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">No cloud upload</strong>: Data never leaves your device by default</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">No analytics</strong>: No usage tracking or telemetry</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">You control data</strong>: Export or delete anytime</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Learning Data</h2>
 
-</ul><h2 id="learning-data" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Learning Data</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Personal Dictionary</h3>
 
-<h3 id="personal-dictionary" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Personal Dictionary</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Save Words</strong></td><td class="px-4 py-2 border-t border-gray-700">Remember words you add</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Auto-Learn</strong></td><td class="px-4 py-2 border-t border-gray-700">Automatically learn new words</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clear Dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">Delete all learned words</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Usage Patterns</h3>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Save Words</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Remember words you add</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Auto-Learn</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Automatically learn new words</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Clear Dictionary</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Delete all learned words</td></tr></tbody></table></div>
-<h3 id="usage-patterns" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Usage Patterns</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Remember Frequency</strong></td><td class="px-4 py-2 border-t border-gray-700">Track word usage for better predictions</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clear Patterns</strong></td><td class="px-4 py-2 border-t border-gray-700">Reset frequency data</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Clipboard Privacy</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Remember Frequency</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Track word usage for better predictions</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Clear Patterns</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Reset frequency data</td></tr></tbody></table></div>
-<h2 id="clipboard-privacy" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Clipboard Privacy</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Clipboard History</h3>
 
-<h3 id="clipboard-history" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Clipboard History</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enable History</strong></td><td class="px-4 py-2 border-t border-gray-700">Keep clipboard history</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">History Duration</strong></td><td class="px-4 py-2 border-t border-gray-700">How long to keep items</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Auto-Clear</strong></td><td class="px-4 py-2 border-t border-gray-700">Clear after time period</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clear Now</strong></td><td class="px-4 py-2 border-t border-gray-700">Immediately clear history</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Sensitive Fields</h3>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Enable History</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Keep clipboard history</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">History Duration</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">How long to keep items</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Auto-Clear</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Clear after time period</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Clear Now</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Immediately clear history</td></tr></tbody></table></div>
-<h3 id="sensitive-fields" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Sensitive Fields</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Detect Password Fields</strong></td><td class="px-4 py-2 border-t border-gray-700">Don't save to history</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Incognito Mode</strong></td><td class="px-4 py-2 border-t border-gray-700">Never save clipboard</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Data Storage</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Detect Password Fields</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Don't save to history</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Incognito Mode</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Never save clipboard</td></tr></tbody></table></div>
-<h2 id="data-storage" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Data Storage</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">What's Stored</h3>
 
-<h3 id="what-s-stored" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">What's Stored</h3>
-
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Data</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Purpose</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Settings</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">App preferences</td><td class="px-4 py-2 border-b border-wiki-border/50">Your configuration</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Dictionary</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">App data</td><td class="px-4 py-2 border-b border-wiki-border/50">Personal words</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Profiles</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">App data</td><td class="px-4 py-2 border-b border-wiki-border/50">Saved configurations</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Clipboard</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">App cache</td><td class="px-4 py-2 border-b border-wiki-border/50">Recent clips</td></tr></tbody></table></div>
-<h3 id="storage-location" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Storage Location</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Data</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Purpose</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Settings</strong></td><td class="px-4 py-2 border-t border-gray-700">App preferences</td><td class="px-4 py-2 border-t border-gray-700">Your configuration</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">App data</td><td class="px-4 py-2 border-t border-gray-700">Personal words</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Profiles</strong></td><td class="px-4 py-2 border-t border-gray-700">App data</td><td class="px-4 py-2 border-t border-gray-700">Saved configurations</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard</strong></td><td class="px-4 py-2 border-t border-gray-700">App cache</td><td class="px-4 py-2 border-t border-gray-700">Recent clips</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Storage Location</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">All data is stored locally on your device:</p>
 
-<pre class="bg-wiki-dark p-4 rounded-lg overflow-x-auto my-4"><code class="language-text">/data/data/app.cleverkeys/
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">/data/data/app.cleverkeys/
 <p class="mb-4 text-gray-300 leading-relaxed">├── shared_prefs/     # Settings</p>
 <p class="mb-4 text-gray-300 leading-relaxed">├── files/            # Dictionary, profiles</p>
 <p class="mb-4 text-gray-300 leading-relaxed">└── cache/            # Temporary data</code></pre></p>
 
-<h2 id="secure-input" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Secure Input</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Secure Input</h2>
 
-<h3 id="password-fields" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Password Fields</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Password Fields</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">When a text field is marked as password:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Predictions disabled</li>
-<li class="ml-4 py-1">&#8226; Learning disabled</li>
-<li class="ml-4 py-1">&#8226; Clipboard disabled</li>
-<li class="ml-4 py-1">&#8226; Incognito indicators shown</li>
-
-</ul><h3 id="incognito-mode" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Incognito Mode</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Predictions disabled</li>
+<li class="ml-4 text-gray-300">&#8226; Learning disabled</li>
+<li class="ml-4 text-gray-300">&#8226; Clipboard disabled</li>
+<li class="ml-4 text-gray-300">&#8226; Incognito indicators shown</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Incognito Mode</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Manual incognito for any field:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Long-press the keyboard settings key</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Toggle <strong class="font-semibold text-white">Incognito Mode</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> All learning and history disabled</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Indicator shows incognito active</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Long-press the keyboard settings key</li>
+<li class="ml-4 text-gray-300">2. Toggle <strong class="text-white">Incognito Mode</strong></li>
+<li class="ml-4 text-gray-300">3. All learning and history disabled</li>
+<li class="ml-4 text-gray-300">4. Indicator shows incognito active</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Data Export and Deletion</h2>
 
-</ul><h2 id="data-export-and-deletion" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Data Export and Deletion</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Export Your Data</h3>
 
-<h3 id="export-your-data" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Export Your Data</h3>
-
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Settings > Privacy > Export Data</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Choose what to export:</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Settings > Privacy > Export Data</li>
+<li class="ml-4 text-gray-300">2. Choose what to export:</li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - Personal dictionary</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Usage patterns</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - Profiles</p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Save to file</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. Save to file</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Delete Data</h3>
 
-</ul><h3 id="delete-data" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Delete Data</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Option</td><td class="px-4 py-2 border-t border-gray-700">What's Deleted</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clear Dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">Personal words only</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clear Patterns</strong></td><td class="px-4 py-2 border-t border-gray-700">Usage frequency data</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clear Clipboard</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard history</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Reset All</strong></td><td class="px-4 py-2 border-t border-gray-700">All personal data</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Option</th><th class="px-4 py-2 text-left border-b border-wiki-border">What's Deleted</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Clear Dictionary</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Personal words only</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Clear Patterns</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Usage frequency data</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Clear Clipboard</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Clipboard history</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Reset All</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">All personal data</td></tr></tbody></table></div>
-<h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Shared devices</strong>: Use incognito mode</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Sensitive apps</strong>: Enable incognito per-app</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">New start</strong>: Clear all data for fresh experience</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Backup first</strong>: Export before clearing</li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Enable auto-clear for clipboard to maintain privacy without manual intervention.</blockquote>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Shared devices</strong>: Use incognito mode</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Sensitive apps</strong>: Enable incognito per-app</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">New start</strong>: Clear all data for fresh experience</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Backup first</strong>: Export before clearing</li>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Privacy Settings Reference</h2>
 
-</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Enable auto-clear for clipboard to maintain privacy without manual intervention.</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
-<h2 id="privacy-settings-reference" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Privacy Settings Reference</h2>
-
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Default</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Auto-Learn Words</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Privacy</td><td class="px-4 py-2 border-b border-wiki-border/50">On</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Clipboard History</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Privacy</td><td class="px-4 py-2 border-b border-wiki-border/50">On</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">History Duration</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Privacy</td><td class="px-4 py-2 border-b border-wiki-border/50">24 hours</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Detect Password</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Privacy</td><td class="px-4 py-2 border-b border-wiki-border/50">On</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Incognito Mode</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Privacy</td><td class="px-4 py-2 border-b border-wiki-border/50">Off</td></tr></tbody></table></div>
-<h2 id="network-privacy" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Network Privacy</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Default</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Auto-Learn Words</strong></td><td class="px-4 py-2 border-t border-gray-700">Privacy</td><td class="px-4 py-2 border-t border-gray-700">On</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clipboard History</strong></td><td class="px-4 py-2 border-t border-gray-700">Privacy</td><td class="px-4 py-2 border-t border-gray-700">On</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">History Duration</strong></td><td class="px-4 py-2 border-t border-gray-700">Privacy</td><td class="px-4 py-2 border-t border-gray-700">24 hours</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Detect Password</strong></td><td class="px-4 py-2 border-t border-gray-700">Privacy</td><td class="px-4 py-2 border-t border-gray-700">On</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Incognito Mode</strong></td><td class="px-4 py-2 border-t border-gray-700">Privacy</td><td class="px-4 py-2 border-t border-gray-700">Off</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Network Privacy</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">CleverKeys does not require network access for core functionality:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Feature</th><th class="px-4 py-2 text-left border-b border-wiki-border">Network Required</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Typing</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">No</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Predictions</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">No</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Autocorrect</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">No</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Themes</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">No</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Language Packs</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Yes (download only)</td></tr></tbody></table></div>
-<h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Feature</td><td class="px-4 py-2 border-t border-gray-700">Network Required</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Typing</strong></td><td class="px-4 py-2 border-t border-gray-700">No</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Predictions</strong></td><td class="px-4 py-2 border-t border-gray-700">No</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Autocorrect</strong></td><td class="px-4 py-2 border-t border-gray-700">No</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Themes</strong></td><td class="px-4 py-2 border-t border-gray-700">No</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Language Packs</strong></td><td class="px-4 py-2 border-t border-gray-700">Yes (download only)</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
-<h3 id="q-does-cleverkeys-send-data-to-servers-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Does CleverKeys send data to servers?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Does CleverKeys send data to servers?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: No. All processing happens locally on your device. The only network use is downloading language packs.</p>
 
-<h3 id="q-are-my-passwords-safe-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Are my passwords safe?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Are my passwords safe?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Password fields are automatically protected - no learning, no clipboard, no predictions.</p>
 
-<h3 id="q-how-do-i-completely-clear-my-data-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How do I completely clear my data?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I completely clear my data?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Settings > Privacy > Reset All Data. This removes all personal data while keeping the app installed.</p>
 
-<h3 id="q-can-i-use-cleverkeys-without-any-data-storage-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I use CleverKeys without any data storage?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I use CleverKeys without any data storage?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Enable Incognito Mode permanently for zero data retention (note: predictions will be less personalized).</p>
 
-<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="../clipboard/clipboard-history.md" class="text-wiki-accent hover:underline">Clipboard History</a> - Manage clipboard</li>
-<li class="ml-4 py-1">&#8226; <a href="../layouts/profiles.md" class="text-wiki-accent hover:underline">Profiles</a> - Export/import settings</li>
-<li class="ml-4 py-1">&#8226; <a href="../troubleshooting/backup-restore.md" class="text-wiki-accent hover:underline">Backup & Restore</a> - Data management</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../clipboard/clipboard-history.html" class="text-green-400 hover:underline">Clipboard History</a> - Manage clipboard</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../layouts/profiles.html" class="text-green-400 hover:underline">Profiles</a> - Export/import settings</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../troubleshooting/backup-restore.html" class="text-green-400 hover:underline">Backup & Restore</a> - Data management</li>
 </ul>
-                
-        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
-            
-                <a href="settings/neural-settings.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <div class="text-right">
-                        <div class="text-xs uppercase text-gray-500">Previous</div>
-                        <div class="font-medium">Neural Settings</div>
-                    </div>
-                </a>
-            
-            
-                <a href="settings/accessibility.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <div>
-                        <div class="text-xs uppercase text-gray-500">Next</div>
-                        <div class="font-medium">Accessibility</div>
-                    </div>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-            
         </div>
-    
-            </article>
-            
-        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
-            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
-            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
-                
-                    <li class="">
-                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#privacy-philosophy" class="text-gray-400 hover:text-wiki-primary transition-colors">Privacy Philosophy</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#learning-data" class="text-gray-400 hover:text-wiki-primary transition-colors">Learning Data</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#personal-dictionary" class="text-gray-400 hover:text-wiki-primary transition-colors">Personal Dictionary</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#usage-patterns" class="text-gray-400 hover:text-wiki-primary transition-colors">Usage Patterns</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#clipboard-privacy" class="text-gray-400 hover:text-wiki-primary transition-colors">Clipboard Privacy</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#clipboard-history" class="text-gray-400 hover:text-wiki-primary transition-colors">Clipboard History</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#sensitive-fields" class="text-gray-400 hover:text-wiki-primary transition-colors">Sensitive Fields</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#data-storage" class="text-gray-400 hover:text-wiki-primary transition-colors">Data Storage</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#what-s-stored" class="text-gray-400 hover:text-wiki-primary transition-colors">What's Stored</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#storage-location" class="text-gray-400 hover:text-wiki-primary transition-colors">Storage Location</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#secure-input" class="text-gray-400 hover:text-wiki-primary transition-colors">Secure Input</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#password-fields" class="text-gray-400 hover:text-wiki-primary transition-colors">Password Fields</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#incognito-mode" class="text-gray-400 hover:text-wiki-primary transition-colors">Incognito Mode</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#data-export-and-deletion" class="text-gray-400 hover:text-wiki-primary transition-colors">Data Export and Deletion</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#export-your-data" class="text-gray-400 hover:text-wiki-primary transition-colors">Export Your Data</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#delete-data" class="text-gray-400 hover:text-wiki-primary transition-colors">Delete Data</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#privacy-settings-reference" class="text-gray-400 hover:text-wiki-primary transition-colors">Privacy Settings Reference</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#network-privacy" class="text-gray-400 hover:text-wiki-primary transition-colors">Network Privacy</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-does-cleverkeys-send-data-to-servers-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Does CleverKeys send data to servers?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-are-my-passwords-safe-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Are my passwords safe?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-how-do-i-completely-clear-my-data-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How do I completely clear my data?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-can-i-use-cleverkeys-without-any-data-storage-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I use CleverKeys without any data storage?</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
-                    </li>
-                
-            </ul>
-        </nav>
-    
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="settings/neural-settings.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Neural Settings</span>
+            </a>
+            <a href="settings/accessibility.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Accessibility</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
-        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
     </footer>
 </body>
 </html>

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Layouts - CleverKeys Wiki</title>
-    <meta name="description" content="Create your own keyboard layouts">
+    <title>Custom Layouts - CleverKeys User Guide</title>
+    <meta name="description" content="Create your own layout XML">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,30 +12,37 @@
             theme: {
                 extend: {
                     colors: {
-                        'wiki-primary': '#10b981',
-                        'wiki-primary-light': '#34d399',
-                        'wiki-accent': '#3b82f6',
-                        'wiki-dark': '#0d1117',
-                        'wiki-surface': '#161b22',
-                        'wiki-card': '#21262d',
-                        'wiki-border': '#30363d',
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-wiki-dark text-gray-100 min-h-screen">
+<body class="bg-ck-dark text-gray-100 min-h-screen">
     <!-- Nav -->
-    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="../" class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
                 <span class="font-bold">CleverKeys</span>
             </a>
             <div class="flex gap-4">
-                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
-                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
                 <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
             </div>
         </div>
@@ -44,9 +51,11 @@
     <!-- Breadcrumb -->
     <div class="container mx-auto px-6 py-4">
         <div class="flex items-center gap-2 text-sm text-gray-500">
-            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <a href="../" class="hover:text-ck-green">Home</a>
             <span>/</span>
-            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Layouts" class="hover:text-ck-green">Layouts</a>
             <span>/</span>
             <span class="text-gray-300">Custom Layouts</span>
         </div>
@@ -54,46 +63,55 @@
 
     <!-- Header -->
     <header class="container mx-auto px-6 pb-6">
-        <div class="flex items-center gap-3 mb-3">
+        <div class="flex items-center gap-3 mb-4">
             <span class="px-3 py-1 text-sm rounded-full" style="background: #ec489920; color: #ec4899">Layouts</span>
-            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">advanced</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P1</span>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-2">Custom Layouts</h1>
-        <p class="text-xl text-gray-400">Create your own keyboard layouts</p>
-        
-        <div class="flex flex-wrap gap-2 mt-4">
-            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#custom</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#layouts</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#create</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#xml</span>
-        </div>
-    
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Custom Layouts</h1>
+        <p class="text-xl text-gray-400">Create your own layout XML</p>
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-6 pb-20">
-        <div class="flex gap-8">
-            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
-                <h1 class="text-3xl font-bold mb-6 text-white">Custom Layouts</h1>
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300 leading-relaxed">title: Custom Layouts</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Create and edit your own keyboard layouts</p>
+<p class="mb-4 text-gray-300 leading-relaxed">category: Layouts</p>
+<p class="mb-4 text-gray-300 leading-relaxed">difficulty: advanced</p>
+<hr class="border-gray-700 my-6">
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Custom Layouts</h1>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Design your own keyboard layouts from scratch or modify existing layouts to match your preferences.</p>
 
-<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Create personalized layouts</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings > Layouts > Custom Layouts</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Features</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Visual editor, templates, import/export</td></tr></tbody></table></div>
-<h2 id="creating-a-custom-layout" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Creating a Custom Layout</h2>
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Create personalized layouts</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Layouts > Custom Layouts</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Features</strong></td><td class="px-4 py-2 border-t border-gray-700">Visual editor, templates, import/export</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Creating a Custom Layout</h2>
 
-<h3 id="step-1-open-custom-layouts" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 1: Open Custom Layouts</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 1: Open Custom Layouts</h3>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open <strong class="font-semibold text-white">Settings > Layouts</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Custom Layouts</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap <strong class="font-semibold text-white">Create New Layout</strong></li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open <strong class="text-white">Settings > Layouts</strong></li>
+<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Custom Layouts</strong></li>
+<li class="ml-4 text-gray-300">3. Tap <strong class="text-white">Create New Layout</strong></li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 2: Choose Starting Point</h3>
 
-</ul><h3 id="step-2-choose-starting-point" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 2: Choose Starting Point</h3>
-
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Option</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Blank</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Start from scratch</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Template</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">QWERTY, AZERTY, etc.</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Clone</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Copy existing layout</td></tr></tbody></table></div>
-<h3 id="step-3-design-layout" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 3: Design Layout</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Option</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Blank</strong></td><td class="px-4 py-2 border-t border-gray-700">Start from scratch</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Template</strong></td><td class="px-4 py-2 border-t border-gray-700">QWERTY, AZERTY, etc.</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clone</strong></td><td class="px-4 py-2 border-t border-gray-700">Copy existing layout</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 3: Design Layout</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">The visual editor shows:</p>
 
-<pre class="bg-wiki-dark p-4 rounded-lg overflow-x-auto my-4"><code class="language-text">┌─────────────────────────────────────────┐
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">┌─────────────────────────────────────────┐
 <p class="mb-4 text-gray-300 leading-relaxed">│ Layout Name: [My Custom Layout    ]     │</p>
 <p class="mb-4 text-gray-300 leading-relaxed">├─────────────────────────────────────────┤</p>
 <p class="mb-4 text-gray-300 leading-relaxed">│ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ...      │</p>
@@ -104,269 +122,170 @@
 <p class="mb-4 text-gray-300 leading-relaxed">│ [Add Row] [Remove Row] [Key Width]      │</p>
 <p class="mb-4 text-gray-300 leading-relaxed">└─────────────────────────────────────────┘</code></pre></p>
 
-<h3 id="step-4-edit-individual-keys" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 4: Edit Individual Keys</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 4: Edit Individual Keys</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Tap any key to edit:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Primary</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Main character</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Shifted</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Shift character</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Subkeys</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">8-direction subkeys</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Width</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Key width multiplier</td></tr></tbody></table></div>
-<h3 id="step-5-save-and-test" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 5: Save and Test</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Primary</strong></td><td class="px-4 py-2 border-t border-gray-700">Main character</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Shifted</strong></td><td class="px-4 py-2 border-t border-gray-700">Shift character</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Subkeys</strong></td><td class="px-4 py-2 border-t border-gray-700">8-direction subkeys</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Width</strong></td><td class="px-4 py-2 border-t border-gray-700">Key width multiplier</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 5: Save and Test</h3>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Tap <strong class="font-semibold text-white">Save Layout</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Test Layout</strong> to preview</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Make adjustments as needed</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Tap <strong class="font-semibold text-white">Done</strong> when satisfied</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap <strong class="text-white">Save Layout</strong></li>
+<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Test Layout</strong> to preview</li>
+<li class="ml-4 text-gray-300">3. Make adjustments as needed</li>
+<li class="ml-4 text-gray-300">4. Tap <strong class="text-white">Done</strong> when satisfied</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Layout Elements</h2>
 
-</ul><h2 id="layout-elements" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Layout Elements</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Row Configuration</h3>
 
-<h3 id="row-configuration" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Row Configuration</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Row</td><td class="px-4 py-2 border-t border-gray-700">Typical Contents</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Row 1</strong></td><td class="px-4 py-2 border-t border-gray-700">Number row (optional)</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Row 2</strong></td><td class="px-4 py-2 border-t border-gray-700">QWERTY top row</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Row 3</strong></td><td class="px-4 py-2 border-t border-gray-700">Home row (ASDF...)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Row 4</strong></td><td class="px-4 py-2 border-t border-gray-700">Bottom row (ZXCV...)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Row 5</strong></td><td class="px-4 py-2 border-t border-gray-700">Space row</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Key Types</h3>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Row</th><th class="px-4 py-2 text-left border-b border-wiki-border">Typical Contents</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Row 1</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Number row (optional)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Row 2</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">QWERTY top row</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Row 3</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Home row (ASDF...)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Row 4</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Bottom row (ZXCV...)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Row 5</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Space row</td></tr></tbody></table></div>
-<h3 id="key-types" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Key Types</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Type</td><td class="px-4 py-2 border-t border-gray-700">Examples</td><td class="px-4 py-2 border-t border-gray-700">Properties</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Letter</strong></td><td class="px-4 py-2 border-t border-gray-700">A, B, C</td><td class="px-4 py-2 border-t border-gray-700">Has shift variant</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Number</strong></td><td class="px-4 py-2 border-t border-gray-700">1, 2, 3</td><td class="px-4 py-2 border-t border-gray-700">Symbol on shift</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Symbol</strong></td><td class="px-4 py-2 border-t border-gray-700">@, #, $</td><td class="px-4 py-2 border-t border-gray-700">May have shift variant</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Action</strong></td><td class="px-4 py-2 border-t border-gray-700">Shift, Backspace</td><td class="px-4 py-2 border-t border-gray-700">Special behavior</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Space</strong></td><td class="px-4 py-2 border-t border-gray-700">Spacebar</td><td class="px-4 py-2 border-t border-gray-700">Wide key</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Key Width</h3>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Type</th><th class="px-4 py-2 text-left border-b border-wiki-border">Examples</th><th class="px-4 py-2 text-left border-b border-wiki-border">Properties</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Letter</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">A, B, C</td><td class="px-4 py-2 border-b border-wiki-border/50">Has shift variant</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Number</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">1, 2, 3</td><td class="px-4 py-2 border-b border-wiki-border/50">Symbol on shift</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Symbol</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">@, #, $</td><td class="px-4 py-2 border-b border-wiki-border/50">May have shift variant</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Action</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Shift, Backspace</td><td class="px-4 py-2 border-b border-wiki-border/50">Special behavior</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Space</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Spacebar</td><td class="px-4 py-2 border-b border-wiki-border/50">Wide key</td></tr></tbody></table></div>
-<h3 id="key-width" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Key Width</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Width</td><td class="px-4 py-2 border-t border-gray-700">Use Case</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">0.5x</strong></td><td class="px-4 py-2 border-t border-gray-700">Narrow keys</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">1.0x</strong></td><td class="px-4 py-2 border-t border-gray-700">Standard letters</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">1.5x</strong></td><td class="px-4 py-2 border-t border-gray-700">Shift, Tab</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">2.0x</strong></td><td class="px-4 py-2 border-t border-gray-700">Enter key</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">5.0x</strong></td><td class="px-4 py-2 border-t border-gray-700">Spacebar</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Advanced Features</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Width</th><th class="px-4 py-2 text-left border-b border-wiki-border">Use Case</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">0.5x</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Narrow keys</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">1.0x</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Standard letters</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">1.5x</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Shift, Tab</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">2.0x</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Enter key</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">5.0x</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Spacebar</td></tr></tbody></table></div>
-<h2 id="advanced-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Advanced Features</h2>
-
-<h3 id="subkey-configuration" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Subkey Configuration</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Subkey Configuration</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">For each key, define 8 subkeys:</p>
 
-<pre class="bg-wiki-dark p-4 rounded-lg overflow-x-auto my-4"><code class="language-text">[1]   [2]   [3]
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">[1]   [2]   [3]
 <p class="mb-4 text-gray-300 leading-relaxed">      \   |   /</p>
 <p class="mb-4 text-gray-300 leading-relaxed"> [4] -- [Key] -- [5]</p>
 <p class="mb-4 text-gray-300 leading-relaxed">      /   |   \</p>
 <p class="mb-4 text-gray-300 leading-relaxed">    [6]   [7]   [8]</code></pre></p>
 
-<h3 id="key-actions" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Key Actions</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Key Actions</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Assign special actions to keys:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Switch Layout</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Change to specific layout</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Emoji</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Open emoji picker</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Symbols</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Open symbol keyboard</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Voice</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Start voice input</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Macro</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Execute key sequence</td></tr></tbody></table></div>
-<h2 id="import-and-export" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Import and Export</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Switch Layout</strong></td><td class="px-4 py-2 border-t border-gray-700">Change to specific layout</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Emoji</strong></td><td class="px-4 py-2 border-t border-gray-700">Open emoji picker</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Symbols</strong></td><td class="px-4 py-2 border-t border-gray-700">Open symbol keyboard</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Voice</strong></td><td class="px-4 py-2 border-t border-gray-700">Start voice input</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Macro</strong></td><td class="px-4 py-2 border-t border-gray-700">Execute key sequence</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Import and Export</h2>
 
-<h3 id="export-layout" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Export Layout</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Export Layout</h3>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open your custom layout</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Export</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Choose format (JSON or XML)</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Share or save file</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open your custom layout</li>
+<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Export</strong></li>
+<li class="ml-4 text-gray-300">3. Choose format (JSON or XML)</li>
+<li class="ml-4 text-gray-300">4. Share or save file</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Import Layout</h3>
 
-</ul><h3 id="import-layout" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Import Layout</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Custom Layouts</strong></li>
+<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Import</strong></li>
+<li class="ml-4 text-gray-300">3. Select file to import</li>
+<li class="ml-4 text-gray-300">4. Layout appears in list</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Share with Others</h3>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Go to <strong class="font-semibold text-white">Custom Layouts</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Tap <strong class="font-semibold text-white">Import</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Select file to import</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Layout appears in list</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Export your layout</li>
+<li class="ml-4 text-gray-300">2. Share the file</li>
+<li class="ml-4 text-gray-300">3. Recipients import via CleverKeys</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
-</ul><h3 id="share-with-others" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Share with Others</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Start with template</strong>: Easier than blank canvas</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Test frequently</strong>: Use the test feature often</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Small changes</strong>: Make incremental adjustments</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Backup first</strong>: Export before major changes</li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Clone a layout you like and modify just the keys you want to change.</blockquote>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Export your layout</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Share the file</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Recipients import via CleverKeys</li>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Examples</h2>
 
-</ul><h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
-
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Start with template</strong>: Easier than blank canvas</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Test frequently</strong>: Use the test feature often</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Small changes</strong>: Make incremental adjustments</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Backup first</strong>: Export before major changes</li>
-
-</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Clone a layout you like and modify just the keys you want to change.</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
-<h2 id="examples" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Examples</h2>
-
-<h3 id="programming-layout" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Programming Layout</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Programming Layout</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Optimize for coding with symbols accessible:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Add <code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">{</code> <code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">}</code> <code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">[</code> <code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">]</code> as subkeys</li>
-<li class="ml-4 py-1">&#8226; Place <code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">=</code> and <code class="bg-wiki-dark px-1.5 py-0.5 rounded text-wiki-primary">;</code> in easy positions</li>
-<li class="ml-4 py-1">&#8226; Add Tab key in convenient location</li>
-
-</ul><h3 id="one-handed-layout" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">One-Handed Layout</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Add <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">{</code> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">}</code> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">[</code> <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">]</code> as subkeys</li>
+<li class="ml-4 text-gray-300">&#8226; Place <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">=</code> and <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">;</code> in easy positions</li>
+<li class="ml-4 text-gray-300">&#8226; Add Tab key in convenient location</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">One-Handed Layout</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Compact layout for single-hand typing:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; All keys within thumb reach</li>
-<li class="ml-4 py-1">&#8226; Larger key targets</li>
-<li class="ml-4 py-1">&#8226; Essential keys only</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; All keys within thumb reach</li>
+<li class="ml-4 text-gray-300">&#8226; Larger key targets</li>
+<li class="ml-4 text-gray-300">&#8226; Essential keys only</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
 
-</ul><h2 id="settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Settings</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Custom Layouts</strong></td><td class="px-4 py-2 border-t border-gray-700">Layouts</td><td class="px-4 py-2 border-t border-gray-700">Manage custom layouts</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Edit Layout</strong></td><td class="px-4 py-2 border-t border-gray-700">Custom Layouts</td><td class="px-4 py-2 border-t border-gray-700">Open editor</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Export/Import</strong></td><td class="px-4 py-2 border-t border-gray-700">Custom Layouts</td><td class="px-4 py-2 border-t border-gray-700">Share layouts</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Custom Layouts</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Layouts</td><td class="px-4 py-2 border-b border-wiki-border/50">Manage custom layouts</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Edit Layout</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Custom Layouts</td><td class="px-4 py-2 border-b border-wiki-border/50">Open editor</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Export/Import</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Custom Layouts</td><td class="px-4 py-2 border-b border-wiki-border/50">Share layouts</td></tr></tbody></table></div>
-<h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
-
-<h3 id="q-can-i-make-a-layout-with-fewer-rows-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I make a layout with fewer rows?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I make a layout with fewer rows?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Yes, you can remove rows for a more compact layout. Minimum is 2 rows.</p>
 
-<h3 id="q-what-happens-if-i-delete-a-custom-layout-i-m-using-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: What happens if I delete a custom layout I'm using?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: What happens if I delete a custom layout I'm using?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: CleverKeys switches to the next available layout automatically.</p>
 
-<h3 id="q-can-i-share-layouts-between-devices-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I share layouts between devices?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I share layouts between devices?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Yes, export on one device and import on another.</p>
 
-<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="adding-layouts.md" class="text-wiki-accent hover:underline">Adding Layouts</a> - Add custom layouts to keyboard</li>
-<li class="ml-4 py-1">&#8226; <a href="../customization/per-key-actions.md" class="text-wiki-accent hover:underline">Per-Key Actions</a> - Customize subkeys</li>
-<li class="ml-4 py-1">&#8226; <a href="profiles.md" class="text-wiki-accent hover:underline">Profiles</a> - Save layout configurations</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="adding-layouts.html" class="text-green-400 hover:underline">Adding Layouts</a> - Add custom layouts to keyboard</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../customization/per-key-actions.html" class="text-green-400 hover:underline">Per-Key Actions</a> - Customize subkeys</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="profiles.html" class="text-green-400 hover:underline">Profiles</a> - Save layout configurations</li>
 </ul>
-                
-        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
-            
-                <a href="layouts/language-packs.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <div class="text-right">
-                        <div class="text-xs uppercase text-gray-500">Previous</div>
-                        <div class="font-medium">Language Packs</div>
-                    </div>
-                </a>
-            
-            
-                <a href="layouts/profiles.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <div>
-                        <div class="text-xs uppercase text-gray-500">Next</div>
-                        <div class="font-medium">Profiles</div>
-                    </div>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-            
         </div>
-    
-            </article>
-            
-        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
-            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
-            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
-                
-                    <li class="">
-                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#creating-a-custom-layout" class="text-gray-400 hover:text-wiki-primary transition-colors">Creating a Custom Layout</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-1-open-custom-layouts" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 1: Open Custom Layouts</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-2-choose-starting-point" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 2: Choose Starting Point</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-3-design-layout" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 3: Design Layout</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-4-edit-individual-keys" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 4: Edit Individual Keys</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-5-save-and-test" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 5: Save and Test</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#layout-elements" class="text-gray-400 hover:text-wiki-primary transition-colors">Layout Elements</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#row-configuration" class="text-gray-400 hover:text-wiki-primary transition-colors">Row Configuration</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#key-types" class="text-gray-400 hover:text-wiki-primary transition-colors">Key Types</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#key-width" class="text-gray-400 hover:text-wiki-primary transition-colors">Key Width</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#advanced-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Advanced Features</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#subkey-configuration" class="text-gray-400 hover:text-wiki-primary transition-colors">Subkey Configuration</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#key-actions" class="text-gray-400 hover:text-wiki-primary transition-colors">Key Actions</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#import-and-export" class="text-gray-400 hover:text-wiki-primary transition-colors">Import and Export</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#export-layout" class="text-gray-400 hover:text-wiki-primary transition-colors">Export Layout</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#import-layout" class="text-gray-400 hover:text-wiki-primary transition-colors">Import Layout</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#share-with-others" class="text-gray-400 hover:text-wiki-primary transition-colors">Share with Others</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#examples" class="text-gray-400 hover:text-wiki-primary transition-colors">Examples</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#programming-layout" class="text-gray-400 hover:text-wiki-primary transition-colors">Programming Layout</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#one-handed-layout" class="text-gray-400 hover:text-wiki-primary transition-colors">One-Handed Layout</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Settings</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-can-i-make-a-layout-with-fewer-rows-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I make a layout with fewer rows?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-what-happens-if-i-delete-a-custom-layout-i-m-using-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: What happens if I delete a custom layout I'm using?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-can-i-share-layouts-between-devices-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I share layouts between devices?</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
-                    </li>
-                
-            </ul>
-        </nav>
-    
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="layouts/language-packs.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Language Packs</span>
+            </a>
+            <a href="layouts/profiles.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Profiles</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
-        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
     </footer>
 </body>
 </html>

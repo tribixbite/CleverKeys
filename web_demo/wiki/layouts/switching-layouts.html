@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Switching Layouts - CleverKeys Wiki</title>
-    <meta name="description" content="Change between different keyboard layouts">
+    <title>Switching Layouts - CleverKeys User Guide</title>
+    <meta name="description" content="Quick layout switching methods">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,30 +12,37 @@
             theme: {
                 extend: {
                     colors: {
-                        'wiki-primary': '#10b981',
-                        'wiki-primary-light': '#34d399',
-                        'wiki-accent': '#3b82f6',
-                        'wiki-dark': '#0d1117',
-                        'wiki-surface': '#161b22',
-                        'wiki-card': '#21262d',
-                        'wiki-border': '#30363d',
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-wiki-dark text-gray-100 min-h-screen">
+<body class="bg-ck-dark text-gray-100 min-h-screen">
     <!-- Nav -->
-    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="../" class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
                 <span class="font-bold">CleverKeys</span>
             </a>
             <div class="flex gap-4">
-                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
-                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
                 <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
             </div>
         </div>
@@ -44,9 +51,11 @@
     <!-- Breadcrumb -->
     <div class="container mx-auto px-6 py-4">
         <div class="flex items-center gap-2 text-sm text-gray-500">
-            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <a href="../" class="hover:text-ck-green">Home</a>
             <span>/</span>
-            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Layouts" class="hover:text-ck-green">Layouts</a>
             <span>/</span>
             <span class="text-gray-300">Switching Layouts</span>
         </div>
@@ -54,70 +63,79 @@
 
     <!-- Header -->
     <header class="container mx-auto px-6 pb-6">
-        <div class="flex items-center gap-3 mb-3">
+        <div class="flex items-center gap-3 mb-4">
             <span class="px-3 py-1 text-sm rounded-full" style="background: #ec489920; color: #ec4899">Layouts</span>
-            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">beginner</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P1</span>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-2">Switching Layouts</h1>
-        <p class="text-xl text-gray-400">Change between different keyboard layouts</p>
-        
-        <div class="flex flex-wrap gap-2 mt-4">
-            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#switch</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#layouts</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#language</span>
-        </div>
-    
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Switching Layouts</h1>
+        <p class="text-xl text-gray-400">Quick layout switching methods</p>
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-6 pb-20">
-        <div class="flex gap-8">
-            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
-                <h1 class="text-3xl font-bold mb-6 text-white">Switching Layouts</h1>
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300 leading-relaxed">title: Switching Layouts</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Change between keyboard layouts</p>
+<p class="mb-4 text-gray-300 leading-relaxed">category: Layouts</p>
+<p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
+<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/layouts/switching-layouts-spec.md</p>
+<hr class="border-gray-700 my-6">
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Switching Layouts</h1>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Quickly switch between your installed keyboard layouts using gestures, buttons, or shortcuts.</p>
 
-<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Change active keyboard layout</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Methods</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Gesture, button, shortcut</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Layouts</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Between all installed layouts</td></tr></tbody></table></div>
-<h2 id="switching-methods" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Switching Methods</h2>
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Change active keyboard layout</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Methods</strong></td><td class="px-4 py-2 border-t border-gray-700">Gesture, button, shortcut</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Layouts</strong></td><td class="px-4 py-2 border-t border-gray-700">Between all installed layouts</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Switching Methods</h2>
 
-<h3 id="method-1-globe-key" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 1: Globe Key</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 1: Globe Key</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">The globe/language key on the bottom row:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Tap</strong> to cycle to next layout</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Long-press</strong> to show layout picker</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Swipe</strong> for quick access to specific layouts</li>
-
-</ul><h3 id="method-2-swipe-gesture" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 2: Swipe Gesture</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Tap</strong> to cycle to next layout</li>
+<li class="ml-4 text-gray-300">2. <strong class="text-white">Long-press</strong> to show layout picker</li>
+<li class="ml-4 text-gray-300">3. <strong class="text-white">Swipe</strong> for quick access to specific layouts</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Swipe Gesture</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Use the spacebar gesture:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Swipe left</strong> on spacebar → Previous layout</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Swipe right</strong> on spacebar → Next layout</li>
-
-</ul><h3 id="method-3-layout-picker" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 3: Layout Picker</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Swipe left</strong> on spacebar → Previous layout</li>
+<li class="ml-4 text-gray-300">2. <strong class="text-white">Swipe right</strong> on spacebar → Next layout</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 3: Layout Picker</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Access the full layout list:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Long-press</strong> the globe key</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Layout picker overlay appears</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Tap</strong> any layout to switch</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Long-press</strong> the globe key</li>
+<li class="ml-4 text-gray-300">2. Layout picker overlay appears</li>
+<li class="ml-4 text-gray-300">3. <strong class="text-white">Tap</strong> any layout to switch</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 4: From Command Palette</h3>
 
-</ul><h3 id="method-4-from-command-palette" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Method 4: From Command Palette</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open command palette (long-press settings)</li>
+<li class="ml-4 text-gray-300">2. Type "layout" or "switch"</li>
+<li class="ml-4 text-gray-300">3. Select <strong class="text-white">Switch Layout</strong></li>
+<li class="ml-4 text-gray-300">4. Choose target layout</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Switch vs Full Switch</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Open command palette (long-press settings)</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Type "layout" or "switch"</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Select <strong class="font-semibold text-white">Switch Layout</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Choose target layout</li>
-
-</ul><h2 id="quick-switch-vs-full-switch" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Switch vs Full Switch</h2>
-
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Type</th><th class="px-4 py-2 text-left border-b border-wiki-border">Behavior</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Quick Switch</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Tap globe - cycles through active layouts</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Full Switch</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Long-press globe - shows all layouts</td></tr></tbody></table></div>
-<h2 id="layout-indicator" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Layout Indicator</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Type</td><td class="px-4 py-2 border-t border-gray-700">Behavior</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Quick Switch</strong></td><td class="px-4 py-2 border-t border-gray-700">Tap globe - cycles through active layouts</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Full Switch</strong></td><td class="px-4 py-2 border-t border-gray-700">Long-press globe - shows all layouts</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Layout Indicator</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">When you switch layouts, a brief indicator shows:</p>
 
-<pre class="bg-wiki-dark p-4 rounded-lg overflow-x-auto my-4"><code class="language-text">┌─────────────────────────────────────┐
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">┌─────────────────────────────────────┐
 <p class="mb-4 text-gray-300 leading-relaxed">│         ┌───────────────┐           │</p>
 <p class="mb-4 text-gray-300 leading-relaxed">│         │   QWERTY      │           │ ← Layout indicator</p>
 <p class="mb-4 text-gray-300 leading-relaxed">│         │   English     │           │</p>
@@ -127,183 +145,97 @@
 <p class="mb-4 text-gray-300 leading-relaxed">│  │ Q │ │ W │ │ E │ │ R │ │ T │     │</p>
 <p class="mb-4 text-gray-300 leading-relaxed">└─────────────────────────────────────┘</code></pre></p>
 
-<h2 id="active-layout-order" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Active Layout Order</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Active Layout Order</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Layouts cycle in the order set in Settings:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Go to <strong class="font-semibold text-white">Settings > Layouts</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Drag layouts to reorder</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Layouts at top cycle first</li>
-
-</ul><h2 id="per-app-layouts" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Per-App Layouts</h2>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Layouts</strong></li>
+<li class="ml-4 text-gray-300">2. Drag layouts to reorder</li>
+<li class="ml-4 text-gray-300">3. Layouts at top cycle first</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Per-App Layouts</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">CleverKeys can remember layout preferences per app:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Enable <strong class="font-semibold text-white">Settings > Layouts > Per-App Layout</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Switch to desired layout in each app</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> CleverKeys remembers your choice</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Enable <strong class="text-white">Settings > Layouts > Per-App Layout</strong></li>
+<li class="ml-4 text-gray-300">2. Switch to desired layout in each app</li>
+<li class="ml-4 text-gray-300">3. CleverKeys remembers your choice</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
-</ul><h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Pin favorites</strong>: Move frequently used layouts to top</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Hide unused</strong>: Disable layouts you rarely use</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Learn gestures</strong>: Spacebar swipe is fastest</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Visual cue</strong>: Watch for layout indicator when switching</li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Double-tap the globe key to toggle between your two most recently used layouts.</blockquote>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Pin favorites</strong>: Move frequently used layouts to top</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Hide unused</strong>: Disable layouts you rarely use</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Learn gestures</strong>: Spacebar swipe is fastest</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Visual cue</strong>: Watch for layout indicator when switching</li>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Globe Key Behavior</h2>
 
-</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Double-tap the globe key to toggle between your two most recently used layouts.</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
-<h2 id="globe-key-behavior" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Globe Key Behavior</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Result</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Tap</strong></td><td class="px-4 py-2 border-t border-gray-700">Next layout</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Double-tap</strong></td><td class="px-4 py-2 border-t border-gray-700">Toggle last two layouts</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long-press</strong></td><td class="px-4 py-2 border-t border-gray-700">Show layout picker</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe up</strong></td><td class="px-4 py-2 border-t border-gray-700">Show layout picker</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Spacebar Gestures</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th><th class="px-4 py-2 text-left border-b border-wiki-border">Result</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Tap</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Next layout</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Double-tap</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Toggle last two layouts</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Long-press</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Show layout picker</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Swipe up</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Show layout picker</td></tr></tbody></table></div>
-<h2 id="spacebar-gestures" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Spacebar Gestures</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Gesture</td><td class="px-4 py-2 border-t border-gray-700">Result</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe left</strong></td><td class="px-4 py-2 border-t border-gray-700">Previous layout</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe right</strong></td><td class="px-4 py-2 border-t border-gray-700">Next layout</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long swipe</strong></td><td class="px-4 py-2 border-t border-gray-700">Skip to first/last layout</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Gesture</th><th class="px-4 py-2 text-left border-b border-wiki-border">Result</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Swipe left</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Previous layout</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Swipe right</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Next layout</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Long swipe</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Skip to first/last layout</td></tr></tbody></table></div>
-<h2 id="settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Settings</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Layout Order</strong></td><td class="px-4 py-2 border-t border-gray-700">Layouts</td><td class="px-4 py-2 border-t border-gray-700">Set cycle order</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Show Globe</strong></td><td class="px-4 py-2 border-t border-gray-700">Layouts</td><td class="px-4 py-2 border-t border-gray-700">Show/hide globe key</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Per-App Layout</strong></td><td class="px-4 py-2 border-t border-gray-700">Layouts</td><td class="px-4 py-2 border-t border-gray-700">Remember per app</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Show Indicator</strong></td><td class="px-4 py-2 border-t border-gray-700">Layouts</td><td class="px-4 py-2 border-t border-gray-700">Layout change indicator</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Layout Order</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Layouts</td><td class="px-4 py-2 border-b border-wiki-border/50">Set cycle order</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Show Globe</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Layouts</td><td class="px-4 py-2 border-b border-wiki-border/50">Show/hide globe key</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Per-App Layout</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Layouts</td><td class="px-4 py-2 border-b border-wiki-border/50">Remember per app</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Show Indicator</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Layouts</td><td class="px-4 py-2 border-b border-wiki-border/50">Layout change indicator</td></tr></tbody></table></div>
-<h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
-
-<h3 id="q-how-do-i-quickly-switch-between-two-languages-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How do I quickly switch between two languages?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I quickly switch between two languages?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Double-tap the globe key to toggle between your two most recently used layouts.</p>
 
-<h3 id="q-can-i-disable-certain-layouts-from-quick-switch-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I disable certain layouts from quick switch?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I disable certain layouts from quick switch?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Yes, in Settings > Layouts, uncheck "Include in Quick Switch" for layouts you want to access only via the full picker.</p>
 
-<h3 id="q-why-doesn-t-the-globe-key-appear-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Why doesn't the globe key appear?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why doesn't the globe key appear?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: You need at least 2 layouts installed. Go to Settings > Layouts > Add Layout.</p>
 
-<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="adding-layouts.md" class="text-wiki-accent hover:underline">Adding Layouts</a> - Install new layouts</li>
-<li class="ml-4 py-1">&#8226; <a href="multi-language.md" class="text-wiki-accent hover:underline">Multi-Language</a> - Use multiple languages</li>
-<li class="ml-4 py-1">&#8226; <a href="profiles.md" class="text-wiki-accent hover:underline">Profiles</a> - Save layout configurations</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="adding-layouts.html" class="text-green-400 hover:underline">Adding Layouts</a> - Install new layouts</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="multi-language.html" class="text-green-400 hover:underline">Multi-Language</a> - Use multiple languages</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="profiles.html" class="text-green-400 hover:underline">Profiles</a> - Save layout configurations</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
 
-</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/layouts/switching-layouts-spec.html" class="text-green-400 hover:underline">Switching Layouts Technical Specification</a>.</p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/layouts/switching-layouts-spec.md" class="text-wiki-accent hover:underline">Switching Layouts Technical Specification</a>.</p>
-
-                
-        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
-            
-                <a href="layouts/adding-layouts.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <div class="text-right">
-                        <div class="text-xs uppercase text-gray-500">Previous</div>
-                        <div class="font-medium">Adding Layouts</div>
-                    </div>
-                </a>
-            
-            
-                <a href="layouts/multi-language.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <div>
-                        <div class="text-xs uppercase text-gray-500">Next</div>
-                        <div class="font-medium">Multi-Language Typing</div>
-                    </div>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-            
         </div>
-    
-            </article>
-            
-        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
-            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
-            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
-                
-                    <li class="">
-                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#switching-methods" class="text-gray-400 hover:text-wiki-primary transition-colors">Switching Methods</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#method-1-globe-key" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 1: Globe Key</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#method-2-swipe-gesture" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 2: Swipe Gesture</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#method-3-layout-picker" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 3: Layout Picker</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#method-4-from-command-palette" class="text-gray-400 hover:text-wiki-primary transition-colors">Method 4: From Command Palette</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#quick-switch-vs-full-switch" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Switch vs Full Switch</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#layout-indicator" class="text-gray-400 hover:text-wiki-primary transition-colors">Layout Indicator</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#active-layout-order" class="text-gray-400 hover:text-wiki-primary transition-colors">Active Layout Order</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#per-app-layouts" class="text-gray-400 hover:text-wiki-primary transition-colors">Per-App Layouts</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#globe-key-behavior" class="text-gray-400 hover:text-wiki-primary transition-colors">Globe Key Behavior</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#spacebar-gestures" class="text-gray-400 hover:text-wiki-primary transition-colors">Spacebar Gestures</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Settings</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-how-do-i-quickly-switch-between-two-languages-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How do I quickly switch between two languages?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-can-i-disable-certain-layouts-from-quick-switch-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I disable certain layouts from quick switch?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-why-doesn-t-the-globe-key-appear-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Why doesn't the globe key appear?</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
-                    </li>
-                
-            </ul>
-        </nav>
-    
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="layouts/adding-layouts.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Adding Layouts</span>
+            </a>
+            <a href="layouts/multi-language.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Multi-Language Typing</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
-        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
     </footer>
 </body>
 </html>

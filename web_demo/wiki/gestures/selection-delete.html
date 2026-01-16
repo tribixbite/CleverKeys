@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Selection Delete - CleverKeys Wiki</title>
-    <meta name="description" content="Select and delete text with backspace gesture">
+    <title>Selection-Delete Mode - CleverKeys User Guide</title>
+    <meta name="description" content="Select text by holding backspace">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,30 +12,37 @@
             theme: {
                 extend: {
                     colors: {
-                        'wiki-primary': '#10b981',
-                        'wiki-primary-light': '#34d399',
-                        'wiki-accent': '#3b82f6',
-                        'wiki-dark': '#0d1117',
-                        'wiki-surface': '#161b22',
-                        'wiki-card': '#21262d',
-                        'wiki-border': '#30363d',
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-wiki-dark text-gray-100 min-h-screen">
+<body class="bg-ck-dark text-gray-100 min-h-screen">
     <!-- Nav -->
-    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="../" class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
                 <span class="font-bold">CleverKeys</span>
             </a>
             <div class="flex gap-4">
-                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
-                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
                 <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
             </div>
         </div>
@@ -44,227 +51,170 @@
     <!-- Breadcrumb -->
     <div class="container mx-auto px-6 py-4">
         <div class="flex items-center gap-2 text-sm text-gray-500">
-            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <a href="../" class="hover:text-ck-green">Home</a>
             <span>/</span>
-            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
             <span>/</span>
-            <span class="text-gray-300">Selection Delete</span>
+            <a href="./?category=Gestures" class="hover:text-ck-green">Gestures</a>
+            <span>/</span>
+            <span class="text-gray-300">Selection-Delete Mode</span>
         </div>
     </div>
 
     <!-- Header -->
     <header class="container mx-auto px-6 pb-6">
-        <div class="flex items-center gap-3 mb-3">
+        <div class="flex items-center gap-3 mb-4">
             <span class="px-3 py-1 text-sm rounded-full" style="background: #8b5cf620; color: #8b5cf6">Gestures</span>
-            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">advanced</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P0</span>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-2">Selection Delete</h1>
-        <p class="text-xl text-gray-400">Select and delete text with backspace gesture</p>
-        
-        <div class="flex flex-wrap gap-2 mt-4">
-            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#selection</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#delete</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#backspace</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#text</span>
-        </div>
-    
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Selection-Delete Mode</h1>
+        <p class="text-xl text-gray-400">Select text by holding backspace</p>
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-6 pb-20">
-        <div class="flex gap-8">
-            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
-                <h1 class="text-3xl font-bold mb-6 text-white">Selection Delete</h1>
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300 leading-relaxed">title: Selection Delete</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Select and delete text with backspace gesture</p>
+<p class="mb-4 text-gray-300 leading-relaxed">category: Gestures</p>
+<p class="mb-4 text-gray-300 leading-relaxed">difficulty: advanced</p>
+<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/gestures/selection-delete-spec.md</p>
+<hr class="border-gray-700 my-6">
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Selection Delete</h1>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Selection Delete mode lets you select text by holding backspace and moving your finger like a joystick. When you release, the selected text is deleted.</p>
 
-<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Quickly select and delete text</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Activation</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Short swipe + hold on backspace</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Movement</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Joystick-style text selection</td></tr></tbody></table></div>
-<h2 id="how-it-works" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">How It Works</h2>
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Quickly select and delete text</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Activation</strong></td><td class="px-4 py-2 border-t border-gray-700">Short swipe + hold on backspace</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Movement</strong></td><td class="px-4 py-2 border-t border-gray-700">Joystick-style text selection</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How It Works</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Do a short swipe on backspace and hold</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Move your finger to select text (like TrackPoint)</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Release to delete the selected text</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Do a short swipe on backspace and hold</li>
+<li class="ml-4 text-gray-300">2. Move your finger to select text (like TrackPoint)</li>
+<li class="ml-4 text-gray-300">3. Release to delete the selected text</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">The gesture combines selection and deletion in one fluid motion.</p>
 
-</ul><p class="mb-4 text-gray-300 leading-relaxed">The gesture combines selection and deletion in one fluid motion.</p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How to Use</h2>
 
-<h2 id="how-to-use" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">How to Use</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 1: Short Swipe on Backspace</h3>
 
-<h3 id="step-1-short-swipe-on-backspace" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 1: Short Swipe on Backspace</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">Touch backspace and do a small swipe in any direction, then <strong class="text-white">hold</strong> without lifting.</p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Touch backspace and do a small swipe in any direction, then <strong class="font-semibold text-white">hold</strong> without lifting.</p>
-
-<h3 id="step-2-selection-mode-activates" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 2: Selection Mode Activates</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 2: Selection Mode Activates</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">After holding briefly, selection mode activates. You'll feel a haptic pulse.</p>
 
-<h3 id="step-3-move-to-select" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 3: Move to Select</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 3: Move to Select</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Move your finger in the direction you want to select:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Direction</th><th class="px-4 py-2 text-left border-b border-wiki-border">Selection</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Left</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Select characters to the left</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Right</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Select characters to the right</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Up</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Select lines above</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Down</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Select lines below</td></tr></tbody></table></div>
-<h3 id="step-4-release-to-delete" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Step 4: Release to Delete</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Direction</td><td class="px-4 py-2 border-t border-gray-700">Selection</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Left</strong></td><td class="px-4 py-2 border-t border-gray-700">Select characters to the left</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Right</strong></td><td class="px-4 py-2 border-t border-gray-700">Select characters to the right</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Up</strong></td><td class="px-4 py-2 border-t border-gray-700">Select lines above</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Down</strong></td><td class="px-4 py-2 border-t border-gray-700">Select lines below</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 4: Release to Delete</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Lift your finger. All selected text is deleted.</p>
 
-<div class="callout callout-warning bg-amber-900/20 border-l-4 border-amber-500 p-4 my-4 rounded-r">
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-amber-400 mb-1">Warning</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">This action cannot be easily undone. Select carefully!</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
-<h2 id="bidirectional-selection" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Bidirectional Selection</h2>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!WARNING]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">This action cannot be easily undone. Select carefully!</blockquote>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Bidirectional Selection</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">You can change direction while selecting:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Start selecting left</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Move finger right to reduce selection</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Move further right to select in the other direction</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Start selecting left</li>
+<li class="ml-4 text-gray-300">2. Move finger right to reduce selection</li>
+<li class="ml-4 text-gray-300">3. Move further right to select in the other direction</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">The selection follows your finger movement continuously.</p>
 
-</ul><p class="mb-4 text-gray-300 leading-relaxed">The selection follows your finger movement continuously.</p>
-
-<h2 id="vertical-selection" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Vertical Selection</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Vertical Selection</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Moving up/down selects by lines:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Vertical Threshold</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">How much vertical movement triggers line selection</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Vertical Speed</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">How fast line selection moves</td></tr></tbody></table></div>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Vertical Threshold</strong></td><td class="px-4 py-2 border-t border-gray-700">How much vertical movement triggers line selection</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Vertical Speed</strong></td><td class="px-4 py-2 border-t border-gray-700">How fast line selection moves</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <p class="mb-4 text-gray-300 leading-relaxed">Configure in Settings > Gesture Tuning > Selection-Delete Mode.</p>
 
-<h2 id="speed-control" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Speed Control</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Speed Control</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Like TrackPoint, speed depends on distance:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Near center</strong>: Slow selection (precise)</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Far from center</strong>: Fast selection</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Vertical</strong>: Slower than horizontal (configurable)</li>
-
-</ul><h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
-
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Small deletions</strong>: Don't move far, quick release</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Large deletions</strong>: Swipe to edge for fast selection</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Change direction</strong>: Move opposite way to deselect</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Cancel</strong>: Move back to center and release (selects nothing)</li>
-
-</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Practice with non-important text first. The gesture takes some getting used to.</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
-<h2 id="difference-from-regular-backspace" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Difference from Regular Backspace</h2>
-
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th><th class="px-4 py-2 text-left border-b border-wiki-border">Regular Backspace</th><th class="px-4 py-2 text-left border-b border-wiki-border">Selection Delete</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Gesture</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Tap or hold</td><td class="px-4 py-2 border-b border-wiki-border/50">Short swipe + hold</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Deletes</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">One char / word at a time</td><td class="px-4 py-2 border-b border-wiki-border/50">Selected region at once</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Direction</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Backwards only</td><td class="px-4 py-2 border-b border-wiki-border/50">Any direction</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Speed</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Fixed repeat rate</td><td class="px-4 py-2 border-b border-wiki-border/50">Variable</td></tr></tbody></table></div>
-<h2 id="settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Settings</h2>
-
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Vertical Threshold</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Gesture Tuning</td><td class="px-4 py-2 border-b border-wiki-border/50">% of key height for vertical activation</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Vertical Speed</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Gesture Tuning</td><td class="px-4 py-2 border-b border-wiki-border/50">Speed multiplier for line selection</td></tr></tbody></table></div>
-<p class="mb-4 text-gray-300 leading-relaxed">Default values:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Vertical Threshold: 40%</li>
-<li class="ml-4 py-1">&#8226; Vertical Speed: 0.4x (slower than horizontal)</li>
-
-</ul><h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
-
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="trackpoint-mode.md" class="text-wiki-accent hover:underline">TrackPoint Mode</a> - Similar joystick for cursor</li>
-<li class="ml-4 py-1">&#8226; <a href="cursor-navigation.md" class="text-wiki-accent hover:underline">Cursor Navigation</a> - Basic cursor movement</li>
-<li class="ml-4 py-1">&#8226; <a href="short-swipes.md" class="text-wiki-accent hover:underline">Short Swipes</a> - Regular short swipe on backspace deletes word</li>
-
-</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/gestures/selection-delete-spec.md" class="text-wiki-accent hover:underline">Selection Delete Technical Specification</a> for implementation details including:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; FLAG_P_SELECTION_DELETE_MODE flag</li>
-<li class="ml-4 py-1">&#8226; Shift+Arrow key simulation</li>
-<li class="ml-4 py-1">&#8226; Axis tracking algorithm</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Near center</strong>: Slow selection (precise)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Far from center</strong>: Fast selection</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Vertical</strong>: Slower than horizontal (configurable)</li>
 </ul>
-                
-        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
-            
-                <a href="gestures/cursor-navigation.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <div class="text-right">
-                        <div class="text-xs uppercase text-gray-500">Previous</div>
-                        <div class="font-medium">Cursor Navigation</div>
-                    </div>
-                </a>
-            
-            
-                <a href="gestures/trackpoint-mode.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <div>
-                        <div class="text-xs uppercase text-gray-500">Next</div>
-                        <div class="font-medium">TrackPoint Mode</div>
-                    </div>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-            
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Small deletions</strong>: Don't move far, quick release</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Large deletions</strong>: Swipe to edge for fast selection</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Change direction</strong>: Move opposite way to deselect</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Cancel</strong>: Move back to center and release (selects nothing)</li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Practice with non-important text first. The gesture takes some getting used to.</blockquote>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Difference from Regular Backspace</h2>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Regular Backspace</td><td class="px-4 py-2 border-t border-gray-700">Selection Delete</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Gesture</strong></td><td class="px-4 py-2 border-t border-gray-700">Tap or hold</td><td class="px-4 py-2 border-t border-gray-700">Short swipe + hold</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Deletes</strong></td><td class="px-4 py-2 border-t border-gray-700">One char / word at a time</td><td class="px-4 py-2 border-t border-gray-700">Selected region at once</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Direction</strong></td><td class="px-4 py-2 border-t border-gray-700">Backwards only</td><td class="px-4 py-2 border-t border-gray-700">Any direction</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Speed</strong></td><td class="px-4 py-2 border-t border-gray-700">Fixed repeat rate</td><td class="px-4 py-2 border-t border-gray-700">Variable</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Vertical Threshold</strong></td><td class="px-4 py-2 border-t border-gray-700">Gesture Tuning</td><td class="px-4 py-2 border-t border-gray-700">% of key height for vertical activation</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Vertical Speed</strong></td><td class="px-4 py-2 border-t border-gray-700">Gesture Tuning</td><td class="px-4 py-2 border-t border-gray-700">Speed multiplier for line selection</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">Default values:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Vertical Threshold: 40%</li>
+<li class="ml-4 text-gray-300">&#8226; Vertical Speed: 0.4x (slower than horizontal)</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="trackpoint-mode.html" class="text-green-400 hover:underline">TrackPoint Mode</a> - Similar joystick for cursor</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="cursor-navigation.html" class="text-green-400 hover:underline">Cursor Navigation</a> - Basic cursor movement</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="short-swipes.html" class="text-green-400 hover:underline">Short Swipes</a> - Regular short swipe on backspace deletes word</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/gestures/selection-delete-spec.html" class="text-green-400 hover:underline">Selection Delete Technical Specification</a> for implementation details including:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; FLAG_P_SELECTION_DELETE_MODE flag</li>
+<li class="ml-4 text-gray-300">&#8226; Shift+Arrow key simulation</li>
+<li class="ml-4 text-gray-300">&#8226; Axis tracking algorithm</li>
+</ul>
         </div>
-    
-            </article>
-            
-        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
-            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
-            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
-                
-                    <li class="">
-                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#how-it-works" class="text-gray-400 hover:text-wiki-primary transition-colors">How It Works</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#how-to-use" class="text-gray-400 hover:text-wiki-primary transition-colors">How to Use</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-1-short-swipe-on-backspace" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 1: Short Swipe on Backspace</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-2-selection-mode-activates" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 2: Selection Mode Activates</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-3-move-to-select" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 3: Move to Select</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#step-4-release-to-delete" class="text-gray-400 hover:text-wiki-primary transition-colors">Step 4: Release to Delete</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#bidirectional-selection" class="text-gray-400 hover:text-wiki-primary transition-colors">Bidirectional Selection</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#vertical-selection" class="text-gray-400 hover:text-wiki-primary transition-colors">Vertical Selection</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#speed-control" class="text-gray-400 hover:text-wiki-primary transition-colors">Speed Control</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#difference-from-regular-backspace" class="text-gray-400 hover:text-wiki-primary transition-colors">Difference from Regular Backspace</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Settings</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
-                    </li>
-                
-            </ul>
-        </nav>
-    
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="gestures/cursor-navigation.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Cursor Navigation</span>
+            </a>
+            <a href="gestures/trackpoint-mode.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">TrackPoint Mode</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
-        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
     </footer>
 </body>
 </html>

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basic Typing - CleverKeys Wiki</title>
-    <meta name="description" content="Learn tap typing and basic shortcuts">
+    <title>Basic Typing - CleverKeys User Guide</title>
+    <meta name="description" content="Tap and swipe typing fundamentals">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,30 +12,37 @@
             theme: {
                 extend: {
                     colors: {
-                        'wiki-primary': '#10b981',
-                        'wiki-primary-light': '#34d399',
-                        'wiki-accent': '#3b82f6',
-                        'wiki-dark': '#0d1117',
-                        'wiki-surface': '#161b22',
-                        'wiki-card': '#21262d',
-                        'wiki-border': '#30363d',
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-wiki-dark text-gray-100 min-h-screen">
+<body class="bg-ck-dark text-gray-100 min-h-screen">
     <!-- Nav -->
-    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="../" class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
                 <span class="font-bold">CleverKeys</span>
             </a>
             <div class="flex gap-4">
-                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
-                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
                 <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
             </div>
         </div>
@@ -44,9 +51,11 @@
     <!-- Breadcrumb -->
     <div class="container mx-auto px-6 py-4">
         <div class="flex items-center gap-2 text-sm text-gray-500">
-            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <a href="../" class="hover:text-ck-green">Home</a>
             <span>/</span>
-            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Getting%20Started" class="hover:text-ck-green">Getting Started</a>
             <span>/</span>
             <span class="text-gray-300">Basic Typing</span>
         </div>
@@ -54,206 +63,114 @@
 
     <!-- Header -->
     <header class="container mx-auto px-6 pb-6">
-        <div class="flex items-center gap-3 mb-3">
+        <div class="flex items-center gap-3 mb-4">
             <span class="px-3 py-1 text-sm rounded-full" style="background: #10b98120; color: #10b981">Getting Started</span>
-            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">beginner</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P0</span>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-2">Basic Typing</h1>
-        <p class="text-xl text-gray-400">Learn tap typing and basic shortcuts</p>
-        
-        <div class="flex flex-wrap gap-2 mt-4">
-            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#typing</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#basics</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#shortcuts</span>
-        </div>
-    
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Basic Typing</h1>
+        <p class="text-xl text-gray-400">Tap and swipe typing fundamentals</p>
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-6 pb-20">
-        <div class="flex gap-8">
-            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
-                <h1 class="text-3xl font-bold mb-6 text-white">Basic Typing</h1>
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Basic Typing</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Learn the fundamentals of typing with CleverKeys, from simple taps to useful shortcuts.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys supports two main input methods: tap typing and swipe typing. This guide covers the fundamentals.</p>
 
-<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tap Typing</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Type text using tap and basic gestures</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Difficulty</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Beginner</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Time to learn</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">5 minutes</td></tr></tbody></table></div>
-<h2 id="tap-typing" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tap Typing</h2>
+<p class="mb-4 text-gray-300 leading-relaxed">Tap typing works like any standard keyboard:</p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Tap individual keys to type letters:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Tap each key to type the corresponding letter</li>
+<li class="ml-4 text-gray-300">&#8226; Tap <strong class="text-white">Shift</strong> to capitalize the next letter</li>
+<li class="ml-4 text-gray-300">&#8226; Double-tap <strong class="text-white">Shift</strong> for CAPS LOCK</li>
+<li class="ml-4 text-gray-300">&#8226; Tap <strong class="text-white">Backspace</strong> to delete the last character</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Swipe Typing</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Tap a letter</strong> - Types that letter</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Tap space</strong> - Inserts a space</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Tap backspace</strong> - Deletes previous character</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> <strong class="font-semibold text-white">Tap enter</strong> - New line or submit (depends on app)</li>
+<p class="mb-4 text-gray-300 leading-relaxed">Swipe typing lets you type words by drawing a path through the letters:</p>
 
-</ul><h3 id="shift-and-caps-lock" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Shift and Caps Lock</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Place your finger on the first letter</li>
+<li class="ml-4 text-gray-300">2. Without lifting, drag through each letter of the word</li>
+<li class="ml-4 text-gray-300">3. Lift your finger when done</li>
+<li class="ml-4 text-gray-300">4. CleverKeys predicts your word using neural AI</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Example: Typing "hello"</h3>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Tap shift once</strong> - Next letter is uppercase</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Double-tap shift</strong> - Caps lock (all uppercase)</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Tap shift again</strong> - Return to lowercase</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Start on <strong class="text-white">H</strong></li>
+<li class="ml-4 text-gray-300">2. Slide to <strong class="text-white">E</strong></li>
+<li class="ml-4 text-gray-300">3. Slide to <strong class="text-white">L</strong> (stay there briefly for double L)</li>
+<li class="ml-4 text-gray-300">4. Slide to <strong class="text-white">O</strong></li>
+<li class="ml-4 text-gray-300">5. Lift your finger</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">The neural prediction engine analyzes your path and suggests "hello".</p>
 
-</ul><h3 id="numbers-and-symbols" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Numbers and Symbols</h3>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Predictions Bar</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Tap ?123</strong> - Switch to numbers/symbols</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Tap ABC</strong> - Return to letters</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Long-press a key</strong> - See additional characters</li>
+<p class="mb-4 text-gray-300 leading-relaxed">The prediction bar appears above the keyboard showing word suggestions:</p>
 
-</ul><h2 id="using-predictions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Using Predictions</h2>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Tap</strong> a suggestion to insert it</li>
+<li class="ml-4 text-gray-300">&#8226; The <strong class="text-white">center</strong> suggestion is usually the best match</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Long-press</strong> a suggestion to see alternatives</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Auto-Corrections</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">As you type, predictions appear above the keyboard:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys automatically corrects common typos:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Center prediction</strong> - Best match (tap to insert)</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> <strong class="font-semibold text-white">Side predictions</strong> - Alternative suggestions</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> <strong class="font-semibold text-white">Tap a prediction</strong> - Replaces current word</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Mistyped letters are fixed</li>
+<li class="ml-4 text-gray-300">&#8226; Capitalization is corrected (sentence start)</li>
+<li class="ml-4 text-gray-300">&#8226; Double-space inserts a period</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Special Keys</h2>
 
-</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">Tap the center prediction or press space to accept it.</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
-<h2 id="useful-shortcuts" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Useful Shortcuts</h2>
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">Key</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Action</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Shift</strong></td><td class="px-4 py-2 border-t border-gray-700">Capitalize next letter</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Backspace</strong></td><td class="px-4 py-2 border-t border-gray-700">Delete last character</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Space</strong></td><td class="px-4 py-2 border-t border-gray-700">Insert space, slide for cursor</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enter</strong></td><td class="px-4 py-2 border-t border-gray-700">New line or submit</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">?123</strong></td><td class="px-4 py-2 border-t border-gray-700">Switch to numbers/symbols</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Gestures on Keys</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Shortcut</th><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Double-tap space</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Insert period and space</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Long-press period</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">More punctuation options</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Long-press comma</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Open settings</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Swipe backspace left</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Delete entire word</td></tr></tbody></table></div>
-<h2 id="basic-punctuation" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Basic Punctuation</h2>
+<p class="mb-4 text-gray-300 leading-relaxed">Each key supports directional swipes:</p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Access common punctuation:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Swipe up</strong> on a letter: often types the uppercase version</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Swipe in any direction</strong>: customizable actions</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../gestures/short-swipes.html" class="text-green-400 hover:underline">Short Swipes</a> for gesture details.</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Period</strong>: Bottom row, next to space</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Comma</strong>: Bottom row, left of space</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Question mark</strong>: Short swipe up on period</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Exclamation</strong>: Short swipe up on comma</li>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips for Beginners</h2>
 
-</ul><h2 id="moving-the-cursor" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Moving the Cursor</h2>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Start with tap typing</strong> to learn the layout</li>
+<li class="ml-4 text-gray-300">2. <strong class="text-white">Try swipe typing</strong> for common words first</li>
+<li class="ml-4 text-gray-300">3. <strong class="text-white">Trust the predictions</strong> - lift your finger and see the suggestions</li>
+<li class="ml-4 text-gray-300">4. <strong class="text-white">Use the prediction bar</strong> to save keystrokes</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Next Steps</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Tap in text</strong> - Move cursor to that position</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Slide on spacebar</strong> - Move cursor left/right</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Arrow keys</strong> - If enabled in settings</li>
-
-</ul><h2 id="tips-for-beginners" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips for Beginners</h2>
-
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Don't rush</strong>: Accuracy improves with practice</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Use predictions</strong>: They save keystrokes</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Try swipe typing</strong>: Often faster than tapping (see <a href="../typing/swipe-typing.md" class="text-wiki-accent hover:underline">Swipe Typing</a>)</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Explore settings</strong>: Customize to your preference</li>
-
-</ul><h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
-
-<h3 id="q-how-do-i-undo-autocorrect-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How do I undo autocorrect?</h3>
-<p class="mb-4 text-gray-300 leading-relaxed">A: Tap the original word in predictions, or tap backspace and retype.</p>
-
-<h3 id="q-how-do-i-type-accented-characters-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How do I type accented characters?</h3>
-<p class="mb-4 text-gray-300 leading-relaxed">A: Long-press the base letter (e.g., long-press 'e' for é, è, ê).</p>
-
-<h3 id="q-how-do-i-access-emoji-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How do I access emoji?</h3>
-<p class="mb-4 text-gray-300 leading-relaxed">A: Tap the emoji key (smiley face) or long-press Enter.</p>
-
-<h2 id="next-steps" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Next Steps</h2>
-
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="../typing/swipe-typing.md" class="text-wiki-accent hover:underline">Swipe Typing</a> - Type faster with gestures</li>
-<li class="ml-4 py-1">&#8226; <a href="../gestures/short-swipes.md" class="text-wiki-accent hover:underline">Short Swipes</a> - Quick access to subkeys</li>
-<li class="ml-4 py-1">&#8226; <a href="../typing/autocorrect.md" class="text-wiki-accent hover:underline">Autocorrect</a> - Manage corrections</li>
-
-</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/getting-started/setup-spec.md" class="text-wiki-accent hover:underline">Setup Technical Specification</a>.</p>
-
-                
-        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
-            
-                <a href="getting-started/first-time-setup.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <div class="text-right">
-                        <div class="text-xs uppercase text-gray-500">Previous</div>
-                        <div class="font-medium">First Time Setup</div>
-                    </div>
-                </a>
-            
-            
-                <a href="getting-started/enabling-keyboard.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <div>
-                        <div class="text-xs uppercase text-gray-500">Next</div>
-                        <div class="font-medium">Enabling the Keyboard</div>
-                    </div>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-            
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../typing/swipe-typing.html" class="text-green-400 hover:underline">Swipe Typing</a> - Master neural swipe</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../gestures/short-swipes.html" class="text-green-400 hover:underline">Short Swipes</a> - Learn key gestures</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../gestures/cursor-navigation.html" class="text-green-400 hover:underline">Cursor Navigation</a> - Navigate text efficiently</li>
+</ul>
         </div>
-    
-            </article>
-            
-        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
-            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
-            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
-                
-                    <li class="">
-                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#tap-typing" class="text-gray-400 hover:text-wiki-primary transition-colors">Tap Typing</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#shift-and-caps-lock" class="text-gray-400 hover:text-wiki-primary transition-colors">Shift and Caps Lock</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#numbers-and-symbols" class="text-gray-400 hover:text-wiki-primary transition-colors">Numbers and Symbols</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#using-predictions" class="text-gray-400 hover:text-wiki-primary transition-colors">Using Predictions</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#useful-shortcuts" class="text-gray-400 hover:text-wiki-primary transition-colors">Useful Shortcuts</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#basic-punctuation" class="text-gray-400 hover:text-wiki-primary transition-colors">Basic Punctuation</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#moving-the-cursor" class="text-gray-400 hover:text-wiki-primary transition-colors">Moving the Cursor</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#tips-for-beginners" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips for Beginners</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-how-do-i-undo-autocorrect-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How do I undo autocorrect?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-how-do-i-type-accented-characters-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How do I type accented characters?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-how-do-i-access-emoji-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How do I access emoji?</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#next-steps" class="text-gray-400 hover:text-wiki-primary transition-colors">Next Steps</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
-                    </li>
-                
-            </ul>
-        </nav>
-    
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="getting-started/first-time-setup.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">First-Time Setup</span>
+            </a>
+            <a href="getting-started/enabling-keyboard.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Enabling the Keyboard</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
-        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
     </footer>
 </body>
 </html>

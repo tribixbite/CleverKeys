@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CleverKeys Wiki</title>
-    <meta name="description" content="User guides, tutorials, and how-to articles">
+    <title>User Guide - CleverKeys</title>
+    <meta name="description" content="Comprehensive user documentation for CleverKeys keyboard">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,30 +12,37 @@
             theme: {
                 extend: {
                     colors: {
-                        'wiki-primary': '#10b981',
-                        'wiki-primary-light': '#34d399',
-                        'wiki-accent': '#3b82f6',
-                        'wiki-dark': '#0d1117',
-                        'wiki-surface': '#161b22',
-                        'wiki-card': '#21262d',
-                        'wiki-border': '#30363d',
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-wiki-dark text-gray-100 min-h-screen">
+<body class="bg-ck-dark text-gray-100 min-h-screen">
     <!-- Nav -->
-    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="../" class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
                 <span class="font-bold">CleverKeys</span>
             </a>
             <div class="flex gap-4">
-                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
-                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <span class="text-green-400 font-medium">User Guide</span>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
                 <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
             </div>
         </div>
@@ -43,407 +50,267 @@
 
     <!-- Header -->
     <header class="container mx-auto px-6 py-12 text-center">
-        <h1 class="text-4xl font-bold text-white mb-4">CleverKeys Wiki</h1>
-        <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-8">User guides, tutorials, and how-to articles</p>
-
-        <!-- Search -->
-        <div class="max-w-md mx-auto">
-            <div class="relative">
-                <input type="text" id="search-input" placeholder="Search wiki..."
-                    class="w-full bg-wiki-surface border border-wiki-border rounded-xl px-4 py-3 pl-10 text-white placeholder-gray-500 focus:outline-none focus:border-wiki-primary">
-                <svg class="absolute left-3 top-3.5 w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-            </div>
-            <div id="search-results" class="hidden mt-2 bg-wiki-surface border border-wiki-border rounded-xl overflow-hidden text-left"></div>
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-4">CleverKeys User Guide</h1>
+        <p class="text-xl text-gray-400 max-w-2xl mx-auto">User documentation and how-to guides</p>
+        
+        <!-- Search placeholder -->
+        <div class="mt-8 max-w-md mx-auto">
+            <input type="text" id="wiki-search" placeholder="Search documentation..." 
+                   class="w-full px-4 py-3 bg-ck-surface border border-gray-700 rounded-xl focus:outline-none focus:border-ck-green text-gray-100">
         </div>
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-6 pb-20 max-w-5xl">
+    <main class="container mx-auto px-6 pb-20 max-w-4xl">
         
-        <section class="mb-12">
-            <h2 class="text-xl font-bold mb-4 text-wiki-primary">Featured Guides</h2>
-            <div class="grid md:grid-cols-3 gap-4">
-                
-                        <a href="getting-started/installation.html" class="block bg-wiki-card p-5 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                            <span class="text-xs px-2 py-0.5 rounded-full mb-2 inline-block" style="background: #10b98120; color: #10b981">Getting Started</span>
-                            <h3 class="font-semibold text-lg mb-1">Installation</h3>
-                            <p class="text-sm text-gray-400">Download CleverKeys from F-Droid or GitHub</p>
-                        </a>
-                    
-                        <a href="typing/swipe-typing.html" class="block bg-wiki-card p-5 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                            <span class="text-xs px-2 py-0.5 rounded-full mb-2 inline-block" style="background: #3b82f620; color: #3b82f6">Typing</span>
-                            <h3 class="font-semibold text-lg mb-1">Swipe Typing</h3>
-                            <p class="text-sm text-gray-400">Draw paths through letters to type words</p>
-                        </a>
-                    
-                        <a href="gestures/short-swipes.html" class="block bg-wiki-card p-5 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                            <span class="text-xs px-2 py-0.5 rounded-full mb-2 inline-block" style="background: #8b5cf620; color: #8b5cf6">Gestures</span>
-                            <h3 class="font-semibold text-lg mb-1">Short Swipes</h3>
-                            <p class="text-sm text-gray-400">Quick flick gestures to access subkeys</p>
-                        </a>
-                    
-            </div>
-        </section>
-    
-        
-        <section class="mb-12">
+        <section class="mb-10">
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full" style="background: #10b981"></span>
                 Getting Started
             </h2>
             <div class="grid md:grid-cols-2 gap-4">
                 
-            <a href="getting-started/installation.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Installation</h3>
-                <p class="text-sm text-gray-400">Download CleverKeys from F-Droid or GitHub</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="getting-started/installation.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Installation</h3>
+                <p class="text-sm text-gray-400">Download and install CleverKeys</p>
             </a>
         
-            <a href="getting-started/first-time-setup.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">First Time Setup</h3>
-                <p class="text-sm text-gray-400">Configure CleverKeys after installation</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="getting-started/first-time-setup.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">First-Time Setup</h3>
+                <p class="text-sm text-gray-400">Enable keyboard and basic configuration</p>
             </a>
         
-            <a href="getting-started/basic-typing.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Basic Typing</h3>
-                <p class="text-sm text-gray-400">Learn tap typing and basic shortcuts</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="getting-started/basic-typing.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Basic Typing</h3>
+                <p class="text-sm text-gray-400">Tap and swipe typing fundamentals</p>
             </a>
         
-            <a href="getting-started/enabling-keyboard.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Enabling the Keyboard</h3>
-                <p class="text-sm text-gray-400">Set CleverKeys as your default keyboard</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="getting-started/enabling-keyboard.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Enabling the Keyboard</h3>
+                <p class="text-sm text-gray-400">Android keyboard activation steps</p>
             </a>
         
             </div>
         </section>
-        <section class="mb-12">
+        <section class="mb-10">
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full" style="background: #3b82f6"></span>
                 Typing
             </h2>
             <div class="grid md:grid-cols-2 gap-4">
                 
-            <a href="typing/swipe-typing.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Swipe Typing</h3>
-                <p class="text-sm text-gray-400">Draw paths through letters to type words</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="typing/swipe-typing.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Swipe Typing</h3>
+                <p class="text-sm text-gray-400">How neural swipe prediction works</p>
             </a>
         
-            <a href="typing/autocorrect.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Autocorrect</h3>
-                <p class="text-sm text-gray-400">Automatic spelling corrections and undo</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="typing/autocorrect.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Autocorrect & Predictions</h3>
+                <p class="text-sm text-gray-400">Smart text correction settings</p>
             </a>
         
-            <a href="typing/special-characters.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Special Characters</h3>
-                <p class="text-sm text-gray-400">Type symbols, accents, and currency</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">intermediate</span>
-                </div>
+            <a href="typing/special-characters.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Special Characters</h3>
+                <p class="text-sm text-gray-400">Symbols, accents, and compose key</p>
             </a>
         
-            <a href="typing/emoji.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Emoji</h3>
-                <p class="text-sm text-gray-400">Access emoji keyboard and shortcuts</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="typing/emoji.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Emoji & Symbols</h3>
+                <p class="text-sm text-gray-400">Emoji picker and symbol input</p>
             </a>
         
             </div>
         </section>
-        <section class="mb-12">
+        <section class="mb-10">
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full" style="background: #8b5cf6"></span>
                 Gestures
             </h2>
             <div class="grid md:grid-cols-2 gap-4">
                 
-            <a href="gestures/short-swipes.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Short Swipes</h3>
-                <p class="text-sm text-gray-400">Quick flick gestures to access subkeys</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">intermediate</span>
-                </div>
+            <a href="gestures/short-swipes.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Short Swipes</h3>
+                <p class="text-sm text-gray-400">Quick swipe actions on any key</p>
             </a>
         
-            <a href="gestures/cursor-navigation.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Cursor Navigation</h3>
-                <p class="text-sm text-gray-400">Move cursor with spacebar or arrow keys</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">intermediate</span>
-                </div>
+            <a href="gestures/cursor-navigation.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Cursor Navigation</h3>
+                <p class="text-sm text-gray-400">Spacebar slider and arrow keys</p>
             </a>
         
-            <a href="gestures/selection-delete.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Selection Delete</h3>
-                <p class="text-sm text-gray-400">Select and delete text with backspace gesture</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">advanced</span>
-                </div>
+            <a href="gestures/selection-delete.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Selection-Delete Mode</h3>
+                <p class="text-sm text-gray-400">Select text by holding backspace</p>
             </a>
         
-            <a href="gestures/trackpoint-mode.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">TrackPoint Mode</h3>
-                <p class="text-sm text-gray-400">Joystick-style cursor control on navigation keys</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">advanced</span>
-                </div>
+            <a href="gestures/trackpoint-mode.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">TrackPoint Mode</h3>
+                <p class="text-sm text-gray-400">Joystick-style cursor on nav keys</p>
             </a>
         
-            <a href="gestures/circle-gestures.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Circle Gestures</h3>
-                <p class="text-sm text-gray-400">Circular swipes for quick actions</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">advanced</span>
-                </div>
+            <a href="gestures/circle-gestures.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Circle Gestures</h3>
+                <p class="text-sm text-gray-400">Loop for double letters</p>
             </a>
         
             </div>
         </section>
-        <section class="mb-12">
+        <section class="mb-10">
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full" style="background: #f59e0b"></span>
                 Customization
             </h2>
             <div class="grid md:grid-cols-2 gap-4">
                 
-            <a href="customization/per-key-actions.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Per-Key Actions</h3>
-                <p class="text-sm text-gray-400">Customize what each swipe direction does</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">advanced</span>
-                </div>
+            <a href="customization/per-key-actions.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Per-Key Actions</h3>
+                <p class="text-sm text-gray-400">Customize swipe actions per key</p>
             </a>
         
-            <a href="customization/extra-keys.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Extra Keys</h3>
-                <p class="text-sm text-gray-400">Add custom keys to the bottom row</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">intermediate</span>
-                </div>
+            <a href="customization/extra-keys.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Extra Keys</h3>
+                <p class="text-sm text-gray-400">Add function keys, arrows, Tab, Ctrl</p>
             </a>
         
-            <a href="customization/themes.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Themes</h3>
-                <p class="text-sm text-gray-400">Change keyboard appearance and colors</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="customization/themes.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Themes</h3>
+                <p class="text-sm text-gray-400">Color schemes and appearance</p>
             </a>
         
-            <a href="customization/command-palette.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Command Palette</h3>
-                <p class="text-sm text-gray-400">Quick access to all keyboard actions</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">intermediate</span>
-                </div>
+            <a href="customization/command-palette.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Command Palette</h3>
+                <p class="text-sm text-gray-400">Quick access to keyboard commands</p>
             </a>
         
             </div>
         </section>
-        <section class="mb-12">
+        <section class="mb-10">
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full" style="background: #ec4899"></span>
                 Layouts
             </h2>
             <div class="grid md:grid-cols-2 gap-4">
                 
-            <a href="layouts/adding-layouts.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Adding Layouts</h3>
-                <p class="text-sm text-gray-400">Download and install keyboard layouts</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="layouts/adding-layouts.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Adding Layouts</h3>
+                <p class="text-sm text-gray-400">Install AZERTY, Dvorak, Colemak, etc.</p>
             </a>
         
-            <a href="layouts/switching-layouts.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Switching Layouts</h3>
-                <p class="text-sm text-gray-400">Change between different keyboard layouts</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="layouts/switching-layouts.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Switching Layouts</h3>
+                <p class="text-sm text-gray-400">Quick layout switching methods</p>
             </a>
         
-            <a href="layouts/multi-language.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Multi-Language Typing</h3>
-                <p class="text-sm text-gray-400">Type in multiple languages simultaneously</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">intermediate</span>
-                </div>
+            <a href="layouts/multi-language.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Multi-Language Typing</h3>
+                <p class="text-sm text-gray-400">Bilingual swipe typing</p>
             </a>
         
-            <a href="layouts/language-packs.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Language Packs</h3>
-                <p class="text-sm text-gray-400">Download prediction dictionaries</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">intermediate</span>
-                </div>
+            <a href="layouts/language-packs.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Language Packs</h3>
+                <p class="text-sm text-gray-400">Download additional dictionaries</p>
             </a>
         
-            <a href="layouts/custom-layouts.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Custom Layouts</h3>
-                <p class="text-sm text-gray-400">Create your own keyboard layouts</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">advanced</span>
-                </div>
+            <a href="layouts/custom-layouts.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Custom Layouts</h3>
+                <p class="text-sm text-gray-400">Create your own layout XML</p>
             </a>
         
-            <a href="layouts/profiles.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Profiles</h3>
-                <p class="text-sm text-gray-400">Save and restore keyboard configurations</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">intermediate</span>
-                </div>
+            <a href="layouts/profiles.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Profiles</h3>
+                <p class="text-sm text-gray-400">Save and restore configurations</p>
             </a>
         
             </div>
         </section>
-        <section class="mb-12">
+        <section class="mb-10">
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full" style="background: #6366f1"></span>
+                <span class="w-3 h-3 rounded-full" style="background: #6b7280"></span>
                 Settings
             </h2>
             <div class="grid md:grid-cols-2 gap-4">
                 
-            <a href="settings/appearance.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Appearance Settings</h3>
-                <p class="text-sm text-gray-400">Configure keyboard height, margins, and colors</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="settings/appearance.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Appearance</h3>
+                <p class="text-sm text-gray-400">Height, opacity, key borders</p>
             </a>
         
-            <a href="settings/input-behavior.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Input Behavior</h3>
-                <p class="text-sm text-gray-400">Configure autocorrect, autocapitalize, and more</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">intermediate</span>
-                </div>
+            <a href="settings/input-behavior.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Input Behavior</h3>
+                <p class="text-sm text-gray-400">Autocorrect, autocaps, double-space</p>
             </a>
         
-            <a href="settings/haptics.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Haptic Feedback</h3>
-                <p class="text-sm text-gray-400">Configure vibration settings</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="settings/haptics.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Haptics & Sound</h3>
+                <p class="text-sm text-gray-400">Vibration and key press sounds</p>
             </a>
         
-            <a href="settings/neural-settings.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Neural Settings</h3>
-                <p class="text-sm text-gray-400">Tune prediction accuracy and performance</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">advanced</span>
-                </div>
+            <a href="settings/neural-settings.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Neural Settings</h3>
+                <p class="text-sm text-gray-400">Beam width, prediction profiles</p>
             </a>
         
-            <a href="settings/privacy.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Privacy Settings</h3>
-                <p class="text-sm text-gray-400">Control data collection and storage</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">intermediate</span>
-                </div>
+            <a href="settings/privacy.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Privacy</h3>
+                <p class="text-sm text-gray-400">Data collection and clipboard settings</p>
             </a>
         
-            <a href="settings/accessibility.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Accessibility</h3>
-                <p class="text-sm text-gray-400">Configure accessibility features</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="settings/accessibility.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Accessibility</h3>
+                <p class="text-sm text-gray-400">Switch Access, TalkBack, large keys</p>
             </a>
         
             </div>
         </section>
-        <section class="mb-12">
+        <section class="mb-10">
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full" style="background: #14b8a6"></span>
                 Clipboard
             </h2>
             <div class="grid md:grid-cols-2 gap-4">
                 
-            <a href="clipboard/clipboard-history.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Clipboard History</h3>
-                <p class="text-sm text-gray-400">Access recently copied text</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="clipboard/clipboard-history.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Clipboard History</h3>
+                <p class="text-sm text-gray-400">Recent clips, pins, search</p>
             </a>
         
-            <a href="clipboard/text-selection.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Text Selection</h3>
-                <p class="text-sm text-gray-400">Select, copy, cut, and paste text</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">intermediate</span>
-                </div>
+            <a href="clipboard/text-selection.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Text Selection</h3>
+                <p class="text-sm text-gray-400">Select, cut, copy, paste text</p>
             </a>
         
-            <a href="clipboard/shortcuts.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Text Shortcuts</h3>
-                <p class="text-sm text-gray-400">Common text editing shortcuts</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">intermediate</span>
-                </div>
+            <a href="clipboard/shortcuts.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Clipboard Shortcuts</h3>
+                <p class="text-sm text-gray-400">Quick clipboard actions</p>
             </a>
         
             </div>
         </section>
-        <section class="mb-12">
+        <section class="mb-10">
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full" style="background: #ef4444"></span>
                 Troubleshooting
             </h2>
             <div class="grid md:grid-cols-2 gap-4">
                 
-            <a href="troubleshooting/common-issues.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Common Issues</h3>
-                <p class="text-sm text-gray-400">Solutions to frequently reported problems</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="troubleshooting/common-issues.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Common Issues</h3>
+                <p class="text-sm text-gray-400">FAQ and quick fixes</p>
             </a>
         
-            <a href="troubleshooting/reset-defaults.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Reset to Defaults</h3>
-                <p class="text-sm text-gray-400">Restore factory settings</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">beginner</span>
-                </div>
+            <a href="troubleshooting/performance.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Performance</h3>
+                <p class="text-sm text-gray-400">Speed and battery optimization</p>
             </a>
         
-            <a href="troubleshooting/backup-restore.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Backup & Restore</h3>
-                <p class="text-sm text-gray-400">Export and import your settings</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">intermediate</span>
-                </div>
+            <a href="troubleshooting/reset-defaults.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Reset to Defaults</h3>
+                <p class="text-sm text-gray-400">Restore default settings</p>
             </a>
         
-            <a href="troubleshooting/performance.html" class="block bg-wiki-card p-4 rounded-xl hover:bg-wiki-surface transition-colors border border-transparent hover:border-wiki-primary/30">
-                <h3 class="font-semibold mb-1">Performance Tips</h3>
-                <p class="text-sm text-gray-400">Optimize keyboard speed and responsiveness</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-xs px-2 py-0.5 rounded bg-wiki-dark text-gray-500">intermediate</span>
-                </div>
+            <a href="troubleshooting/backup-restore.html" class="block bg-ck-card p-4 rounded-xl hover:bg-ck-surface transition-colors border border-transparent hover:border-ck-green/30">
+                <h3 class="font-semibold mb-1 text-white">Backup & Restore</h3>
+                <p class="text-sm text-gray-400">Export and import settings</p>
             </a>
         
             </div>
@@ -451,47 +318,18 @@
     </main>
 
     <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
         <p>CleverKeys - Open Source Neural Keyboard</p>
     </footer>
 
-    <!-- Search Script -->
     <script>
-        const searchIndex = [{"file":"getting-started/installation.html","title":"Installation","description":"Download CleverKeys from F-Droid or GitHub","category":"Getting Started","tags":["install","download","f-droid","github"],"excerpt":"Installation\n\nCleverKeys is available for free from F-Droid and GitHub. Choose your preferred installation method below.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Install Cle"},{"file":"getting-started/first-time-setup.html","title":"First Time Setup","description":"Configure CleverKeys after installation","category":"Getting Started","tags":["setup","wizard","configuration"],"excerpt":"First Time Setup\n\nWhen you first use CleverKeys, a setup wizard guides you through initial configuration.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Configure keyboard layout"},{"file":"getting-started/basic-typing.html","title":"Basic Typing","description":"Learn tap typing and basic shortcuts","category":"Getting Started","tags":["typing","basics","shortcuts"],"excerpt":"Basic Typing\n\nLearn the fundamentals of typing with CleverKeys, from simple taps to useful shortcuts.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Type text using tap and basic"},{"file":"getting-started/enabling-keyboard.html","title":"Enabling the Keyboard","description":"Set CleverKeys as your default keyboard","category":"Getting Started","tags":["enable","input method","android"],"excerpt":"Enabling the Keyboard\n\nAfter installing CleverKeys, you need to enable it in Android settings and set it as your default keyboard.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  E"},{"file":"typing/swipe-typing.html","title":"Swipe Typing","description":"Draw paths through letters to type words","category":"Typing","tags":["swipe","glide","neural","predictions"],"excerpt":"Swipe Typing\n\nSwipe typing lets you type words by drawing a continuous path through letters. CleverKeys uses a neural AI model to predict words from your swipe patterns.\n\n Quick Summary\n\n What  Descr"},{"file":"typing/autocorrect.html","title":"Autocorrect","description":"Automatic spelling corrections and undo","category":"Typing","tags":["autocorrect","spelling","dictionary"],"excerpt":"Autocorrect\n\nCleverKeys automatically corrects common spelling mistakes as you type. You can undo corrections and add words to your personal dictionary.\n\n Quick Summary\n\n What  Description \n---------"},{"file":"typing/special-characters.html","title":"Special Characters","description":"Type symbols, accents, and currency","category":"Typing","tags":["symbols","accents","diacritics","currency"],"excerpt":"Special Characters\n\nAccess symbols, accented letters, diacritics, and currency symbols through long-press menus and short swipe gestures.\n\n Quick Summary\n\n What  Description \n-------------------\n Pur"},{"file":"typing/emoji.html","title":"Emoji","description":"Access emoji keyboard and shortcuts","category":"Typing","tags":["emoji","emoticons","symbols"],"excerpt":"Emoji\n\nCleverKeys includes a full emoji keyboard with categories, search, and recent emoji history.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Insert emoji and emoticons \n Acc"},{"file":"gestures/short-swipes.html","title":"Short Swipes","description":"Quick flick gestures to access subkeys","category":"Gestures","tags":["swipe","flick","subkeys","shortcuts"],"excerpt":"Short Swipes\n\nShort swipes let you quickly access additional characters by flicking in 8 directions from any key. This is faster than long-pressing for common characters.\n\n Quick Summary\n\n What  Desc"},{"file":"gestures/cursor-navigation.html","title":"Cursor Navigation","description":"Move cursor with spacebar or arrow keys","category":"Gestures","tags":["cursor","navigation","spacebar","arrow"],"excerpt":"Cursor Navigation\n\nMove the text cursor precisely using the spacebar slider or dedicated arrow keys without lifting your fingers from the keyboard.\n\n Quick Summary\n\n What  Description \n--------------"},{"file":"gestures/selection-delete.html","title":"Selection Delete","description":"Select and delete text with backspace gesture","category":"Gestures","tags":["selection","delete","backspace","text"],"excerpt":"Selection Delete\n\nSelection Delete mode lets you select text by holding backspace and moving your finger like a joystick. When you release, the selected text is deleted.\n\n Quick Summary\n\n What  Descr"},{"file":"gestures/trackpoint-mode.html","title":"TrackPoint Mode","description":"Joystick-style cursor control on navigation keys","category":"Gestures","tags":["trackpoint","joystick","cursor","navigation"],"excerpt":"TrackPoint Mode\n\nTrackPoint mode turns your arrow keys into a virtual joystick for continuous cursor movement. Hold the navigation key and move your finger to control the cursor like a laptop TrackPo"},{"file":"gestures/circle-gestures.html","title":"Circle Gestures","description":"Circular swipes for quick actions","category":"Gestures","tags":["circle","gesture","undo","redo"],"excerpt":"Circle Gestures\n\nCircle gestures allow you to perform actions like undo and redo by drawing circular patterns on the keyboard.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Quick"},{"file":"customization/per-key-actions.html","title":"Per-Key Actions","description":"Customize what each swipe direction does","category":"Customization","tags":["customize","actions","swipe","directions"],"excerpt":"Per-Key Actions\n\nCustomize what happens when you swipe in each of the 8 directions from any key. Assign characters, actions, or macros to each swipe direction.\n\n Quick Summary\n\n What  Description \n--"},{"file":"customization/extra-keys.html","title":"Extra Keys","description":"Add custom keys to the bottom row","category":"Customization","tags":["extra","keys","bottom row","customize"],"excerpt":"Extra Keys\n\nAdd custom keys to the bottom row of your keyboard for quick access to frequently used actions, characters, or modifiers.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose"},{"file":"customization/themes.html","title":"Themes","description":"Change keyboard appearance and colors","category":"Customization","tags":["themes","colors","appearance","dark mode"],"excerpt":"Themes\n\nCustomize the appearance of your keyboard with different color themes, from dark modes to vibrant colors.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Change keyboard co"},{"file":"customization/command-palette.html","title":"Command Palette","description":"Quick access to all keyboard actions","category":"Customization","tags":["command","palette","actions","quick"],"excerpt":"Command Palette\n\nThe command palette provides quick access to keyboard actions, settings, and features through a searchable interface.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpos"},{"file":"layouts/adding-layouts.html","title":"Adding Layouts","description":"Download and install keyboard layouts","category":"Layouts","tags":["layouts","download","install"],"excerpt":"Adding Layouts\n\nInstall new keyboard layouts to support different languages, keyboard styles, and specialized input needs.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Add new k"},{"file":"layouts/switching-layouts.html","title":"Switching Layouts","description":"Change between different keyboard layouts","category":"Layouts","tags":["switch","layouts","language"],"excerpt":"Switching Layouts\n\nQuickly switch between your installed keyboard layouts using gestures, buttons, or shortcuts.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Change active keybo"},{"file":"layouts/multi-language.html","title":"Multi-Language Typing","description":"Type in multiple languages simultaneously","category":"Layouts","tags":["multi-language","bilingual","secondary"],"excerpt":"Multi-Language Input\n\nType in multiple languages with smart language detection, seamless switching, and per-language predictions.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Ty"},{"file":"layouts/language-packs.html","title":"Language Packs","description":"Download prediction dictionaries","category":"Layouts","tags":["language","packs","dictionary","download"],"excerpt":"Language Packs\n\nDownload language packs to add dictionaries, layouts, and predictions for additional languages.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Add language support"},{"file":"layouts/custom-layouts.html","title":"Custom Layouts","description":"Create your own keyboard layouts","category":"Layouts","tags":["custom","layouts","create","xml"],"excerpt":"Custom Layouts\n\nDesign your own keyboard layouts from scratch or modify existing layouts to match your preferences.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Create personali"},{"file":"layouts/profiles.html","title":"Profiles","description":"Save and restore keyboard configurations","category":"Layouts","tags":["profiles","backup","restore","export"],"excerpt":"Profiles\n\nSave complete keyboard configurations as profiles and switch between them instantly. Back up your settings and share configurations.\n\n Quick Summary\n\n What  Description \n-------------------"},{"file":"settings/appearance.html","title":"Appearance Settings","description":"Configure keyboard height, margins, and colors","category":"Settings","tags":["appearance","height","margins","colors"],"excerpt":"Appearance Settings\n\nConfigure how the keyboard looks on screen, including size, margins, key shapes, and visual effects.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Customize"},{"file":"settings/input-behavior.html","title":"Input Behavior","description":"Configure autocorrect, autocapitalize, and more","category":"Settings","tags":["input","autocorrect","autocapitalize","double-space"],"excerpt":"Input Behavior Settings\n\nConfigure how CleverKeys processes your input, including auto-capitalization, punctuation, and special behaviors.\n\n Quick Summary\n\n What  Description \n-------------------\n Pu"},{"file":"settings/haptics.html","title":"Haptic Feedback","description":"Configure vibration settings","category":"Settings","tags":["haptics","vibration","feedback"],"excerpt":"Haptics Settings\n\nConfigure vibration feedback for key presses, gestures, and special events.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Control vibration feedback \n Access  S"},{"file":"settings/neural-settings.html","title":"Neural Settings","description":"Tune prediction accuracy and performance","category":"Settings","tags":["neural","prediction","beam width","performance"],"excerpt":"Neural Prediction Settings\n\nFine-tune the neural network-based swipe typing predictions for accuracy and performance.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Optimize neura"},{"file":"settings/privacy.html","title":"Privacy Settings","description":"Control data collection and storage","category":"Settings","tags":["privacy","data","collection","storage"],"excerpt":"Privacy Settings\n\nControl what data CleverKeys collects, stores, and how your information is handled.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Manage privacy and data \n Acce"},{"file":"settings/accessibility.html","title":"Accessibility","description":"Configure accessibility features","category":"Settings","tags":["accessibility","large keys","slow mode"],"excerpt":"Accessibility Settings\n\nCleverKeys includes accessibility features for users with visual, motor, or cognitive accessibility needs.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  A"},{"file":"clipboard/clipboard-history.html","title":"Clipboard History","description":"Access recently copied text","category":"Clipboard","tags":["clipboard","history","copy","paste"],"excerpt":"Clipboard History\n\nCleverKeys maintains a history of text you've copied, making it easy to paste items from earlier.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Access previous"},{"file":"clipboard/text-selection.html","title":"Text Selection","description":"Select, copy, cut, and paste text","category":"Clipboard","tags":["selection","copy","cut","paste"],"excerpt":"Text Selection\n\nSelect text efficiently using CleverKeys gestures, including selection-delete mode and trackpoint navigation.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Select"},{"file":"clipboard/shortcuts.html","title":"Text Shortcuts","description":"Common text editing shortcuts","category":"Clipboard","tags":["shortcuts","undo","redo","select all"],"excerpt":"Clipboard Shortcuts\n\nUse keyboard shortcuts for fast copy, cut, paste, and other clipboard operations.\n\n Quick Summary\n\n What  Description \n-------------------\n Purpose  Fast clipboard operations \n M"},{"file":"troubleshooting/common-issues.html","title":"Common Issues","description":"Solutions to frequently reported problems","category":"Troubleshooting","tags":["issues","problems","solutions","fix"],"excerpt":"Common Issues\n\nSolutions for the most frequently encountered problems with CleverKeys.\n\n Quick Summary\n\n Issue Type  Common Causes \n---------------------------\n Keyboard not showing  Not enabled in s"},{"file":"troubleshooting/reset-defaults.html","title":"Reset to Defaults","description":"Restore factory settings","category":"Troubleshooting","tags":["reset","defaults","factory","restore"],"excerpt":"Reset to Defaults\n\nRestore CleverKeys settings to their original state when troubleshooting issues or wanting a fresh start.\n\n Quick Summary\n\n Reset Type  What's Affected \n---------------------------"},{"file":"troubleshooting/backup-restore.html","title":"Backup & Restore","description":"Export and import your settings","category":"Troubleshooting","tags":["backup","restore","export","import"],"excerpt":"Backup & Restore\n\nProtect your keyboard configuration by creating backups that can be restored later or transferred to another device.\n\n Quick Summary\n\n What  How \n-----------\n Backup  Settings > Pro"},{"file":"troubleshooting/performance.html","title":"Performance Tips","description":"Optimize keyboard speed and responsiveness","category":"Troubleshooting","tags":["performance","speed","lag","optimization"],"excerpt":"Performance\n\nOptimize CleverKeys for better speed, responsiveness, and battery efficiency.\n\n Quick Summary\n\n Issue  Common Cause  Solution \n-------------------------------\n Slow typing  Neural predic"}];
-        const searchInput = document.getElementById('search-input');
-        const searchResults = document.getElementById('search-results');
-
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase().trim();
-            if (query.length < 2) {
-                searchResults.classList.add('hidden');
-                return;
-            }
-
-            const results = searchIndex.filter(page =>
-                page.title.toLowerCase().includes(query) ||
-                page.description.toLowerCase().includes(query) ||
-                page.tags.some(t => t.toLowerCase().includes(query)) ||
-                page.excerpt.toLowerCase().includes(query)
-            ).slice(0, 5);
-
-            if (results.length === 0) {
-                searchResults.innerHTML = '<div class="p-4 text-gray-400">No results found</div>';
-            } else {
-                searchResults.innerHTML = results.map(r => `
-                    <a href="${r.file}" class="block p-4 hover:bg-wiki-card border-b border-wiki-border last:border-0">
-                        <div class="font-medium">${r.title}</div>
-                        <div class="text-sm text-gray-400">${r.description}</div>
-                    </a>
-                `).join('');
-            }
-            searchResults.classList.remove('hidden');
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                searchResults.classList.add('hidden');
-            }
+        // Simple client-side search
+        document.getElementById('wiki-search').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('section a').forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(query) ? 'block' : 'none';
+            });
         });
     </script>
 </body>

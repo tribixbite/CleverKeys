@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Shortcuts - CleverKeys Wiki</title>
-    <meta name="description" content="Common text editing shortcuts">
+    <title>Clipboard Shortcuts - CleverKeys User Guide</title>
+    <meta name="description" content="Quick clipboard actions">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,30 +12,37 @@
             theme: {
                 extend: {
                     colors: {
-                        'wiki-primary': '#10b981',
-                        'wiki-primary-light': '#34d399',
-                        'wiki-accent': '#3b82f6',
-                        'wiki-dark': '#0d1117',
-                        'wiki-surface': '#161b22',
-                        'wiki-card': '#21262d',
-                        'wiki-border': '#30363d',
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-wiki-dark text-gray-100 min-h-screen">
+<body class="bg-ck-dark text-gray-100 min-h-screen">
     <!-- Nav -->
-    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="../" class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
                 <span class="font-bold">CleverKeys</span>
             </a>
             <div class="flex gap-4">
-                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
-                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
                 <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
             </div>
         </div>
@@ -44,278 +51,217 @@
     <!-- Breadcrumb -->
     <div class="container mx-auto px-6 py-4">
         <div class="flex items-center gap-2 text-sm text-gray-500">
-            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <a href="../" class="hover:text-ck-green">Home</a>
             <span>/</span>
-            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
             <span>/</span>
-            <span class="text-gray-300">Text Shortcuts</span>
+            <a href="./?category=Clipboard" class="hover:text-ck-green">Clipboard</a>
+            <span>/</span>
+            <span class="text-gray-300">Clipboard Shortcuts</span>
         </div>
     </div>
 
     <!-- Header -->
     <header class="container mx-auto px-6 pb-6">
-        <div class="flex items-center gap-3 mb-3">
+        <div class="flex items-center gap-3 mb-4">
             <span class="px-3 py-1 text-sm rounded-full" style="background: #14b8a620; color: #14b8a6">Clipboard</span>
-            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">intermediate</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P2</span>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-2">Text Shortcuts</h1>
-        <p class="text-xl text-gray-400">Common text editing shortcuts</p>
-        
-        <div class="flex flex-wrap gap-2 mt-4">
-            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#shortcuts</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#undo</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#redo</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#select all</span>
-        </div>
-    
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Clipboard Shortcuts</h1>
+        <p class="text-xl text-gray-400">Quick clipboard actions</p>
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-6 pb-20">
-        <div class="flex gap-8">
-            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
-                <h1 class="text-3xl font-bold mb-6 text-white">Clipboard Shortcuts</h1>
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300 leading-relaxed">title: Clipboard Shortcuts</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Quick keyboard shortcuts for clipboard operations</p>
+<p class="mb-4 text-gray-300 leading-relaxed">category: Clipboard</p>
+<p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
+<hr class="border-gray-700 my-6">
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Clipboard Shortcuts</h1>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Use keyboard shortcuts for fast copy, cut, paste, and other clipboard operations.</p>
 
-<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Fast clipboard operations</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Methods</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Modifier keys, gestures, palette</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Setup</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Add Ctrl key as extra key</td></tr></tbody></table></div>
-<h2 id="standard-shortcuts" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Standard Shortcuts</h2>
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Fast clipboard operations</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Methods</strong></td><td class="px-4 py-2 border-t border-gray-700">Modifier keys, gestures, palette</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Setup</strong></td><td class="px-4 py-2 border-t border-gray-700">Add Ctrl key as extra key</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Standard Shortcuts</h2>
 
-<h3 id="with-ctrl-key" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">With Ctrl Key</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">With Ctrl Key</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Add Ctrl as an extra key to use standard shortcuts:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Shortcut</th><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Ctrl+C</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Copy selected text</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Ctrl+X</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Cut selected text</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Ctrl+V</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Paste</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Ctrl+A</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Select all</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Ctrl+Z</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Undo</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Ctrl+Y</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Redo</td></tr></tbody></table></div>
-<h3 id="setting-up-ctrl-key" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Setting Up Ctrl Key</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Shortcut</td><td class="px-4 py-2 border-t border-gray-700">Action</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Ctrl+C</strong></td><td class="px-4 py-2 border-t border-gray-700">Copy selected text</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Ctrl+X</strong></td><td class="px-4 py-2 border-t border-gray-700">Cut selected text</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Ctrl+V</strong></td><td class="px-4 py-2 border-t border-gray-700">Paste</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Ctrl+A</strong></td><td class="px-4 py-2 border-t border-gray-700">Select all</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Ctrl+Z</strong></td><td class="px-4 py-2 border-t border-gray-700">Undo</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Ctrl+Y</strong></td><td class="px-4 py-2 border-t border-gray-700">Redo</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Setting Up Ctrl Key</h3>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Go to <strong class="font-semibold text-white">Settings > Extra Keys</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Add <strong class="font-semibold text-white">Ctrl</strong> to left or right side</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Ctrl key appears on bottom row</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Tap Ctrl, then the letter key</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Extra Keys</strong></li>
+<li class="ml-4 text-gray-300">2. Add <strong class="text-white">Ctrl</strong> to left or right side</li>
+<li class="ml-4 text-gray-300">3. Ctrl key appears on bottom row</li>
+<li class="ml-4 text-gray-300">4. Tap Ctrl, then the letter key</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Gesture Shortcuts</h2>
 
-</ul><h2 id="gesture-shortcuts" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Gesture Shortcuts</h2>
-
-<h3 id="circle-gestures" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Circle Gestures</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Circle Gestures</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Draw circles for undo/redo:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Gesture</th><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Counter-clockwise circle</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Undo</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Clockwise circle</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Redo</td></tr></tbody></table></div>
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../gestures/circle-gestures.md" class="text-wiki-accent hover:underline">Circle Gestures</a> for details.</p>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Gesture</td><td class="px-4 py-2 border-t border-gray-700">Action</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Counter-clockwise circle</strong></td><td class="px-4 py-2 border-t border-gray-700">Undo</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Clockwise circle</strong></td><td class="px-4 py-2 border-t border-gray-700">Redo</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../gestures/circle-gestures.html" class="text-green-400 hover:underline">Circle Gestures</a> for details.</p>
 
-<h3 id="ctrl-key-subkeys" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Ctrl Key Subkeys</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Ctrl Key Subkeys</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Swipe from Ctrl key for quick access:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Direction</th><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Swipe Up (N)</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Select All (Ctrl+A)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Swipe Right (E)</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Copy (Ctrl+C)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Swipe Down (S)</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Paste (Ctrl+V)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Swipe Left (W)</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Cut (Ctrl+X)</td></tr></tbody></table></div>
-<h2 id="command-palette-shortcuts" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Command Palette Shortcuts</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Direction</td><td class="px-4 py-2 border-t border-gray-700">Action</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe Up (N)</strong></td><td class="px-4 py-2 border-t border-gray-700">Select All (Ctrl+A)</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe Right (E)</strong></td><td class="px-4 py-2 border-t border-gray-700">Copy (Ctrl+C)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe Down (S)</strong></td><td class="px-4 py-2 border-t border-gray-700">Paste (Ctrl+V)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe Left (W)</strong></td><td class="px-4 py-2 border-t border-gray-700">Cut (Ctrl+X)</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Command Palette Shortcuts</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Access via command palette:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> <strong class="font-semibold text-white">Long-press settings key</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Type action name:</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Long-press settings key</strong></li>
+<li class="ml-4 text-gray-300">2. Type action name:</li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - "copy"</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - "cut"</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - "paste"</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - "undo"</p>
 <p class="mb-4 text-gray-300 leading-relaxed">   - "select"</p>
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Tap to execute</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. Tap to execute</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Paste Shortcuts</h2>
 
-</ul><h2 id="paste-shortcuts" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Paste Shortcuts</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Quick Paste</h3>
 
-<h3 id="quick-paste" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Quick Paste</h3>
-
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Tap paste key</strong>: Paste most recent</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Long-press paste</strong>: Open clipboard history</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Double-tap paste</strong>: Paste previous item</li>
-
-</ul><h3 id="paste-menu" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Paste Menu</h3>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Tap paste key</strong>: Paste most recent</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Long-press paste</strong>: Open clipboard history</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Double-tap paste</strong>: Paste previous item</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Paste Menu</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Some apps show paste options:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Option</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Paste</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Plain paste</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Paste as plain text</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Strip formatting</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Paste from history</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Choose from history</td></tr></tbody></table></div>
-<h2 id="customizing-shortcuts" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Customizing Shortcuts</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Option</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Paste</strong></td><td class="px-4 py-2 border-t border-gray-700">Plain paste</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Paste as plain text</strong></td><td class="px-4 py-2 border-t border-gray-700">Strip formatting</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Paste from history</strong></td><td class="px-4 py-2 border-t border-gray-700">Choose from history</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Customizing Shortcuts</h2>
 
-<h3 id="per-key-actions" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Per-Key Actions</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Per-Key Actions</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Assign clipboard actions to swipe directions:</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1"><span class="text-wiki-primary mr-2">1.</span> Go to <strong class="font-semibold text-white">Settings > Per-Key Actions</strong></li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">2.</span> Select a key (e.g., Shift)</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">3.</span> Choose a direction</li>
-<li class="ml-4 py-1"><span class="text-wiki-primary mr-2">4.</span> Select action (Copy, Paste, etc.)</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Per-Key Actions</strong></li>
+<li class="ml-4 text-gray-300">2. Select a key (e.g., Shift)</li>
+<li class="ml-4 text-gray-300">3. Choose a direction</li>
+<li class="ml-4 text-gray-300">4. Select action (Copy, Paste, etc.)</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">Example setup:</p>
 
-</ul><p class="mb-4 text-gray-300 leading-relaxed">Example setup:</p>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Key</td><td class="px-4 py-2 border-t border-gray-700">Direction</td><td class="px-4 py-2 border-t border-gray-700">Action</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Shift</strong></td><td class="px-4 py-2 border-t border-gray-700">NE</td><td class="px-4 py-2 border-t border-gray-700">Copy</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Shift</strong></td><td class="px-4 py-2 border-t border-gray-700">SE</td><td class="px-4 py-2 border-t border-gray-700">Paste</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Shift</strong></td><td class="px-4 py-2 border-t border-gray-700">SW</td><td class="px-4 py-2 border-t border-gray-700">Cut</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../customization/per-key-actions.html" class="text-green-400 hover:underline">Per-Key Actions</a>.</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Key</th><th class="px-4 py-2 text-left border-b border-wiki-border">Direction</th><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Shift</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">NE</td><td class="px-4 py-2 border-b border-wiki-border/50">Copy</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Shift</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">SE</td><td class="px-4 py-2 border-b border-wiki-border/50">Paste</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Shift</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">SW</td><td class="px-4 py-2 border-b border-wiki-border/50">Cut</td></tr></tbody></table></div>
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../customization/per-key-actions.md" class="text-wiki-accent hover:underline">Per-Key Actions</a>.</p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">All Clipboard Actions</h2>
 
-<h2 id="all-clipboard-actions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">All Clipboard Actions</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Standard</td><td class="px-4 py-2 border-t border-gray-700">Gesture</td><td class="px-4 py-2 border-t border-gray-700">Palette</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Copy</strong></td><td class="px-4 py-2 border-t border-gray-700">Ctrl+C</td><td class="px-4 py-2 border-t border-gray-700">Ctrl→E</td><td class="px-4 py-2 border-t border-gray-700">"copy"</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Cut</strong></td><td class="px-4 py-2 border-t border-gray-700">Ctrl+X</td><td class="px-4 py-2 border-t border-gray-700">Ctrl→W</td><td class="px-4 py-2 border-t border-gray-700">"cut"</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Paste</strong></td><td class="px-4 py-2 border-t border-gray-700">Ctrl+V</td><td class="px-4 py-2 border-t border-gray-700">Ctrl→S</td><td class="px-4 py-2 border-t border-gray-700">"paste"</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Select All</strong></td><td class="px-4 py-2 border-t border-gray-700">Ctrl+A</td><td class="px-4 py-2 border-t border-gray-700">Ctrl→N</td><td class="px-4 py-2 border-t border-gray-700">"select"</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Undo</strong></td><td class="px-4 py-2 border-t border-gray-700">Ctrl+Z</td><td class="px-4 py-2 border-t border-gray-700">CCW circle</td><td class="px-4 py-2 border-t border-gray-700">"undo"</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Redo</strong></td><td class="px-4 py-2 border-t border-gray-700">Ctrl+Y</td><td class="px-4 py-2 border-t border-gray-700">CW circle</td><td class="px-4 py-2 border-t border-gray-700">"redo"</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">History</strong></td><td class="px-4 py-2 border-t border-gray-700">-</td><td class="px-4 py-2 border-t border-gray-700">Long-press paste</td><td class="px-4 py-2 border-t border-gray-700">"history"</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th><th class="px-4 py-2 text-left border-b border-wiki-border">Standard</th><th class="px-4 py-2 text-left border-b border-wiki-border">Gesture</th><th class="px-4 py-2 text-left border-b border-wiki-border">Palette</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Copy</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Ctrl+C</td><td class="px-4 py-2 border-b border-wiki-border/50">Ctrl→E</td><td class="px-4 py-2 border-b border-wiki-border/50">"copy"</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Cut</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Ctrl+X</td><td class="px-4 py-2 border-b border-wiki-border/50">Ctrl→W</td><td class="px-4 py-2 border-b border-wiki-border/50">"cut"</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Paste</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Ctrl+V</td><td class="px-4 py-2 border-b border-wiki-border/50">Ctrl→S</td><td class="px-4 py-2 border-b border-wiki-border/50">"paste"</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Select All</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Ctrl+A</td><td class="px-4 py-2 border-b border-wiki-border/50">Ctrl→N</td><td class="px-4 py-2 border-b border-wiki-border/50">"select"</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Undo</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Ctrl+Z</td><td class="px-4 py-2 border-b border-wiki-border/50">CCW circle</td><td class="px-4 py-2 border-b border-wiki-border/50">"undo"</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Redo</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Ctrl+Y</td><td class="px-4 py-2 border-b border-wiki-border/50">CW circle</td><td class="px-4 py-2 border-b border-wiki-border/50">"redo"</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">History</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">-</td><td class="px-4 py-2 border-b border-wiki-border/50">Long-press paste</td><td class="px-4 py-2 border-b border-wiki-border/50">"history"</td></tr></tbody></table></div>
-<h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Muscle memory</strong>: Practice Ctrl subkeys for speed</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">One-handed</strong>: Use command palette when one-handed</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Editing flow</strong>: Combine with selection-delete for efficiency</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Custom shortcuts</strong>: Set up per-key actions for your workflow</li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">If you frequently copy/paste, add Ctrl key and learn the subkey shortcuts.</blockquote>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Muscle memory</strong>: Practice Ctrl subkeys for speed</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">One-handed</strong>: Use command palette when one-handed</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Editing flow</strong>: Combine with selection-delete for efficiency</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Custom shortcuts</strong>: Set up per-key actions for your workflow</li>
-
-</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">If you frequently copy/paste, add Ctrl key and learn the subkey shortcuts.</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
-<h2 id="without-ctrl-key" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Without Ctrl Key</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Without Ctrl Key</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">If you don't want the Ctrl key:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Action</th><th class="px-4 py-2 text-left border-b border-wiki-border">Alternative</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Copy</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Command palette or app menu</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Paste</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Paste key or app menu</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Undo</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Circle gesture or app menu</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Select All</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Command palette or app menu</td></tr></tbody></table></div>
-<h2 id="settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Settings</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Alternative</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Copy</strong></td><td class="px-4 py-2 border-t border-gray-700">Command palette or app menu</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Paste</strong></td><td class="px-4 py-2 border-t border-gray-700">Paste key or app menu</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Undo</strong></td><td class="px-4 py-2 border-t border-gray-700">Circle gesture or app menu</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Select All</strong></td><td class="px-4 py-2 border-t border-gray-700">Command palette or app menu</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Extra Keys</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings</td><td class="px-4 py-2 border-b border-wiki-border/50">Add Ctrl key</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Per-Key Actions</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Customization</td><td class="px-4 py-2 border-b border-wiki-border/50">Custom shortcuts</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Ctrl Subkeys</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Per-Key Actions</td><td class="px-4 py-2 border-b border-wiki-border/50">Ctrl swipe actions</td></tr></tbody></table></div>
-<h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Extra Keys</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings</td><td class="px-4 py-2 border-t border-gray-700">Add Ctrl key</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Per-Key Actions</strong></td><td class="px-4 py-2 border-t border-gray-700">Customization</td><td class="px-4 py-2 border-t border-gray-700">Custom shortcuts</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Ctrl Subkeys</strong></td><td class="px-4 py-2 border-t border-gray-700">Per-Key Actions</td><td class="px-4 py-2 border-t border-gray-700">Ctrl swipe actions</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
-<h3 id="q-why-isn-t-ctrl-c-working-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Why isn't Ctrl+C working?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why isn't Ctrl+C working?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: First tap Ctrl, then tap C. They're not simultaneous presses.</p>
 
-<h3 id="q-can-i-hold-ctrl-like-on-a-computer-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I hold Ctrl like on a computer?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I hold Ctrl like on a computer?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: The modifier is "sticky" - tap once, it applies to next key. No need to hold.</p>
 
-<h3 id="q-how-do-i-make-shortcuts-faster-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How do I make shortcuts faster?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I make shortcuts faster?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Use Ctrl subkeys (swipe from Ctrl) instead of two taps.</p>
 
-<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="../customization/extra-keys.md" class="text-wiki-accent hover:underline">Extra Keys</a> - Add Ctrl key</li>
-<li class="ml-4 py-1">&#8226; <a href="../customization/per-key-actions.md" class="text-wiki-accent hover:underline">Per-Key Actions</a> - Custom shortcuts</li>
-<li class="ml-4 py-1">&#8226; <a href="../gestures/circle-gestures.md" class="text-wiki-accent hover:underline">Circle Gestures</a> - Undo/redo gestures</li>
-<li class="ml-4 py-1">&#8226; <a href="clipboard-history.md" class="text-wiki-accent hover:underline">Clipboard History</a> - Access history</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../customization/extra-keys.html" class="text-green-400 hover:underline">Extra Keys</a> - Add Ctrl key</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../customization/per-key-actions.html" class="text-green-400 hover:underline">Per-Key Actions</a> - Custom shortcuts</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../gestures/circle-gestures.html" class="text-green-400 hover:underline">Circle Gestures</a> - Undo/redo gestures</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="clipboard-history.html" class="text-green-400 hover:underline">Clipboard History</a> - Access history</li>
 </ul>
-                
-        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
-            
-                <a href="clipboard/text-selection.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <div class="text-right">
-                        <div class="text-xs uppercase text-gray-500">Previous</div>
-                        <div class="font-medium">Text Selection</div>
-                    </div>
-                </a>
-            
-            
-                <a href="troubleshooting/common-issues.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <div>
-                        <div class="text-xs uppercase text-gray-500">Next</div>
-                        <div class="font-medium">Common Issues</div>
-                    </div>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-            
         </div>
-    
-            </article>
-            
-        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
-            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
-            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
-                
-                    <li class="">
-                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#standard-shortcuts" class="text-gray-400 hover:text-wiki-primary transition-colors">Standard Shortcuts</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#with-ctrl-key" class="text-gray-400 hover:text-wiki-primary transition-colors">With Ctrl Key</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#setting-up-ctrl-key" class="text-gray-400 hover:text-wiki-primary transition-colors">Setting Up Ctrl Key</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#gesture-shortcuts" class="text-gray-400 hover:text-wiki-primary transition-colors">Gesture Shortcuts</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#circle-gestures" class="text-gray-400 hover:text-wiki-primary transition-colors">Circle Gestures</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#ctrl-key-subkeys" class="text-gray-400 hover:text-wiki-primary transition-colors">Ctrl Key Subkeys</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#command-palette-shortcuts" class="text-gray-400 hover:text-wiki-primary transition-colors">Command Palette Shortcuts</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#paste-shortcuts" class="text-gray-400 hover:text-wiki-primary transition-colors">Paste Shortcuts</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#quick-paste" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Paste</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#paste-menu" class="text-gray-400 hover:text-wiki-primary transition-colors">Paste Menu</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#customizing-shortcuts" class="text-gray-400 hover:text-wiki-primary transition-colors">Customizing Shortcuts</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#per-key-actions" class="text-gray-400 hover:text-wiki-primary transition-colors">Per-Key Actions</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#all-clipboard-actions" class="text-gray-400 hover:text-wiki-primary transition-colors">All Clipboard Actions</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#without-ctrl-key" class="text-gray-400 hover:text-wiki-primary transition-colors">Without Ctrl Key</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#settings" class="text-gray-400 hover:text-wiki-primary transition-colors">Settings</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-why-isn-t-ctrl-c-working-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Why isn't Ctrl+C working?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-can-i-hold-ctrl-like-on-a-computer-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I hold Ctrl like on a computer?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-how-do-i-make-shortcuts-faster-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How do I make shortcuts faster?</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
-                    </li>
-                
-            </ul>
-        </nav>
-    
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="clipboard/text-selection.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Text Selection</span>
+            </a>
+            <a href="troubleshooting/common-issues.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Common Issues</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
-        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
     </footer>
 </body>
 </html>

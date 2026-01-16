@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Input Behavior - CleverKeys Wiki</title>
-    <meta name="description" content="Configure autocorrect, autocapitalize, and more">
+    <title>Input Behavior - CleverKeys User Guide</title>
+    <meta name="description" content="Autocorrect, autocaps, double-space">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,30 +12,37 @@
             theme: {
                 extend: {
                     colors: {
-                        'wiki-primary': '#10b981',
-                        'wiki-primary-light': '#34d399',
-                        'wiki-accent': '#3b82f6',
-                        'wiki-dark': '#0d1117',
-                        'wiki-surface': '#161b22',
-                        'wiki-card': '#21262d',
-                        'wiki-border': '#30363d',
+                        'ck-green': '#10b981',
+                        'ck-green-dark': '#059669',
+                        'ck-green-light': '#34d399',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text-wiki {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-wiki-dark text-gray-100 min-h-screen">
+<body class="bg-ck-dark text-gray-100 min-h-screen">
     <!-- Nav -->
-    <nav class="sticky top-0 bg-wiki-dark/95 backdrop-blur border-b border-wiki-border z-50">
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="../" class="flex items-center gap-3">
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
                 <span class="font-bold">CleverKeys</span>
             </a>
             <div class="flex gap-4">
-                <a href="./" class="text-wiki-primary font-medium">Wiki</a>
-                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Docs</a>
+                <a href="./" class="text-green-400 font-medium">User Guide</a>
+                <a href="../specs/" class="text-gray-400 hover:text-white transition-colors">Tech Specs</a>
                 <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
             </div>
         </div>
@@ -44,9 +51,11 @@
     <!-- Breadcrumb -->
     <div class="container mx-auto px-6 py-4">
         <div class="flex items-center gap-2 text-sm text-gray-500">
-            <a href="../" class="hover:text-wiki-primary">Home</a>
+            <a href="../" class="hover:text-ck-green">Home</a>
             <span>/</span>
-            <a href="./" class="hover:text-wiki-primary">Wiki</a>
+            <a href="./" class="hover:text-ck-green">User Guide</a>
+            <span>/</span>
+            <a href="./?category=Settings" class="hover:text-ck-green">Settings</a>
             <span>/</span>
             <span class="text-gray-300">Input Behavior</span>
         </div>
@@ -54,278 +63,208 @@
 
     <!-- Header -->
     <header class="container mx-auto px-6 pb-6">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="px-3 py-1 text-sm rounded-full" style="background: #6366f120; color: #6366f1">Settings</span>
-            <span class="px-3 py-1 text-sm rounded-full bg-wiki-card text-gray-400">intermediate</span>
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #6b728020; color: #6b7280">Settings</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">P1</span>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-2">Input Behavior</h1>
-        <p class="text-xl text-gray-400">Configure autocorrect, autocapitalize, and more</p>
-        
-        <div class="flex flex-wrap gap-2 mt-4">
-            <span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#input</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#autocorrect</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#autocapitalize</span><span class="px-2 py-1 text-xs rounded-full bg-wiki-card text-gray-400">#double-space</span>
-        </div>
-    
+        <h1 class="text-4xl font-bold gradient-text-wiki mb-2">Input Behavior</h1>
+        <p class="text-xl text-gray-400">Autocorrect, autocaps, double-space</p>
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-6 pb-20">
-        <div class="flex gap-8">
-            <article class="flex-1 bg-wiki-surface rounded-2xl p-8 max-w-4xl">
-                <h1 class="text-3xl font-bold mb-6 text-white">Input Behavior Settings</h1>
+    <main class="container mx-auto px-6 pb-12">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300 leading-relaxed">title: Input Behavior Settings</p>
+<p class="mb-4 text-gray-300 leading-relaxed">description: Configure typing behavior and text processing</p>
+<p class="mb-4 text-gray-300 leading-relaxed">category: Settings</p>
+<p class="mb-4 text-gray-300 leading-relaxed">difficulty: intermediate</p>
+<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/settings/input-behavior-spec.md</p>
+<hr class="border-gray-700 my-6">
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Input Behavior Settings</h1>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Configure how CleverKeys processes your input, including auto-capitalization, punctuation, and special behaviors.</p>
 
-<h2 id="quick-summary" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Quick Summary</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">What</th><th class="px-4 py-2 text-left border-b border-wiki-border">Description</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Purpose</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Control typing behavior</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Access</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Settings > Input</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Options</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Auto-cap, double-space, smart punct</td></tr></tbody></table></div>
-<h2 id="auto-capitalization" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Auto-Capitalization</h2>
+<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Control typing behavior</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Input</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Options</strong></td><td class="px-4 py-2 border-t border-gray-700">Auto-cap, double-space, smart punct</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Auto-Capitalization</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Automatically capitalize letters:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Behavior</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Off</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Never auto-capitalize</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Sentences</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Capitalize after . ! ?</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Words</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Capitalize each word (for names)</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Characters</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">All uppercase</td></tr></tbody></table></div>
-<h3 id="how-auto-cap-works" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">How Auto-Cap Works</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Behavior</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Off</strong></td><td class="px-4 py-2 border-t border-gray-700">Never auto-capitalize</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Sentences</strong></td><td class="px-4 py-2 border-t border-gray-700">Capitalize after . ! ?</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Words</strong></td><td class="px-4 py-2 border-t border-gray-700">Capitalize each word (for names)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Characters</strong></td><td class="px-4 py-2 border-t border-gray-700">All uppercase</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">How Auto-Cap Works</h3>
 
-<pre class="bg-wiki-dark p-4 rounded-lg overflow-x-auto my-4"><code class="language-text">Sentence mode:
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">Sentence mode:
 <p class="mb-4 text-gray-300 leading-relaxed">"hello world. " → next letter capitalized</p>
 <p class="mb-4 text-gray-300 leading-relaxed">"what?! " → next letter capitalized</code></pre></p>
 
-<h2 id="double-space-period" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Double-Space Period</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Double-Space Period</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Insert period and space when tapping space twice:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Result</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Enabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">"hello  " → "hello. "</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Disabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">"hello  " → "hello  "</td></tr></tbody></table></div>
-<h3 id="behavior-details" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Behavior Details</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Result</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enabled</strong></td><td class="px-4 py-2 border-t border-gray-700">"hello  " → "hello. "</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Disabled</strong></td><td class="px-4 py-2 border-t border-gray-700">"hello  " → "hello  "</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Behavior Details</h3>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; Works after letters, not punctuation</li>
-<li class="ml-4 py-1">&#8226; Adds period and capitalizes next word</li>
-<li class="ml-4 py-1">&#8226; Can be disabled per-app</li>
-
-</ul><h2 id="smart-punctuation" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Smart Punctuation</h2>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Works after letters, not punctuation</li>
+<li class="ml-4 text-gray-300">&#8226; Adds period and capitalizes next word</li>
+<li class="ml-4 text-gray-300">&#8226; Can be disabled per-app</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Smart Punctuation</h2>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Automatic punctuation formatting:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Feature</th><th class="px-4 py-2 text-left border-b border-wiki-border">Example</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Auto-space after punct</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">"hello," → "hello, "</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Remove space before punct</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">"hello ," → "hello,"</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Smart quotes</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">"test" → "test"</td></tr></tbody></table></div>
-<h2 id="delete-behavior" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Delete Behavior</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Feature</td><td class="px-4 py-2 border-t border-gray-700">Example</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Auto-space after punct</strong></td><td class="px-4 py-2 border-t border-gray-700">"hello," → "hello, "</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Remove space before punct</strong></td><td class="px-4 py-2 border-t border-gray-700">"hello ," → "hello,"</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Smart quotes</strong></td><td class="px-4 py-2 border-t border-gray-700">"test" → "test"</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Delete Behavior</h2>
 
-<h3 id="backspace-mode" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Backspace Mode</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Backspace Mode</h3>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Option</th><th class="px-4 py-2 text-left border-b border-wiki-border">Behavior</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Character</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Delete one character</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Selection</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Delete selection first</td></tr></tbody></table></div>
-<h3 id="delete-word" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Delete Word</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Option</td><td class="px-4 py-2 border-t border-gray-700">Behavior</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Character</strong></td><td class="px-4 py-2 border-t border-gray-700">Delete one character</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Selection</strong></td><td class="px-4 py-2 border-t border-gray-700">Delete selection first</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Delete Word</h3>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Effect</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Whole Word</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Delete entire word</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">To Word Boundary</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Delete to space/punctuation</td></tr></tbody></table></div>
-<h2 id="swipe-sensitivity" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Swipe Sensitivity</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Whole Word</strong></td><td class="px-4 py-2 border-t border-gray-700">Delete entire word</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">To Word Boundary</strong></td><td class="px-4 py-2 border-t border-gray-700">Delete to space/punctuation</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Swipe Sensitivity</h2>
 
-<h3 id="swipe-threshold" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Swipe Threshold</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Swipe Threshold</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">How far to swipe before registering:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Level</th><th class="px-4 py-2 text-left border-b border-wiki-border">Use Case</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Low</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Very sensitive, easy activation</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Normal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Balanced</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">High</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Requires intentional swipe</td></tr></tbody></table></div>
-<h3 id="swipe-speed" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Swipe Speed</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Level</td><td class="px-4 py-2 border-t border-gray-700">Use Case</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Low</strong></td><td class="px-4 py-2 border-t border-gray-700">Very sensitive, easy activation</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Normal</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">High</strong></td><td class="px-4 py-2 border-t border-gray-700">Requires intentional swipe</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Swipe Speed</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Minimum swipe velocity:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Effect</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Slow</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Accept slow swipes</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Normal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Standard speed requirement</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Fast</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Require quick swipes</td></tr></tbody></table></div>
-<h2 id="gesture-tuning" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Gesture Tuning</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Slow</strong></td><td class="px-4 py-2 border-t border-gray-700">Accept slow swipes</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Normal</strong></td><td class="px-4 py-2 border-t border-gray-700">Standard speed requirement</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Fast</strong></td><td class="px-4 py-2 border-t border-gray-700">Require quick swipes</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Gesture Tuning</h2>
 
-<h3 id="long-press-delay" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Long Press Delay</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Long Press Delay</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">Time before long press activates:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Duration</th><th class="px-4 py-2 text-left border-b border-wiki-border">Use Case</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Short (200ms)</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Fast access</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Normal (400ms)</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Balanced</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Long (600ms)</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Avoid accidental activation</td></tr></tbody></table></div>
-<h3 id="short-swipe-distance" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Short Swipe Distance</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Duration</td><td class="px-4 py-2 border-t border-gray-700">Use Case</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Short (200ms)</strong></td><td class="px-4 py-2 border-t border-gray-700">Fast access</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Normal (400ms)</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long (600ms)</strong></td><td class="px-4 py-2 border-t border-gray-700">Avoid accidental activation</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Short Swipe Distance</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">How far to swipe for subkey:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Distance</th><th class="px-4 py-2 text-left border-b border-wiki-border">Effect</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Short</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Easy activation, may be accidental</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Normal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Balanced</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Long</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Requires intentional swipe</td></tr></tbody></table></div>
-<h2 id="cursor-control" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Cursor Control</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Distance</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Short</strong></td><td class="px-4 py-2 border-t border-gray-700">Easy activation, may be accidental</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Normal</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long</strong></td><td class="px-4 py-2 border-t border-gray-700">Requires intentional swipe</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Cursor Control</h2>
 
-<h3 id="cursor-movement-speed" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Cursor Movement Speed</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Cursor Movement Speed</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">In trackpoint/cursor mode:</p>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Speed</th><th class="px-4 py-2 text-left border-b border-wiki-border">Behavior</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Slow</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Precise movement</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Normal</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Balanced</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Fast</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Quick navigation</td></tr></tbody></table></div>
-<h3 id="snap-to-words" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Snap to Words</h3>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Speed</td><td class="px-4 py-2 border-t border-gray-700">Behavior</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Slow</strong></td><td class="px-4 py-2 border-t border-gray-700">Precise movement</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Normal</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Fast</strong></td><td class="px-4 py-2 border-t border-gray-700">Quick navigation</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Snap to Words</h3>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Effect</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Enabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Cursor snaps to word boundaries</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Disabled</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Free movement</td></tr></tbody></table></div>
-<h2 id="tips-and-tricks" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Tips and Tricks</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Cursor snaps to word boundaries</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Disabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Free movement</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Fast typing</strong>: Lower thresholds and delays</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Precision</strong>: Higher thresholds, longer delays</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">One-handed</strong>: Increase sensitivity</li>
-<li class="ml-4 py-1">&#8226; <strong class="font-semibold text-white">Error-prone</strong>: Raise thresholds</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Fast typing</strong>: Lower thresholds and delays</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Precision</strong>: Higher thresholds, longer delays</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">One-handed</strong>: Increase sensitivity</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Error-prone</strong>: Raise thresholds</li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">If you're getting accidental swipes, increase the swipe threshold.</blockquote>
 
-</ul><div class="callout callout-tip bg-emerald-900/20 border-l-4 border-emerald-500 p-4 my-4 rounded-r">
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="font-semibold text-emerald-400 mb-1">Tip</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">                <div class="text-gray-300">If you're getting accidental swipes, increase the swipe threshold.</div></p>
-<p class="mb-4 text-gray-300 leading-relaxed">            </div></p>
-<h2 id="all-input-settings" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">All Input Settings</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">All Input Settings</h2>
 
-<div class="overflow-x-auto my-4"><table class="w-full border-collapse"><thead class="bg-wiki-card"><tr><th class="px-4 py-2 text-left border-b border-wiki-border">Setting</th><th class="px-4 py-2 text-left border-b border-wiki-border">Location</th><th class="px-4 py-2 text-left border-b border-wiki-border">Default</th></tr></thead><tbody><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Auto-Capitalize</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Input</td><td class="px-4 py-2 border-b border-wiki-border/50">Sentences</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Double-Space Period</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Input</td><td class="px-4 py-2 border-b border-wiki-border/50">On</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Smart Punctuation</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Input</td><td class="px-4 py-2 border-b border-wiki-border/50">On</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Long Press Delay</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Input</td><td class="px-4 py-2 border-b border-wiki-border/50">400ms</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Swipe Threshold</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Input</td><td class="px-4 py-2 border-b border-wiki-border/50">Normal</td></tr><tr><td class="px-4 py-2 border-b border-wiki-border/50"><strong class="font-semibold text-white">Short Swipe Distance</strong></td><td class="px-4 py-2 border-b border-wiki-border/50">Gestures</td><td class="px-4 py-2 border-b border-wiki-border/50">Normal</td></tr></tbody></table></div>
-<h2 id="common-questions" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Common Questions</h2>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Default</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Auto-Capitalize</strong></td><td class="px-4 py-2 border-t border-gray-700">Input</td><td class="px-4 py-2 border-t border-gray-700">Sentences</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Double-Space Period</strong></td><td class="px-4 py-2 border-t border-gray-700">Input</td><td class="px-4 py-2 border-t border-gray-700">On</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Smart Punctuation</strong></td><td class="px-4 py-2 border-t border-gray-700">Input</td><td class="px-4 py-2 border-t border-gray-700">On</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long Press Delay</strong></td><td class="px-4 py-2 border-t border-gray-700">Input</td><td class="px-4 py-2 border-t border-gray-700">400ms</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe Threshold</strong></td><td class="px-4 py-2 border-t border-gray-700">Input</td><td class="px-4 py-2 border-t border-gray-700">Normal</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Short Swipe Distance</strong></td><td class="px-4 py-2 border-t border-gray-700">Gestures</td><td class="px-4 py-2 border-t border-gray-700">Normal</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
-<h3 id="q-why-isn-t-auto-capitalize-working-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Why isn't auto-capitalize working?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why isn't auto-capitalize working?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Check if it's enabled in Settings > Input. Some apps override keyboard behavior.</p>
 
-<h3 id="q-how-do-i-disable-double-space-period-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: How do I disable double-space period?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I disable double-space period?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Settings > Input > Double-Space Period > Off.</p>
 
-<h3 id="q-can-i-have-different-settings-per-app-" class="text-xl font-semibold mt-8 mb-3 text-wiki-primary-light scroll-mt-20">Q: Can I have different settings per app?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I have different settings per app?</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: Some settings (like auto-cap) respect app hints. Full per-app settings may be added in future.</p>
 
-<h2 id="related-features" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Related Features</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4 py-1">&#8226; <a href="../typing/autocorrect.md" class="text-wiki-accent hover:underline">Autocorrect</a> - Text correction</li>
-<li class="ml-4 py-1">&#8226; <a href="../gestures/short-swipes.md" class="text-wiki-accent hover:underline">Gestures</a> - Gesture configuration</li>
-<li class="ml-4 py-1">&#8226; <a href="accessibility.md" class="text-wiki-accent hover:underline">Accessibility</a> - Touch accommodation</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../typing/autocorrect.html" class="text-green-400 hover:underline">Autocorrect</a> - Text correction</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../gestures/short-swipes.html" class="text-green-400 hover:underline">Gestures</a> - Gesture configuration</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="accessibility.html" class="text-green-400 hover:underline">Accessibility</a> - Touch accommodation</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
 
-</ul><h2 id="technical-details" class="text-2xl font-bold mt-10 mb-4 text-white scroll-mt-20">Technical Details</h2>
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/settings/input-behavior-spec.html" class="text-green-400 hover:underline">Input Behavior Technical Specification</a>.</p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/settings/input-behavior-spec.md" class="text-wiki-accent hover:underline">Input Behavior Technical Specification</a>.</p>
-
-                
-        <div class="flex justify-between items-center mt-12 pt-8 border-t border-wiki-border">
-            
-                <a href="settings/appearance.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <div class="text-right">
-                        <div class="text-xs uppercase text-gray-500">Previous</div>
-                        <div class="font-medium">Appearance Settings</div>
-                    </div>
-                </a>
-            
-            
-                <a href="settings/haptics.html" class="group flex items-center gap-2 text-gray-400 hover:text-wiki-primary transition-colors">
-                    <div>
-                        <div class="text-xs uppercase text-gray-500">Next</div>
-                        <div class="font-medium">Haptic Feedback</div>
-                    </div>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-            
         </div>
-    
-            </article>
-            
-        <nav class="hidden lg:block sticky top-24 w-64 shrink-0">
-            <div class="text-sm font-semibold text-gray-400 uppercase mb-3">On This Page</div>
-            <ul class="space-y-2 text-sm border-l border-wiki-border pl-4">
-                
-                    <li class="">
-                        <a href="#quick-summary" class="text-gray-400 hover:text-wiki-primary transition-colors">Quick Summary</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#auto-capitalization" class="text-gray-400 hover:text-wiki-primary transition-colors">Auto-Capitalization</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#how-auto-cap-works" class="text-gray-400 hover:text-wiki-primary transition-colors">How Auto-Cap Works</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#double-space-period" class="text-gray-400 hover:text-wiki-primary transition-colors">Double-Space Period</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#behavior-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Behavior Details</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#smart-punctuation" class="text-gray-400 hover:text-wiki-primary transition-colors">Smart Punctuation</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#delete-behavior" class="text-gray-400 hover:text-wiki-primary transition-colors">Delete Behavior</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#backspace-mode" class="text-gray-400 hover:text-wiki-primary transition-colors">Backspace Mode</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#delete-word" class="text-gray-400 hover:text-wiki-primary transition-colors">Delete Word</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#swipe-sensitivity" class="text-gray-400 hover:text-wiki-primary transition-colors">Swipe Sensitivity</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#swipe-threshold" class="text-gray-400 hover:text-wiki-primary transition-colors">Swipe Threshold</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#swipe-speed" class="text-gray-400 hover:text-wiki-primary transition-colors">Swipe Speed</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#gesture-tuning" class="text-gray-400 hover:text-wiki-primary transition-colors">Gesture Tuning</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#long-press-delay" class="text-gray-400 hover:text-wiki-primary transition-colors">Long Press Delay</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#short-swipe-distance" class="text-gray-400 hover:text-wiki-primary transition-colors">Short Swipe Distance</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#cursor-control" class="text-gray-400 hover:text-wiki-primary transition-colors">Cursor Control</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#cursor-movement-speed" class="text-gray-400 hover:text-wiki-primary transition-colors">Cursor Movement Speed</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#snap-to-words" class="text-gray-400 hover:text-wiki-primary transition-colors">Snap to Words</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#tips-and-tricks" class="text-gray-400 hover:text-wiki-primary transition-colors">Tips and Tricks</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#all-input-settings" class="text-gray-400 hover:text-wiki-primary transition-colors">All Input Settings</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#common-questions" class="text-gray-400 hover:text-wiki-primary transition-colors">Common Questions</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-why-isn-t-auto-capitalize-working-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Why isn't auto-capitalize working?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-how-do-i-disable-double-space-period-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: How do I disable double-space period?</a>
-                    </li>
-                
-                    <li class="ml-3">
-                        <a href="#q-can-i-have-different-settings-per-app-" class="text-gray-400 hover:text-wiki-primary transition-colors">Q: Can I have different settings per app?</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#related-features" class="text-gray-400 hover:text-wiki-primary transition-colors">Related Features</a>
-                    </li>
-                
-                    <li class="">
-                        <a href="#technical-details" class="text-gray-400 hover:text-wiki-primary transition-colors">Technical Details</a>
-                    </li>
-                
-            </ul>
-        </nav>
-    
+        
+        <!-- Prev/Next Navigation -->
+        <div class="max-w-4xl mt-8 flex justify-between">
+            <a href="settings/appearance.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span>&larr;</span>
+                <span class="text-sm text-gray-400">Appearance</span>
+            </a>
+            <a href="settings/haptics.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+                <span class="text-sm text-gray-400">Haptics & Sound</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-wiki-border">
-        <p>CleverKeys Wiki - Open Source Neural Keyboard</p>
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys User Guide - Making typing smarter</p>
     </footer>
 </body>
 </html>
