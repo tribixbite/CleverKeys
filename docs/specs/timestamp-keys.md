@@ -1,25 +1,59 @@
-# Timestamp Keys Specification
-
-**Status**: Implemented
-**Version**: 1.2.9
-**Last Updated**: 2026-01-15
-**GitHub Issue**: #1103
+# Timestamp Keys
 
 ## Overview
 
 Timestamp keys insert the current date and/or time formatted according to a user-specified pattern when pressed. This allows users to quickly insert dates, times, or combined datetime strings without typing them manually.
 
+## Key Files
+
+| File | Class/Function | Purpose |
+|------|----------------|---------|
+| `src/main/kotlin/tribixbite/cleverkeys/KeyValue.kt:126` | `Kind.Timestamp` | Enum value for timestamp keys |
+| `src/main/kotlin/tribixbite/cleverkeys/KeyValue.kt:162-173` | `TimestampFormat` | Data class holding pattern and symbol |
+| `src/main/kotlin/tribixbite/cleverkeys/KeyValue.kt:460-466` | `makeTimestampKey()` | Factory method to create keys |
+| `src/main/kotlin/tribixbite/cleverkeys/KeyValueParser.kt:121-127` | `parseTimestampKeydef()` | Parser for short syntax |
+| `src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt:377-401` | `handleTimestampKey()` | Formats and inserts time |
+
+## Architecture
+
+```
+Key Press (timestamp key)
+       |
+       v
++----------------------+
+| KeyEventHandler      | -- Receives timestamp KeyValue
+| handleKeyPress()     |
++----------------------+
+       |
+       v
++----------------------+
+| handleTimestampKey() | -- Extract pattern from KeyValue.timestampFormat
++----------------------+
+       |
+       v
++----------------------+
+| DateTimeFormatter    | -- Format current time with pattern
+| or SimpleDateFormat  |
++----------------------+
+       |
+       v
++----------------------+
+| InputConnection      | -- Commit formatted text
+| commitText()         |
++----------------------+
+```
+
 ## Syntax
 
-### Short Syntax (New Style)
+### Short Syntax
 
 ```
-timestamp:'pattern'
+symbol:timestamp:'pattern'
 ```
 
-Example: `Date:timestamp:'yyyy-MM-dd'` displays "Date" and inserts "2026-01-15"
+Example: `📅:timestamp:'yyyy-MM-dd'` displays "📅" and inserts "2026-01-15"
 
-### Long Syntax (Legacy Style)
+### Long Syntax (Legacy)
 
 ```
 :timestamp symbol='symbol':'pattern'
@@ -27,7 +61,7 @@ Example: `Date:timestamp:'yyyy-MM-dd'` displays "Date" and inserts "2026-01-15"
 
 Example: `:timestamp symbol='📅':'yyyy-MM-dd HH:mm'`
 
-### Pattern Format
+## Pattern Format
 
 Uses Java DateTimeFormatter patterns:
 
@@ -46,27 +80,80 @@ Uses Java DateTimeFormatter patterns:
 | `E` | Day of week | Wed |
 | `EEEE` | Full day name | Wednesday |
 
-### Common Examples
+## Pre-defined Timestamp Keys
 
-| Key Definition | Display | Output Example |
-|---------------|---------|----------------|
-| `📅:timestamp:'yyyy-MM-dd'` | 📅 | 2026-01-15 |
-| `🕐:timestamp:'HH:mm'` | 🕐 | 14:30 |
-| `📆:timestamp:'yyyy-MM-dd HH:mm:ss'` | 📆 | 2026-01-15 14:30:45 |
-| `🗓:timestamp:'EEEE, MMMM d, yyyy'` | 🗓 | Wednesday, January 15, 2026 |
-| `⏰:timestamp:'h:mm a'` | ⏰ | 2:30 PM |
+Available without specifying patterns:
 
-## Implementation
+| Key Name | Symbol | Pattern | Output Example |
+|----------|--------|---------|----------------|
+| `timestamp_date` | 📅 | `yyyy-MM-dd` | 2026-01-15 |
+| `timestamp_time` | 🕐 | `HH:mm` | 14:30 |
+| `timestamp_datetime` | 📆 | `yyyy-MM-dd HH:mm` | 2026-01-15 14:30 |
+| `timestamp_time_seconds` | ⏱ | `HH:mm:ss` | 14:30:45 |
+| `timestamp_date_short` | 📅 | `MM/dd/yy` | 01/15/26 |
+| `timestamp_date_long` | 🗓 | `EEEE, MMMM d, yyyy` | Wednesday, January 15, 2026 |
+| `timestamp_time_12h` | 🕐 | `h:mm a` | 2:30 PM |
+| `timestamp_iso` | 📋 | `yyyy-MM-dd'T'HH:mm:ss` | 2026-01-15T14:30:45 |
 
-### Key Components
+## Implementation Details
 
-| Component | File | Purpose |
-|-----------|------|---------|
-| `Kind.Timestamp` | `KeyValue.kt:126` | Enum value for timestamp keys |
-| `TimestampFormat` | `KeyValue.kt:162-173` | Data class holding pattern and symbol |
-| `makeTimestampKey()` | `KeyValue.kt:460-466` | Factory method to create timestamp keys |
-| `parseTimestampKeydef()` | `KeyValueParser.kt:121-127` | Parser for short syntax |
-| `handleTimestampKey()` | `KeyEventHandler.kt:377-401` | Handler that formats and inserts time |
+### Data Class
+
+```kotlin
+data class TimestampFormat(
+    val pattern: String,
+    val symbol: String
+)
+```
+
+### Factory Method
+
+```kotlin
+fun makeTimestampKey(pattern: String, symbol: String): KeyValue {
+    return KeyValue(
+        kind = Kind.Timestamp,
+        char = '\u0000',
+        timestampFormat = TimestampFormat(pattern, symbol)
+    )
+}
+```
+
+### Handler Implementation
+
+```kotlin
+private fun handleTimestampKey(key: KeyValue) {
+    val format = key.timestampFormat ?: return
+    val formattedTime = try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // API 26+: Use java.time
+            val formatter = DateTimeFormatter.ofPattern(format.pattern)
+            LocalDateTime.now().format(formatter)
+        } else {
+            // API < 26: Use SimpleDateFormat
+            val formatter = SimpleDateFormat(format.pattern, Locale.getDefault())
+            formatter.format(Date())
+        }
+    } catch (e: Exception) {
+        Log.w(TAG, "Invalid timestamp format: ${format.pattern}")
+        format.pattern  // Fallback: insert pattern itself
+    }
+    inputConnection.commitText(formattedTime, 1)
+}
+```
+
+### Parser Implementation
+
+```kotlin
+fun parseTimestampKeydef(keydef: String): KeyValue? {
+    // Short syntax: symbol:timestamp:'pattern'
+    val shortMatch = """(.+):timestamp:'(.+)'""".toRegex().matchEntire(keydef)
+    if (shortMatch != null) {
+        val (symbol, pattern) = shortMatch.destructured
+        return makeTimestampKey(pattern, symbol)
+    }
+    return null
+}
+```
 
 ### API Compatibility
 
@@ -76,54 +163,5 @@ Uses Java DateTimeFormatter patterns:
 ### Error Handling
 
 If the pattern is invalid:
-1. Logs a warning: `"Invalid timestamp format: [pattern]"`
+1. Logs warning: `"Invalid timestamp format: [pattern]"`
 2. Falls back to inserting the pattern string itself
-
-## Pre-defined Timestamp Keys
-
-For convenience, these named keys are available without specifying patterns:
-
-| Key Name | Symbol | Output Example |
-|----------|--------|----------------|
-| `timestamp_date` | 📅 | 2026-01-15 |
-| `timestamp_time` | 🕐 | 14:30 |
-| `timestamp_datetime` | 📆 | 2026-01-15 14:30 |
-| `timestamp_time_seconds` | ⏱ | 14:30:45 |
-| `timestamp_date_short` | 📅 | 01/15/26 |
-| `timestamp_date_long` | 🗓 | Wednesday, January 15, 2026 |
-| `timestamp_time_12h` | 🕐 | 2:30 PM |
-| `timestamp_iso` | 📋 | 2026-01-15T14:30:45 |
-
-## Usage in Custom Layouts
-
-### Using Pre-defined Keys
-
-Add to `custom_extra_keys` setting or custom layout XML:
-```
-timestamp_date
-```
-
-### Using Custom Patterns
-
-```
-timestamp:'yyyy-MM-dd'
-```
-
-Or with custom symbol:
-```
-📅:timestamp:'yyyy-MM-dd'
-```
-
-## Testing
-
-1. Add timestamp key to extra keys
-2. Press key - should insert current formatted time
-3. Test various patterns (date-only, time-only, combined)
-4. Test on API < 26 device for fallback behavior
-5. Test invalid pattern handling
-
-## Related
-
-- [Short Swipe Customization](./short-swipe-customization.md) - For adding timestamp to key gestures
-- [Custom Layouts](./layout-system.md) - For adding to custom layouts
-- [Java DateTimeFormatter](https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html)

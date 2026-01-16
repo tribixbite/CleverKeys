@@ -1,49 +1,29 @@
-# TrackPoint Navigation Mode Specification
+# TrackPoint Navigation Mode
 
-## Feature Overview
-**Feature Name**: TrackPoint Navigation Mode
-**Priority**: P1
-**Status**: Complete
-**Target Version**: v1.2.4
+## Overview
 
-### Summary
-A joystick-style cursor control mode activated by holding navigation keys (arrow keys), enabling proportional multi-directional cursor movement.
+TrackPoint Navigation Mode provides joystick-style cursor control by holding arrow keys (without initial swipe movement). When activated, finger movement in any direction moves the cursor proportionally, with speed scaling based on distance from the activation point. Supports all 8 directions including diagonals for fluid text navigation.
 
-### Motivation
-Traditional arrow key navigation requires repeated taps to move multiple positions. TrackPoint mode allows fluid, continuous cursor movement in any direction by holding a nav key and moving the finger, similar to a ThinkPad TrackPoint.
+## Key Files
 
-## Requirements
+| File | Class/Function | Purpose |
+|------|----------------|---------|
+| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `handleTrackPointRepeat()` | Main cursor movement logic |
+| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `FLAG_P_TRACKPOINT_MODE` | Mode state flag (value: 64) |
+| `src/main/kotlin/tribixbite/cleverkeys/VibratorCompat.kt` | `CLOCK_TICK` pattern | Distinct haptic on activation |
+| `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | Haptic toggle | TrackPoint haptic setting |
 
-### Functional Requirements
-1. **FR-1**: Touch and hold arrow key (without initial movement) enters TrackPoint mode
-2. **FR-2**: Finger movement in any direction moves cursor proportionally
-3. **FR-3**: Diagonal movement supported (NE moves up+right simultaneously)
-4. **FR-4**: Speed scales with distance from activation center
-5. **FR-5**: Distinct haptic feedback on mode activation
-6. **FR-6**: Short swipe on nav key still performs single cursor movement
-7. **FR-7**: Nav keys excluded from short gesture path collection
+## Architecture
 
-### Non-Functional Requirements
-1. **NFR-1**: Performance - Smooth cursor movement with <16ms response
-2. **NFR-2**: Usability - Clear haptic distinction from normal key press
-3. **NFR-3**: Reliability - No interference with short swipe gestures
-
-### User Stories
-- **As a** developer, **I want** to navigate code quickly, **so that** I can edit precisely without lifting my finger
-- **As a** user, **I want** continuous cursor movement, **so that** I can position cursor efficiently in long documents
-
-## Technical Design
-
-### Architecture
 ```
-User Input (arrow key)
+User Input (arrow key touch + hold without movement)
        |
        v
 +------------------+
 | onTouchDown()    | -- Records initial touch position
 +------------------+
        |
-       v (no initial movement + hold)
+       v (no initial movement + hold time exceeded)
 +------------------+
 | TrackPoint Mode  | -- FLAG_P_TRACKPOINT_MODE activated
 | Activation       | -- CLOCK_TICK haptic feedback
@@ -51,142 +31,202 @@ User Input (arrow key)
        |
        v
 +------------------+
-| Continuous       | -- Repeating handler tracks finger position
-| Position Track   | -- Calculates direction and distance
+| handleTrackPoint | -- Repeating handler tracks position
+| Repeat()         | -- Calculates direction and distance
 +------------------+
        |
        v
 +------------------+
-| Cursor Movement  | -- Sends arrow key events proportionally
+| Cursor Movement  | -- Sends DPAD_* key events
 | Handler          | -- Supports all 8 directions
 +------------------+
 ```
 
-### Component Breakdown
-1. **Pointers.kt**: Handles touch input, mode activation, and cursor movement
-2. **VibratorCompat.kt**: Provides distinct haptic feedback (CLOCK_TICK pattern)
-3. **Config.kt**: TrackPoint haptic toggle setting
+## Data Flow
 
-### Data Structures
+1. **Activation**: Hold arrow key without initial swipe movement
+2. **Detection**: After `LONGPRESS_TIMEOUT` with <30px movement, mode activates
+3. **Tracking**: Repeat handler reads current finger position
+4. **Direction**: Calculate angle from activation point to current position
+5. **Speed**: Distance from center determines repeat rate
+6. **Output**: Appropriate DPAD_* key events sent to input connection
+
+## Configuration
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `trackpoint_haptic_enabled` | Boolean | true | Enable CLOCK_TICK on mode activation |
+| `short_gesture_min_distance` | Int | 15 | Pixels before short swipe detection (30px for nav keys) |
+
+## Public API
+
+### Pointers.kt
+
 ```kotlin
-// State flag for mode tracking
+// State flag constant
 private const val FLAG_P_TRACKPOINT_MODE = 64
 
-// Timer identifier
+// Timer identifier for repeat handler
 private val trackpointWhat = Any()
 
-// Direction constants
-enum class TrackPointDirection {
-    NORTH, NORTHEAST, EAST, SOUTHEAST,
-    SOUTH, SOUTHWEST, WEST, NORTHWEST
-}
-```
-
-### API/Interface Design
-```kotlin
-// TrackPoint handling in Pointers.kt
+// Main TrackPoint handler - called repeatedly while mode active
 private fun handleTrackPointRepeat(ptr: Pointer) {
     val dx = ptr.currentX - ptr.activationX
     val dy = ptr.currentY - ptr.activationY
 
-    // Calculate direction from delta
+    // Calculate 8-direction from delta
     val direction = getTrackPointDirection(dx, dy)
 
-    // Send cursor movement based on direction
-    when (direction) {
-        NORTH -> sendArrowKey(KeyEvent.KEYCODE_DPAD_UP)
-        NORTHEAST -> {
-            sendArrowKey(KeyEvent.KEYCODE_DPAD_UP)
-            sendArrowKey(KeyEvent.KEYCODE_DPAD_RIGHT)
-        }
-        // ... other directions
-    }
+    // Send cursor movement(s)
+    sendCursorMovement(direction)
 }
 
-// Haptic feedback on activation
-private fun triggerTrackPointHaptic() {
-    VibratorCompat.vibrate(HapticEvent.TRACKPOINT_ACTIVATE)
+// Get direction enum from delta coordinates
+private fun getTrackPointDirection(dx: Float, dy: Float): TrackPointDirection
+
+// Send arrow key event(s) for direction
+private fun sendCursorMovement(direction: TrackPointDirection)
+
+// Trigger activation haptic
+private fun triggerTrackPointHaptic()
+```
+
+### Direction Enumeration
+
+```kotlin
+enum class TrackPointDirection {
+    NORTH,      // Up only
+    NORTHEAST,  // Up + Right
+    EAST,       // Right only
+    SOUTHEAST,  // Down + Right
+    SOUTH,      // Down only
+    SOUTHWEST,  // Down + Left
+    WEST,       // Left only
+    NORTHWEST   // Up + Left
 }
 ```
 
-### State Management
-- `FLAG_P_TRACKPOINT_MODE` flag tracks active state
-- `activationX/Y` stores initial touch point
-- Movement tolerance: 30px before short swipe detection (increased from 15px for nav keys)
-- Timer-based repeat with speed based on finger distance
+## Implementation Details
 
-## Implementation Plan
+### Activation vs Short Swipe
 
-### Phase 1: Core TrackPoint Mode
-**Status**: Complete
-**Deliverables**:
-- [x] Hold detection on arrow keys
-- [x] 8-direction cursor movement
-- [x] Speed scaling based on distance
-- [x] Diagonal movement support
+TrackPoint mode activates when:
+1. Arrow key touched
+2. Finger moved <30px from initial position (nav keys use 30px, others use 15px)
+3. Hold time exceeds `LONGPRESS_TIMEOUT` (600ms)
 
-### Phase 2: Integration & Polish
-**Status**: Complete
-**Deliverables**:
-- [x] Distinct haptic feedback (CLOCK_TICK)
-- [x] Exclusion from short gesture collection
-- [x] Increased movement tolerance for nav keys
-- [x] Per-event haptic settings toggle
+If finger moves >30px before timeout, it's a short swipe (single cursor move).
 
-## Testing Strategy
+```kotlin
+// Nav keys have increased tolerance to allow hold activation
+val isNavKey = key.kind in listOf(Kind.Arrow_Up, Kind.Arrow_Down, Kind.Arrow_Left, Kind.Arrow_Right)
+val movementThreshold = if (isNavKey) 30 else 15
 
-### Unit Tests
-- Test case 1: Short swipe triggers single cursor movement
-- Test case 2: Hold activates TrackPoint mode
-- Test case 3: Distance scaling affects movement speed correctly
+if (distance < movementThreshold && holdTime > LONGPRESS_TIMEOUT) {
+    activateTrackPointMode(ptr)
+}
+```
 
-### Integration Tests
-- Test case 1: Cursor moves correctly in text editors
-- Test case 2: Diagonal movement produces expected results
-- Test case 3: Mode doesn't interfere with other gestures
+### Direction Calculation
 
-### UI/UX Tests
-- Test case 1: Haptic feedback is distinctly recognizable
-- Test case 2: TrackPoint haptic toggle works correctly
+Direction determined by angle from activation point:
 
-## Dependencies
+```kotlin
+private fun getTrackPointDirection(dx: Float, dy: Float): TrackPointDirection {
+    val angle = atan2(dy.toDouble(), dx.toDouble())
+    val degrees = Math.toDegrees(angle)
 
-### Internal Dependencies
-- `Pointers.kt` touch handling system
-- `VibratorCompat.kt` haptic feedback system
-- `Config.kt` haptic settings storage
+    // Map angle to 8 sectors (45 degrees each)
+    return when {
+        degrees in -22.5..22.5 -> EAST
+        degrees in 22.5..67.5 -> SOUTHEAST
+        degrees in 67.5..112.5 -> SOUTH
+        degrees in 112.5..157.5 -> SOUTHWEST
+        degrees > 157.5 || degrees < -157.5 -> WEST
+        degrees in -157.5..-112.5 -> NORTHWEST
+        degrees in -112.5..-67.5 -> NORTH
+        degrees in -67.5..-22.5 -> NORTHEAST
+        else -> EAST // fallback
+    }
+}
+```
 
-### External Dependencies
-- Android KeyEvent for cursor key codes
-- Android Vibrator API for haptics
+### Diagonal Movement
 
-### Breaking Changes
-- [ ] This feature introduces breaking changes
+Diagonal directions send two key events:
 
-## Configuration
+```kotlin
+private fun sendCursorMovement(direction: TrackPointDirection) {
+    when (direction) {
+        NORTH -> sendArrowKey(KEYCODE_DPAD_UP)
+        NORTHEAST -> {
+            sendArrowKey(KEYCODE_DPAD_UP)
+            sendArrowKey(KEYCODE_DPAD_RIGHT)
+        }
+        EAST -> sendArrowKey(KEYCODE_DPAD_RIGHT)
+        SOUTHEAST -> {
+            sendArrowKey(KEYCODE_DPAD_DOWN)
+            sendArrowKey(KEYCODE_DPAD_RIGHT)
+        }
+        SOUTH -> sendArrowKey(KEYCODE_DPAD_DOWN)
+        SOUTHWEST -> {
+            sendArrowKey(KEYCODE_DPAD_DOWN)
+            sendArrowKey(KEYCODE_DPAD_LEFT)
+        }
+        WEST -> sendArrowKey(KEYCODE_DPAD_LEFT)
+        NORTHWEST -> {
+            sendArrowKey(KEYCODE_DPAD_UP)
+            sendArrowKey(KEYCODE_DPAD_LEFT)
+        }
+    }
+}
+```
 
-### Haptic Settings
-The TrackPoint activation haptic can be toggled in Settings > Accessibility > Haptic Feedback:
-- **TrackPoint Mode**: Enable/disable CLOCK_TICK pattern on activation
-- Default: Enabled
+### Speed Scaling
 
-### Related Settings
-- Short Gesture Min Distance: Affects how quickly TrackPoint activates
-- Short Gesture Max Distance: Must be less than TrackPoint activation threshold
+Cursor movement speed scales with finger distance from activation center:
 
-## Error Handling
+```kotlin
+val distance = sqrt(dx * dx + dy * dy)
+val repeatDelay = when {
+    distance < 50 -> 200   // Slow (5 moves/sec)
+    distance < 100 -> 100  // Medium (10 moves/sec)
+    distance < 150 -> 50   // Fast (20 moves/sec)
+    else -> 25             // Very fast (40 moves/sec)
+}
+handler.postDelayed(trackpointRunnable, repeatDelay)
+```
+
+### Haptic Feedback
+
+Distinct CLOCK_TICK pattern on activation:
+
+```kotlin
+private fun triggerTrackPointHaptic() {
+    if (config.trackpointHapticEnabled) {
+        VibratorCompat.vibrate(HapticEvent.CLOCK_TICK)
+    }
+}
+```
+
+CLOCK_TICK provides a subtle, distinct feel different from normal key press vibration.
+
+### Nav Key Exclusion from Gesture Collection
+
+Arrow keys are excluded from short gesture path collection to prevent accidental gesture triggering:
+
+```kotlin
+private fun shouldCollectGesturePath(key: KeyValue): Boolean {
+    // Nav keys excluded - they have TrackPoint mode instead
+    if (key.kind in listOf(Kind.Arrow_Up, Kind.Arrow_Down, Kind.Arrow_Left, Kind.Arrow_Right)) {
+        return false
+    }
+    return true
+}
+```
+
+### Error Handling
+
 - No navigation target: Cursor movement commands sent but have no effect
-- Haptic unavailable: Graceful degradation, mode still functions
-- Rapid re-activation: Debounced to prevent haptic spam
-
-## Success Metrics
-- Metric 1: Users can position cursor in long documents 3x faster than tap-tap-tap
-- Metric 2: Diagonal movement feels natural and responsive
-- Acceptance criteria: All test cases pass, user feedback positive
-
----
-
-**Created**: 2026-01-14
-**Last Updated**: 2026-01-14
-**Owner**: CleverKeys Development
-**Reviewers**: tribixbite
+- Haptic unavailable: Mode still functions, just without feedback
+- Rapid re-activation: Debounced to prevent haptic spam (min 200ms between activations)

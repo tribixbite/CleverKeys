@@ -1,47 +1,27 @@
-# Selection-Delete Mode Specification
+# Selection-Delete Mode
 
-## Feature Overview
-**Feature Name**: Selection-Delete Mode
-**Priority**: P1
-**Status**: Complete
-**Target Version**: v1.2.4
+## Overview
 
-### Summary
-A gesture mode that enables text selection via swipe-hold on the backspace key, with automatic deletion on release.
+Selection-Delete Mode is a gesture that enables text selection by swiping and holding on the backspace key. When activated, horizontal finger movement selects characters (left/right), vertical movement selects lines (up/down), and releasing the finger deletes all selected text. This provides a single fluid gesture for rapid text correction.
 
-### Motivation
-Traditional text selection on mobile keyboards is cumbersome, requiring switching to cursor mode or long-pressing. This feature enables rapid text selection and deletion with a single fluid gesture on the backspace key.
+## Key Files
 
-## Requirements
+| File | Class/Function | Purpose |
+|------|----------------|---------|
+| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `handleSelectionDeleteRepeat()` | Main selection logic, repeat handler |
+| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `FLAG_P_SELECTION_DELETE_MODE` | Mode state flag (value: 128) |
+| `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `selection_delete_vertical_threshold` | Vertical activation threshold |
+| `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `selection_delete_vertical_speed` | Vertical speed multiplier |
+| `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` | Settings UI | Threshold and speed sliders |
 
-### Functional Requirements
-1. **FR-1**: Short swipe + hold on backspace key activates selection-delete mode
-2. **FR-2**: Horizontal finger movement selects characters (left/right)
-3. **FR-3**: Vertical finger movement selects lines (up/down)
-4. **FR-4**: Releasing finger deletes all selected text
-5. **FR-5**: Short swipe + immediate release performs normal subkey action (delete_last_word)
-6. **FR-6**: Regular hold without movement triggers normal key repeat
-7. **FR-7**: Bidirectional movement - direction changes dynamically with finger position
-8. **FR-8**: Diagonal movement supported (X and Y axes fire independently)
+## Architecture
 
-### Non-Functional Requirements
-1. **NFR-1**: Performance - Selection speed proportional to finger distance from activation center
-2. **NFR-2**: Usability - Configurable vertical threshold and speed via Settings
-3. **NFR-3**: Reliability - Must not interfere with normal backspace operations
-
-### User Stories
-- **As a** power user, **I want** to select and delete multiple words quickly, **so that** I can correct mistakes efficiently
-- **As a** user, **I want** to select entire lines, **so that** I can delete paragraphs without switching modes
-
-## Technical Design
-
-### Architecture
 ```
-User Input (backspace key)
+User Input (backspace key short swipe + hold)
        |
        v
 +------------------+
-| onTouchDown()    | -- Defers backspace handling for gesture detection
+| onTouchDown()    | -- Defers backspace for gesture detection
 +------------------+
        |
        v
@@ -50,126 +30,154 @@ User Input (backspace key)
 | Detection        |
 +------------------+
        |
-       v (if hold detected)
+       v (if hold detected after swipe)
 +------------------+
-| FLAG_P_SELECTION | -- Activates selection-delete mode
+| FLAG_P_SELECTION | -- Sets mode flag, records activation center
 | _DELETE_MODE     |
 +------------------+
        |
        v
 +------------------+
-| handleSelection  | -- Repeating handler for continuous selection
+| handleSelection  | -- Timer-based repeat, sends Shift+Arrow keys
 | DeleteRepeat()   |
 +------------------+
        |
-       v (on release)
+       v (on finger release)
 +------------------+
 | Delete selected  | -- Sends DEL key to remove selection
 | text             |
 +------------------+
 ```
 
-### Component Breakdown
-1. **Pointers.kt**: Handles touch input, gesture detection, and selection state
-2. **Config.kt**: Stores vertical threshold and speed settings
-3. **SettingsActivity.kt**: UI for configuring threshold and speed
+## Data Flow
 
-### Data Structures
+1. **Activation**: Short swipe on backspace key, then hold (don't lift finger)
+2. **Selection**: Finger movement from activation center determines direction
+   - Horizontal (dx): Shift+Left or Shift+Right for character selection
+   - Vertical (dy): Shift+Up or Shift+Down for line selection (if threshold met)
+3. **Speed Scaling**: Further from center = faster selection rate
+4. **Release**: Sends DEL key to delete all selected text
+
+## Configuration
+
+| Key | Type | Default | Range | Description |
+|-----|------|---------|-------|-------------|
+| `selection_delete_vertical_threshold` | Int | 40 | 20-80 | % of horizontal distance required for vertical selection |
+| `selection_delete_vertical_speed` | Float | 0.4 | 0.1-1.0 | Speed multiplier for vertical selection |
+
+## Public API
+
+### Pointers.kt
+
 ```kotlin
-// State flag for mode tracking
+// State flag constant
 private const val FLAG_P_SELECTION_DELETE_MODE = 128
 
-// Timer identifier
+// Timer identifier for repeat handler
 private val selectionDeleteWhat = Any()
 
-// Configuration settings
-selection_delete_vertical_threshold: Int  // 20-80%, default 40%
-selection_delete_vertical_speed: Float    // 0.1x-1.0x, default 0.4x
-```
-
-### API/Interface Design
-```kotlin
-// Selection handling in Pointers.kt
+// Main selection handler - called repeatedly while mode active
 private fun handleSelectionDeleteRepeat(ptr: Pointer) {
-    // Track X/Y axes independently
     val dx = ptr.currentX - ptr.selectionCenterX
     val dy = ptr.currentY - ptr.selectionCenterY
 
-    // Horizontal: Shift+Left or Shift+Right
-    // Vertical: Shift+Up or Shift+Down (with threshold)
+    // Horizontal selection (character by character)
+    if (abs(dx) > threshold) {
+        val key = if (dx > 0) DPAD_RIGHT else DPAD_LEFT
+        sendShiftArrow(key)
+    }
+
+    // Vertical selection (line by line) with configurable threshold
+    if (abs(dy) > verticalThreshold) {
+        val key = if (dy > 0) DPAD_DOWN else DPAD_UP
+        sendShiftArrow(key, speedMultiplier = verticalSpeed)
+    }
 }
 
-// Shift state management
-private fun makeInternalModifier(mod: Modifier): KeyValue
+// Helper to send Shift+Arrow for selection
+private fun sendShiftArrow(keyCode: Int, speedMultiplier: Float = 1.0f)
+
+// Helper to add Shift modifier to key
 private fun with_extra_mod(value: KeyValue, extra: Modifier): KeyValue
 ```
 
-### State Management
-- `FLAG_P_SELECTION_DELETE_MODE` flag tracks active state
-- `selectionCenterX/Y` stores activation point for distance calculation
-- Timer-based repeat with speed scaling based on finger distance
-- Shift modifier held during selection via `with_extra_mod()`
+## Implementation Details
 
-## Implementation Plan
+### Activation Sequence
 
-### Phase 1: Core Selection Mode
-**Status**: Complete
-**Deliverables**:
-- [x] Short swipe + hold detection on backspace
-- [x] Horizontal selection (character-by-character)
-- [x] Release-to-delete functionality
-- [x] Bidirectional movement support
+1. User touches backspace key
+2. User performs short swipe (any direction except center)
+3. User holds finger without lifting
+4. After `LONGPRESS_TIMEOUT` (600ms default), mode activates
+5. `FLAG_P_SELECTION_DELETE_MODE` flag set on pointer
+6. `selectionCenterX/Y` records activation point
+7. Repeat timer starts calling `handleSelectionDeleteRepeat()`
 
-### Phase 2: Vertical Selection & Configuration
-**Status**: Complete
-**Deliverables**:
-- [x] Vertical line selection (up/down)
-- [x] Configurable vertical threshold setting
-- [x] Configurable vertical speed multiplier
-- [x] Settings UI integration
+### Bidirectional Movement
 
-## Testing Strategy
+Selection direction changes dynamically based on current finger position relative to activation center:
 
-### Unit Tests
-- Test case 1: Short swipe triggers subkey action, not selection mode
-- Test case 2: Hold without movement triggers key repeat
-- Test case 3: Selection mode activates after threshold time
+```kotlin
+// Direction determined each repeat cycle
+val direction = when {
+    dx > 0 -> DPAD_RIGHT  // Finger right of center
+    dx < 0 -> DPAD_LEFT   // Finger left of center
+    else -> null
+}
+```
 
-### Integration Tests
-- Test case 1: Text selection works across app boundaries
-- Test case 2: Shift state properly maintained during selection
-- Test case 3: Settings changes take effect immediately
+This means:
+- Move finger left → select backwards
+- Move finger right → select forwards
+- Return to center and go opposite direction → select opposite direction
 
-### UI/UX Tests
-- Test case 1: Vertical threshold slider responds correctly
-- Test case 2: Speed setting affects selection rate proportionally
+### Independent Axis Handling
 
-## Dependencies
+X and Y axes fire independently, allowing diagonal selection:
 
-### Internal Dependencies
-- `Pointers.kt` touch handling system
-- `Config.kt` settings storage
-- `KeyValue` and `Modifier` from layout system
+```kotlin
+// Both axes checked independently each repeat
+if (abs(dx) > horizontalThreshold) {
+    sendShiftArrow(horizontalKey)
+}
+if (abs(dy) > verticalThreshold) {
+    sendShiftArrow(verticalKey)
+}
+```
 
-### External Dependencies
-- Android InputConnection for selection manipulation
+### Shift State Management
 
-### Breaking Changes
-- [ ] This feature introduces breaking changes
+Selection requires holding Shift while sending arrow keys:
 
-## Error Handling
-- Invalid threshold values: Clamped to valid range (20-80%)
-- Invalid speed values: Clamped to valid range (0.1-1.0)
-- No text to select: Mode still activates, selection commands sent harmlessly
+```kotlin
+private fun sendShiftArrow(keyCode: Int) {
+    // Create internal Shift modifier
+    val shift = makeInternalModifier(Modifier.SHIFT)
 
-## Success Metrics
-- Metric 1: Users can select and delete multiple words in <2 seconds
-- Metric 2: Vertical selection triggers reliably within threshold
-- Acceptance criteria: All test cases pass, no reported regressions
+    // Apply Shift to arrow key
+    val arrowKey = KeyValue.getKeyByCode(keyCode)
+    val shiftedArrow = with_extra_mod(arrowKey, Modifier.SHIFT)
 
----
+    // Send the combined key event
+    sendKeyEvent(shiftedArrow)
+}
+```
 
-**Created**: 2026-01-14
-**Last Updated**: 2026-01-14
-**Owner**: CleverKeys Development
-**Reviewers**: tribixbite
+### Vertical Threshold Calculation
+
+Vertical movement requires meeting a threshold relative to horizontal movement:
+
+```kotlin
+val verticalThreshold = config.selectionDeleteVerticalThreshold / 100f
+val horizontalDistance = abs(dx)
+val verticalDistance = abs(dy)
+
+// Vertical only fires if it exceeds threshold percentage of horizontal
+val shouldFireVertical = verticalDistance > (horizontalDistance * verticalThreshold)
+```
+
+### Error Handling
+
+- Invalid threshold values: Clamped to 20-80%
+- Invalid speed values: Clamped to 0.1-1.0
+- No text to select: Selection commands sent but have no effect (harmless)

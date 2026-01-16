@@ -1,46 +1,119 @@
-# Quick Settings Tile Specification
-
-**Status**: Implemented
-**Version**: 1.2.8
-**Last Updated**: 2026-01-15
+# Quick Settings Tile
 
 ## Overview
 
-CleverKeys provides a Quick Settings tile that allows users to quickly access the keyboard switcher from the Android notification shade. This provides a convenient way to switch between keyboards without navigating to system settings.
+CleverKeys provides an Android Quick Settings tile that allows users to quickly access the keyboard switcher from the notification shade. Tapping the tile opens the system input method picker, providing a convenient way to switch between keyboards without navigating to system settings.
 
-## Requirements
+## Key Files
 
-- Android 7.0 (API 24) or higher
-- CleverKeys must be installed and enabled as an input method
+| File | Class/Function | Purpose |
+|------|----------------|---------|
+| `src/main/kotlin/tribixbite/cleverkeys/KeyboardTileService.kt` | `KeyboardTileService` | TileService implementation |
+| `AndroidManifest.xml` | Service registration | Declares tile service |
 
-## Implementation
+## Architecture
 
-### KeyboardTileService.kt
+```
+Quick Settings Panel
+       |
+       v (user taps tile)
++------------------+
+| KeyboardTile     | -- Android calls onClick()
+| Service          |
++------------------+
+       |
+       v
++------------------+
+| showInputMethod  | -- Opens system IME picker
+| Picker()         |
++------------------+
+       |
+       v (fallback)
++------------------+
+| Open Input       | -- If picker fails, opens settings
+| Method Settings  |
++------------------+
+```
 
-Location: `src/main/kotlin/tribixbite/cleverkeys/KeyboardTileService.kt`
+## Public API
+
+### KeyboardTileService
 
 ```kotlin
 @RequiresApi(Build.VERSION_CODES.N)
-class KeyboardTileService : TileService()
+class KeyboardTileService : TileService() {
+
+    // Called when Quick Settings panel opens
+    override fun onStartListening() {
+        updateTileState()
+    }
+
+    // Called when user taps the tile
+    override fun onClick() {
+        showInputMethodPicker()
+    }
+
+    // Called when user adds tile to panel
+    override fun onTileAdded() {
+        updateTileState()
+    }
+
+    // Update tile visual state
+    private fun updateTileState() {
+        qsTile?.apply {
+            state = if (isCleverKeysActive()) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+            updateTile()
+        }
+    }
+
+    // Show system input method picker
+    private fun showInputMethodPicker() {
+        val imm = getSystemService(InputMethodManager::class.java)
+        imm?.showInputMethodPicker()
+    }
+}
 ```
 
-#### Key Methods
-
-| Method | Purpose |
-|--------|---------|
-| `onStartListening()` | Updates tile state when Quick Settings panel opens |
-| `onClick()` | Shows input method picker when tile is tapped |
-| `onTileAdded()` | Updates tile state when user adds tile to panel |
-| `updateTileState()` | Sets tile active/inactive based on current keyboard |
+## Implementation Details
 
 ### Tile States
 
 | State | Condition | Visual |
 |-------|-----------|--------|
-| `STATE_ACTIVE` | CleverKeys is current input method | Highlighted |
-| `STATE_INACTIVE` | Another keyboard is active | Dimmed |
+| `STATE_ACTIVE` | CleverKeys is current input method | Highlighted/colored |
+| `STATE_INACTIVE` | Another keyboard is active | Dimmed/gray |
 
-### Android Manifest Registration
+### Input Method Detection
+
+```kotlin
+private fun isCleverKeysActive(): Boolean {
+    val currentIme = Settings.Secure.getString(
+        contentResolver,
+        Settings.Secure.DEFAULT_INPUT_METHOD
+    )
+    return currentIme?.contains(packageName) == true
+}
+```
+
+### Fallback Behavior
+
+If `InputMethodManager.showInputMethodPicker()` fails:
+
+```kotlin
+private fun showInputMethodPicker() {
+    try {
+        val imm = getSystemService(InputMethodManager::class.java)
+        imm?.showInputMethodPicker()
+    } catch (e: Exception) {
+        // Fallback: open system input method settings
+        val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(intent)
+    }
+}
+```
+
+### AndroidManifest Registration
 
 ```xml
 <service
@@ -55,48 +128,17 @@ class KeyboardTileService : TileService()
 </service>
 ```
 
-## User Experience
+### Requirements
 
-### Adding the Tile
+- Android 7.0 (API 24) or higher (TileService introduced in API 24)
+- CleverKeys must be installed and enabled as an input method
+- User must manually add tile to Quick Settings panel
+
+### User Flow
 
 1. Pull down notification shade
-2. Tap "Edit" or pencil icon
-3. Find "CleverKeys" tile in available tiles
+2. Tap "Edit" or pencil icon to customize tiles
+3. Find "CleverKeys" in available tiles
 4. Drag to active tiles area
-
-### Using the Tile
-
-1. Pull down notification shade
-2. Tap CleverKeys tile
-3. System input method picker appears
-4. Select desired keyboard
-
-## Technical Details
-
-### Input Method Detection
-
-The tile checks if CleverKeys is the current input method by reading:
-
-```kotlin
-val currentIme = Settings.Secure.getString(
-    contentResolver,
-    Settings.Secure.DEFAULT_INPUT_METHOD
-)
-val isCleverKeysActive = currentIme?.contains(packageName) == true
-```
-
-### Fallback Behavior
-
-If `InputMethodManager.showInputMethodPicker()` fails:
-- Opens system input method settings as fallback
-- Uses `Settings.ACTION_INPUT_METHOD_SETTINGS` intent
-
-## Related Files
-
-- `KeyboardTileService.kt` - TileService implementation
-- `AndroidManifest.xml` - Service registration
-- `ic_launcher` - Tile icon (uses app launcher icon)
-
-## References
-
-- [Android TileService Documentation](https://developer.android.com/develop/ui/views/quicksettings-tiles)
+5. Tile now appears in Quick Settings
+6. Tap tile → system IME picker appears → select keyboard
