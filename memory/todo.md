@@ -12,8 +12,10 @@
 - ✅ Fixed wiki-config.json to match existing content files
 - ✅ Updated wiki generator with better styling and navigation
 - ✅ Simplified macro delay logic per #1108 (e55629ed)
+- ✅ Added timestamp-keys wiki page (91d611d7)
 
 **Recent Commits**:
+- `91d611d7` docs: add timestamp-keys wiki page
 - `e55629ed` fix: always apply delay between macro keys (#1108)
 - `722cfb9a` docs: update wiki generator and regenerate 37 pages
 - `315d8662` docs: update CHANGELOG with v1.2.4, v1.2.8, v1.2.9 releases
