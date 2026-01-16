@@ -138,7 +138,7 @@ A: Most extra keys have subkeys. Long-press or short swipe to access.
 
 - [Per-Key Actions](per-key-actions.md) - Customize subkeys
 - [Short Swipes](../gestures/short-swipes.md) - Access extra key subkeys
-- [Profiles](../layouts/profiles.md) - Save extra key configuration
+- [Profiles](../troubleshooting/backup-restore.md) - Save extra key configuration
 
 ## Technical Details
 

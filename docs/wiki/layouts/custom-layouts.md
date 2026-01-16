@@ -202,4 +202,4 @@ A: Yes, export on one device and import on another.
 
 - [Adding Layouts](adding-layouts.md) - Add custom layouts to keyboard
 - [Per-Key Actions](../customization/per-key-actions.md) - Customize subkeys
-- [Profiles](profiles.md) - Save layout configurations
+- [Profiles](../troubleshooting/backup-restore.md) - Save layout configurations

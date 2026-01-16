@@ -109,7 +109,7 @@ Time before long press activates:
 | Duration | Use Case |
 |----------|----------|
 | **Short (200ms)** | Fast access |
-| **Normal (400ms)** | Balanced |
+| **Normal (600ms)** | Balanced |
 | **Long (600ms)** | Avoid accidental activation |
 
 ### Short Swipe Distance
@@ -158,7 +158,7 @@ In trackpoint/cursor mode:
 | **Auto-Capitalize** | Input | Sentences |
 | **Double-Space Period** | Input | On |
 | **Smart Punctuation** | Input | On |
-| **Long Press Delay** | Input | 400ms |
+| **Long Press Delay** | Input | 600ms |
 | **Swipe Threshold** | Input | Normal |
 | **Short Swipe Distance** | Gestures | Normal |
 

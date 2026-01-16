@@ -24,7 +24,7 @@ Access symbols, accented letters, diacritics, and currency symbols through long-
 
 Hold any key to see available special characters:
 
-1. **Touch and hold** a key for ~400ms
+1. **Touch and hold** a key for ~600ms
 2. A popup appears showing available characters
 3. **Slide to select** the character you want
 4. **Release** to type it

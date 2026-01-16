@@ -22,7 +22,7 @@ TrackPoint mode turns your arrow keys into a virtual joystick for continuous cur
 
 When you hold an arrow key:
 
-1. After the long-press timeout (~400ms), TrackPoint mode activates
+1. After the long-press timeout (~600ms), TrackPoint mode activates
 2. A distinct haptic pulse indicates activation
 3. Your finger position becomes the "center" of the joystick
 4. Moving your finger away from center moves the cursor

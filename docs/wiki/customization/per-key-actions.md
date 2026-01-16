@@ -135,7 +135,7 @@ Save and share your customizations:
 2. Select **Export Profile**
 3. Choose to include customizations
 
-See [Profiles](../layouts/profiles.md) for details.
+See [Profiles](../troubleshooting/backup-restore.md) for details.
 
 ## Settings
 
@@ -148,7 +148,7 @@ See [Profiles](../layouts/profiles.md) for details.
 ## Related Features
 
 - [Short Swipes](../gestures/short-swipes.md) - How to trigger subkeys
-- [Profiles](../layouts/profiles.md) - Save customizations
+- [Profiles](../troubleshooting/backup-restore.md) - Save customizations
 - [Extra Keys](extra-keys.md) - Add custom keys to bottom row
 
 ## Technical Details

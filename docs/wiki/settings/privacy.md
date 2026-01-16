@@ -176,5 +176,5 @@ A: Enable Incognito Mode permanently for zero data retention (note: predictions 
 ## Related Features
 
 - [Clipboard History](../clipboard/clipboard-history.md) - Manage clipboard
-- [Profiles](../layouts/profiles.md) - Export/import settings
+- [Profiles](../troubleshooting/backup-restore.md) - Export/import settings
 - [Backup & Restore](../troubleshooting/backup-restore.md) - Data management

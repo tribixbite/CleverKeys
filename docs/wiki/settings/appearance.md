@@ -166,7 +166,7 @@ A: Yes, configure separate height settings for each orientation in Settings > Ap
 
 - [Themes](../customization/themes.md) - Colors and styling
 - [Accessibility](accessibility.md) - High contrast options
-- [Profiles](../layouts/profiles.md) - Save appearance settings
+- [Profiles](../troubleshooting/backup-restore.md) - Save appearance settings
 
 ## Technical Details
 

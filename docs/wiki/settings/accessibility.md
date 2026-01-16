@@ -112,7 +112,7 @@ Adjust time for long press:
 | Duration | Use Case |
 |----------|----------|
 | **Short (200ms)** | Quick access |
-| **Default (400ms)** | Standard |
+| **Default (600ms)** | Standard |
 | **Long (800ms)** | Prevent accidental |
 | **Extra Long (1200ms)** | Significant delay |
 
@@ -166,7 +166,7 @@ Reduce complexity:
 | **Bold Labels** | Accessibility | Off |
 | **Speak Keys** | Accessibility | System |
 | **Touch Duration** | Accessibility | 0ms |
-| **Long Press Delay** | Accessibility | 400ms |
+| **Long Press Delay** | Accessibility | 600ms |
 | **Sticky Modifiers** | Accessibility | Off |
 | **Simplified Mode** | Accessibility | Off |
 
