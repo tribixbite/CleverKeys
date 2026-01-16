@@ -7,6 +7,12 @@
 
 ## Session Progress (2026-01-16)
 
+### Space Key Selection Behavior (#1142)
+- ✅ Fixed: Space key now types space when text selected (4b5e016f)
+- **Issue**: Pressing space while text selected would cancel selection (Esc behavior)
+- **Fix**: Modified `KeyModifier.kt:applySelectionMode()` to let character keys pass through
+- **Result**: Space (and all characters) now replace selected text, matching standard keyboard behavior
+
 ### Emoji Search by Name (#41)
 - ✅ v1: Initial implementation with EditText in emoji pane (633d6548)
 - ✅ v2: Redesigned to use suggestion bar instead (2e3f416b)
@@ -139,6 +145,7 @@
 - ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `4b5e016f` fix: space key now types space when text selected (#1142)
 - `252d72a6` feat: expand emoji search to 500+ name mappings (#41)
 - `2e3f416b` feat: redesign emoji search to use suggestion bar (#41)
 - `9213de83` feat: settings follow system theme + Intent automation (#35, #70)
