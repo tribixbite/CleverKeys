@@ -38,7 +38,16 @@ import sys
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-SCRIPT_DIR = Path(__file__).parent
+SCRIPT_DIR = Path(__file__).parent.resolve()
+
+# Required helper scripts (must be in same directory)
+REQUIRED_SCRIPTS = [
+    'get_wordlist.py',
+    'build_dictionary.py',
+    'generate_unigrams.py',
+    'build_langpack.py',
+    'compute_prefix_boosts.py',
+]
 
 # All supported languages with display names and word counts
 # Languages with 'wordlist' use pre-existing word lists instead of wordfreq
@@ -59,6 +68,26 @@ SUPPORTED_LANGUAGES = {
 
 # Minimum word count for language detection unigrams
 UNIGRAM_COUNT = 5000
+
+
+def check_required_scripts():
+    """Check that all required helper scripts exist in the same directory."""
+    missing = []
+    for script in REQUIRED_SCRIPTS:
+        script_path = SCRIPT_DIR / script
+        if not script_path.exists():
+            missing.append(script)
+
+    if missing:
+        print(f"Error: Required helper scripts not found in {SCRIPT_DIR}")
+        print(f"Missing: {', '.join(missing)}")
+        print()
+        print("Make sure you're running this script from the cleverkeys/scripts/ directory")
+        print("or that all helper scripts are in the same directory as this script.")
+        print()
+        print(f"Expected location: {SCRIPT_DIR}")
+        return False
+    return True
 
 
 def check_wordfreq():
@@ -317,6 +346,10 @@ def main():
             bundle_marker = "[BUNDLE]" if info.get('bundle') else ""
             print(f"  {code}: {info['name']} ({info['words']} words) {bundle_marker}")
         return
+
+    # Check required helper scripts exist
+    if not check_required_scripts():
+        sys.exit(1)
 
     # Check wordfreq
     if not check_wordfreq():
