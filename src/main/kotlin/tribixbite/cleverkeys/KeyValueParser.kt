@@ -66,7 +66,7 @@ object KeyValueParser {
     private fun init() {
         if (::KEYDEF_TOKEN.isInitialized) return
 
-        KEYDEF_TOKEN = Pattern.compile("'|,|keyevent:|(?:[^\\\\',]+|\\\\.)+")
+        KEYDEF_TOKEN = Pattern.compile("'|,|keyevent:|timestamp:|(?:[^\\\\',]+|\\\\.)+")
         QUOTED_PAT = Pattern.compile("((?:[^'\\\\]+|\\\\')*)'")
         WORD_PAT = Pattern.compile("[a-zA-Z0-9_]+|.")
     }
@@ -87,6 +87,7 @@ object KeyValueParser {
                 KeyValue.makeStringKey("") // Unreachable
             }
             "keyevent:" -> parseKeyeventKeydef(m)
+            "timestamp:" -> parseTimestampKeydef(m)
             else -> keyByNameOrStr(removeEscaping(token))
         }
     }
@@ -109,6 +110,20 @@ object KeyValueParser {
             0 // Unreachable
         }
         return KeyValue.keyeventKey("", eventcode, 0)
+    }
+
+    /**
+     * Parse a timestamp key definition.
+     * Syntax: timestamp:'format_pattern'
+     * Example: timestamp:'yyyy-MM-dd' or timestamp:'HH:mm:ss'
+     * Uses Java DateTimeFormatter patterns.
+     */
+    private fun parseTimestampKeydef(m: Matcher): KeyValue {
+        if (!match(m, QUOTED_PAT)) {
+            parseError("Expected quoted format pattern for timestamp, e.g. timestamp:'yyyy-MM-dd'", m)
+        }
+        val pattern = m.group(1).replace("\\'", "'")
+        return KeyValue.makeTimestampKey("📅", pattern, 0)
     }
 
     /** Returns [true] if the next token is a comma, [false] if it is the end of the input. Throws an error otherwise. */
@@ -214,6 +229,14 @@ object KeyValueParser {
                     }
                     val finalSymbol = symbol ?: eventcode.toString()
                     return KeyValue.keyeventKey(finalSymbol, eventcode, flags)
+                }
+
+                "timestamp" -> {
+                    // Syntax: :timestamp symbol='📅':'yyyy-MM-dd HH:mm'
+                    // The pattern is a DateTimeFormatter pattern
+                    payload = parseSingleQuotedString(m)
+                    val finalSymbol = symbol ?: "📅" // Default to calendar emoji
+                    return KeyValue.makeTimestampKey(finalSymbol, payload, flags)
                 }
 
                 else -> {

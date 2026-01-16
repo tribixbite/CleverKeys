@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.text.InputType
@@ -10,6 +11,8 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.ExtractedText
 import android.view.inputmethod.ExtractedTextRequest
 import android.view.inputmethod.InputConnection
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class KeyEventHandler(
     private val recv: IReceiver
@@ -107,6 +110,7 @@ class KeyEventHandler(
             KeyValue.Kind.Compose_pending -> recv.set_compose_pending(true)
             KeyValue.Kind.Slider -> handleSlider(key.getSlider(), key.getSliderRepeat(), false)
             KeyValue.Kind.Macro -> evaluateMacro(key.getMacro())
+            KeyValue.Kind.Timestamp -> handleTimestampKey(key.getTimestampFormat())
             else -> {} // Handle Hangul_initial, Hangul_medial, Placeholder
         }
 
@@ -362,6 +366,37 @@ class KeyEventHandler(
                 KeyEvent.KEYCODE_MOVE_END,
                 KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
             )
+        }
+    }
+
+    /**
+     * Handle timestamp key: format current date/time and insert as text.
+     * Uses Java DateTimeFormatter patterns (e.g., "yyyy-MM-dd", "HH:mm:ss").
+     * Requires Android API 26+ for java.time APIs.
+     */
+    private fun handleTimestampKey(format: KeyValue.TimestampFormat) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            // Fallback for API < 26: use SimpleDateFormat
+            try {
+                val sdf = java.text.SimpleDateFormat(format.pattern, java.util.Locale.getDefault())
+                val formattedTime = sdf.format(java.util.Date())
+                sendText(formattedTime)
+            } catch (e: Exception) {
+                android.util.Log.w("KeyEventHandler", "Invalid timestamp format: ${format.pattern}", e)
+                sendText(format.pattern) // Fall back to showing the pattern itself
+            }
+            return
+        }
+
+        // API 26+: Use modern java.time API
+        try {
+            val formatter = DateTimeFormatter.ofPattern(format.pattern)
+            val now = LocalDateTime.now()
+            val formattedTime = now.format(formatter)
+            sendText(formattedTime)
+        } catch (e: Exception) {
+            android.util.Log.w("KeyEventHandler", "Invalid timestamp format: ${format.pattern}", e)
+            sendText(format.pattern) // Fall back to showing the pattern itself
         }
     }
 

@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-15
-**Status**: v1.2.8 - Android 15 clipboard nav bar fix + Quick Settings tile
+**Status**: v1.2.9 - Timestamp key feature + Android 15 fixes
 
 ---
 
@@ -22,6 +22,7 @@
 - #1107 ✅ Monet theme crash fix (Android < 12) - FIXED (2026-01-15) - Comment added
 - #1131 ✅ Clipboard/emoji nav bar overlap (Android 15) - FIXED (2026-01-15) - Comment added
 - #1116 ✅ White nav bar buttons (Android 9) - FIXED (2026-01-15) - Comment added
+- #1103 ✅ Insert timestamp key - IMPLEMENTED (2026-01-15)
 
 **Open Feature Requests** (for future consideration):
 - #1153 Floating keyboard - Larger feature, needs design
@@ -31,7 +32,6 @@
 - #1122 Image pasting - Complex feature
 - #1121 Smart key hit detection - Algorithm enhancement
 - #1109 Keyboard under nav bar - Android system race condition, not code bug
-- #1103 Insert timestamp - Needs syntax design (DateTimeFormatter)
 - #61 Active multi-language switching
 - #58 Scaling number keyboard
 - #52 MessageEase layout contribution
@@ -56,6 +56,31 @@
 **Settings UI**: Clipboard → "Exclude Password Managers" toggle
 
 **Commit**: `edfac50f feat: add password manager clipboard exclusion`
+
+---
+
+## Timestamp Key Feature - IMPLEMENTED (2026-01-15)
+
+**Feature**: Insert current date/time formatted with custom patterns (#1103).
+
+**Syntax**:
+- Short: `timestamp:'yyyy-MM-dd'` or `📅:timestamp:'yyyy-MM-dd'`
+- Long: `:timestamp symbol='📅':'yyyy-MM-dd HH:mm'`
+
+**Implementation**:
+- **KeyValue.kt**: Added `Kind.Timestamp` enum + `TimestampFormat` data class + `makeTimestampKey()` factory
+- **KeyValueParser.kt**: Added `timestamp:` prefix parsing + `:timestamp` kind in legacy syntax
+- **KeyEventHandler.kt**: Added `handleTimestampKey()` using DateTimeFormatter (API 26+) with SimpleDateFormat fallback
+
+**Common Patterns**:
+| Pattern | Example Output |
+|---------|---------------|
+| `yyyy-MM-dd` | 2026-01-15 |
+| `HH:mm:ss` | 14:30:45 |
+| `yyyy-MM-dd HH:mm` | 2026-01-15 14:30 |
+| `EEEE, MMMM d` | Wednesday, January 15 |
+
+**Spec**: `docs/specs/timestamp-keys.md`
 
 ---
 

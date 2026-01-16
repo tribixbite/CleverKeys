@@ -123,6 +123,7 @@ class KeyValue private constructor(
         String, // [_payload] is also the string to output, value is unused.
         Slider, // [_payload] is a [KeyValue.Slider], value is slider repeatition.
         Macro, // [_payload] is a [KeyValue.Macro], value is unused.
+        Timestamp, // [_payload] is a [KeyValue.TimestampFormat], formats current date/time.
     }
 
     enum class Slider(val symbol: String) {
@@ -153,6 +154,24 @@ class KeyValue private constructor(
         }
     }
 
+    /**
+     * Holds a DateTimeFormatter pattern for timestamp keys.
+     * When the key is pressed, the current date/time is formatted using this pattern.
+     * Uses Java's DateTimeFormatter syntax (e.g., "yyyy-MM-dd HH:mm:ss").
+     */
+    class TimestampFormat(
+        val pattern: String,
+        private val _symbol: String
+    ) : Comparable<TimestampFormat> {
+        override fun toString(): String = _symbol
+
+        override fun compareTo(other: TimestampFormat): Int {
+            val d = pattern.compareTo(other.pattern)
+            if (d != 0) return d
+            return _symbol.compareTo(other._symbol)
+        }
+    }
+
     // Accessors - methods that work from both Kotlin and Java
     // (Kotlin allows property-style access like .kind instead of .getKind())
     fun getKind(): Kind = Kind.entries[(_code and KIND_BITS) ushr KIND_OFFSET]
@@ -167,6 +186,7 @@ class KeyValue private constructor(
     fun getSlider(): Slider = _payload as Slider
     fun getSliderRepeat(): Int = (_code and VALUE_BITS).toShort().toInt()
     fun getMacro(): Array<KeyValue> = (_payload as Macro).keys
+    fun getTimestampFormat(): TimestampFormat = _payload as TimestampFormat
 
     fun hasFlagsAny(has: Int): Boolean = ((_code and has) != 0)
 
@@ -207,6 +227,7 @@ class KeyValue private constructor(
                 KeyValue(symbol, _code, _code, f)
             }
             Kind.Macro -> makeMacro(symbol, getMacro(), f)
+            Kind.Timestamp -> makeTimestampKey(symbol, getTimestampFormat().pattern, f)
             else -> makeMacro(symbol, arrayOf(this), f)
         }
     }
@@ -429,6 +450,20 @@ class KeyValue private constructor(
             var f = flags
             if (symbol.length > 1) f = f or FLAG_SMALLER_FONT
             return KeyValue(Macro(keys, symbol), Kind.Macro, 0, f)
+        }
+
+        /**
+         * Make a timestamp key that inserts current date/time when pressed.
+         * @param symbol Display symbol for the key (e.g., "📅", "🕐", or custom text)
+         * @param pattern DateTimeFormatter pattern (e.g., "yyyy-MM-dd", "HH:mm:ss")
+         * @param flags Optional key flags
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun makeTimestampKey(symbol: String, pattern: String, flags: Int = 0): KeyValue {
+            var f = flags
+            if (symbol.length > 1) f = f or FLAG_SMALLER_FONT
+            return KeyValue(TimestampFormat(pattern, symbol), Kind.Timestamp, 0, f)
         }
 
         /** Make a modifier key for passing to [KeyModifier]. */

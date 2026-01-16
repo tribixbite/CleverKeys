@@ -1,7 +1,7 @@
 # CleverKeys Feature Specifications
 
 **Last Updated**: 2026-01-15
-**Total Specs**: 18 (core) + 4 (optional enhancements)
+**Total Specs**: 19 (core) + 4 (optional enhancements)
 
 This directory contains feature specifications and architectural decision records (ADRs) for CleverKeys. All specifications follow the template in `SPEC_TEMPLATE.md`.
 
@@ -133,6 +133,13 @@ This directory contains feature specifications and architectural decision record
 18. **[SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md)** - Template
     - Template for creating new feature specifications
     - Use this when creating new specs
+
+19. **[Timestamp Keys](./timestamp-keys.md)** - P2
+    - Status: ✅ Complete (v1.2.9 - 2026-01-15)
+    - Covers: Dynamic timestamp insertion, DateTimeFormatter patterns
+    - Components: `KeyValue.kt` (Kind.Timestamp), `KeyValueParser.kt`, `KeyEventHandler.kt`
+    - Key Concepts: Date/time formatting, custom patterns, API 26+ and fallback support
+    - Outstanding: Device testing
 
 ### Optional Enhancement Specs (Not Yet Created)
 
