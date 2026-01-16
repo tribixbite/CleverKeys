@@ -116,7 +116,7 @@ Each user guide has a paired technical specification for developers:
 
 - [Feature Specifications](../specs/README.md) - Technical documentation
 - [CHANGELOG](../../CHANGELOG.md) - Version history
-- [GitHub Issues](https://github.com/Julow/Unexpected-Keyboard/issues) - Bug reports and feature requests
+- [GitHub Issues](https://github.com/tribixbite/CleverKeys/issues) - Bug reports and feature requests
 
 ---
 

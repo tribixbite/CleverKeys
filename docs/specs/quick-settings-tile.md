@@ -100,4 +100,3 @@ If `InputMethodManager.showInputMethodPicker()` fails:
 ## References
 
 - [Android TileService Documentation](https://developer.android.com/develop/ui/views/quicksettings-tiles)
-- [GitHub Issue #1113](https://github.com/Julow/Unexpected-Keyboard/issues/1113)
