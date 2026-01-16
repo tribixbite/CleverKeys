@@ -722,6 +722,16 @@ class KeyValue private constructor(
             "cursor_right" -> sliderKey(Slider.Cursor_right, 1)
             "cursor_up" -> sliderKey(Slider.Cursor_up, 1)
             "cursor_down" -> sliderKey(Slider.Cursor_down, 1)
+
+            /* Timestamp keys - insert current date/time */
+            "timestamp_date" -> makeTimestampKey("📅", "yyyy-MM-dd", FLAG_SMALLER_FONT)
+            "timestamp_time" -> makeTimestampKey("🕐", "HH:mm", FLAG_SMALLER_FONT)
+            "timestamp_datetime" -> makeTimestampKey("📆", "yyyy-MM-dd HH:mm", FLAG_SMALLER_FONT)
+            "timestamp_time_seconds" -> makeTimestampKey("⏱", "HH:mm:ss", FLAG_SMALLER_FONT)
+            "timestamp_date_short" -> makeTimestampKey("📅", "MM/dd/yy", FLAG_SMALLER_FONT)
+            "timestamp_date_long" -> makeTimestampKey("🗓", "EEEE, MMMM d, yyyy", FLAG_SMALLER_FONT)
+            "timestamp_time_12h" -> makeTimestampKey("🕐", "h:mm a", FLAG_SMALLER_FONT)
+            "timestamp_iso" -> makeTimestampKey("📋", "yyyy-MM-dd'T'HH:mm:ss", FLAG_SMALLER_FONT)
             "selection_cancel" -> editingKey("Esc", Editing.SELECTION_CANCEL, FLAG_SMALLER_FONT)
             "selection_cursor_left" -> sliderKey(Slider.Selection_cursor_left, -1) // Move the left side of the selection
             "selection_cursor_right" -> sliderKey(Slider.Selection_cursor_right, 1)

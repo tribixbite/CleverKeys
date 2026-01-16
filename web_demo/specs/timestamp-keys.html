@@ -147,9 +147,29 @@
 <ul class="mb-4 space-y-1"><li class="ml-4">1. Logs a warning: <code class="bg-ck-dark px-1 rounded">"Invalid timestamp format: [pattern]"</code></li>
 <li class="ml-4">2. Falls back to inserting the pattern string itself</li>
 </ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Pre-defined Timestamp Keys</h2>
+
+<p class="mb-4 text-gray-300">For convenience, these named keys are available without specifying patterns:</p>
+
+<p class="mb-4 text-gray-300">| Key Name | Symbol | Output Example |</p>
+<p class="mb-4 text-gray-300">|----------|--------|----------------|</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_date</code> | 📅 | 2026-01-15 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_time</code> | 🕐 | 14:30 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_datetime</code> | 📆 | 2026-01-15 14:30 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_time_seconds</code> | ⏱ | 14:30:45 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_date_short</code> | 📅 | 01/15/26 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_date_long</code> | 🗓 | Wednesday, January 15, 2026 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_time_12h</code> | 🕐 | 2:30 PM |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_iso</code> | 📋 | 2026-01-15T14:30:45 |</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Usage in Custom Layouts</h2>
 
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Using Pre-defined Keys</h3>
+
 <p class="mb-4 text-gray-300">Add to <code class="bg-ck-dark px-1 rounded">custom_extra_keys</code> setting or custom layout XML:</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">timestamp_date</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Using Custom Patterns</h3>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">timestamp:'yyyy-MM-dd'</code></pre>
 

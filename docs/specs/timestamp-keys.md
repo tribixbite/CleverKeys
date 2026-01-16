@@ -79,9 +79,31 @@ If the pattern is invalid:
 1. Logs a warning: `"Invalid timestamp format: [pattern]"`
 2. Falls back to inserting the pattern string itself
 
+## Pre-defined Timestamp Keys
+
+For convenience, these named keys are available without specifying patterns:
+
+| Key Name | Symbol | Output Example |
+|----------|--------|----------------|
+| `timestamp_date` | 📅 | 2026-01-15 |
+| `timestamp_time` | 🕐 | 14:30 |
+| `timestamp_datetime` | 📆 | 2026-01-15 14:30 |
+| `timestamp_time_seconds` | ⏱ | 14:30:45 |
+| `timestamp_date_short` | 📅 | 01/15/26 |
+| `timestamp_date_long` | 🗓 | Wednesday, January 15, 2026 |
+| `timestamp_time_12h` | 🕐 | 2:30 PM |
+| `timestamp_iso` | 📋 | 2026-01-15T14:30:45 |
+
 ## Usage in Custom Layouts
 
+### Using Pre-defined Keys
+
 Add to `custom_extra_keys` setting or custom layout XML:
+```
+timestamp_date
+```
+
+### Using Custom Patterns
 
 ```
 timestamp:'yyyy-MM-dd'
