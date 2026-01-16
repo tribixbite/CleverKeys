@@ -89,153 +89,130 @@
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Optimize neural predictions</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Neural/Predictions</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Options</strong></td><td class="px-4 py-2 border-t border-gray-700">Beam width, thresholds, vocabulary</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Scroll to <strong class="text-white">Neural Prediction</strong> section in Settings</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Key Setting</strong></td><td class="px-4 py-2 border-t border-gray-700">Beam Width controls accuracy vs speed</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings Location</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">In <strong class="text-white">Settings</strong>, scroll to the <strong class="text-white">Neural Prediction</strong> section (collapsible). All neural prediction settings are here.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Understanding Neural Predictions</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys uses an ONNX neural network to predict words from swipe gestures. These settings control how the network processes your input.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys uses an ONNX neural network to predict words from swipe gestures. The model processes your swipe trajectory and outputs probability distributions for each letter position.</p>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Prediction Settings</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Key Settings</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Prediction Count</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">How many suggestions to show:</p>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Count</td><td class="px-4 py-2 border-t border-gray-700">Trade-off</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">3</strong></td><td class="px-4 py-2 border-t border-gray-700">Faster, less choice</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">5</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">7</strong></td><td class="px-4 py-2 border-t border-gray-700">More options, slightly slower</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Beam Width</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Controls prediction search breadth:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">The most important setting for prediction quality. Controls how many parallel word candidates the decoder tracks:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Width</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">3</strong></td><td class="px-4 py-2 border-t border-gray-700">Faster, may miss some words</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">5</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced (default)</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">8</strong></td><td class="px-4 py-2 border-t border-gray-700">More thorough, slightly slower</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">10</strong></td><td class="px-4 py-2 border-t border-gray-700">Most accurate, slower</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">3-4</strong></td><td class="px-4 py-2 border-t border-gray-700">Faster, may miss less common words</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">6</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced (default)</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">8-10</strong></td><td class="px-4 py-2 border-t border-gray-700">More thorough search, finds rare words</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Higher beam width finds more word candidates but uses more processing time.</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Higher beam width = more word candidates explored = better accuracy but slightly slower.</blockquote>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Threshold Settings</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Show Suggestions</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Minimum Score</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Predictions below this score are filtered:</p>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Threshold</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Low (0.1)</strong></td><td class="px-4 py-2 border-t border-gray-700">More suggestions, some poor</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Medium (0.3)</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced filtering</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">High (0.5)</strong></td><td class="px-4 py-2 border-t border-gray-700">Only confident predictions</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Distance Threshold</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Maximum gesture-to-key distance:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Toggle the prediction/suggestion bar above the keyboard:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Loose</strong></td><td class="px-4 py-2 border-t border-gray-700">Accept approximate swipes</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Normal</strong></td><td class="px-4 py-2 border-t border-gray-700">Standard tolerance</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Strict</strong></td><td class="px-4 py-2 border-t border-gray-700">Require precise swipes</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">On</strong></td><td class="px-4 py-2 border-t border-gray-700">Shows word predictions above keyboard</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Off</strong></td><td class="px-4 py-2 border-t border-gray-700">Hides prediction bar (more screen space)</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Vocabulary Settings</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Autocorrect from Beam</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Personal Words</h3>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Include Personal</strong></td><td class="px-4 py-2 border-t border-gray-700">Add your words to predictions</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Personal Priority</strong></td><td class="px-4 py-2 border-t border-gray-700">Boost score for personal words</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Technical Terms</h3>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enable Tech Vocab</strong></td><td class="px-4 py-2 border-t border-gray-700">Include programming terms</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Camelcase</strong></td><td class="px-4 py-2 border-t border-gray-700">Support camelCase words</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Performance Settings</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Processing Mode</h3>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Mode</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Balanced</strong></td><td class="px-4 py-2 border-t border-gray-700">Good accuracy and speed</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Performance</strong></td><td class="px-4 py-2 border-t border-gray-700">Faster, reduced accuracy</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Quality</strong></td><td class="px-4 py-2 border-t border-gray-700">Best accuracy, slower</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Background Processing</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">When enabled, uses neural predictions for autocorrection:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Pre-process during pauses</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Disabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Process only on demand</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">On</strong></td><td class="px-4 py-2 border-t border-gray-700">Neural model helps with tap-typing corrections</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Off</strong></td><td class="px-4 py-2 border-t border-gray-700">Only dictionary-based autocorrect</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Learning Settings</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Advanced Settings</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Adaptive Learning</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Confidence Threshold</h3>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Learn from your typing</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Disabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Use base model only</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed">Minimum score for a prediction to be shown (default: 0.01):</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Lower = more suggestions, some may be weak</li>
+<li class="ml-4 text-gray-300">&#8226; Higher = only confident predictions shown</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Frequency Weight</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">How much word frequency influences scoring (default: 0.57):</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Weight</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">0.0</strong></td><td class="px-4 py-2 border-t border-gray-700">Neural model only</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">0.5</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">1.0+</strong></td><td class="px-4 py-2 border-t border-gray-700">Favor common words heavily</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Learn Rate</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Length Penalty (Beam Alpha)</h3>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Rate</td><td class="px-4 py-2 border-t border-gray-700">Effect</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Slow</strong></td><td class="px-4 py-2 border-t border-gray-700">Gradual adaptation</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Normal</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced learning</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Fast</strong></td><td class="px-4 py-2 border-t border-gray-700">Quick adaptation</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed">Normalizes scores by word length (default: 1.0):</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Lower = favors shorter words</li>
+<li class="ml-4 text-gray-300">&#8226; Higher = allows longer words to compete</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Neural Profiles</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys includes preset profiles optimizing for different use cases:</p>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Profile</td><td class="px-4 py-2 border-t border-gray-700">Beam Width</td><td class="px-4 py-2 border-t border-gray-700">Use Case</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Speed</strong></td><td class="px-4 py-2 border-t border-gray-700">4</td><td class="px-4 py-2 border-t border-gray-700">Fast typing, acceptable accuracy</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Balanced</strong></td><td class="px-4 py-2 border-t border-gray-700">6</td><td class="px-4 py-2 border-t border-gray-700">Default experience</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Accuracy</strong></td><td class="px-4 py-2 border-t border-gray-700">8+</td><td class="px-4 py-2 border-t border-gray-700">Best predictions, slower</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">Access via the Neural Prediction section settings.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Accuracy issues</strong>: Increase beam width</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Slow predictions</strong>: Reduce beam width, enable performance mode</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Missing words</strong>: Lower minimum score threshold</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Personal words</strong>: Add frequently used terms to dictionary</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Accuracy issues</strong>: Increase beam width from 6 to 8 or 10</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Slow predictions</strong>: Reduce beam width to 4-5</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Missing words</strong>: Check that multi-language is configured correctly</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Long words wrong</strong>: Increase beam width or adjust beam alpha</li>
 </ul>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">If predictions feel "off," try resetting neural settings to defaults and gradually adjusting.</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Start with the default beam width of 6. Only adjust if you notice specific issues.</blockquote>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">All Neural Settings</h2>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Default</td><td class="px-4 py-2 border-t border-gray-700">Range</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Prediction Count</strong></td><td class="px-4 py-2 border-t border-gray-700">5</td><td class="px-4 py-2 border-t border-gray-700">3-7</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Beam Width</strong></td><td class="px-4 py-2 border-t border-gray-700">5</td><td class="px-4 py-2 border-t border-gray-700">3-10</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Min Score</strong></td><td class="px-4 py-2 border-t border-gray-700">0.3</td><td class="px-4 py-2 border-t border-gray-700">0.1-0.7</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Distance Threshold</strong></td><td class="px-4 py-2 border-t border-gray-700">Normal</td><td class="px-4 py-2 border-t border-gray-700">Loose/Normal/Strict</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Personal Priority</strong></td><td class="px-4 py-2 border-t border-gray-700">1.2x</td><td class="px-4 py-2 border-t border-gray-700">1.0-2.0x</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Processing Mode</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced</td><td class="px-4 py-2 border-t border-gray-700">Performance/Balanced/Quality</td></tr>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Default</td><td class="px-4 py-2 border-t border-gray-700">Range/Options</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Beam Width</strong></td><td class="px-4 py-2 border-t border-gray-700">6</td><td class="px-4 py-2 border-t border-gray-700">3-10</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Show Suggestions</strong></td><td class="px-4 py-2 border-t border-gray-700">On</td><td class="px-4 py-2 border-t border-gray-700">On/Off</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Confidence Threshold</strong></td><td class="px-4 py-2 border-t border-gray-700">0.01</td><td class="px-4 py-2 border-t border-gray-700">0.01-0.5</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Frequency Weight</strong></td><td class="px-4 py-2 border-t border-gray-700">0.57</td><td class="px-4 py-2 border-t border-gray-700">0.0-2.0</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Beam Alpha</strong></td><td class="px-4 py-2 border-t border-gray-700">1.0</td><td class="px-4 py-2 border-t border-gray-700">0.5-2.0</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Beam Autocorrect</strong></td><td class="px-4 py-2 border-t border-gray-700">On</td><td class="px-4 py-2 border-t border-gray-700">On/Off</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Advanced Diagnostics</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Debug Mode</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Enable to see prediction scores:</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Settings > Neural > Show Debug Info</li>
-<li class="ml-4 text-gray-300">2. Predictions show score values</li>
-<li class="ml-4 text-gray-300">3. Helps understand prediction ranking</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Reset Neural Data</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Start fresh:</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Settings > Neural > Reset</li>
-<li class="ml-4 text-gray-300">2. Clears learned patterns</li>
-<li class="ml-4 text-gray-300">3. Returns to base model</li>
-</ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why are predictions slow?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Reduce beam width or switch to Performance mode. Also check if many languages are enabled.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Reduce beam width from 6 to 4-5. Also check if multiple languages are enabled, which increases processing.</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why does it suggest wrong words?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Increase beam width for more thorough search, or adjust distance threshold for your swipe style.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Try increasing beam width for more thorough search. Also ensure your primary language is set correctly in Multi-Language section.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I make it learn my vocabulary?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I add words to the dictionary?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Enable Adaptive Learning and add words to personal dictionary. They'll be prioritized.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Type the word and tap it in predictions, or long-press a word and select "Add to dictionary" if supported.</p>
 
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I reset neural settings?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Go to Settings and look for reset options, or use Backup & Restore to reset to defaults.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">The neural model is:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Format</strong>: ONNX (Open Neural Network Exchange)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Architecture</strong>: Encoder-only transformer</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Input</strong>: Normalized swipe coordinates (x, y, time)</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Output</strong>: Per-position letter probabilities</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Decoding</strong>: Beam search with vocabulary constraint</li>
+</ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="../typing/swipe-typing.html" class="text-green-400 hover:underline">Swipe Typing</a> - How to swipe type</li>

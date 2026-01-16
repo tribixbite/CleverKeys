@@ -79,7 +79,6 @@
 <p class="mb-4 text-gray-300 leading-relaxed">description: Access and manage previously copied text</p>
 <p class="mb-4 text-gray-300 leading-relaxed">category: Clipboard</p>
 <p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
-<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/clipboard/clipboard-history-spec.md</p>
 <hr class="border-gray-700 my-6">
 
 <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Clipboard History</h1>
@@ -90,30 +89,33 @@
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Access previous clipboard items</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Long-press paste key or clipboard icon</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Capacity</strong></td><td class="px-4 py-2 border-t border-gray-700">Up to 25 items</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Swipe NW from Ctrl key, or add Clipboard to Extra Keys</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Capacity</strong></td><td class="px-4 py-2 border-t border-gray-700">Configurable (default 25 items)</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Accessing Clipboard History</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 1: Long-Press Paste</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 1: Ctrl Key Swipe</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Long-press</strong> the paste key</li>
-<li class="ml-4 text-gray-300">2. Clipboard history panel opens</li>
-<li class="ml-4 text-gray-300">3. Tap any item to paste</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Find the <strong class="text-white">Ctrl</strong> key on the bottom row</li>
+<li class="ml-4 text-gray-300">2. <strong class="text-white">Swipe NW</strong> (up-left) to activate <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_clipboard</code></li>
+<li class="ml-4 text-gray-300">3. Clipboard history panel opens</li>
+<li class="ml-4 text-gray-300">4. Tap any item to paste</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Clipboard Icon</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Extra Keys</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">If clipboard icon is shown:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">If you've added a clipboard key to Extra Keys:</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap the <strong class="text-white">clipboard icon</strong> in toolbar</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap the <strong class="text-white">clipboard icon</strong> in your extra keys row</li>
 <li class="ml-4 text-gray-300">2. History panel opens</li>
 <li class="ml-4 text-gray-300">3. Tap item to paste</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 3: Command Palette</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 3: Per-Key Customization</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open command palette</li>
-<li class="ml-4 text-gray-300">2. Type "clipboard" or "history"</li>
-<li class="ml-4 text-gray-300">3. Select <strong class="text-white">Clipboard History</strong></li>
+<p class="mb-4 text-gray-300 leading-relaxed">You can assign clipboard access to any key's short swipe:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Per-Key Customization</strong></li>
+<li class="ml-4 text-gray-300">2. Select any key</li>
+<li class="ml-4 text-gray-300">3. Assign <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_clipboard</code> to a swipe direction</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Using Clipboard History</h2>
 
@@ -133,8 +135,8 @@
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Delete Item</h3>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open clipboard history</li>
-<li class="ml-4 text-gray-300">2. <strong class="text-white">Swipe left</strong> on item</li>
-<li class="ml-4 text-gray-300">3. Or long-press and select <strong class="text-white">Delete</strong></li>
+<li class="ml-4 text-gray-300">2. Tap the <strong class="text-white">delete button</strong> on the item</li>
+<li class="ml-4 text-gray-300">3. Or swipe left and tap delete</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Pin Items</h2>
 
@@ -157,77 +159,55 @@
 <li class="ml-4 text-gray-300">&#8226; Don't auto-expire</li>
 <li class="ml-4 text-gray-300">&#8226; Don't count toward limit</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Search History</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Find items in your clipboard:</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open clipboard history</li>
-<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">search icon</strong></li>
-<li class="ml-4 text-gray-300">3. Type search term</li>
-<li class="ml-4 text-gray-300">4. Matching items shown</li>
-</ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">History Panel Layout</h2>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">┌─────────────────────────────────────┐
-<p class="mb-4 text-gray-300 leading-relaxed">│ Clipboard History           [🔍] [X]│</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ Clipboard History              [X]  │</p>
 <p class="mb-4 text-gray-300 leading-relaxed">├─────────────────────────────────────┤</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ 📌 Pinned item text...              │ ← Pinned</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ 📌 Another pinned item...           │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ 📌 Pinned item text...         [🗑] │ ← Pinned</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ 📌 Another pinned item...      [🗑] │</p>
 <p class="mb-4 text-gray-300 leading-relaxed">├─────────────────────────────────────┤</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ Recently copied text here...        │ ← Recent</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ Another clipboard item...           │</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ More text from earlier...           │</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ ...                                 │</p>
-<p class="mb-4 text-gray-300 leading-relaxed">├─────────────────────────────────────┤</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│ [Clear All]      [Settings]         │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ Recently copied text here...   [🗑] │ ← Recent</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ Another clipboard item...      [🗑] │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│ More text from earlier...      [🗑] │</p>
 <p class="mb-4 text-gray-300 leading-relaxed">└─────────────────────────────────────┘</code></pre></p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Privacy Features</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Auto-Expiry</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Password Manager Exclusion</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Items automatically expire based on your settings:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys can exclude clipboard entries from password managers:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Behavior</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">1 hour</strong></td><td class="px-4 py-2 border-t border-gray-700">Items deleted after 1 hour</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">24 hours</strong></td><td class="px-4 py-2 border-t border-gray-700">Items deleted after 1 day</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">7 days</strong></td><td class="px-4 py-2 border-t border-gray-700">Items deleted after 1 week</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Never</strong></td><td class="px-4 py-2 border-t border-gray-700">Items kept until manually deleted</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enabled</strong></td><td class="px-4 py-2 border-t border-gray-700">Clips from 1Password, Bitwarden, etc. not saved</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Disabled</strong></td><td class="px-4 py-2 border-t border-gray-700">All clips saved normally</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Password Protection</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">Supported apps include: 1Password, Bitwarden, LastPass, Dashlane, KeePass variants, and more.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Password Field Detection</h3>
 
 <p class="mb-4 text-gray-300 leading-relaxed">CleverKeys automatically detects password fields:</p>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Behavior</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Don't save</strong></td><td class="px-4 py-2 border-t border-gray-700">Password field text not saved to history</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Mask display</strong></td><td class="px-4 py-2 border-t border-gray-700">Sensitive items show as "••••"</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Mask display</strong></td><td class="px-4 py-2 border-t border-gray-700">Sensitive items may show masked</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Incognito Mode</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">When incognito is active:</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Nothing saved to clipboard history</li>
-<li class="ml-4 text-gray-300">&#8226; Existing history still accessible</li>
-<li class="ml-4 text-gray-300">&#8226; New copies are temporary only</li>
-</ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Pin frequently used</strong>: Pin items you paste often</li>
 <li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Clear sensitive data</strong>: Regularly clear history with sensitive info</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Search long history</strong>: Use search for older items</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Quick access</strong>: Enable clipboard icon for one-tap access</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Quick access</strong>: Add clipboard to Extra Keys for one-tap access</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Customize access</strong>: Assign clipboard to any key via Per-Key Customization</li>
 </ul>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Double-tap the paste key as a shortcut to open clipboard history.</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">The Ctrl key's NW subkey is <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_clipboard</code> by default on most layouts.</blockquote>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enable History</strong></td><td class="px-4 py-2 border-t border-gray-700">Privacy</td><td class="px-4 py-2 border-t border-gray-700">Turn history on/off</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">History Size</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard</td><td class="px-4 py-2 border-t border-gray-700">Maximum items</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Auto-Expiry</strong></td><td class="px-4 py-2 border-t border-gray-700">Privacy</td><td class="px-4 py-2 border-t border-gray-700">Automatic deletion</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Show Icon</strong></td><td class="px-4 py-2 border-t border-gray-700">Toolbar</td><td class="px-4 py-2 border-t border-gray-700">Clipboard icon visibility</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Password Detection</strong></td><td class="px-4 py-2 border-t border-gray-700">Privacy</td><td class="px-4 py-2 border-t border-gray-700">Detect password fields</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Enable History</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard section</td><td class="px-4 py-2 border-t border-gray-700">Turn history on/off</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">History Size</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard section</td><td class="px-4 py-2 border-t border-gray-700">Maximum items to keep</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Exclude Password Managers</strong></td><td class="px-4 py-2 border-t border-gray-700">Clipboard section</td><td class="px-4 py-2 border-t border-gray-700">Don't save from password apps</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Clear History</h2>
 
@@ -247,11 +227,15 @@
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why don't I see clipboard history?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Check that it's enabled in Settings > Privacy > Clipboard History.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Check that it's enabled in <strong class="text-white">Settings > Clipboard</strong> section (expand it).</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I access clipboard quickly?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Swipe NW from the Ctrl key, or add a clipboard key to your Extra Keys.</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why wasn't my copied text saved?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: It may have been from a password field, or incognito mode was active.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: It may have been from a password field or a password manager app (if exclusion is enabled).</p>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I recover deleted items?</h3>
 
@@ -263,10 +247,6 @@
 <li class="ml-4 text-gray-300">&#8226; <a href="shortcuts.html" class="text-green-400 hover:underline">Shortcuts</a> - Keyboard shortcuts for clipboard</li>
 <li class="ml-4 text-gray-300">&#8226; <a href="../settings/privacy.html" class="text-green-400 hover:underline">Privacy</a> - Privacy settings</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/clipboard/clipboard-history-spec.html" class="text-green-400 hover:underline">Clipboard History Technical Specification</a>.</p>
-
         </div>
         
         <!-- Prev/Next Navigation -->

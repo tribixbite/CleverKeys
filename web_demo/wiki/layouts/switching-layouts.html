@@ -79,145 +79,133 @@
 <p class="mb-4 text-gray-300 leading-relaxed">description: Change between keyboard layouts</p>
 <p class="mb-4 text-gray-300 leading-relaxed">category: Layouts</p>
 <p class="mb-4 text-gray-300 leading-relaxed">difficulty: beginner</p>
-<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/layouts/switching-layouts-spec.md</p>
 <hr class="border-gray-700 my-6">
 
 <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Switching Layouts</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Quickly switch between your installed keyboard layouts using gestures, buttons, or shortcuts.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Switch between installed keyboard layouts using key actions or swipe gestures.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Change active keyboard layout</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Methods</strong></td><td class="px-4 py-2 border-t border-gray-700">Gesture, button, shortcut</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Layouts</strong></td><td class="px-4 py-2 border-t border-gray-700">Between all installed layouts</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Methods</strong></td><td class="px-4 py-2 border-t border-gray-700">Assigned key swipes, Shift key swipe</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Layouts</strong></td><td class="px-4 py-2 border-t border-gray-700">Between all enabled layouts</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Switching Methods</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 1: Globe Key</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 1: Shift Key Swipes (Default)</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">The globe/language key on the bottom row:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">On the default layout, the Shift key has layout switching:</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Tap</strong> to cycle to next layout</li>
-<li class="ml-4 text-gray-300">2. <strong class="text-white">Long-press</strong> to show layout picker</li>
-<li class="ml-4 text-gray-300">3. <strong class="text-white">Swipe</strong> for quick access to specific layouts</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Swipe right on Shift</strong> → Next layout (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_forward</code>)</li>
+<li class="ml-4 text-gray-300">2. <strong class="text-white">Swipe left on Shift</strong> → Previous layout (<code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_backward</code>)</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Swipe Gesture</h3>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">The exact swipe directions depend on your layout. Check the subkeys on your Shift key.</blockquote>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Use the spacebar gesture:</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 2: Custom Key Assignment</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Swipe left</strong> on spacebar → Previous layout</li>
-<li class="ml-4 text-gray-300">2. <strong class="text-white">Swipe right</strong> on spacebar → Next layout</li>
+<p class="mb-4 text-gray-300 leading-relaxed">Assign layout switching to any key via Per-Key Customization:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Per-Key Customization</strong> (in Activities section)</li>
+<li class="ml-4 text-gray-300">2. Select any key</li>
+<li class="ml-4 text-gray-300">3. Assign <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_forward</code> or <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_backward</code> to a swipe direction</li>
+<li class="ml-4 text-gray-300">4. Save your customization</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 3: Layout Picker</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 3: Extra Keys</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Access the full layout list:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Add dedicated layout switching keys:</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Long-press</strong> the globe key</li>
-<li class="ml-4 text-gray-300">2. Layout picker overlay appears</li>
-<li class="ml-4 text-gray-300">3. <strong class="text-white">Tap</strong> any layout to switch</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Extra Keys</strong> (in Activities section)</li>
+<li class="ml-4 text-gray-300">2. Add <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_forward</code> or <code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_backward</code> to your extra keys row</li>
+<li class="ml-4 text-gray-300">3. Tap the key to switch layouts</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Method 4: From Command Palette</h3>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open command palette (long-press settings)</li>
-<li class="ml-4 text-gray-300">2. Type "layout" or "switch"</li>
-<li class="ml-4 text-gray-300">3. Select <strong class="text-white">Switch Layout</strong></li>
-<li class="ml-4 text-gray-300">4. Choose target layout</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Switch vs Full Switch</h2>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Type</td><td class="px-4 py-2 border-t border-gray-700">Behavior</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Quick Switch</strong></td><td class="px-4 py-2 border-t border-gray-700">Tap globe - cycles through active layouts</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Full Switch</strong></td><td class="px-4 py-2 border-t border-gray-700">Long-press globe - shows all layouts</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Layout Indicator</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">When you switch layouts, a brief indicator shows:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">When you switch layouts, the current layout name appears briefly on the spacebar.</p>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">┌─────────────────────────────────────┐
-<p class="mb-4 text-gray-300 leading-relaxed">│         ┌───────────────┐           │</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│         │   QWERTY      │           │ ← Layout indicator</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│         │   English     │           │</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│         └───────────────┘           │</p>
-<p class="mb-4 text-gray-300 leading-relaxed">│                                     │</p>
 <p class="mb-4 text-gray-300 leading-relaxed">│  ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐     │</p>
 <p class="mb-4 text-gray-300 leading-relaxed">│  │ Q │ │ W │ │ E │ │ R │ │ T │     │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│  └───┘ └───┘ └───┘ └───┘ └───┘     │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│           ...                       │</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│  ┌─────────────────────────────────┐│</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│  │         QWERTY EN               ││ ← Layout shown on spacebar</p>
+<p class="mb-4 text-gray-300 leading-relaxed">│  └─────────────────────────────────┘│</p>
 <p class="mb-4 text-gray-300 leading-relaxed">└─────────────────────────────────────┘</code></pre></p>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Active Layout Order</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Managing Layouts</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Layouts cycle in the order set in Settings:</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Enable/Disable Layouts</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Layouts</strong></li>
-<li class="ml-4 text-gray-300">2. Drag layouts to reorder</li>
-<li class="ml-4 text-gray-300">3. Layouts at top cycle first</li>
+<p class="mb-4 text-gray-300 leading-relaxed">Control which layouts appear in rotation:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings</strong> and scroll to <strong class="text-white">Multi-Language</strong> section</li>
+<li class="ml-4 text-gray-300">2. Configure your enabled languages/layouts</li>
+<li class="ml-4 text-gray-300">3. Only enabled layouts are included in switching</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Per-App Layouts</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Immediate vs Delayed Switching</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys can remember layout preferences per app:</p>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Behavior</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Immediate</strong></td><td class="px-4 py-2 border-t border-gray-700">Layout switches instantly on key action</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Delayed</strong></td><td class="px-4 py-2 border-t border-gray-700">Layout changes after releasing the key</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">Configure in Settings under the layout/input behavior options.</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Enable <strong class="text-white">Settings > Layouts > Per-App Layout</strong></li>
-<li class="ml-4 text-gray-300">2. Switch to desired layout in each app</li>
-<li class="ml-4 text-gray-300">3. CleverKeys remembers your choice</li>
-</ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Pin favorites</strong>: Move frequently used layouts to top</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Hide unused</strong>: Disable layouts you rarely use</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Learn gestures</strong>: Spacebar swipe is fastest</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Visual cue</strong>: Watch for layout indicator when switching</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Two languages</strong>: If you only use 2 layouts, switching always toggles between them</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Learn your subkeys</strong>: Check Shift key subkeys for default switch actions</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Custom placement</strong>: Put switch keys where they're most convenient for you</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Visual feedback</strong>: Watch the spacebar for current layout confirmation</li>
 </ul>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">Double-tap the globe key to toggle between your two most recently used layouts.</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">For bilingual typing, consider using Multi-Language mode instead of switching layouts. It suggests words from both languages simultaneously.</blockquote>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Globe Key Behavior</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Multi-Language Alternative</h2>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Result</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Tap</strong></td><td class="px-4 py-2 border-t border-gray-700">Next layout</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Double-tap</strong></td><td class="px-4 py-2 border-t border-gray-700">Toggle last two layouts</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long-press</strong></td><td class="px-4 py-2 border-t border-gray-700">Show layout picker</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe up</strong></td><td class="px-4 py-2 border-t border-gray-700">Show layout picker</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Spacebar Gestures</h2>
+<p class="mb-4 text-gray-300 leading-relaxed">Instead of switching layouts, you can type in multiple languages on one layout:</p>
 
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Gesture</td><td class="px-4 py-2 border-t border-gray-700">Result</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe left</strong></td><td class="px-4 py-2 border-t border-gray-700">Previous layout</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Swipe right</strong></td><td class="px-4 py-2 border-t border-gray-700">Next layout</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Long swipe</strong></td><td class="px-4 py-2 border-t border-gray-700">Skip to first/last layout</td></tr>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Go to <strong class="text-white">Settings > Multi-Language</strong> section</li>
+<li class="ml-4 text-gray-300">2. Enable a <strong class="text-white">Secondary Language</strong></li>
+<li class="ml-4 text-gray-300">3. Both language dictionaries work simultaneously</li>
+<li class="ml-4 text-gray-300">4. See <a href="multi-language.html" class="text-green-400 hover:underline">Multi-Language</a> for details</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Available Actions</h2>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Action</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_forward</code></td><td class="px-4 py-2 border-t border-gray-700">Switch to next layout</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_backward</code></td><td class="px-4 py-2 border-t border-gray-700">Switch to previous layout</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">switch_text</code></td><td class="px-4 py-2 border-t border-gray-700">Switch to text keyboard</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Layout Order</strong></td><td class="px-4 py-2 border-t border-gray-700">Layouts</td><td class="px-4 py-2 border-t border-gray-700">Set cycle order</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Show Globe</strong></td><td class="px-4 py-2 border-t border-gray-700">Layouts</td><td class="px-4 py-2 border-t border-gray-700">Show/hide globe key</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Per-App Layout</strong></td><td class="px-4 py-2 border-t border-gray-700">Layouts</td><td class="px-4 py-2 border-t border-gray-700">Remember per app</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Show Indicator</strong></td><td class="px-4 py-2 border-t border-gray-700">Layouts</td><td class="px-4 py-2 border-t border-gray-700">Layout change indicator</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Primary Language</strong></td><td class="px-4 py-2 border-t border-gray-700">Multi-Language section</td><td class="px-4 py-2 border-t border-gray-700">Main language</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Secondary Language</strong></td><td class="px-4 py-2 border-t border-gray-700">Multi-Language section</td><td class="px-4 py-2 border-t border-gray-700">Additional dictionary</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Switch Input Immediate</strong></td><td class="px-4 py-2 border-t border-gray-700">Input settings</td><td class="px-4 py-2 border-t border-gray-700">Instant vs delayed switch</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I quickly switch between two languages?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Double-tap the globe key to toggle between your two most recently used layouts.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: If you only have 2 layouts enabled, any switch action toggles between them. Alternatively, enable Multi-Language mode for simultaneous bilingual typing.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I disable certain layouts from quick switch?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Where are the layout switch keys?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, in Settings > Layouts, uncheck "Include in Quick Switch" for layouts you want to access only via the full picker.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: By default, check the Shift key subkeys (swipe to see). You can also assign switch actions to any key via Per-Key Customization.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Why doesn't the globe key appear?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I have different layouts per app?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: You need at least 2 layouts installed. Go to Settings > Layouts > Add Layout.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Per-app layouts are not currently supported. The active layout is global across all apps.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="adding-layouts.html" class="text-green-400 hover:underline">Adding Layouts</a> - Install new layouts</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="multi-language.html" class="text-green-400 hover:underline">Multi-Language</a> - Use multiple languages</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="profiles.html" class="text-green-400 hover:underline">Profiles</a> - Save layout configurations</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="multi-language.html" class="text-green-400 hover:underline">Multi-Language</a> - Type in multiple languages simultaneously</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../customization/per-key-actions.html" class="text-green-400 hover:underline">Per-Key Actions</a> - Customize switch key placement</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/layouts/switching-layouts-spec.html" class="text-green-400 hover:underline">Switching Layouts Technical Specification</a>.</p>
-
         </div>
         
         <!-- Prev/Next Navigation -->

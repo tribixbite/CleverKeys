@@ -79,162 +79,164 @@
 <p class="mb-4 text-gray-300 leading-relaxed">description: Type in multiple languages seamlessly</p>
 <p class="mb-4 text-gray-300 leading-relaxed">category: Layouts</p>
 <p class="mb-4 text-gray-300 leading-relaxed">difficulty: intermediate</p>
-<p class="mb-4 text-gray-300 leading-relaxed">related_spec: ../specs/layouts/multi-language-spec.md</p>
 <hr class="border-gray-700 my-6">
 
 <h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Multi-Language Input</h1>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Type in multiple languages with smart language detection, seamless switching, and per-language predictions.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Type in multiple languages with smart language detection and combined predictions from multiple dictionaries.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Quick Summary</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">What</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Description</th></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Type in multiple languages</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Settings > Languages</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Features</strong></td><td class="px-4 py-2 border-t border-gray-700">Auto-detect, per-language dictionary, mixed typing</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Purpose</strong></td><td class="px-4 py-2 border-t border-gray-700">Type in multiple languages on one layout</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Access</strong></td><td class="px-4 py-2 border-t border-gray-700">Scroll to <strong class="text-white">Multi-Language</strong> section in Settings</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Features</strong></td><td class="px-4 py-2 border-t border-gray-700">Auto-detect, dual dictionaries, accent normalization</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How Multi-Language Works</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Instead of switching layouts, CleverKeys can provide predictions from multiple language dictionaries simultaneously. The neural model outputs letter sequences, and the system checks them against dictionaries for both your primary and secondary languages.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">The Key Concept</h3>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. You swipe a word on QWERTY layout</li>
+<li class="ml-4 text-gray-300">2. Neural model suggests possible letter sequences</li>
+<li class="ml-4 text-gray-300">3. System checks both English AND Spanish (for example) dictionaries</li>
+<li class="ml-4 text-gray-300">4. Best matches from both languages appear in suggestions</li>
+<li class="ml-4 text-gray-300">5. Accent normalization maps "espanol" → "español"</li>
+</ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Setting Up Multi-Language</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 1: Add Languages</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 1: Open Multi-Language Settings</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open <strong class="text-white">Settings > Languages</strong></li>
-<li class="ml-4 text-gray-300">2. Tap <strong class="text-white">Add Language</strong></li>
-<li class="ml-4 text-gray-300">3. Select languages you use</li>
-<li class="ml-4 text-gray-300">4. Each language can have its own layout</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Open <strong class="text-white">Settings</strong></li>
+<li class="ml-4 text-gray-300">2. Scroll to the <strong class="text-white">Multi-Language</strong> section (collapsible)</li>
+<li class="ml-4 text-gray-300">3. Expand to see language options</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 2: Configure Primary Language</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Drag your main language to the top</li>
-<li class="ml-4 text-gray-300">2. This becomes the default for new text fields</li>
-<li class="ml-4 text-gray-300">3. Predictions prioritize this language</li>
+<p class="mb-4 text-gray-300 leading-relaxed">Your primary language is the main dictionary:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Primary Language</strong> determines the neural model's vocabulary base</li>
+<li class="ml-4 text-gray-300">2. English is the default primary language</li>
+<li class="ml-4 text-gray-300">3. The neural model is trained primarily on English</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 3: Enable Auto-Detection (Optional)</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 3: Add Secondary Language</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Toggle <strong class="text-white">Auto-Detect Language</strong></li>
-<li class="ml-4 text-gray-300">2. CleverKeys analyzes your typing</li>
-<li class="ml-4 text-gray-300">3. Predictions adapt to detected language</li>
+<p class="mb-4 text-gray-300 leading-relaxed">Enable a second language for combined predictions:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. In <strong class="text-white">Multi-Language</strong> section, find <strong class="text-white">Secondary Language</strong></li>
+<li class="ml-4 text-gray-300">2. Select a language (Spanish, French, German, etc.)</li>
+<li class="ml-4 text-gray-300">3. Both dictionaries now contribute predictions</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">How Multi-Language Works</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Step 4: Enable Language Detection (Optional)</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Language Detection</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">Auto-detect adjusts prediction weighting:</p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys analyzes your typing patterns:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Enable <strong class="text-white">Language Detection</strong></li>
+<li class="ml-4 text-gray-300">2. The system analyzes recent words</li>
+<li class="ml-4 text-gray-300">3. If you're typing mostly Spanish, Spanish predictions get boosted</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Detection Sensitivity</h2>
 
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">You type: "Bon" → Detects French
-<p class="mb-4 text-gray-300 leading-relaxed">Predictions: "Bonjour" "Bonne" "Bonheur"</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Control how quickly the system adapts to detected language:</p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">You type: "Good" → Detects English</p>
-<p class="mb-4 text-gray-300 leading-relaxed">Predictions: "Good" "Goodnight" "Goodbye"</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Per-Language Dictionaries</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Each language has its own dictionary:</p>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Language</td><td class="px-4 py-2 border-t border-gray-700">Dictionary</td><td class="px-4 py-2 border-t border-gray-700">Personal Words</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">English</td><td class="px-4 py-2 border-t border-gray-700">100,000+ words</td><td class="px-4 py-2 border-t border-gray-700">Your additions</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700">French</td><td class="px-4 py-2 border-t border-gray-700">80,000+ words</td><td class="px-4 py-2 border-t border-gray-700">Your additions</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700">Spanish</td><td class="px-4 py-2 border-t border-gray-700">90,000+ words</td><td class="px-4 py-2 border-t border-gray-700">Your additions</td></tr>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Sensitivity</td><td class="px-4 py-2 border-t border-gray-700">Behavior</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Low (0.4)</strong></td><td class="px-4 py-2 border-t border-gray-700">Slow to switch, stable predictions</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Medium (0.6)</strong></td><td class="px-4 py-2 border-t border-gray-700">Balanced adaptation</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">High (0.9)</strong></td><td class="px-4 py-2 border-t border-gray-700">Quick switching between languages</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Mixed Typing</h3>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Available Languages</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Type mixed-language sentences:</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Bundled Languages</h3>
 
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">"Let's meet at the café mañana"
-<p class="mb-4 text-gray-300 leading-relaxed">↑ English    ↑ French  ↑ Spanish</code></pre></p>
+<p class="mb-4 text-gray-300 leading-relaxed">These come pre-installed:</p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">CleverKeys handles code-switching naturally.</p>
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Language Layouts</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Each language can have an associated layout:</p>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Language</td><td class="px-4 py-2 border-t border-gray-700">Layout</td><td class="px-4 py-2 border-t border-gray-700">Special Keys</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">English</td><td class="px-4 py-2 border-t border-gray-700">QWERTY</td><td class="px-4 py-2 border-t border-gray-700">Standard</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700">French</td><td class="px-4 py-2 border-t border-gray-700">AZERTY</td><td class="px-4 py-2 border-t border-gray-700">é, è, à, ç</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700">German</td><td class="px-4 py-2 border-t border-gray-700">QWERTZ</td><td class="px-4 py-2 border-t border-gray-700">ä, ö, ü, ß</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700">Spanish</td><td class="px-4 py-2 border-t border-gray-700">QWERTY</td><td class="px-4 py-2 border-t border-gray-700">ñ, ¿, ¡</td></tr>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Language</td><td class="px-4 py-2 border-t border-gray-700">Code</td><td class="px-4 py-2 border-t border-gray-700">Dictionary Size</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">English</td><td class="px-4 py-2 border-t border-gray-700">en</td><td class="px-4 py-2 border-t border-gray-700">50,000 words</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700">Spanish</td><td class="px-4 py-2 border-t border-gray-700">es</td><td class="px-4 py-2 border-t border-gray-700">50,000 words</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">French</td><td class="px-4 py-2 border-t border-gray-700">fr</td><td class="px-4 py-2 border-t border-gray-700">25,000 words</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Portuguese</td><td class="px-4 py-2 border-t border-gray-700">pt</td><td class="px-4 py-2 border-t border-gray-700">25,000 words</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">German</td><td class="px-4 py-2 border-t border-gray-700">de</td><td class="px-4 py-2 border-t border-gray-700">25,000 words</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Italian</td><td class="px-4 py-2 border-t border-gray-700">it</td><td class="px-4 py-2 border-t border-gray-700">25,000 words</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Switching Languages</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Downloadable Languages</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Automatic Switching</h3>
+<p class="mb-4 text-gray-300 leading-relaxed">Via Language Packs:</p>
 
-<p class="mb-4 text-gray-300 leading-relaxed">With auto-detect enabled:</p>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Language</td><td class="px-4 py-2 border-t border-gray-700">Code</td><td class="px-4 py-2 border-t border-gray-700">Status</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Dutch</td><td class="px-4 py-2 border-t border-gray-700">nl</td><td class="px-4 py-2 border-t border-gray-700">Available</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700">Indonesian</td><td class="px-4 py-2 border-t border-gray-700">id</td><td class="px-4 py-2 border-t border-gray-700">Available</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Malay</td><td class="px-4 py-2 border-t border-gray-700">ms</td><td class="px-4 py-2 border-t border-gray-700">Available</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Tagalog</td><td class="px-4 py-2 border-t border-gray-700">tl</td><td class="px-4 py-2 border-t border-gray-700">Available</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Swedish</td><td class="px-4 py-2 border-t border-gray-700">sv</td><td class="px-4 py-2 border-t border-gray-700">Via wordfreq script</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="language-packs.html" class="text-green-400 hover:underline">Language Packs</a> for download instructions.</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Start typing in any language</li>
-<li class="ml-4 text-gray-300">2. CleverKeys detects the language</li>
-<li class="ml-4 text-gray-300">3. Predictions and corrections adapt</li>
-<li class="ml-4 text-gray-300">4. No manual switch needed</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Manual Switching</h3>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Accent Normalization</h2>
 
-<p class="mb-4 text-gray-300 leading-relaxed">Without auto-detect:</p>
+<p class="mb-4 text-gray-300 leading-relaxed">Multi-language mode automatically handles accented characters:</p>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. Tap the globe key to switch layout</li>
-<li class="ml-4 text-gray-300">2. Or swipe spacebar left/right</li>
-<li class="ml-4 text-gray-300">3. Layout and language change together</li>
-</ul>
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">You type</td><td class="px-4 py-2 border-t border-gray-700">Suggestion</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">"cafe"</td><td class="px-4 py-2 border-t border-gray-700">"café"</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700">"espanol"</td><td class="px-4 py-2 border-t border-gray-700">"español"</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">"francais"</td><td class="px-4 py-2 border-t border-gray-700">"français"</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">"nino"</td><td class="px-4 py-2 border-t border-gray-700">"niño"</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<p class="mb-4 text-gray-300 leading-relaxed">The system maps your 26-letter QWERTY input to properly accented words.</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Tips and Tricks</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Primary language</strong>: Set your most-used language as primary</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Related languages</strong>: Auto-detect works best with distinct languages</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Personal dictionary</strong>: Add words to each language separately</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Layout association</strong>: Associate each language with preferred layout</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">One layout, two languages</strong>: No need to switch layouts for bilingual typing</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Accent-free typing</strong>: Just type the base letters, accents are added automatically</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Detection window</strong>: The system looks at your last ~10 words to detect language</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Boost settings</strong>: Adjust detection sensitivity if switching feels too fast/slow</li>
 </ul>
 <blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
-<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">For better auto-detection, type at least 3-4 characters before expecting language switch.</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">For best results, type a few words in one language before expecting accurate detection.</blockquote>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Language-Specific Features</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Accented Characters</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">Access accents via long-press or short swipe:</p>
-
-<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Key</td><td class="px-4 py-2 border-t border-gray-700">Long-press options</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">e</strong></td><td class="px-4 py-2 border-t border-gray-700">é, è, ê, ë, ē</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">a</strong></td><td class="px-4 py-2 border-t border-gray-700">á, à, â, ä, ã, å</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">n</strong></td><td class="px-4 py-2 border-t border-gray-700">ñ, ń</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">c</strong></td><td class="px-4 py-2 border-t border-gray-700">ç, ć</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Right-to-Left Languages</h3>
-
-<p class="mb-4 text-gray-300 leading-relaxed">For Arabic, Hebrew, etc.:</p>
-
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Keyboard flips to RTL</li>
-<li class="ml-4 text-gray-300">&#8226; Cursor behavior adapts</li>
-<li class="ml-4 text-gray-300">&#8226; Predictions flow RTL</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Settings Reference</h2>
 
 <table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Setting</td><td class="px-4 py-2 border-t border-gray-700">Location</td><td class="px-4 py-2 border-t border-gray-700">Description</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Languages</strong></td><td class="px-4 py-2 border-t border-gray-700">Languages</td><td class="px-4 py-2 border-t border-gray-700">Add/remove languages</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Auto-Detect</strong></td><td class="px-4 py-2 border-t border-gray-700">Languages</td><td class="px-4 py-2 border-t border-gray-700">Enable auto-detection</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Language Order</strong></td><td class="px-4 py-2 border-t border-gray-700">Languages</td><td class="px-4 py-2 border-t border-gray-700">Set priority</td></tr>
-<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Per-Language Dictionary</strong></td><td class="px-4 py-2 border-t border-gray-700">Languages</td><td class="px-4 py-2 border-t border-gray-700">Separate dictionaries</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Primary Language</strong></td><td class="px-4 py-2 border-t border-gray-700">Multi-Language section</td><td class="px-4 py-2 border-t border-gray-700">Main dictionary</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Secondary Language</strong></td><td class="px-4 py-2 border-t border-gray-700">Multi-Language section</td><td class="px-4 py-2 border-t border-gray-700">Additional dictionary</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Language Detection</strong></td><td class="px-4 py-2 border-t border-gray-700">Multi-Language section</td><td class="px-4 py-2 border-t border-gray-700">Auto-detect toggle</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><strong class="text-white">Detection Sensitivity</strong></td><td class="px-4 py-2 border-t border-gray-700">Multi-Language section</td><td class="px-4 py-2 border-t border-gray-700">0.4-0.9 range</td></tr>
 <p class="mb-4 text-gray-300 leading-relaxed"></table></p>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Common Questions</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Does auto-detect work for similar languages?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Do I need to switch layouts to type in another language?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: It works best with distinct languages (English/French). Very similar languages (Norwegian/Swedish) may need manual switching.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: No! Multi-Language mode provides predictions from both languages on your current layout. Type naturally and the system suggests words from both dictionaries.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I disable auto-detect for specific languages?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How does accent normalization work?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: Yes, in Settings > Languages, toggle auto-detect per language.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: The neural model outputs base letters. The dictionary lookup maps "espanol" to "español" using accent normalization tables.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: How do I add words to a specific language's dictionary?</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: What if I need characters not on QWERTY?</h3>
 
-<p class="mb-4 text-gray-300 leading-relaxed">A: When adding a word, choose which language dictionary to add it to.</p>
+<p class="mb-4 text-gray-300 leading-relaxed">A: Use subkeys! Long-press or swipe on keys to access accented characters directly (e.g., swipe up on 'n' for 'ñ').</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Q: Can I use more than two languages?</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">A: Currently, the system supports primary + secondary language. For three or more languages, you'd switch between secondary languages.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">The multi-language system uses:</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">V2 Binary Dictionaries</strong>: Optimized format with accent mapping</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Unigram Language Detection</strong>: Word frequency analysis to detect language</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Suggestion Ranker</strong>: Merges results from multiple dictionaries</li>
+<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Accent Normalizer</strong>: Maps ASCII input to Unicode accented forms</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../../specs/secondary-language-integration.html" class="text-green-400 hover:underline">Secondary Language Integration</a> for implementation details.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="adding-layouts.html" class="text-green-400 hover:underline">Adding Layouts</a> - Install language layouts</li>
 <li class="ml-4 text-gray-300">&#8226; <a href="language-packs.html" class="text-green-400 hover:underline">Language Packs</a> - Download language support</li>
-<li class="ml-4 text-gray-300">&#8226; <a href="../typing/autocorrect.html" class="text-green-400 hover:underline">Autocorrect</a> - Per-language corrections</li>
+<li class="ml-4 text-gray-300">&#8226; <a href="../typing/swipe-typing.html" class="text-green-400 hover:underline">Swipe Typing</a> - How swipe prediction works</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Technical Details</h2>
-
-<p class="mb-4 text-gray-300 leading-relaxed">See <a href="../specs/layouts/multi-language-spec.html" class="text-green-400 hover:underline">Multi-Language Technical Specification</a>.</p>
-
         </div>
         
         <!-- Prev/Next Navigation -->
