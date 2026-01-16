@@ -14,12 +14,35 @@
 - #67 ✅ Script error (build_all_languages.py) - User error, provided fix
 - #68 ✅ Greek dictionary request - Engaged with contributor
 
+**Completed Feature Requests**:
+- #62 ✅ Password manager clipboard exclusion - IMPLEMENTED (2026-01-15)
+
 **Open Feature Requests** (for future consideration):
-- #62 Do not store clipboard from password managers (privacy)
 - #59 Clipboard delete individual items + timestamps
 - #61 Active multi-language switching
 - #58 Scaling number keyboard
 - #52 MessageEase layout contribution
+
+---
+
+## Password Manager Clipboard Exclusion - IMPLEMENTED (2026-01-15)
+
+**Feature**: Don't store clipboard entries from password managers for privacy.
+
+**Implementation**:
+- **Config.kt**: Added `CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS` default (true) + package list
+- **ClipboardHistoryService.kt**: Foreground app detection via UsageStatsManager/ActivityManager
+- **SettingsActivity.kt**: UI toggle in Clipboard section
+
+**Supported Apps** (20+ packages):
+- Bitwarden, 1Password, LastPass, Dashlane
+- KeePass variants (keepass2android, KunziSoft Free/Pro, OpenKeePass)
+- Enpass, NordPass, RoboForm, Keeper
+- Proton Pass, SafeInCloud, mSecure, Zoho Vault, Sticky Password
+
+**Settings UI**: Clipboard → "Exclude Password Managers" toggle
+
+**Commit**: `edfac50f feat: add password manager clipboard exclusion`
 
 ---
 
