@@ -107,9 +107,15 @@ For languages requiring diacritics:
 - Select from popup
 
 ### Circumflex (ê, î, ô, û, â)
+
+**Method 1 - Long-press (all layouts):**
 - Long-press the base letter (e, i, o, u, a)
 - Select the circumflex variant from popup
-- Works on all layouts (QWERTY, AZERTY, etc.)
+
+**Method 2 - Dead key (AZERTY):**
+- Swipe north on **j** key to access circumflex dead key (^)
+- Then type the base letter (e, i, o, u, a)
+- The combined character appears (ê, î, ô, û, â)
 
 ### Umlaut/Diaeresis (ë)
 - Long-press the base letter
@@ -129,6 +135,7 @@ For languages requiring diacritics:
 - **Speed**: Short swipes are faster than long-press once learned
 - **Customize**: You can change subkey assignments in Settings
 - **Language packs**: Some accents only appear with language pack installed
+- **Dead keys (AZERTY)**: Use j-north for ^, d-north for `, d-south for ´, then type the letter
 - **All layouts supported**: Long-press works on QWERTY, AZERTY, Dvorak, etc.
 
 > [!TIP]
