@@ -7,6 +7,14 @@
 
 ## Session Progress (2026-01-16)
 
+### Vibration Toggle Fix (#46)
+- ✅ Fixed vibration feedback toggle not working (ef7369a0)
+- Issue: Settings saved to "vibration_enabled" but Config read "vibrate_custom"
+- Added `haptic_enabled` master toggle in Config.kt
+- VibratorCompat now checks master toggle before any haptic feedback
+- Fixed SettingsActivity defaults from VIBRATE_CUSTOM to HAPTIC_ENABLED
+- Added to BackupRestoreManager for backup/restore support
+
 ### Specs Rewrite for LLM Agents
 - ✅ Rewrote 25 docs/specs files for LLM coding agent consumption
 - ✅ Removed: dates, TODOs, sprints, bugs, verification checklists
@@ -51,6 +59,7 @@
 - ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `ef7369a0` fix: vibration feedback toggle now properly disables all haptics (#46)
 - `f697f528` docs(specs): complete spec rewrite for LLM agents
 - `3603fc01` docs(specs): rewrite 4 more specs for LLM agent audience
 - `43fc91ee` docs(specs): rewrite layout, neural, dictionary, termux specs
@@ -90,6 +99,7 @@
 - #62 ✅ Password manager clipboard exclusion - IMPLEMENTED (v1.2.8)
 - #67 ✅ Script error - Fixed: added helper script validation
 - #68 ✅ Greek dictionary request - Feature request tracked
+- #46 ✅ Vibration feedback toggle - FIXED: master haptic toggle now works (ef7369a0)
 
 **Open CleverKeys Issues**:
 - #61 Active multi-language switching
@@ -98,7 +108,6 @@
 - #50 Swedish language support
 - #49 Turkish language support
 - #48 Password Manager autofill support
-- #46 Vibration feedback toggle
 - #42 Integrate add-to-dictionary to typing
 
 ---
