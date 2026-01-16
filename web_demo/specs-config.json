@@ -84,6 +84,24 @@
       "icon": "calendar",
       "reviewed": true,
       "version": "v1.2.9"
+    },
+    {
+      "file": "quick-settings-tile.md",
+      "title": "Quick Settings Tile",
+      "description": "Android Quick Settings tile for keyboard switching",
+      "category": "Settings",
+      "icon": "tile",
+      "reviewed": true,
+      "version": "v1.2.8"
+    },
+    {
+      "file": "clipboard-privacy.md",
+      "title": "Clipboard Privacy",
+      "description": "Password manager exclusion for clipboard history",
+      "category": "Settings",
+      "icon": "privacy",
+      "reviewed": true,
+      "version": "v1.2.8"
     }
   ],
   "categories": [

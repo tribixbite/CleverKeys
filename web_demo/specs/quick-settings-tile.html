@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Settings Tile - CleverKeys Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'ck-purple': '#9b59b6',
+                        'ck-purple-dark': '#6b21a8',
+                        'ck-purple-light': '#c39bd3',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #9b59b6 0%, #c39bd3 50%, #9b59b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-ck-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-gray-400 hover:text-white transition-colors">All Specs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4 pt-20">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-ck-purple">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-ck-purple">Specs</a>
+            <span>/</span>
+            <span class="text-gray-300">Quick Settings Tile</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-8">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #f39c1220; color: #f39c12">Settings</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">v1.2.8</span>
+        </div>
+        <h1 class="text-4xl font-bold gradient-text mb-2">Quick Settings Tile</h1>
+        <p class="text-xl text-gray-400">Android Quick Settings tile for keyboard switching</p>
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <h1 class="text-3xl font-bold mb-6 gradient-text">Quick Settings Tile Specification</h1>
+
+<p class="mb-4 text-gray-300"><strong>Status</strong>: Implemented</p>
+<p class="mb-4 text-gray-300"><strong>Version</strong>: 1.2.8</p>
+<p class="mb-4 text-gray-300"><strong>Last Updated</strong>: 2026-01-15</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
+
+<p class="mb-4 text-gray-300">CleverKeys provides a Quick Settings tile that allows users to quickly access the keyboard switcher from the Android notification shade. This provides a convenient way to switch between keyboards without navigating to system settings.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Requirements</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Android 7.0 (API 24) or higher</li>
+<li class="ml-4">&#8226; CleverKeys must be installed and enabled as an input method</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">KeyboardTileService.kt</h3>
+
+<p class="mb-4 text-gray-300">Location: <code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/KeyboardTileService.kt</code></p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">@RequiresApi(Build.VERSION_CODES.N)
+<p class="mb-4 text-gray-300">class KeyboardTileService : TileService()</code></pre></p>
+
+<p class="mb-4 text-gray-300">#### Key Methods</p>
+
+<p class="mb-4 text-gray-300">| Method | Purpose |</p>
+<p class="mb-4 text-gray-300">|--------|---------|</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">onStartListening()</code> | Updates tile state when Quick Settings panel opens |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">onClick()</code> | Shows input method picker when tile is tapped |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">onTileAdded()</code> | Updates tile state when user adds tile to panel |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">updateTileState()</code> | Sets tile active/inactive based on current keyboard |</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Tile States</h3>
+
+<p class="mb-4 text-gray-300">| State | Condition | Visual |</p>
+<p class="mb-4 text-gray-300">|-------|-----------|--------|</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">STATE_ACTIVE</code> | CleverKeys is current input method | Highlighted |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">STATE_INACTIVE</code> | Another keyboard is active | Dimmed |</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Android Manifest Registration</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-xml">&lt;service
+<p class="mb-4 text-gray-300">    android:name="tribixbite.cleverkeys.KeyboardTileService"</p>
+<p class="mb-4 text-gray-300">    android:label="@string/app_name"</p>
+<p class="mb-4 text-gray-300">    android:icon="@mipmap/ic_launcher"</p>
+<p class="mb-4 text-gray-300">    android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"</p>
+<p class="mb-4 text-gray-300">    android:exported="true"&gt;</p>
+<p class="mb-4 text-gray-300">  &lt;intent-filter&gt;</p>
+<p class="mb-4 text-gray-300">    &lt;action android:name="android.service.quicksettings.action.QS_TILE"/&gt;</p>
+<p class="mb-4 text-gray-300">  &lt;/intent-filter&gt;</p>
+<p class="mb-4 text-gray-300">&lt;/service&gt;</code></pre></p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">User Experience</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Adding the Tile</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4">1. Pull down notification shade</li>
+<li class="ml-4">2. Tap "Edit" or pencil icon</li>
+<li class="ml-4">3. Find "CleverKeys" tile in available tiles</li>
+<li class="ml-4">4. Drag to active tiles area</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Using the Tile</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4">1. Pull down notification shade</li>
+<li class="ml-4">2. Tap CleverKeys tile</li>
+<li class="ml-4">3. System input method picker appears</li>
+<li class="ml-4">4. Select desired keyboard</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Technical Details</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Input Method Detection</h3>
+
+<p class="mb-4 text-gray-300">The tile checks if CleverKeys is the current input method by reading:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">val currentIme = Settings.Secure.getString(
+<p class="mb-4 text-gray-300">    contentResolver,</p>
+<p class="mb-4 text-gray-300">    Settings.Secure.DEFAULT_INPUT_METHOD</p>
+<p class="mb-4 text-gray-300">)</p>
+<p class="mb-4 text-gray-300">val isCleverKeysActive = currentIme?.contains(packageName) == true</code></pre></p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Fallback Behavior</h3>
+
+<p class="mb-4 text-gray-300">If <code class="bg-ck-dark px-1 rounded">InputMethodManager.showInputMethodPicker()</code> fails:</p>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Opens system input method settings as fallback</li>
+<li class="ml-4">&#8226; Uses <code class="bg-ck-dark px-1 rounded">Settings.ACTION_INPUT_METHOD_SETTINGS</code> intent</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Related Files</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">KeyboardTileService.kt</code> - TileService implementation</li>
+<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">AndroidManifest.xml</code> - Service registration</li>
+<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">ic_launcher</code> - Tile icon (uses app launcher icon)</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">References</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <a href="https://developer.android.com/develop/ui/views/quicksettings-tiles" class="text-ck-purple hover:underline">Android TileService Documentation</a></li>
+<li class="ml-4">&#8226; <a href="https://github.com/Julow/Unexpected-Keyboard/issues/1113" class="text-ck-purple hover:underline">GitHub Issue #1113</a></li>
+</ul>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys Documentation - Generated from specs</p>
+    </footer>
+</body>
+</html>
