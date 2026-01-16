@@ -49,6 +49,9 @@ class KeyboardReceiver(
     private var emojiPane: ViewGroup? = null
     private var contentPaneContainer: ViewGroup? = null
 
+    // #41: Emoji search manager (uses suggestion bar for status display)
+    private var emojiSearchManager: EmojiSearchManager? = null
+
     /**
      * Sets references to emoji pane and content pane container.
      * These are created later in CleverKeysService lifecycle.
@@ -59,6 +62,14 @@ class KeyboardReceiver(
     fun setViewReferences(emojiPane: ViewGroup?, contentPaneContainer: ViewGroup?) {
         this.emojiPane = emojiPane
         this.contentPaneContainer = contentPaneContainer
+    }
+
+    /**
+     * #41: Sets the emoji search manager.
+     * Called from CleverKeysService after initialization.
+     */
+    fun setEmojiSearchManager(manager: EmojiSearchManager) {
+        this.emojiSearchManager = manager
     }
 
     override fun handle_event_key(ev: KeyValue.Event) {
@@ -104,6 +115,15 @@ class KeyboardReceiver(
                         keyboard2.setInputView(pane)
                     }
                 }
+
+                // #41: Enter emoji search mode with auto-detected context word
+                emojiSearchManager?.let { manager ->
+                    // Get text before cursor to detect context word
+                    val textBeforeCursor = keyboard2.currentInputConnection
+                        ?.getTextBeforeCursor(100, 0)
+                    val contextWord = manager.extractWordBeforeCursor(textBeforeCursor)
+                    manager.enterSearchMode(contextWord)
+                }
             }
 
             KeyValue.Event.SWITCH_CLIPBOARD -> {
@@ -136,6 +156,9 @@ class KeyboardReceiver(
             KeyValue.Event.SWITCH_BACK_CLIPBOARD -> {
                 // Exit clipboard search mode when switching back
                 clipboardManager.resetSearchOnHide()
+
+                // #41: Exit emoji search mode when switching back
+                emojiSearchManager?.exitSearchMode()
 
                 // Hide content pane (keyboard remains visible)
                 contentPaneContainer?.let {
@@ -273,5 +296,22 @@ class KeyboardReceiver(
 
     override fun exitClipboardSearchMode() {
         clipboardManager.clearSearch()
+    }
+
+    // #41: Emoji search mode IReceiver implementations
+    override fun isEmojiSearchMode(): Boolean {
+        return emojiSearchManager?.isInSearchMode() ?: false
+    }
+
+    override fun appendToEmojiSearch(text: String) {
+        emojiSearchManager?.appendToSearch(text)
+    }
+
+    override fun backspaceEmojiSearch() {
+        emojiSearchManager?.deleteFromSearch()
+    }
+
+    override fun exitEmojiSearchMode() {
+        emojiSearchManager?.exitSearchMode()
     }
 }

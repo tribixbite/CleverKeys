@@ -60,6 +60,9 @@ class SuggestionBar : LinearLayout {
         setSuggestionsWithScores(savedSuggestions, savedScores)
     }
 
+    // #41: Emoji search mode properties
+    private var isInEmojiSearchMode = false
+
     /**
      * Check if currently showing a temporary message.
      * v1.2.6: Used to prevent cursor sync from overwriting feedback messages.
@@ -416,6 +419,72 @@ class SuggestionBar : LinearLayout {
         savedSuggestions = emptyList()
         savedScores = emptyList()
     }
+
+    // ==================== Emoji Search Mode (#41) ====================
+
+    /**
+     * #41: Show emoji search status in the suggestion bar.
+     * This is a dedicated mode that takes over the suggestion bar display.
+     *
+     * @param message The message to display (e.g., "Type to search emoji..." or "Search: \"banana\"")
+     */
+    fun showEmojiSearchStatus(message: String) {
+        if (isPasswordMode) return
+
+        // Cancel any pending temporary message restore
+        mainHandler.removeCallbacks(restoreRunnable)
+        isShowingTemporaryMessage = false
+
+        // Enter emoji search display mode
+        isInEmojiSearchMode = true
+
+        // Clear and show single status message
+        removeAllViews()
+        suggestionViews.clear()
+        currentSuggestions.clear()
+        currentScores.clear()
+
+        val statusView = TextView(context).apply {
+            layoutParams = LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            gravity = Gravity.CENTER
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            setTextColor(theme?.subLabelColor?.takeIf { it != 0 } ?: Color.LTGRAY)
+            typeface = Typeface.DEFAULT_BOLD
+            text = message
+        }
+        addView(statusView)
+
+        Log.d(TAG, "showEmojiSearchStatus: '$message'")
+    }
+
+    /**
+     * #41: Exit emoji search mode and clear the display.
+     * Restores normal suggestion bar behavior.
+     */
+    fun clearEmojiSearchStatus() {
+        if (!isInEmojiSearchMode) return
+
+        isInEmojiSearchMode = false
+
+        // Clear the display
+        removeAllViews()
+        suggestionViews.clear()
+        currentSuggestions.clear()
+        currentScores.clear()
+
+        // Show empty suggestions (maintains bar visibility if alwaysVisible)
+        visibility = if (alwaysVisible) VISIBLE else GONE
+
+        Log.d(TAG, "clearEmojiSearchStatus: exited emoji search mode")
+    }
+
+    /**
+     * #41: Check if currently in emoji search mode.
+     */
+    fun isInEmojiSearchMode(): Boolean = isInEmojiSearchMode
 
     // ==================== Inline Autofill Support ====================
     // Track the inline autofill view to properly manage its lifecycle

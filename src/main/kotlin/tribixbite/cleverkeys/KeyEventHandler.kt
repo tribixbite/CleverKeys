@@ -97,6 +97,10 @@ class KeyEventHandler(
                 // Handle backspace in clipboard search mode
                 if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardSearchMode()) {
                     recv.backspaceClipboardSearch()
+                }
+                // #41: Handle backspace in emoji search mode
+                else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isEmojiSearchMode()) {
+                    recv.backspaceEmojiSearch()
                 } else {
                     send_key_down_up(key.getKeyevent())
                     // Handle backspace for word prediction
@@ -214,6 +218,12 @@ class KeyEventHandler(
         // Route to clipboard search box if in search mode
         if (recv.isClipboardSearchMode()) {
             recv.appendToClipboardSearch(text.toString())
+            return
+        }
+
+        // #41: Route to emoji search if in emoji search mode
+        if (recv.isEmojiSearchMode()) {
+            recv.appendToEmojiSearch(text.toString())
             return
         }
 
@@ -618,10 +628,16 @@ class KeyEventHandler(
         fun handle_text_typed(text: String)
         fun handle_backspace() {} // Default implementation for backward compatibility
         fun handle_delete_last_word() {} // Delete last auto-inserted or typed word
+        // Clipboard search mode methods
         fun isClipboardSearchMode(): Boolean = false // Check if clipboard search mode is active
         fun appendToClipboardSearch(text: String) {} // Append text to clipboard search box
         fun backspaceClipboardSearch() {} // Handle backspace in clipboard search
         fun exitClipboardSearchMode() {} // Exit clipboard search mode (clear search box and mode)
+        // #41: Emoji search mode methods (uses suggestion bar instead of separate EditText)
+        fun isEmojiSearchMode(): Boolean = false // Check if emoji search mode is active
+        fun appendToEmojiSearch(text: String) {} // Append text to emoji search query
+        fun backspaceEmojiSearch() {} // Handle backspace in emoji search
+        fun exitEmojiSearchMode() {} // Exit emoji search mode
     }
 
     private inner class AutocapitalisationCallback : Autocapitalisation.Callback {

@@ -665,6 +665,16 @@ class CleverKeysService : InputMethodService(),
             _contentPaneContainer = predictionSetup.contentPaneContainer
             setInputView(predictionSetup.inputView)
 
+            // #41: Initialize emoji search manager (uses suggestion bar for status display)
+            // Uses provider functions for lazy resolution of views
+            val emojiSearchManager = EmojiSearchManager(
+                suggestionBarProvider = { _suggestionBar },
+                emojiGridProvider = {
+                    _emojiPane?.findViewById(R.id.emoji_grid)
+                }
+            )
+            _receiver?.setEmojiSearchManager(emojiSearchManager)
+
             // Password field detection: disable predictions and show eye toggle
             val isPasswordField = SuggestionBar.isPasswordField(info)
             _suggestionBar?.setPasswordMode(isPasswordField)
