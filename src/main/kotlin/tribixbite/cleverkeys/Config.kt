@@ -36,6 +36,8 @@ object Defaults {
     const val NUMPAD_LAYOUT = "default"
     const val NUMBER_ROW = "no_number_row"
     const val NUMBER_ENTRY_LAYOUT = "pin"
+    // Scale numeric keyboards (PIN/numpad) to fill full keyboard height
+    const val SCALE_NUMPAD_HEIGHT = true
 
     // Margin settings (percentages of screen dimension)
     // Bottom margin as % of screen height
@@ -320,6 +322,7 @@ class Config private constructor(
     @JvmField var layouts: List<KeyboardData?> = emptyList()
     @JvmField var show_numpad = false
     @JvmField var inverse_numpad = false
+    @JvmField var scale_numpad_height = Defaults.SCALE_NUMPAD_HEIGHT
     @JvmField var add_number_row = false
     @JvmField var number_row_symbols = false
     @JvmField var swipe_dist_px = 0f
@@ -526,6 +529,7 @@ class Config private constructor(
         // Keep nulls - they represent SystemLayout entries (resolved to localeTextLayout at runtime)
         layouts = LayoutsPreference.load_from_preferences(res, _prefs)
         inverse_numpad = safeGetString(_prefs, "numpad_layout", Defaults.NUMPAD_LAYOUT) == "low_first"
+        scale_numpad_height = _prefs.getBoolean("scale_numpad_height", Defaults.SCALE_NUMPAD_HEIGHT)
 
         val number_row = safeGetString(_prefs, "number_row", Defaults.NUMBER_ROW)
         add_number_row = number_row != "no_number_row"

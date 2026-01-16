@@ -153,6 +153,7 @@ class BackupRestoreManager(private val context: Context) {
         // Layout
         "show_numpad" to Defaults.SHOW_NUMPAD,
         "numpad_layout" to Defaults.NUMPAD_LAYOUT,
+        "scale_numpad_height" to Defaults.SCALE_NUMPAD_HEIGHT,
         "number_row" to Defaults.NUMBER_ROW,
         "number_entry_layout" to Defaults.NUMBER_ENTRY_LAYOUT,
         "margin_bottom_portrait" to Defaults.MARGIN_BOTTOM_PORTRAIT,

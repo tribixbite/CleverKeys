@@ -187,8 +187,17 @@ class Theme {
             // a layout in KeyboardData unit. The keyboard will be higher if the
             // layout has more rows and smaller if it has less because rows stay the
             // same height.
+            //
+            // For numeric keyboards (bottom_row=false) with scale_numpad_height enabled,
+            // use the actual keysHeight as divisor so rows scale up to fill the full
+            // keyboard height, making keys easier to hit on small screens (#58).
+            val heightDivisor = if (config.scale_numpad_height && !layout.bottom_row) {
+                layout.keysHeight
+            } else {
+                3.95f
+            }
             row_height = min(
-                config.screenHeightPixels * config.keyboardHeightPercent / 100 / 3.95f,
+                config.screenHeightPixels * config.keyboardHeightPercent / 100 / heightDivisor,
                 config.screenHeightPixels / layout.keysHeight
             )
             vertical_margin = config.key_vertical_margin * row_height
