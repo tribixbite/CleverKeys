@@ -1,7 +1,25 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-15
+**Last Updated**: 2026-01-16
 **Status**: v1.2.7 - Cursor-aware prediction fixes + Wiki System
+
+---
+
+## GitHub Issue Triage (2026-01-16)
+
+**Issues Addressed**:
+- #51 ✅ Transparent background on Android 16 - User guidance (opacity setting)
+- #55 ✅ Crashes on Nexus 6 - User guidance (disable swipe, older device)
+- #56 ✅ First-time user tutorial - Pointed to new wiki documentation
+- #67 ✅ Script error (build_all_languages.py) - User error, provided fix
+- #68 ✅ Greek dictionary request - Engaged with contributor
+
+**Open Feature Requests** (for future consideration):
+- #62 Do not store clipboard from password managers (privacy)
+- #59 Clipboard delete individual items + timestamps
+- #61 Active multi-language switching
+- #58 Scaling number keyboard
+- #52 MessageEase layout contribution
 
 ---
 
