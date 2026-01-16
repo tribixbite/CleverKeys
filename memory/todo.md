@@ -25,6 +25,15 @@
   - Rows scale up to fill full keyboard height for easier tapping
   - Theme.kt modified row_height calculation logic
 
+### Timestamp UI Commands + Language Packs (ba53b955)
+- ✅ Added timestamp commands to CommandRegistry for short swipe UI
+  - 8 timestamp formats: date, time, datetime, time_seconds, date_short, date_long, time_12h, iso
+  - Users can now assign timestamp insertion to any key's short swipe gesture
+- ✅ Created Turkish language pack (langpack-tr.zip, 50k words, 567KB)
+- ✅ Created Swedish language pack (langpack-sv.zip, 50k words, 582KB)
+  - Both packs include unigrams for language detection
+  - Install via Settings > Multi-Language
+
 ### Tap-to-Add Dictionary Feature (#42)
 - ✅ Implemented tap-to-add-to-dictionary during typing (7c4054d4)
 - When typing an unknown word, shows exact typed string with "+" prefix as last suggestion
@@ -81,6 +90,7 @@
 - ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `ba53b955` feat: add timestamp commands to UI + Turkish/Swedish language packs
 - `7c4054d4` feat: add tap-to-add-to-dictionary for exact typed words (#42)
 - `74580c22` feat: add numpad height scaling for larger keys (#58)
 - `be23db40` fix: enlarge PIN keyboard keys by 20% (#58)
