@@ -1,34 +1,23 @@
-# Gesture Recognition System Specification
+# Gesture Recognition System
 
-**Status**: Implemented
-**Last Updated**: 2025-12-12
+## Overview
 
----
+CleverKeys implements a multi-layered gesture recognition system that handles four gesture types: short swipes (directional swipes within a key for sublabels), long swipes (gestures across keys for neural word prediction), circle/rotation gestures (for double letters), and slider gestures (continuous value adjustment). The `hasLeftStartingKey` flag is the central decision point that routes touches to the appropriate handler.
 
-## 1. Overview
+## Key Files
 
-CleverKeys implements a multi-layered gesture recognition system that handles:
+| File | Class/Function | Purpose |
+|------|----------------|---------|
+| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `Pointers` | Touch event handling, gesture pipeline routing (~1100 lines) |
+| `src/main/kotlin/tribixbite/cleverkeys/GestureClassifier.kt` | `GestureClassifier` | TAP vs SWIPE classification (65 lines) |
+| `src/main/kotlin/tribixbite/cleverkeys/Gesture.kt` | `Gesture` | Circle/rotation state machine (141 lines) |
+| `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | Gesture settings | Configuration thresholds |
+| `src/main/kotlin/tribixbite/cleverkeys/Keyboard2View.kt` | `getKeyHypotenuse()` | Key dimension calculation |
 
-1. **Short Gestures**: Directional swipes within/near a key that trigger sublabel actions
-2. **Long Swipes (Swipe Typing)**: Gestures across multiple keys that trigger neural word prediction
-3. **Circle/Rotation Gestures**: Clockwise or counterclockwise rotation patterns
-4. **Slider Gestures**: Continuous value adjustment (brightness, volume, etc.)
-
-### Core Files
-
-| File | Lines | Purpose |
-|------|-------|---------|
-| `Pointers.kt` | ~1100 | Touch event handling, gesture pipeline routing |
-| `GestureClassifier.kt` | 65 | TAP vs SWIPE classification |
-| `Gesture.kt` | 141 | Circle/rotation state machine |
-| `Config.kt` | — | Gesture configuration options |
-
----
-
-## 2. Gesture Pipeline Architecture
+## Architecture
 
 ```
-Touch Events (Keyboard2View)
+Touch Events (Keyboard2View.onTouchEvent)
            │
            ▼
       Pointers.kt
@@ -52,20 +41,24 @@ Touch Events (Keyboard2View)
         (onSwipeEnd)      Handler
 ```
 
----
+## Data Flow
 
-## 3. The `hasLeftStartingKey` Gatekeeper
+### Touch Tracking
 
-The `hasLeftStartingKey` boolean flag is the **single decision point** that determines whether a gesture becomes a long swipe (neural prediction) or remains eligible for short gesture handling.
+1. `onTouchDown`: Record start position, identify starting key
+2. `onTouchMove`: Update position, check if left starting key
+3. `onTouchUp`: Classify gesture, trigger appropriate handler
 
-### Setting the Flag (During MOVE)
+### The `hasLeftStartingKey` Gatekeeper
+
+This boolean flag is the single decision point determining gesture type:
 
 ```kotlin
 // Pointers.kt, onTouchMove handler
 if (ptr.key != null && !ptr.hasLeftStartingKey) {
     val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
-    val maxAllowedDistance = keyHypotenuse * (_config.short_gesture_max_distance / 100.0f)
-    val distanceFromStart = sqrt((x - ptr.downX)² + (y - ptr.downY)²)
+    val maxAllowedDistance = keyHypotenuse * (config.short_gesture_max_distance / 100.0f)
+    val distanceFromStart = sqrt((x - ptr.downX).pow(2) + (y - ptr.downY).pow(2))
 
     if (distanceFromStart > maxAllowedDistance) {
         ptr.hasLeftStartingKey = true  // Permanently set for this touch
@@ -73,50 +66,22 @@ if (ptr.key != null && !ptr.hasLeftStartingKey) {
 }
 ```
 
-### Key Dimension Calculation
+## Configuration
 
-All thresholds use actual device pixels computed at runtime:
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `short_gesture_min_distance` | Int | 15 | Min pixels for short swipe detection |
+| `short_gesture_max_distance` | Int | 50 | Max % of key hypotenuse for short swipe (above = long swipe) |
+| `tap_duration_threshold` | Long | 200 | Max ms for tap vs swipe distinction |
+| `swipe_speed_threshold` | Float | 0.4 | Min speed for swipe typing activation |
+| `circle_gesture_enabled` | Boolean | true | Enable circle gestures for double letters |
 
-```kotlin
-// Keyboard2View.kt
-override fun getKeyHypotenuse(key: KeyboardData.Key): Float {
-    val tc = _tc ?: return 0f  // Theme.Computed with device-specific scaling
+## Public API
 
-    // Find row height (normalized value from layout XML)
-    var normalizedRowHeight = 0f
-    for (row in keyboard.rows) {
-        for (k in row.keys) {
-            if (k == key) {
-                normalizedRowHeight = row.height
-                break
-            }
-        }
-    }
-
-    // Convert to actual pixels
-    val keyHeightPx = normalizedRowHeight * tc.row_height  // Device-specific
-    val keyWidthPx = key.width * _keyWidth                 // Screen width / keys
-
-    return sqrt(keyWidthPx² + keyHeightPx²)  // Diagonal in pixels
-}
-```
-
-Where:
-- `tc.row_height` = computed from device screen height and user's keyboard height percentage setting
-- `_keyWidth` = `(screenWidth - margins) / keyboard.keysWidth`
-
----
-
-## 4. GestureClassifier (TAP vs SWIPE)
-
-The `GestureClassifier` provides unified classification on touch UP:
+### GestureClassifier
 
 ```kotlin
-// GestureClassifier.kt
 class GestureClassifier(private val context: Context) {
-
-    private val maxTapDurationMs: Long
-        get() = Config.globalConfig().tap_duration_threshold
 
     enum class GestureType { TAP, SWIPE }
 
@@ -141,7 +106,30 @@ class GestureClassifier(private val context: Context) {
 }
 ```
 
-### Classification Logic
+### Pointers Touch Handlers
+
+```kotlin
+class Pointers(
+    private val handler: Handler,
+    private val config: Config
+) {
+    // Called from Keyboard2View.onTouchEvent
+    fun onTouchEvent(event: MotionEvent): Boolean
+
+    // Internal handlers
+    private fun onTouchDown(ptr: Pointer, x: Float, y: Float)
+    private fun onTouchMove(ptr: Pointer, x: Float, y: Float)
+    private fun onTouchUp(ptr: Pointer)
+
+    // Gesture routing
+    private fun handleShortGesture(ptr: Pointer, direction: SwipeDirection)
+    private fun handleSwipeTyping(ptr: Pointer)
+}
+```
+
+## Implementation Details
+
+### Gesture Classification Logic
 
 | hasLeftStartingKey | Distance | Time | Result |
 |--------------------|----------|------|--------|
@@ -150,335 +138,127 @@ class GestureClassifier(private val context: Context) {
 | TRUE | >= keyWidth/2 | any | SWIPE |
 | TRUE | any | > tap_duration | SWIPE |
 
----
+### Key Dimension Calculation
 
-## 5. Short Gesture Detection
-
-When classified as TAP, short gesture detection checks if the movement qualifies as a directional swipe within the key.
-
-### 5.1 Dual Threshold System: SHORT_GESTURE_MIN_DISTANCE vs SWIPE_DIST
-
-CleverKeys uses **two complementary thresholds** to determine the minimum distance required for a short gesture. This dual system ensures wide keys (like Backspace, Space) don't require massive swipes while small keys don't trigger accidentally.
-
-#### The Two Threshold Types
-
-| Setting | Type | Default | Storage | Purpose |
-|---------|------|---------|---------|---------|
-| `short_gesture_min_distance` | **Relative** (% of key diagonal) | 37% | Int in prefs | Scales with key size |
-| `swipe_dist` → `swipe_dist_px` | **Absolute** (screen-scaled pixels) | 23 | String in prefs | Fixed pixel cap |
-
-#### How They Work Together (Pointers.kt:287-299)
+All thresholds use actual device pixels computed at runtime:
 
 ```kotlin
-// 1. PERCENTAGE-BASED threshold: % of key's diagonal (hypotenuse)
-val percentMinThreshold = keyHypotenuse * (_config.short_gesture_min_distance / 100.0f)
+// Keyboard2View.kt
+override fun getKeyHypotenuse(key: KeyboardData.Key): Float {
+    val tc = themeComputed ?: return 0f
 
-// 2. ABSOLUTE threshold: swipe_dist converted to device-specific pixels
-val absoluteThreshold = _config.swipe_dist_px.toFloat()
+    // Find row height from layout
+    var normalizedRowHeight = 0f
+    for (row in keyboard.rows) {
+        for (k in row.keys) {
+            if (k == key) {
+                normalizedRowHeight = row.height
+                break
+            }
+        }
+    }
 
-// 3. Relaxation factor (0.8x) for Manhattan→Euclidean conversion
-// Manhattan distance is ~1.4x Euclidean for diagonals
-val effectiveAbsolute = if (absoluteThreshold > 0) absoluteThreshold * 0.8f else Float.MAX_VALUE
+    // Convert to actual pixels
+    val keyHeightPx = normalizedRowHeight * tc.row_height
+    val keyWidthPx = key.width * keyWidth
 
-// 4. USE THE SMALLER (easier to trigger) THRESHOLD
-val minDistance = min(percentMinThreshold, effectiveAbsolute)
+    return sqrt(keyWidthPx.pow(2) + keyHeightPx.pow(2))  // Diagonal in pixels
+}
 ```
 
-#### Why MIN() Instead of MAX()?
+### Short Swipe Direction Detection
 
-**Problem**: Different key sizes need different thresholds.
-
-| Key Type | Typical Width | Hypotenuse | 37% of Hypotenuse |
-|----------|---------------|------------|-------------------|
-| Letter (Q,W,E...) | ~90px | ~127px | **~47px** |
-| Backspace | ~180px | ~254px | **~94px** |
-| Space bar | ~400px | ~410px | **~152px** |
-
-Without the absolute threshold cap, you'd need to swipe **152 pixels** on the space bar just to trigger a short gesture — far too much!
-
-**Solution**: Take the **minimum** of:
-1. **Percentage-based** (prevents accidental triggers on small keys)
-2. **Absolute** (caps the maximum for wide keys)
-
-#### Practical Examples
-
-**Backspace key** (180px wide, ~254px diagonal):
-- Percentage threshold: 254 × 0.37 = **94px**
-- Absolute threshold: ~70px (after DPI scaling and 0.8 factor)
-- **Effective threshold**: `min(94, 70)` = **70px** ← absolute wins
-
-**Small letter key** (90px wide, ~127px diagonal):
-- Percentage threshold: 127 × 0.37 = **47px**
-- Absolute threshold: ~70px
-- **Effective threshold**: `min(47, 70)` = **47px** ← percentage wins
-
-#### swipe_dist_px Calculation (Config.kt:353-356)
-
-The raw `swipe_dist` preference value (stored as string "23") is converted to device-specific pixels:
+Direction calculated from delta between start and end positions:
 
 ```kotlin
-// DPI ratio accounts for non-square pixels
-val dpi_ratio = maxOf(dm.xdpi, dm.ydpi) / minOf(dm.xdpi, dm.ydpi)
+private fun calculateSwipeDirection(dx: Float, dy: Float): SwipeDirection {
+    val angle = atan2(-dy.toDouble(), dx.toDouble())  // Negative Y because screen coords
+    val degrees = Math.toDegrees(angle)
 
-// Base scaling from screen dimensions
-val swipe_scaling = minOf(dm.widthPixels, dm.heightPixels) / 10f * dpi_ratio
-
-// Convert preference value (0-100 scale) to pixels
-val swipe_dist_value = safeGetString(_prefs, "swipe_dist", "23").toFloatOrNull() ?: 23f
-swipe_dist_px = swipe_dist_value / 25f * swipe_scaling
+    return when {
+        degrees in -22.5..22.5 -> SwipeDirection.E
+        degrees in 22.5..67.5 -> SwipeDirection.NE
+        degrees in 67.5..112.5 -> SwipeDirection.N
+        degrees in 112.5..157.5 -> SwipeDirection.NW
+        degrees > 157.5 || degrees < -157.5 -> SwipeDirection.W
+        degrees in -157.5..-112.5 -> SwipeDirection.SW
+        degrees in -112.5..-67.5 -> SwipeDirection.S
+        degrees in -67.5..-22.5 -> SwipeDirection.SE
+        else -> SwipeDirection.E
+    }
+}
 ```
 
-This normalization produces approximately:
-- ~70-100px on a 1080p phone (5-6" screen)
-- ~100-140px on a 1440p phone/tablet
+### Circle Gesture Detection
 
-#### Tuning Guidelines
-
-| Symptom | Adjust |
-|---------|--------|
-| Accidental triggers on small letter keys | **Increase** `short_gesture_min_distance` (e.g., 37 → 45%) |
-| Hard to trigger on small keys | **Decrease** `short_gesture_min_distance` (e.g., 37 → 30%) |
-| Accidental triggers on wide keys (Space, Backspace) | **Increase** `swipe_dist` (e.g., 23 → 30) |
-| Hard to trigger on wide keys | **Decrease** `swipe_dist` (e.g., 23 → 18) |
-
-#### Related Settings
-
-| Setting | Default | Effect |
-|---------|---------|--------|
-| `short_gesture_max_distance` | 141% | Maximum travel before becoming a long swipe (exits key boundary) |
-| `short_gestures_enabled` | true | Master toggle for short gesture detection |
-
-### 5.2 Short Gesture Detection Flow
+Circle gestures detected via rotation accumulation:
 
 ```kotlin
-// Pointers.kt, onTouchUp handler
-if (_config.short_gestures_enabled && !ptr.hasLeftStartingKey) {
-    val dx = ptr.lastX - ptr.downX
-    val dy = ptr.lastY - ptr.downY
-    val distance = sqrt(dx * dx + dy * dy)
+class Gesture {
+    private var totalRotation: Float = 0f
+    private var lastAngle: Float = 0f
 
-    // Calculate dual threshold (see Section 5.1)
-    val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
-    val percentMinThreshold = keyHypotenuse * (_config.short_gesture_min_distance / 100.0f)
-    val absoluteThreshold = _config.swipe_dist_px.toFloat()
-    val effectiveAbsolute = if (absoluteThreshold > 0) absoluteThreshold * 0.8f else Float.MAX_VALUE
-    val minDistance = min(percentMinThreshold, effectiveAbsolute)
+    fun addPoint(x: Float, y: Float, centerX: Float, centerY: Float) {
+        val currentAngle = atan2(y - centerY, x - centerX)
+        val delta = normalizeAngle(currentAngle - lastAngle)
+        totalRotation += delta
+        lastAngle = currentAngle
+    }
 
-    if (distance >= minDistance) {
-        // Calculate 16-direction (0-15)
-        val angle = atan2(dy, dx) + Math.PI
-        val direction = ((angle * 8 / Math.PI).toInt() + 12) % 16
+    fun isCircleComplete(): Boolean {
+        return abs(totalRotation) >= 2 * PI  // Full circle (360 degrees)
+    }
 
-        // Map to 8-direction for sublabel lookup
-        val gestureValue = getNearestKeyAtDirection(ptr, direction)
-        if (gestureValue != null) {
-            _handler.onPointerDown(gestureValue, false)
-            _handler.onPointerUp(gestureValue, ptr.modifiers)
-            return  // Exit - gesture handled
+    fun getDirection(): CircleDirection {
+        return if (totalRotation > 0) CircleDirection.CLOCKWISE
+               else CircleDirection.COUNTER_CLOCKWISE
+    }
+}
+```
+
+### Swipe Typing Activation
+
+Long swipes trigger neural prediction when finger leaves starting key:
+
+```kotlin
+private fun onTouchUp(ptr: Pointer) {
+    val gestureType = gestureClassifier.classify(GestureData(
+        hasLeftStartingKey = ptr.hasLeftStartingKey,
+        totalDistance = ptr.totalDistance,
+        timeElapsed = ptr.timeElapsed,
+        keyWidth = getKeyWidth(ptr.key)
+    ))
+
+    when (gestureType) {
+        GestureType.SWIPE -> {
+            if (ptr.hasLeftStartingKey) {
+                // Long swipe - neural prediction
+                onSwipeEnd(ptr.swipePath)
+            } else {
+                // Short swipe - sublabel action
+                val direction = calculateSwipeDirection(ptr.dx, ptr.dy)
+                handleShortGesture(ptr, direction)
+            }
+        }
+        GestureType.TAP -> {
+            handleTap(ptr.key)
         }
     }
 }
-// Fall through to regular TAP handling
 ```
 
-### Direction Mapping
-
-16-direction to key position mapping:
-
-| Direction | Angle Range | Key Position |
-|-----------|-------------|--------------|
-| 0 | 348.75° - 11.25° | East (E) |
-| 2 | 33.75° - 56.25° | Southeast (SE) |
-| 4 | 78.75° - 101.25° | South (S) |
-| 6 | 123.75° - 146.25° | Southwest (SW) |
-| 8 | 168.75° - 191.25° | West (W) |
-| 10 | 213.75° - 236.25° | Northwest (NW) |
-| 12 | 258.75° - 281.25° | North (N) |
-| 14 | 303.75° - 326.25° | Northeast (NE) |
-
----
-
-## 6. Circle/Rotation Gesture State Machine
-
-The `Gesture.kt` class implements a state machine for detecting rotation patterns, primarily used for Slider activation:
-
-### States
+### Pointer State
 
 ```kotlin
-enum class State {
-    Cancelled,              // Gesture was cancelled (rotation reversed)
-    Swiped,                 // Initial swipe, no rotation detected yet
-    Rotating_clockwise,     // Clockwise rotation in progress
-    Rotating_anticlockwise, // Counter-clockwise rotation in progress
-    Ended_swipe,            // Simple swipe completed
-    Ended_center,           // Roundtrip (swipe out and back)
-    Ended_clockwise,        // Clockwise circle completed
-    Ended_anticlockwise     // Counter-clockwise circle completed
-}
-
-enum class Name {
-    None,        // Cancelled
-    Swipe,       // Simple directional swipe
-    Roundtrip,   // Swipe out and return to center
-    Circle,      // Clockwise rotation
-    Anticircle   // Counter-clockwise rotation
-}
+data class Pointer(
+    var key: KeyboardData.Key?,       // Starting key
+    var downX: Float,                  // Initial touch X
+    var downY: Float,                  // Initial touch Y
+    var currentX: Float,               // Current X
+    var currentY: Float,               // Current Y
+    var downTime: Long,                // Touch start time
+    var hasLeftStartingKey: Boolean,   // The gatekeeper flag
+    var swipePath: MutableList<Point>, // Path for neural prediction
+    var flags: Int                     // State flags (trackpoint, selection-delete, etc.)
+)
 ```
-
-### Direction Difference Algorithm
-
-```kotlin
-// Find shortest path between two directions on 16-point circle
-fun dirDiff(d1: Int, d2: Int): Int {
-    val n = 16
-    if (d1 == d2) return 0
-    val left = (d1 - d2 + n) % n
-    val right = (d2 - d1 + n) % n
-    return if (left < right) -left else right
-}
-```
-
-Key insight: Uses modular arithmetic for circular distance:
-- Direction 1 → 15: diff = +2 (wraps around, not -14)
-- Direction 15 → 1: diff = -2 (wraps around, not +14)
-
-### State Transitions
-
-```
-Touch Down (direction D)
-        │
-        ▼
-   [Swiped, dir=D]
-        │
-Direction change detected?
-(|dirDiff| >= circle_sensitivity)
-        │
-   ┌────┴────┐
-   NO        YES
-   │         │
-   │    ┌────┴────┐
-   │    CW       CCW
-   │    │         │
-   │    ▼         ▼
-   │ [Rotating   [Rotating
-   │  _clockwise] _anticlockwise]
-   │    │         │
-   │    └────┬────┘
-   │         │
-   │    Rotation reversed?
-   │    ┌────┴────┐
-   │    YES       NO
-   │    │         │
-   │    ▼         │
-   │ [Cancelled]  │
-   │              │
-   └──────┬──────┘
-          │
-     Touch Up
-          │
-   Return to center?
-   ┌──────┴──────┐
-   YES           NO
-   │             │
-   ▼             ▼
-[Ended_center] [Ended_* based on state]
-   │             │
-   ▼             ▼
-Roundtrip    Swipe/Circle/Anticircle
-```
-
----
-
-## 7. Configuration Options
-
-### Config.kt Settings
-
-| Setting | Type | Default | Range | Description |
-|---------|------|---------|-------|-------------|
-| `short_gestures_enabled` | Boolean | true | — | Enable short gesture detection |
-| `short_gesture_min_distance` | Int | 37 | 10-95% | Minimum travel to trigger (% of key diagonal) |
-| `short_gesture_max_distance` | Int | 141 | 50-200% | Maximum travel before becoming long swipe |
-| `swipe_dist` | String | "23" | 0-100 | Absolute threshold base (see Section 5.1) |
-| `swipe_dist_px` | Float | varies | — | Computed from swipe_dist + screen DPI |
-| `tap_duration_threshold` | Long | 150 | 50-500ms | Maximum duration for TAP classification |
-| `swipe_typing_enabled` | Boolean | true | — | Enable neural swipe prediction |
-| `circle_sensitivity` | Int | 2 | 1-8 | Minimum direction change for rotation detection |
-
-### Threshold Behavior
-
-| max_distance | Effect |
-|--------------|--------|
-| 50% | Very strict - must stay within half key diagonal |
-| 100% | Standard - can travel one full key diagonal |
-| 150% | Lenient - 1.5× key diagonal allowed |
-| 200% | Effectively disabled - very permissive |
-
----
-
-## 8. Pipeline Mutual Exclusivity
-
-The gesture pipelines are mutually exclusive by design:
-
-```
-hasLeftStartingKey = TRUE
-    → GestureClassifier returns SWIPE (if conditions met)
-    → onSwipeEnd() called
-    → return (exit early)
-    → Short gesture code NEVER executes
-
-hasLeftStartingKey = FALSE
-    → GestureClassifier returns TAP
-    → Short gesture check runs
-    → Requires !ptr.hasLeftStartingKey (satisfied)
-    → Short gesture may trigger OR fall through to regular TAP
-```
-
-**Guarantee**: Both pipelines cannot trigger for the same touch event because `hasLeftStartingKey` is a single boolean that gates both paths.
-
----
-
-## 9. Integration Points
-
-### Keyboard2View.kt
-- Captures raw touch events
-- Calls `Pointers.onTouchDown/Move/Up`
-- Implements `getKeyHypotenuse()` for threshold calculation
-
-### KeyEventHandler.kt
-- Receives gesture results via `onPointerDown/Up`
-- Executes key actions based on gesture direction
-
-### IPointerEventHandler Interface
-```kotlin
-interface IPointerEventHandler {
-    fun onPointerDown(value: KeyValue, isSwipe: Boolean)
-    fun onPointerUp(value: KeyValue, mods: Modifiers)
-    fun onSwipeMove(x: Float, y: Float, recognizer: SwipeRecognizer)
-    fun onSwipeEnd(recognizer: SwipeRecognizer)
-    fun getKeyHypotenuse(key: KeyboardData.Key): Float
-    fun getKeyWidth(key: KeyboardData.Key): Float
-    // ...
-}
-```
-
----
-
-## 10. Performance Characteristics
-
-| Operation | Complexity | Latency |
-|-----------|------------|---------|
-| Direction calculation | O(1) | < 0.1ms |
-| GestureClassifier.classify() | O(1) | < 0.1ms |
-| hasLeftStartingKey check | O(1) | < 0.1ms |
-| Short gesture direction lookup | O(n) | < 1ms |
-| State machine transition | O(1) | < 0.1ms |
-
-All operations avoid heap allocations in the hot path.
-
----
-
-## 11. Related Specifications
-
-- [Short Swipe Customization](short-swipe-customization.md) - User-defined gesture mappings
-- [Neural Prediction](neural-prediction.md) - Swipe typing word prediction
-- [Settings System](settings-system.md) - Configuration UI
