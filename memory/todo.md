@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-16
-**Status**: v1.2.7 - Cursor-aware prediction fixes + Wiki System
+**Last Updated**: 2026-01-15
+**Status**: v1.2.8 - Android 15 clipboard nav bar fix + Quick Settings tile
 
 ---
 
@@ -20,6 +20,7 @@
 - #940 ✅ Clipboard delete individual items - IMPLEMENTED (2026-01-15)
 - #1113 ✅ Quick Settings tile for keyboard - IMPLEMENTED (2026-01-15)
 - #1107 ✅ Monet theme crash fix (Android < 12) - FIXED (2026-01-15)
+- #1131 ✅ Clipboard/emoji nav bar overlap (Android 15) - FIXED (2026-01-15)
 
 **Open Feature Requests** (for future consideration):
 - #61 Active multi-language switching
@@ -88,6 +89,20 @@
 - **AndroidManifest.xml**: Register service with BIND_QUICK_SETTINGS_TILE permission
 
 **Commit**: `7db976d1 feat: add Quick Settings tile for keyboard switching`
+
+---
+
+## Android 15 Nav Bar Overlap Fix - FIXED (2026-01-15)
+
+**Bug**: Clipboard/emoji pane bottom row obscured by nav bar on Android 15 (#1131).
+
+**Cause**: `contentPaneContainer` height was percentage of screen without nav bar insets.
+
+**Fix**:
+- **SuggestionBarInitializer.kt**: Added WindowInsets listener to apply bottom padding
+- **KeyboardReceiver.kt**: Request insets when pane becomes visible
+
+**Commit**: `c4cd5368 fix: prevent clipboard/emoji pane from overlapping nav bar on Android 15`
 
 ---
 
