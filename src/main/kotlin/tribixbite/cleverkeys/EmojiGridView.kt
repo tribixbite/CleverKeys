@@ -28,8 +28,23 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
     fun setEmojiGroup(group: Int) {
         emojiArray = if (group == GROUP_LAST_USE) {
             getLastEmojis()
+        } else if (group == GROUP_SEARCH) {
+            emptyList() // Will be populated by search
         } else {
             Emoji.getEmojisByGroup(group)
+        }
+        adapter = EmojiViewAdapter(context, emojiArray)
+    }
+
+    /**
+     * #41: Search emojis by name and display results.
+     * @param query The search query
+     */
+    fun searchEmojis(query: String) {
+        emojiArray = if (query.isBlank()) {
+            getLastEmojis() // Show last used when empty
+        } else {
+            Emoji.searchByName(query)
         }
         adapter = EmojiViewAdapter(context, emojiArray)
     }
@@ -147,6 +162,7 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
 
     companion object {
         const val GROUP_LAST_USE = -1
+        const val GROUP_SEARCH = -2  // #41: Search mode
         private const val LAST_USE_PREF = "emoji_last_use"
         private const val MIGRATION_CHECK_KEY = "MIGRATION_COMPLETE"
     }

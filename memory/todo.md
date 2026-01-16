@@ -7,6 +7,14 @@
 
 ## Session Progress (2026-01-16)
 
+### Emoji Search by Name (#41)
+- ✅ Implemented emoji search functionality in emoji pane
+- **Emoji.kt**: Added `searchByName()` method with 100+ emoji name mappings
+- **EmojiGridView.kt**: Added `searchEmojis()` method and `GROUP_SEARCH` constant
+- **EmojiGroupButtonsBar.kt**: Added search button (🔍) and search input field
+- Tap 🔍 to toggle search mode, type to filter emojis by name
+- Supports common names like "smile", "heart", "fire", "pizza", etc.
+
 ### Swipe on Password Fields (#39)
 - ✅ Added option to enable swipe typing on password fields
 - **Config.kt**: Added `SWIPE_ON_PASSWORD_FIELDS` default (false) and `swipe_on_password_fields` field

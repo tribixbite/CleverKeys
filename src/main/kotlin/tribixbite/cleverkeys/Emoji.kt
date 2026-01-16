@@ -14,6 +14,8 @@ class Emoji protected constructor(bytecode: String) {
         private val all: MutableList<Emoji> = mutableListOf()
         private val groups: MutableList<List<Emoji>> = mutableListOf()
         private val stringMap: MutableMap<String, Emoji> = mutableMapOf()
+        // #41: Name-to-emoji map for search
+        private val nameMap: MutableMap<String, Emoji> = mutableMapOf()
 
         @JvmStatic
         fun init(res: Resources) {
@@ -57,6 +59,99 @@ class Emoji protected constructor(bytecode: String) {
 
         @JvmStatic
         fun getEmojiByString(value: String): Emoji? = stringMap[value]
+
+        /**
+         * #41: Search emojis by name.
+         * Searches both the emoji names and keywords.
+         * @param query The search query (case-insensitive)
+         * @return List of matching emojis
+         */
+        @JvmStatic
+        fun searchByName(query: String): List<Emoji> {
+            if (query.isBlank()) return emptyList()
+
+            // Initialize name map on first search
+            if (nameMap.isEmpty()) {
+                initNameMap()
+            }
+
+            val queryLower = query.lowercase().trim()
+            val results = mutableListOf<Emoji>()
+            val seen = mutableSetOf<String>()
+
+            // Search by name
+            for ((name, emoji) in nameMap) {
+                if (name.contains(queryLower) && emoji.kv().getString() !in seen) {
+                    results.add(emoji)
+                    seen.add(emoji.kv().getString())
+                }
+            }
+
+            return results.take(100) // Limit results
+        }
+
+        /**
+         * #41: Initialize the name-to-emoji map from mapOldNameToValue entries.
+         */
+        private fun initNameMap() {
+            // Map all the names from mapOldNameToValue
+            val nameToEmoji = mapOf(
+                "grinning" to "😀", "smiley" to "😃", "smile" to "😄", "grin" to "😁",
+                "satisfied" to "😆", "sweat smile" to "😅", "joy" to "😂", "wink" to "😉",
+                "blush" to "😊", "innocent" to "😇", "heart eyes" to "😍", "kissing heart" to "😘",
+                "kissing" to "😗", "kissing closed eyes" to "😚", "kissing smiling eyes" to "😙",
+                "yum" to "😋", "stuck out tongue" to "😛", "stuck out tongue winking eye" to "😜",
+                "stuck out tongue closed eyes" to "😝", "neutral face" to "😐", "expressionless" to "😑",
+                "no mouth" to "😶", "smirk" to "😏", "unamused" to "😒", "grimacing" to "😬",
+                "relieved" to "😌", "pensive" to "😔", "sleepy" to "😪", "sleeping" to "😴",
+                "mask" to "😷", "dizzy face" to "😵", "sunglasses" to "😎", "confused" to "😕",
+                "worried" to "😟", "open mouth" to "😮", "hushed" to "😯", "astonished" to "😲",
+                "flushed" to "😳", "frowning" to "😦", "anguished" to "😧", "fearful" to "😨",
+                "cold sweat" to "😰", "disappointed relieved" to "😥", "cry" to "😢", "sob" to "😭",
+                "scream" to "😱", "confounded" to "😖", "persevere" to "😣", "disappointed" to "😞",
+                "sweat" to "😓", "weary" to "😩", "tired face" to "😫", "triumph" to "😤",
+                "rage" to "😡", "angry" to "😠", "smiling imp" to "😈", "imp" to "👿",
+                "skull" to "💀", "poop" to "💩", "shit" to "💩", "ghost" to "👻", "alien" to "👽",
+                "cat" to "🐱", "dog" to "🐶", "monkey" to "🐵", "monkey face" to "🐵",
+                "see no evil" to "🙈", "hear no evil" to "🙉", "speak no evil" to "🙊",
+                "kiss" to "💋", "love letter" to "💌", "cupid" to "💘", "heart" to "❤️",
+                "broken heart" to "💔", "two hearts" to "💕", "sparkling heart" to "💖",
+                "fire" to "🔥", "100" to "💯", "thumbs up" to "👍", "thumbsup" to "👍",
+                "thumbs down" to "👎", "thumbsdown" to "👎", "ok hand" to "👌", "clap" to "👏",
+                "wave" to "👋", "pray" to "🙏", "muscle" to "💪", "eyes" to "👀",
+                "sun" to "☀️", "moon" to "🌙", "star" to "⭐", "cloud" to "☁️",
+                "rain" to "🌧️", "rainbow" to "🌈", "snow" to "❄️", "snowflake" to "❄️",
+                "pizza" to "🍕", "hamburger" to "🍔", "fries" to "🍟", "hot dog" to "🌭",
+                "taco" to "🌮", "burrito" to "🌯", "sushi" to "🍣", "ramen" to "🍜",
+                "coffee" to "☕", "tea" to "🍵", "beer" to "🍺", "wine" to "🍷",
+                "cake" to "🎂", "birthday" to "🎂", "cookie" to "🍪", "chocolate" to "🍫",
+                "apple" to "🍎", "banana" to "🍌", "orange" to "🍊", "lemon" to "🍋",
+                "car" to "🚗", "taxi" to "🚕", "bus" to "🚌", "train" to "🚆",
+                "plane" to "✈️", "rocket" to "🚀", "ship" to "🚢", "bike" to "🚲",
+                "house" to "🏠", "office" to "🏢", "hospital" to "🏥", "school" to "🏫",
+                "phone" to "📱", "computer" to "💻", "tv" to "📺", "camera" to "📷",
+                "book" to "📚", "money" to "💰", "dollar" to "💵", "email" to "📧",
+                "lock" to "🔒", "key" to "🔑", "bell" to "🔔", "search" to "🔍",
+                "check" to "✅", "x" to "❌", "cross" to "❌", "warning" to "⚠️",
+                "question" to "❓", "exclamation" to "❗", "plus" to "➕", "minus" to "➖",
+                "music" to "🎵", "note" to "🎵", "guitar" to "🎸", "microphone" to "🎤",
+                "trophy" to "🏆", "medal" to "🏅", "crown" to "👑", "gift" to "🎁",
+                "party" to "🎉", "tada" to "🎉", "balloon" to "🎈", "confetti" to "🎊",
+                "football" to "🏈", "basketball" to "🏀", "soccer" to "⚽", "tennis" to "🎾",
+                "tree" to "🌲", "flower" to "🌸", "rose" to "🌹", "tulip" to "🌷",
+                "christmas" to "🎄", "halloween" to "🎃", "egg" to "🥚", "chicken" to "🐔"
+            )
+
+            for ((name, emojiStr) in nameToEmoji) {
+                val emoji = stringMap[emojiStr]
+                if (emoji != null) {
+                    // Store with multiple variations for better search
+                    nameMap[name] = emoji
+                    nameMap[name.replace(" ", "_")] = emoji
+                    nameMap[name.replace(" ", "")] = emoji
+                }
+            }
+        }
 
         @JvmStatic
         @Throws(IllegalArgumentException::class)
