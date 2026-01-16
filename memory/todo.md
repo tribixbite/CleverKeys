@@ -18,6 +18,7 @@
 - #62 ✅ Password manager clipboard exclusion - IMPLEMENTED (2026-01-15)
 - #1134 ✅ Test keyboard field in settings - IMPLEMENTED (2026-01-15)
 - #940 ✅ Clipboard delete individual items - IMPLEMENTED (2026-01-15)
+- #1113 ✅ Quick Settings tile for keyboard - IMPLEMENTED (2026-01-15)
 
 **Open Feature Requests** (for future consideration):
 - #61 Active multi-language switching
@@ -72,6 +73,20 @@
   - Clears expanded state and refreshes list
 
 **Commit**: `bd9403d6 feat: add delete button for clipboard history entries`
+
+---
+
+## Quick Settings Tile - IMPLEMENTED (2026-01-15)
+
+**Feature**: Add Quick Settings tile for keyboard switching (#1113).
+
+**Implementation**:
+- **KeyboardTileService.kt**: TileService implementation (Android 7.0+)
+  - Shows active/inactive state based on current input method
+  - Tapping opens system input method picker
+- **AndroidManifest.xml**: Register service with BIND_QUICK_SETTINGS_TILE permission
+
+**Commit**: `7db976d1 feat: add Quick Settings tile for keyboard switching`
 
 ---
 
