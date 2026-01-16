@@ -2,24 +2,66 @@
 title: Emoji - Technical Specification
 user_guide: ../../typing/emoji.md
 status: implemented
-version: v1.2.7
+version: v1.2.10
 ---
 
 # Emoji Technical Specification
 
 ## Overview
 
-Emoji keyboard implementation using Android's EmojiCompat library with category navigation and recent history.
+Emoji keyboard implementation with suggestion bar-based search, category navigation, and recent history.
 
 ## Key Components
 
 | Component | File | Purpose |
 |-----------|------|---------|
+| EmojiSearchManager | `EmojiSearchManager.kt` | Search state and query routing |
 | EmojiGridView | `EmojiGridView.kt` | Emoji grid rendering |
-| EmojiCategory | `EmojiCategory.kt` | Category definitions |
-| EmojiData | `EmojiData.kt` | Emoji database |
+| Emoji | `Emoji.kt` | Emoji data with 500+ searchable names |
+| EmojiGroupButtonsBar | `EmojiGroupButtonsBar.kt` | Category navigation |
+| SuggestionBar | `SuggestionBar.kt` | Search status display |
 | KeyValue | `KeyValue.kt` | Emoji as KeyValue.Char |
 | SharedPreferences | - | Recent emoji storage |
+
+## Emoji Search
+
+### Architecture
+
+```
+User types → KeyEventHandler → KeyboardReceiver → EmojiSearchManager
+                                                        ↓
+SuggestionBar ← showEmojiSearchStatus() ← updateSearchDisplay()
+                                                        ↓
+EmojiGridView ← searchEmojis() ← Emoji.searchByName()
+```
+
+### Search Manager
+
+```kotlin
+// EmojiSearchManager.kt
+class EmojiSearchManager(
+    private val suggestionBarProvider: () -> SuggestionBar?,
+    private val emojiGridProvider: () -> EmojiGridView?
+) {
+    fun enterSearchMode(initialQuery: String? = null)
+    fun exitSearchMode()
+    fun appendToSearch(text: String)
+    fun deleteFromSearch()
+    fun extractWordBeforeCursor(textBeforeCursor: CharSequence?): String?
+}
+```
+
+### Name Mapping
+
+```kotlin
+// Emoji.kt initNameMap()
+// 500+ emoji name mappings organized by category:
+// - Faces: smile, happy, sad, angry, cry, love, etc.
+// - Gestures: thumbs, wave, clap, pray, etc.
+// - Animals: dog, cat, bird, fish, etc.
+// - Food: pizza, burger, apple, etc.
+// Supports partial matching with lowercase normalization
+```
 
 ## Emoji Categories
 
