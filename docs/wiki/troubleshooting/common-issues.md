@@ -178,6 +178,49 @@ Some apps override keyboard behavior:
 2. Check app cleaner:
    - If using RAM cleaner, whitelist CleverKeys
 
+## Performance on Older Devices
+
+### Issue: Keyboard crashes when swipe typing
+
+**Affected:** Older devices (pre-2018), devices with limited RAM, or slow processors
+
+**Symptoms:**
+- Keyboard crashes immediately when trying to swipe type
+- App force closes during gesture input
+- Works fine with tap typing, crashes with swipe
+
+**Solution:**
+
+1. **Disable neural swipe typing**
+   - Open CleverKeys Settings
+   - Go to **Input Behavior** or **Swipe Typing**
+   - Disable **Enable Swipe Typing**
+   - Use tap typing instead
+
+2. **Why this happens**
+   - Neural swipe prediction uses an ONNX machine learning model
+   - Older devices may lack sufficient memory or CPU power
+   - The model requires real-time inference during gestures
+
+> [!NOTE]
+> CleverKeys' neural prediction is optimized for modern devices. If your device is from 2017 or earlier, disabling swipe typing provides a stable experience while retaining all other features.
+
+### Issue: Keyboard is slow or laggy
+
+**Solutions:**
+
+1. **Reduce prediction beam width**
+   - Settings > Neural > Beam Width
+   - Try "Fast" or "Minimal" setting
+
+2. **Disable haptic feedback**
+   - Settings > Haptics > Disable
+   - Haptics can cause lag on some devices
+
+3. **Clear app cache**
+   - Android Settings > Apps > CleverKeys > Storage
+   - Tap "Clear Cache"
+
 ## Android Version-Specific Issues
 
 ### Issue: Navigation bar covers keyboard (Android 15)
