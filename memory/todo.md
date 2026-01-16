@@ -14,8 +14,12 @@
 - ✅ Simplified macro delay logic per #1108 (e55629ed)
 - ✅ Added timestamp-keys wiki page (91d611d7)
 - ✅ Updated ROADMAP.md with v1.2.4-v1.2.9 features (474f84ac)
+- ✅ Added command-palette to wiki TABLE_OF_CONTENTS (b9e67308)
+- ✅ Updated first-time-setup with test keyboard tip (546c54a0)
 
 **Recent Commits**:
+- `546c54a0` docs: mention test keyboard field in first-time-setup guide
+- `b9e67308` docs: add command-palette to wiki table of contents
 - `474f84ac` docs: update ROADMAP with v1.2.4-v1.2.9 features
 - `91d611d7` docs: add timestamp-keys wiki page
 - `e55629ed` fix: always apply delay between macro keys (#1108)
