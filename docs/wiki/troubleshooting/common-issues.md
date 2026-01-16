@@ -200,6 +200,19 @@ Tablets running Android 12+ with limited color extraction now fall back graceful
 
 ## Visual Issues
 
+### Issue: Keyboard background is transparent
+
+**Common on:** Android 16 with blur disabled in accessibility settings
+
+**Solution:**
+
+1. Go to **Settings > Appearance > Background Opacity**
+2. Increase to 100% for solid background
+3. Also check **Key Opacity** if keys appear transparent
+
+> [!TIP]
+> If using a custom theme, ensure both key and background opacity are set to your preference in the theme creator.
+
 ### Issue: Keyboard too small/large
 
 **Solution:**
