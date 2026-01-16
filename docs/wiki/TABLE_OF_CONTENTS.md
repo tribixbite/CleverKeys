@@ -59,7 +59,6 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | [Multi-Language Typing](./layouts/multi-language.md) | Bilingual swipe typing |
 | [Language Packs](./layouts/language-packs.md) | Download additional dictionaries |
 | [Custom Layouts](./layouts/custom-layouts.md) | Create your own layout XML |
-| [Profiles](./layouts/profiles.md) | Save and restore configurations |
 
 ### 6. Settings Reference (P1)
 | Page | Description |
@@ -67,7 +66,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | [Appearance](./settings/appearance.md) | Height, opacity, key borders |
 | [Input Behavior](./settings/input-behavior.md) | Autocorrect, autocaps, double-space |
 | [Haptics & Sound](./settings/haptics.md) | Vibration and key press sounds |
-| [Neural Settings](./settings/neural.md) | Beam width, prediction profiles |
+| [Neural Settings](./settings/neural-settings.md) | Beam width, prediction profiles |
 | [Privacy](./settings/privacy.md) | Data collection and clipboard settings |
 | [Accessibility](./settings/accessibility.md) | Switch Access, TalkBack, large keys |
 
@@ -75,16 +74,16 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | Page | Description |
 |------|-------------|
 | [Clipboard History](./clipboard/clipboard-history.md) | Recent clips, pins, search |
-| [Text Actions](./clipboard/text-actions.md) | Cut, copy, paste, select all |
-| [Privacy Exclusions](./clipboard/privacy-exclusions.md) | Exclude password managers |
+| [Text Selection](./clipboard/text-selection.md) | Select, cut, copy, paste |
+| [Keyboard Shortcuts](./clipboard/shortcuts.md) | Standard shortcuts (Ctrl+C, etc.) |
 
 ### 8. Troubleshooting (P2)
 | Page | Description |
 |------|-------------|
 | [Common Issues](./troubleshooting/common-issues.md) | FAQ and quick fixes |
 | [Performance](./troubleshooting/performance.md) | Speed and battery optimization |
-| [Crashes](./troubleshooting/crashes.md) | Crash diagnosis and reporting |
-| [Feature Requests](./troubleshooting/feature-requests.md) | How to request features |
+| [Backup & Restore](./troubleshooting/backup-restore.md) | Export and import settings |
+| [Reset Defaults](./troubleshooting/reset-defaults.md) | Reset to factory settings |
 
 ---
 

@@ -14,7 +14,7 @@ CleverKeys maintains a history of text you've copied, making it easy to paste it
 | What | Description |
 |------|-------------|
 | **Purpose** | Access previous clipboard items |
-| **Access** | Swipe NW from Ctrl key, or add Clipboard to Extra Keys |
+| **Access** | Swipe SW from Ctrl key, or add Clipboard to Extra Keys |
 | **Capacity** | Configurable (default 25 items) |
 
 ## Accessing Clipboard History
@@ -22,7 +22,7 @@ CleverKeys maintains a history of text you've copied, making it easy to paste it
 ### Method 1: Ctrl Key Swipe
 
 1. Find the **Ctrl** key on the bottom row
-2. **Swipe NW** (up-left) to activate `switch_clipboard`
+2. **Swipe SW** (down-left) to activate `switch_clipboard`
 3. Clipboard history panel opens
 4. Tap any item to paste
 
@@ -129,7 +129,7 @@ CleverKeys automatically detects password fields:
 - **Customize access**: Assign clipboard to any key via Per-Key Customization
 
 > [!TIP]
-> The Ctrl key's NW subkey is `switch_clipboard` by default on most layouts.
+> The Ctrl key's SW subkey is `switch_clipboard` by default on most layouts.
 
 ## Settings
 
