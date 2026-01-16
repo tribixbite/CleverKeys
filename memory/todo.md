@@ -17,9 +17,9 @@
 **Completed Feature Requests**:
 - #62 ✅ Password manager clipboard exclusion - IMPLEMENTED (2026-01-15)
 - #1134 ✅ Test keyboard field in settings - IMPLEMENTED (2026-01-15)
+- #940 ✅ Clipboard delete individual items - IMPLEMENTED (2026-01-15)
 
 **Open Feature Requests** (for future consideration):
-- #59 Clipboard delete individual items + timestamps
 - #61 Active multi-language switching
 - #58 Scaling number keyboard
 - #52 MessageEase layout contribution
@@ -58,6 +58,20 @@
   - OutlinedTextField with 3-5 lines, placeholder text, Clear button
 
 **Commit**: `39a3214f feat: add test keyboard field in settings`
+
+---
+
+## Clipboard Delete Individual Items - IMPLEMENTED (2026-01-15)
+
+**Feature**: Delete individual clipboard history entries (#940).
+
+**Implementation**:
+- **clipboard_history_entry.xml**: Added delete button with ic_delete icon
+- **ClipboardHistoryView.kt**: Added `delete_entry(pos: Int)` method
+  - Calls `service.removeHistoryEntry(clip)` to remove from database
+  - Clears expanded state and refreshes list
+
+**Commit**: `bd9403d6 feat: add delete button for clipboard history entries`
 
 ---
 
