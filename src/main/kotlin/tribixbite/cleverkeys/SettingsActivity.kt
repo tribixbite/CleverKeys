@@ -164,6 +164,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var clipboardMaxItemSizeKb by mutableStateOf(500)
     private var clipboardLimitType by mutableStateOf("count") // "count" or "size"
     private var clipboardSizeLimitMb by mutableStateOf(10)
+    private var clipboardExcludePasswordManagers by mutableStateOf(true)  // Privacy: skip password managers
     private var autoCapitalizationEnabled by mutableStateOf(true)
 
     // Phase 1: Expose existing Config.kt settings
@@ -2802,6 +2803,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     },
                     displayValue = "${clipboardMaxItemSizeKb}KB"
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Privacy: Exclude password managers
+                SettingsToggle(
+                    title = "Exclude Password Managers",
+                    description = "Don't store clipboard from Bitwarden, 1Password, LastPass, KeePass, etc.",
+                    checked = clipboardExcludePasswordManagers,
+                    onCheckedChange = {
+                        clipboardExcludePasswordManagers = it
+                        saveSetting("clipboard_exclude_password_managers", clipboardExcludePasswordManagers)
+                    }
+                )
             }
 
             // Backup & Restore Section (Collapsible)
@@ -4245,6 +4259,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         clipboardMaxItemSizeKb = prefs.getSafeString("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK
         clipboardLimitType = prefs.getSafeString("clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
         clipboardSizeLimitMb = prefs.getSafeString("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
+        clipboardExcludePasswordManagers = prefs.getSafeBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
         autoCapitalizationEnabled = prefs.getSafeBoolean("autocapitalisation", Defaults.AUTOCAPITALISATION)
 
         // Gesture sensitivity settings

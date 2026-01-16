@@ -167,6 +167,44 @@ object Defaults {
     const val CLIPBOARD_LIMIT_TYPE = "count"
     const val CLIPBOARD_SIZE_LIMIT_MB = "10"
     const val CLIPBOARD_SIZE_LIMIT_MB_FALLBACK = 10
+    const val CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS = true  // Skip clipboard from password managers
+
+    // Common password manager package names (for clipboard exclusion)
+    val PASSWORD_MANAGER_PACKAGES = setOf(
+        // Bitwarden
+        "com.x8bit.bitwarden",
+        // 1Password
+        "com.onepassword.android",
+        "com.agilebits.onepassword",
+        // LastPass
+        "com.lastpass.lpandroid",
+        // Dashlane
+        "com.dashlane",
+        // KeePass variants
+        "keepass2android.keepass2android",
+        "keepass2android.keepass2android_nonet",
+        "com.kunzisoft.keepass.free",
+        "com.kunzisoft.keepass.pro",
+        "de.slackspace.openkeepass",
+        // Enpass
+        "io.enpass.app",
+        // NordPass
+        "com.nordpass.android.app.password.manager",
+        // RoboForm
+        "com.siber.roboform",
+        // Keeper
+        "com.callpod.android_apps.keeper",
+        // Proton Pass
+        "proton.android.pass",
+        // SafeInCloud
+        "com.safeincloud",
+        // mSecure
+        "com.msecure",
+        // Zoho Vault
+        "com.zoho.vault",
+        // Sticky Password
+        "com.stickypassword.android"
+    )
 
     // Multi-language
     const val ENABLE_MULTILANG = false
@@ -325,6 +363,7 @@ class Config private constructor(
     @JvmField var clipboard_max_item_size_kb = 0
     @JvmField var clipboard_limit_type: String? = null
     @JvmField var clipboard_size_limit_mb = 0
+    @JvmField var clipboard_exclude_password_managers = true  // Skip clipboard from password managers
     @JvmField var swipe_typing_enabled = true  // Default to enabled for CleverKeys
     @JvmField var swipe_show_debug_scores = false
     @JvmField var word_prediction_enabled = false
@@ -565,6 +604,8 @@ class Config private constructor(
         clipboard_limit_type = safeGetString(_prefs, "clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
 
         clipboard_size_limit_mb = safeGetString(_prefs, "clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
+
+        clipboard_exclude_password_managers = _prefs.getBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
 
         swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
         swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", Defaults.SWIPE_SHOW_DEBUG_SCORES)

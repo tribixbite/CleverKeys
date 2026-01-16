@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys
 
+import android.app.ActivityManager
+import android.app.usage.UsageStatsManager
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -250,9 +252,75 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         fun on_clipboard_history_change()
     }
 
+    /**
+     * Get the package name of the currently running foreground app.
+     * Returns null if detection fails or permission not granted.
+     */
+    @Suppress("DEPRECATION")
+    private fun getForegroundAppPackage(): String? {
+        return try {
+            if (VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                // Android 5.1+: Use UsageStatsManager (requires PACKAGE_USAGE_STATS permission)
+                val usageStatsManager = _context.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
+                if (usageStatsManager != null) {
+                    val endTime = System.currentTimeMillis()
+                    val startTime = endTime - 5000 // Last 5 seconds
+                    val usageStats = usageStatsManager.queryUsageStats(
+                        UsageStatsManager.INTERVAL_DAILY, startTime, endTime
+                    )
+                    if (!usageStats.isNullOrEmpty()) {
+                        // Find the most recently used app
+                        val recentApp = usageStats.maxByOrNull { it.lastTimeUsed }
+                        if (recentApp != null && recentApp.lastTimeUsed > startTime) {
+                            return recentApp.packageName
+                        }
+                    }
+                }
+            }
+
+            // Fallback: Use ActivityManager (deprecated but works on older APIs)
+            val activityManager = _context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+            if (activityManager != null) {
+                val runningTasks = activityManager.getRunningTasks(1)
+                if (!runningTasks.isNullOrEmpty()) {
+                    return runningTasks[0].topActivity?.packageName
+                }
+            }
+            null
+        } catch (e: SecurityException) {
+            // Permission not granted - this is expected, silently return null
+            if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                android.util.Log.d("ClipboardHistory", "Cannot detect foreground app: ${e.message}")
+            }
+            null
+        } catch (e: Exception) {
+            android.util.Log.w("ClipboardHistory", "Error detecting foreground app: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Check if the given package is a known password manager.
+     */
+    private fun isPasswordManagerApp(packageName: String?): Boolean {
+        if (packageName == null) return false
+        return Defaults.PASSWORD_MANAGER_PACKAGES.contains(packageName)
+    }
+
     /** Add what is currently in the system clipboard into the history. */
     private fun addCurrentClip() {
         try {
+            // Check if password manager exclusion is enabled
+            if (Config.globalConfig().clipboard_exclude_password_managers) {
+                val foregroundApp = getForegroundAppPackage()
+                if (isPasswordManagerApp(foregroundApp)) {
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                        android.util.Log.d("ClipboardHistory", "Skipping clipboard from password manager: $foregroundApp")
+                    }
+                    return // Don't store clipboard from password managers
+                }
+            }
+
             val clip = _cm.primaryClip ?: return
             val count = clip.itemCount
             for (i in 0 until count) {
