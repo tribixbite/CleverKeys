@@ -1,179 +1,34 @@
-# Settings System Specification
+# Settings System
 
-## Feature Overview
-**Feature Name**: Settings & Preferences System
-**Priority**: P1 (High)
-**Status**: Maintenance & Enhancement
-**Target Version**: v1.0.0
+## Overview
 
-### Summary
-The settings system manages user preferences, storage permissions, configuration persistence, and settings UI. It provides a modern Material 3 interface for configuring keyboard behavior.
+The settings system manages user preferences through SharedPreferences, provides a Material 3 Compose UI for configuration, and applies settings at runtime via the Config singleton. All default values are centralized in the `Defaults` object within Config.kt to prevent mismatches between UI display and actual behavior.
 
-### Motivation
-Users need a comprehensive, intuitive settings system to customize keyboard behavior. The system must handle Android 11+ storage changes, persist preferences reliably, and expose all configurable options.
+## Key Files
 
----
+| File | Class/Function | Purpose |
+|------|----------------|---------|
+| `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `Config`, `Defaults` | Global configuration singleton, centralized defaults |
+| `src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt` | `SettingsActivity` | Material 3 Compose settings UI (~3000 lines) |
+| `src/main/kotlin/tribixbite/cleverkeys/ConfigurationManager.kt` | `ConfigurationManager` | Runtime configuration application |
+| `src/main/kotlin/tribixbite/cleverkeys/theme/KeyboardTheme.kt` | `KeyboardTheme` | Theme data and application |
 
-## 📋 Feature Parity Status (2025-11-16)
+## Architecture
 
-**For complete analysis of missing settings compared to original Unexpected-Keyboard, see:**
-**[SETTINGS_COMPARISON_MISSING_ITEMS.md](../../SETTINGS_COMPARISON_MISSING_ITEMS.md)**
-
-### Current Status Summary:
-- **CleverKeys Implementation**: ~20 settings across 7 sections (50% parity)
-- **Original Unexpected-Keyboard**: 40+ settings across 4 categories
-- **Missing Settings**: ~25 settings requiring implementation
-- **Estimated Implementation Time**: 17-24 hours for 100% parity
-
-### Priority Breakdown:
-- **P1 - CRITICAL** (7-10 hours): Layout Manager UI, Extra Keys Configuration, Adaptive Layout Settings
-- **P2 - HIGH** (7-9 hours): Gesture Sensitivity, Long Press Config, Visual Customization, Spacing Controls
-- **P3 - MEDIUM** (3-5 hours): Number Row, NumPad, Borders, Pin Entry
-- **P4 - LOW** (30 min): Double Tap Shift for Caps Lock
-
-### CleverKeys Exclusive Features (Not in Original):
-- ✅ Neural Prediction Configuration (4 settings) - ONNX beam width, max length, confidence
-- ✅ Accessibility Enhancements (3 settings) - Sticky keys, voice guidance
-- ✅ Dictionary Manager UI - User dictionary management
-- ✅ Advanced Features - Debug mode, neural calibration
-- ✅ Material 3 Compose UI - Modern reactive settings interface
-
----
-
-## ⚠️ KNOWN ISSUES (From Historical Review)
-
-### CRITICAL Issues (Fixed)
-
-#### ✅ Issue #5: Termux Mode Setting Missing from UI
-**File:** `res/xml/settings.xml`
-**Status**: ⚠️ NEEDS VERIFICATION
-**Original Problem**: `termux_mode_enabled` checkbox not present in neural settings screen
-**Impact**: Users cannot enable Termux-compatible prediction insertion
-**Current State**: Variable exists in Config.kt but may not be exposed in settings XML
-**Action Required**:
-- [ ] Check res/xml/settings.xml for `termux_mode_enabled` preference
-- [ ] If missing, add checkbox after `neural_prediction_enabled`
-- [ ] Verify Config.kt reads this preference correctly
-- [ ] Test Termux mode functionality
-- [ ] Document Termux mode behavior in user guide
-
-### HIGH PRIORITY Issues (Fixed)
-
-#### ✅ Issue #9: External Storage Permissions (Android 11+) - VERIFIED FIXED
-**File:** `AndroidManifest.xml:11-15`
-**Status**: ✅ VERIFIED (2025-10-21)
-**Original Problem**: READ/WRITE_EXTERNAL_STORAGE deprecated on Android 11+ (API 30+)
-**Impact**: Would cause file access failures on modern Android versions
-**Verification Result**: **PROPERLY CONFIGURED** ✅
-- AndroidManifest.xml:11 - `WRITE_EXTERNAL_STORAGE` with `maxSdkVersion="29"` ✅
-- AndroidManifest.xml:12 - `READ_EXTERNAL_STORAGE` with `maxSdkVersion="29"` ✅
-- Lines 9-15 have proper comments explaining scoped storage for Android 11+
-- Comment confirms: "For Android 11+, use scoped storage via MediaStore or SAF"
-
-**Action Required** (Testing):
-- [x] Review AndroidManifest.xml permissions ✅
-- [x] Verify `maxSdkVersion="29"` is set for READ/WRITE_EXTERNAL_STORAGE ✅
-- [x] Comments document scoped storage strategy ✅
-- [ ] Test file access on Android 11+ devices (verify scoped storage works)
-- [ ] Test file access on Android 10 and below (verify legacy permissions work)
-- [ ] Verify app-specific directories (getExternalFilesDir()) work without permissions
-
-### MEDIUM PRIORITY Issues (Fixed)
-
-#### ✅ Issue #15: Theme Propagation Incomplete
-**File:** `src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt:654`
-**Status**: ⚠️ NEEDS VERIFICATION
-**Original Problem**: `// TODO: Propagate theme changes to active UI components`
-**Impact**: Theme changes may not apply until restart
-**Action Required**:
-- [ ] Review CleverKeysService.kt:654
-- [ ] Implement theme update notification system
-- [ ] Test theme switching without restart
-- [ ] Verify all UI components update correctly
-- [ ] Document theme propagation mechanism
-
-#### ✅ Issue #17: Emoji Preferences Not Loaded
-**File:** `src/main/kotlin/tribixbite/keyboard2/Emoji.kt:102`
-**Status**: ⚠️ NEEDS VERIFICATION
-**Original Problem**: `// TODO: Load from preferences`
-**Impact**: Emoji preferences don't persist (recent/favorite emoji)
-**Action Required**:
-- [ ] Review Emoji.kt:102
-- [ ] Implement SharedPreferences loading for emoji data
-- [ ] Persist recent emoji list
-- [ ] Persist favorite emoji list
-- [ ] Test emoji persistence across app restarts
-- [ ] Limit recent emoji list size (e.g., 30 items)
-
-#### ✅ Issue #18: ConfigurationManager Theme Application
-**File:** `src/main/kotlin/tribixbite/keyboard2/ConfigurationManager.kt:306`
-**Status**: ⚠️ NEEDS VERIFICATION
-**Original Problem**: `// TODO: Fix Theme.initialize(context).applyThemeToView(view, theme)`
-**Impact**: Theme not fully applied to all UI components
-**Action Required**:
-- [ ] Review ConfigurationManager.kt:306
-- [ ] Fix theme application to all views
-- [ ] Verify Material 3 theming works correctly
-- [ ] Test with KeyboardTheme integration
-- [ ] Document theme application flow
-
-### LOW PRIORITY Issues
-
-#### Issue #23: Deprecated API Suppressions
-**Files:**
-- `ClipboardHistoryService.kt:165`
-- `VibratorCompat.kt:20,38`
-**Status**: FUTURE WORK
-**Problem**: Using deprecated Android APIs with @Suppress annotations
-**Action Required** (Future):
-- [ ] Migrate ClipboardHistoryService to modern ClipboardManager API
-- [ ] Migrate VibratorCompat to VibrationEffect (API 26+)
-- [ ] Remove @Suppress annotations
-- [ ] Test on various Android versions
-
-#### Issue #24: Hardcoded Strings
-**File:** `src/main/kotlin/tribixbite/keyboard2/CustomLayoutEditDialog.kt:46,54`
-**Status**: FUTURE WORK
-**Problem**: Hardcoded "Custom layout" and "Remove layout" strings
-**Action Required** (Future):
-- [ ] Create string resources in res/values/strings.xml
-- [ ] Replace hardcoded strings with R.string references
-- [ ] Prepare for i18n/localization
-
----
-
-## Requirements
-
-### Functional Requirements
-1. **FR-1**: All keyboard settings must be accessible from settings UI
-2. **FR-2**: Settings must persist correctly using SharedPreferences
-3. **FR-3**: Storage access must work on Android 11+ (scoped storage)
-4. **FR-4**: Theme changes must apply immediately without restart
-5. **FR-5**: Emoji preferences (recent/favorites) must persist
-6. **FR-6**: Termux mode must be configurable from UI
-7. **FR-7**: Settings UI must use Material 3 design
-
-### Non-Functional Requirements
-1. **NFR-1**: Performance - Settings load in <100ms
-2. **NFR-2**: Usability - Settings organized logically, searchable
-3. **NFR-3**: Reliability - No data loss on crashes
-
----
-
-## Technical Design
-
-### Architecture
 ```
 SettingsActivity (Material 3 Compose)
     ├── PreferenceScreen
-    │   ├── Neural Prediction Settings
-    │   ├── Layout Settings
-    │   ├── Theme Settings
-    │   └── Advanced Settings
+    │   ├── Appearance Section
+    │   ├── Input Behavior Section
+    │   ├── Neural Prediction Section
+    │   ├── Gestures Section
+    │   ├── Layout Section
+    │   ├── Clipboard Section
+    │   └── Advanced Section
     ├── Config (reads SharedPreferences)
     └── ConfigurationManager (applies settings)
 
-Defaults Architecture (added 2025-12-10):
+Defaults Architecture:
     └── Defaults object (Config.kt)
         ├── Single source of truth for all ~100 default values
         ├── Referenced by Config.kt refresh()
@@ -187,125 +42,262 @@ Storage Strategy:
     └── Scoped storage (Android 11+)
 ```
 
-### Defaults Object (Config.kt)
+## Configuration
 
-**Added**: 2025-12-10 (commit f85a2a33)
+### Defaults Object
 
-The `Defaults` object centralizes all app default values to prevent mismatches between different code paths:
+The `Defaults` object centralizes all app default values:
 
 ```kotlin
+// Config.kt
 object Defaults {
     // Appearance
     const val THEME = "cleverkeysdark"
     const val KEYBOARD_HEIGHT_PORTRAIT = 28
     const val KEYBOARD_HEIGHT_LANDSCAPE = 50
-    // ... ~100 constants organized by category
+    const val KEY_OPACITY = 1.0f
+    const val KEY_BORDER_ENABLED = false
 
-    // Neural prediction
+    // Input Behavior
+    const val LONGPRESS_TIMEOUT = 600
+    const val KEY_REPEAT_DELAY = 50
+    const val VIBRATION_ENABLED = true
+    const val VIBRATION_STRENGTH = 10
+
+    // Neural Prediction
     const val NEURAL_BEAM_WIDTH = 6
     const val NEURAL_MAX_LENGTH = 20
-    // ...
+    const val NEURAL_CONFIDENCE_THRESHOLD = 0.3f
+    const val SWIPE_ENABLED = true
+
+    // Gestures
+    const val SHORT_GESTURE_MIN_DISTANCE = 15
+    const val SHORT_GESTURE_MAX_DISTANCE = 50
+    const val SLIDER_SENSITIVITY = 30
+    const val TAP_DURATION_THRESHOLD = 200L
+
+    // Clipboard
+    const val CLIPBOARD_HISTORY_ENABLED = true
+    const val CLIPBOARD_HISTORY_SIZE = 25
+    const val CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS = true
+
+    // ... ~100 constants organized by category
 }
 ```
 
-**Why this matters**: Previously, Config.kt and SettingsActivity.kt had separate hardcoded defaults. If they disagreed, new users would see one value in the settings UI but the keyboard would use a different value. Now both files reference `Defaults.X`.
+### Settings Categories
 
-**Categories**:
-- Appearance (theme, opacity, sizing)
-- Layout (margins, numpad, number row)
-- Input behavior (vibration, long press, key repeat)
-- Gesture settings (swipe distance, tap threshold)
-- Short gestures
-- Swipe trail appearance
-- Neural prediction
-- Word prediction
-- Autocorrect
-- Clipboard
-- Multi-language
-- Debug
-- Privacy
-- Accessibility
+| Category | Settings Count | Key Settings |
+|----------|----------------|--------------|
+| Appearance | ~15 | theme, keyboard_height, opacity, borders |
+| Input Behavior | ~10 | longpress_timeout, vibration, key_repeat |
+| Neural | ~8 | beam_width, confidence, swipe_enabled |
+| Gestures | ~12 | short_swipe distances, slider sensitivity |
+| Layout | ~8 | margins, number_row, extra_keys |
+| Clipboard | ~5 | history_enabled, history_size, exclusions |
+| Accessibility | ~6 | sticky_keys, voice_guidance |
+| Debug | ~4 | debug_mode, logging |
 
-### Component Breakdown
-1. **SettingsActivity**: Material 3 Compose UI for settings
-2. **NeuralSettingsActivity**: Neural prediction-specific settings
-3. **Config**: Global configuration singleton
-4. **ConfigurationManager**: Runtime configuration application
-5. **Theme System**: KeyboardTheme, MaterialThemeManager
+## Public API
 
----
+### Config Singleton
 
-## TODO: Verification & Implementation Tasks
+```kotlin
+class Config private constructor(context: Context) {
+    companion object {
+        private var instance: Config? = null
 
-### Phase 1: Critical Settings Issues (P0)
-**Duration**: 2-3 hours
-**Tasks**:
-- [ ] Add Termux mode checkbox to settings.xml
-- [ ] Verify Config.kt reads termux_mode_enabled
-- [ ] Test Termux mode functionality
-- [ ] Review and fix Android 11+ storage permissions
+        fun globalConfig(): Config = instance
+            ?: throw IllegalStateException("Config not initialized")
 
-### Phase 2: Medium Priority Settings (P1)
-**Duration**: 3-4 hours
-**Tasks**:
-- [ ] Implement theme propagation without restart
-- [ ] Implement emoji preferences persistence
-- [ ] Fix ConfigurationManager theme application
-- [ ] Test all settings apply correctly
+        fun initialize(context: Context) {
+            instance = Config(context)
+        }
+    }
 
-### Phase 3: Low Priority Polish (P2)
-**Duration**: 1-2 hours
-**Tasks**:
-- [ ] Plan migration from deprecated APIs
-- [ ] Extract hardcoded strings to resources
-- [ ] Prepare i18n structure
+    // Refresh from SharedPreferences
+    fun refresh() {
+        val prefs = context.getSharedPreferences("cleverkeys_prefs", MODE_PRIVATE)
+        theme = prefs.getString("theme", Defaults.THEME)!!
+        keyboardHeightPortrait = prefs.getInt("keyboard_height_portrait", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
+        neuralBeamWidth = prefs.getInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
+        // ... all other settings
+    }
 
----
+    // Save individual setting
+    fun saveSetting(key: String, value: Any) {
+        val prefs = context.getSharedPreferences("cleverkeys_prefs", MODE_PRIVATE)
+        prefs.edit().apply {
+            when (value) {
+                is String -> putString(key, value)
+                is Int -> putInt(key, value)
+                is Boolean -> putBoolean(key, value)
+                is Float -> putFloat(key, value)
+            }
+            apply()
+        }
+        refresh()
+    }
+}
+```
 
-## Testing Strategy
+### SettingsActivity
 
-### Unit Tests
-- Test case 1: SharedPreferences read/write
-- Test case 2: Config initialization
-- Test case 3: Theme propagation
+```kotlin
+class SettingsActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            CleverKeysSettingsTheme {
+                SettingsScreen(
+                    onNavigateBack = { finish() }
+                )
+            }
+        }
+    }
+}
 
-### Integration Tests
-- Test case 1: Settings UI → Config → Runtime application
-- Test case 2: Storage permissions on Android 11+
-- Test case 3: Theme switching without restart
+@Composable
+fun SettingsScreen(onNavigateBack: () -> Unit) {
+    // Collapsible sections for each category
+    var appearanceExpanded by remember { mutableStateOf(false) }
+    var inputExpanded by remember { mutableStateOf(false) }
+    // ...
 
-### Manual Tests
-- Test case 1: All settings save and load correctly
-- Test case 2: Termux mode works as expected
-- Test case 3: Emoji recent/favorites persist
-- Test case 4: Theme changes apply immediately
+    LazyColumn {
+        item { SettingsSection("Appearance", appearanceExpanded, { appearanceExpanded = it }) {
+            ThemePicker()
+            HeightSlider()
+            OpacitySlider()
+        }}
+        item { SettingsSection("Input Behavior", inputExpanded, { inputExpanded = it }) {
+            VibrationToggle()
+            LongpressSlider()
+        }}
+        // ... other sections
+    }
+}
+```
 
----
+## Implementation Details
 
-## Dependencies
+### Settings UI Components
 
-### Internal Dependencies
-- theme/KeyboardTheme.kt
-- config/Config.kt
-- config/ConfigurationManager.kt
+```kotlin
+@Composable
+fun SettingsSwitch(
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(description, style = MaterialTheme.typography.bodySmall)
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
 
-### External Dependencies
-- AndroidX Preference library
-- Material 3 Compose
-- SharedPreferences API
+@Composable
+fun SettingsSlider(
+    title: String,
+    value: Float,
+    range: ClosedFloatingPointRange<Float>,
+    onValueChange: (Float) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Text(title, style = MaterialTheme.typography.bodyLarge)
+        Slider(value = value, valueRange = range, onValueChange = onValueChange)
+    }
+}
+```
 
----
+### Storage Permissions (Android 11+)
 
-## Success Metrics
-- All settings accessible from UI
-- 100% preference persistence rate
-- Theme changes apply in <200ms
-- Zero storage permission errors on Android 11+
-- All emoji preferences persist correctly
+```xml
+<!-- AndroidManifest.xml -->
+<!-- Legacy permissions for Android 10 and below -->
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    android:maxSdkVersion="29" />
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+    android:maxSdkVersion="29" />
 
----
+<!-- For Android 11+, use scoped storage via MediaStore or SAF -->
+```
 
-**Created**: 2025-10-21
-**Last Updated**: 2025-12-10
-**Owner**: CleverKeys Development Team
-**Status**: Defaults object added to centralize default values (f85a2a33)
+App-specific storage doesn't require permissions:
+```kotlin
+val appDir = context.getExternalFilesDir(null)  // No permission needed
+```
+
+### Theme Application
+
+```kotlin
+// ConfigurationManager.kt
+fun applyTheme(themeName: String) {
+    val theme = KeyboardTheme.loadTheme(context, themeName)
+    KeyboardTheme.current = theme
+
+    // Notify keyboard view to redraw
+    CleverKeysService.getInstance()?.requestKeyboardRedraw()
+}
+```
+
+### Settings Change Listener
+
+```kotlin
+class Config(context: Context) : SharedPreferences.OnSharedPreferenceChangeListener {
+    init {
+        prefs.registerOnSharedPreferenceChangeListener(this)
+    }
+
+    override fun onSharedPreferenceChanged(prefs: SharedPreferences, key: String?) {
+        when (key) {
+            "theme" -> {
+                theme = prefs.getString("theme", Defaults.THEME)!!
+                ConfigurationManager.applyTheme(theme)
+            }
+            "keyboard_height_portrait" -> {
+                keyboardHeightPortrait = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_PORTRAIT)
+                CleverKeysService.getInstance()?.requestKeyboardResize()
+            }
+            // ... handle other settings
+        }
+    }
+}
+```
+
+### Collapsible Sections Pattern
+
+Settings UI uses collapsible sections (not hierarchical navigation):
+
+```kotlin
+@Composable
+fun CollapsibleSection(
+    title: String,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column {
+        Row(
+            modifier = Modifier.clickable { onExpandedChange(!expanded) }
+                .fillMaxWidth().padding(16.dp)
+        ) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.weight(1f))
+            Icon(
+                if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = null
+            )
+        }
+        AnimatedVisibility(visible = expanded) {
+            Column(content = content)
+        }
+    }
+}
+```
+
+This pattern means settings paths are "Settings > [expand section] > [setting]" rather than hierarchical navigation like "Settings > Appearance > Theme".
