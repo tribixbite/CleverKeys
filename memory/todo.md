@@ -5,7 +5,7 @@
 
 ---
 
-## Session Progress (2026-01-15 Evening)
+## Session Progress (2026-01-16)
 
 - ✅ Updated CHANGELOG.md with v1.2.4, v1.2.8, v1.2.9 releases (315d8662)
 - ✅ Regenerated wiki pages with improved generator (37 pages)
@@ -24,8 +24,12 @@
 - ✅ Improved circumflex and accents documentation for all layouts (935dd25b)
 - ✅ Fixed GitHub repo references to tribixbite/CleverKeys (026dd719)
 - ✅ Added transparent background fix to troubleshooting for #51 (dbc91c2b)
+- ✅ Added older device crash troubleshooting for #55 (b9b02277)
+- ✅ Fixed build_all_languages.py helper script validation for #67 (e20cc275)
 
 **Recent Commits**:
+- `e20cc275` fix: add helper script validation to build_all_languages.py (#67)
+- `b9b02277` docs: add troubleshooting for older device crashes (#55)
 - `dbc91c2b` docs: add transparent background fix to troubleshooting (#51)
 - `026dd719` fix: correct GitHub repo references to tribixbite/CleverKeys
 - `935dd25b` docs: improve circumflex and accents documentation
@@ -44,16 +48,16 @@
 
 ---
 
-## GitHub Issue Triage (2026-01-15)
+## GitHub Issue Triage (2026-01-16)
 
 **CleverKeys Issues (tribixbite/CleverKeys)**:
-- #51 ✅ Transparent background - User guidance (opacity setting)
-- #55 ✅ Crashes on older devices - User guidance
+- #51 ✅ Transparent background - Added troubleshooting guide (opacity setting)
+- #55 ✅ Crashes on older devices - Added troubleshooting guide (disable swipe typing)
 - #56 ✅ First-time user tutorial - Wiki documentation available
 - #59 ✅ Clipboard delete option - IMPLEMENTED (v1.2.8)
 - #62 ✅ Password manager clipboard exclusion - IMPLEMENTED (v1.2.8)
-- #67 ✅ Script error - User error, provided fix
-- #68 ✅ Greek dictionary request - Engaged with contributor
+- #67 ✅ Script error - Fixed: added helper script validation
+- #68 ✅ Greek dictionary request - Feature request tracked
 
 **Open CleverKeys Issues**:
 - #61 Active multi-language switching
