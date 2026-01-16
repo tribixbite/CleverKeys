@@ -1,9 +1,12 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
+import android.os.Build
 import android.util.TypedValue
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 
 /**
  * Utility class for initializing the suggestion bar and input view container.
@@ -123,6 +126,21 @@ object SuggestionBarInitializer {
         )
         contentPaneContainer.visibility = android.view.View.GONE // Hidden by default
         contentPaneContainer.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+
+        // FIX #1131: Apply bottom padding for navigation bar on Android 15+
+        // This prevents clipboard/emoji pane content from being obscured by the nav bar
+        ViewCompat.setOnApplyWindowInsetsListener(contentPaneContainer) { view, insets ->
+            val navBarInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            // Apply bottom padding to keep content above nav bar
+            view.setPadding(
+                view.paddingLeft,
+                view.paddingTop,
+                view.paddingRight,
+                navBarInsets.bottom
+            )
+            insets
+        }
+
         inputViewContainer.addView(contentPaneContainer)
 
         // Note: Keyboard view is added by caller after this method returns

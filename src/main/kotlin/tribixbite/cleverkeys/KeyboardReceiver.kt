@@ -7,6 +7,7 @@ import android.os.Handler
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputConnection
+import androidx.core.view.ViewCompat
 
 /**
  * Handles keyboard events and state changes for CleverKeysService.
@@ -95,6 +96,8 @@ class KeyboardReceiver(
                     it.removeAllViews()
                     it.addView(pane)
                     it.visibility = View.VISIBLE
+                    // FIX #1131: Request window insets to apply nav bar padding on Android 15+
+                    ViewCompat.requestApplyInsets(it)
                 } ?: run {
                     // Fallback for when predictions disabled (no container)
                     if (pane != null) {
@@ -121,6 +124,8 @@ class KeyboardReceiver(
                     it.removeAllViews()
                     it.addView(clipboardPane)
                     it.visibility = View.VISIBLE
+                    // FIX #1131: Request window insets to apply nav bar padding on Android 15+
+                    ViewCompat.requestApplyInsets(it)
                 } ?: run {
                     // Fallback for when predictions disabled (no container)
                     keyboard2.setInputView(clipboardPane)
