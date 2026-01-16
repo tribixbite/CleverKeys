@@ -263,6 +263,7 @@ class Keyboard2View @JvmOverloads constructor(
         }
     }
 
+    @Suppress("DEPRECATION")
     fun refresh_navigation_bar(context: Context) {
         if (VERSION.SDK_INT < 21)
             return
@@ -276,11 +277,24 @@ class Keyboard2View @JvmOverloads constructor(
         // causes white-on-white icons. Use theme's nav bar color instead.
         if (VERSION.SDK_INT < 29 && _theme.isLightNavBar) {
             // Use the theme's nav bar color (usually light gray or white)
-            // The system will automatically use dark icons on light backgrounds
             w.navigationBarColor = _theme.colorNavBar
+            // For API 26-28: explicitly set light navigation bar flag for dark icons
+            if (VERSION.SDK_INT >= 26) {
+                val decorView = w.decorView
+                var flags = decorView.systemUiVisibility
+                flags = flags or android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                decorView.systemUiVisibility = flags
+            }
         } else {
             // Set transparent navigation bar color
             w.navigationBarColor = android.graphics.Color.TRANSPARENT
+            // Clear light navigation bar flag for light icons on dark/transparent background
+            if (VERSION.SDK_INT >= 26 && VERSION.SDK_INT < 29) {
+                val decorView = w.decorView
+                var flags = decorView.systemUiVisibility
+                flags = flags and android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
+                decorView.systemUiVisibility = flags
+            }
         }
 
         // Disable navigation bar contrast enforcement on API 29+
@@ -288,9 +302,11 @@ class Keyboard2View @JvmOverloads constructor(
             w.isNavigationBarContrastEnforced = false
         }
 
-        // Use modern WindowInsetsController to handle light/dark nav bar icons
-        val controller = androidx.core.view.ViewCompat.getWindowInsetsController(w.decorView)
-        controller?.isAppearanceLightNavigationBars = _theme.isLightNavBar
+        // Use modern WindowInsetsController for API 30+ (API 26-28 handled above with legacy flags)
+        if (VERSION.SDK_INT >= 30) {
+            val controller = androidx.core.view.ViewCompat.getWindowInsetsController(w.decorView)
+            controller?.isAppearanceLightNavigationBars = _theme.isLightNavBar
+        }
     }
 
     fun setKeyboard(kw: KeyboardData) {
