@@ -90,6 +90,7 @@
 - ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `a9dbc7fb` fix: add TIMESTAMP case to CommandPaletteDialog when expression
 - `ba53b955` feat: add timestamp commands to UI + Turkish/Swedish language packs
 - `7c4054d4` feat: add tap-to-add-to-dictionary for exact typed words (#42)
 - `74580c22` feat: add numpad height scaling for larger keys (#58)
@@ -139,10 +140,10 @@
 **Open CleverKeys Issues** (commented with guidance):
 - #61 Active multi-language switching - Feature request, discussed implementation path
 - #52 MessageEase layout contribution - Provided gesture tuning tips, offered to add layout
-- #50 Swedish language support - Pointed to wiki: scripts/build_langpack.py with wordfreq
-- #49 Turkish language support - Pointed to wiki: scripts/build_langpack.py with wordfreq
 
 **Recently Fixed**:
+- #50 ✅ Swedish language support - CREATED langpack-sv.zip (ba53b955)
+- #49 ✅ Turkish language support - CREATED langpack-tr.zip (ba53b955)
 - #42 ✅ Tap-to-add dictionary - FIXED (7c4054d4)
   - Shows exact typed word with "+" prefix when unknown
   - Tapping commits and adds to user dictionary
