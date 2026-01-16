@@ -651,7 +651,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 keyboardHeight = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_PORTRAIT)
             }
             "vibration_enabled" -> {
-                vibrationEnabled = prefs.getBoolean(key, Defaults.VIBRATE_CUSTOM)
+                vibrationEnabled = prefs.getBoolean(key, Defaults.HAPTIC_ENABLED)
             }
             "debug_enabled" -> {
                 debugEnabled = prefs.getBoolean(key, Defaults.DEBUG_ENABLED)
@@ -4290,7 +4290,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         customBorderLineWidth = prefs.getSafeInt("custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH)
 
         // Input behavior settings
-        vibrationEnabled = prefs.getSafeBoolean("vibration_enabled", Defaults.VIBRATE_CUSTOM)
+        vibrationEnabled = prefs.getSafeBoolean("vibration_enabled", Defaults.HAPTIC_ENABLED)
         clipboardHistoryEnabled = prefs.getSafeBoolean("clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
         clipboardHistoryLimit = prefs.getSafeString("clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
         clipboardPaneHeightPercent = Config.safeGetInt(prefs, "clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT).coerceIn(10, 50)

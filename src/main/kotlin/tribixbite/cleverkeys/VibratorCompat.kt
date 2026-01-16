@@ -60,6 +60,11 @@ object VibratorCompat {
     @JvmStatic
     @JvmOverloads
     fun vibrate(v: View, config: Config, event: HapticEvent = HapticEvent.KEY_PRESS) {
+        // Master toggle - when disabled, no haptic feedback at all
+        if (!config.haptic_enabled) {
+            return
+        }
+
         // Check if this specific event type is enabled in app settings
         if (!isEventEnabled(config, event)) {
             return

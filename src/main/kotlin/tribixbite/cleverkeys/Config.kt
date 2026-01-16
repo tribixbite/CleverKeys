@@ -57,7 +57,9 @@ object Defaults {
     // Input behavior
     const val VIBRATE_CUSTOM = false
     const val VIBRATE_DURATION = 20
-    // Per-event haptic feedback (all enabled by default)
+    // Master haptic toggle - when false, disables ALL vibration/haptic feedback
+    const val HAPTIC_ENABLED = true
+    // Per-event haptic feedback (all enabled by default, but only if HAPTIC_ENABLED is true)
     const val HAPTIC_KEY_PRESS = true
     const val HAPTIC_PREDICTION_TAP = true
     const val HAPTIC_TRACKPOINT_ACTIVATE = true
@@ -324,7 +326,9 @@ class Config private constructor(
     @JvmField var slide_step_px = 0f
     @JvmField var vibrate_custom = false
     @JvmField var vibrate_duration = 0L
-    // Per-event haptic feedback toggles
+    // Master haptic toggle - disables ALL vibration when false
+    @JvmField var haptic_enabled = Defaults.HAPTIC_ENABLED
+    // Per-event haptic feedback toggles (only checked if haptic_enabled is true)
     @JvmField var haptic_key_press = Defaults.HAPTIC_KEY_PRESS
     @JvmField var haptic_prediction_tap = Defaults.HAPTIC_PREDICTION_TAP
     @JvmField var haptic_trackpoint_activate = Defaults.HAPTIC_TRACKPOINT_ACTIVATE
@@ -537,7 +541,9 @@ class Config private constructor(
 
         vibrate_custom = _prefs.getBoolean("vibrate_custom", Defaults.VIBRATE_CUSTOM)
         vibrate_duration = safeGetInt(_prefs, "vibrate_duration", Defaults.VIBRATE_DURATION).toLong()
-        // Per-event haptic feedback toggles
+        // Master haptic toggle - "vibration_enabled" key from Settings UI
+        haptic_enabled = _prefs.getBoolean("vibration_enabled", Defaults.HAPTIC_ENABLED)
+        // Per-event haptic feedback toggles (only matter if haptic_enabled is true)
         haptic_key_press = _prefs.getBoolean("haptic_key_press", Defaults.HAPTIC_KEY_PRESS)
         haptic_prediction_tap = _prefs.getBoolean("haptic_prediction_tap", Defaults.HAPTIC_PREDICTION_TAP)
         haptic_trackpoint_activate = _prefs.getBoolean("haptic_trackpoint_activate", Defaults.HAPTIC_TRACKPOINT_ACTIVATE)

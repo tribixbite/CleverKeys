@@ -165,6 +165,8 @@ class BackupRestoreManager(private val context: Context) {
         // Input behavior
         "vibrate_custom" to Defaults.VIBRATE_CUSTOM,
         "vibrate_duration" to Defaults.VIBRATE_DURATION,
+        // Master haptic toggle
+        "vibration_enabled" to Defaults.HAPTIC_ENABLED,
         // Per-event haptic feedback
         "haptic_key_press" to Defaults.HAPTIC_KEY_PRESS,
         "haptic_prediction_tap" to Defaults.HAPTIC_PREDICTION_TAP,
