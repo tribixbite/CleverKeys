@@ -251,6 +251,49 @@
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. Check app cleaner:</li>
 </ul><p class="mb-4 text-gray-300 leading-relaxed">   - If using RAM cleaner, whitelist CleverKeys</p>
 
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Performance on Older Devices</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Keyboard crashes when swipe typing</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Affected:</strong> Older devices (pre-2018), devices with limited RAM, or slow processors</p>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Symptoms:</strong></p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Keyboard crashes immediately when trying to swipe type</li>
+<li class="ml-4 text-gray-300">&#8226; App force closes during gesture input</li>
+<li class="ml-4 text-gray-300">&#8226; Works fine with tap typing, crashes with swipe</li>
+</ul>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solution:</strong></p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Disable neural swipe typing</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Open CleverKeys Settings</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Go to <strong class="text-white">Input Behavior</strong> or <strong class="text-white">Swipe Typing</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Disable <strong class="text-white">Enable Swipe Typing</strong></p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Use tap typing instead</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Why this happens</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Neural swipe prediction uses an ONNX machine learning model</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Older devices may lack sufficient memory or CPU power</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - The model requires real-time inference during gestures</p>
+
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!NOTE]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">CleverKeys' neural prediction is optimized for modern devices. If your device is from 2017 or earlier, disabling swipe typing provides a stable experience while retaining all other features.</blockquote>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Keyboard is slow or laggy</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">Solutions:</strong></p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">1. <strong class="text-white">Reduce prediction beam width</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Neural > Beam Width</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Try "Fast" or "Minimal" setting</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">2. <strong class="text-white">Disable haptic feedback</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Settings > Haptics > Disable</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Haptics can cause lag on some devices</p>
+
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">3. <strong class="text-white">Clear app cache</strong></li>
+</ul><p class="mb-4 text-gray-300 leading-relaxed">   - Android Settings > Apps > CleverKeys > Storage</p>
+<p class="mb-4 text-gray-300 leading-relaxed">   - Tap "Clear Cache"</p>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Android Version-Specific Issues</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Issue: Navigation bar covers keyboard (Android 15)</h3>
