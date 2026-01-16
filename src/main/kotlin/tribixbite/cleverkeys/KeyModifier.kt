@@ -377,13 +377,10 @@ object KeyModifier {
     }
 
     private fun applySelectionMode(k: KeyValue): KeyValue {
+        // #1142: Characters (including space) pass through unchanged to replace selection
+        // Only non-character keys get special selection-mode handling
         val name: String? = when (k.getKind()) {
-            KeyValue.Kind.Char -> {
-                when (k.getChar()) {
-                    ' ' -> "selection_cancel"
-                    else -> null
-                }
-            }
+            KeyValue.Kind.Char -> null // Let characters replace selected text normally
             KeyValue.Kind.Slider -> {
                 when (k.getSlider()) {
                     KeyValue.Slider.Cursor_left -> "selection_cursor_left"
