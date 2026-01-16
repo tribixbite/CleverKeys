@@ -1,57 +1,63 @@
-# Secondary Language Integration Specification
+# Secondary Language Integration
 
-## Feature Overview
-**Feature Name**: Secondary Language Integration (Multilanguage Mode)
-**Priority**: P1 (High)
-**Status**: ✅ COMPLETE (v1.1.84)
-**Implementation Date**: 2026-01-04
+## Overview
 
-### Summary
-This feature allows users to type in multiple languages simultaneously using a single QWERTY layout. The system combines:
-- **V2 Binary Dictionaries** with accent normalization (e.g., "espanol" → "español")
-- **Unigram Language Detection** for automatic language context switching
-- **Language Packs** for importing additional languages without internet
+Multi-language typing system that allows users to type in two languages simultaneously using a single QWERTY layout. Combines V2 binary dictionaries with accent normalization, unigram language detection, and language pack importing.
 
-### Motivation
-Many users type in two languages interchangeably. Rather than switching layouts, the prediction engine suggests words from *both* languages at once, using the primary language's neural model with a secondary dictionary for validation and accent mapping.
+## Key Files
 
----
+| File | Class/Function | Purpose |
+|------|----------------|---------|
+| `src/main/kotlin/tribixbite/cleverkeys/AccentNormalizer.kt` | `AccentNormalizer` | Strips diacritical marks |
+| `src/main/kotlin/tribixbite/cleverkeys/NormalizedPrefixIndex.kt` | `NormalizedPrefixIndex` | Accent-aware prefix lookup |
+| `src/main/kotlin/tribixbite/cleverkeys/BinaryDictionaryLoader.kt` | V1/V2 loading | Dictionary loading |
+| `src/main/kotlin/tribixbite/cleverkeys/OptimizedVocabulary.kt` | Dual dictionaries | Primary + secondary management |
+| `src/main/kotlin/tribixbite/cleverkeys/SuggestionRanker.kt` | Merging | Combines results with scoring |
+| `src/main/kotlin/tribixbite/cleverkeys/UnigramLanguageDetector.kt` | Detection | Word-based language detection |
+| `src/main/kotlin/tribixbite/cleverkeys/langpack/LanguagePackManager.kt` | Pack import | Language pack storage |
 
-## Architecture Overview
+## Architecture
 
-### Phase 1: Accent Normalization (v1.1.80)
-- **AccentNormalizer**: Maps 26-letter NN output to accented canonical forms
-- **NormalizedPrefixIndex**: Fast prefix lookup with accent mapping
-- **BinaryDictionaryLoader V2**: Loads dictionaries with accent data
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   Neural Swipe Predictor                     │
+│  Outputs 26-letter words: "espanol", "cafe"                 │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    SuggestionRanker                          │
+│  Merges candidates from primary + secondary dictionaries     │
+└─────────────────────────────────────────────────────────────┘
+        │                                    │
+        ▼                                    ▼
+┌───────────────────┐            ┌───────────────────┐
+│ Primary Dict (EN) │            │ Secondary Dict(ES)│
+│ NormalizedPrefix  │            │ NormalizedPrefix  │
+│ Index             │            │ Index             │
+└───────────────────┘            └───────────────────┘
+        │                                    │
+        └────────────────┬───────────────────┘
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                UnigramLanguageDetector                       │
+│  Sliding window of 10 words, adjusts scoring multiplier     │
+└─────────────────────────────────────────────────────────────┘
+```
 
-### Phase 2: Multi-Dictionary Support (v1.1.81)
-- **SuggestionRanker**: Merges results from primary + secondary dictionaries
-- **OptimizedVocabulary**: Manages dual dictionary loading
-- **Settings UI**: Secondary language picker in Multi-Language section
+## Configuration
 
-### Phase 3: Language Detection (v1.1.81)
-- **UnigramLanguageDetector**: Word-based detection using frequency analysis
-- Sliding window of 10 recent words
-- 5000 top unigrams per language (EN, ES bundled)
+| Setting | Key | Default | Description |
+|---------|-----|---------|-------------|
+| Enable Multi-Language | `pref_enable_multilang` | false | Master switch |
+| Primary Language | `pref_primary_language` | en | Main language |
+| Secondary Language | `pref_secondary_language` | none | Additional language |
+| Auto-Detect Language | `pref_auto_detect_language` | true | Enable detection |
+| Detection Sensitivity | `pref_language_detection_sensitivity` | 0.6 | Auto-switch threshold |
 
-### Phase 4: Auto-Switching (v1.1.82)
-- Dynamic language multiplier adjusts secondary dictionary scoring
-- Configurable detection sensitivity (0.4-0.9)
-- Multiplier formula:
-  - Secondary > threshold: boost (1.1+)
-  - Primary > threshold: penalty (0.85)
-  - Balanced: neutral (1.0)
+## Implementation Details
 
-### Phase 5: Language Packs (v1.1.84)
-- **LanguagePackManager**: Import/validate/store ZIP packs
-- **ZIP Format**: manifest.json + dictionary.bin + unigrams.txt
-- No internet permission needed (Storage Access Framework)
-
----
-
-## Technical Components
-
-### 1. V2 Binary Dictionary Format
+### V2 Binary Dictionary Format
 
 ```
 Header (48 bytes):
@@ -82,24 +88,9 @@ Accent Map Section:
     Indices:    4 bytes each (uint32 index into canonical section)
 ```
 
-### 2. Key Classes
-
-```
-src/main/kotlin/tribixbite/cleverkeys/
-├── AccentNormalizer.kt          # Strips diacritical marks
-├── NormalizedPrefixIndex.kt     # Accent-aware prefix lookup
-├── BinaryDictionaryLoader.kt    # V1/V2 dictionary loading
-├── OptimizedVocabulary.kt       # Dual dictionary management
-├── SuggestionRanker.kt          # Merges primary + secondary results
-├── UnigramLanguageDetector.kt   # Word-based language detection
-└── langpack/
-    └── LanguagePackManager.kt   # Language pack import/storage
-```
-
-### 3. Dictionary Loading Flow
+### Dictionary Loading Flow
 
 ```kotlin
-// OptimizedVocabulary.loadSecondaryDictionary()
 fun loadSecondaryDictionary(language: String): Boolean {
     // 1. Try loading from installed language packs first
     val packManager = LanguagePackManager.getInstance(context)
@@ -115,10 +106,9 @@ fun loadSecondaryDictionary(language: String): Boolean {
 }
 ```
 
-### 4. Prediction Flow with Secondary Dictionary
+### Prediction Flow with Secondary Dictionary
 
 ```kotlin
-// SuggestionRanker.getSuggestions()
 fun getSuggestions(prefix: String, limit: Int): List<Candidate> {
     val candidates = mutableListOf<Candidate>()
 
@@ -139,11 +129,17 @@ fun getSuggestions(prefix: String, limit: Int): List<Candidate> {
 }
 ```
 
----
+### Language Detection Algorithm
 
-## Language Pack System
+- Sliding window of 10 recent committed words
+- 5000 top unigrams per language (EN, ES bundled)
+- Dynamic multiplier adjusts secondary dictionary scoring:
+  - Secondary > threshold: boost (1.1+)
+  - Primary > threshold: penalty (0.85)
+  - Balanced: neutral (1.0)
 
-### ZIP File Structure
+### Language Pack ZIP Format
+
 ```
 langpack-fr.zip
 ├── manifest.json      # Metadata
@@ -151,7 +147,7 @@ langpack-fr.zip
 └── unigrams.txt       # Word frequency list (optional)
 ```
 
-### manifest.json
+**manifest.json**:
 ```json
 {
   "code": "fr",
@@ -162,72 +158,19 @@ langpack-fr.zip
 }
 ```
 
-### Build Scripts
-```bash
-# Generate word list from wordfreq
-python3 scripts/get_wordlist.py --lang fr --output fr_words.txt --count 100000
-
-# Build language pack ZIP
-python3 scripts/build_langpack.py \
-    --lang fr \
-    --name "French" \
-    --input fr_words.txt \
-    --output langpack-fr.zip \
-    --use-wordfreq
-```
-
 ### Import Flow
-1. User downloads ZIP file externally (browser, file transfer)
+
+1. User downloads ZIP file externally
 2. Settings → Multi-Language → Import Pack
 3. File picker opens (Storage Access Framework)
 4. LanguagePackManager validates and extracts to `files/langpacks/{code}/`
 5. Language appears in Secondary Language dropdown
 
----
-
-## Settings UI
-
-**Location**: Settings → Multi-Language
-
-| Setting | Key | Default | Description |
-|---------|-----|---------|-------------|
-| Enable Multi-Language | pref_enable_multilang | false | Master switch |
-| Primary Language | pref_primary_language | en | Main language |
-| Secondary Language | pref_secondary_language | none | Additional language |
-| Auto-Detect Language | pref_auto_detect_language | true | Enable detection |
-| Detection Sensitivity | pref_language_detection_sensitivity | 0.6 | Auto-switch threshold |
-
-**Language Packs Section**:
-- "Import Pack" button → file picker
-- "Manage" button → view/delete installed packs
-- Shows installed pack count
-
----
-
 ## Performance Considerations
 
-1. **Memory**: Secondary dictionary loads into separate NormalizedPrefixIndex (~2-5MB)
-2. **Lookup**: O(log n) prefix search in each dictionary, merged linearly
-3. **Language Detection**: O(1) per word (hash lookup in unigram set)
-4. **Pack Import**: One-time extraction, ~1-2 seconds for 100k word pack
-
----
-
-## Testing Checklist
-
-- [x] Load bundled Spanish dictionary (es_enhanced.bin)
-- [x] Accent normalization: "espanol" → "español"
-- [x] Secondary dictionary appears in suggestions
-- [x] Language multiplier adjusts based on context
-- [ ] Import French language pack from ZIP
-- [ ] Secondary language dropdown shows imported packs
-- [ ] Delete language pack via Manage dialog
-
----
-
-## Future Enhancements
-
-1. **Language Pack Repository**: Optional online catalog (requires INTERNET permission)
-2. **Auto-Download**: Detect device locale and offer relevant packs
-3. **Multiple Secondary Languages**: Support 2+ secondary dictionaries
-4. **Per-App Language**: Remember language preference per input field
+| Aspect | Characteristic |
+|--------|----------------|
+| Memory | Secondary dictionary ~2-5MB in NormalizedPrefixIndex |
+| Lookup | O(log n) prefix search per dictionary, merged linearly |
+| Language Detection | O(1) per word (hash lookup in unigram set) |
+| Pack Import | One-time extraction, ~1-2 seconds for 100k word pack |
