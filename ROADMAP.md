@@ -4,6 +4,22 @@ This document outlines the planned development path for CleverKeys, focusing on 
 
 ## ✅ Recently Completed (v1.2.x)
 
+### v1.2.9
+- [x] **Timestamp Keys** - Insert formatted date/time with custom patterns
+- [x] **Pre-defined Timestamp Shortcuts** - 8 ready-to-use timestamp keys
+
+### v1.2.8
+- [x] **Quick Settings Tile** - Add keyboard to Android Quick Settings panel
+- [x] **Password Manager Clipboard Exclusion** - Privacy for 1Password, Bitwarden, etc.
+- [x] **Test Keyboard Field** - Built-in text field in Settings for testing
+- [x] **Android 15 Edge-to-Edge Fix** - Navigation bar no longer covers keyboard
+- [x] **Monet Theme Crash Fix** - Fixed dynamic color extraction on tablets
+
+### v1.2.4
+- [x] **Selection-Delete Mode** - Swipe-hold backspace to select and delete text
+- [x] **TrackPoint Navigation** - Joystick-style cursor control on nav keys
+
+### v1.2.0-1.2.3
 - [x] **Space Key Repeat on Hold** - Long-press space now repeats like delete key
 - [x] **Finger Occlusion Compensation** - Configurable Y-offset setting (0-50%)
 - [x] **Per-Key Short Swipe Customization** - 204+ commands assignable to any key
@@ -11,6 +27,7 @@ This document outlines the planned development path for CleverKeys, focusing on 
 - [x] **Language Quick Toggle** - Swap between primary/secondary languages instantly
 - [x] **Profile System** - Layout import/export with gesture customizations
 - [x] **New Website** - Tailwind dark-mode homepage with demo at `/demo/`
+- [x] **User Guide Wiki** - 38-page comprehensive user documentation
 
 ## 🚀 Core Features & Stability
 
