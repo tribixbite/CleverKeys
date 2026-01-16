@@ -268,7 +268,15 @@ fun ThemeSettingsScreen(
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
-            items(ThemeSettingsActivity.BUILTIN_THEMES) { builtinTheme ->
+            // Filter Monet themes on Android < 12 (API 31) - Material You requires Android 12+
+            val availableThemes = ThemeSettingsActivity.BUILTIN_THEMES.filter { theme ->
+                if (theme.id.startsWith("monet")) {
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                } else {
+                    true
+                }
+            }
+            items(availableThemes) { builtinTheme ->
                 BuiltinThemeCard(
                     theme = builtinTheme,
                     isSelected = currentThemeId == builtinTheme.id,

@@ -839,13 +839,28 @@ class Config private constructor(
             theme_name == "epaper" -> R.style.ePaper
             theme_name == "desert" -> R.style.Desert
             theme_name == "jungle" -> R.style.Jungle
-            theme_name == "monetlight" -> R.style.MonetLight
-            theme_name == "monetdark" -> R.style.MonetDark
+            // Monet (Material You) requires Android 12+ (API 31)
+            theme_name == "monetlight" -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) R.style.MonetLight
+                else R.style.Light  // Fallback for older Android
+            }
+            theme_name == "monetdark" -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) R.style.MonetDark
+                else R.style.Dark  // Fallback for older Android
+            }
             theme_name == "monet" -> {
-                if (night_mode and Configuration.UI_MODE_NIGHT_NO != 0)
-                    R.style.MonetLight
-                else
-                    R.style.MonetDark
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    if (night_mode and Configuration.UI_MODE_NIGHT_NO != 0)
+                        R.style.MonetLight
+                    else
+                        R.style.MonetDark
+                } else {
+                    // Fallback for older Android
+                    if (night_mode and Configuration.UI_MODE_NIGHT_NO != 0)
+                        R.style.Light
+                    else
+                        R.style.Dark
+                }
             }
             theme_name == "rosepine" -> R.style.RosePine
             theme_name == "everforestlight" -> R.style.EverforestLight
@@ -1130,9 +1145,10 @@ class Config private constructor(
                 "epaper" -> R.style.ePaper
                 "desert" -> R.style.Desert
                 "jungle" -> R.style.Jungle
-                "monetlight" -> R.style.MonetLight
-                "monetdark" -> R.style.MonetDark
-                "monet" -> R.style.MonetDark // Default to dark for monet
+                // Monet (Material You) requires Android 12+ (API 31)
+                "monetlight" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) R.style.MonetLight else R.style.Light
+                "monetdark" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) R.style.MonetDark else R.style.Dark
+                "monet" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) R.style.MonetDark else R.style.Dark
                 "rosepine" -> R.style.RosePine
                 "everforestlight" -> R.style.EverforestLight
                 "cobalt" -> R.style.Cobalt
