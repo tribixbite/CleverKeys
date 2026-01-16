@@ -25,6 +25,13 @@
   - Rows scale up to fill full keyboard height for easier tapping
   - Theme.kt modified row_height calculation logic
 
+### Greek Language Pack + Keyboard Command Routing (0fb56dc0)
+- ✅ Created Greek (Ελληνικά) language pack (langpack-el.zip, 46k words, 632KB)
+- ✅ Improved CustomShortSwipeExecutor command routing (#30)
+  - Keyboard-level commands (config, switch_clipboard, switch_numeric, voice_typing,
+    timestamp_*, etc.) now properly route through KeyValue-based handling
+  - Fixed: per-key actions for keyboard events now work correctly
+
 ### Timestamp UI Commands + Language Packs (ba53b955)
 - ✅ Added timestamp commands to CommandRegistry for short swipe UI
   - 8 timestamp formats: date, time, datetime, time_seconds, date_short, date_long, time_12h, iso
@@ -90,6 +97,7 @@
 - ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `0fb56dc0` feat: add Greek language pack + improve keyboard command routing (#68, #30)
 - `a9dbc7fb` fix: add TIMESTAMP case to CommandPaletteDialog when expression
 - `ba53b955` feat: add timestamp commands to UI + Turkish/Swedish language packs
 - `7c4054d4` feat: add tap-to-add-to-dictionary for exact typed words (#42)
@@ -134,7 +142,6 @@
 - #59 ✅ Clipboard delete option - IMPLEMENTED (v1.2.8)
 - #62 ✅ Password manager clipboard exclusion - IMPLEMENTED (v1.2.8)
 - #67 ✅ Script error - Fixed: added helper script validation
-- #68 ✅ Greek dictionary request - Feature request tracked
 - #46 ✅ Vibration feedback toggle - FIXED: master haptic toggle now works (ef7369a0)
 
 **Open CleverKeys Issues** (commented with guidance):
@@ -142,8 +149,10 @@
 - #52 MessageEase layout contribution - Provided gesture tuning tips, offered to add layout
 
 **Recently Fixed**:
+- #68 ✅ Greek language support - CREATED langpack-el.zip (0fb56dc0)
 - #50 ✅ Swedish language support - CREATED langpack-sv.zip (ba53b955)
 - #49 ✅ Turkish language support - CREATED langpack-tr.zip (ba53b955)
+- #30 ✅ Per-key keyboard events - FIXED routing in CustomShortSwipeExecutor (0fb56dc0)
 - #42 ✅ Tap-to-add dictionary - FIXED (7c4054d4)
   - Shows exact typed word with "+" prefix when unknown
   - Tapping commits and adds to user dictionary
