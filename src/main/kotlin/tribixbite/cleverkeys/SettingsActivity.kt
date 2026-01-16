@@ -2845,7 +2845,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Privacy: Exclude password managers
-                SettingsToggle(
+                SettingsSwitch(
                     title = "Exclude Password Managers",
                     description = "Don't store clipboard from Bitwarden, 1Password, LastPass, KeePass, etc.",
                     checked = clipboardExcludePasswordManagers,

@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.content.res.Resources
+import android.os.Build
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
