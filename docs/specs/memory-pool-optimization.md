@@ -1,18 +1,18 @@
-# MemoryPool Optimization Spec
+# Memory Pool Optimization
 
-**Feature**: Enhanced Memory Pooling for ONNX Inference
-**Status**: 🟡 PLANNED (Medium Priority Optimization)
-**Priority**: P2 (Performance Enhancement)
-**Date Created**: 2026-01-02
-**Last Updated**: 2026-01-02
+## Overview
 
----
+Enhanced memory pooling for ONNX inference to reduce allocations, prevent GC pauses during typing, and improve first-prediction latency through pre-warming.
 
-## 1. Current State
+## Key Files
 
-### Existing Implementation
+| File | Class/Function | Purpose |
+|------|----------------|---------|
+| `src/main/kotlin/tribixbite/cleverkeys/onnx/MemoryPool.kt` | `MemoryPool` | Buffer pooling for decoder |
+| `src/main/kotlin/tribixbite/cleverkeys/onnx/TensorPool.kt` | `TensorPool` | OnnxTensor wrapper pooling |
+| `src/main/kotlin/tribixbite/cleverkeys/onnx/EncoderOutputCache.kt` | `EncoderOutputCache` | LRU cache for encoder memory |
 
-The `MemoryPool` class (`onnx/MemoryPool.kt`) provides basic buffer pooling:
+## Current Implementation
 
 ```kotlin
 class MemoryPool {
@@ -31,32 +31,50 @@ class MemoryPool {
 }
 ```
 
-### Current Limitations
+## Current Limitations
 
-1. **No OnnxTensor pooling**: `OnnxTensor.createTensor()` is called every inference, allocating native memory
-2. **No encoder output caching**: Memory tensor recreated even for same swipe
-3. **No buffer size tracking**: Can't monitor or limit memory usage
-4. **No LRU eviction**: Buffers allocated but never shrunk
-5. **Thread-unsafe**: Documented limitation, problematic for async prediction
-6. **No warm-up**: First prediction slower due to lazy allocation
+| Limitation | Impact |
+|------------|--------|
+| No OnnxTensor pooling | Native memory allocated every inference |
+| No encoder output caching | Memory tensor recreated for same swipe |
+| No buffer size tracking | Can't monitor or limit memory usage |
+| No LRU eviction | Buffers grow but never shrink |
+| Thread-unsafe | Problematic for async prediction |
+| No warm-up | First prediction slower due to lazy allocation |
 
----
+## Architecture
 
-## 2. Proposed Enhancements
-
-### 2.1 OnnxTensor Pooling
-
-**Problem**: Each decoder step creates new OnnxTensor objects for inputs:
-```kotlin
-// Current: Allocates each time
-val targetTokensTensor = OnnxTensor.createTensor(ortEnvironment,
-    java.nio.IntBuffer.wrap(tgtTokens), longArrayOf(1, DECODER_SEQ_LEN.toLong()))
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     TensorPool                               │
+│  Pools OnnxTensor wrappers with reusable backing buffers    │
+│  - IntBuffer tensors for token sequences                    │
+│  - FloatBuffer tensors for features                         │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  EncoderOutputCache                          │
+│  LRU cache of encoder outputs keyed by trajectory hash      │
+│  - Avoids re-encoding same swipe on multi-tap/correction    │
+│  - Max 4 entries, 5-second staleness eviction               │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    MemoryBudget                              │
+│  Tracks allocations and enforces limits                     │
+│  - Prevents OOM on low-memory devices                       │
+│  - Provides usage metrics for debugging                     │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**Solution**: Pool tensor wrappers with reusable backing buffers:
+## Implementation Details
+
+### OnnxTensor Pooling
+
 ```kotlin
 class TensorPool(private val ortEnv: OrtEnvironment) {
-    // Pool of pre-created tensors with reusable backing arrays
     private val intTensorPool = ArrayDeque<PooledIntTensor>()
 
     data class PooledIntTensor(
@@ -78,11 +96,8 @@ class TensorPool(private val ortEnv: OrtEnvironment) {
 }
 ```
 
-### 2.2 Encoder Output Caching
+### Encoder Output Caching
 
-**Problem**: For multi-tap/correction scenarios, we re-encode the same swipe trajectory.
-
-**Solution**: Cache encoder output with trajectory hash:
 ```kotlin
 class EncoderOutputCache(private val maxEntries: Int = 4) {
     private val cache = LinkedHashMap<Int, CachedMemory>(maxEntries, 0.75f, true)
@@ -96,17 +111,12 @@ class EncoderOutputCache(private val maxEntries: Int = 4) {
 
     fun get(trajectoryHash: Int): CachedMemory?
     fun put(trajectoryHash: Int, memory: CachedMemory)
-
-    // Evict entries older than 5 seconds
     fun evictStale(maxAgeMs: Long = 5000L)
 }
 ```
 
-### 2.3 Memory Budget Tracking
+### Memory Budget Tracking
 
-**Problem**: No visibility into memory usage, can't prevent OOM.
-
-**Solution**: Track allocations and enforce budgets:
 ```kotlin
 class MemoryBudget {
     private val currentUsageBytes = AtomicLong(0)
@@ -114,7 +124,7 @@ class MemoryBudget {
 
     fun allocate(bytes: Long): Boolean {
         if (currentUsageBytes.get() + bytes > maxBudgetBytes) {
-            Log.w(TAG, "Memory budget exceeded: ${currentUsageBytes.get()} + $bytes > $maxBudgetBytes")
+            Log.w(TAG, "Memory budget exceeded")
             return false
         }
         currentUsageBytes.addAndGet(bytes)
@@ -129,11 +139,8 @@ class MemoryBudget {
 }
 ```
 
-### 2.4 Thread-Safe Pool
+### Thread-Safe Pool
 
-**Problem**: Current MemoryPool is not thread-safe.
-
-**Solution**: Use concurrent data structures or per-thread pools:
 ```kotlin
 class ThreadSafeMemoryPool {
     // Option A: Per-thread pool (no contention)
@@ -152,11 +159,8 @@ class ThreadSafeMemoryPool {
 }
 ```
 
-### 2.5 Warm-Up Protocol
+### Warm-Up Protocol
 
-**Problem**: First prediction is slow due to lazy allocation and JIT.
-
-**Solution**: Pre-warm pools on keyboard initialization:
 ```kotlin
 class MemoryPoolWarmup {
     suspend fun warmup(pool: MemoryPool, config: NeuralConfig) {
@@ -166,91 +170,21 @@ class MemoryPoolWarmup {
             decoderSeqLength = 20,
             vocabSize = 35
         )
-        pool.ensurePooledCapacity(
-            newCapacity = config.beamWidth,
-            maxSeqLength = 150,
-            hiddenDim = 256
-        )
 
         // Touch pages to avoid page faults on first use
         val buffers = pool.getPreallocBatchedTokens()
         buffers.forEach { arr -> arr.fill(0) }
-
-        Log.d(TAG, "MemoryPool warmed up: ${pool.getPooledCapacity()} beams")
     }
 }
 ```
 
----
+## Performance Targets
 
-## 3. Implementation Plan
-
-### Phase 1: Memory Budget & Monitoring
-
-**Time Estimate: 2-3 hours**
-
-- [ ] Create `MemoryBudget` class with allocation tracking
-- [ ] Integrate with existing MemoryPool
-- [ ] Add debug logging for allocations
-- [ ] Add memory usage to NeuralSettingsActivity (info display only)
-
-### Phase 2: OnnxTensor Pooling
-
-**Time Estimate: 4-6 hours**
-
-- [ ] Create `TensorPool` class
-- [ ] Implement acquire/release for IntBuffer-backed tensors
-- [ ] Implement acquire/release for FloatBuffer-backed tensors
-- [ ] Integrate into BeamSearchEngine
-- [ ] Benchmark reduction in allocations
-
-### Phase 3: Encoder Output Caching
-
-**Time Estimate: 3-4 hours**
-
-- [ ] Implement trajectory hashing (hash of coordinates + timestamps)
-- [ ] Create `EncoderOutputCache` with LRU eviction
-- [ ] Integrate into OnnxSwipePredictorImpl
-- [ ] Add cache hit/miss logging
-- [ ] Test multi-tap scenarios for cache effectiveness
-
-### Phase 4: Thread Safety
-
-**Time Estimate: 3-4 hours**
-
-- [ ] Evaluate thread-local vs concurrent pool approach
-- [ ] Implement chosen solution
-- [ ] Add stress tests for concurrent access
-- [ ] Verify no data races with ThreadSanitizer
-
-### Phase 5: Warm-Up & Optimization
-
-**Time Estimate: 2-3 hours**
-
-- [ ] Add warm-up call in CleverKeysService.onCreate()
-- [ ] Measure first-prediction latency before/after
-- [ ] Profile and optimize hot allocation paths
-- [ ] Document final memory footprint
-
----
-
-## 4. Success Criteria
-
-- [ ] Allocation count per prediction reduced by ≥50%
-- [ ] GC pause time during typing reduced
-- [ ] Memory usage tracked and bounded
-- [ ] No memory leaks after 1000+ predictions
-- [ ] Thread-safe operation verified
-- [ ] First prediction latency reduced by ≥30%
-
----
-
-## 5. References
-
-- Current implementation: `src/main/kotlin/tribixbite/cleverkeys/onnx/MemoryPool.kt`
-- ONNX Runtime memory management: https://onnxruntime.ai/docs/performance/tune-performance.html
-- Android memory profiling: https://developer.android.com/studio/profile/memory-profiler
-
----
-
-*— Opus 4.5*
+| Metric | Target |
+|--------|--------|
+| Allocation reduction | ≥50% per prediction |
+| GC pause during typing | Reduced |
+| Memory usage | Tracked and bounded |
+| Memory leaks | None after 1000+ predictions |
+| Thread safety | Verified |
+| First prediction latency | ≥30% reduction |
