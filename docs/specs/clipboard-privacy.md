@@ -125,4 +125,4 @@ SettingsToggle(
 ## References
 
 - [Android UsageStatsManager](https://developer.android.com/reference/android/app/usage/UsageStatsManager)
-- [GitHub Issue #62](https://github.com/Julow/Unexpected-Keyboard/issues/62) (Meta key - not related)
+- Feature inspired by common password manager security best practices
