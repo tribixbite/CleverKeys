@@ -19,6 +19,7 @@
 - #1134 ✅ Test keyboard field in settings - IMPLEMENTED (2026-01-15)
 - #940 ✅ Clipboard delete individual items - IMPLEMENTED (2026-01-15)
 - #1113 ✅ Quick Settings tile for keyboard - IMPLEMENTED (2026-01-15)
+- #1107 ✅ Monet theme crash fix (Android < 12) - FIXED (2026-01-15)
 
 **Open Feature Requests** (for future consideration):
 - #61 Active multi-language switching
@@ -87,6 +88,20 @@
 - **AndroidManifest.xml**: Register service with BIND_QUICK_SETTINGS_TILE permission
 
 **Commit**: `7db976d1 feat: add Quick Settings tile for keyboard switching`
+
+---
+
+## Monet Theme Crash Fix - FIXED (2026-01-15)
+
+**Bug**: Monet theme crashed on Android 9 (#1107).
+
+**Cause**: Monet/Material You requires Android 12+ (API 31).
+
+**Fix**:
+- **ThemeSettingsActivity.kt**: Filter Monet themes from list on Android < 12
+- **Config.kt**: Fallback to Light/Dark if Monet selected on older devices
+
+**Commit**: `551b2250 fix: prevent Monet theme crash on Android < 12`
 
 ---
 
