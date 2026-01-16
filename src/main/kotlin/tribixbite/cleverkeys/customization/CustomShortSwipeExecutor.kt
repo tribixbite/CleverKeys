@@ -185,28 +185,32 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 "insert" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_INSERT)
                 "scroll_lock" -> sendKeyEvent(inputConnection, KeyEvent.KEYCODE_SCROLL_LOCK)
 
-                // Language toggle commands (v1.2.0) - require keyboard service handling
-                "primaryLangToggle" -> {
-                    Log.d(TAG, "primaryLangToggle - requires keyboard view handling")
-                    false
-                }
-                "secondaryLangToggle" -> {
-                    Log.d(TAG, "secondaryLangToggle - requires keyboard view handling")
-                    false
-                }
-
-                // Text action commands (v1.2.0) - require keyboard view handling
-                "textAssist" -> {
-                    Log.d(TAG, "textAssist - requires keyboard view handling")
-                    false
-                }
-                "replaceText" -> {
-                    Log.d(TAG, "replaceText - requires keyboard view handling")
-                    false
-                }
-                "showTextMenu" -> {
-                    Log.d(TAG, "showTextMenu - requires keyboard view handling")
-                    false
+                // Language toggle commands (v1.2.0) - handled via KeyValue
+                "primaryLangToggle", "secondaryLangToggle",
+                // Keyboard event commands - handled via KeyValue
+                "config", "switch_text", "switch_numeric", "switch_emoji",
+                "switch_back_emoji", "switch_clipboard", "switch_back_clipboard",
+                "switch_forward", "switch_backward", "switch_greekmath",
+                "change_method", "change_method_prev", "action", "capslock",
+                "voice_typing", "voice_typing_chooser",
+                // Text action commands
+                "textAssist", "replaceText", "showTextMenu",
+                // Timestamp commands
+                "timestamp_date", "timestamp_time", "timestamp_datetime",
+                "timestamp_time_seconds", "timestamp_date_short", "timestamp_date_long",
+                "timestamp_time_12h", "timestamp_iso" -> {
+                    // These commands need KeyValue-based handling through the keyboard service
+                    // Return the KeyValue result which will be processed by Keyboard2View
+                    val keyValue = KeyValue.getKeyByName(command.name)
+                    if (keyValue != null) {
+                        Log.d(TAG, "Command ${command.name} -> KeyValue routing")
+                        // Signal that this needs keyboard-level handling
+                        // The actual execution happens in Keyboard2View.executeCustomShortSwipeMapping()
+                        false // Return false to indicate keyboard-level handling needed
+                    } else {
+                        Log.w(TAG, "No KeyValue found for command: ${command.name}")
+                        false
+                    }
                 }
 
                 // Fallback: try to get KeyValue for character-based commands
