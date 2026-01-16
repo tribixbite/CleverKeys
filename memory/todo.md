@@ -21,8 +21,10 @@
 - ✅ Updated README.md with v1.2.x features and documentation section (b68b8b19)
 - ✅ Added quick-settings-tile and clipboard-privacy to specs HTML (457644ef)
 - ✅ Added Android version fixes and test keyboard to troubleshooting (680f3ea8)
+- ✅ Improved circumflex and accents documentation for all layouts (935dd25b)
 
 **Recent Commits**:
+- `935dd25b` docs: improve circumflex and accents documentation
 - `680f3ea8` docs: add Android version fixes and test keyboard to troubleshooting
 - `457644ef` docs: add quick-settings-tile and clipboard-privacy to specs
 - `b68b8b19` docs: add v1.2.x features and documentation section to README
