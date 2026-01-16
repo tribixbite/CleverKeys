@@ -1,7 +1,7 @@
 # CleverKeys Feature Specifications
 
-**Last Updated**: 2026-01-14
-**Total Specs**: 16 (core) + 4 (optional enhancements)
+**Last Updated**: 2026-01-15
+**Total Specs**: 17 (core) + 4 (optional enhancements)
 
 This directory contains feature specifications and architectural decision records (ADRs) for CleverKeys. All specifications follow the template in `SPEC_TEMPLATE.md`.
 
@@ -116,7 +116,14 @@ This directory contains feature specifications and architectural decision record
     - Key Concepts: Hold activation, distance-based speed scaling, diagonal support
     - Outstanding: None
 
-16. **[SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md)** - Template
+16. **[Quick Settings Tile](./quick-settings-tile.md)** - P2
+    - Status: ✅ Complete (v1.2.8 - 2026-01-15)
+    - Covers: Android Quick Settings tile for keyboard switching
+    - Components: `KeyboardTileService.kt`, AndroidManifest.xml
+    - Key Concepts: TileService, input method picker, active/inactive state
+    - Outstanding: None
+
+17. **[SPEC_TEMPLATE.md](./SPEC_TEMPLATE.md)** - Template
     - Template for creating new feature specifications
     - Use this when creating new specs
 
