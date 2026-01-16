@@ -21,6 +21,7 @@
 - #1113 ✅ Quick Settings tile for keyboard - IMPLEMENTED (2026-01-15)
 - #1107 ✅ Monet theme crash fix (Android < 12) - FIXED (2026-01-15)
 - #1131 ✅ Clipboard/emoji nav bar overlap (Android 15) - FIXED (2026-01-15)
+- #1116 ✅ White nav bar buttons (Android 9) - FIXED (2026-01-15)
 
 **Open Feature Requests** (for future consideration):
 - #61 Active multi-language switching
@@ -89,6 +90,19 @@
 - **AndroidManifest.xml**: Register service with BIND_QUICK_SETTINGS_TILE permission
 
 **Commit**: `7db976d1 feat: add Quick Settings tile for keyboard switching`
+
+---
+
+## White Nav Bar Buttons Fix (Android 8-9) - FIXED (2026-01-15)
+
+**Bug**: White nav bar buttons invisible on light theme on Android 9 (#1116).
+
+**Cause**: Transparent nav bar + light theme = white icons on white background.
+
+**Fix**:
+- **Keyboard2View.kt**: Use theme's nav bar color instead of transparent on API < 29 for light themes
+
+**Commit**: `c9cbefe1 fix: prevent invisible nav bar icons on light theme for Android 8-9`
 
 ---
 
