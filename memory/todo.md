@@ -5,7 +5,7 @@
 
 ---
 
-## GitHub Issue Triage (2026-01-16)
+## GitHub Issue Triage (2026-01-15)
 
 **Issues Addressed**:
 - #51 ✅ Transparent background on Android 16 - User guidance (opacity setting)
