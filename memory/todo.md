@@ -10,6 +10,7 @@
 ### Emoji Search by Name (#41)
 - ✅ v1: Initial implementation with EditText in emoji pane (633d6548)
 - ✅ v2: Redesigned to use suggestion bar instead (2e3f416b)
+- ✅ v3: Expanded emoji search coverage with 500+ name mappings (252d72a6)
 - **EmojiSearchManager.kt**: New class managing search state with provider functions
 - **Auto-detect context word**: When opening emoji pane, extracts word before cursor
   - If word exists (no trailing space): immediately shows search results
@@ -17,12 +18,18 @@
 - **Suggestion bar display**: Shows "Search: '[query]'" during typing
 - **Keyboard routing**: All typing goes to search query when emoji pane visible
 - **Fuzzy matching**: Case-insensitive partial name matching via Emoji.searchByName()
+- **Emoji.kt initNameMap()**: Enhanced from ~100 to 500+ entries covering:
+  - Faces & expressions, Gestures, People & activities
+  - Hearts & love symbols, Animals (100+), Food & drinks
+  - Travel & places, Weather & nature, Sports & activities
+  - Tech & objects, Symbols & flags
 - Files changed:
   - KeyEventHandler.kt: Added IReceiver emoji search interface methods
   - KeyboardReceiver.kt: Implements emoji search mode routing
   - SuggestionBar.kt: Added showEmojiSearchStatus/clearEmojiSearchStatus
   - EmojiGroupButtonsBar.kt: Removed EditText UI (simplified to category buttons only)
   - CleverKeysService.kt: Wires up EmojiSearchManager
+  - Emoji.kt: Enhanced initNameMap() with 500+ emoji name mappings
 
 ### Swipe on Password Fields (#39)
 - ✅ Added option to enable swipe typing on password fields
@@ -132,6 +139,7 @@
 - ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `252d72a6` feat: expand emoji search to 500+ name mappings (#41)
 - `2e3f416b` feat: redesign emoji search to use suggestion bar (#41)
 - `9213de83` feat: settings follow system theme + Intent automation (#35, #70)
 - `0fb56dc0` feat: add Greek language pack + improve keyboard command routing (#68, #30)
