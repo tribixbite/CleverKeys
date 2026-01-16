@@ -16,6 +16,7 @@
 
 **Completed Feature Requests**:
 - #62 ✅ Password manager clipboard exclusion - IMPLEMENTED (2026-01-15)
+- #1134 ✅ Test keyboard field in settings - IMPLEMENTED (2026-01-15)
 
 **Open Feature Requests** (for future consideration):
 - #59 Clipboard delete individual items + timestamps
@@ -43,6 +44,20 @@
 **Settings UI**: Clipboard → "Exclude Password Managers" toggle
 
 **Commit**: `edfac50f feat: add password manager clipboard exclusion`
+
+---
+
+## Test Keyboard Field in Settings - IMPLEMENTED (2026-01-15)
+
+**Feature**: Test keyboard without leaving settings (#1134).
+
+**Implementation**:
+- **SettingsActivity.kt**:
+  - Added `testKeyboardExpanded` and `testKeyboardText` state variables
+  - Added collapsible "⌨️ Test Keyboard" section after search bar
+  - OutlinedTextField with 3-5 lines, placeholder text, Clear button
+
+**Commit**: `39a3214f feat: add test keyboard field in settings`
 
 ---
 
