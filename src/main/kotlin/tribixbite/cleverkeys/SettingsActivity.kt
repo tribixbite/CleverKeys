@@ -346,6 +346,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var advancedSectionExpanded by mutableStateOf(false)
     private var infoSectionExpanded by mutableStateOf(false)
 
+    // Test keyboard field (#1134: test input without leaving settings)
+    private var testKeyboardExpanded by mutableStateOf(false)
+    private var testKeyboardText by mutableStateOf("")
+
     // Settings search
     private var settingsSearchQuery by mutableStateOf("")
     private var showSearchResults by mutableStateOf(false)
@@ -960,6 +964,40 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            // Test Keyboard Section (#1134: test input without leaving settings)
+            CollapsibleSettingsSection(
+                title = "⌨️ Test Keyboard",
+                expanded = testKeyboardExpanded,
+                onExpandChange = { testKeyboardExpanded = it }
+            ) {
+                OutlinedTextField(
+                    value = testKeyboardText,
+                    onValueChange = { testKeyboardText = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Type here to test your keyboard...") },
+                    minLines = 3,
+                    maxLines = 5,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = { testKeyboardText = "" }
+                    ) {
+                        Text("Clear")
                     }
                 }
             }
