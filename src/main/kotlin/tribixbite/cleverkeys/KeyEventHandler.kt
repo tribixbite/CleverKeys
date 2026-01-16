@@ -523,7 +523,8 @@ class KeyEventHandler(
         evaluateMacroLoop(keys, 0, Pointers.Modifiers.EMPTY, autocap.pause())
     }
 
-    /** Evaluate the macro asynchronously to make sure event are processed in the right order. */
+    /** Evaluate the macro asynchronously to make sure events are processed in the right order.
+     * Always applies a delay between keys to avoid race conditions. */
     private fun evaluateMacroLoop(
         keys: Array<KeyValue>,
         i: Int,
@@ -532,7 +533,6 @@ class KeyEventHandler(
     ) {
         var currentI = i
         var currentMods = mods
-        var shouldDelay = false
 
         val kv = KeyModifier.modify(keys[currentI], currentMods)
         if (kv != null) {
@@ -547,36 +547,20 @@ class KeyEventHandler(
                 key_up(kv, currentMods)
                 currentMods = Pointers.Modifiers.EMPTY
             }
-            shouldDelay = waitAfterMacroKey(kv)
         }
 
         currentI++
-        when {
-            currentI >= keys.size -> {
-                // Stop looping
-                autocap.unpause(autocapPaused)
-            }
-            shouldDelay -> {
-                // Add a delay before sending the next key to avoid race conditions
-                // causing keys to be handled in the wrong order. Notably, KeyEvent keys
-                // handling is scheduled differently than the other edit functions.
-                recv.getHandler().postDelayed({
-                    evaluateMacroLoop(keys, currentI, currentMods, autocapPaused)
-                }, 1000 / 30)
-            }
-            else -> {
+        if (currentI >= keys.size) {
+            // Stop looping
+            autocap.unpause(autocapPaused)
+        } else {
+            // Always add a delay before sending the next key to avoid race conditions
+            // causing keys to be handled in the wrong order. KeyEvent handling is
+            // scheduled differently than other edit functions, so consistent delay
+            // ensures proper ordering for all key types.
+            recv.getHandler().postDelayed({
                 evaluateMacroLoop(keys, currentI, currentMods, autocapPaused)
-            }
-        }
-    }
-
-    private fun waitAfterMacroKey(kv: KeyValue): Boolean {
-        return when (kv.getKind()) {
-            KeyValue.Kind.Keyevent,
-            KeyValue.Kind.Editing,
-            KeyValue.Kind.Event -> true
-            KeyValue.Kind.Slider -> moveCursorForceFallback
-            else -> false
+            }, 1000 / 30)
         }
     }
 
