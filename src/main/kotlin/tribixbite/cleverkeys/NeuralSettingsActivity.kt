@@ -63,7 +63,8 @@ class NeuralSettingsActivity : ComponentActivity() {
         loadSavedParameters()
 
         setContent {
-            KeyboardTheme(darkTheme = true) {
+            // #35: Follow system dark/light mode
+            KeyboardTheme {
                 NeuralSettingsScreen()
             }
         }

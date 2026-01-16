@@ -85,7 +85,8 @@ class ClipboardSettingsActivity : ComponentActivity(), SharedPreferences.OnShare
         }
 
         setContent {
-            KeyboardTheme(darkTheme = true) {
+            // #35: Follow system dark/light mode
+            KeyboardTheme {
                 ClipboardSettingsScreen()
             }
         }

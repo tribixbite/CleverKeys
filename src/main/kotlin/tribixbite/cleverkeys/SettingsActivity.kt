@@ -600,7 +600,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
         try {
             setContent {
-                KeyboardTheme(darkTheme = true) {
+                // #35: Follow system dark/light mode instead of forcing dark
+                KeyboardTheme {
                     SettingsScreen()
                 }
             }

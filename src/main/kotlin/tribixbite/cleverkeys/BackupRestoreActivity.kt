@@ -50,6 +50,14 @@ class BackupRestoreActivity : ComponentActivity() {
     companion object {
         private const val TAG = "BackupRestoreActivity"
         const val ACTION_DICTIONARY_IMPORTED = "tribixbite.cleverkeys.ACTION_DICTIONARY_IMPORTED"
+
+        // #70: Intent actions for programmatic backup/restore (Termux, automation)
+        const val ACTION_EXPORT_SETTINGS = "tribixbite.cleverkeys.action.EXPORT_SETTINGS"
+        const val ACTION_IMPORT_SETTINGS = "tribixbite.cleverkeys.action.IMPORT_SETTINGS"
+        const val ACTION_EXPORT_DICTIONARIES = "tribixbite.cleverkeys.action.EXPORT_DICTIONARIES"
+        const val ACTION_IMPORT_DICTIONARIES = "tribixbite.cleverkeys.action.IMPORT_DICTIONARIES"
+        const val ACTION_EXPORT_CLIPBOARD = "tribixbite.cleverkeys.action.EXPORT_CLIPBOARD"
+        const val ACTION_IMPORT_CLIPBOARD = "tribixbite.cleverkeys.action.IMPORT_CLIPBOARD"
     }
 
     // SharedPreferences
@@ -76,8 +84,50 @@ class BackupRestoreActivity : ComponentActivity() {
             return
         }
 
+        // #70: Handle programmatic Intent actions for automation
+        val fileUri = intent.data
+        when (intent.action) {
+            ACTION_EXPORT_SETTINGS -> {
+                if (fileUri != null) {
+                    performExport(fileUri)
+                    return // Don't show UI for headless operation
+                }
+            }
+            ACTION_IMPORT_SETTINGS -> {
+                if (fileUri != null) {
+                    performImport(fileUri)
+                    return
+                }
+            }
+            ACTION_EXPORT_DICTIONARIES -> {
+                if (fileUri != null) {
+                    performExportDictionaries(fileUri)
+                    return
+                }
+            }
+            ACTION_IMPORT_DICTIONARIES -> {
+                if (fileUri != null) {
+                    performImportDictionaries(fileUri)
+                    return
+                }
+            }
+            ACTION_EXPORT_CLIPBOARD -> {
+                if (fileUri != null) {
+                    performExportClipboard(fileUri)
+                    return
+                }
+            }
+            ACTION_IMPORT_CLIPBOARD -> {
+                if (fileUri != null) {
+                    performImportClipboard(fileUri)
+                    return
+                }
+            }
+        }
+
         setContent {
-            KeyboardTheme(darkTheme = true) {
+            // #35: Follow system dark/light mode
+            KeyboardTheme {
                 BackupRestoreScreen()
             }
         }

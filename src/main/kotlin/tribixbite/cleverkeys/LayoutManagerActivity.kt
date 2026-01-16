@@ -45,7 +45,8 @@ class LayoutManagerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            KeyboardTheme(darkTheme = true) {
+            // #35: Follow system dark/light mode
+            KeyboardTheme {
                 Surface(
                     color = MaterialTheme.colorScheme.background,
                     modifier = Modifier.fillMaxSize()

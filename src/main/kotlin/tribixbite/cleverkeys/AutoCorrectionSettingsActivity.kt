@@ -67,7 +67,8 @@ class AutoCorrectionSettingsActivity : ComponentActivity(), SharedPreferences.On
         }
 
         setContent {
-            KeyboardTheme(darkTheme = true) {
+            // #35: Follow system dark/light mode
+            KeyboardTheme {
                 AutoCorrectionSettingsScreen()
             }
         }

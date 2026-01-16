@@ -114,6 +114,18 @@
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
+      <!-- #70: Intent filters for programmatic backup/restore automation (Termux, scripts) -->
+      <intent-filter>
+        <action android:name="tribixbite.cleverkeys.action.EXPORT_SETTINGS"/>
+        <action android:name="tribixbite.cleverkeys.action.IMPORT_SETTINGS"/>
+        <action android:name="tribixbite.cleverkeys.action.EXPORT_DICTIONARIES"/>
+        <action android:name="tribixbite.cleverkeys.action.IMPORT_DICTIONARIES"/>
+        <action android:name="tribixbite.cleverkeys.action.EXPORT_CLIPBOARD"/>
+        <action android:name="tribixbite.cleverkeys.action.IMPORT_CLIPBOARD"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <data android:scheme="file"/>
+        <data android:scheme="content"/>
+      </intent-filter>
     </activity>
 
     <activity android:name="tribixbite.cleverkeys.ShortSwipeCalibrationActivity" android:label="Short Swipe Calibration" android:theme="@style/settingsTheme" android:exported="true" android:directBootAware="true">
