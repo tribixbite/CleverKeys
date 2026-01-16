@@ -75,6 +75,15 @@
       "icon": "language",
       "reviewed": true,
       "version": "v1.1.84"
+    },
+    {
+      "file": "timestamp-keys.md",
+      "title": "Timestamp Keys",
+      "description": "Insert formatted date/time with custom patterns",
+      "category": "Customization",
+      "icon": "calendar",
+      "reviewed": true,
+      "version": "v1.2.9"
     }
   ],
   "categories": [

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timestamp Keys - CleverKeys Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'ck-purple': '#9b59b6',
+                        'ck-purple-dark': '#6b21a8',
+                        'ck-purple-light': '#c39bd3',
+                        'ck-dark': '#0f0f1a',
+                        'ck-surface': '#1a1a2e',
+                        'ck-card': '#242438',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #9b59b6 0%, #c39bd3 50%, #9b59b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-ck-dark text-gray-100 min-h-screen">
+    <!-- Nav -->
+    <nav class="sticky top-0 bg-ck-dark/95 backdrop-blur border-b border-gray-800 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="../" class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-8 h-8 rounded-lg">
+                <span class="font-bold">CleverKeys</span>
+            </a>
+            <div class="flex gap-4">
+                <a href="./" class="text-gray-400 hover:text-white transition-colors">All Specs</a>
+                <a href="../" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="container mx-auto px-6 py-4 pt-20">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="../" class="hover:text-ck-purple">Home</a>
+            <span>/</span>
+            <a href="./" class="hover:text-ck-purple">Specs</a>
+            <span>/</span>
+            <span class="text-gray-300">Timestamp Keys</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="container mx-auto px-6 pb-8">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 text-sm rounded-full" style="background: #e74c3c20; color: #e74c3c">Customization</span>
+            <span class="px-3 py-1 text-sm rounded-full bg-ck-card text-gray-400">v1.2.9</span>
+        </div>
+        <h1 class="text-4xl font-bold gradient-text mb-2">Timestamp Keys</h1>
+        <p class="text-xl text-gray-400">Insert formatted date/time with custom patterns</p>
+    </header>
+
+    <!-- Content -->
+    <main class="container mx-auto px-6 pb-20">
+        <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
+            <h1 class="text-3xl font-bold mb-6 gradient-text">Timestamp Keys Specification</h1>
+
+<p class="mb-4 text-gray-300"><strong>Status</strong>: Implemented</p>
+<p class="mb-4 text-gray-300"><strong>Version</strong>: 1.2.9</p>
+<p class="mb-4 text-gray-300"><strong>Last Updated</strong>: 2026-01-15</p>
+<p class="mb-4 text-gray-300"><strong>GitHub Issue</strong>: #1103</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
+
+<p class="mb-4 text-gray-300">Timestamp keys insert the current date and/or time formatted according to a user-specified pattern when pressed. This allows users to quickly insert dates, times, or combined datetime strings without typing them manually.</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Syntax</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Short Syntax (New Style)</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">timestamp:'pattern'</code></pre>
+
+<p class="mb-4 text-gray-300">Example: <code class="bg-ck-dark px-1 rounded">Date:timestamp:'yyyy-MM-dd'</code> displays "Date" and inserts "2026-01-15"</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Long Syntax (Legacy Style)</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">:timestamp symbol='symbol':'pattern'</code></pre>
+
+<p class="mb-4 text-gray-300">Example: <code class="bg-ck-dark px-1 rounded">:timestamp symbol='📅':'yyyy-MM-dd HH:mm'</code></p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Pattern Format</h3>
+
+<p class="mb-4 text-gray-300">Uses Java DateTimeFormatter patterns:</p>
+
+<p class="mb-4 text-gray-300">| Pattern | Description | Example |</p>
+<p class="mb-4 text-gray-300">|---------|-------------|---------|</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">yyyy</code> | 4-digit year | 2026 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">yy</code> | 2-digit year | 26 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">MM</code> | Month (01-12) | 01 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">MMM</code> | Month abbrev | Jan |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">dd</code> | Day (01-31) | 15 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">HH</code> | Hour 24h (00-23) | 14 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">hh</code> | Hour 12h (01-12) | 02 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">mm</code> | Minute (00-59) | 30 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">ss</code> | Second (00-59) | 45 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">a</code> | AM/PM | PM |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">E</code> | Day of week | Wed |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">EEEE</code> | Full day name | Wednesday |</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Common Examples</h3>
+
+<p class="mb-4 text-gray-300">| Key Definition | Display | Output Example |</p>
+<p class="mb-4 text-gray-300">|---------------|---------|----------------|</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">📅:timestamp:'yyyy-MM-dd'</code> | 📅 | 2026-01-15 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">🕐:timestamp:'HH:mm'</code> | 🕐 | 14:30 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">📆:timestamp:'yyyy-MM-dd HH:mm:ss'</code> | 📆 | 2026-01-15 14:30:45 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">🗓:timestamp:'EEEE, MMMM d, yyyy'</code> | 🗓 | Wednesday, January 15, 2026 |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">⏰:timestamp:'h:mm a'</code> | ⏰ | 2:30 PM |</p>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Key Components</h3>
+
+<p class="mb-4 text-gray-300">| Component | File | Purpose |</p>
+<p class="mb-4 text-gray-300">|-----------|------|---------|</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">Kind.Timestamp</code> | <code class="bg-ck-dark px-1 rounded">KeyValue.kt:126</code> | Enum value for timestamp keys |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">TimestampFormat</code> | <code class="bg-ck-dark px-1 rounded">KeyValue.kt:162-173</code> | Data class holding pattern and symbol |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">makeTimestampKey()</code> | <code class="bg-ck-dark px-1 rounded">KeyValue.kt:460-466</code> | Factory method to create timestamp keys |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">parseTimestampKeydef()</code> | <code class="bg-ck-dark px-1 rounded">KeyValueParser.kt:121-127</code> | Parser for short syntax |</p>
+<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">handleTimestampKey()</code> | <code class="bg-ck-dark px-1 rounded">KeyEventHandler.kt:377-401</code> | Handler that formats and inserts time |</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">API Compatibility</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>API 26+ (Android 8.0+)</strong>: Uses <code class="bg-ck-dark px-1 rounded">java.time.LocalDateTime</code> and <code class="bg-ck-dark px-1 rounded">DateTimeFormatter</code></li>
+<li class="ml-4">&#8226; <strong>API < 26</strong>: Falls back to <code class="bg-ck-dark px-1 rounded">java.text.SimpleDateFormat</code> with <code class="bg-ck-dark px-1 rounded">java.util.Date</code></li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Error Handling</h3>
+
+<p class="mb-4 text-gray-300">If the pattern is invalid:</p>
+<ul class="mb-4 space-y-1"><li class="ml-4">1. Logs a warning: <code class="bg-ck-dark px-1 rounded">"Invalid timestamp format: [pattern]"</code></li>
+<li class="ml-4">2. Falls back to inserting the pattern string itself</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Usage in Custom Layouts</h2>
+
+<p class="mb-4 text-gray-300">Add to <code class="bg-ck-dark px-1 rounded">custom_extra_keys</code> setting or custom layout XML:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">timestamp:'yyyy-MM-dd'</code></pre>
+
+<p class="mb-4 text-gray-300">Or with custom symbol:</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">📅:timestamp:'yyyy-MM-dd'</code></pre>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Testing</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4">1. Add timestamp key to extra keys</li>
+<li class="ml-4">2. Press key - should insert current formatted time</li>
+<li class="ml-4">3. Test various patterns (date-only, time-only, combined)</li>
+<li class="ml-4">4. Test on API < 26 device for fallback behavior</li>
+<li class="ml-4">5. Test invalid pattern handling</li>
+</ul>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Related</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <a href="./short-swipe-customization.md" class="text-ck-purple hover:underline">Short Swipe Customization</a> - For adding timestamp to key gestures</li>
+<li class="ml-4">&#8226; <a href="./layout-system.md" class="text-ck-purple hover:underline">Custom Layouts</a> - For adding to custom layouts</li>
+<li class="ml-4">&#8226; <a href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html" class="text-ck-purple hover:underline">Java DateTimeFormatter</a></li>
+</ul>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm border-t border-gray-800">
+        <p>CleverKeys Documentation - Generated from specs</p>
+    </footer>
+</body>
+</html>
