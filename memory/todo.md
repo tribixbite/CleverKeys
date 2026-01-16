@@ -107,8 +107,13 @@
 - #52 MessageEase layout contribution
 - #50 Swedish language support
 - #49 Turkish language support
-- #48 Password Manager autofill support
 - #42 Integrate add-to-dictionary to typing
+
+**Already Implemented (needs user documentation)**:
+- #48 ✅ Password Manager autofill - ALREADY IMPLEMENTED (b769b0fc)
+  - Requires Android 11+ (API 30)
+  - Password manager must support inline suggestions
+  - InlineAutofillUtils.kt handles display in SuggestionBar
 
 ---
 
