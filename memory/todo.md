@@ -126,11 +126,11 @@
 - #68 ✅ Greek dictionary request - Feature request tracked
 - #46 ✅ Vibration feedback toggle - FIXED: master haptic toggle now works (ef7369a0)
 
-**Open CleverKeys Issues**:
-- #61 Active multi-language switching
-- #52 MessageEase layout contribution
-- #50 Swedish language support
-- #49 Turkish language support
+**Open CleverKeys Issues** (commented with guidance):
+- #61 Active multi-language switching - Feature request, discussed implementation path
+- #52 MessageEase layout contribution - Provided gesture tuning tips, offered to add layout
+- #50 Swedish language support - Pointed to wiki: scripts/build_langpack.py with wordfreq
+- #49 Turkish language support - Pointed to wiki: scripts/build_langpack.py with wordfreq
 
 **Recently Fixed**:
 - #42 ✅ Tap-to-add dictionary - FIXED (7c4054d4)
