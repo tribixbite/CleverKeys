@@ -5,5 +5,6 @@
     <View android:id="@+id/clipboard_entry_expand" style="@style/clipboardEntryButton" android:background="@drawable/ic_expand_more" android:visibility="gone" android:layout_marginRight="4dp"/>
     <View android:id="@+id/clipboard_entry_paste" style="@style/clipboardEntryButton" android:background="@drawable/ic_clipboard_paste"/>
     <View android:id="@+id/clipboard_entry_addpin" style="@style/clipboardEntryButton" android:background="@drawable/ic_clipboard_save"/>
+    <View android:id="@+id/clipboard_entry_delete" style="@style/clipboardEntryButton" android:background="@drawable/ic_delete"/>
   </LinearLayout>
 </LinearLayout>

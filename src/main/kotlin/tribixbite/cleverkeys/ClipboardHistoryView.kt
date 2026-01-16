@@ -95,6 +95,15 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         pinView?.refresh_pinned_items()
     }
 
+    /** Delete the specified entry from clipboard history. */
+    fun delete_entry(pos: Int) {
+        val clip = filteredHistory[pos].content
+        service?.removeHistoryEntry(clip)
+        // Clear expanded state for deleted position
+        expandedStates.remove(pos)
+        update_data()
+    }
+
     /** Send the specified entry to the editor. */
     fun paste_entry(pos: Int) {
         ClipboardHistoryService.paste(filteredHistory[pos].content)
@@ -192,6 +201,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             }
             view.findViewById<View>(R.id.clipboard_entry_paste).setOnClickListener {
                 paste_entry(pos)
+            }
+            view.findViewById<View>(R.id.clipboard_entry_delete).setOnClickListener {
+                delete_entry(pos)
             }
 
             return view
