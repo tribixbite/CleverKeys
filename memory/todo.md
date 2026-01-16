@@ -23,8 +23,10 @@
 - ✅ Added Android version fixes and test keyboard to troubleshooting (680f3ea8)
 - ✅ Improved circumflex and accents documentation for all layouts (935dd25b)
 - ✅ Fixed GitHub repo references to tribixbite/CleverKeys (026dd719)
+- ✅ Added transparent background fix to troubleshooting for #51 (dbc91c2b)
 
 **Recent Commits**:
+- `dbc91c2b` docs: add transparent background fix to troubleshooting (#51)
 - `026dd719` fix: correct GitHub repo references to tribixbite/CleverKeys
 - `935dd25b` docs: improve circumflex and accents documentation
 - `680f3ea8` docs: add Android version fixes and test keyboard to troubleshooting
