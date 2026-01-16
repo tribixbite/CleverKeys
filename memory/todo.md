@@ -1,6 +1,6 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-15
+**Last Updated**: 2026-01-16
 **Status**: v1.2.9 - Timestamp key feature + Android 15 fixes
 
 ---
@@ -26,8 +26,14 @@
 - ✅ Added transparent background fix to troubleshooting for #51 (dbc91c2b)
 - ✅ Added older device crash troubleshooting for #55 (b9b02277)
 - ✅ Fixed build_all_languages.py helper script validation for #67 (e20cc275)
+- ✅ Regenerated common-issues HTML (5126256a)
+- ✅ Updated copyright year to 2026 (afa2c49c)
+- ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `72411d3d` docs: add custom language pack creation instructions to wiki
+- `afa2c49c` chore: update copyright year to 2026
+- `5126256a` docs: regenerate common-issues HTML with older device fix
 - `e20cc275` fix: add helper script validation to build_all_languages.py (#67)
 - `b9b02277` docs: add troubleshooting for older device crashes (#55)
 - `dbc91c2b` docs: add transparent background fix to troubleshooting (#51)
