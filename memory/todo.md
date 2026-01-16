@@ -7,6 +7,13 @@
 
 ## Session Progress (2026-01-16)
 
+### Specs Rewrite for LLM Agents
+- ✅ Rewrote 25 docs/specs files for LLM coding agent consumption
+- ✅ Removed: dates, TODOs, sprints, bugs, verification checklists
+- ✅ Kept: architecture diagrams, code examples, config tables, key files
+- ✅ Deleted 6 obsolete meta files (CORE_LOGIC_REFACTORING_PLAN, TEST_STATUS_REPORT, test-suite, ui-material3-modernization, web_demo_flaws v1/v2)
+- ✅ Net result: -3933 lines removed (f697f528, 3603fc01, 43fc91ee, 832dd0b2)
+
 ### Wiki Documentation Audit & Fixes
 - ✅ Fixed clipboard-history.md: removed non-existent "paste key", fixed access method
 - ✅ Fixed themes.md: removed non-existent "System" theme, corrected theme names
@@ -44,6 +51,10 @@
 - ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `f697f528` docs(specs): complete spec rewrite for LLM agents
+- `3603fc01` docs(specs): rewrite 4 more specs for LLM agent audience
+- `43fc91ee` docs(specs): rewrite layout, neural, dictionary, termux specs
+- `832dd0b2` docs(specs): rewrite 4 more specs for LLM agent audience
 - `93cbfb27` chore: regenerate wiki HTML with corrected documentation
 - `4e1afd78` fix: correct wiki documentation errors
 - `72411d3d` docs: add custom language pack creation instructions to wiki
