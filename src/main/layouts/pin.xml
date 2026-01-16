@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<keyboard width="6.0" bottom_row="false">
+<!-- Removed explicit width="6.0" to auto-compute from row content (5.0 units) -->
+<!-- This makes keys 20% larger by eliminating right-side padding -->
+<keyboard bottom_row="false">
   <row>
     <key shift="1.0" key0="1"/>
     <key key0="2" indication="ABC"/>
