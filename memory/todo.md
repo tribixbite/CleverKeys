@@ -16,8 +16,12 @@
 - ✅ Updated ROADMAP.md with v1.2.4-v1.2.9 features (474f84ac)
 - ✅ Added command-palette to wiki TABLE_OF_CONTENTS (b9e67308)
 - ✅ Updated first-time-setup with test keyboard tip (546c54a0)
+- ✅ Regenerated wiki HTML pages (7f9c92de)
+- ✅ Updated specs README with v1.2.x status (136325a8)
 
 **Recent Commits**:
+- `136325a8` docs: update specs README with v1.2.x status
+- `7f9c92de` docs: regenerate wiki HTML pages
 - `546c54a0` docs: mention test keyboard field in first-time-setup guide
 - `b9e67308` docs: add command-palette to wiki table of contents
 - `474f84ac` docs: update ROADMAP with v1.2.4-v1.2.9 features
