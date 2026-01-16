@@ -8,12 +8,21 @@
 ## Session Progress (2026-01-16)
 
 ### Emoji Search by Name (#41)
-- ✅ Implemented emoji search functionality in emoji pane
-- **Emoji.kt**: Added `searchByName()` method with 100+ emoji name mappings
-- **EmojiGridView.kt**: Added `searchEmojis()` method and `GROUP_SEARCH` constant
-- **EmojiGroupButtonsBar.kt**: Added search button (🔍) and search input field
-- Tap 🔍 to toggle search mode, type to filter emojis by name
-- Supports common names like "smile", "heart", "fire", "pizza", etc.
+- ✅ v1: Initial implementation with EditText in emoji pane (633d6548)
+- ✅ v2: Redesigned to use suggestion bar instead (2e3f416b)
+- **EmojiSearchManager.kt**: New class managing search state with provider functions
+- **Auto-detect context word**: When opening emoji pane, extracts word before cursor
+  - If word exists (no trailing space): immediately shows search results
+  - If no word or space after: shows "Type to search emoji..."
+- **Suggestion bar display**: Shows "Search: '[query]'" during typing
+- **Keyboard routing**: All typing goes to search query when emoji pane visible
+- **Fuzzy matching**: Case-insensitive partial name matching via Emoji.searchByName()
+- Files changed:
+  - KeyEventHandler.kt: Added IReceiver emoji search interface methods
+  - KeyboardReceiver.kt: Implements emoji search mode routing
+  - SuggestionBar.kt: Added showEmojiSearchStatus/clearEmojiSearchStatus
+  - EmojiGroupButtonsBar.kt: Removed EditText UI (simplified to category buttons only)
+  - CleverKeysService.kt: Wires up EmojiSearchManager
 
 ### Swipe on Password Fields (#39)
 - ✅ Added option to enable swipe typing on password fields
@@ -123,6 +132,7 @@
 - ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `2e3f416b` feat: redesign emoji search to use suggestion bar (#41)
 - `9213de83` feat: settings follow system theme + Intent automation (#35, #70)
 - `0fb56dc0` feat: add Greek language pack + improve keyboard command routing (#68, #30)
 - `a9dbc7fb` fix: add TIMESTAMP case to CommandPaletteDialog when expression
