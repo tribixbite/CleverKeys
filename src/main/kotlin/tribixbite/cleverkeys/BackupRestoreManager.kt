@@ -229,6 +229,7 @@ class BackupRestoreManager(private val context: Context) {
         "swipe_typing_enabled" to Defaults.SWIPE_TYPING_ENABLED,
         "word_prediction_enabled" to Defaults.WORD_PREDICTION_ENABLED,
         "suggestion_bar_opacity" to Defaults.SUGGESTION_BAR_OPACITY,
+        "show_exact_typed_word" to Defaults.SHOW_EXACT_TYPED_WORD,  // #42: Tap-to-add
         "context_aware_predictions_enabled" to Defaults.CONTEXT_AWARE_PREDICTIONS_ENABLED,
         "personalized_learning_enabled" to Defaults.PERSONALIZED_LEARNING_ENABLED,
         "learning_aggression" to Defaults.LEARNING_AGGRESSION,

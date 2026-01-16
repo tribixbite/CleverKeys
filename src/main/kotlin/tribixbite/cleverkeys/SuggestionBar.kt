@@ -261,6 +261,8 @@ class SuggestionBar : LinearLayout {
                 // Check if this is a centered prompt (single dict_add: suggestion)
                 val isDictAddPrompt = suggestion.startsWith("dict_add:")
                 val isCenteredPrompt = isDictAddPrompt && currentSuggestions.size == 1
+                // #42: Check if this is an exact typed word (tap to add)
+                val isExactAddPrompt = suggestion.startsWith("exact_add:")
 
                 // Transform special prefixes for display
                 val displayText = when {
@@ -268,6 +270,11 @@ class SuggestionBar : LinearLayout {
                     isDictAddPrompt -> {
                         val wordToAdd = suggestion.removePrefix("dict_add:")
                         "Add '$wordToAdd' to dictionary?"
+                    }
+                    // #42: Exact typed word with + indicator (exact_add:word -> +word)
+                    isExactAddPrompt -> {
+                        val exactWord = suggestion.removePrefix("exact_add:")
+                        "+$exactWord"
                     }
                     // Debug scores mode
                     showDebugScores && i < currentScores.size && currentScores.isNotEmpty() -> {
@@ -289,6 +296,12 @@ class SuggestionBar : LinearLayout {
                         gravity = Gravity.CENTER
                         typeface = Typeface.DEFAULT_BOLD
                         setTextColor(theme?.activatedColor?.takeIf { it != 0 } ?: Color.CYAN)
+                    }
+                    // #42: Style exact_add prompt (italic, sublabel color for "tap to add" indicator)
+                    else if (isExactAddPrompt) {
+                        typeface = Typeface.DEFAULT_BOLD
+                        setTypeface(typeface, Typeface.BOLD_ITALIC)
+                        setTextColor(theme?.subLabelColor?.takeIf { it != 0 } ?: Color.LTGRAY)
                     }
                     // Highlight first suggestion with activated color
                     else if (i == 0) {

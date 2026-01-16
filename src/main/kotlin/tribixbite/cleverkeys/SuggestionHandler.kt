@@ -294,6 +294,14 @@ class SuggestionHandler(
             return
         }
 
+        // #42: Check if this is an exact typed word tap (exact_add: prefix)
+        // Commits the word and adds it to dictionary
+        if (word.startsWith("exact_add:")) {
+            val exactWord = word.removePrefix("exact_add:")
+            handleExactWordAdd(exactWord, ic, editorInfo)
+            return
+        }
+
         // Check if this is an autocorrect undo (user tapped the original word after autocorrect)
         val lastAutocorrectOriginal = contextTracker.getLastAutocorrectOriginalWord()
         if (contextTracker.getLastCommitSource() == PredictionSource.AUTOCORRECT &&
@@ -588,6 +596,61 @@ class SuggestionHandler(
 
         // Show confirmation message (clearAfter=true so bar clears instead of restoring prompt)
         suggestionBar?.showTemporaryMessage("Added '$wordToAdd' to dictionary", 2000L, clearAfter = true)
+    }
+
+    /**
+     * #42: Handle exact typed word tap: commit the word, add to dictionary, and insert trailing space.
+     * Unlike handleAddToDictionary, this is used during typing (not after word completion).
+     *
+     * @param exactWord The exact word user typed that they want to add
+     * @param ic InputConnection for text manipulation
+     * @param editorInfo Editor info for app detection
+     */
+    private fun handleExactWordAdd(exactWord: String, ic: InputConnection?, editorInfo: EditorInfo?) {
+        if (exactWord.isEmpty()) {
+            Log.w(TAG, "EXACT ADD: Empty word, ignoring")
+            return
+        }
+
+        Log.d(TAG, "EXACT ADD: Committing and adding '$exactWord' to dictionary")
+
+        // First, delete the partial word that was typed (since we're replacing it)
+        val currentWord = contextTracker.getCurrentWord()
+        if (currentWord.isNotEmpty() && ic != null) {
+            // Detect Termux
+            val inTermuxApp = try {
+                editorInfo?.packageName == "com.termux"
+            } catch (e: Exception) {
+                false
+            }
+
+            if (inTermuxApp) {
+                // Termux: Use backspace key events
+                repeat(currentWord.length) {
+                    keyeventhandler.send_key_down_up(android.view.KeyEvent.KEYCODE_DEL, 0)
+                }
+            } else {
+                ic.deleteSurroundingText(currentWord.length, 0)
+            }
+        }
+
+        // Commit the exact word with trailing space
+        ic?.commitText("$exactWord ", 1)
+
+        // Add to user dictionary
+        predictionCoordinator.getDictionaryManager()?.addUserWord(exactWord)
+        predictionCoordinator.refreshCustomWords()
+
+        // Update context with the committed word
+        updateContext(exactWord)
+
+        // Reset state
+        contextTracker.clearCurrentWord()
+        predictionCoordinator.getWordPredictor()?.reset()
+        suggestionBar?.clearSuggestions()
+
+        // Show confirmation
+        suggestionBar?.showTemporaryMessage("Added '$exactWord' to dictionary", 1500L, clearAfter = true)
     }
 
     /**
@@ -923,9 +986,42 @@ class SuggestionHandler(
                     mergedWords
                 }
 
+                // #42: Add exact typed word option if enabled and word is not in predictions
+                // This allows users to tap the exact typed word to add it to dictionary
+                val finalWords: List<String>
+                val finalScores: List<Int>
+                if (config.show_exact_typed_word && partial.length >= 2) {
+                    // Check if the exact partial (with capitalization) is already in predictions
+                    val exactTyped = if (shouldCapitalize) {
+                        partial.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString()
+                        }
+                    } else {
+                        partial
+                    }
+                    val exactLower = exactTyped.lowercase()
+                    val alreadyInPredictions = transformedWords.any { it.lowercase() == exactLower }
+                    val isUserWord = predictionCoordinator.getDictionaryManager()?.isUserWord(exactTyped) ?: false
+                    val isInDictionary = predictionCoordinator.getWordPredictor()?.isInDictionary(exactTyped) ?: true
+
+                    if (!alreadyInPredictions && !isUserWord && !isInDictionary) {
+                        // Add exact typed word at the end with exact_add: prefix
+                        // Using end position so it doesn't displace the best prediction
+                        finalWords = transformedWords + "exact_add:$exactTyped"
+                        finalScores = mergedScores + 0  // Low score since it's at the end
+                        Log.d(TAG, "EXACT ADD: Added '$exactTyped' as tap-to-add option")
+                    } else {
+                        finalWords = transformedWords
+                        finalScores = mergedScores
+                    }
+                } else {
+                    finalWords = transformedWords
+                    finalScores = mergedScores
+                }
+
                 // Post result to UI thread
                 // v1.2.6 FIX: Check if task was cancelled or special prompt is active
-                if (transformedWords.isNotEmpty() && suggestionBar != null &&
+                if (finalWords.isNotEmpty() && suggestionBar != null &&
                     !Thread.currentThread().isInterrupted && !specialPromptActive) {
                     suggestionBar?.post {
                         // v1.2.6: Skip if special prompt became active while queued
@@ -935,7 +1031,7 @@ class SuggestionHandler(
                         suggestionBar?.let { bar ->
                             bar.setShowDebugScores(config.swipe_show_debug_scores)
                             // v1.2.0: Use merged scores that include contraction scores
-                            bar.setSuggestionsWithScores(transformedWords, mergedScores)
+                            bar.setSuggestionsWithScores(finalWords, finalScores)
                         }
                     }
                 }

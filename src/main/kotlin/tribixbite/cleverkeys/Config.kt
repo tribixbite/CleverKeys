@@ -140,6 +140,7 @@ object Defaults {
     const val SWIPE_TYPING_ENABLED = true
     const val WORD_PREDICTION_ENABLED = true
     const val SUGGESTION_BAR_OPACITY = 80
+    const val SHOW_EXACT_TYPED_WORD = true  // #42: Show exact typed string as tap-to-add-to-dictionary option
     const val CONTEXT_AWARE_PREDICTIONS_ENABLED = true
     const val PERSONALIZED_LEARNING_ENABLED = true
     const val LEARNING_AGGRESSION = "BALANCED"
@@ -374,6 +375,7 @@ class Config private constructor(
     @JvmField var clipboard_exclude_password_managers = true  // Skip clipboard from password managers
     @JvmField var swipe_typing_enabled = true  // Default to enabled for CleverKeys
     @JvmField var swipe_show_debug_scores = false
+    @JvmField var show_exact_typed_word = true  // #42: Tap-to-add exact typed word to dictionary
     @JvmField var word_prediction_enabled = false
     @JvmField var suggestion_bar_opacity = 0
 
@@ -620,6 +622,7 @@ class Config private constructor(
 
         swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
         swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", Defaults.SWIPE_SHOW_DEBUG_SCORES)
+        show_exact_typed_word = _prefs.getBoolean("show_exact_typed_word", Defaults.SHOW_EXACT_TYPED_WORD)
         word_prediction_enabled = _prefs.getBoolean("word_prediction_enabled", Defaults.WORD_PREDICTION_ENABLED)
         suggestion_bar_opacity = safeGetInt(_prefs, "suggestion_bar_opacity", Defaults.SUGGESTION_BAR_OPACITY)
 
