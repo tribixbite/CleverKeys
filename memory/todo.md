@@ -18,8 +18,10 @@
 - ✅ Updated first-time-setup with test keyboard tip (546c54a0)
 - ✅ Regenerated wiki HTML pages (7f9c92de)
 - ✅ Updated specs README with v1.2.x status (136325a8)
+- ✅ Updated README.md with v1.2.x features and documentation section (b68b8b19)
 
 **Recent Commits**:
+- `b68b8b19` docs: add v1.2.x features and documentation section to README
 - `136325a8` docs: update specs README with v1.2.x status
 - `7f9c92de` docs: regenerate wiki HTML pages
 - `546c54a0` docs: mention test keyboard field in first-time-setup guide
