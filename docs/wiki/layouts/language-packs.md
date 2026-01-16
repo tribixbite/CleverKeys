@@ -145,6 +145,53 @@ A: Some languages are still in development. Check back for updates or request su
 
 A: No, English is included by default. You can download enhanced English for a larger dictionary.
 
+## Creating Custom Language Packs
+
+For languages not yet available (Swedish, Turkish, etc.), you can create your own:
+
+### Using Python Scripts
+
+```bash
+# Navigate to scripts directory
+cd scripts/
+
+# Option 1: Generate from wordfreq (requires Python wordfreq package)
+pip install wordfreq
+python build_langpack.py --lang sv --output langpack-sv.zip
+
+# Option 2: Build from custom word list
+# Create a CSV file: word,frequency (one per line)
+python build_dictionary.py --input my_words.csv --output custom.bin
+```
+
+### Scripts Available
+
+| Script | Purpose |
+|--------|---------|
+| `build_langpack.py` | Create .zip language pack from wordfreq |
+| `build_dictionary.py` | Build binary dictionary from CSV |
+| `build_all_languages.py` | Batch build all supported languages |
+| `get_wordlist.py` | Extract top N words from wordfreq |
+
+### Language Pack Structure
+
+```
+langpack-{lang}.zip
+├── {lang}_enhanced.bin    # Binary dictionary
+├── {lang}_enhanced.json   # Human-readable word list
+└── manifest.json          # Metadata
+```
+
+### Supported by wordfreq
+
+Languages available through wordfreq include:
+- European: Swedish (sv), Norwegian (nb), Danish (da), Finnish (fi), Polish (pl), Czech (cs)
+- Asian: Japanese (ja), Korean (ko), Chinese (zh)
+- Other: Russian (ru), Arabic (ar), Hebrew (he), Hindi (hi), Turkish (tr)
+
+> [!TIP]
+> See the [README](https://github.com/tribixbite/CleverKeys#creating-custom-language-packs) for detailed instructions.
+
 ## Related Features
 
 - [Adding Layouts](adding-layouts.md) - Use downloaded layouts

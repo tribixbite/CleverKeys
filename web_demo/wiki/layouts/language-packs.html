@@ -215,6 +215,48 @@
 
 <p class="mb-4 text-gray-300 leading-relaxed">A: No, English is included by default. You can download enhanced English for a larger dictionary.</p>
 
+<h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Creating Custom Language Packs</h2>
+
+<p class="mb-4 text-gray-300 leading-relaxed">For languages not yet available (Swedish, Turkish, etc.), you can create your own:</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Using Python Scripts</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-bash"># Navigate to scripts directory
+<p class="mb-4 text-gray-300 leading-relaxed">cd scripts/</p>
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Option 1: Generate from wordfreq (requires Python wordfreq package)</h1>
+<p class="mb-4 text-gray-300 leading-relaxed">pip install wordfreq</p>
+<p class="mb-4 text-gray-300 leading-relaxed">python build_langpack.py --lang sv --output langpack-sv.zip</p>
+
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Option 2: Build from custom word list</h1>
+<h1 class="text-3xl font-bold mb-6 gradient-text-wiki">Create a CSV file: word,frequency (one per line)</h1>
+<p class="mb-4 text-gray-300 leading-relaxed">python build_dictionary.py --input my_words.csv --output custom.bin</code></pre></p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Scripts Available</h3>
+
+<table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Script</td><td class="px-4 py-2 border-t border-gray-700">Purpose</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">build_langpack.py</code></td><td class="px-4 py-2 border-t border-gray-700">Create .zip language pack from wordfreq</td></tr></p>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">build_dictionary.py</code></td><td class="px-4 py-2 border-t border-gray-700">Build binary dictionary from CSV</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">build_all_languages.py</code></td><td class="px-4 py-2 border-t border-gray-700">Batch build all supported languages</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">get_wordlist.py</code></td><td class="px-4 py-2 border-t border-gray-700">Extract top N words from wordfreq</td></tr>
+<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Language Pack Structure</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto mb-4"><code class="language-text">langpack-{lang}.zip
+<p class="mb-4 text-gray-300 leading-relaxed">├── {lang}_enhanced.bin    # Binary dictionary</p>
+<p class="mb-4 text-gray-300 leading-relaxed">├── {lang}_enhanced.json   # Human-readable word list</p>
+<p class="mb-4 text-gray-300 leading-relaxed">└── manifest.json          # Metadata</code></pre></p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">Supported by wordfreq</h3>
+
+<p class="mb-4 text-gray-300 leading-relaxed">Languages available through wordfreq include:</p>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; European: Swedish (sv), Norwegian (nb), Danish (da), Finnish (fi), Polish (pl), Czech (cs)</li>
+<li class="ml-4 text-gray-300">&#8226; Asian: Japanese (ja), Korean (ko), Chinese (zh)</li>
+<li class="ml-4 text-gray-300">&#8226; Other: Russian (ru), Arabic (ar), Hebrew (he), Hindi (hi), Turkish (tr)</li>
+</ul>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">[!TIP]</blockquote>
+<blockquote class="border-l-4 border-green-500 pl-4 py-2 my-4 bg-ck-card rounded-r text-gray-300">See the <a href="https://github.com/tribixbite/CleverKeys#creating-custom-language-packs" class="text-green-400 hover:underline">README</a> for detailed instructions.</blockquote>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Related Features</h2>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <a href="adding-layouts.html" class="text-green-400 hover:underline">Adding Layouts</a> - Use downloaded layouts</li>
