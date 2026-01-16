@@ -72,13 +72,16 @@
 - **KeyValueParser.kt**: Added `timestamp:` prefix parsing + `:timestamp` kind in legacy syntax
 - **KeyEventHandler.kt**: Added `handleTimestampKey()` using DateTimeFormatter (API 26+) with SimpleDateFormat fallback
 
-**Common Patterns**:
-| Pattern | Example Output |
-|---------|---------------|
-| `yyyy-MM-dd` | 2026-01-15 |
-| `HH:mm:ss` | 14:30:45 |
-| `yyyy-MM-dd HH:mm` | 2026-01-15 14:30 |
-| `EEEE, MMMM d` | Wednesday, January 15 |
+**Pre-defined Keys**:
+| Key Name | Output |
+|----------|--------|
+| `timestamp_date` | 2026-01-15 |
+| `timestamp_time` | 14:30 |
+| `timestamp_datetime` | 2026-01-15 14:30 |
+| `timestamp_date_long` | Wednesday, January 15, 2026 |
+| `timestamp_iso` | 2026-01-15T14:30:45 |
+
+**Custom Patterns**: Use `timestamp:'pattern'` with DateTimeFormatter syntax
 
 **Spec**: `docs/specs/timestamp-keys.md`
 
