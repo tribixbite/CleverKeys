@@ -7,6 +7,15 @@
 
 ## Session Progress (2026-01-16)
 
+### Swipe on Password Fields (#39)
+- ✅ Added option to enable swipe typing on password fields
+- **Config.kt**: Added `SWIPE_ON_PASSWORD_FIELDS` default (false) and `swipe_on_password_fields` field
+- **SuggestionBar.kt**: Added `allowSwipeInPasswordMode` flag and `setAllowSwipeInPasswordMode()` method
+- **SuggestionHandler.kt**: Modified `handlePredictionResults()` to allow swipe in password mode when enabled
+- **CleverKeysService.kt**: Wire up setting from config when entering password field
+- **SettingsActivity.kt**: Added UI toggle in Neural Prediction section
+- **BackupRestoreManager.kt**: Added setting for backup/restore
+
 ### Vibration Toggle Fix (#46)
 - ✅ Fixed vibration feedback toggle not working (ef7369a0)
 - Issue: Settings saved to "vibration_enabled" but Config read "vibrate_custom"

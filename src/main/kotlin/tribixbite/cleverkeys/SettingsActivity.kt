@@ -169,6 +169,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Phase 1: Expose existing Config.kt settings
     private var swipeTypingEnabled by mutableStateOf(true)  // Master switch for swipe typing (default ON for CleverKeys)
+    private var swipeOnPasswordFields by mutableStateOf(false)  // #39: Allow swipe on password fields
     private var wordPredictionEnabled by mutableStateOf(true)  // Match Config.kt default
     private var suggestionBarOpacity by mutableStateOf(90)
     private var autoCorrectEnabled by mutableStateOf(true)
@@ -1310,6 +1311,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 )
 
                 if (swipeTypingEnabled) {
+                    // #39: Option to enable swipe typing on password fields
+                    SettingsSwitch(
+                        title = "Swipe on Password Fields",
+                        description = "Enable swipe typing even in password fields. Predictions will be shown but individual typed characters remain hidden.",
+                        checked = swipeOnPasswordFields,
+                        onCheckedChange = {
+                            swipeOnPasswordFields = it
+                            saveSetting("swipe_on_password_fields", it)
+                        }
+                    )
+
                     SettingsSlider(
                         title = stringResource(R.string.settings_neural_beam_width_title),
                         description = stringResource(R.string.settings_neural_beam_width_desc),
@@ -4255,6 +4267,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private fun loadCurrentSettings() {
         // Swipe typing master switch
         swipeTypingEnabled = prefs.getSafeBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
+        swipeOnPasswordFields = prefs.getSafeBoolean("swipe_on_password_fields", Defaults.SWIPE_ON_PASSWORD_FIELDS)
 
         // Neural prediction settings
         beamWidth = prefs.getSafeInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)

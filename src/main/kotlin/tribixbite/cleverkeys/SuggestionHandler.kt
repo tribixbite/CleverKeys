@@ -188,8 +188,8 @@ class SuggestionHandler(
         editorInfo: EditorInfo?,
         resources: Resources
     ) {
-        // Skip predictions in password mode
-        if (isPasswordMode) {
+        // Skip predictions in password mode, unless swipe_on_password_fields is enabled (#39)
+        if (isPasswordMode && !config.swipe_on_password_fields) {
             return
         }
 

@@ -138,6 +138,7 @@ object Defaults {
 
     // Word prediction
     const val SWIPE_TYPING_ENABLED = true
+    const val SWIPE_ON_PASSWORD_FIELDS = false  // #39: Reenable swipe typing on password fields
     const val WORD_PREDICTION_ENABLED = true
     const val SUGGESTION_BAR_OPACITY = 80
     const val SHOW_EXACT_TYPED_WORD = true  // #42: Show exact typed string as tap-to-add-to-dictionary option
@@ -374,6 +375,7 @@ class Config private constructor(
     @JvmField var clipboard_size_limit_mb = 0
     @JvmField var clipboard_exclude_password_managers = true  // Skip clipboard from password managers
     @JvmField var swipe_typing_enabled = true  // Default to enabled for CleverKeys
+    @JvmField var swipe_on_password_fields = false  // #39: Reenable swipe typing on password fields
     @JvmField var swipe_show_debug_scores = false
     @JvmField var show_exact_typed_word = true  // #42: Tap-to-add exact typed word to dictionary
     @JvmField var word_prediction_enabled = false
@@ -621,6 +623,7 @@ class Config private constructor(
         clipboard_exclude_password_managers = _prefs.getBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
 
         swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
+        swipe_on_password_fields = _prefs.getBoolean("swipe_on_password_fields", Defaults.SWIPE_ON_PASSWORD_FIELDS)
         swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", Defaults.SWIPE_SHOW_DEBUG_SCORES)
         show_exact_typed_word = _prefs.getBoolean("show_exact_typed_word", Defaults.SHOW_EXACT_TYPED_WORD)
         word_prediction_enabled = _prefs.getBoolean("word_prediction_enabled", Defaults.WORD_PREDICTION_ENABLED)

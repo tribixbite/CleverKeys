@@ -227,6 +227,7 @@ class BackupRestoreManager(private val context: Context) {
 
         // Word prediction
         "swipe_typing_enabled" to Defaults.SWIPE_TYPING_ENABLED,
+        "swipe_on_password_fields" to Defaults.SWIPE_ON_PASSWORD_FIELDS,  // #39
         "word_prediction_enabled" to Defaults.WORD_PREDICTION_ENABLED,
         "suggestion_bar_opacity" to Defaults.SUGGESTION_BAR_OPACITY,
         "show_exact_typed_word" to Defaults.SHOW_EXACT_TYPED_WORD,  // #42: Tap-to-add

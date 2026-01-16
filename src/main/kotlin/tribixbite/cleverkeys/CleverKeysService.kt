@@ -669,6 +669,8 @@ class CleverKeysService : InputMethodService(),
             val isPasswordField = SuggestionBar.isPasswordField(info)
             _suggestionBar?.setPasswordMode(isPasswordField)
             _suggestionHandler?.setPasswordMode(isPasswordField)
+            // #39: Allow swipe predictions in password fields if enabled
+            _suggestionBar?.setAllowSwipeInPasswordMode(_config?.swipe_on_password_fields ?: false)
             // Wire up InputConnectionProvider for accurate password text reading
             // This enables the eye toggle to show actual field content even after cursor moves
             _suggestionBar?.setInputConnectionProvider { currentInputConnection }

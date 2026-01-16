@@ -43,6 +43,7 @@ class SuggestionBar : LinearLayout {
     // Password mode properties
     private var isPasswordMode = false
     private var isPasswordVisible = false
+    private var allowSwipeInPasswordMode = false  // #39: Allow swipe predictions in password fields
     private var currentPasswordText = StringBuilder()
     private var passwordContainer: RelativeLayout? = null
     private var passwordTextView: TextView? = null
@@ -225,8 +226,8 @@ class SuggestionBar : LinearLayout {
      * Update the displayed suggestions with scores
      */
     fun setSuggestionsWithScores(suggestions: List<String>?, scores: List<Int>?) {
-        // Skip suggestion updates in password mode - don't show predictions
-        if (isPasswordMode) {
+        // Skip suggestion updates in password mode, unless swipe on password is enabled (#39)
+        if (isPasswordMode && !allowSwipeInPasswordMode) {
             return
         }
 
@@ -592,6 +593,15 @@ class SuggestionBar : LinearLayout {
      * Check if currently in password mode.
      */
     fun isInPasswordMode(): Boolean = isPasswordMode
+
+    /**
+     * #39: Enable/disable swipe predictions in password mode.
+     * When true, swipe typing results will be shown even in password fields.
+     */
+    fun setAllowSwipeInPasswordMode(allow: Boolean) {
+        allowSwipeInPasswordMode = allow
+        Log.d(TAG, "Swipe in password mode: ${if (allow) "enabled" else "disabled"}")
+    }
 
     /**
      * Update the password text being typed.
