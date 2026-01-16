@@ -14,16 +14,24 @@
 - #67 ✅ Script error (build_all_languages.py) - User error, provided fix
 - #68 ✅ Greek dictionary request - Engaged with contributor
 
-**Completed Feature Requests**:
+**Completed Feature Requests** (GitHub comments added 2026-01-15):
 - #62 ✅ Password manager clipboard exclusion - IMPLEMENTED (2026-01-15)
-- #1134 ✅ Test keyboard field in settings - IMPLEMENTED (2026-01-15)
+- #1134 ✅ Test keyboard field in settings - IMPLEMENTED (2026-01-15) - Comment added
 - #940 ✅ Clipboard delete individual items - IMPLEMENTED (2026-01-15)
-- #1113 ✅ Quick Settings tile for keyboard - IMPLEMENTED (2026-01-15)
-- #1107 ✅ Monet theme crash fix (Android < 12) - FIXED (2026-01-15)
-- #1131 ✅ Clipboard/emoji nav bar overlap (Android 15) - FIXED (2026-01-15)
-- #1116 ✅ White nav bar buttons (Android 9) - FIXED (2026-01-15)
+- #1113 ✅ Quick Settings tile for keyboard - IMPLEMENTED (2026-01-15) - Comment added
+- #1107 ✅ Monet theme crash fix (Android < 12) - FIXED (2026-01-15) - Comment added
+- #1131 ✅ Clipboard/emoji nav bar overlap (Android 15) - FIXED (2026-01-15) - Comment added
+- #1116 ✅ White nav bar buttons (Android 9) - FIXED (2026-01-15) - Comment added
 
 **Open Feature Requests** (for future consideration):
+- #1153 Floating keyboard - Larger feature, needs design
+- #1151 Vertical gradient button theme - Design decision
+- #1145 Fast typer overlay - Larger feature
+- #1142 Space while selected = Space not Esc - Discussed, PR #1141 merged
+- #1122 Image pasting - Complex feature
+- #1121 Smart key hit detection - Algorithm enhancement
+- #1109 Keyboard under nav bar - Android system race condition, not code bug
+- #1103 Insert timestamp - Needs syntax design (DateTimeFormatter)
 - #61 Active multi-language switching
 - #58 Scaling number keyboard
 - #52 MessageEase layout contribution
