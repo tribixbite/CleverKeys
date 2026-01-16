@@ -7,6 +7,13 @@
 
 ## Session Progress (2026-01-16)
 
+### White Navbar Icons on Android 8-9 (#1116)
+- ✅ Fixed: White navigation buttons now visible on white/light themes (5bc83f97)
+- **Issue**: On Android 9 with white theme, navbar icons were white on white (invisible)
+- **Fix**: `Keyboard2View.kt:refresh_navigation_bar()` now explicitly sets `SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR`
+  for API 26-28 when using light themes, ensuring dark icons on light backgrounds
+- **Cause**: WindowInsetsController compat shim doesn't work reliably for IME windows on older APIs
+
 ### Space Key Selection Behavior (#1142)
 - ✅ Fixed: Space key now types space when text selected (4b5e016f)
 - **Issue**: Pressing space while text selected would cancel selection (Esc behavior)
@@ -145,6 +152,7 @@
 - ✅ Added custom language pack creation guide for #50/#49 (72411d3d)
 
 **Recent Commits**:
+- `5bc83f97` fix: white navbar icons on Android 8-9 with light themes (#1116)
 - `4b5e016f` fix: space key now types space when text selected (#1142)
 - `252d72a6` feat: expand emoji search to 500+ name mappings (#41)
 - `2e3f416b` feat: redesign emoji search to use suggestion bar (#41)
