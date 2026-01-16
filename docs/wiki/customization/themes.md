@@ -3,7 +3,6 @@ title: Themes
 description: Change keyboard appearance and colors
 category: Customization
 difficulty: beginner
-related_spec: ../specs/customization/themes-spec.md
 ---
 
 # Themes
@@ -15,67 +14,88 @@ Customize the appearance of your keyboard with different color themes, from dark
 | What | Description |
 |------|-------------|
 | **Purpose** | Change keyboard colors and appearance |
-| **Access** | Settings > Theme |
-| **Options** | Built-in themes + custom colors |
+| **Access** | Settings > Theme Manager (in Activities section) |
+| **Options** | 18+ built-in themes + custom DIY colors |
 
 ## Built-in Themes
 
-CleverKeys includes several pre-designed themes:
+CleverKeys includes many pre-designed themes:
+
+### Dark Themes
 
 | Theme | Description |
 |-------|-------------|
-| **CleverKeys Dark** | Default dark purple theme |
-| **Midnight** | Pure black with subtle accents |
-| **Ocean** | Deep blue tones |
-| **Forest** | Green nature-inspired |
-| **Sunset** | Warm orange and red |
-| **Snow** | Light theme for bright environments |
-| **System** | Follows Android dark/light mode |
+| **CleverKeys Dark** | Default - deep purple with silver accents |
+| **Dark** | Classic dark gray |
+| **Black** | Pure black for OLED screens |
+| **Alt Black** | Alternative black styling |
+| **ePaper Black** | High contrast e-ink dark |
+| **Cobalt** | Blue-tinted dark theme |
+| **Pine** | Dark green nature theme |
+| **Rose Pine** | Muted rose and pine colors |
+
+### Light Themes
+
+| Theme | Description |
+|-------|-------------|
+| **CleverKeys Light** | Silver keys with purple accents |
+| **Light** | Classic light gray |
+| **White** | Pure white background |
+| **ePaper** | High contrast e-ink style |
+| **Everforest Light** | Soft green nature theme |
+| **Desert** | Warm sandy tones |
+| **Jungle** | Tropical teal theme |
+| **Jewel** | Vibrant colored theme |
+
+### System-Following Themes (Android 12+)
+
+| Theme | Description |
+|-------|-------------|
+| **Monet** | Material You - follows system colors |
+| **Monet Light** | Material You - forced light |
+| **Monet Dark** | Material You - forced dark |
+
+> [!NOTE]
+> Monet themes require Android 12+ for dynamic color extraction. On older devices, these themes fall back to default colors.
 
 ## How to Change Theme
 
-### Step 1: Open Theme Settings
+### Step 1: Open Theme Manager
 
 1. Open CleverKeys Settings (gear icon)
-2. Tap **Theme** or **Appearance**
+2. Scroll to **Activities** section
+3. Tap **Theme Manager**
 
-### Step 2: Preview Themes
+### Step 2: Select Theme
 
 1. Scroll through available themes
-2. Each theme shows a preview
+2. Each theme shows its name and preview colors
 3. Tap to select
 
 ### Step 3: Apply
 
 The theme applies immediately. No restart required.
 
-## Custom Colors
+## DIY Theme Creator
 
-For fine-tuned control:
+CleverKeys includes a powerful theme creator for custom colors:
 
-### Background Color
-
-1. Go to Theme settings
-2. Tap **Background Color**
-3. Use the color picker or enter hex code
-4. Tap **Apply**
-
-### Key Colors
+### Accessible Colors
 
 | Element | Description |
 |---------|-------------|
-| **Key Background** | Main key color |
-| **Key Text** | Letter color |
-| **Key Border** | Optional border |
-| **Accent** | Highlights and active states |
+| **Key Colors** | Default, Activated, Locked, Modifier, Special |
+| **Label Colors** | Primary, Sub-label, Secondary labels |
+| **Border Colors** | Full border customization |
+| **Trail Effects** | Swipe trail color and style |
 
-### Prediction Bar
+### Creating Custom Theme
 
-| Element | Description |
-|---------|-------------|
-| **Bar Background** | Suggestion bar color |
-| **Suggestion Text** | Prediction text color |
-| **Active Suggestion** | Selected prediction |
+1. Open **Theme Manager**
+2. Scroll to **Custom Theme** or **DIY** section
+3. Tap each color element to customize
+4. Use the color picker or enter hex codes
+5. Changes apply in real-time
 
 ## Theme Elements
 
@@ -95,49 +115,53 @@ What each theme affects:
 
 ## Tips and Tricks
 
-- **OLED screens**: Use pure black themes to save battery
+- **OLED screens**: Use Black or ePaper Black themes to save battery
 - **Readability**: Ensure good contrast between keys and text
 - **Eye strain**: Dark themes are easier on eyes in low light
-- **Consistency**: Match your system theme for visual harmony
+- **Material You**: Use Monet theme on Android 12+ for system color matching
 
 > [!TIP]
-> The "System" theme automatically switches between light and dark based on your Android settings.
+> The **Monet** theme on Android 12+ automatically uses your wallpaper's accent colors.
 
 ## Opacity Settings
 
-Adjust transparency:
+Adjust transparency in the **Appearance** section:
 
 | Setting | Range | Description |
 |---------|-------|-------------|
+| **Keyboard Opacity** | 0-100% | Overall keyboard transparency |
 | **Key Opacity** | 0-100% | Transparency of key backgrounds |
-| **Background Opacity** | 0-100% | Overall keyboard transparency |
+| **Suggestion Bar Opacity** | 0-100% | Prediction bar transparency |
 
-## Settings
+## Settings Locations
 
 | Setting | Location | Description |
 |---------|----------|-------------|
-| **Theme** | Appearance | Select theme |
-| **Custom Colors** | Theme > Custom | Individual colors |
-| **Key Opacity** | Appearance | Transparency |
-| **Border Style** | Appearance | Key borders |
+| **Theme Selection** | Activities > Theme Manager | Select theme |
+| **Keyboard Opacity** | Appearance section | Overall transparency |
+| **Key Opacity** | Appearance section | Key transparency |
+| **Border Style** | Appearance section | Key borders |
 
 ## Common Questions
 
 ### Q: Can I create my own theme?
-A: Yes, use Custom Colors to define each element's color.
 
-### Q: How do I share my theme?
-A: Export your profile (Settings > Profiles > Export) which includes theme settings.
+A: Yes! Use the DIY Theme Creator in Theme Manager to customize every color.
 
-### Q: Why does my keyboard look different in some apps?
-A: Some apps force their own keyboard styling. CleverKeys tries to maintain your theme, but app overrides may occur.
+### Q: How do I backup my custom theme?
+
+A: Export your settings via **Settings > Backup & Restore** which includes theme settings.
+
+### Q: Why does Monet theme look different than expected?
+
+A: Monet uses Android's Material You color extraction. Results depend on your wallpaper and Android version. Requires Android 12+.
+
+### Q: The keyboard background is transparent!
+
+A: Increase **Keyboard Opacity** in the Appearance section (Settings > Appearance).
 
 ## Related Features
 
-- [Appearance Settings](../settings/appearance.md) - Height, margins
-- [Profiles](../layouts/profiles.md) - Save theme with settings
-- [Accessibility](../settings/accessibility.md) - High contrast options
-
-## Technical Details
-
-See [Themes Technical Specification](../specs/customization/themes-spec.md).
+- [Appearance Settings](../settings/appearance.md) - Height, margins, opacity
+- [Backup & Restore](../troubleshooting/backup-restore.md) - Save settings including theme
+- [Accessibility](../settings/accessibility.md) - Contrast options

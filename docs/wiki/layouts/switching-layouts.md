@@ -3,148 +3,135 @@ title: Switching Layouts
 description: Change between keyboard layouts
 category: Layouts
 difficulty: beginner
-related_spec: ../specs/layouts/switching-layouts-spec.md
 ---
 
 # Switching Layouts
 
-Quickly switch between your installed keyboard layouts using gestures, buttons, or shortcuts.
+Switch between installed keyboard layouts using key actions or swipe gestures.
 
 ## Quick Summary
 
 | What | Description |
 |------|-------------|
 | **Purpose** | Change active keyboard layout |
-| **Methods** | Gesture, button, shortcut |
-| **Layouts** | Between all installed layouts |
+| **Methods** | Assigned key swipes, Shift key swipe |
+| **Layouts** | Between all enabled layouts |
 
 ## Switching Methods
 
-### Method 1: Globe Key
+### Method 1: Shift Key Swipes (Default)
 
-The globe/language key on the bottom row:
+On the default layout, the Shift key has layout switching:
 
-1. **Tap** to cycle to next layout
-2. **Long-press** to show layout picker
-3. **Swipe** for quick access to specific layouts
+1. **Swipe right on Shift** → Next layout (`switch_forward`)
+2. **Swipe left on Shift** → Previous layout (`switch_backward`)
 
-### Method 2: Swipe Gesture
+> [!NOTE]
+> The exact swipe directions depend on your layout. Check the subkeys on your Shift key.
 
-Use the spacebar gesture:
+### Method 2: Custom Key Assignment
 
-1. **Swipe left** on spacebar → Previous layout
-2. **Swipe right** on spacebar → Next layout
+Assign layout switching to any key via Per-Key Customization:
 
-### Method 3: Layout Picker
+1. Go to **Settings > Per-Key Customization** (in Activities section)
+2. Select any key
+3. Assign `switch_forward` or `switch_backward` to a swipe direction
+4. Save your customization
 
-Access the full layout list:
+### Method 3: Extra Keys
 
-1. **Long-press** the globe key
-2. Layout picker overlay appears
-3. **Tap** any layout to switch
+Add dedicated layout switching keys:
 
-### Method 4: From Command Palette
-
-1. Open command palette (long-press settings)
-2. Type "layout" or "switch"
-3. Select **Switch Layout**
-4. Choose target layout
-
-## Quick Switch vs Full Switch
-
-| Type | Behavior |
-|------|----------|
-| **Quick Switch** | Tap globe - cycles through active layouts |
-| **Full Switch** | Long-press globe - shows all layouts |
+1. Go to **Settings > Extra Keys** (in Activities section)
+2. Add `switch_forward` or `switch_backward` to your extra keys row
+3. Tap the key to switch layouts
 
 ## Layout Indicator
 
-When you switch layouts, a brief indicator shows:
+When you switch layouts, the current layout name appears briefly on the spacebar.
 
 ```
 ┌─────────────────────────────────────┐
-│         ┌───────────────┐           │
-│         │   QWERTY      │           │ ← Layout indicator
-│         │   English     │           │
-│         └───────────────┘           │
-│                                     │
 │  ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐     │
 │  │ Q │ │ W │ │ E │ │ R │ │ T │     │
+│  └───┘ └───┘ └───┘ └───┘ └───┘     │
+│           ...                       │
+│  ┌─────────────────────────────────┐│
+│  │         QWERTY EN               ││ ← Layout shown on spacebar
+│  └─────────────────────────────────┘│
 └─────────────────────────────────────┘
 ```
 
-## Active Layout Order
+## Managing Layouts
 
-Layouts cycle in the order set in Settings:
+### Enable/Disable Layouts
 
-1. Go to **Settings > Layouts**
-2. Drag layouts to reorder
-3. Layouts at top cycle first
+Control which layouts appear in rotation:
 
-## Per-App Layouts
+1. Go to **Settings** and scroll to **Multi-Language** section
+2. Configure your enabled languages/layouts
+3. Only enabled layouts are included in switching
 
-CleverKeys can remember layout preferences per app:
+### Immediate vs Delayed Switching
 
-1. Enable **Settings > Layouts > Per-App Layout**
-2. Switch to desired layout in each app
-3. CleverKeys remembers your choice
+| Setting | Behavior |
+|---------|----------|
+| **Immediate** | Layout switches instantly on key action |
+| **Delayed** | Layout changes after releasing the key |
+
+Configure in Settings under the layout/input behavior options.
 
 ## Tips and Tricks
 
-- **Pin favorites**: Move frequently used layouts to top
-- **Hide unused**: Disable layouts you rarely use
-- **Learn gestures**: Spacebar swipe is fastest
-- **Visual cue**: Watch for layout indicator when switching
+- **Two languages**: If you only use 2 layouts, switching always toggles between them
+- **Learn your subkeys**: Check Shift key subkeys for default switch actions
+- **Custom placement**: Put switch keys where they're most convenient for you
+- **Visual feedback**: Watch the spacebar for current layout confirmation
 
 > [!TIP]
-> Double-tap the globe key to toggle between your two most recently used layouts.
+> For bilingual typing, consider using Multi-Language mode instead of switching layouts. It suggests words from both languages simultaneously.
 
-## Globe Key Behavior
+## Multi-Language Alternative
 
-| Action | Result |
-|--------|--------|
-| **Tap** | Next layout |
-| **Double-tap** | Toggle last two layouts |
-| **Long-press** | Show layout picker |
-| **Swipe up** | Show layout picker |
+Instead of switching layouts, you can type in multiple languages on one layout:
 
-## Spacebar Gestures
+1. Go to **Settings > Multi-Language** section
+2. Enable a **Secondary Language**
+3. Both language dictionaries work simultaneously
+4. See [Multi-Language](multi-language.md) for details
 
-| Gesture | Result |
-|---------|--------|
-| **Swipe left** | Previous layout |
-| **Swipe right** | Next layout |
-| **Long swipe** | Skip to first/last layout |
+## Available Actions
+
+| Action | Description |
+|--------|-------------|
+| `switch_forward` | Switch to next layout |
+| `switch_backward` | Switch to previous layout |
+| `switch_text` | Switch to text keyboard |
 
 ## Settings
 
 | Setting | Location | Description |
 |---------|----------|-------------|
-| **Layout Order** | Layouts | Set cycle order |
-| **Show Globe** | Layouts | Show/hide globe key |
-| **Per-App Layout** | Layouts | Remember per app |
-| **Show Indicator** | Layouts | Layout change indicator |
+| **Primary Language** | Multi-Language section | Main language |
+| **Secondary Language** | Multi-Language section | Additional dictionary |
+| **Switch Input Immediate** | Input settings | Instant vs delayed switch |
 
 ## Common Questions
 
 ### Q: How do I quickly switch between two languages?
 
-A: Double-tap the globe key to toggle between your two most recently used layouts.
+A: If you only have 2 layouts enabled, any switch action toggles between them. Alternatively, enable Multi-Language mode for simultaneous bilingual typing.
 
-### Q: Can I disable certain layouts from quick switch?
+### Q: Where are the layout switch keys?
 
-A: Yes, in Settings > Layouts, uncheck "Include in Quick Switch" for layouts you want to access only via the full picker.
+A: By default, check the Shift key subkeys (swipe to see). You can also assign switch actions to any key via Per-Key Customization.
 
-### Q: Why doesn't the globe key appear?
+### Q: Can I have different layouts per app?
 
-A: You need at least 2 layouts installed. Go to Settings > Layouts > Add Layout.
+A: Per-app layouts are not currently supported. The active layout is global across all apps.
 
 ## Related Features
 
 - [Adding Layouts](adding-layouts.md) - Install new layouts
-- [Multi-Language](multi-language.md) - Use multiple languages
-- [Profiles](profiles.md) - Save layout configurations
-
-## Technical Details
-
-See [Switching Layouts Technical Specification](../specs/layouts/switching-layouts-spec.md).
+- [Multi-Language](multi-language.md) - Type in multiple languages simultaneously
+- [Per-Key Actions](../customization/per-key-actions.md) - Customize switch key placement

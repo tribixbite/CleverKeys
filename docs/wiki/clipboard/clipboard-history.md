@@ -3,7 +3,6 @@ title: Clipboard History
 description: Access and manage previously copied text
 category: Clipboard
 difficulty: beginner
-related_spec: ../specs/clipboard/clipboard-history-spec.md
 ---
 
 # Clipboard History
@@ -15,30 +14,33 @@ CleverKeys maintains a history of text you've copied, making it easy to paste it
 | What | Description |
 |------|-------------|
 | **Purpose** | Access previous clipboard items |
-| **Access** | Long-press paste key or clipboard icon |
-| **Capacity** | Up to 25 items |
+| **Access** | Swipe NW from Ctrl key, or add Clipboard to Extra Keys |
+| **Capacity** | Configurable (default 25 items) |
 
 ## Accessing Clipboard History
 
-### Method 1: Long-Press Paste
+### Method 1: Ctrl Key Swipe
 
-1. **Long-press** the paste key
-2. Clipboard history panel opens
-3. Tap any item to paste
+1. Find the **Ctrl** key on the bottom row
+2. **Swipe NW** (up-left) to activate `switch_clipboard`
+3. Clipboard history panel opens
+4. Tap any item to paste
 
-### Method 2: Clipboard Icon
+### Method 2: Extra Keys
 
-If clipboard icon is shown:
+If you've added a clipboard key to Extra Keys:
 
-1. Tap the **clipboard icon** in toolbar
+1. Tap the **clipboard icon** in your extra keys row
 2. History panel opens
 3. Tap item to paste
 
-### Method 3: Command Palette
+### Method 3: Per-Key Customization
 
-1. Open command palette
-2. Type "clipboard" or "history"
-3. Select **Clipboard History**
+You can assign clipboard access to any key's short swipe:
+
+1. Go to **Settings > Per-Key Customization**
+2. Select any key
+3. Assign `switch_clipboard` to a swipe direction
 
 ## Using Clipboard History
 
@@ -58,8 +60,8 @@ If clipboard icon is shown:
 ### Delete Item
 
 1. Open clipboard history
-2. **Swipe left** on item
-3. Or long-press and select **Delete**
+2. Tap the **delete button** on the item
+3. Or swipe left and tap delete
 
 ## Pin Items
 
@@ -82,82 +84,60 @@ Pinned items:
 - Don't auto-expire
 - Don't count toward limit
 
-## Search History
-
-Find items in your clipboard:
-
-1. Open clipboard history
-2. Tap **search icon**
-3. Type search term
-4. Matching items shown
-
 ## History Panel Layout
 
 ```
 ┌─────────────────────────────────────┐
-│ Clipboard History           [🔍] [X]│
+│ Clipboard History              [X]  │
 ├─────────────────────────────────────┤
-│ 📌 Pinned item text...              │ ← Pinned
-│ 📌 Another pinned item...           │
+│ 📌 Pinned item text...         [🗑] │ ← Pinned
+│ 📌 Another pinned item...      [🗑] │
 ├─────────────────────────────────────┤
-│ Recently copied text here...        │ ← Recent
-│ Another clipboard item...           │
-│ More text from earlier...           │
-│ ...                                 │
-├─────────────────────────────────────┤
-│ [Clear All]      [Settings]         │
+│ Recently copied text here...   [🗑] │ ← Recent
+│ Another clipboard item...      [🗑] │
+│ More text from earlier...      [🗑] │
 └─────────────────────────────────────┘
 ```
 
 ## Privacy Features
 
-### Auto-Expiry
+### Password Manager Exclusion
 
-Items automatically expire based on your settings:
+CleverKeys can exclude clipboard entries from password managers:
 
 | Setting | Behavior |
 |---------|----------|
-| **1 hour** | Items deleted after 1 hour |
-| **24 hours** | Items deleted after 1 day |
-| **7 days** | Items deleted after 1 week |
-| **Never** | Items kept until manually deleted |
+| **Enabled** | Clips from 1Password, Bitwarden, etc. not saved |
+| **Disabled** | All clips saved normally |
 
-### Password Protection
+Supported apps include: 1Password, Bitwarden, LastPass, Dashlane, KeePass variants, and more.
+
+### Password Field Detection
 
 CleverKeys automatically detects password fields:
 
 | Behavior | Description |
 |----------|-------------|
 | **Don't save** | Password field text not saved to history |
-| **Mask display** | Sensitive items show as "••••" |
-
-### Incognito Mode
-
-When incognito is active:
-
-- Nothing saved to clipboard history
-- Existing history still accessible
-- New copies are temporary only
+| **Mask display** | Sensitive items may show masked |
 
 ## Tips and Tricks
 
 - **Pin frequently used**: Pin items you paste often
 - **Clear sensitive data**: Regularly clear history with sensitive info
-- **Search long history**: Use search for older items
-- **Quick access**: Enable clipboard icon for one-tap access
+- **Quick access**: Add clipboard to Extra Keys for one-tap access
+- **Customize access**: Assign clipboard to any key via Per-Key Customization
 
 > [!TIP]
-> Double-tap the paste key as a shortcut to open clipboard history.
+> The Ctrl key's NW subkey is `switch_clipboard` by default on most layouts.
 
 ## Settings
 
 | Setting | Location | Description |
 |---------|----------|-------------|
-| **Enable History** | Privacy | Turn history on/off |
-| **History Size** | Clipboard | Maximum items |
-| **Auto-Expiry** | Privacy | Automatic deletion |
-| **Show Icon** | Toolbar | Clipboard icon visibility |
-| **Password Detection** | Privacy | Detect password fields |
+| **Enable History** | Clipboard section | Turn history on/off |
+| **History Size** | Clipboard section | Maximum items to keep |
+| **Exclude Password Managers** | Clipboard section | Don't save from password apps |
 
 ## Clear History
 
@@ -177,11 +157,15 @@ When incognito is active:
 
 ### Q: Why don't I see clipboard history?
 
-A: Check that it's enabled in Settings > Privacy > Clipboard History.
+A: Check that it's enabled in **Settings > Clipboard** section (expand it).
+
+### Q: How do I access clipboard quickly?
+
+A: Swipe NW from the Ctrl key, or add a clipboard key to your Extra Keys.
 
 ### Q: Why wasn't my copied text saved?
 
-A: It may have been from a password field, or incognito mode was active.
+A: It may have been from a password field or a password manager app (if exclusion is enabled).
 
 ### Q: Can I recover deleted items?
 
@@ -192,7 +176,3 @@ A: No, deleted items cannot be recovered. Pin important items.
 - [Text Selection](text-selection.md) - Select text efficiently
 - [Shortcuts](shortcuts.md) - Keyboard shortcuts for clipboard
 - [Privacy](../settings/privacy.md) - Privacy settings
-
-## Technical Details
-
-See [Clipboard History Technical Specification](../specs/clipboard/clipboard-history-spec.md).

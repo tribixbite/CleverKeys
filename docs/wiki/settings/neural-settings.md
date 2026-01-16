@@ -14,163 +14,135 @@ Fine-tune the neural network-based swipe typing predictions for accuracy and per
 | What | Description |
 |------|-------------|
 | **Purpose** | Optimize neural predictions |
-| **Access** | Settings > Neural/Predictions |
-| **Options** | Beam width, thresholds, vocabulary |
+| **Access** | Scroll to **Neural Prediction** section in Settings |
+| **Key Setting** | Beam Width controls accuracy vs speed |
+
+## Settings Location
+
+In **Settings**, scroll to the **Neural Prediction** section (collapsible). All neural prediction settings are here.
 
 ## Understanding Neural Predictions
 
-CleverKeys uses an ONNX neural network to predict words from swipe gestures. These settings control how the network processes your input.
+CleverKeys uses an ONNX neural network to predict words from swipe gestures. The model processes your swipe trajectory and outputs probability distributions for each letter position.
 
-## Prediction Settings
-
-### Prediction Count
-
-How many suggestions to show:
-
-| Count | Trade-off |
-|-------|-----------|
-| **3** | Faster, less choice |
-| **5** | Balanced |
-| **7** | More options, slightly slower |
+## Key Settings
 
 ### Beam Width
 
-Controls prediction search breadth:
+The most important setting for prediction quality. Controls how many parallel word candidates the decoder tracks:
 
 | Width | Effect |
 |-------|--------|
-| **3** | Faster, may miss some words |
-| **5** | Balanced (default) |
-| **8** | More thorough, slightly slower |
-| **10** | Most accurate, slower |
+| **3-4** | Faster, may miss less common words |
+| **6** | Balanced (default) |
+| **8-10** | More thorough search, finds rare words |
 
 > [!NOTE]
-> Higher beam width finds more word candidates but uses more processing time.
+> Higher beam width = more word candidates explored = better accuracy but slightly slower.
 
-## Threshold Settings
+### Show Suggestions
 
-### Minimum Score
-
-Predictions below this score are filtered:
-
-| Threshold | Effect |
-|-----------|--------|
-| **Low (0.1)** | More suggestions, some poor |
-| **Medium (0.3)** | Balanced filtering |
-| **High (0.5)** | Only confident predictions |
-
-### Distance Threshold
-
-Maximum gesture-to-key distance:
+Toggle the prediction/suggestion bar above the keyboard:
 
 | Setting | Effect |
 |---------|--------|
-| **Loose** | Accept approximate swipes |
-| **Normal** | Standard tolerance |
-| **Strict** | Require precise swipes |
+| **On** | Shows word predictions above keyboard |
+| **Off** | Hides prediction bar (more screen space) |
 
-## Vocabulary Settings
+### Autocorrect from Beam
 
-### Personal Words
-
-| Setting | Description |
-|---------|-------------|
-| **Include Personal** | Add your words to predictions |
-| **Personal Priority** | Boost score for personal words |
-
-### Technical Terms
-
-| Setting | Description |
-|---------|-------------|
-| **Enable Tech Vocab** | Include programming terms |
-| **Camelcase** | Support camelCase words |
-
-## Performance Settings
-
-### Processing Mode
-
-| Mode | Description |
-|------|-------------|
-| **Balanced** | Good accuracy and speed |
-| **Performance** | Faster, reduced accuracy |
-| **Quality** | Best accuracy, slower |
-
-### Background Processing
+When enabled, uses neural predictions for autocorrection:
 
 | Setting | Effect |
 |---------|--------|
-| **Enabled** | Pre-process during pauses |
-| **Disabled** | Process only on demand |
+| **On** | Neural model helps with tap-typing corrections |
+| **Off** | Only dictionary-based autocorrect |
 
-## Learning Settings
+## Advanced Settings
 
-### Adaptive Learning
+### Confidence Threshold
 
-| Setting | Description |
-|---------|-------------|
-| **Enabled** | Learn from your typing |
-| **Disabled** | Use base model only |
+Minimum score for a prediction to be shown (default: 0.01):
 
-### Learn Rate
+- Lower = more suggestions, some may be weak
+- Higher = only confident predictions shown
 
-| Rate | Effect |
-|------|--------|
-| **Slow** | Gradual adaptation |
-| **Normal** | Balanced learning |
-| **Fast** | Quick adaptation |
+### Frequency Weight
+
+How much word frequency influences scoring (default: 0.57):
+
+| Weight | Effect |
+|--------|--------|
+| **0.0** | Neural model only |
+| **0.5** | Balanced |
+| **1.0+** | Favor common words heavily |
+
+### Length Penalty (Beam Alpha)
+
+Normalizes scores by word length (default: 1.0):
+
+- Lower = favors shorter words
+- Higher = allows longer words to compete
+
+## Neural Profiles
+
+CleverKeys includes preset profiles optimizing for different use cases:
+
+| Profile | Beam Width | Use Case |
+|---------|------------|----------|
+| **Speed** | 4 | Fast typing, acceptable accuracy |
+| **Balanced** | 6 | Default experience |
+| **Accuracy** | 8+ | Best predictions, slower |
+
+Access via the Neural Prediction section settings.
 
 ## Tips and Tricks
 
-- **Accuracy issues**: Increase beam width
-- **Slow predictions**: Reduce beam width, enable performance mode
-- **Missing words**: Lower minimum score threshold
-- **Personal words**: Add frequently used terms to dictionary
+- **Accuracy issues**: Increase beam width from 6 to 8 or 10
+- **Slow predictions**: Reduce beam width to 4-5
+- **Missing words**: Check that multi-language is configured correctly
+- **Long words wrong**: Increase beam width or adjust beam alpha
 
 > [!TIP]
-> If predictions feel "off," try resetting neural settings to defaults and gradually adjusting.
+> Start with the default beam width of 6. Only adjust if you notice specific issues.
 
 ## All Neural Settings
 
-| Setting | Default | Range |
-|---------|---------|-------|
-| **Prediction Count** | 5 | 3-7 |
-| **Beam Width** | 5 | 3-10 |
-| **Min Score** | 0.3 | 0.1-0.7 |
-| **Distance Threshold** | Normal | Loose/Normal/Strict |
-| **Personal Priority** | 1.2x | 1.0-2.0x |
-| **Processing Mode** | Balanced | Performance/Balanced/Quality |
-
-## Advanced Diagnostics
-
-### Debug Mode
-
-Enable to see prediction scores:
-
-1. Settings > Neural > Show Debug Info
-2. Predictions show score values
-3. Helps understand prediction ranking
-
-### Reset Neural Data
-
-Start fresh:
-
-1. Settings > Neural > Reset
-2. Clears learned patterns
-3. Returns to base model
+| Setting | Default | Range/Options |
+|---------|---------|---------------|
+| **Beam Width** | 6 | 3-10 |
+| **Show Suggestions** | On | On/Off |
+| **Confidence Threshold** | 0.01 | 0.01-0.5 |
+| **Frequency Weight** | 0.57 | 0.0-2.0 |
+| **Beam Alpha** | 1.0 | 0.5-2.0 |
+| **Beam Autocorrect** | On | On/Off |
 
 ## Common Questions
 
 ### Q: Why are predictions slow?
 
-A: Reduce beam width or switch to Performance mode. Also check if many languages are enabled.
+A: Reduce beam width from 6 to 4-5. Also check if multiple languages are enabled, which increases processing.
 
 ### Q: Why does it suggest wrong words?
 
-A: Increase beam width for more thorough search, or adjust distance threshold for your swipe style.
+A: Try increasing beam width for more thorough search. Also ensure your primary language is set correctly in Multi-Language section.
 
-### Q: How do I make it learn my vocabulary?
+### Q: How do I add words to the dictionary?
 
-A: Enable Adaptive Learning and add words to personal dictionary. They'll be prioritized.
+A: Type the word and tap it in predictions, or long-press a word and select "Add to dictionary" if supported.
+
+### Q: Can I reset neural settings?
+
+A: Go to Settings and look for reset options, or use Backup & Restore to reset to defaults.
+
+## Technical Details
+
+The neural model is:
+- **Format**: ONNX (Open Neural Network Exchange)
+- **Architecture**: Encoder-only transformer
+- **Input**: Normalized swipe coordinates (x, y, time)
+- **Output**: Per-position letter probabilities
+- **Decoding**: Beam search with vocabulary constraint
 
 ## Related Features
 

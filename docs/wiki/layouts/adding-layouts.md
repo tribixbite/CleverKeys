@@ -3,20 +3,19 @@ title: Adding Layouts
 description: Install and manage keyboard layouts
 category: Layouts
 difficulty: beginner
-related_spec: ../specs/layouts/adding-layouts-spec.md
 ---
 
 # Adding Layouts
 
-Install new keyboard layouts to support different languages, keyboard styles, and specialized input needs.
+Install new keyboard layouts to support different languages and keyboard styles.
 
 ## Quick Summary
 
 | What | Description |
 |------|-------------|
 | **Purpose** | Add new keyboard layouts |
-| **Access** | Settings > Layouts > Add Layout |
-| **Options** | Language layouts, QWERTY variants, specialized |
+| **Access** | Layouts are bundled or added via language packs |
+| **Options** | QWERTY variants, language-specific layouts |
 
 ## Built-in Layouts
 
@@ -29,132 +28,113 @@ CleverKeys includes several pre-installed layouts:
 | **QWERTZ** | German keyboard layout |
 | **Dvorak** | Alternative English layout |
 | **Colemak** | Ergonomic alternative layout |
+| **Programmer** | Symbols-optimized layout |
 
-## How to Add a Layout
+## Adding Language Layouts
 
-### Step 1: Open Layout Settings
+### Via Language Packs
 
-1. Open CleverKeys Settings (gear icon)
-2. Navigate to **Layouts**
-3. Tap **Add Layout**
+To add layouts for other languages:
 
-### Step 2: Browse Available Layouts
-
-Layouts are organized by category:
-
-| Category | Contents |
-|----------|----------|
-| **Languages** | Language-specific layouts |
-| **Variants** | QWERTY alternatives (Dvorak, etc.) |
-| **Specialized** | Programming, number pads |
-
-### Step 3: Select Layout
-
-1. Tap the layout you want to add
-2. Preview shows the layout design
-3. Tap **Add** to confirm
-
-### Step 4: Configure Position
-
-Choose where the layout appears:
-
-- **Primary**: Main layout (slot 1)
-- **Secondary**: Second layout (slot 2)
-- **Additional**: Extra layouts (slots 3+)
-
-## Layout Sources
-
-### Language Packs
-
-For additional languages:
-
-1. Go to **Settings > Language Packs**
-2. Download the language pack
-3. New layouts become available
-4. Add from the Layouts menu
+1. Go to **Settings** and tap **Language Packs** in the Activities section
+2. Browse available language packs
+3. Download the pack for your language
+4. The layout and dictionary are installed together
 
 See [Language Packs](language-packs.md) for details.
 
-### Custom Layouts
+### Bundled Languages
 
-Create your own layouts:
+Some languages come pre-bundled:
 
-1. Go to **Settings > Custom Layouts**
-2. Start from a template or blank
-3. Design your layout
-4. Save and add to keyboard
-
-See [Custom Layouts](custom-layouts.md) for details.
+| Language | Layout | Dictionary |
+|----------|--------|------------|
+| English | QWERTY | Included |
+| Spanish | QWERTY (ES) | Included |
+| French | AZERTY, QWERTY (FR) | Included |
+| German | QWERTZ | Included |
+| Portuguese | QWERTY (PT) | Included |
+| Italian | QWERTY (IT) | Included |
 
 ## Managing Layouts
 
-### View Installed Layouts
+### View Available Layouts
 
-1. Open **Settings > Layouts**
-2. See list of installed layouts
-3. Tap to configure each layout
+The keyboard uses the layout associated with your configured language:
 
-### Remove a Layout
+1. Go to **Settings** and scroll to **Multi-Language** section
+2. Your primary language determines the default layout
+3. Secondary language can use the same or different layout
 
-1. Go to **Settings > Layouts**
-2. Swipe left on the layout
-3. Tap **Remove**
-4. Confirm removal
+### Enabling Multiple Layouts
 
-### Reorder Layouts
+To switch between layouts:
 
-1. Go to **Settings > Layouts**
-2. Long-press a layout
-3. Drag to new position
-4. Release to save
+1. Configure languages in **Multi-Language** section
+2. Use `switch_forward` / `switch_backward` commands to cycle
+3. See [Switching Layouts](switching-layouts.md) for details
+
+## Layout Types
+
+### Language Layouts
+
+Optimized for specific languages:
+
+| Type | Examples |
+|------|----------|
+| **Latin** | QWERTY, AZERTY, QWERTZ |
+| **Extended** | Nordic, Spanish, Portuguese accents |
+| **Alternative** | Dvorak, Colemak |
+
+### Specialized Layouts
+
+For specific use cases:
+
+| Layout | Use Case |
+|--------|----------|
+| **Programmer** | Easier symbol access |
+| **Number Pad** | Numeric input |
+| **Emoji** | Emoji keyboard |
 
 ## Tips and Tricks
 
-- **Start simple**: Add one or two layouts first
-- **Test layouts**: Try each layout before committing
-- **Language association**: Associate layouts with input languages
-- **Quick switch**: Learn the layout switch gesture
+- **Start simple**: Enable 1-2 layouts maximum for easy switching
+- **Match language**: Use layouts designed for your language's characters
+- **Learn subkeys**: Each layout has character subkeys for accents and symbols
+- **Multi-Language**: For bilingual typing, consider Multi-Language mode instead of switching
 
 > [!TIP]
-> You can preview any layout before adding it. Tap the preview button to see the full layout.
+> You don't need separate layouts for bilingual typing. Enable Multi-Language mode to get predictions from both languages on one layout.
 
-## Layout Limits
+## Limitations
 
-| Feature | Limit |
-|---------|-------|
-| **Maximum layouts** | 10 |
-| **Active layouts** | 5 (for quick switching) |
-| **Custom layouts** | Unlimited |
-
-## Settings
-
-| Setting | Location | Description |
-|---------|----------|-------------|
-| **Add Layout** | Layouts | Add new layout |
-| **Layout Order** | Layouts | Drag to reorder |
-| **Remove Layout** | Layouts | Swipe to remove |
+| Feature | Status |
+|---------|--------|
+| **Custom layout creation** | Not currently available |
+| **Layout import** | Via language packs only |
+| **Per-app layouts** | Not supported |
 
 ## Common Questions
 
 ### Q: How do I get layouts for my language?
 
-A: Download the appropriate language pack from Settings > Language Packs, then add the layout.
+A: Download the appropriate language pack from the Language Packs activity. It includes both the layout and dictionary.
 
-### Q: Can I modify built-in layouts?
+### Q: Can I create custom layouts?
 
-A: Yes, use the Custom Layouts feature to create a modified version of any layout.
+A: Custom layout creation is not currently available in the app. Layouts are provided via language packs.
 
-### Q: Why can't I add more layouts?
+### Q: Why can't I find my language's layout?
 
-A: There's a maximum of 10 layouts to maintain performance. Remove unused layouts first.
+A: Check if a language pack is available. If not, request it via GitHub issues or create one using the build scripts (see [Language Packs](language-packs.md)).
+
+### Q: Do I need different layouts for different languages?
+
+A: Not always. Many Latin-alphabet languages work on QWERTY with subkeys for accented characters. Multi-Language mode provides predictions for multiple languages on one layout.
 
 ## Related Features
 
 - [Switching Layouts](switching-layouts.md) - Change between layouts
 - [Language Packs](language-packs.md) - Download language support
-- [Custom Layouts](custom-layouts.md) - Create your own layouts
-- [Profiles](profiles.md) - Save layout configurations
-
-## Technical Details
-
-See [Adding Layouts Technical Specification](../specs/layouts/adding-layouts-spec.md).
+- [Multi-Language](multi-language.md) - Type in multiple languages
+- [Backup & Restore](../troubleshooting/backup-restore.md) - Save your configuration

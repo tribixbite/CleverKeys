@@ -1,3 +1,10 @@
+---
+title: First-Time Setup
+description: Configure CleverKeys after installation
+category: Getting Started
+difficulty: beginner
+---
+
 # First-Time Setup
 
 After enabling CleverKeys, take a few minutes to configure it for your preferences.
@@ -8,42 +15,45 @@ When you first use CleverKeys, we recommend:
 
 1. **Test the keyboard** by typing in any app
 2. **Adjust the height** if keys feel too small/large
-3. **Choose your theme** (light, dark, or system)
+3. **Choose your theme** (CleverKeys Dark, CleverKeys Light, or Monet for Material You)
 4. **Select your language** for swipe predictions
 
 ## Accessing Settings
 
 Open CleverKeys settings:
 
-1. Find **CleverKeys** in your app drawer
-2. Or go to **Android Settings → System → CleverKeys**
-3. Or long-press the **gear icon** on the keyboard
+1. Find **CleverKeys** in your app drawer and tap it
+2. Or long-press the **gear icon** on the keyboard (if visible)
+3. Or go to **Android Settings > System > Languages & input > On-screen keyboard > CleverKeys**
 
 ## Recommended First Settings
 
 ### Keyboard Height
 
-- Path: Settings → Appearance → Keyboard Height
-- Default: 100%
-- Tip: Try 90-110% based on your hand size
+- **Location**: Scroll to **Appearance** section in Settings
+- **Setting**: Keyboard Height slider
+- **Default**: 100%
+- **Tip**: Try 85-95% for most phones. 100% may be too large.
 
 ### Theme
 
-- Path: Settings → Appearance → Theme
-- Options: Light, Dark, Auto (follows system)
-- Tip: Dark theme works best for OLED screens
+- **Location**: Tap **Theme Manager** in the Activities section
+- **Options**: CleverKeys Dark (default), CleverKeys Light, Black, White, Monet (Material You on Android 12+)
+- **Tip**: Black theme saves battery on OLED screens
 
 ### Haptic Feedback
 
-- Path: Settings → Haptics
-- Enable vibration for tactile key response
-- Adjust vibration strength (light to strong)
+- **Location**: Scroll to **Haptics** section in Settings
+- **Settings**:
+  - Haptic Feedback: On/Off toggle
+  - Haptic Feedback Duration: Adjust vibration strength
+- **Tip**: Start with default duration, adjust if too weak or strong
 
 ### Primary Language
 
-- Path: Settings → Languages → Primary Language
-- Select your main typing language
-- This affects swipe predictions and autocorrect
+- **Location**: Scroll to **Multi-Language** section in Settings
+- **Setting**: Tap to configure languages
+- **Note**: English is included by default. Add more via Language Packs.
 
 ## Optional Customizations
 
@@ -51,24 +61,27 @@ Open CleverKeys settings:
 
 Add a row of function keys above the keyboard:
 
-- Path: Settings → Layout → Extra Keys
-- Popular additions: Tab, Ctrl, Arrow keys
+- **Location**: Tap **Extra Keys** in the Activities section
+- **Popular additions**: Tab, Ctrl, Arrow keys, Clipboard
+- **Tip**: Drag keys to reorder them
 
 ### Swipe Sensitivity
 
 Adjust how sensitive swipe detection is:
 
-- Path: Settings → Swipe Typing → Swipe Sensitivity
-- Lower: More precise but slower
-- Higher: Faster but may misread
+- **Location**: Scroll to **Gesture Tuning** section in Settings
+- **Settings**: Short Swipe Threshold, Swipe Velocity Threshold
+- **Lower threshold**: More sensitive (easier to trigger)
+- **Higher threshold**: Less sensitive (requires more deliberate swipes)
 
 ### Prediction Bar
 
 Configure word suggestions:
 
-- Path: Settings → Input → Predictions
-- Enable/disable prediction bar
-- Adjust number of suggestions
+- **Location**: Scroll to **Neural Prediction** section in Settings
+- **Settings**:
+  - Show Suggestions: On/Off
+  - Beam Width: Higher = more candidates (default: 6)
 
 ## Quick Test
 
@@ -76,28 +89,29 @@ Try these to verify your setup:
 
 1. **Tap test**: Type "hello" by tapping each letter
 2. **Swipe test**: Swipe "keyboard" without lifting
-3. **Gesture test**: Swipe up on any letter
-4. **Backspace test**: Long-press backspace to delete multiple characters
+3. **Gesture test**: Swipe up on any letter to see the subkey
+4. **Backspace test**: Long-press backspace to delete continuously
 
-> **Tip**: Use the built-in test keyboard field in Settings to test without leaving the app. Look for "⌨️ Test Keyboard" at the top of the settings screen.
+> [!TIP]
+> Use the built-in test keyboard field at the top of the Settings screen to test without leaving the app.
 
 ## Troubleshooting
 
 ### Keyboard is too small/large
 
-Adjust keyboard height in Settings → Appearance
+Adjust **Keyboard Height** in the Appearance section of Settings.
 
 ### Predictions are inaccurate
 
-- Set correct primary language
+- Set correct primary language in Multi-Language section
 - Type more words to train the neural model
-- Increase beam width in Neural Settings
+- Increase **Beam Width** in Neural Prediction section (default: 6, max: 10)
 
 ### Haptics don't work
 
-- Check that vibration is enabled
-- Grant vibration permission if prompted
-- Verify device vibration is not disabled system-wide
+- Check that **Haptic Feedback** is enabled in Haptics section
+- Verify device vibration is not disabled in Android system settings
+- Some devices have separate "Touch vibration" system settings
 
 ## Next Steps
 

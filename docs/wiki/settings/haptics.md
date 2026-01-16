@@ -3,7 +3,6 @@ title: Haptics Settings
 description: Configure vibration feedback for keyboard actions
 category: Settings
 difficulty: beginner
-related_spec: ../specs/settings/haptics-spec.md
 ---
 
 # Haptics Settings
@@ -15,139 +14,140 @@ Configure vibration feedback for key presses, gestures, and special events.
 | What | Description |
 |------|-------------|
 | **Purpose** | Control vibration feedback |
-| **Access** | Settings > Haptics |
-| **Options** | Intensity, events, patterns |
+| **Access** | Scroll to **Haptics** section in Settings |
+| **Events** | 5 configurable haptic events |
 
-## Haptic Feedback
+## Settings Location
 
-### Master Toggle
+In **Settings**, scroll to the **Haptics** section (collapsible). All haptic settings are here.
+
+## Master Settings
+
+### Haptic Feedback Toggle
 
 | Setting | Effect |
 |---------|--------|
-| **On** | Haptics enabled |
+| **On** | Haptics enabled for selected events |
 | **Off** | All haptics disabled |
 
-### Vibration Intensity
+### Haptic Feedback Duration
 
-| Level | Description |
-|-------|-------------|
-| **Light** | Subtle feedback |
-| **Medium** | Noticeable but not strong |
-| **Strong** | Pronounced vibration |
-| **System** | Uses system haptic settings |
+Control vibration intensity via duration:
+
+| Duration | Feel |
+|----------|------|
+| **Short** | Subtle, brief feedback |
+| **Medium** | Noticeable tactile response |
+| **Long** | Pronounced, strong vibration |
 
 ## Per-Event Haptics
 
-Configure vibration for specific events:
+CleverKeys supports 5 specific haptic events:
 
-### Key Press
+| Event | Setting Key | Default | Description |
+|-------|-------------|---------|-------------|
+| **Key Press** | `haptic_key_press` | On | Vibrate on every key tap |
+| **Prediction Tap** | `haptic_prediction_tap` | On | Vibrate when tapping a suggestion |
+| **TrackPoint Activate** | `haptic_trackpoint_activate` | On | Vibrate when entering navigation mode |
+| **Long Press** | `haptic_long_press` | On | Vibrate when long-press detected |
+| **Swipe Complete** | `haptic_swipe_complete` | Off | Vibrate when swipe word completes |
 
-| Setting | When |
-|---------|------|
-| **Enabled** | Vibrate on every key tap |
-| **Disabled** | No key press vibration |
+> [!NOTE]
+> Swipe Complete is disabled by default as it can be distracting during rapid typing.
 
-### Special Keys
+## Configuring Haptics
 
-| Key Type | Default | Description |
-|----------|---------|-------------|
-| **Backspace** | On | Delete feedback |
-| **Space** | Off | Space bar tap |
-| **Enter** | On | Return/submit |
-| **Shift** | On | Modifier activation |
+### Enable/Disable Individual Events
 
-### Gesture Events
+Each of the 5 events can be toggled independently:
 
-| Gesture | Default | Description |
-|---------|---------|-------------|
-| **Short Swipe** | On | Subkey activation |
-| **Long Press** | On | Long press detected |
-| **Mode Activation** | Strong | TrackPoint/Selection mode |
-| **Circle Gesture** | On | Undo/redo circle |
+1. Open **Settings**
+2. Scroll to **Haptics** section
+3. Toggle individual event switches
 
-### Text Events
+### Adjust Intensity
 
-| Event | Default | Description |
-|-------|---------|-------------|
-| **Autocorrect** | Light | Word corrected |
-| **Prediction Selected** | Light | Tap on prediction |
-| **Word Completed** | Off | Swipe word finished |
+1. In **Haptics** section
+2. Find **Haptic Feedback Duration** slider
+3. Adjust for desired intensity
 
-## Haptic Patterns
+## Recommended Settings
 
-Different vibration patterns for different events:
+### For Learning Gestures
 
-| Pattern | Used For | Feel |
-|---------|----------|------|
-| **Click** | Key press | Short, sharp |
-| **Tick** | Subtle events | Very brief |
-| **Heavy** | Mode changes | Longer, stronger |
-| **Double** | Confirmations | Two quick pulses |
+| Event | Setting |
+|-------|---------|
+| Key Press | On |
+| Long Press | On |
+| TrackPoint Activate | On |
+| Swipe Complete | On |
 
-## OLED Protection
+Strong feedback helps confirm when gestures are recognized.
 
-For OLED screens, some users prefer haptics to confirm key presses without visual feedback:
+### For Silent/Battery Saving
 
-1. Enable haptics for all key events
-2. Consider disabling key pop-up
-3. Reduce key press animation
+| Event | Setting |
+|-------|---------|
+| All events | Off |
+
+Or reduce duration to minimum.
+
+### For Swipe Typing Focus
+
+| Event | Setting |
+|-------|---------|
+| Key Press | Off |
+| Prediction Tap | On |
+| Swipe Complete | On |
+
+Feedback on completions, not every key.
 
 ## Tips and Tricks
 
-- **Battery saving**: Disable or reduce haptics intensity
-- **Silent environments**: Disable haptics to avoid noise
-- **Accessibility**: Haptics help confirm input without looking
-- **Learning gestures**: Enable gesture haptics while learning
+- **TrackPoint feedback**: Keep enabled to feel when navigation mode activates
+- **Battery**: Haptics use minimal power; intensity makes little difference
+- **Silent mode**: System silent mode doesn't affect keyboard haptics
+- **No vibration?**: Check Android system settings for vibration permissions
 
 > [!TIP]
-> Use "Strong" haptics for mode activations (TrackPoint, Selection) to clearly feel when modes engage.
-
-## Haptic Events Reference
-
-| Event | Setting Key | Description |
-|-------|-------------|-------------|
-| **Key Press** | `haptic_key` | Regular key tap |
-| **Backspace** | `haptic_backspace` | Delete key |
-| **Enter** | `haptic_enter` | Submit/return |
-| **Space** | `haptic_space` | Spacebar |
-| **Shift** | `haptic_shift` | Shift/caps |
-| **Short Swipe** | `haptic_short_swipe` | Subkey access |
-| **Long Press** | `haptic_long_press` | Hold gesture |
-| **TrackPoint** | `haptic_trackpoint` | Mode activation |
-| **Selection** | `haptic_selection` | Selection mode |
-| **Circle** | `haptic_circle` | Circle gesture |
-| **Autocorrect** | `haptic_autocorrect` | Word correction |
-| **Prediction** | `haptic_prediction` | Tap prediction |
-
-## Intensity Levels
-
-| Level | Amplitude | Duration |
-|-------|-----------|----------|
-| **Off** | 0 | 0ms |
-| **Light** | 50 | 10ms |
-| **Medium** | 128 | 15ms |
-| **Strong** | 255 | 25ms |
+> Enable TrackPoint Activate haptic to clearly feel when you enter navigation mode with the navigation keys.
 
 ## Common Questions
 
 ### Q: Why don't I feel any haptics?
 
-A: Check system haptics settings first, then CleverKeys haptics settings. Some devices require system haptics enabled.
+A: Check these in order:
+1. Master haptic toggle is On
+2. Specific event toggle is On
+3. Duration is not at minimum
+4. Android system haptics/vibration is enabled
+5. Device vibration motor is working (test in another app)
 
 ### Q: Do haptics drain battery?
 
-A: Yes, but minimally. If concerned, reduce intensity or disable for frequent events like key press.
+A: Minimally. The vibration motor uses very little power compared to the screen.
 
-### Q: Can I have different haptics for different layouts?
+### Q: Can I have different haptics per key?
 
-A: Haptic settings apply globally. Per-layout haptics may be added in future.
+A: No, haptic settings apply to event types (all key presses, all predictions, etc.), not individual keys.
+
+### Q: Why is Swipe Complete off by default?
+
+A: It vibrates after every swipe word, which many users find distracting during continuous typing. Enable it if you want confirmation that swipes are recognized.
+
+## Technical Details
+
+| Setting | Preference Key | Default |
+|---------|----------------|---------|
+| Key Press | `haptic_key_press` | `true` |
+| Prediction Tap | `haptic_prediction_tap` | `true` |
+| TrackPoint Activate | `haptic_trackpoint_activate` | `true` |
+| Long Press | `haptic_long_press` | `true` |
+| Swipe Complete | `haptic_swipe_complete` | `false` |
+| Custom Duration | `vibrate_duration` | System default |
 
 ## Related Features
 
 - [Appearance](appearance.md) - Visual feedback options
-- [Accessibility](accessibility.md) - Alternative feedback
-- [Input Behavior](input-behavior.md) - Touch sensitivity
-
-## Technical Details
-
-See [Haptics Technical Specification](../specs/settings/haptics-spec.md).
+- [TrackPoint Mode](../gestures/trackpoint-mode.md) - Navigation mode
+- [Swipe Typing](../typing/swipe-typing.md) - Gesture typing

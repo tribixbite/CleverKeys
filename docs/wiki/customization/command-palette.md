@@ -1,167 +1,149 @@
 ---
 title: Command Palette
-description: Quick access to all keyboard actions
+description: Searchable list of keyboard actions for customization
 category: Customization
 difficulty: intermediate
-related_spec: ../specs/customization/command-palette-spec.md
 ---
 
 # Command Palette
 
-The command palette provides quick access to keyboard actions, settings, and features through a searchable interface.
+The command palette is a searchable dialog that appears when customizing key actions, showing all available keyboard commands you can assign.
 
 ## Quick Summary
 
 | What | Description |
 |------|-------------|
-| **Purpose** | Quick access to any keyboard action |
-| **Access** | Long-press settings key or designated shortcut |
-| **Features** | Search, recent actions, categorized list |
+| **Purpose** | Browse and search all assignable key actions |
+| **Access** | Opens automatically in Per-Key Customization |
+| **Features** | Search, categories, 100+ commands |
 
-## Accessing Command Palette
+## Where It Appears
 
-### Method 1: Long-Press Settings
+The command palette is **not** a standalone feature. It appears when you:
 
-1. **Long-press** the settings/gear key
-2. Command palette opens
-3. Type to search or browse
+1. Go to **Per-Key Customization** (Settings > Activities section)
+2. Select a key
+3. Tap a swipe direction to assign an action
+4. The command palette opens to let you choose an action
 
-### Method 2: Keyboard Shortcut
-
-If configured:
-1. Press the designated key combination
-2. Command palette opens
-
-### Method 3: From Settings
-
-1. Open Settings
-2. Navigate to **Command Palette**
-3. Browse all available actions
-
-## Using the Palette
+## Using the Command Palette
 
 ### Search
 
-1. Start typing when palette opens
-2. Results filter in real-time
-3. Tap any result to execute
+1. When the palette opens, a search bar appears at top
+2. Type to filter commands in real-time
+3. Matches title, description, and keywords
 
 ### Browse Categories
 
-Actions are organized into categories:
+Commands are organized into categories:
 
 | Category | Contents |
 |----------|----------|
-| **Text** | Copy, paste, select all, undo |
-| **Navigation** | Cursor movement, home, end |
-| **Input** | Switch layout, language, emoji |
-| **Settings** | Quick toggles, open settings |
-| **Clipboard** | History, clear, pin |
+| **Text** | Copy, paste, select all, undo, redo |
+| **Cursor** | Move cursor, select text, home, end |
+| **Modifiers** | Shift, Ctrl, Alt, Meta |
+| **Delete** | Backspace, delete word, delete line |
+| **Events** | Switch layout, open settings, clipboard |
+| **Characters** | Special characters and symbols |
 
-### Recent Actions
+### Select an Action
 
-The palette remembers your frequently used actions and shows them first.
+1. Tap any command to select it
+2. The command is assigned to the selected swipe direction
+3. Palette closes automatically
 
-## Available Actions
+## Available Commands
 
 ### Text Actions
 
-| Action | Description |
-|--------|-------------|
-| **Copy** | Copy selected text |
-| **Cut** | Cut selected text |
-| **Paste** | Paste from clipboard |
-| **Select All** | Select all text |
-| **Undo** | Undo last action |
-| **Redo** | Redo undone action |
+| Command | Description |
+|---------|-------------|
+| `copy` | Copy selected text |
+| `cut` | Cut selected text |
+| `paste` | Paste from clipboard |
+| `select_all` | Select all text |
+| `undo` | Undo last action |
+| `redo` | Redo undone action |
 
-### Navigation Actions
+### Cursor Navigation
 
-| Action | Description |
-|--------|-------------|
-| **Home** | Jump to line start |
-| **End** | Jump to line end |
-| **Page Up** | Scroll up |
-| **Page Down** | Scroll down |
-| **Word Left** | Move cursor word left |
-| **Word Right** | Move cursor word right |
+| Command | Description |
+|---------|-------------|
+| `cursor_left` | Move cursor left |
+| `cursor_right` | Move cursor right |
+| `cursor_up` | Move cursor up |
+| `cursor_down` | Move cursor down |
+| `home` | Jump to line start |
+| `end` | Jump to line end |
+| `page_up` | Page up |
+| `page_down` | Page down |
 
-### Input Actions
+### Selection Actions
 
-| Action | Description |
-|--------|-------------|
-| **Switch Layout** | Change keyboard layout |
-| **Switch Language** | Change input language |
-| **Open Emoji** | Show emoji keyboard |
-| **Open Symbols** | Show symbol keyboard |
-| **Voice Input** | Start voice typing |
+| Command | Description |
+|---------|-------------|
+| `selection_left` | Select left |
+| `selection_right` | Select right |
+| `selection_up` | Select up |
+| `selection_down` | Select down |
+| `selection_word_left` | Select word left |
+| `selection_word_right` | Select word right |
 
-### Settings Actions
+### Delete Actions
 
-| Action | Description |
-|--------|-------------|
-| **Toggle Haptics** | Enable/disable vibration |
-| **Toggle Autocorrect** | Enable/disable autocorrect |
-| **Toggle Predictions** | Show/hide predictions |
-| **Open Settings** | Go to full settings |
-| **Theme Picker** | Quick theme change |
+| Command | Description |
+|---------|-------------|
+| `backspace` | Delete character before cursor |
+| `delete` | Delete character after cursor |
+| `delete_word` | Delete word before cursor |
+| `delete_word_forward` | Delete word after cursor |
 
-## Tips and Tricks
+### Layout/Mode Actions
 
-- **Learn shortcuts**: Frequently used actions are faster via shortcuts
-- **Search keywords**: Actions match multiple keywords (e.g., "vibration" finds "Toggle Haptics")
-- **Recent first**: Your most-used actions appear at the top
-- **Keyboard stays open**: Palette operates without closing keyboard
+| Command | Description |
+|---------|-------------|
+| `switch_forward` | Next keyboard layout |
+| `switch_backward` | Previous keyboard layout |
+| `switch_clipboard` | Open clipboard history |
+| `switch_emoji` | Open emoji keyboard |
+| `switch_numeric` | Switch to number pad |
+
+### Special Actions
+
+| Command | Description |
+|---------|-------------|
+| `trackpoint_mode` | Enter TrackPoint navigation mode |
+| `selection_delete_mode` | Enter selection-delete mode |
+| `voice_typing_key` | Start voice input |
+| `config` | Open settings |
+
+## Tips for Customization
+
+- **Search keywords**: Try "select", "delete", "cursor" to find related commands
+- **Preview**: Command descriptions explain what each action does
+- **Popular choices**: `copy`, `paste`, `home`, `end` are commonly assigned
+- **Power user**: `trackpoint_mode` and `selection_delete_mode` enable advanced navigation
 
 > [!TIP]
-> Use the command palette to discover features you didn't know existed!
-
-## Customization
-
-### Reorder Actions
-
-1. Go to Settings > Command Palette
-2. Tap **Edit Order**
-3. Drag actions to reorder
-4. Tap **Done**
-
-### Add to Favorites
-
-1. Long-press any action in palette
-2. Select **Add to Favorites**
-3. Action appears in Favorites category
-
-### Hide Actions
-
-1. Go to Settings > Command Palette
-2. Tap action to toggle visibility
-3. Hidden actions won't appear in palette
-
-## Settings
-
-| Setting | Location | Description |
-|---------|----------|-------------|
-| **Palette Trigger** | Command Palette | Set activation method |
-| **Show Recent** | Command Palette | Enable recent actions |
-| **Categories** | Command Palette | Show/hide categories |
+> The command palette shows 100+ commands. Use search to quickly find what you need.
 
 ## Common Questions
 
-### Q: Can I add custom actions?
-A: Currently, the palette includes built-in actions. Custom macros may be added in future updates.
+### Q: Can I access the command palette directly?
 
-### Q: How do I close the palette without selecting?
-A: Tap outside the palette, press back, or tap the close button.
+A: No, the command palette only appears when assigning actions in Per-Key Customization. It's a selection tool, not a standalone command runner.
 
-### Q: Why don't I see certain actions?
-A: Some actions only appear in specific contexts (e.g., "Paste" when clipboard has content).
+### Q: Can I run commands without assigning them?
+
+A: Most commands can be run via their assigned keys or default key combinations. For example, Ctrl+C for copy, Ctrl+V for paste.
+
+### Q: How do I know what commands are available?
+
+A: Open Per-Key Customization, select any key, and browse the full list in the command palette.
 
 ## Related Features
 
+- [Per-Key Actions](per-key-actions.md) - Customize key swipe actions
 - [Shortcuts](../clipboard/shortcuts.md) - Keyboard shortcuts
-- [Per-Key Actions](per-key-actions.md) - Assign actions to swipes
-- [Extra Keys](extra-keys.md) - Add action keys
-
-## Technical Details
-
-See [Command Palette Technical Specification](../specs/customization/command-palette-spec.md).
+- [Extra Keys](extra-keys.md) - Add function key row

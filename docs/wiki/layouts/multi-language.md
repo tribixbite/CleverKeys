@@ -3,167 +3,166 @@ title: Multi-Language Input
 description: Type in multiple languages seamlessly
 category: Layouts
 difficulty: intermediate
-related_spec: ../specs/layouts/multi-language-spec.md
 ---
 
 # Multi-Language Input
 
-Type in multiple languages with smart language detection, seamless switching, and per-language predictions.
+Type in multiple languages with smart language detection and combined predictions from multiple dictionaries.
 
 ## Quick Summary
 
 | What | Description |
 |------|-------------|
-| **Purpose** | Type in multiple languages |
-| **Access** | Settings > Languages |
-| **Features** | Auto-detect, per-language dictionary, mixed typing |
-
-## Setting Up Multi-Language
-
-### Step 1: Add Languages
-
-1. Open **Settings > Languages**
-2. Tap **Add Language**
-3. Select languages you use
-4. Each language can have its own layout
-
-### Step 2: Configure Primary Language
-
-1. Drag your main language to the top
-2. This becomes the default for new text fields
-3. Predictions prioritize this language
-
-### Step 3: Enable Auto-Detection (Optional)
-
-1. Toggle **Auto-Detect Language**
-2. CleverKeys analyzes your typing
-3. Predictions adapt to detected language
+| **Purpose** | Type in multiple languages on one layout |
+| **Access** | Scroll to **Multi-Language** section in Settings |
+| **Features** | Auto-detect, dual dictionaries, accent normalization |
 
 ## How Multi-Language Works
 
-### Language Detection
+Instead of switching layouts, CleverKeys can provide predictions from multiple language dictionaries simultaneously. The neural model outputs letter sequences, and the system checks them against dictionaries for both your primary and secondary languages.
 
-CleverKeys analyzes your typing patterns:
+### The Key Concept
 
-```
-You type: "Bon" → Detects French
-Predictions: "Bonjour" "Bonne" "Bonheur"
+1. You swipe a word on QWERTY layout
+2. Neural model suggests possible letter sequences
+3. System checks both English AND Spanish (for example) dictionaries
+4. Best matches from both languages appear in suggestions
+5. Accent normalization maps "espanol" → "español"
 
-You type: "Good" → Detects English
-Predictions: "Good" "Goodnight" "Goodbye"
-```
+## Setting Up Multi-Language
 
-### Per-Language Dictionaries
+### Step 1: Open Multi-Language Settings
 
-Each language has its own dictionary:
+1. Open **Settings**
+2. Scroll to the **Multi-Language** section (collapsible)
+3. Expand to see language options
 
-| Language | Dictionary | Personal Words |
-|----------|------------|----------------|
-| English | 100,000+ words | Your additions |
-| French | 80,000+ words | Your additions |
-| Spanish | 90,000+ words | Your additions |
+### Step 2: Configure Primary Language
 
-### Mixed Typing
+Your primary language is the main dictionary:
 
-Type mixed-language sentences:
+1. **Primary Language** determines the neural model's vocabulary base
+2. English is the default primary language
+3. The neural model is trained primarily on English
 
-```
-"Let's meet at the café mañana"
-↑ English    ↑ French  ↑ Spanish
-```
+### Step 3: Add Secondary Language
 
-CleverKeys handles code-switching naturally.
+Enable a second language for combined predictions:
 
-## Language Layouts
+1. In **Multi-Language** section, find **Secondary Language**
+2. Select a language (Spanish, French, German, etc.)
+3. Both dictionaries now contribute predictions
 
-Each language can have an associated layout:
+### Step 4: Enable Language Detection (Optional)
 
-| Language | Layout | Special Keys |
-|----------|--------|--------------|
-| English | QWERTY | Standard |
-| French | AZERTY | é, è, à, ç |
-| German | QWERTZ | ä, ö, ü, ß |
-| Spanish | QWERTY | ñ, ¿, ¡ |
+Auto-detect adjusts prediction weighting:
 
-## Switching Languages
+1. Enable **Language Detection**
+2. The system analyzes recent words
+3. If you're typing mostly Spanish, Spanish predictions get boosted
 
-### Automatic Switching
+## Detection Sensitivity
 
-With auto-detect enabled:
+Control how quickly the system adapts to detected language:
 
-1. Start typing in any language
-2. CleverKeys detects the language
-3. Predictions and corrections adapt
-4. No manual switch needed
+| Sensitivity | Behavior |
+|-------------|----------|
+| **Low (0.4)** | Slow to switch, stable predictions |
+| **Medium (0.6)** | Balanced adaptation |
+| **High (0.9)** | Quick switching between languages |
 
-### Manual Switching
+## Available Languages
 
-Without auto-detect:
+### Bundled Languages
 
-1. Tap the globe key to switch layout
-2. Or swipe spacebar left/right
-3. Layout and language change together
+These come pre-installed:
+
+| Language | Code | Dictionary Size |
+|----------|------|-----------------|
+| English | en | 50,000 words |
+| Spanish | es | 50,000 words |
+| French | fr | 25,000 words |
+| Portuguese | pt | 25,000 words |
+| German | de | 25,000 words |
+| Italian | it | 25,000 words |
+
+### Downloadable Languages
+
+Via Language Packs:
+
+| Language | Code | Status |
+|----------|------|--------|
+| Dutch | nl | Available |
+| Indonesian | id | Available |
+| Malay | ms | Available |
+| Tagalog | tl | Available |
+| Swedish | sv | Via wordfreq script |
+
+See [Language Packs](language-packs.md) for download instructions.
+
+## Accent Normalization
+
+Multi-language mode automatically handles accented characters:
+
+| You type | Suggestion |
+|----------|------------|
+| "cafe" | "café" |
+| "espanol" | "español" |
+| "francais" | "français" |
+| "nino" | "niño" |
+
+The system maps your 26-letter QWERTY input to properly accented words.
 
 ## Tips and Tricks
 
-- **Primary language**: Set your most-used language as primary
-- **Related languages**: Auto-detect works best with distinct languages
-- **Personal dictionary**: Add words to each language separately
-- **Layout association**: Associate each language with preferred layout
+- **One layout, two languages**: No need to switch layouts for bilingual typing
+- **Accent-free typing**: Just type the base letters, accents are added automatically
+- **Detection window**: The system looks at your last ~10 words to detect language
+- **Boost settings**: Adjust detection sensitivity if switching feels too fast/slow
 
 > [!TIP]
-> For better auto-detection, type at least 3-4 characters before expecting language switch.
+> For best results, type a few words in one language before expecting accurate detection.
 
-## Language-Specific Features
-
-### Accented Characters
-
-Access accents via long-press or short swipe:
-
-| Key | Long-press options |
-|-----|--------------------|
-| **e** | é, è, ê, ë, ē |
-| **a** | á, à, â, ä, ã, å |
-| **n** | ñ, ń |
-| **c** | ç, ć |
-
-### Right-to-Left Languages
-
-For Arabic, Hebrew, etc.:
-
-- Keyboard flips to RTL
-- Cursor behavior adapts
-- Predictions flow RTL
-
-## Settings
+## Settings Reference
 
 | Setting | Location | Description |
 |---------|----------|-------------|
-| **Languages** | Languages | Add/remove languages |
-| **Auto-Detect** | Languages | Enable auto-detection |
-| **Language Order** | Languages | Set priority |
-| **Per-Language Dictionary** | Languages | Separate dictionaries |
+| **Primary Language** | Multi-Language section | Main dictionary |
+| **Secondary Language** | Multi-Language section | Additional dictionary |
+| **Language Detection** | Multi-Language section | Auto-detect toggle |
+| **Detection Sensitivity** | Multi-Language section | 0.4-0.9 range |
 
 ## Common Questions
 
-### Q: Does auto-detect work for similar languages?
+### Q: Do I need to switch layouts to type in another language?
 
-A: It works best with distinct languages (English/French). Very similar languages (Norwegian/Swedish) may need manual switching.
+A: No! Multi-Language mode provides predictions from both languages on your current layout. Type naturally and the system suggests words from both dictionaries.
 
-### Q: Can I disable auto-detect for specific languages?
+### Q: How does accent normalization work?
 
-A: Yes, in Settings > Languages, toggle auto-detect per language.
+A: The neural model outputs base letters. The dictionary lookup maps "espanol" to "español" using accent normalization tables.
 
-### Q: How do I add words to a specific language's dictionary?
+### Q: What if I need characters not on QWERTY?
 
-A: When adding a word, choose which language dictionary to add it to.
+A: Use subkeys! Long-press or swipe on keys to access accented characters directly (e.g., swipe up on 'n' for 'ñ').
+
+### Q: Can I use more than two languages?
+
+A: Currently, the system supports primary + secondary language. For three or more languages, you'd switch between secondary languages.
+
+## Technical Details
+
+The multi-language system uses:
+
+- **V2 Binary Dictionaries**: Optimized format with accent mapping
+- **Unigram Language Detection**: Word frequency analysis to detect language
+- **Suggestion Ranker**: Merges results from multiple dictionaries
+- **Accent Normalizer**: Maps ASCII input to Unicode accented forms
+
+See [Secondary Language Integration](../../specs/secondary-language-integration.md) for implementation details.
 
 ## Related Features
 
 - [Adding Layouts](adding-layouts.md) - Install language layouts
 - [Language Packs](language-packs.md) - Download language support
-- [Autocorrect](../typing/autocorrect.md) - Per-language corrections
-
-## Technical Details
-
-See [Multi-Language Technical Specification](../specs/layouts/multi-language-spec.md).
+- [Swipe Typing](../typing/swipe-typing.md) - How swipe prediction works
