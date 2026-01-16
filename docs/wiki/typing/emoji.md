@@ -65,9 +65,30 @@ The emoji keyboard is organized into categories:
 3. Scroll within each category
 4. Tap any emoji to insert
 
+### Searching by Name
+
+CleverKeys supports smart emoji search via the suggestion bar:
+
+**Auto-Context Search:**
+1. Type a word (e.g., "banana")
+2. Open emoji keyboard
+3. Search results for "banana" appear automatically
+4. Tap 🍌 to insert
+
+**Manual Search:**
+1. Open emoji keyboard (suggestion bar shows "Type to search emoji...")
+2. Start typing on the keyboard
+3. Results update as you type
+4. Tap any emoji to insert
+
+The search matches 500+ emoji names including:
+- Common words: "smile", "heart", "fire", "thumbs up"
+- Categories: animals, food, sports, weather
+- Variations: "happy", "sad", "angry", "love"
+
 ### Recent Emoji
 
-Your most recently used emoji appear in the first category for quick access.
+Your most recently used emoji appear in the first category (clock icon) for quick access.
 
 ### Skin Tone Variations
 
@@ -78,6 +99,7 @@ For emoji with skin tone options:
 
 ## Tips and Tricks
 
+- **Context search**: Type the word, then open emoji - instant results
 - **Recents**: Check recents first for frequently used emoji
 - **Scroll**: Swipe left/right to see more in each category
 - **Return to letters**: Tap ABC or the keyboard icon
@@ -108,7 +130,7 @@ Some apps auto-convert emoticons to emoji. CleverKeys does not do this by defaul
 A: Emoji appearance depends on the app and Android version. CleverKeys sends the Unicode character; the app decides how to display it.
 
 ### Q: How do I search for emoji?
-A: Some layouts include a search bar at the top of the emoji keyboard. Type a word like "happy" to find matching emoji.
+A: Just type while the emoji keyboard is open. The suggestion bar shows your search query and results update in real-time. You can also type a word first, then open emoji keyboard - it auto-detects the word and shows matching emoji instantly.
 
 ### Q: Can I add custom emoji?
 A: CleverKeys uses standard Unicode emoji. Custom emoji/stickers depend on the app you're typing in.
