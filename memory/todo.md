@@ -36,9 +36,16 @@
   - **Fix**: Mirrored ClipboardManager.searchMode pattern with simple `searchActive` boolean
   - Set `searchActive = true` in `onPaneOpened()`, `false` in `onPaneClosed()`
   - `isEmojiPaneOpen()` now returns `searchActive` flag
-- **Architecture (v6)**:
+- ✅ v7: Fixed KeyEventReceiverBridge missing emoji methods (d3806bb5)
+  - **Root cause**: `KeyEventReceiverBridge` had clipboard search delegation but NOT emoji search
+  - Missing: `isEmojiPaneOpen()`, `appendToEmojiSearch()`, `backspaceEmojiSearch()`
+  - Bridge fell back to `IReceiver` defaults (always `false`/no-op)
+  - **Fix**: Added all three emoji search methods to bridge
+  - Also: Always focus search input on pane open (e243be9a)
+- **Architecture (v7)**:
   - EditText shows query visually but receives input programmatically (not via IME's InputConnection)
-  - All typing when emoji pane is open routes through KeyEventHandler → KeyboardReceiver → EmojiSearchManager
+  - Full routing chain: KeyEventHandler → KeyEventReceiverBridge → KeyboardReceiver → EmojiSearchManager
+  - Bridge pattern required because KeyEventHandler created before KeyboardReceiver
   - TextWatcher on EditText handles search as text changes
   - `searchActive` flag tracks pane visibility (same pattern as clipboard search)
 - **Fuzzy matching**: Case-insensitive partial name matching via Emoji.searchByName()
