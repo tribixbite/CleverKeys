@@ -31,10 +31,16 @@
   - Added `appendToSearch(text)` and `backspaceSearch()` methods to EmojiSearchManager
   - Added `isEmojiPaneOpen()`, `appendToEmojiSearch()`, `backspaceEmojiSearch()` to IReceiver
   - Fixed clear button visibility: added `android:tint` for dark theme support
-- **Architecture (v5)**:
+- ✅ v6: Fixed searchActive flag routing (2cae0d25)
+  - **Root cause**: `isEmojiPaneOpen()` checked `isInitialized && searchInput != null` which didn't track pane state
+  - **Fix**: Mirrored ClipboardManager.searchMode pattern with simple `searchActive` boolean
+  - Set `searchActive = true` in `onPaneOpened()`, `false` in `onPaneClosed()`
+  - `isEmojiPaneOpen()` now returns `searchActive` flag
+- **Architecture (v6)**:
   - EditText shows query visually but receives input programmatically (not via IME's InputConnection)
   - All typing when emoji pane is open routes through KeyEventHandler → KeyboardReceiver → EmojiSearchManager
   - TextWatcher on EditText handles search as text changes
+  - `searchActive` flag tracks pane visibility (same pattern as clipboard search)
 - **Fuzzy matching**: Case-insensitive partial name matching via Emoji.searchByName()
 - **Emoji.kt initNameMap()**: 500+ entries covering all major categories
 
