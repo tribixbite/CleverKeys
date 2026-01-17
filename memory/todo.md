@@ -22,7 +22,7 @@
   - Added try-catch protection in `clearExpiredAndGetHistory()`
   - Entries truncated for display only; full content preserved for paste
 
-### Issue #72: Auto-Capitalize "I" Words
+### Issue #72: Auto-Capitalize "I" Words + Proper Noun Support
 - ✅ Implemented: Automatically capitalize "I" and contractions (a16a95f5)
 - **Feature**: Auto-capitalizes "i", "i'm", "i'll", "i'd", "i've" when typing or swiping
 - **Implementation**:
@@ -30,6 +30,15 @@
   - Added `capitalizeIWord()` helper in SuggestionHandler
   - Applied in: prediction transforms, suggestion selection, word completion
 - **Works independently**: Capitalizes even if autocorrect is disabled
+- ✅ Fixed: Autocorrect now preserves capitalization (29dd10e6)
+  - "Teh" → "The" (not "the"), "TEH" → "THE"
+  - Added `preserveCapitalization()` helper
+- ✅ Fixed: Proper noun case preserved in user dictionary (05050b47)
+  - **Root cause**: `loadCustomAndUserWords()` lowercased all words for dictionary lookup
+  - **Fix**: Added `userWordOriginalCase` map in WordPredictor to track original case
+  - When user adds "Boston", stored as "Boston", predicted as "Boston"
+  - Added `applyUserWordCase()` and `applyUserWordCaseToList()` helpers
+  - Applied to prediction output in `predictWordsWithContext()`
 
 ### Code Review (v1.2.5 → HEAD)
 - Reviewed 39 changed Kotlin files, 3000+ lines added
