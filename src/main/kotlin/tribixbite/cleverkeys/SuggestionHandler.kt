@@ -50,6 +50,31 @@ class SuggestionHandler(
 ) {
     companion object {
         private const val TAG = "SuggestionHandler"
+
+        /**
+         * Issue #72: Words that should always be capitalized.
+         * Includes "I" and all its contractions.
+         */
+        private val I_WORDS = setOf("i", "i'm", "i'll", "i'd", "i've")
+    }
+
+    /**
+     * Issue #72: Capitalize "I" words if the setting is enabled.
+     * Transforms "i" → "I", "i'm" → "I'm", "i'll" → "I'll", etc.
+     *
+     * @param word Word to potentially capitalize
+     * @return Capitalized word if it's an I-word, otherwise unchanged
+     */
+    private fun capitalizeIWord(word: String): String {
+        if (!config.autocapitalize_i_words) return word
+
+        val lower = word.lowercase()
+        return if (lower in I_WORDS) {
+            // Capitalize the first letter (I)
+            word.replaceFirstChar { it.uppercaseChar() }
+        } else {
+            word
+        }
     }
 
     /**
@@ -321,6 +346,9 @@ class SuggestionHandler(
         // Strip "raw:" prefix before processing (v1.33.7: fixed regex to match actual prefix format)
         // Prefix format: "raw:word" not " [raw:0.08]"
         processedWord = processedWord.replace(Regex("^raw:"), "")
+
+        // Issue #72: Capitalize "I" words (i → I, i'm → I'm, i'll → I'll)
+        processedWord = capitalizeIWord(processedWord)
 
         // Check if this is a known contraction (already has apostrophes from displayText)
         // If it is, skip autocorrect to prevent fuzzy matching to wrong words
@@ -801,6 +829,28 @@ class SuggestionHandler(
                         false
                     }
 
+                    // Issue #72: Auto-capitalize "I" words when completed
+                    // Check BEFORE autocorrect so this works even if autocorrect is disabled
+                    val capitalizedWord = capitalizeIWord(completedWord)
+                    val needsICapitalization = text == " " && !inTermuxApp &&
+                        capitalizedWord != completedWord
+
+                    if (needsICapitalization) {
+                        ic?.let { inputConnection ->
+                            // Delete the typed word + space (already committed)
+                            inputConnection.deleteSurroundingText(completedWord.length + 1, 0)
+                            // Insert the capitalized word with trailing space
+                            inputConnection.commitText("$capitalizedWord ", 1)
+                            updateContext(capitalizedWord)
+                            contextTracker.clearCurrentWord()
+                            contextTracker.setLastCommitSource(PredictionSource.USER_TYPED_TAP)
+                            Log.d(TAG, "I-WORD CAPITALIZE: '$completedWord' → '$capitalizedWord'")
+                            predictionCoordinator.getWordPredictor()?.reset()
+                            suggestionBar?.clearSuggestions()
+                            return
+                        }
+                    }
+
                     if (config.autocorrect_enabled && predictionCoordinator.getWordPredictor() != null &&
                         text == " " && !inTermuxApp) {
                         val correctedWord = predictionCoordinator.getWordPredictor()?.autoCorrect(completedWord)
@@ -958,14 +1008,17 @@ class SuggestionHandler(
                 val contractionMapping = contractionManager.getNonPairedMapping(partial)
                 if (contractionMapping != null) {
                     // Add contraction as first suggestion with high score
-                    contractionWords.add(contractionMapping)
+                    // Issue #72: Also capitalize I-contractions (im → I'm, ill → I'll)
+                    contractionWords.add(capitalizeIWord(contractionMapping))
                     contractionScores.add(result.scores.firstOrNull()?.plus(1000) ?: 10000)
                 }
 
                 // v1.2.6 FIX: Transform ALL predictions through contraction manager
                 // e.g., if predictor suggests "cant", transform to "can't"
+                // Issue #72: Also capitalize I-words (i → I, i'm → I'm)
                 val transformedPredictions = result.words.map { word ->
-                    contractionManager.getNonPairedMapping(word) ?: word
+                    val contracted = contractionManager.getNonPairedMapping(word) ?: word
+                    capitalizeIWord(contracted)
                 }
 
                 // Merge contraction with predictions (contraction first, then transformed predictions)

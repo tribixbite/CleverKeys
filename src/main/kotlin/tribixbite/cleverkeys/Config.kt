@@ -158,6 +158,10 @@ object Defaults {
     const val AUTOCORRECT_MAX_BEAM_CANDIDATES = 3
     const val SWIPE_BEAM_AUTOCORRECT_ENABLED = true
     const val SWIPE_FINAL_AUTOCORRECT_ENABLED = true
+
+    // Issue #72: Auto-capitalize "I" and its contractions
+    // When enabled, automatically capitalizes "i", "i'm", "i'll", "i'd", "i've"
+    const val AUTOCAPITALIZE_I_WORDS = true
     const val SWIPE_FUZZY_MATCH_MODE = "edit_distance"
     const val SWIPE_PREDICTION_SOURCE = 80
     const val SWIPE_COMMON_WORDS_BOOST = 1.0f
@@ -402,6 +406,8 @@ class Config private constructor(
     @JvmField var autocorrect_min_word_length = 0
     @JvmField var autocorrect_char_match_threshold = 0f
     @JvmField var autocorrect_confidence_min_frequency = 0
+    /** Issue #72: Auto-capitalize "I" and contractions (i'm → I'm, i'll → I'll) */
+    @JvmField var autocapitalize_i_words = true
 
     // Fuzzy matching configuration
     @JvmField var autocorrect_max_length_diff = 0
@@ -650,6 +656,8 @@ class Config private constructor(
         autocorrect_min_word_length = safeGetInt(_prefs, "autocorrect_min_word_length", Defaults.AUTOCORRECT_MIN_WORD_LENGTH)
         autocorrect_char_match_threshold = safeGetFloat(_prefs, "autocorrect_char_match_threshold", Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD)
         autocorrect_confidence_min_frequency = safeGetInt(_prefs, "autocorrect_confidence_min_frequency", Defaults.AUTOCORRECT_MIN_FREQUENCY)
+        // Issue #72: Auto-capitalize "I" words
+        autocapitalize_i_words = _prefs.getBoolean("autocapitalize_i_words", Defaults.AUTOCAPITALIZE_I_WORDS)
 
         autocorrect_max_length_diff = safeGetInt(_prefs, "autocorrect_max_length_diff", Defaults.AUTOCORRECT_MAX_LENGTH_DIFF)
         autocorrect_prefix_length = safeGetInt(_prefs, "autocorrect_prefix_length", Defaults.AUTOCORRECT_PREFIX_LENGTH)
