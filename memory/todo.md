@@ -60,11 +60,17 @@
   - Created `assets/emoji_keywords.tsv` (314KB, 9,833 keywords → 26,713 mappings)
   - Background loading on IO thread (doesn't block keyboard startup)
   - Prefix matching: "fi" finds fire, fireworks, fish, etc.
-- ✅ v10: UI improvements (close button, divider, long-press name) (0d7779f5)
+- ✅ v10: UI improvements (close button, divider, long-press name) (0d7779f5, e9703c62)
   - Added close button (down arrow icon) to dismiss emoji pane
   - Added visual divider between category buttons and emoji grid
-  - Added long-press handler to show emoji name in toast
+  - Added long-press handler to show emoji name in suggestion bar
   - Added `Emoji.getEmojiName()` reverse lookup (emoji → name)
+  - Fixed: Toast suppressed on Android 13+ IME, uses `showSuggestionBarMessage()` instead
+- ✅ DRY refactor: Toast → suggestion bar in IME context (c5f6f6e7)
+  - Refactored `showNoTextSelectedToast()` → `showNoTextSelectedMessage()`
+  - Replaced 7 Toast.makeText() calls with `_keyboard2?.showSuggestionBarMessage()`
+  - Removed unused Toast import from Keyboard2View.kt
+  - Kept Toast in non-IME contexts (SettingsActivity, etc.)
 - **Fuzzy matching**: Case-insensitive partial name matching via Emoji.searchByName()
 - **Emoji.kt initNameMap()**: 500+ entries covering all major categories
 
