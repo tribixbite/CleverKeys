@@ -128,6 +128,10 @@ class KeyboardReceiver(
                     // Wire up search manager to category buttons
                     pane.findViewById<EmojiGroupButtonsBar>(R.id.emoji_group_buttons)
                         ?.setSearchManager(emojiSearchManager!!)
+
+                    // #41 v8: Wire up search manager to emoji grid for selection bypass
+                    pane.findViewById<EmojiGridView>(R.id.emoji_grid)
+                        ?.setSearchManager(emojiSearchManager!!)
                 }
             }
 

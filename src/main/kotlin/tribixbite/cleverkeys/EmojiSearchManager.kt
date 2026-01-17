@@ -201,6 +201,29 @@ class EmojiSearchManager {
     }
 
     /**
+     * Called when an emoji is selected from the grid.
+     * #41 v8: Temporarily deactivates search routing so emoji is inserted into app, not search bar.
+     * Must be called BEFORE the emoji key_up event is processed.
+     */
+    fun onEmojiSelected() {
+        // Deactivate routing so the emoji goes to InputConnection, not search
+        searchActive = false
+        Log.d(TAG, "Emoji selected, searchActive temporarily disabled")
+    }
+
+    /**
+     * Called after emoji selection to re-enable search routing.
+     * #41 v8: Re-activates search routing after emoji is inserted.
+     */
+    fun onEmojiInserted() {
+        // Re-enable routing for continued searching
+        if (isInitialized) {
+            searchActive = true
+            Log.d(TAG, "Emoji inserted, searchActive re-enabled")
+        }
+    }
+
+    /**
      * Check if emoji search is active.
      * Used to determine if keyboard input should be routed to search.
      * #41 v6: Simple flag like ClipboardManager.searchMode

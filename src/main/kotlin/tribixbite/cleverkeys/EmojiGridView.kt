@@ -17,6 +17,17 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
     private var emojiArray: List<Emoji> = emptyList()
     private val lastUsed: MutableMap<Emoji, Int> = mutableMapOf()
 
+    // #41 v8: Reference to search manager for bypassing search routing on emoji selection
+    private var searchManager: EmojiSearchManager? = null
+
+    /**
+     * Set the search manager reference.
+     * #41 v8: Needed to temporarily disable search routing when emoji is selected.
+     */
+    fun setSearchManager(manager: EmojiSearchManager) {
+        this.searchManager = manager
+    }
+
     init {
         Emoji.init(context.resources)
         migrateOldPrefs() // TODO: Remove at some point in future
@@ -56,7 +67,15 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         val emoji = emojiArray[pos]
         val used = lastUsed[emoji]
         lastUsed[emoji] = (used ?: 0) + 1
+
+        // #41 v8: Temporarily disable search routing so emoji goes to app, not search bar
+        searchManager?.onEmojiSelected()
+
         config.handler?.key_up(emoji.kv(), Pointers.Modifiers.EMPTY)
+
+        // #41 v8: Re-enable search routing for continued searching
+        searchManager?.onEmojiInserted()
+
         saveLastUsed() // TODO: opti
     }
 

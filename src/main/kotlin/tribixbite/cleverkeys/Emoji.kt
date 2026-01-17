@@ -126,7 +126,7 @@ class Emoji protected constructor(bytecode: String) {
 
                 // Fantasy/Creatures
                 "smiling imp" to "😈", "imp" to "👿", "poop" to "💩", "shit" to "💩",
-                "ghost" to "👻", "alien" to "👽", "robot" to "🤖", "jack o lantern" to "🎃",
+                "ghost" to "👻", "alien" to "👽", "robot" to "🤖", "jack o lantern" to "🎃", "pumpkin" to "🎃", "halloween" to "🎃",
                 "clown" to "🤡", "ogre" to "👹", "goblin" to "👺", "skull crossbones" to "☠️",
 
                 // Gestures & Body
