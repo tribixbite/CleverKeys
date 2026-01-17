@@ -25,6 +25,7 @@ class EmojiSearchManager {
 
     private var searchInput: EditText? = null
     private var clearButton: ImageButton? = null
+    private var closeButton: ImageButton? = null
     private var noResultsView: TextView? = null
     private var emojiGrid: EmojiGridView? = null
     private var groupButtonsBar: EmojiGroupButtonsBar? = null
@@ -35,6 +36,9 @@ class EmojiSearchManager {
     // #41 v5: Simple flag like ClipboardManager.searchMode - set true when pane open
     private var searchActive = false
 
+    // Callback to close emoji pane and return to keyboard
+    private var onCloseCallback: (() -> Unit)? = null
+
     /**
      * Initialize the search manager with views from the emoji pane.
      * Call this when the emoji pane is inflated.
@@ -42,15 +46,24 @@ class EmojiSearchManager {
     fun initialize(emojiPane: ViewGroup) {
         searchInput = emojiPane.findViewById(R.id.emoji_search_input)
         clearButton = emojiPane.findViewById(R.id.emoji_search_clear)
+        closeButton = emojiPane.findViewById(R.id.emoji_close_button)
         noResultsView = emojiPane.findViewById(R.id.emoji_no_results)
         emojiGrid = emojiPane.findViewById(R.id.emoji_grid)
         groupButtonsBar = emojiPane.findViewById(R.id.emoji_group_buttons)
 
         setupTextWatcher()
         setupClearButton()
+        setupCloseButton()
 
         isInitialized = true
         Log.d(TAG, "EmojiSearchManager initialized")
+    }
+
+    /**
+     * Set callback to close emoji pane and return to keyboard.
+     */
+    fun setOnCloseCallback(callback: () -> Unit) {
+        onCloseCallback = callback
     }
 
     /**
@@ -76,6 +89,16 @@ class EmojiSearchManager {
     private fun setupClearButton() {
         clearButton?.setOnClickListener {
             clearSearch()
+        }
+    }
+
+    /**
+     * Set up close button to dismiss emoji pane.
+     */
+    private fun setupCloseButton() {
+        closeButton?.setOnClickListener {
+            Log.d(TAG, "Close button clicked")
+            onCloseCallback?.invoke()
         }
     }
 
@@ -306,9 +329,11 @@ class EmojiSearchManager {
         textWatcher = null
         searchInput = null
         clearButton = null
+        closeButton = null
         noResultsView = null
         emojiGrid = null
         groupButtonsBar = null
+        onCloseCallback = null
         isInitialized = false
         Log.d(TAG, "EmojiSearchManager cleaned up")
     }

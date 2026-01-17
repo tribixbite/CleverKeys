@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:hardwareAccelerated="false">
 
-  <!-- Search bar -->
+  <!-- Search bar with close button -->
   <LinearLayout
       android:id="@+id/emoji_search_bar"
       android:layout_width="match_parent"
@@ -46,6 +46,18 @@
         android:scaleType="centerInside"
         android:padding="6dp" />
 
+    <!-- Close/dismiss emoji pane button -->
+    <ImageButton
+        android:id="@+id/emoji_close_button"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:src="@android:drawable/arrow_down_float"
+        android:tint="?attr/colorLabel"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Close emoji picker"
+        android:scaleType="centerInside"
+        android:padding="6dp" />
+
   </LinearLayout>
 
   <!-- Category buttons -->
@@ -53,7 +65,14 @@
       android:id="@+id/emoji_group_buttons"
       android:orientation="horizontal"
       android:layout_width="match_parent"
-      android:layout_height="wrap_content"/>
+      android:layout_height="wrap_content"
+      android:background="?attr/colorKey"/>
+
+  <!-- Divider between categories and emoji grid -->
+  <View
+      android:layout_width="match_parent"
+      android:layout_height="1dp"
+      android:background="?attr/clipboard_divider_color"/>
 
   <!-- Emoji grid -->
   <FrameLayout

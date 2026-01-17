@@ -10,9 +10,10 @@ import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.GridView
 import android.widget.TextView
+import android.widget.Toast
 
 class EmojiGridView(context: Context, attrs: AttributeSet?) :
-    GridView(context, attrs), AdapterView.OnItemClickListener {
+    GridView(context, attrs), AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
 
     private var emojiArray: List<Emoji> = emptyList()
     private val lastUsed: MutableMap<Emoji, Int> = mutableMapOf()
@@ -32,6 +33,7 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         Emoji.init(context.resources)
         migrateOldPrefs() // TODO: Remove at some point in future
         onItemClickListener = this
+        onItemLongClickListener = this  // #41 v10: Long-press shows emoji name
         loadLastUsed()
         setEmojiGroup(if (lastUsed.isEmpty()) 0 else GROUP_LAST_USE)
     }
@@ -77,6 +79,22 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         searchManager?.onEmojiInserted()
 
         saveLastUsed() // TODO: opti
+    }
+
+    /**
+     * #41 v10: Long-press handler to show emoji name in toast.
+     */
+    override fun onItemLongClick(parent: AdapterView<*>?, view: View?, pos: Int, id: Long): Boolean {
+        if (pos < 0 || pos >= emojiArray.size) return false
+
+        val emoji = emojiArray[pos]
+        val emojiStr = emoji.kv().getString()
+        val name = Emoji.getEmojiName(emojiStr) ?: emojiStr
+
+        // Format: "😀 grinning" or just the emoji if no name found
+        val displayText = if (name != emojiStr) "$emojiStr $name" else emojiStr
+        Toast.makeText(context, displayText, Toast.LENGTH_SHORT).show()
+        return true  // Consume the event
     }
 
     private fun getLastEmojis(): List<Emoji> {

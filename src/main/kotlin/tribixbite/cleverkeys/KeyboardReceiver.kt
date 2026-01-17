@@ -132,6 +132,11 @@ class KeyboardReceiver(
                     // #41 v8: Wire up search manager to emoji grid for selection bypass
                     pane.findViewById<EmojiGridView>(R.id.emoji_grid)
                         ?.setSearchManager(emojiSearchManager!!)
+
+                    // #41 v10: Close button callback to return to keyboard
+                    emojiSearchManager?.setOnCloseCallback {
+                        handle_event_key(KeyValue.Event.SWITCH_BACK_CLIPBOARD)
+                    }
                 }
             }
 

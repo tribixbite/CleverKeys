@@ -16,6 +16,8 @@ class Emoji protected constructor(bytecode: String) {
         private val stringMap: MutableMap<String, Emoji> = mutableMapOf()
         // #41: Name-to-emoji map for search
         private val nameMap: MutableMap<String, Emoji> = mutableMapOf()
+        // #41 v10: Reverse map (emoji → name) for long-press display
+        private val emojiToName: MutableMap<String, String> = mutableMapOf()
 
         @JvmStatic
         fun init(res: Resources) {
@@ -484,8 +486,25 @@ class Emoji protected constructor(bytecode: String) {
                     nameMap[name] = emoji
                     nameMap[name.replace(" ", "_")] = emoji
                     nameMap[name.replace(" ", "")] = emoji
+                    // #41 v10: Also populate reverse map (only store first/canonical name)
+                    if (!emojiToName.containsKey(emojiStr)) {
+                        emojiToName[emojiStr] = name
+                    }
                 }
             }
+        }
+
+        /**
+         * #41 v10: Get the display name for an emoji (for long-press tooltip).
+         * @param emojiStr The emoji string (e.g., "😀")
+         * @return The emoji name (e.g., "grinning") or null if not found
+         */
+        @JvmStatic
+        fun getEmojiName(emojiStr: String): String? {
+            if (nameMap.isEmpty()) {
+                initNameMap()
+            }
+            return emojiToName[emojiStr]
         }
 
         @JvmStatic
