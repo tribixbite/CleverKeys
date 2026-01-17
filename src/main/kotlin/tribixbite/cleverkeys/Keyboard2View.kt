@@ -18,7 +18,6 @@ import android.util.LruCache
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
-import android.widget.Toast
 import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
 import tribixbite.cleverkeys.customization.AvailableCommand
@@ -746,14 +745,11 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /**
-     * Show a toast message indicating no text is selected for the given action.
+     * Show a message indicating no text is selected for the given action.
+     * Uses suggestion bar instead of Toast (suppressed on Android 13+ IME).
      */
-    private fun showNoTextSelectedToast(actionName: String) {
-        try {
-            Toast.makeText(context, "No text selected for $actionName", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Log.e("Keyboard2View", "Failed to show toast", e)
-        }
+    private fun showNoTextSelectedMessage(actionName: String) {
+        _keyboard2?.showSuggestionBarMessage("No text selected for $actionName")
     }
 
     /**
@@ -765,7 +761,7 @@ class Keyboard2View @JvmOverloads constructor(
         val selectedText = inputConnection.getSelectedText(0)?.toString()
         if (selectedText.isNullOrEmpty()) {
             Log.d("Keyboard2View", "No text selected for text assist")
-            showNoTextSelectedToast("Text Assist")
+            showNoTextSelectedMessage("Text Assist")
             return
         }
 
@@ -798,7 +794,7 @@ class Keyboard2View @JvmOverloads constructor(
         val selectedText = inputConnection.getSelectedText(0)?.toString()
         if (selectedText.isNullOrEmpty()) {
             Log.d("Keyboard2View", "No text selected for replace")
-            showNoTextSelectedToast("Replace Text")
+            showNoTextSelectedMessage("Replace Text")
             return
         }
 
@@ -836,9 +832,9 @@ class Keyboard2View @JvmOverloads constructor(
             // Check if there's already a selection
             val existingSelection = inputConnection.getSelectedText(0)?.toString()
             if (!existingSelection.isNullOrEmpty()) {
-                // Already have selection, just show toast indicating menu should appear
+                // Already have selection, show message indicating menu should appear
                 Log.d("Keyboard2View", "Text already selected, toolbar should be visible")
-                Toast.makeText(context, "Selection menu available", Toast.LENGTH_SHORT).show()
+                _keyboard2?.showSuggestionBarMessage("Selection menu available")
                 return
             }
 
@@ -848,7 +844,7 @@ class Keyboard2View @JvmOverloads constructor(
             val textAfter = inputConnection.getTextAfterCursor(50, 0)?.toString() ?: ""
 
             if (textBefore.isEmpty() && textAfter.isEmpty()) {
-                Toast.makeText(context, "No text to select", Toast.LENGTH_SHORT).show()
+                _keyboard2?.showSuggestionBarMessage("No text to select")
                 return
             }
 
@@ -877,7 +873,7 @@ class Keyboard2View @JvmOverloads constructor(
             val selectForward = endOffset
 
             if (selectBackward == 0 && selectForward == 0) {
-                Toast.makeText(context, "No word at cursor", Toast.LENGTH_SHORT).show()
+                _keyboard2?.showSuggestionBarMessage("No word at cursor")
                 return
             }
 
@@ -891,7 +887,7 @@ class Keyboard2View @JvmOverloads constructor(
                 // Select the word using absolute positions
                 inputConnection.setSelection(wordStart, wordEnd)
                 Log.d("Keyboard2View", "Selected word at positions: $wordStart to $wordEnd")
-                Toast.makeText(context, "Word selected", Toast.LENGTH_SHORT).show()
+                _keyboard2?.showSuggestionBarMessage("Word selected")
             } else {
                 // Fallback: try double-tap simulation via ctrl+shift+left then shift+right
                 // Send Ctrl+Shift+Left to select word left
@@ -911,11 +907,11 @@ class Keyboard2View @JvmOverloads constructor(
                     0,
                     android.view.KeyEvent.META_CTRL_ON or android.view.KeyEvent.META_SHIFT_ON
                 ))
-                Toast.makeText(context, "Word selection attempted", Toast.LENGTH_SHORT).show()
+                _keyboard2?.showSuggestionBarMessage("Word selection attempted")
             }
         } catch (e: Exception) {
             Log.e("Keyboard2View", "Failed to show text menu", e)
-            Toast.makeText(context, "Could not select text", Toast.LENGTH_SHORT).show()
+            _keyboard2?.showSuggestionBarMessage("Could not select text")
         }
     }
 
