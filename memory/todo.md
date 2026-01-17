@@ -25,28 +25,18 @@
 - ✅ v2: Redesigned to use suggestion bar instead (2e3f416b)
 - ✅ v3: Expanded emoji search coverage with 500+ name mappings (252d72a6)
 - ✅ v4: Complete UI redesign with visible EditText (b9b12f08)
-  - **Critical fixes**: Users couldn't see what they typed, no way to toggle search vs app input
-  - **Visible search bar**: EditText at top of emoji pane shows typed query
-  - **Clear button**: X button appears when search has text, clears on tap
-  - **No results message**: Shows "No emoji found for '[query]'" when empty
-  - **Focus-based routing**: Typing goes to EditText only when focused (tap to focus)
-  - **Category clears search**: Tapping category button clears search text
-- **EmojiSearchManager.kt**: Redesigned to use visible EditText with TextWatcher
-  - `initialize(ViewGroup)`: Sets up views when emoji pane opens
-  - `onPaneOpened(initialQuery)`: Optionally pre-fills detected word before cursor
-  - `onPaneClosed()`: Resets state when pane closes
-  - `onCategorySelected()`: Clears search when category tapped
-  - Removed: IReceiver-based text routing (no longer hijacks all typing)
+- ✅ v5: Fixed text routing - IME can't type into own views (71fa531e)
+  - **Root cause**: EditText inside IME view hierarchy, but typing goes to app's InputConnection
+  - **Fix**: Re-added IReceiver routing to programmatically update EditText
+  - Added `appendToSearch(text)` and `backspaceSearch()` methods to EmojiSearchManager
+  - Added `isEmojiPaneOpen()`, `appendToEmojiSearch()`, `backspaceEmojiSearch()` to IReceiver
+  - Fixed clear button visibility: added `android:tint` for dark theme support
+- **Architecture (v5)**:
+  - EditText shows query visually but receives input programmatically (not via IME's InputConnection)
+  - All typing when emoji pane is open routes through KeyEventHandler → KeyboardReceiver → EmojiSearchManager
+  - TextWatcher on EditText handles search as text changes
 - **Fuzzy matching**: Case-insensitive partial name matching via Emoji.searchByName()
 - **Emoji.kt initNameMap()**: 500+ entries covering all major categories
-- Files changed (v4):
-  - emoji_pane.xml: Added search bar LinearLayout with EditText + clear button + no results TextView
-  - EmojiSearchManager.kt: Complete rewrite using EditText + TextWatcher
-  - EmojiGridView.kt: searchEmojis() now returns result count for "no results" display
-  - EmojiGroupButtonsBar.kt: Added setSearchManager() to wire up category→search clearing
-  - KeyEventHandler.kt: Removed IReceiver emoji search methods (no longer needed)
-  - KeyboardReceiver.kt: Updated to use new EmojiSearchManager API
-  - CleverKeysService.kt: Simplified initialization (manager created empty, views wired on pane open)
 
 ### Swipe on Password Fields (#39)
 - ✅ Added option to enable swipe typing on password fields
