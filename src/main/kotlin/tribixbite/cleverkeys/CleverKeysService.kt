@@ -110,6 +110,9 @@ class CleverKeysService : InputMethodService(),
     // Event handling (v1.32.368: extracted to KeyboardReceiver)
     private var _receiver: KeyboardReceiver? = null
 
+    // Emoji search management (#41 v5: persistent to survive onStartInputView recreations)
+    private var _emojiSearchManager: EmojiSearchManager? = null
+
     // KeyEventHandler bridge (v1.32.390: extracted to KeyEventReceiverBridge)
     private lateinit var _receiverBridge: KeyEventReceiverBridge
 
@@ -665,10 +668,12 @@ class CleverKeysService : InputMethodService(),
             _contentPaneContainer = predictionSetup.contentPaneContainer
             setInputView(predictionSetup.inputView)
 
-            // #41 v4: Initialize emoji search manager (uses visible EditText in emoji pane)
-            // Manager is initialized lazily when emoji pane is opened
-            val emojiSearchManager = EmojiSearchManager()
-            _receiver?.setEmojiSearchManager(emojiSearchManager)
+            // #41 v5: Emoji search manager persists across onStartInputView calls
+            // Only create once; it gets initialized when emoji pane is first opened
+            if (_emojiSearchManager == null) {
+                _emojiSearchManager = EmojiSearchManager()
+            }
+            _receiver?.setEmojiSearchManager(_emojiSearchManager!!)
 
             // Password field detection: disable predictions and show eye toggle
             val isPasswordField = SuggestionBar.isPasswordField(info)
