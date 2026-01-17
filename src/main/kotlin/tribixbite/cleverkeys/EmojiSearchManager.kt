@@ -32,6 +32,9 @@ class EmojiSearchManager {
     private var isInitialized = false
     private var textWatcher: TextWatcher? = null
 
+    // #41 v5: Simple flag like ClipboardManager.searchMode - set true when pane open
+    private var searchActive = false
+
     /**
      * Initialize the search manager with views from the emoji pane.
      * Call this when the emoji pane is inflated.
@@ -134,12 +137,17 @@ class EmojiSearchManager {
     /**
      * Called when emoji pane is opened.
      * Optionally pre-fills search with detected word before cursor.
+     * #41 v5: Sets searchActive flag for routing
      */
     fun onPaneOpened(initialQuery: String? = null) {
         if (!isInitialized) {
             Log.w(TAG, "onPaneOpened called before initialization")
             return
         }
+
+        // #41 v5: Activate search routing (like ClipboardManager.searchMode)
+        searchActive = true
+        Log.d(TAG, "Search active = true")
 
         // Reset state
         showGrid()
@@ -162,8 +170,13 @@ class EmojiSearchManager {
 
     /**
      * Called when emoji pane is closed.
+     * #41 v5: Clears searchActive flag for routing
      */
     fun onPaneClosed() {
+        // #41 v5: Deactivate search routing (like ClipboardManager.searchMode)
+        searchActive = false
+        Log.d(TAG, "Search active = false")
+
         // Clear search state when pane closes
         searchInput?.setText("")
         searchInput?.clearFocus()
@@ -186,11 +199,12 @@ class EmojiSearchManager {
     }
 
     /**
-     * Check if emoji pane is open and initialized.
+     * Check if emoji search is active.
      * Used to determine if keyboard input should be routed to search.
+     * #41 v5: Simple flag like ClipboardManager.searchMode
      */
     fun isEmojiPaneOpen(): Boolean {
-        return isInitialized && searchInput != null
+        return searchActive
     }
 
     /**
