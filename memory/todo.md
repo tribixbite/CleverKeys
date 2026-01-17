@@ -1,7 +1,43 @@
 # CleverKeys Working TODO List
 
 **Last Updated**: 2026-01-17
-**Status**: v1.2.10 - Emoji search enhancements (#41 v8-v10)
+**Status**: v1.2.11 - Bug fixes and Issue #71, #72
+
+---
+
+## Session Progress (2026-01-17)
+
+### Autocapitalisation Fix
+- ✅ Fixed: Auto-capitalize not working in some text fields (3ef810ca)
+- **Issue**: `capsMode` only checked for `CAP_MODE_SENTENCES`, missing `CAP_MODE_WORDS`
+- **Fix**: Changed to use `SUPPORTED_CAPS_MODES` which checks both sentence and word capitalization
+- **Cause**: Some text fields (like search bars) specify CAP_WORDS but not CAP_SENTENCES
+
+### Issue #71: Clipboard TransactionTooLargeException
+- ✅ Fixed: Prevent crashes with large clipboard histories (17203125)
+- **Issue**: Clipboard with large items (2.2MB HTML file) could exceed Android Binder ~1MB limit
+- **Fix**:
+  - Added `MAX_DISPLAY_ENTRIES` constant (100) to limit clipboard list IPC size
+  - Updated default limits: 50 entries max, 256KB max item size, 5MB total
+  - Added try-catch protection in `clearExpiredAndGetHistory()`
+  - Entries truncated for display only; full content preserved for paste
+
+### Issue #72: Auto-Capitalize "I" Words
+- ✅ Implemented: Automatically capitalize "I" and contractions (a16a95f5)
+- **Feature**: Auto-capitalizes "i", "i'm", "i'll", "i'd", "i've" when typing or swiping
+- **Implementation**:
+  - Added `AUTOCAPITALIZE_I_WORDS` default and `autocapitalize_i_words` setting
+  - Added `capitalizeIWord()` helper in SuggestionHandler
+  - Applied in: prediction transforms, suggestion selection, word completion
+- **Works independently**: Capitalizes even if autocorrect is disabled
+
+### Code Review (v1.2.5 → HEAD)
+- Reviewed 39 changed Kotlin files, 3000+ lines added
+- No critical issues found
+- Minor TODOs noted:
+  - `EmojiGridView.kt:43` - `migrateOldPrefs()` removal (future cleanup)
+  - `MultiLanguageManager.kt:102` - Phase 8.2 language dictionaries (planned)
+- Emoji search architecture well-designed: lazy background loading, Trie structure
 
 ---
 
