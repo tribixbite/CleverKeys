@@ -1,7 +1,7 @@
 # CleverKeys Working TODO List
 
-**Last Updated**: 2026-01-16
-**Status**: v1.2.9 - Timestamp key feature + Android 15 fixes
+**Last Updated**: 2026-01-17
+**Status**: v1.2.10 - Emoji search enhancements (#41 v8-v10)
 
 ---
 
@@ -48,6 +48,23 @@
   - Bridge pattern required because KeyEventHandler created before KeyboardReceiver
   - TextWatcher on EditText handles search as text changes
   - `searchActive` flag tracks pane visibility (same pattern as clipboard search)
+- ✅ v8: Fixed emoji tap routing and app switch issues
+  - **Issue 1**: Tapping emoji added to search instead of inserting into app
+  - **Fix**: Added `onEmojiSelected()` / `onEmojiInserted()` to temporarily disable search routing
+  - **Issue 2**: Switching apps while emoji picker open broke keyboard
+  - **Fix**: Call `onPaneClosed()` in `onFinishInputView()` to reset searchActive flag
+- ✅ v9: Comprehensive emoji keyword index (9,800+ keywords)
+  - Created `EmojiKeywordIndex.kt` - Trie-based lazy-loaded index
+  - Sources: Discord/Twemoji, Slack, GitHub, Google Noto, CLDR
+  - Created `tools/generate_emoji_tsv.js` to generate keyword data
+  - Created `assets/emoji_keywords.tsv` (314KB, 9,833 keywords → 26,713 mappings)
+  - Background loading on IO thread (doesn't block keyboard startup)
+  - Prefix matching: "fi" finds fire, fireworks, fish, etc.
+- ✅ v10: UI improvements (close button, divider, long-press name) (0d7779f5)
+  - Added close button (down arrow icon) to dismiss emoji pane
+  - Added visual divider between category buttons and emoji grid
+  - Added long-press handler to show emoji name in toast
+  - Added `Emoji.getEmojiName()` reverse lookup (emoji → name)
 - **Fuzzy matching**: Case-insensitive partial name matching via Emoji.searchByName()
 - **Emoji.kt initNameMap()**: 500+ entries covering all major categories
 
