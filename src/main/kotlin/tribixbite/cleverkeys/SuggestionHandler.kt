@@ -78,6 +78,30 @@ class SuggestionHandler(
     }
 
     /**
+     * Preserve the capitalization pattern from the original word in the corrected word.
+     * Handles three cases:
+     * 1. ALL CAPS: "TEH" → "THE"
+     * 2. Title Case: "Teh" → "The"
+     * 3. lowercase: "teh" → "the"
+     *
+     * @param original The word as typed by the user
+     * @param corrected The autocorrected word (typically lowercase)
+     * @return Corrected word with original's capitalization pattern applied
+     */
+    private fun preserveCapitalization(original: String, corrected: String): String {
+        if (original.isEmpty() || corrected.isEmpty()) return corrected
+
+        return when {
+            // All uppercase: "TEH" → "THE"
+            original.all { !it.isLetter() || it.isUpperCase() } -> corrected.uppercase()
+            // First letter uppercase (title case): "Teh" → "The"
+            original[0].isUpperCase() -> corrected.replaceFirstChar { it.uppercaseChar() }
+            // All lowercase: keep as-is
+            else -> corrected
+        }
+    }
+
+    /**
      * Interface for sending debug logs to SwipeDebugActivity.
      * Implemented by CleverKeysService to bridge to its sendDebugLog method.
      */
@@ -374,10 +398,13 @@ class SuggestionHandler(
             // Useful for correcting vocabulary misses
             // SKIP for known contractions, raw predictions, and manual selections
             if (config.swipe_final_autocorrect_enabled && predictionCoordinator.getWordPredictor() != null) {
-                val correctedWord = predictionCoordinator.getWordPredictor()?.autoCorrect(processedWord)
+                var correctedWord = predictionCoordinator.getWordPredictor()?.autoCorrect(processedWord)
 
                 // If autocorrect found a better match, use it
                 if (correctedWord != null && correctedWord != processedWord) {
+                    // Preserve capitalization from original prediction
+                    correctedWord = preserveCapitalization(processedWord, correctedWord)
+                    correctedWord = capitalizeIWord(correctedWord)
                     Log.d(TAG, "FINAL AUTOCORRECT: \"$processedWord\" → \"$correctedWord\"")
                     processedWord = correctedWord
                 }
@@ -853,10 +880,15 @@ class SuggestionHandler(
 
                     if (config.autocorrect_enabled && predictionCoordinator.getWordPredictor() != null &&
                         text == " " && !inTermuxApp) {
-                        val correctedWord = predictionCoordinator.getWordPredictor()?.autoCorrect(completedWord)
+                        var correctedWord = predictionCoordinator.getWordPredictor()?.autoCorrect(completedWord)
 
                         // If correction was made, replace the typed word
                         if (correctedWord != null && correctedWord != completedWord) {
+                            // Preserve original capitalization pattern
+                            correctedWord = preserveCapitalization(completedWord, correctedWord)
+                            // Also apply I-word capitalization
+                            correctedWord = capitalizeIWord(correctedWord)
+
                             ic?.let { inputConnection ->
                                 // At this point:
                                 // - The typed word "thid" has been committed via KeyEventHandler.send_text()
