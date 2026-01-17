@@ -97,6 +97,9 @@ class KeyEventHandler(
                 // Handle backspace in clipboard search mode
                 if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isClipboardSearchMode()) {
                     recv.backspaceClipboardSearch()
+                // #41 v5: Handle backspace in emoji search
+                } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && recv.isEmojiPaneOpen()) {
+                    recv.backspaceEmojiSearch()
                 } else {
                     send_key_down_up(key.getKeyevent())
                     // Handle backspace for word prediction
@@ -217,7 +220,11 @@ class KeyEventHandler(
             return
         }
 
-        // #41 v4: Emoji search now uses EditText - no routing needed here
+        // #41 v5: Route to emoji search EditText when emoji pane is open
+        if (recv.isEmojiPaneOpen()) {
+            recv.appendToEmojiSearch(text.toString())
+            return
+        }
 
         val conn = recv.getCurrentInputConnection() ?: return
 
@@ -625,7 +632,10 @@ class KeyEventHandler(
         fun appendToClipboardSearch(text: String) {} // Append text to clipboard search box
         fun backspaceClipboardSearch() {} // Handle backspace in clipboard search
         fun exitClipboardSearchMode() {} // Exit clipboard search mode (clear search box and mode)
-        // #41 v4: Emoji search now uses EditText in emoji pane - no routing through IReceiver needed
+        // #41 v5: Emoji search routes typing to visible EditText (IME can't type into own views)
+        fun isEmojiPaneOpen(): Boolean = false // Check if emoji pane is visible
+        fun appendToEmojiSearch(text: String) {} // Append text to emoji search EditText
+        fun backspaceEmojiSearch() {} // Handle backspace in emoji search
     }
 
     private inner class AutocapitalisationCallback : Autocapitalisation.Callback {

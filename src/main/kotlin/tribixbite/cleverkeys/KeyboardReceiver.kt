@@ -303,5 +303,16 @@ class KeyboardReceiver(
         clipboardManager.clearSearch()
     }
 
-    // #41 v4: Emoji search now uses EditText in emoji pane - no IReceiver methods needed
+    // #41 v5: Emoji search routes typing to visible EditText (IME can't type into own views)
+    override fun isEmojiPaneOpen(): Boolean {
+        return emojiSearchManager?.isEmojiPaneOpen() ?: false
+    }
+
+    override fun appendToEmojiSearch(text: String) {
+        emojiSearchManager?.appendToSearch(text)
+    }
+
+    override fun backspaceEmojiSearch() {
+        emojiSearchManager?.backspaceSearch()
+    }
 }

@@ -186,11 +186,40 @@ class EmojiSearchManager {
     }
 
     /**
-     * Check if the search input has focus.
-     * Used to determine if keyboard input should go to search.
+     * Check if emoji pane is open and initialized.
+     * Used to determine if keyboard input should be routed to search.
      */
-    fun isSearchFocused(): Boolean {
-        return searchInput?.hasFocus() == true
+    fun isEmojiPaneOpen(): Boolean {
+        return isInitialized && searchInput != null
+    }
+
+    /**
+     * Append text to the search query.
+     * Called from KeyEventHandler when emoji pane is open.
+     * This programmatically updates the EditText since IME can't type into its own views.
+     */
+    fun appendToSearch(text: String) {
+        val input = searchInput ?: return
+        val current = input.text?.toString() ?: ""
+        val newText = current + text
+        input.setText(newText)
+        input.setSelection(newText.length)
+        Log.d(TAG, "Appended to search: '$text' -> '$newText'")
+    }
+
+    /**
+     * Handle backspace in search.
+     * Called from KeyEventHandler when emoji pane is open.
+     */
+    fun backspaceSearch() {
+        val input = searchInput ?: return
+        val current = input.text?.toString() ?: ""
+        if (current.isNotEmpty()) {
+            val newText = current.dropLast(1)
+            input.setText(newText)
+            input.setSelection(newText.length)
+            Log.d(TAG, "Backspace in search: '$current' -> '$newText'")
+        }
     }
 
     /**

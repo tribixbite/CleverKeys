@@ -36,13 +36,15 @@
 
     <ImageButton
         android:id="@+id/emoji_search_clear"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
         android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:tint="?attr/colorLabel"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="Clear search"
         android:visibility="gone"
-        android:padding="4dp" />
+        android:scaleType="centerInside"
+        android:padding="6dp" />
 
   </LinearLayout>
 
