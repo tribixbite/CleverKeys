@@ -10,7 +10,6 @@ import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.GridView
 import android.widget.TextView
-import android.widget.Toast
 
 class EmojiGridView(context: Context, attrs: AttributeSet?) :
     GridView(context, attrs), AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
@@ -20,6 +19,8 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
 
     // #41 v8: Reference to search manager for bypassing search routing on emoji selection
     private var searchManager: EmojiSearchManager? = null
+    // #41 v10: Reference to service for suggestion bar messages (Toast suppressed on Android 13+ IME)
+    private var service: CleverKeysService? = null
 
     /**
      * Set the search manager reference.
@@ -27,6 +28,14 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
      */
     fun setSearchManager(manager: EmojiSearchManager) {
         this.searchManager = manager
+    }
+
+    /**
+     * Set the service reference.
+     * #41 v10: Needed for showing emoji name in suggestion bar on long-press.
+     */
+    fun setService(service: CleverKeysService) {
+        this.service = service
     }
 
     init {
@@ -82,7 +91,8 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
     }
 
     /**
-     * #41 v10: Long-press handler to show emoji name in toast.
+     * #41 v10: Long-press handler to show emoji name in suggestion bar.
+     * Uses showSuggestionBarMessage() instead of Toast (suppressed on Android 13+ IME).
      */
     override fun onItemLongClick(parent: AdapterView<*>?, view: View?, pos: Int, id: Long): Boolean {
         if (pos < 0 || pos >= emojiArray.size) return false
@@ -93,7 +103,7 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
 
         // Format: "😀 grinning" or just the emoji if no name found
         val displayText = if (name != emojiStr) "$emojiStr $name" else emojiStr
-        Toast.makeText(context, displayText, Toast.LENGTH_SHORT).show()
+        service?.showSuggestionBarMessage(displayText, 2000L)
         return true  // Consume the event
     }
 

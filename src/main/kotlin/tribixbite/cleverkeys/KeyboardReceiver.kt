@@ -130,8 +130,11 @@ class KeyboardReceiver(
                         ?.setSearchManager(emojiSearchManager!!)
 
                     // #41 v8: Wire up search manager to emoji grid for selection bypass
-                    pane.findViewById<EmojiGridView>(R.id.emoji_grid)
-                        ?.setSearchManager(emojiSearchManager!!)
+                    pane.findViewById<EmojiGridView>(R.id.emoji_grid)?.let { grid ->
+                        grid.setSearchManager(emojiSearchManager!!)
+                        // #41 v10: Wire up service for suggestion bar messages on long-press
+                        grid.setService(keyboard2)
+                    }
 
                     // #41 v10: Close button callback to return to keyboard
                     emojiSearchManager?.setOnCloseCallback {
