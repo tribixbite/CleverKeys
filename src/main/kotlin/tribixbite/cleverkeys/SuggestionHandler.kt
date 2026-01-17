@@ -102,6 +102,49 @@ class SuggestionHandler(
     }
 
     /**
+     * Check if a capitalized word was intentionally capitalized (proper noun) vs auto-capitalized.
+     * Returns true if:
+     * 1. Word starts with uppercase
+     * 2. Word appears mid-sentence (not after sentence-ending punctuation or at text start)
+     *
+     * This detects intentional proper nouns like "Boston" typed mid-sentence.
+     *
+     * @param ic InputConnection to check surrounding text
+     * @param wordLength Length of the word just completed
+     * @return true if the capitalization appears intentional (proper noun)
+     */
+    private fun isIntentionallyCapitalized(ic: android.view.inputmethod.InputConnection?, wordLength: Int): Boolean {
+        if (ic == null || wordLength == 0) return false
+
+        // Get text before the word (before the word + space that was just typed)
+        // We need to look at what's before the word started
+        val textBefore = ic.getTextBeforeCursor(wordLength + 5, 0) ?: return false
+        if (textBefore.length <= wordLength) {
+            // Word is at the very start of text - auto-cap position
+            return false
+        }
+
+        // Get the character right before the word started
+        val beforeWordIndex = textBefore.length - wordLength - 1
+        if (beforeWordIndex < 0) return false
+
+        val charBefore = textBefore[beforeWordIndex]
+
+        // If preceded by sentence-ending punctuation, it's auto-cap position
+        if (charBefore in ".!?\n") return false
+
+        // If preceded by space, check what's before that space
+        if (charBefore == ' ' && beforeWordIndex > 0) {
+            val charBeforeSpace = textBefore[beforeWordIndex - 1]
+            // If space follows sentence-ending punctuation, it's auto-cap
+            if (charBeforeSpace in ".!?\n") return false
+        }
+
+        // Word is mid-sentence - capitalization was intentional
+        return true
+    }
+
+    /**
      * Interface for sending debug logs to SwipeDebugActivity.
      * Implemented by CleverKeysService to bridge to its sendDebugLog method.
      */

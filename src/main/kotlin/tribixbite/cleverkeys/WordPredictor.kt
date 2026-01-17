@@ -63,6 +63,10 @@ class WordPredictor {
     private var disabledWords: MutableSet<String> = mutableSetOf() // Cache of disabled words
     private var lastReloadTime: Long = 0
 
+    // Issue #72: Track original case of user-added words (proper nouns)
+    // Maps lowercase word to original case: "boston" -> "Boston"
+    private val userWordOriginalCase: MutableMap<String, String> = mutableMapOf()
+
     // OPTIMIZATION: Async loading state
     @Volatile
     private var isLoadingState: Boolean = false
@@ -239,6 +243,8 @@ class WordPredictor {
      */
     fun reloadCustomAndUserWords() {
         context?.let {
+            // Issue #72: Clear proper noun case map before reloading
+            userWordOriginalCase.clear()
             // v1.1.90: Pass currentLanguage to filter by locale
             val customWords = loadCustomAndUserWords(it, currentLanguage)
             // NOTE: Full rebuild needed here because we don't track which words were removed
@@ -352,6 +358,28 @@ class WordPredictor {
         // Check if user has typed it frequently (adaptation manager)
         val adaptationMultiplier = adaptationManager?.getAdaptationMultiplier(lowerWord) ?: 0f
         return adaptationMultiplier > 1.0f
+    }
+
+    /**
+     * Issue #72: Apply original case from user dictionary to a word.
+     * If user added "Boston" to dictionary, this transforms "boston" → "Boston".
+     *
+     * @param word Word to potentially restore case for (should be lowercase)
+     * @return Word with original case if found in user dictionary, otherwise unchanged
+     */
+    fun applyUserWordCase(word: String): String {
+        val lowerWord = word.lowercase()
+        return userWordOriginalCase[lowerWord] ?: word
+    }
+
+    /**
+     * Issue #72: Apply original case to a list of predictions.
+     *
+     * @param words List of predicted words
+     * @return List with proper noun case restored where applicable
+     */
+    fun applyUserWordCaseToList(words: List<String>): List<String> {
+        return words.map { applyUserWordCase(it) }
     }
 
     /**
@@ -1212,10 +1240,16 @@ class WordPredictor {
                     val keys = jsonObj.keys()
                     var customCount = 0
                     while (keys.hasNext()) {
-                        val word = keys.next().lowercase()
-                        val frequency = jsonObj.optInt(word, 1000)
-                        dictionary.get()[word] = frequency
-                        loadedWords.add(word)  // Track loaded word
+                        val originalWord = keys.next()
+                        val lowerWord = originalWord.lowercase()
+                        val frequency = jsonObj.optInt(originalWord, 1000)
+                        dictionary.get()[lowerWord] = frequency
+                        loadedWords.add(lowerWord)  // Track loaded word
+                        // Issue #72: Preserve original case for proper nouns
+                        // Only store if word has uppercase (potential proper noun)
+                        if (originalWord != lowerWord) {
+                            userWordOriginalCase[lowerWord] = originalWord
+                        }
                         customCount++
                     }
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -1453,12 +1487,15 @@ class WordPredictor {
                 if (predictions.size >= maxPredictions) break
             }
 
+            // Issue #72: Apply proper noun case from user dictionary
+            val casedPredictions = applyUserWordCaseToList(predictions)
+
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                Log.d(TAG, "Final predictions (${predictions.size}): $predictions")
+                Log.d(TAG, "Final predictions (${casedPredictions.size}): $casedPredictions")
                 Log.d(TAG, "Scores: $scores")
             }
 
-            return PredictionResult(predictions, scores)
+            return PredictionResult(casedPredictions, scores)
         } finally {
             android.os.Trace.endSection()
         }
