@@ -305,10 +305,13 @@ class KeyboardReceiver(
 
     // #41 v5: Emoji search routes typing to visible EditText (IME can't type into own views)
     override fun isEmojiPaneOpen(): Boolean {
-        return emojiSearchManager?.isEmojiPaneOpen() ?: false
+        val result = emojiSearchManager?.isEmojiPaneOpen() ?: false
+        android.util.Log.d("KeyboardReceiver", "isEmojiPaneOpen: manager=$emojiSearchManager, result=$result")
+        return result
     }
 
     override fun appendToEmojiSearch(text: String) {
+        android.util.Log.d("KeyboardReceiver", "appendToEmojiSearch: '$text', manager=$emojiSearchManager")
         emojiSearchManager?.appendToSearch(text)
     }
 

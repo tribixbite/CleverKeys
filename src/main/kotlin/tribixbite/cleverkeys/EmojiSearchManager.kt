@@ -145,22 +145,24 @@ class EmojiSearchManager {
             return
         }
 
-        // #41 v5: Activate search routing (like ClipboardManager.searchMode)
+        // #41 v6: Activate search routing (like ClipboardManager.searchMode)
         searchActive = true
-        Log.d(TAG, "Search active = true")
+        Log.d(TAG, "Search active = true, searchInput=$searchInput")
 
         // Reset state
         showGrid()
         noResultsView?.visibility = View.GONE
 
+        // #41 v7: ALWAYS focus search input when pane opens so typing goes there
+        searchInput?.requestFocus()
+
         if (!initialQuery.isNullOrBlank()) {
             // Pre-fill search with detected word
             searchInput?.setText(initialQuery)
             searchInput?.setSelection(initialQuery.length)
-            searchInput?.requestFocus()
             Log.d(TAG, "Pane opened with initial query: '$initialQuery'")
         } else {
-            // No initial query - show last used, don't focus search
+            // No initial query - show last used emojis
             searchInput?.setText("")
             clearButton?.visibility = View.GONE
             emojiGrid?.setEmojiGroup(EmojiGridView.GROUP_LAST_USE)
@@ -201,9 +203,10 @@ class EmojiSearchManager {
     /**
      * Check if emoji search is active.
      * Used to determine if keyboard input should be routed to search.
-     * #41 v5: Simple flag like ClipboardManager.searchMode
+     * #41 v6: Simple flag like ClipboardManager.searchMode
      */
     fun isEmojiPaneOpen(): Boolean {
+        Log.d(TAG, "isEmojiPaneOpen() called, searchActive=$searchActive")
         return searchActive
     }
 
