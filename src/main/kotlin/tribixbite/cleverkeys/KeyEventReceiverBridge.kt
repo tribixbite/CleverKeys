@@ -91,6 +91,19 @@ class KeyEventReceiverBridge(
         receiver?.exitClipboardSearchMode()
     }
 
+    // #41 v7: Emoji search delegation (was missing - caused routing to fail!)
+    override fun isEmojiPaneOpen(): Boolean {
+        return receiver?.isEmojiPaneOpen() ?: false
+    }
+
+    override fun appendToEmojiSearch(text: String) {
+        receiver?.appendToEmojiSearch(text)
+    }
+
+    override fun backspaceEmojiSearch() {
+        receiver?.backspaceEmojiSearch()
+    }
+
     companion object {
         /**
          * Create a KeyEventReceiverBridge.
