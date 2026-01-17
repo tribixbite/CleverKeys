@@ -446,7 +446,19 @@ class Emoji protected constructor(bytecode: String) {
                 // Flags
                 "checkered flag" to "🏁", "flag" to "🚩", "triangular flag" to "🚩",
                 "crossed flags" to "🎌", "black flag" to "🏴", "white flag" to "🏳️",
-                "rainbow flag" to "🏳️‍🌈", "pirate flag" to "🏴‍☠️"
+                "rainbow flag" to "🏳️‍🌈", "pirate flag" to "🏴‍☠️",
+
+                // Unicode 17.0 (2025) - New emojis
+                "distorted face" to "🫪", "distorted" to "🫪", "warped face" to "🫪",
+                "overwhelmed" to "🫪", "confused face" to "🫪",
+                "fight cloud" to "🫯", "fighting" to "🫯", "dust cloud" to "🫯",
+                "cartoon fight" to "🫯", "brawl" to "🫯",
+                "orca" to "🫍", "killer whale" to "🫍", "orca whale" to "🫍",
+                "hairy creature" to "🫈", "bigfoot" to "🫈", "sasquatch" to "🫈",
+                "yeti" to "🫈", "cryptid" to "🫈",
+                "trombone" to "🪊", "brass" to "🪊", "slide trombone" to "🪊",
+                "landslide" to "🛘", "mudslide" to "🛘", "avalanche" to "🛘",
+                "treasure chest" to "🪎", "treasure" to "🪎", "pirate chest" to "🪎", "loot" to "🪎"
             )
 
             for ((name, emojiStr) in nameToEmoji) {
