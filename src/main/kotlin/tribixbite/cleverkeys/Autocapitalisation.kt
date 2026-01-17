@@ -29,8 +29,11 @@ class Autocapitalisation(
      */
     fun started(info: EditorInfo, ic: InputConnection) {
         this.ic = ic
-        capsMode = info.inputType and TextUtils.CAP_MODE_SENTENCES
-        if (!Config.globalConfig().autocapitalisation || capsMode == 0) {
+        // FIX: Check for both CAP_MODE_SENTENCES and CAP_MODE_WORDS, not just SENTENCES
+        // Some text fields (like search bars) may specify WORDS but not SENTENCES
+        capsMode = info.inputType and SUPPORTED_CAPS_MODES
+        val autocapEnabled = Config.globalConfig().autocapitalisation
+        if (!autocapEnabled || capsMode == 0) {
             enabled = false
             return
         }
