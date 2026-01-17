@@ -165,15 +165,17 @@ object Defaults {
     const val SWIPE_RARE_WORDS_PENALTY = 1.0f
 
     // Clipboard
+    // Issue #71: Made defaults more robust to prevent TransactionTooLargeException
+    // Android Binder has ~1MB limit; conservative defaults prevent crashes
     const val CLIPBOARD_HISTORY_ENABLED = true
-    const val CLIPBOARD_HISTORY_LIMIT = "0"
-    const val CLIPBOARD_HISTORY_LIMIT_FALLBACK = 0
+    const val CLIPBOARD_HISTORY_LIMIT = "50"  // Was "0" (unlimited) - now 50 entries max
+    const val CLIPBOARD_HISTORY_LIMIT_FALLBACK = 50
     const val CLIPBOARD_PANE_HEIGHT_PERCENT = 30
-    const val CLIPBOARD_MAX_ITEM_SIZE_KB = "500"
-    const val CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK = 500
+    const val CLIPBOARD_MAX_ITEM_SIZE_KB = "256"  // Was "500" - reduced to stay well under Binder limit
+    const val CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK = 256
     const val CLIPBOARD_LIMIT_TYPE = "count"
-    const val CLIPBOARD_SIZE_LIMIT_MB = "10"
-    const val CLIPBOARD_SIZE_LIMIT_MB_FALLBACK = 10
+    const val CLIPBOARD_SIZE_LIMIT_MB = "5"  // Was "10" - reduced for safety
+    const val CLIPBOARD_SIZE_LIMIT_MB_FALLBACK = 5
     const val CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS = true  // Skip clipboard from password managers
 
     // Common password manager package names (for clipboard exclusion)
