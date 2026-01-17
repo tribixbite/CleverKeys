@@ -321,6 +321,9 @@ class CleverKeysService : InputMethodService(),
         // Initialize global config for KeyEventHandler
         Config.initGlobalConfig(prefs, resources, _keyeventhandler, foldStateTracker.isUnfolded())
 
+        // Prewarm emoji keyword index for fast search (loads in background on IO thread)
+        EmojiKeywordIndex.prewarm(this)
+
         // Initialize configuration manager (v1.32.345: extracted configuration management)
         _configManager = ConfigurationManager(this, Config.globalConfig(), foldStateTracker)
         _config = _configManager.getConfig() // Cache reference for convenience

@@ -116,3 +116,6 @@ src/main/assets/prefix_boosts/*.json
 
 # MCP tool generated code
 pal_generated.code
+# Temp emoji data files
+*.json
+generated_*.kt

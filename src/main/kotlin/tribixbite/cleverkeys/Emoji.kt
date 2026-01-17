@@ -70,20 +70,36 @@ class Emoji protected constructor(bytecode: String) {
         fun searchByName(query: String): List<Emoji> {
             if (query.isBlank()) return emptyList()
 
-            // Initialize name map on first search
-            if (nameMap.isEmpty()) {
-                initNameMap()
-            }
-
             val queryLower = query.lowercase().trim()
             val results = mutableListOf<Emoji>()
             val seen = mutableSetOf<String>()
 
-            // Search by name
-            for ((name, emoji) in nameMap) {
-                if (name.contains(queryLower) && emoji.kv().getString() !in seen) {
-                    results.add(emoji)
-                    seen.add(emoji.kv().getString())
+            // #41 v9: First search Trie-based index (9,800+ keywords from Discord/Slack/GitHub/CLDR)
+            if (EmojiKeywordIndex.isReady()) {
+                val indexResults = EmojiKeywordIndex.search(queryLower, limit = 60)
+                for (emojiStr in indexResults) {
+                    if (emojiStr !in seen) {
+                        // Convert string to Emoji object
+                        val emoji = getEmojiByString(emojiStr)
+                        if (emoji != null) {
+                            results.add(emoji)
+                            seen.add(emojiStr)
+                        }
+                    }
+                }
+            }
+
+            // Fall back to legacy nameMap for compatibility (in case index not loaded)
+            if (results.size < 20) {
+                if (nameMap.isEmpty()) {
+                    initNameMap()
+                }
+                for ((name, emoji) in nameMap) {
+                    if (name.contains(queryLower) && emoji.kv().getString() !in seen) {
+                        results.add(emoji)
+                        seen.add(emoji.kv().getString())
+                        if (results.size >= 100) break
+                    }
                 }
             }
 
