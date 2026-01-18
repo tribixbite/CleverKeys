@@ -72,17 +72,22 @@ See `docs/DOCS_AUDIT.md` for full analysis:
 - [x] Add MockK + Truth dependencies to build.gradle
 - [x] Create AccentNormalizerTest.kt (29 tests)
 - [x] Create VocabularyTrieTest.kt (34 tests)
+- [x] Create DictionaryWordTest.kt (12 tests)
+- [x] Create SwipeResamplerTest.kt (19 tests)
+- [x] Create MemoryPoolTest.kt (23 tests)
 - [x] Update CI to upload test results
 - [x] Create `run-pure-tests.sh` for ARM64/Termux local testing
 
-### Test Results (63 total)
+### Test Results (117 total)
 ```
 AccentNormalizerTest: 29 tests OK (0.14s)
 VocabularyTrieTest:   34 tests OK (0.13s)
+DictionaryWordTest:   12 tests OK (0.11s)
+SwipeResamplerTest:   19 tests OK (0.08s)
+MemoryPoolTest:       23 tests OK (0.11s)
 ```
 
 ### Pending
-- [ ] Create DictionaryWord tests
 - [ ] Create BeamSearchEngine tests (extract pure logic)
 - [ ] Create GestureClassifier tests
 

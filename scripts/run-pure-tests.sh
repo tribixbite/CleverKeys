@@ -35,6 +35,9 @@ fi
 PURE_TESTS=(
     "tribixbite.cleverkeys.AccentNormalizerTest"
     "tribixbite.cleverkeys.VocabularyTrieTest"
+    "tribixbite.cleverkeys.DictionaryWordTest"
+    "tribixbite.cleverkeys.SwipeResamplerTest"
+    "tribixbite.cleverkeys.onnx.MemoryPoolTest"
 )
 
 # If specific test given, use that
