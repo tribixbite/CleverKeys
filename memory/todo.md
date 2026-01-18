@@ -75,21 +75,24 @@ See `docs/DOCS_AUDIT.md` for full analysis:
 - [x] Create DictionaryWordTest.kt (12 tests)
 - [x] Create SwipeResamplerTest.kt (19 tests)
 - [x] Create MemoryPoolTest.kt (23 tests)
+- [x] Create VocabularyUtilsTest.kt (24 tests)
+- [x] Create BeamSearchModelsTest.kt (21 tests)
 - [x] Update CI to upload test results
 - [x] Create `run-pure-tests.sh` for ARM64/Termux local testing
 
-### Test Results (117 total)
+### Test Results (162 total)
 ```
-AccentNormalizerTest: 29 tests OK (0.14s)
-VocabularyTrieTest:   34 tests OK (0.13s)
-DictionaryWordTest:   12 tests OK (0.11s)
-SwipeResamplerTest:   19 tests OK (0.08s)
-MemoryPoolTest:       23 tests OK (0.11s)
+AccentNormalizerTest:  29 tests OK (0.08s)
+VocabularyTrieTest:    34 tests OK (0.07s)
+DictionaryWordTest:    12 tests OK (0.05s)
+SwipeResamplerTest:    19 tests OK (0.04s)
+MemoryPoolTest:        23 tests OK (0.08s)
+VocabularyUtilsTest:   24 tests OK (0.05s)
+BeamSearchModelsTest:  21 tests OK (0.09s)
 ```
 
 ### Pending
-- [ ] Create BeamSearchEngine tests (extract pure logic)
-- [ ] Create GestureClassifier tests
+- [ ] Create GestureClassifier tests (requires mock framework)
 
 **Local testing**: Uses proot-distro Ubuntu to run pure JVM tests on ARM64.
 

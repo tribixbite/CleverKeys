@@ -38,6 +38,8 @@ PURE_TESTS=(
     "tribixbite.cleverkeys.DictionaryWordTest"
     "tribixbite.cleverkeys.SwipeResamplerTest"
     "tribixbite.cleverkeys.onnx.MemoryPoolTest"
+    "tribixbite.cleverkeys.VocabularyUtilsTest"
+    "tribixbite.cleverkeys.BeamSearchModelsTest"
 )
 
 # If specific test given, use that
