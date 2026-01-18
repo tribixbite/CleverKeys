@@ -64,22 +64,29 @@ See `docs/DOCS_AUDIT.md` for full analysis:
 
 ## Testing Infrastructure
 
-**Status**: Phase 1 in progress (9c45b13a)
+**Status**: Phase 1 complete (7ad3c4ad)
 **Spec**: `docs/specs/testing-strategy.md`
+**Local runner**: `./scripts/run-pure-tests.sh`
 
 ### Completed
 - [x] Add MockK + Truth dependencies to build.gradle
-- [x] Create AccentNormalizerTest.kt (30+ tests)
-- [x] Create VocabularyTrieTest.kt (30+ tests)
+- [x] Create AccentNormalizerTest.kt (29 tests)
+- [x] Create VocabularyTrieTest.kt (34 tests)
 - [x] Update CI to upload test results
+- [x] Create `run-pure-tests.sh` for ARM64/Termux local testing
+
+### Test Results (63 total)
+```
+AccentNormalizerTest: 29 tests OK (0.14s)
+VocabularyTrieTest:   34 tests OK (0.13s)
+```
 
 ### Pending
 - [ ] Create DictionaryWord tests
 - [ ] Create BeamSearchEngine tests (extract pure logic)
 - [ ] Create GestureClassifier tests
-- [ ] Add JUnit 5 for modern test features
 
-**Note**: Tests run on CI (ubuntu-latest x86_64). ARM64/Termux skips Robolectric tests.
+**Local testing**: Uses proot-distro Ubuntu to run pure JVM tests on ARM64.
 
 ---
 
@@ -87,6 +94,7 @@ See `docs/DOCS_AUDIT.md` for full analysis:
 
 | Commit | Description |
 |--------|-------------|
+| `7ad3c4ad` | Local test runner for ARM64/proot |
 | `9c45b13a` | Pure JVM tests: AccentNormalizer, VocabularyTrie |
 | `70986e85` | Workflow rules, release script, docs audit |
 | `7dab5a27` | Context management - split todo.md into archives |
