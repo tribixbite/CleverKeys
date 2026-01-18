@@ -53,9 +53,9 @@ if [ ! -d "$ANDROID_HOME" ]; then
     exit 1
 fi
 
-# Check qemu-x86_64 for AAPT2 wrapper
-if ! command -v qemu-x86_64 &>/dev/null; then
-    echo "Error: qemu-x86_64 not found. Install with: pkg install qemu-user-x86-64"
+# Check native aapt2 (ARM64 build from Termux packages)
+if ! command -v aapt2 &>/dev/null; then
+    echo "Error: aapt2 not found. Install with: pkg install aapt2"
     exit 1
 fi
 
@@ -109,7 +109,16 @@ fi
 echo "This may take a few minutes on first run..."
 
 # Build with Termux-specific configuration (optimized for speed)
-./gradlew $GRADLE_TASK     -Dorg.gradle.jvmargs="-Xmx2048m -XX:MaxMetaspaceSize=512m"     -Pandroid.aapt2FromMavenOverride="/data/data/com.termux/files/home/git/swype/Unexpected-Keyboard/tools/aapt2-arm64/aapt2"     --no-daemon     --warning-mode=none     --console=plain     --parallel     --build-cache     2>&1 | tee build-${BUILD_TYPE_LOWER}.log
+# Uses native ARM64 aapt2 from Termux packages (no QEMU emulation needed)
+./gradlew $GRADLE_TASK \
+    -Dorg.gradle.jvmargs="-Xmx2048m -XX:MaxMetaspaceSize=512m" \
+    -Pandroid.aapt2FromMavenOverride="/data/data/com.termux/files/usr/bin/aapt2" \
+    --no-daemon \
+    --warning-mode=none \
+    --console=plain \
+    --parallel \
+    --build-cache \
+    2>&1 | tee build-${BUILD_TYPE_LOWER}.log
 
 # Check build result - look for APK files in the output directory
 APK_FILES=$(find "$APK_DIR" -name "*.apk" 2>/dev/null | head -1)
@@ -288,7 +297,7 @@ else
     echo "Check build-${BUILD_TYPE_LOWER}.log for details"
     echo
     echo "Common issues:"
-    echo "1. AAPT2 compatibility - ensure qemu-x86_64 is installed"
+    echo "1. AAPT2 missing - install with: pkg install aapt2"
     echo "2. Memory issues - try closing other apps"
     echo "3. Missing layouts - check if src/main/layouts/*.xml exist"
     echo "4. SDK version mismatch - check Android SDK installation"
