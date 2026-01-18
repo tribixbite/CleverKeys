@@ -4,6 +4,26 @@ Quick reference for AI assistants and developers working in this codebase.
 
 ---
 
+## Critical Workflow Rules
+
+### NEVER
+- **Push release tags** without explicit user confirmation ("push release" or "tag and push")
+- **Reply to GitHub issues** - NEVER comment, close, or interact with issues on behalf of user
+- **Reply to GitLab MRs** - NEVER comment on F-Droid or other external MRs
+- **Make architectural changes** without consulting Gemini 3 Pro via PAL MCP first
+
+### ALWAYS
+- **Check GitHub issues** when all tasks are done - look for new bugs or feature requests
+- **Consult Gemini 3 Pro** (via `mcp__pal__chat` or `mcp__pal__consensus`) for:
+  - Architectural decisions
+  - Multi-file refactors
+  - Performance optimizations
+  - Security-sensitive changes
+- **Sync release notes** between GitHub releases and F-Droid fastlane changelogs
+- **Test on device** via `./build-on-termux.sh` before proposing release
+
+---
+
 ## Quick Start
 
 ```bash
@@ -134,3 +154,54 @@ SearchableSetting(
 1. Generate dictionary with `scripts/build_all_languages.py`
 2. Create langpack with `scripts/build_langpack.py`
 3. Update `SettingsActivity` language lists
+
+---
+
+## Release Workflow
+
+### Pre-Release Checklist
+1. All tests pass: `./gradlew compileDebugKotlin`
+2. Device tested: `./build-on-termux.sh` + manual testing
+3. User confirms: "ready to release" or "push release"
+
+### Release Steps (Manual - User Must Confirm)
+```bash
+# 1. Bump version in build.gradle (lines 51-53)
+ext.VERSION_MAJOR = X
+ext.VERSION_MINOR = Y
+ext.VERSION_PATCH = Z
+
+# 2. Create changelog (for each ABI versionCode)
+# versionCode = MAJOR * 100000 + MINOR * 1000 + PATCH * 10 + ABI
+echo "- Feature 1
+- Bug fix 2" > fastlane/metadata/android/en-US/changelogs/VERSIONCODE.txt
+
+# 3. Commit and tag (REQUIRES USER CONFIRMATION)
+git add -A && git commit -m "release: vX.Y.Z"
+git tag vX.Y.Z
+
+# 4. Push (REQUIRES USER CONFIRMATION)
+git push && git push origin vX.Y.Z
+```
+
+### Post-Release (Automated by GitHub Actions)
+- GitHub Actions builds 3 APKs (armv7, arm64, x86_64)
+- Creates GitHub release with APKs attached
+- F-Droid auto-detects tag and builds
+
+### Sync Release Notes
+Release notes must be in sync between:
+1. **GitHub Release**: Created by Actions from tag
+2. **Fastlane Changelogs**: `fastlane/metadata/android/en-US/changelogs/{versionCode}.txt`
+
+Use `/release` skill or manually run `scripts/sync_release_notes.sh` (if available).
+
+---
+
+## Idle Tasks
+
+When all current tasks are complete:
+1. Check GitHub issues: `gh issue list -R tribixbite/CleverKeys`
+2. Review outstanding code TODOs in `memory/todo.md`
+3. Check F-Droid pipeline status if recent release
+4. Run `./gradlew lint` for code quality issues
