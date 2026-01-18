@@ -54,12 +54,20 @@
 - [ ] Migrate `SwipeCalibrationActivity` → ComponentActivity
 - [ ] Migrate deprecated `android.preference.*` to `androidx.preference.*`
 
+### Documentation Consolidation
+See `docs/DOCS_AUDIT.md` for full analysis:
+- [ ] Create wiki guide for `password-field-mode.md`
+- [ ] Create wiki guide for `quick-settings-tile.md`
+- [ ] Consolidate duplicate specs (top-level → wiki/specs)
+
 ---
 
 ## Recent Fixes (2026-01-17/18)
 
 | Commit | Description |
 |--------|-------------|
+| `70986e85` | Workflow rules, release script, docs audit |
+| `7dab5a27` | Context management - split todo.md into archives |
 | `fd6c7747` | Settings search: 38 → 120 entries (~80% coverage) |
 | `5d18e039` | Swipe I-words capitalize, add-to-dictionary case fix |
 | `05050b47` | Proper noun case preserved in user dictionary |
