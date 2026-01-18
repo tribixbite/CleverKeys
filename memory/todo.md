@@ -49,6 +49,24 @@
   - **Fix**: Changed to use `rawPrefix`/`rawSuffix` to preserve original case
   - Prediction lookups still work via internal normalization in WordPredictor
 
+### Settings Search Coverage Expansion
+- ✅ Expanded: Settings search from 38 to ~120 entries (fd6c7747)
+- **Issue**: Only ~16% of settings were searchable (38 of 150+ settings)
+- **Fix**: Added comprehensive search mappings for all categories:
+  - Activities (9 entries)
+  - Neural Prediction (6 entries)
+  - Word Prediction & Autocorrect (10 entries)
+  - Appearance (16 entries)
+  - Swipe Trail (5 entries)
+  - Input Behavior (7 entries)
+  - Gesture Tuning (18 entries)
+  - Accessibility & Haptics (8 entries)
+  - Clipboard (6 entries)
+  - Multi-Language (7 entries)
+  - Privacy (3 entries)
+  - Advanced (4 entries)
+- **Result**: Search coverage increased to ~80%
+
 ### Code Review (v1.2.5 → HEAD)
 - Reviewed 39 changed Kotlin files, 3000+ lines added
 - No critical issues found
