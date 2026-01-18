@@ -39,6 +39,15 @@
   - When user adds "Boston", stored as "Boston", predicted as "Boston"
   - Added `applyUserWordCase()` and `applyUserWordCaseToList()` helpers
   - Applied to prediction output in `predictWordsWithContext()`
+- ✅ Fixed: Swipe I-words now capitalize (5d18e039)
+  - **Issue**: Swiping "im" inserted "i'm" instead of "I'm"
+  - **Fix**: Added `capitalizeIWord()` to `InputCoordinator.onSuggestionSelected()`
+  - Applied after autocorrect to handle both direct and corrected words
+- ✅ Fixed: Add-to-dictionary prompts preserve case (5d18e039)
+  - **Issue**: Typing "Boston" showed "+boston" and "add boston to dictionary?"
+  - **Root cause**: `PredictionContextTracker.synchronizeWithCursor()` used normalized (lowercase) prefix
+  - **Fix**: Changed to use `rawPrefix`/`rawSuffix` to preserve original case
+  - Prediction lookups still work via internal normalization in WordPredictor
 
 ### Code Review (v1.2.5 → HEAD)
 - Reviewed 39 changed Kotlin files, 3000+ lines added
