@@ -437,10 +437,12 @@ class PredictionContextTracker {
         val (normalizedSuffix, rawSuffix) = extractWordSuffix(afterText, beforeText)
 
         // Update state
+        // Issue #72: Use rawPrefix/rawSuffix to preserve original case for add-to-dictionary prompts
+        // Normalization (lowercasing) is done at the point of prediction lookup, not storage
         currentWord.clear()
-        currentWord.append(normalizedPrefix)
+        currentWord.append(rawPrefix)
         currentWordSuffix.clear()
-        currentWordSuffix.append(normalizedSuffix)
+        currentWordSuffix.append(rawSuffix)
         rawPrefixForDeletion = rawPrefix
         rawSuffixForDeletion = rawSuffix
         wasSyncedFromCursor = true

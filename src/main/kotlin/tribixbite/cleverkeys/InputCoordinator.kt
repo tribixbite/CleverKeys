@@ -52,6 +52,30 @@ class InputCoordinator(
         // v1.2.6: Debounce delay for cursor sync (ms)
         // Prevents excessive IPC calls during drag selection
         private const val CURSOR_SYNC_DEBOUNCE_MS = 100L
+
+        /**
+         * Issue #72: Words that should always be capitalized.
+         * Includes "I" and all its contractions.
+         */
+        private val I_WORDS = setOf("i", "i'm", "i'll", "i'd", "i've")
+    }
+
+    /**
+     * Issue #72: Capitalize "I" words if the setting is enabled.
+     * Transforms "i" → "I", "i'm" → "I'm", "i'll" → "I'll", etc.
+     *
+     * @param word Word to potentially capitalize
+     * @return Capitalized word if it's an I-word, otherwise unchanged
+     */
+    private fun capitalizeIWord(word: String): String {
+        if (!config.autocapitalize_i_words) return word
+
+        val lower = word.lowercase()
+        return if (lower in I_WORDS) {
+            word.replaceFirstChar { it.uppercaseChar() }
+        } else {
+            word
+        }
     }
 
     // v1.2.6: Handler for debouncing cursor sync
@@ -497,7 +521,11 @@ class InputCoordinator(
             }
         }
 
-        debugLogger?.invoke("📝 FINAL WORD TO INSERT: \"$processedWord\" (after autocorrect check)")
+        // Issue #72: Capitalize "I" words (i → I, i'm → I'm, i'll → I'll)
+        // Apply after autocorrect to handle both direct predictions and corrected words
+        processedWord = capitalizeIWord(processedWord)
+
+        debugLogger?.invoke("📝 FINAL WORD TO INSERT: \"$processedWord\" (after autocorrect + I-word check)")
 
         // Record user selection for adaptation learning
         predictionCoordinator.getAdaptationManager()?.recordSelection(processedWord.trim())
