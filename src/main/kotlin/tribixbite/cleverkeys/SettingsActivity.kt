@@ -425,7 +425,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     private val searchableSettings: List<SearchableSetting> by lazy {
         listOf(
-            // Activities - navigate to activity
+            // ==================== ACTIVITIES ====================
             SearchableSetting("Theme Manager", listOf("color", "dark mode", "light", "appearance", "theme"), "Activities", ThemeSettingsActivity::class.java),
             SearchableSetting("Dictionary Manager", listOf("words", "custom", "disabled", "vocabulary"), "Activities", DictionaryManagerActivity::class.java),
             SearchableSetting("Layout Manager", listOf("keyboard layout", "qwerty", "azerty"), "Activities", LayoutManagerActivity::class.java),
@@ -435,44 +435,117 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Extra Keys", listOf("toolbar", "arrows", "numbers"), "Activities", ExtraKeysConfigActivity::class.java),
             SearchableSetting("Backup & Restore", listOf("backup", "export", "import", "restore"), "Activities", BackupRestoreActivity::class.java),
             SearchableSetting("What's New", listOf("changelog", "release", "update", "features", "version"), "Activities", settingId = "whats_new"),
-            // Neural Prediction
-            SearchableSetting("Neural Settings", listOf("neural", "ai", "prediction", "model"), "Neural Prediction", NeuralSettingsActivity::class.java),
-            SearchableSetting("Swipe Typing", listOf("gesture", "neural", "glide"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, settingId = "swipe_typing"),
-            SearchableSetting("Beam Width", listOf("accuracy", "prediction", "candidates"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "beam_width"),
-            SearchableSetting("Confidence Threshold", listOf("accuracy", "filter"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "confidence_threshold"),
-            // Appearance
-            SearchableSetting("Key Height", listOf("size", "keyboard", "tall", "short"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "key_height"),
-            SearchableSetting("Key Borders", listOf("outline", "visible"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "key_borders"),
-            SearchableSetting("Horizontal Margin", listOf("padding", "edge"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "horizontal_margin"),
-            SearchableSetting("Number Row", listOf("123", "digits", "top row"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "number_row"),
-            // Swipe Trail
-            SearchableSetting("Swipe Trail", listOf("gesture", "path", "visual", "effect"), "Swipe Trail", expandSection = { swipeTrailSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "swipe_trail"),
-            SearchableSetting("Trail Color", listOf("purple", "rainbow", "glow"), "Swipe Trail", expandSection = { swipeTrailSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "trail_color"),
-            // Input
-            SearchableSetting("Autocapitalization", listOf("uppercase", "sentence", "shift"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "autocap"),
-            SearchableSetting("Long Press Timeout", listOf("hold", "delay", "duration"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "long_press"),
-            SearchableSetting("Key Repeat", listOf("hold", "backspace", "delete"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "key_repeat"),
-            // Gesture Tuning
-            SearchableSetting("Short Gestures", listOf("short swipe", "quick", "action"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "short_gestures"),
-            SearchableSetting("Double-Space to Period", listOf("punctuation", "auto", "shortcut"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "double_space"),
-            SearchableSetting("Finger Occlusion", listOf("offset", "touch", "compensation"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "finger_occlusion"),
-            SearchableSetting("Tap Duration", listOf("timing", "sensitivity"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "tap_duration"),
-            SearchableSetting("Swipe Distance", listOf("sensitivity", "minimum", "recognition"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "swipe_distance"),
-            // Accessibility
-            SearchableSetting("Vibration", listOf("haptic", "feedback", "tactile"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "vibration"),
-            SearchableSetting("Sound on Keypress", listOf("audio", "click", "noise"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "sound"),
-            // v1.2.6: Dictionary searchable entries removed - use Dictionary Manager in Activities
-            // Clipboard
-            SearchableSetting("Clipboard History", listOf("copy", "paste", "buffer"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard"),
-            // Multi-Language
-            SearchableSetting("Enable Multi-Language", listOf("multilingual", "bilingual"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, settingId = "multilang"),
-            SearchableSetting("Primary Language", listOf("multilingual", "dictionary", "locale"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, gatedBy = "multilang", settingId = "primary_lang"),
-            SearchableSetting("Secondary Language", listOf("bilingual", "dual", "alternate"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, gatedBy = "multilang", settingId = "secondary_lang"),
-            SearchableSetting("Language Detection", listOf("auto", "detect", "switch"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, gatedBy = "multilang", settingId = "lang_detection"),
-            // Privacy
-            SearchableSetting("Incognito Mode", listOf("private", "secret", "hide"), "Privacy", expandSection = { privacySectionExpanded = true }, settingId = "incognito"),
-            // Advanced
-            SearchableSetting("Debug Logging", listOf("log", "developer", "verbose"), "Advanced", expandSection = { advancedSectionExpanded = true }, settingId = "debug_logging")
+
+            // ==================== NEURAL PREDICTION ====================
+            SearchableSetting("Neural Settings", listOf("neural", "ai", "prediction", "model", "onnx"), "Neural Prediction", NeuralSettingsActivity::class.java),
+            SearchableSetting("Swipe Typing", listOf("gesture", "neural", "glide", "swipe"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, settingId = "swipe_typing"),
+            SearchableSetting("Swipe on Password Fields", listOf("password", "swipe", "security"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "swipe_password"),
+            SearchableSetting("Beam Width", listOf("accuracy", "prediction", "candidates", "beam"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "beam_width"),
+            SearchableSetting("Confidence Threshold", listOf("accuracy", "filter", "confidence"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "confidence_threshold"),
+            SearchableSetting("Max Sequence Length", listOf("sequence", "length", "maximum", "resampling"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "max_seq_length"),
+
+            // ==================== WORD PREDICTION & AUTOCORRECT ====================
+            SearchableSetting("Word Predictions", listOf("prediction", "suggestions", "completion", "autocomplete"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "word_prediction"),
+            SearchableSetting("Suggestion Bar Opacity", listOf("opacity", "transparency", "prediction bar"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "suggestion_opacity"),
+            SearchableSetting("Show Exact Typed Word", listOf("exact", "typed", "add to dictionary"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "show_exact_typed"),
+            SearchableSetting("Context-Aware Predictions", listOf("context", "aware", "intelligent"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "context_aware"),
+            SearchableSetting("Personalized Learning", listOf("learning", "personalized", "adapt"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "personalized_learning"),
+            SearchableSetting("Autocorrect", listOf("autocorrect", "fix", "error", "typo"), "Word Prediction", expandSection = { swipeCorrectionsSectionExpanded = true }, settingId = "autocorrect"),
+            SearchableSetting("Autocorrect Min Word Length", listOf("minimum", "length", "autocorrect"), "Word Prediction", expandSection = { swipeCorrectionsSectionExpanded = true }, settingId = "autocorrect_min_length"),
+            SearchableSetting("Beam Autocorrect", listOf("beam", "autocorrect", "swipe"), "Word Prediction", expandSection = { swipeCorrectionsSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "beam_autocorrect"),
+            SearchableSetting("Final Autocorrect", listOf("final", "autocorrect", "completion"), "Word Prediction", expandSection = { swipeCorrectionsSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "final_autocorrect"),
+            SearchableSetting("Capitalize I Words", listOf("capitalize", "i'm", "i'll", "uppercase"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "capitalize_i"),
+
+            // ==================== APPEARANCE ====================
+            SearchableSetting("Key Height", listOf("size", "keyboard", "tall", "short", "height"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "key_height"),
+            SearchableSetting("Keyboard Height Portrait", listOf("height", "portrait", "vertical"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "height_portrait"),
+            SearchableSetting("Keyboard Height Landscape", listOf("height", "landscape", "horizontal"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "height_landscape"),
+            SearchableSetting("Key Borders", listOf("outline", "visible", "border"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "key_borders"),
+            SearchableSetting("Border Radius", listOf("corner", "radius", "rounded"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "border_radius"),
+            SearchableSetting("Border Width", listOf("border", "width", "line"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "border_width"),
+            SearchableSetting("Horizontal Margin", listOf("padding", "edge", "margin", "left", "right"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "horizontal_margin"),
+            SearchableSetting("Bottom Margin", listOf("margin", "bottom", "padding"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "bottom_margin"),
+            SearchableSetting("Keyboard Opacity", listOf("opacity", "transparent", "background"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "keyboard_opacity"),
+            SearchableSetting("Key Opacity", listOf("opacity", "key", "transparent"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "key_opacity"),
+            SearchableSetting("Label Brightness", listOf("brightness", "text", "label", "visibility"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "label_brightness"),
+            SearchableSetting("Character Size", listOf("size", "font", "text", "label"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "character_size"),
+            SearchableSetting("Vertical Key Spacing", listOf("vertical", "spacing", "margin", "row"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "vertical_spacing"),
+            SearchableSetting("Number Row", listOf("123", "digits", "top row", "numbers"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "number_row"),
+            SearchableSetting("Show Numpad", listOf("numpad", "numbers", "digits", "calculator"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "show_numpad"),
+            SearchableSetting("Numpad Layout", listOf("numpad", "order", "123", "789"), "Appearance", expandSection = { appearanceSectionExpanded = true }, settingId = "numpad_layout"),
+
+            // ==================== SWIPE TRAIL ====================
+            SearchableSetting("Swipe Trail", listOf("gesture", "path", "visual", "effect", "trail"), "Swipe Trail", expandSection = { swipeTrailSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "swipe_trail"),
+            SearchableSetting("Trail Effect", listOf("effect", "sparkle", "glow", "rainbow", "fade"), "Swipe Trail", expandSection = { swipeTrailSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "trail_effect"),
+            SearchableSetting("Trail Color", listOf("purple", "rainbow", "glow", "color"), "Swipe Trail", expandSection = { swipeTrailSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "trail_color"),
+            SearchableSetting("Trail Width", listOf("width", "thickness", "stroke"), "Swipe Trail", expandSection = { swipeTrailSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "trail_width"),
+            SearchableSetting("Trail Glow Radius", listOf("glow", "radius", "effect"), "Swipe Trail", expandSection = { swipeTrailSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "trail_glow"),
+
+            // ==================== INPUT BEHAVIOR ====================
+            SearchableSetting("Autocapitalization", listOf("uppercase", "sentence", "shift", "capital"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "autocap"),
+            SearchableSetting("Long Press Timeout", listOf("hold", "delay", "duration", "timeout"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "long_press"),
+            SearchableSetting("Long Press Interval", listOf("interval", "repeat", "speed"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "long_press_interval"),
+            SearchableSetting("Key Repeat", listOf("hold", "backspace", "delete", "repeat"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "key_repeat"),
+            SearchableSetting("Double Tap Shift Lock", listOf("caps lock", "shift", "double tap"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "double_tap_shift"),
+            SearchableSetting("Smart Punctuation", listOf("punctuation", "smart", "space"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "smart_punctuation"),
+            SearchableSetting("Immediate Keyboard Switch", listOf("switch", "keyboard", "immediate"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "immediate_switch"),
+
+            // ==================== GESTURE TUNING ====================
+            SearchableSetting("Short Gestures", listOf("short swipe", "quick", "action", "gesture"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "short_gestures"),
+            SearchableSetting("Short Gesture Min Distance", listOf("minimum", "short", "distance"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, gatedBy = "short_gestures", settingId = "short_gesture_min"),
+            SearchableSetting("Short Gesture Max Distance", listOf("maximum", "short", "distance"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, gatedBy = "short_gestures", settingId = "short_gesture_max"),
+            SearchableSetting("Double-Space to Period", listOf("punctuation", "auto", "shortcut", "period"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "double_space"),
+            SearchableSetting("Double-Space Timing", listOf("timing", "double space", "threshold"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "double_space_timing"),
+            SearchableSetting("Finger Occlusion", listOf("offset", "touch", "compensation", "finger"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "finger_occlusion"),
+            SearchableSetting("Tap Duration", listOf("timing", "sensitivity", "tap"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "tap_duration"),
+            SearchableSetting("Swipe Distance", listOf("sensitivity", "minimum", "recognition", "swipe"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "swipe_distance"),
+            SearchableSetting("Min Swipe Distance", listOf("minimum", "swipe", "distance", "pixels"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "min_swipe_distance"),
+            SearchableSetting("Min Key Distance", listOf("minimum", "key", "distance"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "min_key_distance"),
+            SearchableSetting("Min Dwell Time", listOf("dwell", "time", "minimum"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "min_dwell_time"),
+            SearchableSetting("Noise Threshold", listOf("noise", "filter", "threshold"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "noise_threshold"),
+            SearchableSetting("High Velocity Threshold", listOf("velocity", "fast", "speed"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "velocity_threshold"),
+            SearchableSetting("Circle Sensitivity", listOf("circle", "gesture", "sensitivity"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "circle_sensitivity"),
+            SearchableSetting("Slider Sensitivity", listOf("slider", "cursor", "sensitivity", "spacebar"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "slider_sensitivity"),
+            SearchableSetting("Selection-Delete Threshold", listOf("selection", "delete", "vertical", "threshold"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "sel_delete_threshold"),
+            SearchableSetting("Selection-Delete Speed", listOf("selection", "delete", "speed"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "sel_delete_speed"),
+
+            // ==================== ACCESSIBILITY & HAPTICS ====================
+            SearchableSetting("Vibration", listOf("haptic", "feedback", "tactile", "vibrate"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "vibration"),
+            SearchableSetting("Vibration Duration", listOf("duration", "vibration", "intensity"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "vibration_duration"),
+            SearchableSetting("Haptic Key Press", listOf("haptic", "keypress", "vibrate"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "haptic_keypress"),
+            SearchableSetting("Haptic Prediction Tap", listOf("haptic", "prediction", "tap"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "haptic_prediction"),
+            SearchableSetting("Haptic Trackpoint", listOf("haptic", "trackpoint", "navigation"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "haptic_trackpoint"),
+            SearchableSetting("Haptic Long Press", listOf("haptic", "long press", "vibrate"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "haptic_long_press"),
+            SearchableSetting("Haptic Swipe Complete", listOf("haptic", "swipe", "complete"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, gatedBy = "swipe_typing", settingId = "haptic_swipe"),
+            SearchableSetting("Sound on Keypress", listOf("audio", "click", "noise", "sound"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "sound"),
+
+            // ==================== CLIPBOARD ====================
+            SearchableSetting("Clipboard History", listOf("copy", "paste", "buffer", "clipboard"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard"),
+            SearchableSetting("Clipboard History Limit", listOf("history", "limit", "items", "count"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_limit"),
+            SearchableSetting("Clipboard Size Limit", listOf("size", "limit", "megabytes"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_size"),
+            SearchableSetting("Clipboard Max Item Size", listOf("item", "size", "maximum"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_item_size"),
+            SearchableSetting("Clipboard Pane Height", listOf("pane", "height", "size"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_height"),
+            SearchableSetting("Exclude Password Managers", listOf("password", "exclude", "security"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_exclude_passwords"),
+
+            // ==================== MULTI-LANGUAGE ====================
+            SearchableSetting("Enable Multi-Language", listOf("multilingual", "bilingual", "language"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, settingId = "multilang"),
+            SearchableSetting("Primary Language", listOf("multilingual", "dictionary", "locale", "primary"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, gatedBy = "multilang", settingId = "primary_lang"),
+            SearchableSetting("Secondary Language", listOf("bilingual", "dual", "alternate", "secondary"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, gatedBy = "multilang", settingId = "secondary_lang"),
+            SearchableSetting("Secondary Language Weight", listOf("weight", "secondary", "prediction"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, gatedBy = "multilang", settingId = "secondary_weight"),
+            SearchableSetting("Language Detection", listOf("auto", "detect", "switch", "automatic"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, gatedBy = "multilang", settingId = "lang_detection"),
+            SearchableSetting("Detection Sensitivity", listOf("sensitivity", "detection", "threshold"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, gatedBy = "multilang", settingId = "detection_sensitivity"),
+            SearchableSetting("Prefix Boost", listOf("prefix", "boost", "language"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, gatedBy = "multilang", settingId = "prefix_boost"),
+
+            // ==================== PRIVACY ====================
+            SearchableSetting("Incognito Mode", listOf("private", "secret", "hide", "incognito"), "Privacy", expandSection = { privacySectionExpanded = true }, settingId = "incognito"),
+            SearchableSetting("Swipe Data Collection", listOf("data", "collection", "privacy", "swipe"), "Privacy", expandSection = { privacySectionExpanded = true }, settingId = "swipe_data"),
+            SearchableSetting("Performance Metrics", listOf("performance", "metrics", "analytics"), "Privacy", expandSection = { privacySectionExpanded = true }, settingId = "performance_metrics"),
+
+            // ==================== ADVANCED ====================
+            SearchableSetting("Debug Logging", listOf("log", "developer", "verbose", "debug"), "Advanced", expandSection = { advancedSectionExpanded = true }, settingId = "debug_logging"),
+            SearchableSetting("Terminal Mode", listOf("terminal", "termux", "mode"), "Advanced", expandSection = { advancedSectionExpanded = true }, settingId = "terminal_mode"),
+            SearchableSetting("Detailed Swipe Logging", listOf("detailed", "swipe", "logging"), "Advanced", expandSection = { advancedSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "detailed_logging"),
+            SearchableSetting("Show Debug Scores", listOf("debug", "scores", "prediction"), "Advanced", expandSection = { advancedSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "debug_scores")
         )
     }
 
