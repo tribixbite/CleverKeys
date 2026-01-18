@@ -36,8 +36,17 @@ jobs:
       run: ./gradlew assembleDebug --stacktrace
 
     - name: Run unit tests
-      run: ./gradlew test --stacktrace
-      continue-on-error: true
+      run: ./gradlew testDebugUnitTest --stacktrace
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          build/reports/tests/
+          build/test-results/
+        retention-days: 7
 
     - name: Run lint checks
       run: ./gradlew lint --stacktrace
