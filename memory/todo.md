@@ -62,10 +62,32 @@ See `docs/DOCS_AUDIT.md` for full analysis:
 
 ---
 
+## Testing Infrastructure
+
+**Status**: Phase 1 in progress (9c45b13a)
+**Spec**: `docs/specs/testing-strategy.md`
+
+### Completed
+- [x] Add MockK + Truth dependencies to build.gradle
+- [x] Create AccentNormalizerTest.kt (30+ tests)
+- [x] Create VocabularyTrieTest.kt (30+ tests)
+- [x] Update CI to upload test results
+
+### Pending
+- [ ] Create DictionaryWord tests
+- [ ] Create BeamSearchEngine tests (extract pure logic)
+- [ ] Create GestureClassifier tests
+- [ ] Add JUnit 5 for modern test features
+
+**Note**: Tests run on CI (ubuntu-latest x86_64). ARM64/Termux skips Robolectric tests.
+
+---
+
 ## Recent Fixes (2026-01-17/18)
 
 | Commit | Description |
 |--------|-------------|
+| `9c45b13a` | Pure JVM tests: AccentNormalizer, VocabularyTrie |
 | `70986e85` | Workflow rules, release script, docs audit |
 | `7dab5a27` | Context management - split todo.md into archives |
 | `fd6c7747` | Settings search: 38 → 120 entries (~80% coverage) |
