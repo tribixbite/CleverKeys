@@ -1,5 +1,11 @@
 # CleverKeys TODO
 
+## Completed (2026-01-19)
+- ✅ Swedish language pack (sv_enhanced.bin, sv.bin, sv_unigrams.txt)
+- ✅ Emoticons category in emoji picker (#76) - 119 text emoticons
+- ✅ Tests for resolved issues (#41 emoji search, #71 clipboard, #72 I-words)
+- ✅ Tests for swipe sensitivity presets (Low/Medium/High/Custom)
+
 ## Code TODOs
 
 ### SettingsActivity.kt:3434
