@@ -5,6 +5,9 @@
 - ✅ Emoticons category in emoji picker (#76) - 119 text emoticons
 - ✅ Tests for resolved issues (#41 emoji search, #71 clipboard, #72 I-words)
 - ✅ Tests for swipe sensitivity presets (Low/Medium/High/Custom)
+- ✅ Emoticons display fix (auto-sizing text for wider kaomoji)
+- ✅ Emoji/clipboard toggle behavior (tap to open/close)
+- ✅ Hidden prediction bar when emoji/clipboard pane is open
 
 ## Code TODOs
 

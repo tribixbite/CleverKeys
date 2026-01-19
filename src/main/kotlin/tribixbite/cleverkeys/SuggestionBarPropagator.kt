@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.view.View
 import android.view.ViewGroup
 
 /**
@@ -43,14 +44,15 @@ class SuggestionBarPropagator(
     /**
      * Propagate view references to KeyboardReceiver.
      *
-     * Sets emoji pane and content pane container references on the receiver
+     * Sets emoji pane, content pane container, and suggestion bar references on the receiver
      * for managing special view visibility.
      *
      * @param emojiPane The emoji pane view (nullable)
      * @param contentPaneContainer The content pane container for clipboard/emoji (nullable)
+     * @param suggestionBar The suggestion bar view (nullable) - for hiding when pane is open
      */
-    fun propagateViewReferences(emojiPane: ViewGroup?, contentPaneContainer: ViewGroup?) {
-        receiver?.setViewReferences(emojiPane, contentPaneContainer)
+    fun propagateViewReferences(emojiPane: ViewGroup?, contentPaneContainer: ViewGroup?, suggestionBar: View? = null) {
+        receiver?.setViewReferences(emojiPane, contentPaneContainer, suggestionBar)
     }
 
     /**
@@ -68,7 +70,8 @@ class SuggestionBarPropagator(
         contentPaneContainer: ViewGroup?
     ) {
         propagateSuggestionBar(suggestionBar)
-        propagateViewReferences(emojiPane, contentPaneContainer)
+        // Pass suggestion bar to receiver for hiding when emoji/clipboard pane is open
+        propagateViewReferences(emojiPane, contentPaneContainer, suggestionBar)
     }
 
     companion object {

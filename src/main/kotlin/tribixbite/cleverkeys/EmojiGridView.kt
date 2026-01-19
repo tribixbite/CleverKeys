@@ -164,8 +164,28 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
     }
 
     class EmojiView(context: Context) : TextView(context) {
+        init {
+            // Enable auto-sizing for text emoticons that are wider than single emojis
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                setAutoSizeTextTypeWithDefaults(TextView.AUTO_SIZE_TEXT_TYPE_UNIFORM)
+            }
+        }
+
         fun setEmoji(emoji: Emoji) {
-            text = emoji.kv().getString()
+            val emojiStr = emoji.kv().getString()
+            text = emojiStr
+
+            // Detect text emoticons (multi-character, non-emoji text like kaomoji)
+            // Single emojis are typically 1-4 codepoints, emoticons are longer ASCII/Unicode text
+            val isTextEmoticon = emojiStr.length > 4 && !emojiStr.all { Character.isHighSurrogate(it) || Character.isLowSurrogate(it) || it.code > 0x1F000 }
+
+            if (isTextEmoticon) {
+                // Use smaller text for emoticons to prevent overflow
+                // Auto-sizing handles this on API 26+, but set max for older devices
+                if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
+                    textSize = 12f // Smaller fixed size for pre-O devices
+                }
+            }
         }
     }
 

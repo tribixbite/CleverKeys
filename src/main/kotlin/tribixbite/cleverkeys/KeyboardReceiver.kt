@@ -48,6 +48,12 @@ class KeyboardReceiver(
     // View references
     private var emojiPane: ViewGroup? = null
     private var contentPaneContainer: ViewGroup? = null
+    private var suggestionBar: View? = null
+
+    // Track which pane is currently visible for toggle behavior
+    private var currentPaneType: PaneType = PaneType.NONE
+
+    private enum class PaneType { NONE, EMOJI, CLIPBOARD }
 
     // #41: Emoji search manager (uses suggestion bar for status display)
     private var emojiSearchManager: EmojiSearchManager? = null
@@ -58,10 +64,12 @@ class KeyboardReceiver(
      *
      * @param emojiPane Emoji pane view
      * @param contentPaneContainer Container for emoji/clipboard panes
+     * @param suggestionBar Suggestion bar view (to hide when pane is open)
      */
-    fun setViewReferences(emojiPane: ViewGroup?, contentPaneContainer: ViewGroup?) {
+    fun setViewReferences(emojiPane: ViewGroup?, contentPaneContainer: ViewGroup?, suggestionBar: View? = null) {
         this.emojiPane = emojiPane
         this.contentPaneContainer = contentPaneContainer
+        this.suggestionBar = suggestionBar
     }
 
     /**
@@ -95,12 +103,21 @@ class KeyboardReceiver(
             }
 
             KeyValue.Event.SWITCH_EMOJI -> {
+                // Toggle behavior: if emoji pane already visible, close it
+                if (currentPaneType == PaneType.EMOJI && contentPaneContainer?.visibility == View.VISIBLE) {
+                    handle_event_key(KeyValue.Event.SWITCH_BACK_EMOJI)
+                    return
+                }
+
                 if (emojiPane == null) {
                     emojiPane = keyboard2.inflate_view(R.layout.emoji_pane) as ViewGroup
                 }
 
                 // Capture for null safety
                 val pane = emojiPane
+
+                // Hide suggestion bar to avoid double bar (pane has its own search bar)
+                suggestionBar?.visibility = View.GONE
 
                 // Show emoji pane in content container (keyboard stays visible below)
                 contentPaneContainer?.let {
@@ -115,6 +132,8 @@ class KeyboardReceiver(
                         keyboard2.setInputView(pane)
                     }
                 }
+
+                currentPaneType = PaneType.EMOJI
 
                 // #41 v4: Initialize emoji search manager with the pane and notify pane opened
                 emojiPane?.let { pane ->
@@ -144,6 +163,12 @@ class KeyboardReceiver(
             }
 
             KeyValue.Event.SWITCH_CLIPBOARD -> {
+                // Toggle behavior: if clipboard pane already visible, close it
+                if (currentPaneType == PaneType.CLIPBOARD && contentPaneContainer?.visibility == View.VISIBLE) {
+                    handle_event_key(KeyValue.Event.SWITCH_BACK_CLIPBOARD)
+                    return
+                }
+
                 // SECURITY: Block clipboard access on lock screen (contains PII)
                 if (DirectBootManager.getInstance(context).isDeviceLocked) {
                     android.util.Log.w("KeyboardReceiver", "Clipboard blocked: screen is locked")
@@ -156,6 +181,9 @@ class KeyboardReceiver(
                 // Reset search mode and clear any previous search when showing clipboard pane
                 clipboardManager.resetSearchOnShow()
 
+                // Hide suggestion bar to avoid double bar
+                suggestionBar?.visibility = View.GONE
+
                 // Show clipboard pane in content container (keyboard stays visible below)
                 contentPaneContainer?.let {
                     it.removeAllViews()
@@ -167,6 +195,8 @@ class KeyboardReceiver(
                     // Fallback for when predictions disabled (no container)
                     keyboard2.setInputView(clipboardPane)
                 }
+
+                currentPaneType = PaneType.CLIPBOARD
             }
 
             KeyValue.Event.SWITCH_BACK_EMOJI,
@@ -176,6 +206,12 @@ class KeyboardReceiver(
 
                 // #41 v4: Notify emoji search manager pane is closing
                 emojiSearchManager?.onPaneClosed()
+
+                // Reset pane tracking
+                currentPaneType = PaneType.NONE
+
+                // Show suggestion bar again
+                suggestionBar?.visibility = View.VISIBLE
 
                 // Hide content pane (keyboard remains visible)
                 contentPaneContainer?.let {
