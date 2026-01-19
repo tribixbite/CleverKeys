@@ -98,8 +98,9 @@ class MultiLanguageManager(
                 null
             }
 
-            // Try to load dictionary (currently uses same vocabulary for all languages)
-            // TODO Phase 8.2: Load language-specific dictionaries
+            // Load vocabulary with language-specific contractions
+            // Note: Primary/secondary dictionaries are loaded via SwipePredictorOrchestrator
+            // which calls OptimizedVocabulary.loadPrimaryDictionary() for non-English languages
             val vocabulary = try {
                 val vocab = OptimizedVocabulary(context)
                 // v1.1.87: Pass language code to load correct contraction mappings

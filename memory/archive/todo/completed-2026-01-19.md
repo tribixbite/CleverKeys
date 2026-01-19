@@ -35,6 +35,10 @@
 - Optimized `saveLastUsed()` with 500ms debounce
 - Added confidence score API to LanguageDetector
 
+## Resolved TODOs (already implemented)
+- **MultiLanguageManager.kt:102**: Language-specific dictionaries load via `SwipePredictorOrchestrator.loadPrimaryDictionaryFromPrefs()` which calls `OptimizedVocabulary.loadPrimaryDictionary()`
+- **SettingsActivity.kt:3110**: Secondary dictionary loading triggers via `PreferenceUIUpdateHandler.reloadLanguageDictionaryIfNeeded()` when `pref_secondary_language` changes
+
 ## Features
 - Added Swipe Sensitivity preset (Low/Medium/High/Custom)
 

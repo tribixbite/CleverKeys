@@ -3107,7 +3107,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         onSelectionChange = { index ->
                             secondaryLanguage = secondaryOptions.getOrElse(index) { "none" }
                             saveSetting("pref_secondary_language", secondaryLanguage)
-                            // TODO: Trigger secondary dictionary loading in CleverKeysService
+                            // Dictionary reload triggered via PreferenceUIUpdateHandler.reloadLanguageDictionaryIfNeeded()
                         }
                     )
 

@@ -2,17 +2,6 @@
 
 ## Code TODOs
 
-### MultiLanguageManager.kt:102
-**Load language-specific dictionaries (Phase 8.2)**
-- Currently uses same vocabulary for all languages
-- Need to load dictionaries per language code
-- Files: `MultiLanguageManager.kt`, `OptimizedVocabulary.kt`
-
-### SettingsActivity.kt:3096
-**Trigger secondary dictionary loading in service**
-- Secondary language selection doesn't trigger dictionary load
-- Need to call orchestrator to load secondary dictionary
-
 ### SettingsActivity.kt:3434
 **Error Reports toggle has no backend**
 - Toggle is hidden in UI
