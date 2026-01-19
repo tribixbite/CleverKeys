@@ -103,15 +103,19 @@ ew-cli --app build/outputs/apk/debug/CleverKeys-v1.2.5-x86_64.apk \
        --device model=Pixel7,version=35 --use-orchestrator --clear-package-data
 ```
 
-**148 tests pass** (95.7s on Pixel7 API 35):
+**261 tests pass** (170s on Pixel7 API 35):
 | Test Class | Tests | Notes |
 |------------|-------|-------|
 | AccentNormalizerIntegrationTest | 18 | Accent normalization |
 | AutocapitalizationTest | 7 | Caps modes, EditorInfo |
+| AutocorrectTest | 27 | Typo correction, thresholds |
 | BasicInstrumentedTest | 9 | Package, settings launch |
 | ConfigIntegrationTest | 25 | Settings properties |
 | DictionaryManagerTest | 18 | User dictionary ops |
+| KeyEventTest | 36 | KeyValue, modifiers, config |
 | LanguageDetectorTest | 18 | Language detection |
+| ShortSwipeGestureTest | 31 | Customizable gestures |
+| SubkeyTest | 19 | Long-press popups |
 | SwipePredictionTest | 22 | Gesture recognition, NeuralSwipeTypingEngine |
 | WordPredictorTest | 31 | Prediction with real dictionary |
 
