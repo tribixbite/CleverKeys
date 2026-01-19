@@ -99,9 +99,10 @@ class ClipboardHistoryTest {
         clipboardService?.clearHistory()
 
         val history = clipboardService?.clearExpiredAndGetHistory() ?: emptyList()
-        // Filter out pinned entries which survive clear
-        val unpinned = history.filter { !it.isPinned }
-        assertTrue("History should be empty after clear (except pinned)", unpinned.isEmpty())
+        val pinnedEntries = clipboardService?.getPinnedEntries() ?: emptyList()
+        // History should be empty or only contain pinned entries after clear
+        assertTrue("History should be empty after clear (except pinned)",
+            history.isEmpty() || history.size == pinnedEntries.size)
     }
 
     // =========================================================================

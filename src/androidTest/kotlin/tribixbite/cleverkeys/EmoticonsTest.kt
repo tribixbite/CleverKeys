@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -22,6 +23,12 @@ class EmoticonsTest {
         context = InstrumentationRegistry.getInstrumentation().targetContext
         // Initialize Emoji with app resources
         Emoji.init(context.resources)
+    }
+
+    /** Helper to ensure keyword index is ready for search tests */
+    private fun ensureKeywordIndexReady() {
+        EmojiKeywordIndex.prewarm(context)
+        runBlocking { EmojiKeywordIndex.awaitReady() }
     }
 
     // =========================================================================
@@ -174,8 +181,7 @@ class EmoticonsTest {
 
     @Test
     fun testSearchEmoticonKeyword() {
-        // Initialize keyword index
-        EmojiKeywordIndex.init(context.resources)
+        ensureKeywordIndexReady()
 
         // Search for "emoticon"
         val results = Emoji.searchByName("emoticon")
@@ -184,7 +190,7 @@ class EmoticonsTest {
 
     @Test
     fun testSearchShrugKeyword() {
-        EmojiKeywordIndex.init(context.resources)
+        ensureKeywordIndexReady()
 
         val results = Emoji.searchByName("shrug")
         assertTrue("Searching 'shrug' should return results", results.isNotEmpty())
@@ -196,7 +202,7 @@ class EmoticonsTest {
 
     @Test
     fun testSearchTableFlipKeyword() {
-        EmojiKeywordIndex.init(context.resources)
+        ensureKeywordIndexReady()
 
         val results = Emoji.searchByName("tableflip")
         assertTrue("Searching 'tableflip' should return results", results.isNotEmpty())
@@ -204,7 +210,7 @@ class EmoticonsTest {
 
     @Test
     fun testSearchLennyKeyword() {
-        EmojiKeywordIndex.init(context.resources)
+        ensureKeywordIndexReady()
 
         val results = Emoji.searchByName("lenny")
         assertTrue("Searching 'lenny' should return results", results.isNotEmpty())
@@ -212,7 +218,7 @@ class EmoticonsTest {
 
     @Test
     fun testSearchKaomojiKeyword() {
-        EmojiKeywordIndex.init(context.resources)
+        ensureKeywordIndexReady()
 
         val results = Emoji.searchByName("kaomoji")
         assertTrue("Searching 'kaomoji' should return results", results.isNotEmpty())

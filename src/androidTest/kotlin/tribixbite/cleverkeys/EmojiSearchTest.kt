@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -22,8 +23,9 @@ class EmojiSearchTest {
         context = InstrumentationRegistry.getInstrumentation().targetContext
         // Initialize Emoji with app resources
         Emoji.init(context.resources)
-        // Initialize keyword index
-        EmojiKeywordIndex.init(context.resources)
+        // Initialize keyword index (prewarm loads from assets) and wait for completion
+        EmojiKeywordIndex.prewarm(context)
+        runBlocking { EmojiKeywordIndex.awaitReady() }
     }
 
     // =========================================================================
