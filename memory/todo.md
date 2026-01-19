@@ -96,6 +96,14 @@ BeamSearchModelsTest:  21 tests OK (0.09s)
 
 **Local testing**: Uses proot-distro Ubuntu to run pure JVM tests on ARM64.
 
+### Instrumented Tests (emulator.wtf)
+```bash
+ew-cli --app build/outputs/apk/debug/CleverKeys-v1.2.5-x86_64.apk \
+       --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
+       --device model=Pixel7,version=35
+```
+- BasicInstrumentedTest: 9 tests (1.3s)
+
 ---
 
 ## Recent Fixes (2026-01-17/18)
