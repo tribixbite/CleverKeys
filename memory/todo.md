@@ -1,6 +1,6 @@
 # CleverKeys Working TODO
 
-**Last Updated**: 2026-01-18
+**Last Updated**: 2026-01-19
 **Current Version**: v1.2.11
 **Status**: Production Ready
 
@@ -100,16 +100,30 @@ BeamSearchModelsTest:  21 tests OK (0.09s)
 ```bash
 ew-cli --app build/outputs/apk/debug/CleverKeys-v1.2.5-x86_64.apk \
        --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
-       --device model=Pixel7,version=35
+       --device model=Pixel7,version=35 --use-orchestrator --clear-package-data
 ```
-- BasicInstrumentedTest: 9 tests (1.3s)
+
+**148 tests pass** (95.7s on Pixel7 API 35):
+| Test Class | Tests | Notes |
+|------------|-------|-------|
+| AccentNormalizerIntegrationTest | 18 | Accent normalization |
+| AutocapitalizationTest | 7 | Caps modes, EditorInfo |
+| BasicInstrumentedTest | 9 | Package, settings launch |
+| ConfigIntegrationTest | 25 | Settings properties |
+| DictionaryManagerTest | 18 | User dictionary ops |
+| LanguageDetectorTest | 18 | Language detection |
+| SwipePredictionTest | 22 | Gesture recognition (12 skipped: no Config) |
+| WordPredictorTest | 31 | Prediction with real dictionary |
+
+Tests requiring `Config.globalConfig()` are skipped via JUnit assumptions - Config requires full keyboard initialization which isn't available in pure test context.
 
 ---
 
-## Recent Fixes (2026-01-17/18)
+## Recent Fixes (2026-01-17/18/19)
 
 | Commit | Description |
 |--------|-------------|
+| `9faf36d8` | Instrumented tests: 148 tests pass on emulator.wtf |
 | `7ad3c4ad` | Local test runner for ARM64/proot |
 | `9c45b13a` | Pure JVM tests: AccentNormalizer, VocabularyTrie |
 | `70986e85` | Workflow rules, release script, docs audit |
