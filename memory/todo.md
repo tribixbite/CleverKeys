@@ -112,10 +112,10 @@ ew-cli --app build/outputs/apk/debug/CleverKeys-v1.2.5-x86_64.apk \
 | ConfigIntegrationTest | 25 | Settings properties |
 | DictionaryManagerTest | 18 | User dictionary ops |
 | LanguageDetectorTest | 18 | Language detection |
-| SwipePredictionTest | 22 | Gesture recognition (12 skipped: no Config) |
+| SwipePredictionTest | 22 | Gesture recognition, NeuralSwipeTypingEngine |
 | WordPredictorTest | 31 | Prediction with real dictionary |
 
-Tests requiring `Config.globalConfig()` are skipped via JUnit assumptions - Config requires full keyboard initialization which isn't available in pure test context.
+`TestConfigHelper.ensureConfigInitialized()` provides real Config for tests without requiring full keyboard service.
 
 ---
 
@@ -123,6 +123,7 @@ Tests requiring `Config.globalConfig()` are skipped via JUnit assumptions - Conf
 
 | Commit | Description |
 |--------|-------------|
+| `7873e465` | TestConfigHelper: 0 skipped tests, real Config init |
 | `9faf36d8` | Instrumented tests: 148 tests pass on emulator.wtf |
 | `7ad3c4ad` | Local test runner for ARM64/proot |
 | `9c45b13a` | Pure JVM tests: AccentNormalizer, VocabularyTrie |
