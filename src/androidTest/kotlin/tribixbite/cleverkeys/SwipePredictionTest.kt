@@ -29,17 +29,10 @@ class SwipePredictionTest {
         context = InstrumentationRegistry.getInstrumentation().targetContext
         swipeDetector = SwipeDetector()
 
-        // Config.globalConfig() may throw NPE in test context
-        config = try {
-            Config.globalConfig()
-        } catch (e: NullPointerException) {
-            null
-        }
-
-        // NeuralSwipeTypingEngine needs config - only create if available
-        val cfg = config
-        if (cfg != null) {
-            swipeEngine = NeuralSwipeTypingEngine(context, cfg)
+        // Initialize Config for testing using TestConfigHelper
+        if (TestConfigHelper.ensureConfigInitialized(context)) {
+            config = Config.globalConfig()
+            swipeEngine = NeuralSwipeTypingEngine(context, config!!)
         }
     }
 

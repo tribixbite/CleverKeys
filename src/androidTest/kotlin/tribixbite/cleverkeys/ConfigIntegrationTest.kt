@@ -23,11 +23,9 @@ class ConfigIntegrationTest {
     @Before
     fun setup() {
         context = InstrumentationRegistry.getInstrumentation().targetContext
-        try {
+        // Initialize Config for testing
+        if (TestConfigHelper.ensureConfigInitialized(context)) {
             config = Config.globalConfig()
-        } catch (e: NullPointerException) {
-            // Config not available in test context without full keyboard init
-            config = null
         }
     }
 
@@ -37,29 +35,17 @@ class ConfigIntegrationTest {
 
     @Test
     fun testConfigAvailable() {
-        // Config may be null in test context without full keyboard init
-        // Just verify the call doesn't crash the test (NPE is caught in setup)
-        try {
-            val globalConfig = Config.globalConfig()
-            assertNotNull("Config available when initialized", globalConfig)
-        } catch (e: NullPointerException) {
-            // Expected in test context - Config requires full keyboard initialization
-        }
+        // Config should be initialized by TestConfigHelper
+        assertNotNull("Config should be available", config)
     }
 
     @Test
     fun testGlobalConfigSingleton() {
-        try {
-            val config1 = Config.globalConfig()
-            val config2 = Config.globalConfig()
+        val cfg = config ?: return
+        val config1 = Config.globalConfig()
+        val config2 = Config.globalConfig()
 
-            // If both are non-null, should be same instance
-            if (config1 != null && config2 != null) {
-                assertSame("Should return same instance", config1, config2)
-            }
-        } catch (e: NullPointerException) {
-            // Expected in test context - Config requires full keyboard initialization
-        }
+        assertSame("Should return same instance", config1, config2)
     }
 
     // =========================================================================
