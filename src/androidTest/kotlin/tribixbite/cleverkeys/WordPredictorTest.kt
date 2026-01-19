@@ -11,7 +11,7 @@ import org.junit.runner.RunWith
 /**
  * Instrumented tests for WordPredictor.
  * Tests word prediction, autocomplete, and autocorrection functionality.
- * Note: Full dictionary loading is skipped to avoid OOM on emulator.
+ * Uses TestDictionaryHelper for a small test dictionary to avoid OOM.
  */
 @RunWith(AndroidJUnit4::class)
 class WordPredictorTest {
@@ -24,7 +24,8 @@ class WordPredictorTest {
         context = InstrumentationRegistry.getInstrumentation().targetContext
         predictor = WordPredictor()
         predictor.setContext(context)
-        // Note: Skipping loadDictionary to avoid OOM on cloud emulator
+        // Load small test dictionary from androidTest assets (avoids OOM)
+        predictor.loadDictionary(context, "en")
     }
 
     // =========================================================================
@@ -60,25 +61,33 @@ class WordPredictorTest {
     }
 
     // =========================================================================
-    // Prediction tests (without full dictionary)
+    // Prediction tests with real dictionary
     // =========================================================================
 
     @Test
-    fun testPredictWordsReturnsNonNull() {
+    fun testPredictWordsReturnsResults() {
         val predictions = predictor.predictWords("hel")
         assertNotNull("Predictions should not be null", predictions)
+        // With dictionary loaded, should return predictions for common prefix
+        assertTrue("Should have predictions for 'hel'", predictions.isNotEmpty())
     }
 
     @Test
     fun testPredictEmptyString() {
         val predictions = predictor.predictWords("")
         assertNotNull(predictions)
+        assertTrue("Empty input should return empty predictions", predictions.isEmpty())
     }
 
     @Test
     fun testPredictWordsWithScores() {
         val result = predictor.predictWordsWithScores("th")
         assertNotNull(result)
+        assertNotNull(result.words)
+        assertNotNull(result.scores)
+        // "th" should match "the", "that", "this", "they", "their", "there", "them", "than", "then", "think", "through"
+        assertTrue("Should have predictions for 'th'", result.words.isNotEmpty())
+        assertEquals("Words and scores should have same size", result.words.size, result.scores.size)
     }
 
     @Test
@@ -86,12 +95,28 @@ class WordPredictorTest {
         val contextWords = listOf("I", "am")
         val result = predictor.predictWordsWithContext("hap", contextWords)
         assertNotNull(result)
+        assertNotNull(result.words)
     }
 
     @Test
     fun testPredictWordsWithEmptyContext() {
         val result = predictor.predictWordsWithContext("th", emptyList())
         assertNotNull(result)
+        assertTrue("Should have predictions for 'th'", result.words.isNotEmpty())
+    }
+
+    @Test
+    fun testPredictionReturnsThe() {
+        val predictions = predictor.predictWords("th")
+        assertTrue("'the' should be in predictions for 'th'",
+            predictions.any { it.equals("the", ignoreCase = true) })
+    }
+
+    @Test
+    fun testPredictionReturnsHello() {
+        val predictions = predictor.predictWords("hel")
+        assertTrue("'hello' or 'help' should be in predictions for 'hel'",
+            predictions.any { it.equals("hello", ignoreCase = true) || it.equals("help", ignoreCase = true) })
     }
 
     // =========================================================================
@@ -107,7 +132,13 @@ class WordPredictorTest {
     @Test
     fun testAutoCorrectEmptyString() {
         val correction = predictor.autoCorrect("")
-        // Should not crash
+        assertEquals("Empty string should return empty string", "", correction)
+    }
+
+    @Test
+    fun testAutoCorrectValidWord() {
+        val correction = predictor.autoCorrect("the")
+        assertEquals("Valid word should not be corrected", "the", correction)
     }
 
     // =========================================================================
@@ -116,15 +147,19 @@ class WordPredictorTest {
 
     @Test
     fun testIsInDictionary() {
-        // Without dictionary loaded, should return false
-        val result = predictor.isInDictionary("hello")
-        // Just verify no crash
+        assertTrue("'the' should be in dictionary", predictor.isInDictionary("the"))
     }
 
     @Test
     fun testIsNotInDictionary() {
         val result = predictor.isInDictionary("xyznonexistent123")
         assertFalse("Nonsense word should not be in dictionary", result)
+    }
+
+    @Test
+    fun testDictionarySizePositive() {
+        val size = predictor.getDictionarySize()
+        assertTrue("Dictionary should have words loaded", size > 0)
     }
 
     // =========================================================================
@@ -138,6 +173,7 @@ class WordPredictorTest {
 
         val recentWords = predictor.getRecentWords()
         assertNotNull(recentWords)
+        assertTrue("Recent words should contain added words", recentWords.contains("test"))
     }
 
     @Test
@@ -180,13 +216,13 @@ class WordPredictorTest {
     @Test
     fun testIsLoading() {
         val loading = predictor.isLoading()
-        // Should return boolean without crashing
+        assertFalse("Should not be loading after sync load", loading)
     }
 
     @Test
     fun testIsReady() {
         val ready = predictor.isReady()
-        // Should return boolean without crashing
+        assertTrue("Should be ready after dictionary load", ready)
     }
 
     // =========================================================================
@@ -221,5 +257,19 @@ class WordPredictorTest {
     fun testNumericInput() {
         val predictions = predictor.predictWords("123")
         assertNotNull(predictions)
+    }
+
+    // =========================================================================
+    // Secondary dictionary tests
+    // =========================================================================
+
+    @Test
+    fun testHasSecondaryDictionary() {
+        assertFalse("Should not have secondary dictionary initially", predictor.hasSecondaryDictionary())
+    }
+
+    @Test
+    fun testGetSecondaryLanguageCode() {
+        assertEquals("none", predictor.getSecondaryLanguageCode())
     }
 }
