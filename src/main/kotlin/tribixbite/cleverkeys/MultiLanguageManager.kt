@@ -181,16 +181,24 @@ class MultiLanguageManager(
             return null
         }
 
-        val detected = detector.detectLanguageFromWords(recentWords)
-        if (detected != null && detected != activeLanguage) {
-            // TODO: Add confidence score to detector
-            // For now, detector already has internal threshold (0.6)
-            Log.i(TAG, "Language detected from context: $detected")
-            if (switchLanguage(detected)) {
-                return detected
+        val result = detector.detectLanguageFromWordsWithConfidence(recentWords)
+        if (result != null && result.language != activeLanguage && result.confidence >= confidenceThreshold) {
+            Log.i(TAG, "Language detected: ${result.language} (confidence: ${result.confidence})")
+            if (switchLanguage(result.language)) {
+                return result.language
             }
         }
         return null
+    }
+
+    /**
+     * Get confidence score for current language detection
+     * @param recentWords List of recently typed words
+     * @return DetectionResult with language and confidence, or null
+     */
+    fun getLanguageConfidence(recentWords: List<String>): LanguageDetector.DetectionResult? {
+        if (recentWords.isEmpty()) return null
+        return detector.detectLanguageFromWordsWithConfidence(recentWords)
     }
 
     /**

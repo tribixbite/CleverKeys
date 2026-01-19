@@ -12,10 +12,7 @@
 
 | File | Line | Description | Priority |
 |------|------|-------------|----------|
-| `EmojiGridView.kt` | 43 | Remove `migrateOldPrefs()` migration code | Low |
-| `EmojiGridView.kt` | 90 | Optimize `saveLastUsed()` | Low |
 | `MultiLanguageManager.kt` | 102 | Phase 8.2: Load language-specific dictionaries | Medium |
-| `MultiLanguageManager.kt` | 186 | Add confidence score to language detector | Low |
 | `SettingsActivity.kt` | 3096 | Trigger secondary dictionary loading in service | Medium |
 | `SettingsActivity.kt` | 3434 | Error Reports toggle - no logging implementation | Low |
 
@@ -103,7 +100,7 @@ ew-cli --app build/outputs/apk/debug/CleverKeys-v1.2.5-x86_64.apk \
        --device model=Pixel7,version=35 --use-orchestrator --clear-package-data
 ```
 
-**261 tests pass** (170s on Pixel7 API 35):
+**277 tests pass** (180s on Pixel7 API 35):
 | Test Class | Tests | Notes |
 |------------|-------|-------|
 | AccentNormalizerIntegrationTest | 18 | Accent normalization |
@@ -112,6 +109,7 @@ ew-cli --app build/outputs/apk/debug/CleverKeys-v1.2.5-x86_64.apk \
 | BasicInstrumentedTest | 9 | Package, settings launch |
 | ConfigIntegrationTest | 25 | Settings properties |
 | DictionaryManagerTest | 18 | User dictionary ops |
+| GestureClassifierTest | 16 | TAP vs SWIPE classification |
 | KeyEventTest | 36 | KeyValue, modifiers, config |
 | LanguageDetectorTest | 18 | Language detection |
 | ShortSwipeGestureTest | 31 | Customizable gestures |

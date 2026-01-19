@@ -16,6 +16,7 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
 
     private var emojiArray: List<Emoji> = emptyList()
     private val lastUsed: MutableMap<Emoji, Int> = mutableMapOf()
+    private var saveScheduled = false  // Debounce flag for saveLastUsed
 
     // #41 v8: Reference to search manager for bypassing search routing on emoji selection
     private var searchManager: EmojiSearchManager? = null
@@ -40,7 +41,6 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
 
     init {
         Emoji.init(context.resources)
-        migrateOldPrefs() // TODO: Remove at some point in future
         onItemClickListener = this
         onItemLongClickListener = this  // #41 v10: Long-press shows emoji name
         loadLastUsed()
@@ -87,7 +87,19 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         // #41 v8: Re-enable search routing for continued searching
         searchManager?.onEmojiInserted()
 
-        saveLastUsed() // TODO: opti
+        scheduleSaveLastUsed()
+    }
+
+    /**
+     * Debounced save - batches rapid emoji selections into single write
+     */
+    private fun scheduleSaveLastUsed() {
+        if (saveScheduled) return
+        saveScheduled = true
+        postDelayed({
+            saveScheduled = false
+            saveLastUsed()
+        }, 500)  // 500ms debounce
     }
 
     /**
@@ -151,34 +163,6 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         return context.getSharedPreferences("emoji_last_use", Context.MODE_PRIVATE)
     }
 
-    private fun migrateOldPrefs() {
-        val prefs = try {
-            emojiSharedPreferences()
-        } catch (e: Exception) {
-            return
-        }
-
-        val lastUsed = prefs.getStringSet(LAST_USE_PREF, null)
-        if (lastUsed != null && !prefs.getBoolean(MIGRATION_CHECK_KEY, false)) {
-            val edit = prefs.edit()
-            edit.clear()
-
-            val lastUsedNew = mutableSetOf<String>()
-            for (entry in lastUsed) {
-                val data = entry.split("-", limit = 2)
-                try {
-                    val count = data[0].toInt()
-                    val newValue = Emoji.mapOldNameToValue(data[1])
-                    lastUsedNew.add("$count-$newValue")
-                } catch (ignored: IllegalArgumentException) {
-                }
-            }
-            edit.putStringSet(LAST_USE_PREF, lastUsedNew)
-            edit.putBoolean(MIGRATION_CHECK_KEY, true)
-            edit.apply()
-        }
-    }
-
     class EmojiView(context: Context) : TextView(context) {
         fun setEmoji(emoji: Emoji) {
             text = emoji.kv().getString()
@@ -213,6 +197,5 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         const val GROUP_LAST_USE = -1
         const val GROUP_SEARCH = -2  // #41: Search mode
         private const val LAST_USE_PREF = "emoji_last_use"
-        private const val MIGRATION_CHECK_KEY = "MIGRATION_COMPLETE"
     }
 }

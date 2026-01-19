@@ -18,6 +18,14 @@ class LanguageDetector {
         private const val MIN_TEXT_LENGTH = 10 // Minimum characters needed for detection
     }
 
+    /**
+     * Result of language detection with confidence score
+     */
+    data class DetectionResult(
+        val language: String,
+        val confidence: Float
+    )
+
     // Language-specific character patterns
     private val languageCharFreqs: MutableMap<String, Map<Char, Float>> = mutableMapOf()
 
@@ -215,6 +223,46 @@ class LanguageDetector {
 
         val text = words.filterNotNull().joinToString(" ")
         return detectLanguage(text)
+    }
+
+    /**
+     * Detect language with confidence score
+     * @param text Input text to analyze
+     * @return DetectionResult with language and confidence, or null if detection fails
+     */
+    fun detectLanguageWithConfidence(text: String?): DetectionResult? {
+        if (text == null || text.length < MIN_TEXT_LENGTH) {
+            return null
+        }
+
+        val normalizedText = text.lowercase().trim()
+
+        // Calculate scores for each language
+        val languageScores = mutableMapOf<String, Float>()
+        for (language in languageCharFreqs.keys) {
+            val score = calculateLanguageScore(normalizedText, language)
+            languageScores[language] = score
+        }
+
+        // Find the best match
+        val (bestLanguage, bestScore) = languageScores.maxByOrNull { it.value }
+            ?: return null
+
+        // Return result even if below threshold (caller can decide)
+        return DetectionResult(bestLanguage, bestScore)
+    }
+
+    /**
+     * Detect language with confidence from word list
+     * @param words List of recent words typed by user
+     * @return DetectionResult with language and confidence, or null if detection fails
+     */
+    fun detectLanguageFromWordsWithConfidence(words: List<String>?): DetectionResult? {
+        if (words.isNullOrEmpty()) {
+            return null
+        }
+        val text = words.filterNotNull().joinToString(" ")
+        return detectLanguageWithConfidence(text)
     }
 
     /**

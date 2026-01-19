@@ -498,6 +498,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Double-Space Timing", listOf("timing", "double space", "threshold"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "double_space_timing"),
             SearchableSetting("Finger Occlusion", listOf("offset", "touch", "compensation", "finger"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "finger_occlusion"),
             SearchableSetting("Tap Duration", listOf("timing", "sensitivity", "tap"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "tap_duration"),
+            SearchableSetting("Sensitivity Preset", listOf("swipe", "sensitivity", "low", "medium", "high", "preset", "quick"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "sensitivity_preset"),
             SearchableSetting("Swipe Distance", listOf("sensitivity", "minimum", "recognition", "swipe"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, settingId = "swipe_distance"),
             SearchableSetting("Min Swipe Distance", listOf("minimum", "swipe", "distance", "pixels"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "min_swipe_distance"),
             SearchableSetting("Min Key Distance", listOf("minimum", "key", "distance"), "Gesture Tuning", expandSection = { gestureTuningSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "min_key_distance"),
@@ -2659,6 +2660,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                 )
 
+                // Swipe Sensitivity Preset
+                val sensitivityPresets = listOf("Low", "Medium", "High", "Custom")
+                val currentPresetIndex = sensitivityPresets.indexOf(getSwipeSensitivityPreset())
+                SettingsDropdown(
+                    title = "Sensitivity Preset",
+                    description = "Quick presets for swipe recognition. Custom shows when values differ from presets.",
+                    options = sensitivityPresets,
+                    selectedIndex = if (currentPresetIndex >= 0) currentPresetIndex else 3,
+                    onSelectionChange = { index ->
+                        applySwipeSensitivityPreset(sensitivityPresets[index])
+                    }
+                )
+
                 SettingsSlider(
                     title = "Minimum Swipe Distance",
                     description = "Total distance to recognize a swipe (px). Lower allows shorter words like 'it', 'is'.",
@@ -4561,6 +4575,53 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    /**
+     * Get current swipe sensitivity preset based on current values
+     */
+    private fun getSwipeSensitivityPreset(): String {
+        // Low: Higher thresholds = less sensitive
+        val lowPreset = swipeMinDistance == 80f && swipeMinKeyDistance == 60f && swipeMinDwellTime == 30
+        // Medium: Default values
+        val mediumPreset = swipeMinDistance == 50f && swipeMinKeyDistance == 40f && swipeMinDwellTime == 15
+        // High: Lower thresholds = more sensitive
+        val highPreset = swipeMinDistance == 30f && swipeMinKeyDistance == 25f && swipeMinDwellTime == 5
+
+        return when {
+            lowPreset -> "Low"
+            mediumPreset -> "Medium"
+            highPreset -> "High"
+            else -> "Custom"
+        }
+    }
+
+    /**
+     * Apply swipe sensitivity preset values
+     */
+    private fun applySwipeSensitivityPreset(preset: String) {
+        when (preset) {
+            "Low" -> {
+                swipeMinDistance = 80f
+                swipeMinKeyDistance = 60f
+                swipeMinDwellTime = 30
+            }
+            "Medium" -> {
+                swipeMinDistance = 50f
+                swipeMinKeyDistance = 40f
+                swipeMinDwellTime = 15
+            }
+            "High" -> {
+                swipeMinDistance = 30f
+                swipeMinKeyDistance = 25f
+                swipeMinDwellTime = 5
+            }
+            "Custom" -> return // Don't change values
+        }
+        // Save the new values
+        saveSetting("swipe_min_distance", swipeMinDistance)
+        saveSetting("swipe_min_key_distance", swipeMinKeyDistance)
+        saveSetting("swipe_min_dwell_time", swipeMinDwellTime)
     }
 
     private fun updateConfigFromSettings() {
