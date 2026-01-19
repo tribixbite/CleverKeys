@@ -48,7 +48,6 @@ class KeyboardReceiver(
     // View references
     private var emojiPane: ViewGroup? = null
     private var contentPaneContainer: ViewGroup? = null
-    private var suggestionBarScrollView: View? = null  // The scrollView containing suggestion bar (40dp)
 
     // Track which pane is currently visible for toggle behavior
     private var currentPaneType: PaneType = PaneType.NONE
@@ -64,12 +63,10 @@ class KeyboardReceiver(
      *
      * @param emojiPane Emoji pane view
      * @param contentPaneContainer Container for emoji/clipboard panes
-     * @param suggestionBarScrollView The scrollView containing suggestion bar (to hide when pane is open)
      */
-    fun setViewReferences(emojiPane: ViewGroup?, contentPaneContainer: ViewGroup?, suggestionBarScrollView: View? = null) {
+    fun setViewReferences(emojiPane: ViewGroup?, contentPaneContainer: ViewGroup?) {
         this.emojiPane = emojiPane
         this.contentPaneContainer = contentPaneContainer
-        this.suggestionBarScrollView = suggestionBarScrollView
     }
 
     /**
@@ -115,9 +112,6 @@ class KeyboardReceiver(
 
                 // Capture for null safety
                 val pane = emojiPane
-
-                // Hide suggestion bar scrollview to avoid double bar (pane has its own search bar)
-                suggestionBarScrollView?.visibility = View.GONE
 
                 // Show emoji pane in content container (keyboard stays visible below)
                 contentPaneContainer?.let {
@@ -181,9 +175,6 @@ class KeyboardReceiver(
                 // Reset search mode and clear any previous search when showing clipboard pane
                 clipboardManager.resetSearchOnShow()
 
-                // Hide suggestion bar scrollview to avoid double bar
-                suggestionBarScrollView?.visibility = View.GONE
-
                 // Show clipboard pane in content container (keyboard stays visible below)
                 contentPaneContainer?.let {
                     it.removeAllViews()
@@ -209,9 +200,6 @@ class KeyboardReceiver(
 
                 // Reset pane tracking
                 currentPaneType = PaneType.NONE
-
-                // Show suggestion bar scrollview again
-                suggestionBarScrollView?.visibility = View.VISIBLE
 
                 // Hide content pane (keyboard remains visible)
                 contentPaneContainer?.let {

@@ -1,6 +1,5 @@
 package tribixbite.cleverkeys
 
-import android.view.View
 import android.view.ViewGroup
 
 /**
@@ -44,15 +43,14 @@ class SuggestionBarPropagator(
     /**
      * Propagate view references to KeyboardReceiver.
      *
-     * Sets emoji pane, content pane container, and suggestion bar scrollview references
-     * on the receiver for managing special view visibility.
+     * Sets emoji pane and content pane container references on the receiver
+     * for managing special view visibility.
      *
      * @param emojiPane The emoji pane view (nullable)
      * @param contentPaneContainer The content pane container for clipboard/emoji (nullable)
-     * @param suggestionBarScrollView The scrollview containing suggestion bar (nullable) - for hiding when pane is open
      */
-    fun propagateViewReferences(emojiPane: ViewGroup?, contentPaneContainer: ViewGroup?, suggestionBarScrollView: View? = null) {
-        receiver?.setViewReferences(emojiPane, contentPaneContainer, suggestionBarScrollView)
+    fun propagateViewReferences(emojiPane: ViewGroup?, contentPaneContainer: ViewGroup?) {
+        receiver?.setViewReferences(emojiPane, contentPaneContainer)
     }
 
     /**
@@ -61,19 +59,16 @@ class SuggestionBarPropagator(
      * Convenience method to propagate all references in one call.
      *
      * @param suggestionBar The SuggestionBar instance to propagate
-     * @param suggestionBarScrollView The scrollview containing suggestion bar (for hiding)
      * @param emojiPane The emoji pane view (nullable)
      * @param contentPaneContainer The content pane container (nullable)
      */
     fun propagateAll(
         suggestionBar: SuggestionBar,
-        suggestionBarScrollView: View?,
         emojiPane: ViewGroup?,
         contentPaneContainer: ViewGroup?
     ) {
         propagateSuggestionBar(suggestionBar)
-        // Pass scrollview to receiver for hiding when emoji/clipboard pane is open
-        propagateViewReferences(emojiPane, contentPaneContainer, suggestionBarScrollView)
+        propagateViewReferences(emojiPane, contentPaneContainer)
     }
 
     companion object {
