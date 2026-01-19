@@ -164,28 +164,63 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
     }
 
     class EmojiView(context: Context) : TextView(context) {
+        private var defaultTextSize: Float = 0f
+
         init {
-            // Enable auto-sizing for text emoticons that are wider than single emojis
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                setAutoSizeTextTypeWithDefaults(TextView.AUTO_SIZE_TEXT_TYPE_UNIFORM)
-            }
+            // Store the default text size from theme for regular emojis
+            defaultTextSize = textSize
+            // Ensure single line for emoticons
+            maxLines = 1
+            isSingleLine = true
         }
 
         fun setEmoji(emoji: Emoji) {
             val emojiStr = emoji.kv().getString()
             text = emojiStr
 
-            // Detect text emoticons (multi-character, non-emoji text like kaomoji)
-            // Single emojis are typically 1-4 codepoints, emoticons are longer ASCII/Unicode text
-            val isTextEmoticon = emojiStr.length > 4 && !emojiStr.all { Character.isHighSurrogate(it) || Character.isLowSurrogate(it) || it.code > 0x1F000 }
+            // Detect text emoticons (multi-character, ASCII-based like kaomoji)
+            // Regular emojis: short strings mostly made of surrogate pairs or high codepoints
+            // Emoticons: longer strings with ASCII characters like :) or ¯\_(ツ)_/¯
+            val isTextEmoticon = isEmoticon(emojiStr)
 
             if (isTextEmoticon) {
-                // Use smaller text for emoticons to prevent overflow
-                // Auto-sizing handles this on API 26+, but set max for older devices
-                if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
-                    textSize = 12f // Smaller fixed size for pre-O devices
+                // Scale text size based on emoticon length to fit in cell
+                // Column width is ~45sp, emoticons can be 2-20+ chars
+                val len = emojiStr.length
+                val scaledSize = when {
+                    len <= 3 -> 16f   // Short: :) :D
+                    len <= 6 -> 12f   // Medium: ;-) :-P
+                    len <= 10 -> 9f   // Long: (╯°□°)
+                    else -> 7f        // Very long: ¯\_(ツ)_/¯
+                }
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, scaledSize)
+            } else {
+                // Regular emoji - use default size from theme
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, defaultTextSize)
+            }
+        }
+
+        /**
+         * Detect if a string is a text emoticon vs a Unicode emoji.
+         * Text emoticons contain ASCII punctuation/letters, while emojis are mostly
+         * high Unicode codepoints (surrogate pairs) or emoji symbols (U+1F000+).
+         */
+        private fun isEmoticon(str: String): Boolean {
+            if (str.length <= 2) return false  // Single emoji can be 1-2 chars (with variation selector)
+
+            // Count ASCII printable chars (common in emoticons)
+            var asciiCount = 0
+            var emojiCount = 0
+            for (char in str) {
+                when {
+                    char.code in 0x20..0x7E -> asciiCount++  // ASCII printable
+                    Character.isHighSurrogate(char) || Character.isLowSurrogate(char) -> emojiCount++
+                    char.code >= 0x2600 -> emojiCount++  // Unicode symbols/emoji
                 }
             }
+
+            // If more ASCII than emoji codepoints, it's likely an emoticon
+            return asciiCount > emojiCount
         }
     }
 

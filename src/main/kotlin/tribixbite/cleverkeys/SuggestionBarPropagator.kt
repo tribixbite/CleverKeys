@@ -44,15 +44,15 @@ class SuggestionBarPropagator(
     /**
      * Propagate view references to KeyboardReceiver.
      *
-     * Sets emoji pane, content pane container, and suggestion bar references on the receiver
-     * for managing special view visibility.
+     * Sets emoji pane, content pane container, and suggestion bar scrollview references
+     * on the receiver for managing special view visibility.
      *
      * @param emojiPane The emoji pane view (nullable)
      * @param contentPaneContainer The content pane container for clipboard/emoji (nullable)
-     * @param suggestionBar The suggestion bar view (nullable) - for hiding when pane is open
+     * @param suggestionBarScrollView The scrollview containing suggestion bar (nullable) - for hiding when pane is open
      */
-    fun propagateViewReferences(emojiPane: ViewGroup?, contentPaneContainer: ViewGroup?, suggestionBar: View? = null) {
-        receiver?.setViewReferences(emojiPane, contentPaneContainer, suggestionBar)
+    fun propagateViewReferences(emojiPane: ViewGroup?, contentPaneContainer: ViewGroup?, suggestionBarScrollView: View? = null) {
+        receiver?.setViewReferences(emojiPane, contentPaneContainer, suggestionBarScrollView)
     }
 
     /**
@@ -61,17 +61,19 @@ class SuggestionBarPropagator(
      * Convenience method to propagate all references in one call.
      *
      * @param suggestionBar The SuggestionBar instance to propagate
+     * @param suggestionBarScrollView The scrollview containing suggestion bar (for hiding)
      * @param emojiPane The emoji pane view (nullable)
      * @param contentPaneContainer The content pane container (nullable)
      */
     fun propagateAll(
         suggestionBar: SuggestionBar,
+        suggestionBarScrollView: View?,
         emojiPane: ViewGroup?,
         contentPaneContainer: ViewGroup?
     ) {
         propagateSuggestionBar(suggestionBar)
-        // Pass suggestion bar to receiver for hiding when emoji/clipboard pane is open
-        propagateViewReferences(emojiPane, contentPaneContainer, suggestionBar)
+        // Pass scrollview to receiver for hiding when emoji/clipboard pane is open
+        propagateViewReferences(emojiPane, contentPaneContainer, suggestionBarScrollView)
     }
 
     companion object {
