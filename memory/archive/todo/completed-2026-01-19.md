@@ -39,6 +39,12 @@
 - **MultiLanguageManager.kt:102**: Language-specific dictionaries load via `SwipePredictorOrchestrator.loadPrimaryDictionaryFromPrefs()` which calls `OptimizedVocabulary.loadPrimaryDictionary()`
 - **SettingsActivity.kt:3110**: Secondary dictionary loading triggers via `PreferenceUIUpdateHandler.reloadLanguageDictionaryIfNeeded()` when `pref_secondary_language` changes
 
+## Swedish Language Pack
+- **sv_enhanced.bin**: 40,000 words, 26.6% accented (ä, ö, å)
+- **sv.bin**: Prefix boost trie (2.5MB, 154K nodes)
+- **sv_unigrams.txt**: 5,000 words for language detection
+- **langpack-sv.zip**: Importable language pack (1.7MB)
+
 ## Features
 - Added Swipe Sensitivity preset (Low/Medium/High/Custom)
 
