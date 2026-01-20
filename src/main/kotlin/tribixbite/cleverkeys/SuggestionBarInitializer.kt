@@ -259,24 +259,29 @@ object SuggestionBarInitializer {
     /**
      * Switch to content pane mode - expand ViewFlipper to fill space above keyboard.
      *
-     * Uses match_constraint height with max height based on user setting.
+     * Uses fixed height based on user setting. ViewFlipper sits directly above keyboard.
      *
      * @param container The ConstraintLayout container
-     * @param maxHeight Maximum height for content pane in pixels
+     * @param maxHeight Height for content pane in pixels
      */
     @JvmStatic
     fun switchToContentPaneMode(container: ConstraintLayout, maxHeight: Int) {
+        android.util.Log.i("SuggestionBarInitializer", "switchToContentPaneMode: maxHeight=$maxHeight, VIEW_FLIPPER_ID=$VIEW_FLIPPER_ID, KEYBOARD_VIEW_ID=$KEYBOARD_VIEW_ID")
+
         val constraintSet = ConstraintSet()
         constraintSet.clone(container)
 
-        // ViewFlipper: expand to fill space between top and keyboard, with max height
-        constraintSet.connect(VIEW_FLIPPER_ID, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
-        constraintSet.constrainHeight(VIEW_FLIPPER_ID, ConstraintSet.MATCH_CONSTRAINT)
-        constraintSet.constrainMaxHeight(VIEW_FLIPPER_ID, maxHeight)
-        // Keep bottom connected to keyboard
+        // ViewFlipper: fixed height, constrained to sit above keyboard
+        // Use fixed height (user's configured percentage of screen)
+        constraintSet.constrainHeight(VIEW_FLIPPER_ID, maxHeight)
+        // Keep bottom connected to keyboard top (no gap)
         constraintSet.connect(VIEW_FLIPPER_ID, ConstraintSet.BOTTOM, KEYBOARD_VIEW_ID, ConstraintSet.TOP)
+        // Clear top constraint - we want it to "hang" from keyboard, not stretch from top
+        constraintSet.clear(VIEW_FLIPPER_ID, ConstraintSet.TOP)
 
         constraintSet.applyTo(container)
+
+        android.util.Log.i("SuggestionBarInitializer", "switchToContentPaneMode: constraints applied")
     }
 
     /**
@@ -287,16 +292,20 @@ object SuggestionBarInitializer {
      */
     @JvmStatic
     fun switchToSuggestionBarMode(container: ConstraintLayout, suggestionBarHeight: Int) {
+        android.util.Log.i("SuggestionBarInitializer", "switchToSuggestionBarMode: suggestionBarHeight=$suggestionBarHeight")
+
         val constraintSet = ConstraintSet()
         constraintSet.clone(container)
 
-        // ViewFlipper: fixed height, remove top constraint
-        constraintSet.clear(VIEW_FLIPPER_ID, ConstraintSet.TOP)
+        // ViewFlipper: fixed height, constrained to sit above keyboard
         constraintSet.constrainHeight(VIEW_FLIPPER_ID, suggestionBarHeight)
-        constraintSet.constrainMaxHeight(VIEW_FLIPPER_ID, 0) // Clear max height
         // Keep bottom connected to keyboard
         constraintSet.connect(VIEW_FLIPPER_ID, ConstraintSet.BOTTOM, KEYBOARD_VIEW_ID, ConstraintSet.TOP)
+        // Clear top constraint
+        constraintSet.clear(VIEW_FLIPPER_ID, ConstraintSet.TOP)
 
         constraintSet.applyTo(container)
+
+        android.util.Log.i("SuggestionBarInitializer", "switchToSuggestionBarMode: constraints applied")
     }
 }
