@@ -90,22 +90,49 @@ class KeyboardReceiver(
 
     /**
      * Show emoji/clipboard pane and hide suggestion bar.
-     * Uses ViewFlipper to swap views and resizes to content pane height.
+     * Calculates exact height needed to fill space above keyboard.
      */
     private fun showContentPane() {
-        android.util.Log.i("KeyboardReceiver", "showContentPane: viewFlipper=$viewFlipper, contentPaneHeight=$contentPaneHeight")
+        android.util.Log.i("KeyboardReceiver", "showContentPane: viewFlipper=$viewFlipper")
 
         viewFlipper?.let { flipper ->
-            // Resize flipper to content pane height
-            flipper.layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                contentPaneHeight
-            )
+            // Get parent container and keyboard to calculate exact height
+            val parent = flipper.parent as? android.widget.LinearLayout
+            val keyboard = parent?.getChildAt(1) // keyboardView is second child
+
+            if (parent != null && keyboard != null) {
+                // Calculate available height: parent height minus keyboard height
+                val parentHeight = parent.height
+                val keyboardHeight = keyboard.height
+                val contentHeight = parentHeight - keyboardHeight
+
+                android.util.Log.i("KeyboardReceiver", "showContentPane: parentHeight=$parentHeight, keyboardHeight=$keyboardHeight, contentHeight=$contentHeight")
+
+                if (contentHeight > 0) {
+                    flipper.layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        contentHeight
+                    )
+                } else {
+                    // Fallback to stored contentPaneHeight if calculation fails
+                    flipper.layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        contentPaneHeight
+                    )
+                }
+            } else {
+                // Fallback
+                flipper.layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    contentPaneHeight
+                )
+            }
+
             // Switch to content pane (index 1)
             flipper.displayedChild = 1
             flipper.requestLayout()
             isContentPaneShowing = true
-            android.util.Log.i("KeyboardReceiver", "showContentPane: switched to child 1, height=$contentPaneHeight")
+            android.util.Log.i("KeyboardReceiver", "showContentPane: switched to child 1")
         }
     }
 

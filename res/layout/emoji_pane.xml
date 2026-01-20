@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:hardwareAccelerated="false">
 
   <!-- Search bar with close button -->
@@ -74,10 +74,11 @@
       android:layout_height="1dp"
       android:background="?attr/clipboard_divider_color"/>
 
-  <!-- Emoji grid -->
+  <!-- Emoji grid - fills remaining space -->
   <FrameLayout
       android:layout_width="match_parent"
-      android:layout_height="@dimen/emoji_grid_height">
+      android:layout_height="0dp"
+      android:layout_weight="1">
 
     <tribixbite.cleverkeys.EmojiGridView
         android:id="@+id/emoji_grid"
@@ -102,11 +103,6 @@
 
   </FrameLayout>
 
-  <!-- Bottom row keyboard -->
-  <tribixbite.cleverkeys.Keyboard2View
-      layout="@xml/emoji_bottom_row"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:background="?attr/emoji_key_bg"/>
+  <!-- Note: Bottom row keyboard removed - main keyboard is visible below content pane -->
 
 </LinearLayout>

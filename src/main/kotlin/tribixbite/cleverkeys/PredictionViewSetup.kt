@@ -161,7 +161,15 @@ class PredictionViewSetup(
                 // CRITICAL FIX: Remove keyboardView from existing parent (e.g. Window)
                 // before adding to new container to prevent IllegalStateException
                 (keyboardView.parent as? android.view.ViewGroup)?.removeView(keyboardView)
-                inputViewContainer?.addView(keyboardView)
+                // Add keyboard with explicit LayoutParams (weight=0, wrap_content height)
+                // This ensures keyboard doesn't expand and ViewFlipper can fill remaining space
+                val keyboardParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    weight = 0f
+                }
+                inputViewContainer?.addView(keyboardView, keyboardParams)
             } else {
                 // CRITICAL FIX: If views already exist, we MUST still propagate them to the receiver/managers
                 // because the receiver/managers might have been recreated (e.g. onStartInputView)
