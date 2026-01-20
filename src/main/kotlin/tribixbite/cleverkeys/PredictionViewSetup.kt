@@ -114,9 +114,6 @@ class PredictionViewSetup(
             var inputViewContainer = existingInputViewContainer
             var contentPaneContainer = existingContentPaneContainer
 
-            // Track scrollView for collapsing when emoji/clipboard pane is open
-            var scrollView: android.view.View? = null
-
             if (suggestionBar == null) {
                 // Initialize suggestion bar and input view hierarchy
                 val theme = keyboardView.getTheme()
@@ -130,7 +127,6 @@ class PredictionViewSetup(
                 inputViewContainer = result.inputViewContainer
                 suggestionBar = result.suggestionBar
                 contentPaneContainer = result.contentPaneContainer
-                scrollView = result.scrollView
 
                 // Register suggestion selection listener
                 suggestionBar?.setOnSuggestionSelectedListener(keyboard2)
@@ -144,7 +140,6 @@ class PredictionViewSetup(
                 )
                 suggestionBarPropagator.propagateAll(
                     suggestionBar,
-                    scrollView,
                     emojiPane,
                     contentPaneContainer
                 )
@@ -157,9 +152,6 @@ class PredictionViewSetup(
                 // CRITICAL FIX: If views already exist, we MUST still propagate them to the receiver/managers
                 // because the receiver/managers might have been recreated (e.g. onStartInputView)
                 // while the views persisted.
-                // Get scrollView from existing suggestionBar's parent
-                scrollView = suggestionBar.parent as? android.view.View
-
                 val suggestionBarPropagator = SuggestionBarPropagator.create(
                     inputCoordinator,
                     suggestionHandler,
@@ -168,7 +160,6 @@ class PredictionViewSetup(
                 )
                 suggestionBarPropagator.propagateAll(
                     suggestionBar,
-                    scrollView,
                     emojiPane,
                     contentPaneContainer
                 )

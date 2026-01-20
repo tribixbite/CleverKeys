@@ -7,7 +7,7 @@
 - ✅ Tests for swipe sensitivity presets (Low/Medium/High/Custom)
 - ✅ Emoticons display fix (length-based text scaling for kaomoji)
 - ✅ Emoji/clipboard toggle behavior (tap to open/close)
-- ⚠️ Transparent bar between kb and emoji/clipboard pane (needs investigation)
+- ✅ Collapsed suggestion bar when emoji/clipboard pane opens (no gap)
 
 ## Code TODOs
 

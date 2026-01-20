@@ -48,8 +48,6 @@ class KeyboardReceiver(
     // View references
     private var emojiPane: ViewGroup? = null
     private var contentPaneContainer: ViewGroup? = null
-    private var suggestionBarScrollView: View? = null
-    private var scrollViewOriginalHeight: Int = 0  // Store original height to restore later
 
     // Track which pane is currently visible for toggle behavior
     private var currentPaneType: PaneType = PaneType.NONE
@@ -65,43 +63,10 @@ class KeyboardReceiver(
      *
      * @param emojiPane Emoji pane view
      * @param contentPaneContainer Container for emoji/clipboard panes
-     * @param suggestionBarScrollView The scrollView containing suggestion bar (to collapse when pane is open)
      */
-    fun setViewReferences(emojiPane: ViewGroup?, contentPaneContainer: ViewGroup?, suggestionBarScrollView: View? = null) {
+    fun setViewReferences(emojiPane: ViewGroup?, contentPaneContainer: ViewGroup?) {
         this.emojiPane = emojiPane
         this.contentPaneContainer = contentPaneContainer
-        this.suggestionBarScrollView = suggestionBarScrollView
-        // Store original height for restoration
-        suggestionBarScrollView?.layoutParams?.let {
-            scrollViewOriginalHeight = it.height
-        }
-    }
-
-    /**
-     * Collapse the suggestion bar scrollView to 0 height (keeps it in layout but invisible).
-     */
-    private fun collapseSuggestionBar() {
-        suggestionBarScrollView?.let { sv ->
-            val params = sv.layoutParams
-            if (params != null && scrollViewOriginalHeight == 0) {
-                scrollViewOriginalHeight = params.height  // Store if not already stored
-            }
-            params?.height = 0
-            sv.layoutParams = params
-        }
-    }
-
-    /**
-     * Restore the suggestion bar scrollView to its original height.
-     */
-    private fun restoreSuggestionBar() {
-        suggestionBarScrollView?.let { sv ->
-            val params = sv.layoutParams
-            if (params != null && scrollViewOriginalHeight > 0) {
-                params.height = scrollViewOriginalHeight
-                sv.layoutParams = params
-            }
-        }
     }
 
     /**
@@ -147,9 +112,6 @@ class KeyboardReceiver(
 
                 // Capture for null safety
                 val pane = emojiPane
-
-                // Collapse prediction bar - emoji pane has its own search bar
-                collapseSuggestionBar()
 
                 // Show emoji pane in content container (keyboard stays visible below)
                 contentPaneContainer?.let {
@@ -213,9 +175,6 @@ class KeyboardReceiver(
                 // Reset search mode and clear any previous search when showing clipboard pane
                 clipboardManager.resetSearchOnShow()
 
-                // Collapse prediction bar - clipboard pane has its own header
-                collapseSuggestionBar()
-
                 // Show clipboard pane in content container (keyboard stays visible below)
                 contentPaneContainer?.let {
                     it.removeAllViews()
@@ -241,9 +200,6 @@ class KeyboardReceiver(
 
                 // Reset pane tracking
                 currentPaneType = PaneType.NONE
-
-                // Restore prediction bar to original height
-                restoreSuggestionBar()
 
                 // Hide content pane (keyboard remains visible)
                 contentPaneContainer?.let {
