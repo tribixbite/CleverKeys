@@ -7,7 +7,8 @@
 - ✅ Tests for swipe sensitivity presets (Low/Medium/High/Custom)
 - ✅ Emoticons display fix (length-based text scaling for kaomoji)
 - ✅ Emoji/clipboard toggle behavior (tap to open/close)
-- ✅ Gap fix: FrameLayout wrapper swaps scrollView/contentPane in same space
+- ✅ Gap fix: ViewFlipper swaps suggestion bar/content pane with dynamic height
+- ✅ App-switch reset: Content pane state resets when keyboard hides
 
 ## Code TODOs
 
