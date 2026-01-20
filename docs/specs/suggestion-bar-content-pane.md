@@ -17,14 +17,22 @@ Users need word suggestions while typing, and the ability to quickly access emoj
 ### View Hierarchy
 
 ```
-inputViewContainer (LinearLayout, vertical)
+inputViewContainer (ConstraintLayout)
 ├── viewFlipper (ViewFlipper) - swaps between suggestion bar and content pane
 │   ├── scrollView (HorizontalScrollView) - index 0, default
 │   │   └── SuggestionBar (LinearLayout)
 │   └── contentPaneContainer (FrameLayout) - index 1
 │       └── [emoji_pane OR clipboard_pane] (added dynamically)
-└── keyboardView (Keyboard2View) - WRAP_CONTENT height, weight=0
+└── keyboardView (Keyboard2View) - pinned to bottom, wrap_content height
 ```
+
+### ConstraintLayout Design
+
+Uses ConstraintLayout instead of LinearLayout to ensure:
+- **Keyboard pinned to bottom**: Always stays at the bottom of the IME window
+- **ViewFlipper above keyboard**: Constrained between top of parent and top of keyboard
+- **No gap**: Direct constraint connection between ViewFlipper bottom and keyboard top
+- **Configurable max height**: Content pane respects user's height setting via `constraintHeight_max`
 
 ### Key Files
 
@@ -52,27 +60,32 @@ inputViewContainer (LinearLayout, vertical)
 
 ## Technical Design
 
-### Height Management
+### Height Management with ConstraintLayout
 
 When showing content pane:
 ```kotlin
-// KeyboardReceiver.showContentPane()
-flipper.layoutParams = LinearLayout.LayoutParams(
-    MATCH_PARENT,
-    0  // height=0 with weight=1 fills remaining space
-).apply {
-    weight = 1f
-}
+// SuggestionBarInitializer.switchToContentPaneMode()
+val constraintSet = ConstraintSet()
+constraintSet.clone(container)
+// ViewFlipper: expand to fill space between top and keyboard, with max height
+constraintSet.connect(VIEW_FLIPPER_ID, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+constraintSet.constrainHeight(VIEW_FLIPPER_ID, ConstraintSet.MATCH_CONSTRAINT)
+constraintSet.constrainMaxHeight(VIEW_FLIPPER_ID, maxHeight)
+constraintSet.connect(VIEW_FLIPPER_ID, ConstraintSet.BOTTOM, KEYBOARD_VIEW_ID, ConstraintSet.TOP)
+constraintSet.applyTo(container)
 flipper.displayedChild = 1
 ```
 
 When hiding content pane:
 ```kotlin
-// KeyboardReceiver.hideContentPane()
-flipper.layoutParams = LinearLayout.LayoutParams(
-    MATCH_PARENT,
-    suggestionBarHeight  // fixed height (40dp)
-)
+// SuggestionBarInitializer.switchToSuggestionBarMode()
+val constraintSet = ConstraintSet()
+constraintSet.clone(container)
+// ViewFlipper: fixed height, remove top constraint
+constraintSet.clear(VIEW_FLIPPER_ID, ConstraintSet.TOP)
+constraintSet.constrainHeight(VIEW_FLIPPER_ID, suggestionBarHeight)
+constraintSet.connect(VIEW_FLIPPER_ID, ConstraintSet.BOTTOM, KEYBOARD_VIEW_ID, ConstraintSet.TOP)
+constraintSet.applyTo(container)
 flipper.displayedChild = 0
 ```
 
@@ -98,13 +111,16 @@ showContentPane()
 ## Known Issues
 
 ### Gap Between Content Pane and Keyboard
-**Status**: Investigating
+**Status**: Fixed (ConstraintLayout approach)
 
-The content pane sometimes doesn't fill the entire space above the keyboard, leaving a visible gap. Current fix uses `weight=1` on ViewFlipper to let LinearLayout calculate the correct size.
+The content pane previously didn't fill the entire space above the keyboard, leaving a visible gap.
 
-**Root Cause**: Fixed height calculations don't account for all layout factors.
+**Root Cause**: LinearLayout weight-based sizing wasn't reliable across different IME window sizes.
 
-**Workaround**: Use layout_weight=1 instead of fixed height.
+**Solution**: Migrated to ConstraintLayout with explicit constraints:
+- Keyboard pinned to bottom of parent
+- ViewFlipper constrained to sit directly above keyboard (bottom→keyboard top)
+- Max height constraint respects user's configured height percentage
 
 ## State Management
 
@@ -137,9 +153,10 @@ fun resetContentPaneState() {
 - `EmojiPane`/`ClipboardPane`: Content views
 
 ### Android Dependencies
+- `ConstraintLayout`: Root container for precise constraint-based layout
+- `ConstraintSet`: Programmatic constraint manipulation
 - `ViewFlipper`: View swapping
 - `HorizontalScrollView`: Scrollable suggestions
-- `LinearLayout.LayoutParams`: Weight-based sizing
 
 ## Future Enhancements
 

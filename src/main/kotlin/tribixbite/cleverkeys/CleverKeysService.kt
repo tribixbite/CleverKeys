@@ -20,7 +20,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.view.inputmethod.InputMethodSubtype
 import android.widget.FrameLayout
-import android.widget.LinearLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import tribixbite.cleverkeys.ml.SwipeMLData
 import tribixbite.cleverkeys.onnx.SwipePredictorOrchestrator
 
@@ -87,7 +87,7 @@ class CleverKeysService : InputMethodService(),
 
     // UI components (remain in CleverKeysService for view integration)
     private var _suggestionBar: SuggestionBar? = null
-    private var _inputViewContainer: LinearLayout? = null
+    private var _inputViewContainer: ConstraintLayout? = null
 
     // Prediction context tracking (v1.32.342: extracted to PredictionContextTracker)
     private lateinit var _contextTracker: PredictionContextTracker

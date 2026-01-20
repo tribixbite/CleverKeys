@@ -7,6 +7,7 @@ import android.os.Handler
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputConnection
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 
 /**
@@ -90,41 +91,40 @@ class KeyboardReceiver(
 
     /**
      * Show emoji/clipboard pane and hide suggestion bar.
-     * Uses layout_weight=1 to expand ViewFlipper to fill all space above keyboard.
+     * Uses ConstraintLayout to expand ViewFlipper up to max height while keeping keyboard at bottom.
      */
     private fun showContentPane() {
-        android.util.Log.i("KeyboardReceiver", "showContentPane: viewFlipper=$viewFlipper")
+        android.util.Log.i("KeyboardReceiver", "showContentPane: viewFlipper=$viewFlipper, contentPaneHeight=$contentPaneHeight")
 
         viewFlipper?.let { flipper ->
-            // Use weight=1 to expand and fill all available space above keyboard
-            // height=0 with weight=1 tells LinearLayout to give this view all remaining space
-            flipper.layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                0  // height=0 required for weight to work
-            ).apply {
-                weight = 1f
+            // Get parent ConstraintLayout
+            val container = flipper.parent as? ConstraintLayout
+            if (container != null) {
+                // Use ConstraintLayout constraints to expand ViewFlipper
+                SuggestionBarInitializer.switchToContentPaneMode(container, contentPaneHeight)
             }
             // Switch to content pane (index 1)
             flipper.displayedChild = 1
             flipper.requestLayout()
             isContentPaneShowing = true
-            android.util.Log.i("KeyboardReceiver", "showContentPane: switched to child 1 with weight=1")
+            android.util.Log.i("KeyboardReceiver", "showContentPane: switched to child 1 with maxHeight=$contentPaneHeight")
         }
     }
 
     /**
      * Hide emoji/clipboard pane and show suggestion bar.
-     * Uses ViewFlipper to swap views and resizes to suggestion bar height.
+     * Uses ConstraintLayout to collapse ViewFlipper to fixed suggestion bar height.
      */
     private fun hideContentPane() {
         android.util.Log.i("KeyboardReceiver", "hideContentPane: viewFlipper=$viewFlipper, suggestionBarHeight=$suggestionBarHeight")
 
         viewFlipper?.let { flipper ->
-            // Resize flipper to suggestion bar height
-            flipper.layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                suggestionBarHeight
-            )
+            // Get parent ConstraintLayout
+            val container = flipper.parent as? ConstraintLayout
+            if (container != null) {
+                // Use ConstraintLayout constraints to collapse ViewFlipper
+                SuggestionBarInitializer.switchToSuggestionBarMode(container, suggestionBarHeight)
+            }
             // Switch to suggestion bar (index 0)
             flipper.displayedChild = 0
             flipper.requestLayout()

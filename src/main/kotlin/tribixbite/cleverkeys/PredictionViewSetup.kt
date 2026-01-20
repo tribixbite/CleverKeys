@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import androidx.constraintlayout.widget.ConstraintLayout
 
 /**
  * Handles prediction and swipe typing view setup in onStartInputView().
@@ -44,7 +45,7 @@ class PredictionViewSetup(
     data class SetupResult(
         val inputView: View,
         val suggestionBar: SuggestionBar?,
-        val inputViewContainer: android.widget.LinearLayout?,
+        val inputViewContainer: ConstraintLayout?,
         val contentPaneContainer: android.widget.FrameLayout?
     )
 
@@ -62,7 +63,7 @@ class PredictionViewSetup(
      */
     fun setupPredictionViews(
         existingSuggestionBar: SuggestionBar?,
-        existingInputViewContainer: android.widget.LinearLayout?,
+        existingInputViewContainer: ConstraintLayout?,
         existingContentPaneContainer: android.widget.FrameLayout?
     ): SetupResult {
         // Check if word prediction or swipe typing is enabled
@@ -111,7 +112,7 @@ class PredictionViewSetup(
 
             // Create suggestion bar if needed
             var suggestionBar = existingSuggestionBar
-            var inputViewContainer = existingInputViewContainer
+            var inputViewContainer: ConstraintLayout? = existingInputViewContainer
             var contentPaneContainer = existingContentPaneContainer
 
             if (suggestionBar == null) {
@@ -161,15 +162,15 @@ class PredictionViewSetup(
                 // CRITICAL FIX: Remove keyboardView from existing parent (e.g. Window)
                 // before adding to new container to prevent IllegalStateException
                 (keyboardView.parent as? android.view.ViewGroup)?.removeView(keyboardView)
-                // Add keyboard with explicit LayoutParams (weight=0, wrap_content height)
-                // This ensures keyboard doesn't expand and ViewFlipper can fill remaining space
-                val keyboardParams = android.widget.LinearLayout.LayoutParams(
-                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    weight = 0f
+                // Add keyboard with ConstraintLayout constraints
+                // Keyboard pinned to bottom, ViewFlipper sits above it
+                inputViewContainer?.let { container ->
+                    SuggestionBarInitializer.addKeyboardWithConstraints(
+                        container,
+                        keyboardView,
+                        suggestionBarHeight
+                    )
                 }
-                inputViewContainer?.addView(keyboardView, keyboardParams)
             } else {
                 // CRITICAL FIX: If views already exist, we MUST still propagate them to the receiver/managers
                 // because the receiver/managers might have been recreated (e.g. onStartInputView)
@@ -186,9 +187,10 @@ class PredictionViewSetup(
                     config.clipboard_pane_height_percent
                 )
 
-                // Find ViewFlipper from existing hierarchy
-                // inputViewContainer structure: LinearLayout → ViewFlipper → [scrollView, contentPaneContainer]
-                val viewFlipper = inputViewContainer?.getChildAt(0) as? android.widget.ViewFlipper
+                // Find ViewFlipper from existing hierarchy using view ID
+                val viewFlipper = inputViewContainer?.findViewById<android.widget.ViewFlipper>(
+                    SuggestionBarInitializer.getViewFlipperId()
+                )
 
                 android.util.Log.i("PredictionViewSetup", "Else branch: viewFlipper=$viewFlipper, suggestionBarHeight=$suggestionBarHeight, contentPaneHeight=$contentPaneHeight")
 
