@@ -90,49 +90,40 @@ class KeyboardReceiver(
 
     /**
      * Show emoji/clipboard pane and hide suggestion bar.
-     * Calculates exact height needed to fill space above keyboard.
+     * Calculates height dynamically based on actual parent and keyboard sizes.
      */
     private fun showContentPane() {
         android.util.Log.i("KeyboardReceiver", "showContentPane: viewFlipper=$viewFlipper")
 
         viewFlipper?.let { flipper ->
-            // Get parent container and keyboard to calculate exact height
+            // Try to calculate actual available height
             val parent = flipper.parent as? android.widget.LinearLayout
-            val keyboard = parent?.getChildAt(1) // keyboardView is second child
+            var targetHeight = contentPaneHeight  // fallback
 
-            if (parent != null && keyboard != null) {
-                // Calculate available height: parent height minus keyboard height
+            if (parent != null && parent.childCount >= 2) {
+                val keyboard = parent.getChildAt(1)  // keyboardView is second child
                 val parentHeight = parent.height
                 val keyboardHeight = keyboard.height
-                val contentHeight = parentHeight - keyboardHeight
 
-                android.util.Log.i("KeyboardReceiver", "showContentPane: parentHeight=$parentHeight, keyboardHeight=$keyboardHeight, contentHeight=$contentHeight")
-
-                if (contentHeight > 0) {
-                    flipper.layoutParams = android.widget.LinearLayout.LayoutParams(
-                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                        contentHeight
-                    )
-                } else {
-                    // Fallback to stored contentPaneHeight if calculation fails
-                    flipper.layoutParams = android.widget.LinearLayout.LayoutParams(
-                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                        contentPaneHeight
-                    )
+                if (parentHeight > 0 && keyboardHeight > 0) {
+                    // Available height is parent minus keyboard
+                    targetHeight = parentHeight - keyboardHeight
+                    android.util.Log.i("KeyboardReceiver", "showContentPane: calculated height: parent=$parentHeight, keyboard=$keyboardHeight, target=$targetHeight")
                 }
-            } else {
-                // Fallback
-                flipper.layoutParams = android.widget.LinearLayout.LayoutParams(
-                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                    contentPaneHeight
-                )
             }
 
+            // Use at least the configured minimum (contentPaneHeight)
+            val finalHeight = maxOf(targetHeight, contentPaneHeight)
+
+            flipper.layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                finalHeight
+            )
             // Switch to content pane (index 1)
             flipper.displayedChild = 1
             flipper.requestLayout()
             isContentPaneShowing = true
-            android.util.Log.i("KeyboardReceiver", "showContentPane: switched to child 1")
+            android.util.Log.i("KeyboardReceiver", "showContentPane: switched to child 1, height=$finalHeight")
         }
     }
 
