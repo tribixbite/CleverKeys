@@ -9,6 +9,7 @@ Technical documentation for CleverKeys, an Android keyboard with neural swipe ty
 | Spec | Description |
 |------|-------------|
 | [Core Keyboard System](./core-keyboard-system.md) | InputMethodService, view hierarchy, key events, layout management |
+| [Suggestion Bar & Content Pane](./suggestion-bar-content-pane.md) | Word predictions, emoji/clipboard pane, ViewFlipper swap |
 | [Gesture System](./gesture-system.md) | Swipe detection, multi-touch, gesture classification |
 | [Layout System](./layout-system.md) | XML layouts, ExtraKeys, key positioning |
 
