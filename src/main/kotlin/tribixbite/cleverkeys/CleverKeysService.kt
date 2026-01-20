@@ -774,8 +774,8 @@ class CleverKeysService : InputMethodService(),
         // v1.2.6: Cancel any pending cursor sync
         _inputCoordinator.cancelPendingCursorSync()
 
-        // #41 v8: Clear emoji search state on app switch/keyboard hide
-        _emojiSearchManager?.onPaneClosed()
+        // Reset content pane state (hide emoji/clipboard if open)
+        _receiver?.resetContentPaneState()
     }
 
     // ==================== Inline Autofill Support (API 30+) ====================

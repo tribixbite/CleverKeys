@@ -131,7 +131,7 @@ class PredictionViewSetup(
                 // Register suggestion selection listener
                 suggestionBar?.setOnSuggestionSelectedListener(keyboard2)
 
-                // Calculate heights for wrapper resizing
+                // Calculate heights for ViewFlipper resizing
                 val suggestionBarHeight = android.util.TypedValue.applyDimension(
                     android.util.TypedValue.COMPLEX_UNIT_DIP,
                     40f,
@@ -153,8 +153,7 @@ class PredictionViewSetup(
                     suggestionBar,
                     emojiPane,
                     contentPaneContainer,
-                    result.scrollView,
-                    result.topPaneWrapper,
+                    result.viewFlipper,
                     suggestionBarHeight,
                     contentPaneHeight
                 )
@@ -168,7 +167,7 @@ class PredictionViewSetup(
                 // because the receiver/managers might have been recreated (e.g. onStartInputView)
                 // while the views persisted.
 
-                // Calculate heights for wrapper resizing
+                // Calculate heights for ViewFlipper resizing
                 val suggestionBarHeight = android.util.TypedValue.applyDimension(
                     android.util.TypedValue.COMPLEX_UNIT_DIP,
                     40f,
@@ -179,10 +178,11 @@ class PredictionViewSetup(
                     config.clipboard_pane_height_percent
                 )
 
-                // Find scrollView and topPaneWrapper from existing hierarchy
-                // inputViewContainer structure: LinearLayout → FrameLayout(topPaneWrapper) → [scrollView, contentPaneContainer]
-                val topPaneWrapper = inputViewContainer?.getChildAt(0) as? android.widget.FrameLayout
-                val scrollView = topPaneWrapper?.getChildAt(0)
+                // Find ViewFlipper from existing hierarchy
+                // inputViewContainer structure: LinearLayout → ViewFlipper → [scrollView, contentPaneContainer]
+                val viewFlipper = inputViewContainer?.getChildAt(0) as? android.widget.ViewFlipper
+
+                android.util.Log.i("PredictionViewSetup", "Else branch: viewFlipper=$viewFlipper, suggestionBarHeight=$suggestionBarHeight, contentPaneHeight=$contentPaneHeight")
 
                 val suggestionBarPropagator = SuggestionBarPropagator.create(
                     inputCoordinator,
@@ -194,8 +194,7 @@ class PredictionViewSetup(
                     suggestionBar,
                     emojiPane,
                     contentPaneContainer,
-                    scrollView,
-                    topPaneWrapper,
+                    viewFlipper,
                     suggestionBarHeight,
                     contentPaneHeight
                 )

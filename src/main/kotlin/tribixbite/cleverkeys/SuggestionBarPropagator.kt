@@ -44,29 +44,26 @@ class SuggestionBarPropagator(
     /**
      * Propagate view references to KeyboardReceiver.
      *
-     * Sets emoji pane, content pane container, and swap views on the receiver
-     * for managing special view visibility.
+     * Sets emoji pane, content pane container, and ViewFlipper on the receiver
+     * for managing view swapping.
      *
      * @param emojiPane The emoji pane view (nullable)
      * @param contentPaneContainer The content pane container for clipboard/emoji (nullable)
-     * @param scrollView The scroll view containing suggestion bar (nullable)
-     * @param topPaneWrapper The wrapper containing both scroll view and content pane (nullable)
+     * @param viewFlipper The ViewFlipper that swaps between suggestion bar and content pane (nullable)
      * @param suggestionBarHeight Height of suggestion bar in pixels
      * @param contentPaneHeight Height of content pane in pixels
      */
     fun propagateViewReferences(
         emojiPane: ViewGroup?,
         contentPaneContainer: ViewGroup?,
-        scrollView: View? = null,
-        topPaneWrapper: ViewGroup? = null,
+        viewFlipper: android.widget.ViewFlipper? = null,
         suggestionBarHeight: Int = 0,
         contentPaneHeight: Int = 0
     ) {
         receiver?.setViewReferences(
             emojiPane,
             contentPaneContainer,
-            scrollView,
-            topPaneWrapper,
+            viewFlipper,
             suggestionBarHeight,
             contentPaneHeight
         )
@@ -80,8 +77,7 @@ class SuggestionBarPropagator(
      * @param suggestionBar The SuggestionBar instance to propagate
      * @param emojiPane The emoji pane view (nullable)
      * @param contentPaneContainer The content pane container (nullable)
-     * @param scrollView The scroll view containing suggestion bar (nullable)
-     * @param topPaneWrapper The wrapper containing both scroll view and content pane (nullable)
+     * @param viewFlipper The ViewFlipper that swaps between suggestion bar and content pane (nullable)
      * @param suggestionBarHeight Height of suggestion bar in pixels
      * @param contentPaneHeight Height of content pane in pixels
      */
@@ -89,8 +85,7 @@ class SuggestionBarPropagator(
         suggestionBar: SuggestionBar,
         emojiPane: ViewGroup?,
         contentPaneContainer: ViewGroup?,
-        scrollView: View? = null,
-        topPaneWrapper: ViewGroup? = null,
+        viewFlipper: android.widget.ViewFlipper? = null,
         suggestionBarHeight: Int = 0,
         contentPaneHeight: Int = 0
     ) {
@@ -98,8 +93,7 @@ class SuggestionBarPropagator(
         propagateViewReferences(
             emojiPane,
             contentPaneContainer,
-            scrollView,
-            topPaneWrapper,
+            viewFlipper,
             suggestionBarHeight,
             contentPaneHeight
         )
