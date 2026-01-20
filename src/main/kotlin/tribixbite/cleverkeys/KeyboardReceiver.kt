@@ -48,6 +48,10 @@ class KeyboardReceiver(
     // View references
     private var emojiPane: ViewGroup? = null
     private var contentPaneContainer: ViewGroup? = null
+    private var scrollView: View? = null
+    private var topPaneWrapper: ViewGroup? = null
+    private var suggestionBarHeight: Int = 0
+    private var contentPaneHeight: Int = 0
 
     // Track which pane is currently visible for toggle behavior
     private var currentPaneType: PaneType = PaneType.NONE
@@ -63,10 +67,58 @@ class KeyboardReceiver(
      *
      * @param emojiPane Emoji pane view
      * @param contentPaneContainer Container for emoji/clipboard panes
+     * @param scrollView The suggestion bar scroll view
+     * @param topPaneWrapper The wrapper containing both scrollView and contentPaneContainer
+     * @param suggestionBarHeight Height of suggestion bar in pixels
+     * @param contentPaneHeight Height of content pane in pixels
      */
-    fun setViewReferences(emojiPane: ViewGroup?, contentPaneContainer: ViewGroup?) {
+    fun setViewReferences(
+        emojiPane: ViewGroup?,
+        contentPaneContainer: ViewGroup?,
+        scrollView: View? = null,
+        topPaneWrapper: ViewGroup? = null,
+        suggestionBarHeight: Int = 0,
+        contentPaneHeight: Int = 0
+    ) {
+        android.util.Log.i("KeyboardReceiver", "setViewReferences: emojiPane=$emojiPane, contentPaneContainer=$contentPaneContainer, scrollView=$scrollView, topPaneWrapper=$topPaneWrapper, suggestionBarHeight=$suggestionBarHeight, contentPaneHeight=$contentPaneHeight")
         this.emojiPane = emojiPane
         this.contentPaneContainer = contentPaneContainer
+        this.scrollView = scrollView
+        this.topPaneWrapper = topPaneWrapper
+        this.suggestionBarHeight = suggestionBarHeight
+        this.contentPaneHeight = contentPaneHeight
+    }
+
+    /**
+     * Show emoji/clipboard pane and hide suggestion bar.
+     * Resizes wrapper to content pane height.
+     */
+    private fun showContentPane() {
+        android.util.Log.i("KeyboardReceiver", "showContentPane: scrollView=$scrollView, contentPaneContainer=$contentPaneContainer, topPaneWrapper=$topPaneWrapper, suggestionBarHeight=$suggestionBarHeight, contentPaneHeight=$contentPaneHeight")
+        scrollView?.visibility = View.GONE
+        contentPaneContainer?.visibility = View.VISIBLE
+        // Resize wrapper to content pane height
+        topPaneWrapper?.let { wrapper ->
+            val params = wrapper.layoutParams
+            android.util.Log.i("KeyboardReceiver", "showContentPane: resizing wrapper from ${params?.height} to $contentPaneHeight")
+            params?.height = contentPaneHeight
+            wrapper.layoutParams = params
+        }
+    }
+
+    /**
+     * Hide emoji/clipboard pane and show suggestion bar.
+     * Resizes wrapper to suggestion bar height.
+     */
+    private fun hideContentPane() {
+        contentPaneContainer?.visibility = View.GONE
+        scrollView?.visibility = View.VISIBLE
+        // Resize wrapper to suggestion bar height
+        topPaneWrapper?.let { wrapper ->
+            val params = wrapper.layoutParams
+            params?.height = suggestionBarHeight
+            wrapper.layoutParams = params
+        }
     }
 
     /**
@@ -100,6 +152,7 @@ class KeyboardReceiver(
             }
 
             KeyValue.Event.SWITCH_EMOJI -> {
+                android.util.Log.i("KeyboardReceiver", "SWITCH_EMOJI triggered: currentPaneType=$currentPaneType, contentPaneContainer=$contentPaneContainer, scrollView=$scrollView, topPaneWrapper=$topPaneWrapper")
                 // Toggle behavior: if emoji pane already visible, close it
                 if (currentPaneType == PaneType.EMOJI && contentPaneContainer?.visibility == View.VISIBLE) {
                     handle_event_key(KeyValue.Event.SWITCH_BACK_EMOJI)
@@ -117,7 +170,8 @@ class KeyboardReceiver(
                 contentPaneContainer?.let {
                     it.removeAllViews()
                     it.addView(pane)
-                    it.visibility = View.VISIBLE
+                    // Swap: hide suggestion bar, show content pane, resize wrapper
+                    showContentPane()
                     // FIX #1131: Request window insets to apply nav bar padding on Android 15+
                     ViewCompat.requestApplyInsets(it)
                 } ?: run {
@@ -179,7 +233,8 @@ class KeyboardReceiver(
                 contentPaneContainer?.let {
                     it.removeAllViews()
                     it.addView(clipboardPane)
-                    it.visibility = View.VISIBLE
+                    // Swap: hide suggestion bar, show content pane, resize wrapper
+                    showContentPane()
                     // FIX #1131: Request window insets to apply nav bar padding on Android 15+
                     ViewCompat.requestApplyInsets(it)
                 } ?: run {
@@ -201,11 +256,11 @@ class KeyboardReceiver(
                 // Reset pane tracking
                 currentPaneType = PaneType.NONE
 
-                // Hide content pane (keyboard remains visible)
-                contentPaneContainer?.let {
-                    it.visibility = View.GONE
-                } ?: run {
-                    // Fallback for when predictions disabled
+                // Swap back: hide content pane, show suggestion bar, resize wrapper
+                hideContentPane()
+
+                // Fallback for when predictions disabled
+                if (contentPaneContainer == null) {
                     keyboard2.setInputView(keyboardView)
                 }
             }

@@ -43,12 +43,14 @@ object SuggestionBarInitializer {
      * @property suggestionBar The created SuggestionBar instance
      * @property contentPaneContainer The FrameLayout for clipboard/emoji panes
      * @property scrollView The HorizontalScrollView wrapping the suggestion bar
+     * @property topPaneWrapper The FrameLayout that wraps both scrollView and contentPaneContainer
      */
     data class InitializationResult(
         val inputViewContainer: LinearLayout,
         val suggestionBar: SuggestionBar,
         val contentPaneContainer: android.widget.FrameLayout,
-        val scrollView: HorizontalScrollView
+        val scrollView: HorizontalScrollView,
+        val topPaneWrapper: android.widget.FrameLayout? = null
     )
 
     /**
@@ -56,10 +58,13 @@ object SuggestionBarInitializer {
      *
      * Creates a complete input view hierarchy:
      * - LinearLayout (vertical orientation)
-     *   - HorizontalScrollView (scrollable suggestions)
-     *     - SuggestionBar
-     *   - FrameLayout (content pane for clipboard/emoji, initially hidden)
+     *   - FrameLayout (topPaneWrapper - stacks scrollView and contentPaneContainer)
+     *     - HorizontalScrollView (scrollable suggestions) - VISIBLE by default
+     *     - FrameLayout (content pane for clipboard/emoji) - GONE by default
      *   - Keyboard2View (added by caller)
+     *
+     * The topPaneWrapper allows scrollView and contentPaneContainer to swap in the same
+     * space, eliminating the gap when emoji/clipboard opens.
      *
      * @param context Application context
      * @param theme Theme for suggestion bar styling (may be null)
@@ -94,14 +99,10 @@ object SuggestionBarInitializer {
         scrollView.isFillViewport = true // Stretch content to fill viewport when smaller
         scrollView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
-        // Set scroll view layout params (40dp height)
-        val scrollParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                40f,
-                context.resources.displayMetrics
-            ).toInt()
+        // Set scroll view layout params (match parent within wrapper)
+        val scrollParams = android.widget.FrameLayout.LayoutParams(
+            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+            android.widget.FrameLayout.LayoutParams.MATCH_PARENT
         )
         scrollView.layoutParams = scrollParams
 
@@ -113,17 +114,15 @@ object SuggestionBarInitializer {
         suggestionBar.layoutParams = suggestionParams
 
         scrollView.addView(suggestionBar)
-        inputViewContainer.addView(scrollView)
 
         // Create content pane container (for clipboard/emoji)
         // Stays hidden until user opens clipboard or emoji pane
         val contentPaneContainer = android.widget.FrameLayout(context)
-        val screenHeight = context.resources.displayMetrics.heightPixels
-        val paneHeight = (screenHeight * clipboardPaneHeightPercent) / 100
-        contentPaneContainer.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            paneHeight
+        val contentPaneParams = android.widget.FrameLayout.LayoutParams(
+            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+            android.widget.FrameLayout.LayoutParams.MATCH_PARENT
         )
+        contentPaneContainer.layoutParams = contentPaneParams
         contentPaneContainer.visibility = android.view.View.GONE // Hidden by default
         contentPaneContainer.setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
@@ -141,7 +140,30 @@ object SuggestionBarInitializer {
             insets
         }
 
-        inputViewContainer.addView(contentPaneContainer)
+        // Create wrapper FrameLayout to stack scrollView and contentPaneContainer
+        // This allows them to swap in the same space without a gap
+        val topPaneWrapper = android.widget.FrameLayout(context)
+        val screenHeight = context.resources.displayMetrics.heightPixels
+        val paneHeight = (screenHeight * clipboardPaneHeightPercent) / 100
+        // Use the larger of 40dp (suggestion bar) or pane height, but wrap_content works better
+        val suggestionBarHeight = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            40f,
+            context.resources.displayMetrics
+        ).toInt()
+        // Wrapper height: when showing suggestion bar = 40dp, when showing emoji = paneHeight
+        // We'll control this dynamically, but start with suggestion bar height
+        topPaneWrapper.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            suggestionBarHeight
+        )
+        topPaneWrapper.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+
+        // Add both views to wrapper - they stack, only one visible at a time
+        topPaneWrapper.addView(scrollView)
+        topPaneWrapper.addView(contentPaneContainer)
+
+        inputViewContainer.addView(topPaneWrapper)
 
         // Note: Keyboard view is added by caller after this method returns
 
@@ -149,7 +171,8 @@ object SuggestionBarInitializer {
             inputViewContainer,
             suggestionBar,
             contentPaneContainer,
-            scrollView
+            scrollView,
+            topPaneWrapper
         )
     }
 
