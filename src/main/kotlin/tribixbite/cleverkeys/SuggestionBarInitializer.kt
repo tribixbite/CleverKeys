@@ -257,55 +257,50 @@ object SuggestionBarInitializer {
     }
 
     /**
-     * Switch to content pane mode - expand ViewFlipper to fill space above keyboard.
+     * Switch to content pane mode - expand ViewFlipper to show content pane.
      *
-     * Uses fixed height based on user setting. ViewFlipper sits directly above keyboard.
+     * Directly modifies ViewFlipper height via LayoutParams for reliability.
      *
-     * @param container The ConstraintLayout container
+     * @param container The ConstraintLayout container (unused, kept for API compatibility)
+     * @param viewFlipper The ViewFlipper to resize
      * @param maxHeight Height for content pane in pixels
      */
     @JvmStatic
-    fun switchToContentPaneMode(container: ConstraintLayout, maxHeight: Int) {
-        android.util.Log.i("SuggestionBarInitializer", "switchToContentPaneMode: maxHeight=$maxHeight, VIEW_FLIPPER_ID=$VIEW_FLIPPER_ID, KEYBOARD_VIEW_ID=$KEYBOARD_VIEW_ID")
+    fun switchToContentPaneMode(container: ConstraintLayout?, viewFlipper: android.widget.ViewFlipper, maxHeight: Int) {
+        android.util.Log.i("SuggestionBarInitializer", "switchToContentPaneMode: maxHeight=$maxHeight, flipper=$viewFlipper")
 
-        val constraintSet = ConstraintSet()
-        constraintSet.clone(container)
-
-        // ViewFlipper: fixed height, constrained to sit above keyboard
-        // Use fixed height (user's configured percentage of screen)
-        constraintSet.constrainHeight(VIEW_FLIPPER_ID, maxHeight)
-        // Keep bottom connected to keyboard top (no gap)
-        constraintSet.connect(VIEW_FLIPPER_ID, ConstraintSet.BOTTOM, KEYBOARD_VIEW_ID, ConstraintSet.TOP)
-        // Clear top constraint - we want it to "hang" from keyboard, not stretch from top
-        constraintSet.clear(VIEW_FLIPPER_ID, ConstraintSet.TOP)
-
-        constraintSet.applyTo(container)
-
-        android.util.Log.i("SuggestionBarInitializer", "switchToContentPaneMode: constraints applied")
+        // Directly set height on the ViewFlipper's LayoutParams
+        val params = viewFlipper.layoutParams
+        if (params != null) {
+            params.height = maxHeight
+            viewFlipper.layoutParams = params
+            android.util.Log.i("SuggestionBarInitializer", "switchToContentPaneMode: set height to $maxHeight")
+        } else {
+            android.util.Log.e("SuggestionBarInitializer", "switchToContentPaneMode: layoutParams is null!")
+        }
     }
 
     /**
      * Switch to suggestion bar mode - collapse ViewFlipper to fixed height.
      *
-     * @param container The ConstraintLayout container
+     * Directly modifies ViewFlipper height via LayoutParams for reliability.
+     *
+     * @param container The ConstraintLayout container (unused, kept for API compatibility)
+     * @param viewFlipper The ViewFlipper to resize
      * @param suggestionBarHeight Fixed height for suggestion bar in pixels
      */
     @JvmStatic
-    fun switchToSuggestionBarMode(container: ConstraintLayout, suggestionBarHeight: Int) {
-        android.util.Log.i("SuggestionBarInitializer", "switchToSuggestionBarMode: suggestionBarHeight=$suggestionBarHeight")
+    fun switchToSuggestionBarMode(container: ConstraintLayout?, viewFlipper: android.widget.ViewFlipper, suggestionBarHeight: Int) {
+        android.util.Log.i("SuggestionBarInitializer", "switchToSuggestionBarMode: suggestionBarHeight=$suggestionBarHeight, flipper=$viewFlipper")
 
-        val constraintSet = ConstraintSet()
-        constraintSet.clone(container)
-
-        // ViewFlipper: fixed height, constrained to sit above keyboard
-        constraintSet.constrainHeight(VIEW_FLIPPER_ID, suggestionBarHeight)
-        // Keep bottom connected to keyboard
-        constraintSet.connect(VIEW_FLIPPER_ID, ConstraintSet.BOTTOM, KEYBOARD_VIEW_ID, ConstraintSet.TOP)
-        // Clear top constraint
-        constraintSet.clear(VIEW_FLIPPER_ID, ConstraintSet.TOP)
-
-        constraintSet.applyTo(container)
-
-        android.util.Log.i("SuggestionBarInitializer", "switchToSuggestionBarMode: constraints applied")
+        // Directly set height on the ViewFlipper's LayoutParams
+        val params = viewFlipper.layoutParams
+        if (params != null) {
+            params.height = suggestionBarHeight
+            viewFlipper.layoutParams = params
+            android.util.Log.i("SuggestionBarInitializer", "switchToSuggestionBarMode: set height to $suggestionBarHeight")
+        } else {
+            android.util.Log.e("SuggestionBarInitializer", "switchToSuggestionBarMode: layoutParams is null!")
+        }
     }
 }

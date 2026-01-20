@@ -7,7 +7,6 @@ import android.os.Handler
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputConnection
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 
 /**
@@ -91,40 +90,32 @@ class KeyboardReceiver(
 
     /**
      * Show emoji/clipboard pane and hide suggestion bar.
-     * Uses ConstraintLayout to expand ViewFlipper up to max height while keeping keyboard at bottom.
+     * Directly sets ViewFlipper height to content pane height.
      */
     private fun showContentPane() {
         android.util.Log.i("KeyboardReceiver", "showContentPane: viewFlipper=$viewFlipper, contentPaneHeight=$contentPaneHeight")
 
         viewFlipper?.let { flipper ->
-            // Get parent ConstraintLayout
-            val container = flipper.parent as? ConstraintLayout
-            if (container != null) {
-                // Use ConstraintLayout constraints to expand ViewFlipper
-                SuggestionBarInitializer.switchToContentPaneMode(container, contentPaneHeight)
-            }
+            // Directly resize ViewFlipper via LayoutParams
+            SuggestionBarInitializer.switchToContentPaneMode(null, flipper, contentPaneHeight)
             // Switch to content pane (index 1)
             flipper.displayedChild = 1
             flipper.requestLayout()
             isContentPaneShowing = true
-            android.util.Log.i("KeyboardReceiver", "showContentPane: switched to child 1 with maxHeight=$contentPaneHeight")
+            android.util.Log.i("KeyboardReceiver", "showContentPane: switched to child 1, height=$contentPaneHeight")
         }
     }
 
     /**
      * Hide emoji/clipboard pane and show suggestion bar.
-     * Uses ConstraintLayout to collapse ViewFlipper to fixed suggestion bar height.
+     * Directly sets ViewFlipper height to suggestion bar height.
      */
     private fun hideContentPane() {
         android.util.Log.i("KeyboardReceiver", "hideContentPane: viewFlipper=$viewFlipper, suggestionBarHeight=$suggestionBarHeight")
 
         viewFlipper?.let { flipper ->
-            // Get parent ConstraintLayout
-            val container = flipper.parent as? ConstraintLayout
-            if (container != null) {
-                // Use ConstraintLayout constraints to collapse ViewFlipper
-                SuggestionBarInitializer.switchToSuggestionBarMode(container, suggestionBarHeight)
-            }
+            // Directly resize ViewFlipper via LayoutParams
+            SuggestionBarInitializer.switchToSuggestionBarMode(null, flipper, suggestionBarHeight)
             // Switch to suggestion bar (index 0)
             flipper.displayedChild = 0
             flipper.requestLayout()
