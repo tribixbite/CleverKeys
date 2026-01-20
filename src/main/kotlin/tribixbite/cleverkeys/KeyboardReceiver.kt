@@ -96,8 +96,8 @@ class KeyboardReceiver(
         android.util.Log.i("KeyboardReceiver", "showContentPane: viewFlipper=$viewFlipper, contentPaneHeight=$contentPaneHeight")
 
         viewFlipper?.let { flipper ->
-            // Directly resize ViewFlipper via LayoutParams
-            SuggestionBarInitializer.switchToContentPaneMode(null, flipper, contentPaneHeight)
+            // Resize ViewFlipper via LayoutParams
+            SuggestionBarInitializer.switchToContentPaneMode(flipper, contentPaneHeight)
             // Switch to content pane (index 1)
             flipper.displayedChild = 1
             flipper.requestLayout()
@@ -114,8 +114,8 @@ class KeyboardReceiver(
         android.util.Log.i("KeyboardReceiver", "hideContentPane: viewFlipper=$viewFlipper, suggestionBarHeight=$suggestionBarHeight")
 
         viewFlipper?.let { flipper ->
-            // Directly resize ViewFlipper via LayoutParams
-            SuggestionBarInitializer.switchToSuggestionBarMode(null, flipper, suggestionBarHeight)
+            // Resize ViewFlipper via LayoutParams
+            SuggestionBarInitializer.switchToSuggestionBarMode(flipper, suggestionBarHeight)
             // Switch to suggestion bar (index 0)
             flipper.displayedChild = 0
             flipper.requestLayout()

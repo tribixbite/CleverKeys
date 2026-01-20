@@ -1,13 +1,12 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
-import android.os.Build
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
@@ -18,74 +17,45 @@ import androidx.core.view.WindowInsetsCompat
  * - Creating suggestion bar with theme support
  * - Wrapping suggestion bar in scrollable container
  * - Creating content pane container for clipboard/emoji
- * - Assembling complete input view hierarchy using ConstraintLayout
+ * - Assembling complete input view hierarchy
  *
- * Uses ConstraintLayout to ensure:
+ * Uses LinearLayout with gravity=bottom to ensure:
  * - Keyboard pinned to bottom
- * - ViewFlipper fills space above keyboard up to max height
+ * - ViewFlipper sits directly above keyboard
  * - No gap between content pane and keyboard
- *
- * NOT included (remains in CleverKeysService):
- * - Registering suggestion selected listener
- * - Propagating suggestion bar reference to managers
- * - Setting input view on InputMethodService
- *
- * This utility is extracted from CleverKeysService.java for better code organization
- * and testability (v1.32.381).
  *
  * @since v1.32.381
  */
 object SuggestionBarInitializer {
 
-    // View IDs for ConstraintLayout (generated once at class load)
-    private val VIEW_FLIPPER_ID: Int by lazy { View.generateViewId() }
-    private val KEYBOARD_VIEW_ID: Int by lazy { View.generateViewId() }
-
-    /**
-     * Get the keyboard view ID for constraint references.
-     */
-    @JvmStatic
-    fun getKeyboardViewId(): Int = KEYBOARD_VIEW_ID
-
-    /**
-     * Get the ViewFlipper ID for constraint references.
-     */
-    @JvmStatic
-    fun getViewFlipperId(): Int = VIEW_FLIPPER_ID
-
     /**
      * Result of suggestion bar initialization.
      *
-     * @property inputViewContainer The root ConstraintLayout containing all views
+     * @property inputViewContainer The root LinearLayout containing all views
      * @property suggestionBar The created SuggestionBar instance
      * @property contentPaneContainer The FrameLayout for clipboard/emoji panes
      * @property scrollView The HorizontalScrollView wrapping the suggestion bar
      * @property viewFlipper The ViewFlipper that swaps between scrollView and contentPaneContainer
-     * @property keyboardViewId The ID to use when adding keyboard view
      */
     data class InitializationResult(
-        val inputViewContainer: ConstraintLayout,
+        val inputViewContainer: LinearLayout,
         val suggestionBar: SuggestionBar,
-        val contentPaneContainer: android.widget.FrameLayout,
+        val contentPaneContainer: FrameLayout,
         val scrollView: HorizontalScrollView,
-        val viewFlipper: android.widget.ViewFlipper? = null,
-        val keyboardViewId: Int = KEYBOARD_VIEW_ID
+        val viewFlipper: android.widget.ViewFlipper? = null
     )
 
     /**
      * Initialize suggestion bar and input view container.
      *
-     * Creates a complete input view hierarchy using ConstraintLayout:
-     * - ConstraintLayout (root)
+     * Creates a complete input view hierarchy:
+     * - LinearLayout (vertical, gravity=bottom)
      *   - ViewFlipper (swaps between scrollView and contentPaneContainer)
      *     - HorizontalScrollView (scrollable suggestions) - index 0, shown by default
      *     - FrameLayout (content pane for clipboard/emoji) - index 1
-     *   - Keyboard2View (added by caller, pinned to bottom)
+     *   - Keyboard2View (added by caller)
      *
-     * ConstraintLayout ensures:
-     * - Keyboard is always pinned to bottom
-     * - ViewFlipper fills space above keyboard with configurable max height
-     * - No gap between content pane and keyboard
+     * Using gravity=bottom ensures ViewFlipper sits directly above keyboard with no gap.
      *
      * @param context Application context
      * @param theme Theme for suggestion bar styling (may be null)
@@ -100,8 +70,11 @@ object SuggestionBarInitializer {
         opacity: Int,
         clipboardPaneHeightPercent: Int
     ): InitializationResult {
-        // Create root ConstraintLayout container
-        val inputViewContainer = ConstraintLayout(context)
+        // Create root LinearLayout with gravity=bottom
+        // This ensures children (ViewFlipper + Keyboard) stack at the bottom with no gap
+        val inputViewContainer = LinearLayout(context)
+        inputViewContainer.orientation = LinearLayout.VERTICAL
+        inputViewContainer.gravity = Gravity.BOTTOM
         inputViewContainer.setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
         // Create suggestion bar with theme
@@ -119,18 +92,18 @@ object SuggestionBarInitializer {
         scrollView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
         // Set suggestion bar to wrap_content width for scrolling
-        val suggestionParams = android.widget.FrameLayout.LayoutParams(
-            android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
-            android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+        val suggestionParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
         )
         suggestionBar.layoutParams = suggestionParams
         scrollView.addView(suggestionBar)
 
         // Create content pane container (for clipboard/emoji)
-        val contentPaneContainer = android.widget.FrameLayout(context)
+        val contentPaneContainer = FrameLayout(context)
         contentPaneContainer.setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
-        // FIX #1131: Apply bottom padding for navigation bar on Android 15+
+        // Apply bottom padding for navigation bar on Android 15+
         ViewCompat.setOnApplyWindowInsetsListener(contentPaneContainer) { view, insets ->
             val navBarInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
             view.setPadding(
@@ -142,9 +115,7 @@ object SuggestionBarInitializer {
             insets
         }
 
-        // Calculate heights
-        val screenHeight = context.resources.displayMetrics.heightPixels
-        val paneHeight = (screenHeight * clipboardPaneHeightPercent) / 100
+        // Calculate suggestion bar height
         val suggestionBarHeight = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             40f,
@@ -153,56 +124,40 @@ object SuggestionBarInitializer {
 
         // Create ViewFlipper to swap between scrollView and contentPaneContainer
         val viewFlipper = android.widget.ViewFlipper(context)
-        viewFlipper.id = VIEW_FLIPPER_ID
+        viewFlipper.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            suggestionBarHeight // Start with suggestion bar height
+        )
         viewFlipper.setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
-        // Set layout params for children inside ViewFlipper (match parent)
-        val childParams = android.widget.FrameLayout.LayoutParams(
-            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-            android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+        // Set layout params for children inside ViewFlipper (match parent to fill flipper)
+        val childParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
         )
         scrollView.layoutParams = childParams
-        contentPaneContainer.layoutParams = android.widget.FrameLayout.LayoutParams(childParams)
+        contentPaneContainer.layoutParams = FrameLayout.LayoutParams(childParams)
 
         // Add views to flipper - index 0 = scrollView, index 1 = contentPane
         viewFlipper.addView(scrollView)           // index 0 - shown by default
         viewFlipper.addView(contentPaneContainer) // index 1
 
-        // Add ViewFlipper to container (keyboard added by caller)
+        // Add ViewFlipper to container
         inputViewContainer.addView(viewFlipper)
 
-        // Set up initial constraints (suggestion bar mode - fixed height, bottom of parent)
-        val constraintSet = ConstraintSet()
-        constraintSet.clone(inputViewContainer)
-
-        // ViewFlipper: width=match_parent, height=suggestionBarHeight, pinned to bottom
-        constraintSet.constrainWidth(VIEW_FLIPPER_ID, ConstraintSet.MATCH_CONSTRAINT)
-        constraintSet.constrainHeight(VIEW_FLIPPER_ID, suggestionBarHeight)
-        constraintSet.connect(VIEW_FLIPPER_ID, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
-        constraintSet.connect(VIEW_FLIPPER_ID, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
-        constraintSet.connect(VIEW_FLIPPER_ID, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
-
-        constraintSet.applyTo(inputViewContainer)
-
-        // Note: Keyboard view is added by caller using keyboardViewId
-        // When keyboard is added, constraints should be updated to pin keyboard to bottom
-        // and ViewFlipper to sit above keyboard
+        // Note: Keyboard view is added by caller after this method returns
 
         return InitializationResult(
             inputViewContainer,
             suggestionBar,
             contentPaneContainer,
             scrollView,
-            viewFlipper,
-            KEYBOARD_VIEW_ID
+            viewFlipper
         )
     }
 
     /**
      * Calculate content pane height in pixels.
-     *
-     * Helper method to calculate content pane height based on screen height
-     * and configured percentage.
      *
      * @param context Application context
      * @param heightPercent Height as percentage of screen height (0-100)
@@ -215,92 +170,34 @@ object SuggestionBarInitializer {
     }
 
     /**
-     * Add keyboard view to container with proper constraints.
+     * Switch to content pane mode - expand ViewFlipper height.
      *
-     * Sets up ConstraintLayout constraints:
-     * - Keyboard pinned to bottom of parent
-     * - ViewFlipper sits above keyboard
-     *
-     * @param container The ConstraintLayout container
-     * @param keyboardView The keyboard view to add
-     * @param suggestionBarHeight Height of suggestion bar in pixels
-     */
-    @JvmStatic
-    fun addKeyboardWithConstraints(
-        container: ConstraintLayout,
-        keyboardView: View,
-        suggestionBarHeight: Int
-    ) {
-        // Set keyboard ID for constraint references
-        keyboardView.id = KEYBOARD_VIEW_ID
-
-        // Add keyboard to container
-        container.addView(keyboardView)
-
-        // Set up constraints
-        val constraintSet = ConstraintSet()
-        constraintSet.clone(container)
-
-        // Keyboard: width=match_parent, height=wrap_content, pinned to bottom
-        constraintSet.constrainWidth(KEYBOARD_VIEW_ID, ConstraintSet.MATCH_CONSTRAINT)
-        constraintSet.constrainHeight(KEYBOARD_VIEW_ID, ConstraintSet.WRAP_CONTENT)
-        constraintSet.connect(KEYBOARD_VIEW_ID, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
-        constraintSet.connect(KEYBOARD_VIEW_ID, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
-        constraintSet.connect(KEYBOARD_VIEW_ID, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
-
-        // ViewFlipper: sits above keyboard with fixed height (suggestion bar mode)
-        constraintSet.clear(VIEW_FLIPPER_ID, ConstraintSet.BOTTOM)
-        constraintSet.connect(VIEW_FLIPPER_ID, ConstraintSet.BOTTOM, KEYBOARD_VIEW_ID, ConstraintSet.TOP)
-        constraintSet.constrainHeight(VIEW_FLIPPER_ID, suggestionBarHeight)
-
-        constraintSet.applyTo(container)
-    }
-
-    /**
-     * Switch to content pane mode - expand ViewFlipper to show content pane.
-     *
-     * Directly modifies ViewFlipper height via LayoutParams for reliability.
-     *
-     * @param container The ConstraintLayout container (unused, kept for API compatibility)
      * @param viewFlipper The ViewFlipper to resize
-     * @param maxHeight Height for content pane in pixels
+     * @param height Height for content pane in pixels
      */
     @JvmStatic
-    fun switchToContentPaneMode(container: ConstraintLayout?, viewFlipper: android.widget.ViewFlipper, maxHeight: Int) {
-        android.util.Log.i("SuggestionBarInitializer", "switchToContentPaneMode: maxHeight=$maxHeight, flipper=$viewFlipper")
-
-        // Directly set height on the ViewFlipper's LayoutParams
+    fun switchToContentPaneMode(viewFlipper: android.widget.ViewFlipper, height: Int) {
+        android.util.Log.i("SuggestionBarInitializer", "switchToContentPaneMode: height=$height")
         val params = viewFlipper.layoutParams
         if (params != null) {
-            params.height = maxHeight
+            params.height = height
             viewFlipper.layoutParams = params
-            android.util.Log.i("SuggestionBarInitializer", "switchToContentPaneMode: set height to $maxHeight")
-        } else {
-            android.util.Log.e("SuggestionBarInitializer", "switchToContentPaneMode: layoutParams is null!")
         }
     }
 
     /**
-     * Switch to suggestion bar mode - collapse ViewFlipper to fixed height.
+     * Switch to suggestion bar mode - collapse ViewFlipper height.
      *
-     * Directly modifies ViewFlipper height via LayoutParams for reliability.
-     *
-     * @param container The ConstraintLayout container (unused, kept for API compatibility)
      * @param viewFlipper The ViewFlipper to resize
-     * @param suggestionBarHeight Fixed height for suggestion bar in pixels
+     * @param height Height for suggestion bar in pixels
      */
     @JvmStatic
-    fun switchToSuggestionBarMode(container: ConstraintLayout?, viewFlipper: android.widget.ViewFlipper, suggestionBarHeight: Int) {
-        android.util.Log.i("SuggestionBarInitializer", "switchToSuggestionBarMode: suggestionBarHeight=$suggestionBarHeight, flipper=$viewFlipper")
-
-        // Directly set height on the ViewFlipper's LayoutParams
+    fun switchToSuggestionBarMode(viewFlipper: android.widget.ViewFlipper, height: Int) {
+        android.util.Log.i("SuggestionBarInitializer", "switchToSuggestionBarMode: height=$height")
         val params = viewFlipper.layoutParams
         if (params != null) {
-            params.height = suggestionBarHeight
+            params.height = height
             viewFlipper.layoutParams = params
-            android.util.Log.i("SuggestionBarInitializer", "switchToSuggestionBarMode: set height to $suggestionBarHeight")
-        } else {
-            android.util.Log.e("SuggestionBarInitializer", "switchToSuggestionBarMode: layoutParams is null!")
         }
     }
 }
