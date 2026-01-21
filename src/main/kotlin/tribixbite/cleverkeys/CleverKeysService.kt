@@ -69,6 +69,8 @@ class CleverKeysService : InputMethodService(),
 
     private var _emojiPane: ViewGroup? = null
     private var _contentPaneContainer: FrameLayout? = null // Container for emoji/clipboard panes
+    private var _topPane: FrameLayout? = null // TopPane that holds scrollView or contentPaneContainer
+    private var _scrollView: android.widget.HorizontalScrollView? = null // ScrollView with suggestion bar
     var actionId: Int = 0 // Action performed by the Action key.
     private lateinit var _handler: Handler
 
@@ -669,6 +671,8 @@ class CleverKeysService : InputMethodService(),
             _suggestionBar = predictionSetup.suggestionBar
             _inputViewContainer = predictionSetup.inputViewContainer
             _contentPaneContainer = predictionSetup.contentPaneContainer
+            _topPane = predictionSetup.topPane
+            _scrollView = predictionSetup.scrollView
             setInputView(predictionSetup.inputView)
 
             // #41 v5: Emoji search manager persists across onStartInputView calls

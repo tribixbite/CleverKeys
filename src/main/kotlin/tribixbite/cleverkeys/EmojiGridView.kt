@@ -103,8 +103,8 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
     }
 
     /**
-     * #41 v10: Long-press handler to show emoji name in suggestion bar.
-     * Uses showSuggestionBarMessage() instead of Toast (suppressed on Android 13+ IME).
+     * #41 v10: Long-press handler to show emoji name.
+     * Uses Toast since suggestion bar is hidden when emoji pane is visible.
      */
     override fun onItemLongClick(parent: AdapterView<*>?, view: View?, pos: Int, id: Long): Boolean {
         if (pos < 0 || pos >= emojiArray.size) return false
@@ -115,7 +115,7 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
 
         // Format: "😀 grinning" or just the emoji if no name found
         val displayText = if (name != emojiStr) "$emojiStr $name" else emojiStr
-        service?.showSuggestionBarMessage(displayText, 2000L)
+        android.widget.Toast.makeText(context, displayText, android.widget.Toast.LENGTH_SHORT).show()
         return true  // Consume the event
     }
 

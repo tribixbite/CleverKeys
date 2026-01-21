@@ -41,12 +41,16 @@ class PredictionViewSetup(
      * @property suggestionBar The created suggestion bar (null if predictions disabled)
      * @property inputViewContainer The input view container (null if predictions disabled)
      * @property contentPaneContainer The content pane container (null if predictions disabled)
+     * @property topPane The topPane FrameLayout (null if predictions disabled)
+     * @property scrollView The scrollView with suggestion bar (null if predictions disabled)
      */
     data class SetupResult(
         val inputView: View,
         val suggestionBar: SuggestionBar?,
         val inputViewContainer: LinearLayout?,
-        val contentPaneContainer: android.widget.FrameLayout?
+        val contentPaneContainer: android.widget.FrameLayout?,
+        val topPane: android.widget.FrameLayout?,
+        val scrollView: android.widget.HorizontalScrollView?
     )
 
     /**
@@ -114,6 +118,8 @@ class PredictionViewSetup(
             var suggestionBar = existingSuggestionBar
             var inputViewContainer: LinearLayout? = existingInputViewContainer
             var contentPaneContainer = existingContentPaneContainer
+            var topPane: android.widget.FrameLayout? = null
+            var scrollView: android.widget.HorizontalScrollView? = null
 
             if (suggestionBar == null) {
                 // Initialize suggestion bar and input view hierarchy
@@ -128,6 +134,8 @@ class PredictionViewSetup(
                 inputViewContainer = result.inputViewContainer
                 suggestionBar = result.suggestionBar
                 contentPaneContainer = result.contentPaneContainer
+                topPane = result.topPane
+                scrollView = result.scrollView
 
                 // Register suggestion selection listener
                 suggestionBar?.setOnSuggestionSelectedListener(keyboard2)
@@ -154,7 +162,8 @@ class PredictionViewSetup(
                     suggestionBar,
                     emojiPane,
                     contentPaneContainer,
-                    result.viewFlipper,
+                    result.topPane,
+                    result.scrollView,
                     suggestionBarHeight,
                     contentPaneHeight
                 )
@@ -173,7 +182,7 @@ class PredictionViewSetup(
                 // because the receiver/managers might have been recreated (e.g. onStartInputView)
                 // while the views persisted.
 
-                // Calculate heights for ViewFlipper resizing
+                // Calculate heights for topPane resizing
                 val suggestionBarHeight = android.util.TypedValue.applyDimension(
                     android.util.TypedValue.COMPLEX_UNIT_DIP,
                     40f,
@@ -184,10 +193,13 @@ class PredictionViewSetup(
                     config.clipboard_pane_height_percent
                 )
 
-                // Find ViewFlipper from existing hierarchy (first child of LinearLayout)
-                val viewFlipper = inputViewContainer?.getChildAt(0) as? android.widget.ViewFlipper
+                // Find topPane from existing hierarchy (first child of LinearLayout)
+                // Assign to outer vars so they're returned in SetupResult
+                topPane = inputViewContainer?.getChildAt(0) as? android.widget.FrameLayout
+                // Find scrollView - it's either in topPane or needs to be tracked separately
+                scrollView = topPane?.getChildAt(0) as? android.widget.HorizontalScrollView
 
-                android.util.Log.i("PredictionViewSetup", "Else branch: viewFlipper=$viewFlipper, suggestionBarHeight=$suggestionBarHeight, contentPaneHeight=$contentPaneHeight")
+                android.util.Log.i("PredictionViewSetup", "Else branch: topPane=$topPane, scrollView=$scrollView, suggestionBarHeight=$suggestionBarHeight, contentPaneHeight=$contentPaneHeight")
 
                 val suggestionBarPropagator = SuggestionBarPropagator.create(
                     inputCoordinator,
@@ -199,7 +211,8 @@ class PredictionViewSetup(
                     suggestionBar,
                     emojiPane,
                     contentPaneContainer,
-                    viewFlipper,
+                    topPane,
+                    scrollView,
                     suggestionBarHeight,
                     contentPaneHeight
                 )
@@ -261,10 +274,11 @@ class PredictionViewSetup(
                 )
             }
 
-            return SetupResult(inputView, suggestionBar, inputViewContainer, contentPaneContainer)
+            // topPane and scrollView are now tracked throughout the method
+            return SetupResult(inputView, suggestionBar, inputViewContainer, contentPaneContainer, topPane, scrollView)
         } else {
             // Clean up if predictions are disabled
-            return SetupResult(keyboardView, null, null, null)
+            return SetupResult(keyboardView, null, null, null, null, null)
         }
     }
 
