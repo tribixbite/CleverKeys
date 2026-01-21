@@ -629,13 +629,8 @@ class CleverKeysService : InputMethodService(),
             _receiverBridge
         ).initializeIfNeeded(_receiver)
 
-        // Auto-close clipboard pane when switching to new app/field
-        // Prevents confusing UX where clipboard briefly shows then keyboard closes
-        if (_contentPaneContainer != null && _contentPaneContainer!!.visibility == View.VISIBLE) {
-            _contentPaneContainer!!.visibility = View.GONE
-            // Also reset search mode state
-            _clipboardManager.resetSearchOnHide()
-        }
+        // NOTE: Content pane state is now managed by KeyboardReceiver.resetContentPaneState()
+        // which is called in onFinishInputView. No visibility manipulation needed here.
 
         refresh_action_label(info)
 
@@ -665,7 +660,7 @@ class CleverKeysService : InputMethodService(),
                 _neuralLayoutHelper,
                 _receiver,
                 _emojiPane
-            ).setupPredictionViews(_suggestionBar, _inputViewContainer, _contentPaneContainer)
+            ).setupPredictionViews(_suggestionBar, _inputViewContainer, _contentPaneContainer, _topPane, _scrollView)
 
             // Update components from setup result
             _suggestionBar = predictionSetup.suggestionBar

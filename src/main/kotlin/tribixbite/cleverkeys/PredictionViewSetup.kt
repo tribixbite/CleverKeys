@@ -68,7 +68,9 @@ class PredictionViewSetup(
     fun setupPredictionViews(
         existingSuggestionBar: SuggestionBar?,
         existingInputViewContainer: LinearLayout?,
-        existingContentPaneContainer: android.widget.FrameLayout?
+        existingContentPaneContainer: android.widget.FrameLayout?,
+        existingTopPane: android.widget.FrameLayout?,
+        existingScrollView: android.widget.HorizontalScrollView?
     ): SetupResult {
         // Check if word prediction or swipe typing is enabled
         if (config.word_prediction_enabled || config.swipe_typing_enabled) {
@@ -118,8 +120,10 @@ class PredictionViewSetup(
             var suggestionBar = existingSuggestionBar
             var inputViewContainer: LinearLayout? = existingInputViewContainer
             var contentPaneContainer = existingContentPaneContainer
-            var topPane: android.widget.FrameLayout? = null
-            var scrollView: android.widget.HorizontalScrollView? = null
+            // CRITICAL: Use existing references - don't try to extract from hierarchy
+            // because topPane's child changes between scrollView and contentPaneContainer
+            var topPane: android.widget.FrameLayout? = existingTopPane
+            var scrollView: android.widget.HorizontalScrollView? = existingScrollView
 
             if (suggestionBar == null) {
                 // Initialize suggestion bar and input view hierarchy
@@ -181,6 +185,8 @@ class PredictionViewSetup(
                 // CRITICAL FIX: If views already exist, we MUST still propagate them to the receiver/managers
                 // because the receiver/managers might have been recreated (e.g. onStartInputView)
                 // while the views persisted.
+                // NOTE: topPane and scrollView are now passed in as parameters, not extracted from hierarchy
+                // This fixes the bug where scrollView becomes null when content pane is showing
 
                 // Calculate heights for topPane resizing
                 val suggestionBarHeight = android.util.TypedValue.applyDimension(
@@ -192,12 +198,6 @@ class PredictionViewSetup(
                     keyboard2,
                     config.clipboard_pane_height_percent
                 )
-
-                // Find topPane from existing hierarchy (first child of LinearLayout)
-                // Assign to outer vars so they're returned in SetupResult
-                topPane = inputViewContainer?.getChildAt(0) as? android.widget.FrameLayout
-                // Find scrollView - it's either in topPane or needs to be tracked separately
-                scrollView = topPane?.getChildAt(0) as? android.widget.HorizontalScrollView
 
                 android.util.Log.i("PredictionViewSetup", "Else branch: topPane=$topPane, scrollView=$scrollView, suggestionBarHeight=$suggestionBarHeight, contentPaneHeight=$contentPaneHeight")
 

@@ -114,12 +114,20 @@ class KeyboardReceiver(
     private fun hideContentPane() {
         android.util.Log.i("KeyboardReceiver", "hideContentPane: topPane=$topPane, suggestionBarHeight=$suggestionBarHeight")
 
-        val top = topPane ?: return
-        val content = contentPaneContainer ?: return
-        val scroll = scrollView ?: return
+        // CRITICAL: Always reset state flag, even if views are null
+        // Otherwise toggle logic will think pane is still showing
+        isContentPaneShowing = false
+
+        val top = topPane
+        val content = contentPaneContainer
+        val scroll = scrollView
+
+        if (top == null || content == null || scroll == null) {
+            android.util.Log.w("KeyboardReceiver", "hideContentPane: views null, state reset only")
+            return
+        }
 
         SuggestionBarInitializer.switchToSuggestionBarMode(top, content, scroll, suggestionBarHeight)
-        isContentPaneShowing = false
         android.util.Log.i("KeyboardReceiver", "hideContentPane: switched to suggestion bar, height=$suggestionBarHeight")
     }
 
@@ -128,13 +136,19 @@ class KeyboardReceiver(
      * Call this from CleverKeysService.onFinishInputView().
      */
     fun resetContentPaneState() {
-        if (isContentPaneShowing) {
-            android.util.Log.i("KeyboardReceiver", "resetContentPaneState: hiding content pane")
-            hideContentPane()
-            currentPaneType = PaneType.NONE
-            emojiSearchManager?.onPaneClosed()
-            clipboardManager.resetSearchOnHide()
+        // CRITICAL: Always reset state, even if views are null
+        // This prevents stale state after app switches
+        val wasShowing = isContentPaneShowing
+        android.util.Log.i("KeyboardReceiver", "resetContentPaneState: wasShowing=$wasShowing, currentPaneType=$currentPaneType")
+
+        if (wasShowing) {
+            hideContentPane()  // This now always resets isContentPaneShowing
         }
+
+        // Always reset pane type to prevent toggle issues
+        currentPaneType = PaneType.NONE
+        emojiSearchManager?.onPaneClosed()
+        clipboardManager.resetSearchOnHide()
     }
 
     /**
