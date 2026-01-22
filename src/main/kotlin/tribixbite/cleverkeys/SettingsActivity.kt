@@ -522,7 +522,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Vibration", listOf("haptic", "feedback", "tactile", "vibrate"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "vibration"),
             SearchableSetting("Vibration Duration", listOf("duration", "vibration", "intensity"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "vibration_duration"),
             SearchableSetting("Haptic Key Press", listOf("haptic", "keypress", "vibrate"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "haptic_keypress"),
-            SearchableSetting("Haptic Prediction Tap", listOf("haptic", "prediction", "tap"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "haptic_prediction"),
+            SearchableSetting("Haptic Suggestion Tap", listOf("haptic", "suggestion", "tap"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "haptic_prediction"),
             SearchableSetting("Haptic Trackpoint", listOf("haptic", "trackpoint", "navigation"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "haptic_trackpoint"),
             SearchableSetting("Haptic Long Press", listOf("haptic", "long press", "vibrate"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, settingId = "haptic_long_press"),
             SearchableSetting("Haptic Swipe Complete", listOf("haptic", "swipe", "complete"), "Accessibility", expandSection = { accessibilitySectionExpanded = true }, gatedBy = "swipe_typing", settingId = "haptic_swipe"),
@@ -2056,95 +2056,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     }
                 )
 
-                SettingsSwitch(
-                    title = stringResource(R.string.settings_vibration_title),
-                    description = stringResource(R.string.settings_vibration_desc),
-                    checked = vibrationEnabled,
-                    onCheckedChange = {
-                        vibrationEnabled = it
-                        saveSetting("vibration_enabled", it)
-                    }
-                )
-
-                // Phase 1: Vibration Duration Slider (conditional)
-                if (vibrationEnabled) {
-                    SettingsSlider(
-                        title = "Vibration Duration",
-                        description = "Length of haptic feedback in milliseconds",
-                        value = vibrationDuration.toFloat(),
-                        valueRange = 5f..100f,
-                        steps = 19,
-                        onValueChange = {
-                            vibrationDuration = it.toInt()
-                            saveSetting("vibrate_duration", vibrationDuration)
-                        },
-                        displayValue = "${vibrationDuration}ms"
-                    )
-
-                    // Per-event haptic feedback controls
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Haptic Events",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
-                    )
-
-                    SettingsSwitch(
-                        title = "Key Press",
-                        description = "Vibrate on key tap",
-                        checked = hapticKeyPress,
-                        onCheckedChange = {
-                            hapticKeyPress = it
-                            saveSetting("haptic_key_press", it)
-                            Config.globalConfig().haptic_key_press = it
-                        }
-                    )
-
-                    SettingsSwitch(
-                        title = "Prediction Tap",
-                        description = "Vibrate when selecting a prediction",
-                        checked = hapticPredictionTap,
-                        onCheckedChange = {
-                            hapticPredictionTap = it
-                            saveSetting("haptic_prediction_tap", it)
-                            Config.globalConfig().haptic_prediction_tap = it
-                        }
-                    )
-
-                    SettingsSwitch(
-                        title = "TrackPoint Mode",
-                        description = "Vibrate when entering cursor mode on nav keys",
-                        checked = hapticTrackpointActivate,
-                        onCheckedChange = {
-                            hapticTrackpointActivate = it
-                            saveSetting("haptic_trackpoint_activate", it)
-                            Config.globalConfig().haptic_trackpoint_activate = it
-                        }
-                    )
-
-                    SettingsSwitch(
-                        title = "Long Press",
-                        description = "Vibrate on modifier lock",
-                        checked = hapticLongPress,
-                        onCheckedChange = {
-                            hapticLongPress = it
-                            saveSetting("haptic_long_press", it)
-                            Config.globalConfig().haptic_long_press = it
-                        }
-                    )
-
-                    SettingsSwitch(
-                        title = "Swipe Complete",
-                        description = "Vibrate when swipe gesture finishes",
-                        checked = hapticSwipeComplete,
-                        onCheckedChange = {
-                            hapticSwipeComplete = it
-                            saveSetting("haptic_swipe_complete", it)
-                            Config.globalConfig().haptic_swipe_complete = it
-                        }
-                    )
-                }
+                // v1.2.8: Vibration settings moved to Accessibility section
 
                 SettingsSlider(
                     title = "Swipe Distance Threshold",
@@ -2902,6 +2814,105 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp)
                 )
+
+                // v1.2.8: Vibration settings moved to Accessibility section
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Haptic Feedback",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
+                SettingsSwitch(
+                    title = stringResource(R.string.settings_vibration_title),
+                    description = stringResource(R.string.settings_vibration_desc),
+                    checked = vibrationEnabled,
+                    onCheckedChange = {
+                        vibrationEnabled = it
+                        saveSetting("vibration_enabled", it)
+                        // v1.2.8: Update Config immediately for haptic feedback
+                        Config.globalConfig().haptic_enabled = it
+                    }
+                )
+
+                if (vibrationEnabled) {
+                    SettingsSlider(
+                        title = "Vibration Duration",
+                        description = "Length of haptic feedback in milliseconds",
+                        value = vibrationDuration.toFloat(),
+                        valueRange = 5f..100f,
+                        steps = 19,
+                        onValueChange = {
+                            vibrationDuration = it.toInt()
+                            saveSetting("vibrate_duration", vibrationDuration)
+                        },
+                        displayValue = "${vibrationDuration}ms"
+                    )
+
+                    // Per-event haptic feedback controls
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Haptic Events",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
+                    )
+
+                    SettingsSwitch(
+                        title = "Key Press",
+                        description = "Vibrate on key tap",
+                        checked = hapticKeyPress,
+                        onCheckedChange = {
+                            hapticKeyPress = it
+                            saveSetting("haptic_key_press", it)
+                            Config.globalConfig().haptic_key_press = it
+                        }
+                    )
+
+                    SettingsSwitch(
+                        title = "Suggestion Tap",
+                        description = "Vibrate when selecting a suggestion",
+                        checked = hapticPredictionTap,
+                        onCheckedChange = {
+                            hapticPredictionTap = it
+                            saveSetting("haptic_prediction_tap", it)
+                            Config.globalConfig().haptic_prediction_tap = it
+                        }
+                    )
+
+                    SettingsSwitch(
+                        title = "TrackPoint Mode",
+                        description = "Vibrate when entering cursor mode on nav keys",
+                        checked = hapticTrackpointActivate,
+                        onCheckedChange = {
+                            hapticTrackpointActivate = it
+                            saveSetting("haptic_trackpoint_activate", it)
+                            Config.globalConfig().haptic_trackpoint_activate = it
+                        }
+                    )
+
+                    SettingsSwitch(
+                        title = "Long Press",
+                        description = "Vibrate on modifier lock",
+                        checked = hapticLongPress,
+                        onCheckedChange = {
+                            hapticLongPress = it
+                            saveSetting("haptic_long_press", it)
+                            Config.globalConfig().haptic_long_press = it
+                        }
+                    )
+
+                    SettingsSwitch(
+                        title = "Swipe Complete",
+                        description = "Vibrate when swipe gesture finishes",
+                        checked = hapticSwipeComplete,
+                        onCheckedChange = {
+                            hapticSwipeComplete = it
+                            saveSetting("haptic_swipe_complete", it)
+                            Config.globalConfig().haptic_swipe_complete = it
+                        }
+                    )
+                }
             }
 
             // v1.2.6: Dictionary section removed - Dictionary Manager is now accessible

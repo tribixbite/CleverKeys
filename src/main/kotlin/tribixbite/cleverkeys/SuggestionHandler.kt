@@ -66,7 +66,8 @@ class SuggestionHandler(
      * @return Capitalized word if it's an I-word, otherwise unchanged
      */
     private fun capitalizeIWord(word: String): String {
-        if (!config.autocapitalize_i_words) return word
+        // v1.2.8: Use globalConfig to ensure setting is always current
+        if (!Config.globalConfig().autocapitalize_i_words) return word
 
         val lower = word.lowercase()
         return if (lower in I_WORDS) {

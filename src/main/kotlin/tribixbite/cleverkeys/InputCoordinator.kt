@@ -68,7 +68,8 @@ class InputCoordinator(
      * @return Capitalized word if it's an I-word, otherwise unchanged
      */
     private fun capitalizeIWord(word: String): String {
-        if (!config.autocapitalize_i_words) return word
+        // v1.2.8: Use globalConfig to ensure setting is always current
+        if (!Config.globalConfig().autocapitalize_i_words) return word
 
         val lower = word.lowercase()
         return if (lower in I_WORDS) {
@@ -368,6 +369,9 @@ class InputCoordinator(
             // Auto-insert top prediction immediately after swipe completes
             bar.getTopSuggestion()?.takeIf { it.isNotEmpty() }?.let { topPrediction ->
                 debugLogger?.invoke("🎯 TOP SUGGESTION SELECTED FOR INSERT: \"$topPrediction\"")
+
+                // v1.2.8: Trigger haptic feedback for swipe completion
+                keyboardView.triggerHaptic(HapticEvent.SWIPE_COMPLETE)
                 // If manual typing in progress, add space after it
                 if (contextTracker.getCurrentWordLength() > 0 && ic != null) {
                     val spaceCommitTime = System.currentTimeMillis()
