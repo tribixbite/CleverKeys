@@ -69,33 +69,94 @@ Keep important items from being removed:
 
 ### Pin an Item
 
-1. Open clipboard history
-2. **Long-press** item
-3. Select **Pin**
-4. Item shows pin icon
+1. Open clipboard history (History tab)
+2. Tap the **📌 pin button** on the item
+3. Item is added to the Pinned tab
 
 ### Unpin Item
 
-1. **Long-press** pinned item
-2. Select **Unpin**
+1. Switch to the **Pinned tab** (📌)
+2. Tap the **📌 pin button** on the item to unpin
+3. Item is removed from Pinned tab
 
 Pinned items:
-- Stay at top of list
+- Appear in the dedicated Pinned tab
 - Don't auto-expire
-- Don't count toward limit
+- Don't count toward history limit
+
+## Todo Items
+
+Mark clipboard items as to-do reminders:
+
+### Add to Todos
+
+1. Open clipboard (History or Pinned tab)
+2. Tap the **✓ todo button** on the item
+3. Item is added to the Todos tab
+
+### Mark as Done
+
+1. Switch to the **Todos tab** (✓)
+2. Tap the **✓ todo button** to remove from todos
+3. Item is removed from Todos tab (still in history)
+
+Todo items:
+- Appear in the dedicated Todos tab
+- Can also be pinned (both flags independent)
+- Useful for quick reference or follow-up
+
+## Tab System
+
+The clipboard pane organizes items into three tabs:
+
+| Tab | Icon | Description |
+|-----|------|-------------|
+| **History** | 📋 | Recent clipboard history (default) |
+| **Pinned** | 📌 | Items you've pinned for quick access |
+| **Todos** | ✓ | Items marked as to-do reminders |
+
+### Switching Tabs
+
+1. Open clipboard pane
+2. Tap the tab icon (📋, 📌, or ✓) in the header row
+3. Active tab is fully visible (alpha 1.0), inactive tabs are dimmed (alpha 0.5)
+
+### Item Actions by Tab
+
+| Action | History Tab | Pinned Tab | Todos Tab |
+|--------|-------------|------------|-----------|
+| **Pin button** | Pins item | Unpins item | Pins item |
+| **Todo button** | Adds to todos | Adds to todos | Removes from todos |
+| **Delete** | Deletes item | Deletes item | Deletes item |
+| **Paste** | Pastes to editor | Pastes to editor | Pastes to editor |
+
+## Pagination
+
+For large clipboard histories (>100 items), pagination improves performance:
+
+- Items are displayed 100 per page
+- Pagination bar appears at the bottom when needed
+- Shows current page / total pages (e.g., "1 / 6")
+- ◀ and ▶ buttons navigate between pages
+- **Search still searches ALL items** across all pages
+
+```
+┌─────────────────────────────────────┐
+│ [◀]         3 / 6              [▶]  │
+└─────────────────────────────────────┘
+```
 
 ## History Panel Layout
 
 ```
 ┌─────────────────────────────────────┐
-│ Clipboard History              [X]  │
+│ 📋 📌 ✓  [Search...]  📅  [▼]       │ ← Tabs + Search + Close
 ├─────────────────────────────────────┤
-│ 📌 Pinned item text...         [🗑] │ ← Pinned
-│ 📌 Another pinned item...      [🗑] │
+│ Recently copied text here... [📌✓🗑]│ ← History items
+│ Another clipboard item...    [📌✓🗑]│
+│ More text from earlier...    [📌✓🗑]│
 ├─────────────────────────────────────┤
-│ Recently copied text here...   [🗑] │ ← Recent
-│ Another clipboard item...      [🗑] │
-│ More text from earlier...      [🗑] │
+│ [◀]         1 / 3              [▶]  │ ← Pagination (if >100 items)
 └─────────────────────────────────────┘
 ```
 

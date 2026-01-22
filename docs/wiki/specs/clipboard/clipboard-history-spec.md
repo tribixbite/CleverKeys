@@ -23,36 +23,162 @@ The clipboard history system maintains a persistent list of copied text items wi
 
 ## Data Model
 
-### Clipboard Item
+### Clipboard Entry
 
 ```kotlin
-// ClipboardManager.kt
-data class ClipboardItem(
-    val id: Long,
-    val text: String,
+// ClipboardEntry.kt
+data class ClipboardEntry(
+    val content: String,
     val timestamp: Long,
+    val expiryTimestamp: Long,
     val isPinned: Boolean = false,
-    val source: String? = null,     // Package name
-    val isEncrypted: Boolean = false
+    val isTodo: Boolean = false
 )
 ```
 
 ### Storage Structure
 
 ```kotlin
-// ClipboardStore.kt
+// ClipboardDatabase.kt (DATABASE_VERSION = 2)
 // Stored in SQLite database
 CREATE TABLE clipboard_history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    text TEXT NOT NULL,
+    content TEXT PRIMARY KEY,
     timestamp INTEGER NOT NULL,
+    expiry_timestamp INTEGER NOT NULL,
     is_pinned INTEGER DEFAULT 0,
-    source TEXT,
-    hash TEXT  -- For duplicate detection
+    is_todo INTEGER DEFAULT 0        -- Added in v2
 );
 
 CREATE INDEX idx_timestamp ON clipboard_history(timestamp DESC);
 CREATE INDEX idx_pinned ON clipboard_history(is_pinned DESC);
+CREATE INDEX idx_todo ON clipboard_history(is_todo DESC);
+```
+
+### Database Migration (v1 → v2)
+
+```kotlin
+// ClipboardDatabase.kt
+override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+    if (oldVersion < 2) {
+        // Add is_todo column with default value 0
+        db.execSQL("ALTER TABLE clipboard_history ADD COLUMN is_todo INTEGER DEFAULT 0")
+    }
+}
+```
+
+## Tab System
+
+The clipboard pane organizes items into three tabs:
+
+| Tab | Enum | Icon | Query Method |
+|-----|------|------|--------------|
+| **History** | `ClipboardTab.HISTORY` | 📋 | `clearExpiredAndGetHistory()` |
+| **Pinned** | `ClipboardTab.PINNED` | 📌 | `getPinnedEntries()` |
+| **Todos** | `ClipboardTab.TODOS` | ✓ | `getTodoEntries()` |
+
+```kotlin
+// ClipboardHistoryView.kt
+enum class ClipboardTab {
+    HISTORY,  // Recent clipboard history (default)
+    PINNED,   // Pinned items
+    TODOS     // To-do items
+}
+
+private var currentTab = ClipboardTab.HISTORY
+
+fun setTab(tab: ClipboardTab) {
+    currentTab = tab
+    expandedStates.clear()
+    update_data()
+}
+```
+
+### Tab Data Loading
+
+```kotlin
+// ClipboardHistoryView.kt
+private fun update_data() {
+    history = when (currentTab) {
+        ClipboardTab.HISTORY -> service?.clearExpiredAndGetHistory() ?: emptyList()
+        ClipboardTab.PINNED -> database.getPinnedEntries()
+        ClipboardTab.TODOS -> database.getTodoEntries()
+    }
+    applyFilter()
+}
+
+// ClipboardDatabase.kt
+fun getPinnedEntries(): List<ClipboardEntry> =
+    queryEntries("SELECT * FROM clipboard_history WHERE is_pinned = 1 ORDER BY timestamp DESC")
+
+fun getTodoEntries(): List<ClipboardEntry> =
+    queryEntries("SELECT * FROM clipboard_history WHERE is_todo = 1 ORDER BY timestamp DESC")
+```
+
+## Pagination
+
+For large histories (>100 items), pagination improves performance:
+
+```kotlin
+// ClipboardHistoryView.kt
+companion object {
+    const val ITEMS_PER_PAGE = 100
+}
+
+private var currentPage = 0
+private var paginatedHistory: List<ClipboardEntry> = emptyList()
+private var onPaginationChangeListener: ((needsPagination: Boolean, currentPage: Int, totalPages: Int) -> Unit)? = null
+
+private fun applyPagination() {
+    val totalItems = filteredHistory.size
+    val totalPages = getTotalPages()
+
+    // Ensure current page is valid
+    if (currentPage >= totalPages) {
+        currentPage = maxOf(0, totalPages - 1)
+    }
+
+    // Apply pagination only if more than ITEMS_PER_PAGE
+    paginatedHistory = if (totalItems > ITEMS_PER_PAGE) {
+        val startIndex = currentPage * ITEMS_PER_PAGE
+        val endIndex = minOf(startIndex + ITEMS_PER_PAGE, totalItems)
+        filteredHistory.subList(startIndex, endIndex)
+    } else {
+        filteredHistory
+    }
+
+    // Notify listener about pagination state
+    onPaginationChangeListener?.invoke(
+        totalItems > ITEMS_PER_PAGE,
+        currentPage + 1,  // 1-indexed for display
+        totalPages
+    )
+}
+```
+
+### Search Across All Items
+
+Search filters ALL items before pagination:
+
+```kotlin
+private fun applyFilter() {
+    // Filter ALL history items (not paginated)
+    val filtered = history.filter { entry ->
+        // Apply search filter
+        if (searchFilter.isNotEmpty() && !entry.content.lowercase().contains(searchFilter)) {
+            return@filter false
+        }
+        // Apply date filter
+        if (dateFilterEnabled) {
+            // ... date filter logic
+        }
+        true
+    }
+    filteredHistory = filtered
+
+    // Reset to first page when filter changes
+    currentPage = 0
+    applyPagination()
+}
 ```
 
 ## Clipboard Monitoring
@@ -203,40 +329,151 @@ fun search(query: String): List<ClipboardItem> {
 }
 ```
 
-## History View UI
+## Clipboard Pane Layout
+
+The clipboard pane combines tabs, search, date filter, and close button in a single header row:
+
+```xml
+<!-- clipboard_pane.xml -->
+<!-- Combined row: Tabs + Search + Close (40dp height) -->
+<LinearLayout android:id="@+id/clipboard_search_bar">
+    <TextView android:id="@+id/tab_history" android:text="📋"/>    <!-- 36dp -->
+    <TextView android:id="@+id/tab_pinned" android:text="📌"/>     <!-- 36dp -->
+    <TextView android:id="@+id/tab_todos" android:text="✓"/>      <!-- 36dp -->
+    <TextView android:id="@+id/clipboard_search" android:layout_weight="1"/>
+    <TextView android:id="@+id/clipboard_date_filter" android:text="📅"/>
+    <ImageButton android:id="@+id/clipboard_close_button"/>
+</LinearLayout>
+
+<!-- ClipboardHistoryView content area -->
+<ScrollView>
+    <ClipboardHistoryView android:id="@+id/clipboard_history_view"/>
+</ScrollView>
+
+<!-- Pagination bar (hidden when ≤100 items) -->
+<LinearLayout android:id="@+id/clipboard_pagination_bar" android:visibility="gone">
+    <TextView android:id="@+id/clipboard_page_prev" android:text="◀"/>
+    <TextView android:id="@+id/clipboard_page_info" android:text="1 / 1"/>
+    <TextView android:id="@+id/clipboard_page_next" android:text="▶"/>
+</LinearLayout>
+```
+
+### ClipboardManager Tab Wiring
 
 ```kotlin
-// ClipboardHistoryView.kt
-class ClipboardHistoryView : FrameLayout {
-    private val adapter = ClipboardAdapter()
+// ClipboardManager.kt
+fun getClipboardPane(layoutInflater: LayoutInflater): ViewGroup {
+    // Set up tab buttons
+    tabHistory = clipboardPane?.findViewById(R.id.tab_history)
+    tabPinned = clipboardPane?.findViewById(R.id.tab_pinned)
+    tabTodos = clipboardPane?.findViewById(R.id.tab_todos)
 
-    fun show() {
-        val items = clipboardManager.getHistory()
+    tabHistory?.setOnClickListener { switchToTab(ClipboardTab.HISTORY) }
+    tabPinned?.setOnClickListener { switchToTab(ClipboardTab.PINNED) }
+    tabTodos?.setOnClickListener { switchToTab(ClipboardTab.TODOS) }
 
-        // Group by pinned status
-        val grouped = items.groupBy { it.isPinned }
-        val pinned = grouped[true] ?: emptyList()
-        val recent = grouped[false] ?: emptyList()
+    // Set up pagination controls
+    pagePrev?.setOnClickListener { clipboardHistoryView?.previousPage() }
+    pageNext?.setOnClickListener { clipboardHistoryView?.nextPage() }
 
-        adapter.submitList(pinned + recent)
+    clipboardHistoryView?.setOnPaginationChangeListener { needsPagination, currentPage, totalPages ->
+        paginationBar?.visibility = if (needsPagination) View.VISIBLE else View.GONE
+        pageInfo?.text = "$currentPage / $totalPages"
+        pagePrev?.alpha = if (clipboardHistoryView?.hasPreviousPage() == true) 1.0f else 0.3f
+        pageNext?.alpha = if (clipboardHistoryView?.hasNextPage() == true) 1.0f else 0.3f
+    }
+}
 
-        visibility = VISIBLE
-        requestFocus()
+private fun updateTabHighlighting() {
+    val activeAlpha = 1.0f
+    val inactiveAlpha = 0.5f
+    tabHistory?.alpha = if (currentTab == ClipboardTab.HISTORY) activeAlpha else inactiveAlpha
+    tabPinned?.alpha = if (currentTab == ClipboardTab.PINNED) activeAlpha else inactiveAlpha
+    tabTodos?.alpha = if (currentTab == ClipboardTab.TODOS) activeAlpha else inactiveAlpha
+}
+```
+
+### Close Button Callback
+
+```kotlin
+// ClipboardManager.kt
+private var onCloseCallback: (() -> Unit)? = null
+
+fun setOnCloseCallback(callback: () -> Unit) {
+    onCloseCallback = callback
+}
+
+// In getClipboardPane():
+clipboardPane?.findViewById<ImageButton>(R.id.clipboard_close_button)?.setOnClickListener {
+    onCloseCallback?.invoke()
+}
+
+// KeyboardReceiver.kt
+clipboardManager.setOnCloseCallback {
+    handle_event_key(KeyValue.Event.SWITCH_BACK_CLIPBOARD)
+}
+```
+
+## Import/Export with Todos
+
+### Export Format (JSON)
+
+```json
+{
+  "exportVersion": 2,
+  "exportedAt": "2025-01-22T12:00:00Z",
+  "count": 500,
+  "entries": [
+    {
+      "content": "clipboard text",
+      "timestamp": 1705939200000,
+      "isPinned": false,
+      "isTodo": true
+    }
+  ]
+}
+```
+
+### Import with Fresh Expiry
+
+```kotlin
+// ClipboardDatabase.kt
+fun importEntry(entry: JSONObject, addedCounts: IntArray): Boolean {
+    // Use fresh expiry timestamp so imported entries don't expire immediately
+    val freshExpiry = System.currentTimeMillis() + HISTORY_TTL_MS
+
+    val values = ContentValues().apply {
+        put(COLUMN_CONTENT, content)
+        put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
+        put(COLUMN_EXPIRY_TIMESTAMP, freshExpiry)  // Fresh expiry, not imported one
+        put(COLUMN_IS_PINNED, if (isPinned) 1 else 0)
+        put(COLUMN_IS_TODO, if (isTodo) 1 else 0)
     }
 
-    fun onItemClick(item: ClipboardItem) {
-        // Paste the item
-        inputConnection?.commitText(item.text, 1)
-        hide()
-    }
+    // Track what was added: [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped]
+    if (isPinned) addedCounts[1]++
+    if (isTodo) addedCounts[2]++
+    if (!isPinned && !isTodo) addedCounts[0]++
+}
+```
 
-    fun onItemLongClick(item: ClipboardItem) {
-        showContextMenu(item)
-    }
+### BackupRestoreManager Result Handling
 
-    fun onItemSwipe(item: ClipboardItem) {
-        clipboardManager.deleteItem(item.id)
-    }
+```kotlin
+// BackupRestoreManager.kt
+fun importClipboard(context: Context, uri: Uri): ClipboardImportResult {
+    val importResult = database.importFromJson(jsonArray)
+    // importResult = [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped]
+
+    result.importedCount = importResult[0] + importResult[1] + importResult[2]
+    result.skippedCount = importResult[3]
+    return result
+}
+
+fun exportClipboard(context: Context, uri: Uri): ClipboardExportResult {
+    val entries = database.getAllEntriesForExport()
+    // ... write to JSON ...
+    return ClipboardExportResult(exportedCount = entries.size)
 }
 ```
 

@@ -253,6 +253,52 @@ Text emoticons added as final emoji category:
 - Length-based text scaling for proper cell fit
 - Grid spacing prevents overlap
 
+## Recent Enhancements (v1.2.7)
+
+### Close Buttons for Content Panes
+Both emoji and clipboard panes now have close buttons (▼ arrow) in their header row:
+
+```kotlin
+// EmojiSearchManager.kt
+emojiSearchManager?.setOnCloseCallback {
+    handle_event_key(KeyValue.Event.SWITCH_BACK_EMOJI)
+}
+
+// ClipboardManager.kt
+clipboardManager.setOnCloseCallback {
+    handle_event_key(KeyValue.Event.SWITCH_BACK_CLIPBOARD)
+}
+```
+
+### Clipboard Tab System
+The clipboard pane now organizes items into three tabs sharing the header row with search:
+
+| Tab | Icon | Description |
+|-----|------|-------------|
+| History | 📋 | Recent clipboard history (default) |
+| Pinned | 📌 | Pinned items |
+| Todos | ✓ | To-do items |
+
+Layout structure:
+```
+┌─────────────────────────────────────┐
+│ 📋 📌 ✓  [Search...]  📅  [▼]       │ ← Header: Tabs + Search + Close
+├─────────────────────────────────────┤
+│ [Clipboard items...]                │ ← Content area
+├─────────────────────────────────────┤
+│ [◀]         1 / 3              [▶]  │ ← Pagination (if >100 items)
+└─────────────────────────────────────┘
+```
+
+### Clipboard Pagination
+For large histories (>100 items), pagination improves performance:
+- Items displayed 100 per page
+- Pagination bar appears at bottom when needed
+- Search still filters ALL items across all pages
+- Page navigation with ◀/▶ buttons
+
+Key files: `ClipboardManager.kt`, `ClipboardHistoryView.kt`, `clipboard_pane.xml`
+
 ## Future Enhancements
 
 1. **Animation**: Add smooth crossfade when swapping content.
