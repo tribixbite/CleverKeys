@@ -1916,6 +1916,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         onCheckedChange = {
                             autoSpaceAfterSuggestion = it
                             saveSetting("auto_space_after_suggestion", it)
+                            Config.globalConfig()?.auto_space_after_suggestion = it
                         }
                     )
 
@@ -2205,6 +2206,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         onCheckedChange = {
                             keyRepeatBackspaceOnly = it
                             saveSetting("keyrepeat_backspace_only", it)
+                            Config.globalConfig()?.keyrepeat_backspace_only = it
                         }
                     )
                 }
