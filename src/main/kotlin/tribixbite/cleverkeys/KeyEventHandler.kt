@@ -250,11 +250,6 @@ class KeyEventHandler(
         } else if (text.length == 1) {
             val char = text[0]
 
-            // v1.2.7: Manual space clears auto-inserted flag
-            if (char == ' ') {
-                recv.setLastSpaceAutoInserted(false)
-            }
-
             // Smart punctuation: If typing punctuation and previous char is space, delete the space
             // This attaches punctuation to the end of the previous word (e.g., "word ." -> "word.")
             // v1.2.7: Only attach if space was auto-inserted (respects manual space+punctuation)
@@ -283,6 +278,10 @@ class KeyEventHandler(
                     // Apostrophe: just insert normally (handled by contraction logic elsewhere)
                 }
             }
+
+            // v1.2.7: Clear auto-inserted flag AFTER smart punctuation check
+            // This ensures: swipe→":"→attaches, but swipe→" "→":"→doesn't attach
+            recv.setLastSpaceAutoInserted(false)
 
             lastTypedChar = char
         } else {
