@@ -559,8 +559,8 @@ class BackupRestoreManager(private val context: Context) {
             "autocorrect_min_word_length" -> value in 2..5
             "autocorrect_confidence_min_frequency" -> value in 100..5000
 
-            // Clipboard history limit
-            "clipboard_history_limit" -> value in 1..50
+            // Clipboard history limit (0 = unlimited)
+            "clipboard_history_limit" -> value in 0..500
 
             // Circle sensitivity
             "circle_sensitivity" -> value in 1..5

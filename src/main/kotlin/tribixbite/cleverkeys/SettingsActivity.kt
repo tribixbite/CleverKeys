@@ -2886,15 +2886,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 if (clipboardLimitType == "count") {
                     SettingsSlider(
                         title = "History Limit",
-                        description = "Maximum number of clipboard entries",
+                        description = "Maximum number of clipboard entries (0 = unlimited)",
                         value = clipboardHistoryLimit.toFloat(),
-                        valueRange = 1f..50f,
-                        steps = 49,
+                        valueRange = 0f..500f,
+                        steps = 50,  // 50 steps = increments of 10
                         onValueChange = {
                             clipboardHistoryLimit = it.toInt()
                             saveSetting("clipboard_history_limit", clipboardHistoryLimit)
                         },
-                        displayValue = "$clipboardHistoryLimit items"
+                        displayValue = if (clipboardHistoryLimit == 0) "Unlimited" else "$clipboardHistoryLimit items"
                     )
                 }
 
