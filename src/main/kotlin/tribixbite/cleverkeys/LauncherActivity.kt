@@ -49,7 +49,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -197,7 +199,8 @@ fun LauncherScreen(
             .background(Color(0xFF050510)) // Deep dark background extends under system bars
     ) {
         // 1. Background Animation layer - extends edge-to-edge including under system bars
-        MatrixSwipeRainBackground()
+        // Pause animation when keyboard visible to reduce input lag
+        MatrixSwipeRainBackground(isPaused = isKeyboardVisible)
 
         // 2. Top Bar with GitHub (left) and Settings (right)
         // Fixed position at top - not affected by keyboard or scroll
@@ -328,12 +331,15 @@ fun LauncherScreen(
                 )
             }
 
-            // Test Field
+            // Test Field - use sentences capitalization for proper autocaps behavior
             OutlinedTextField(
                 value = testText,
                 onValueChange = { testText = it },
                 label = { Text("Test your new keyboard here") },
                 modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences
+                ),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
@@ -553,7 +559,7 @@ data class MagicSpell(
 )
 
 @Composable
-fun MatrixSwipeRainBackground() {
+fun MatrixSwipeRainBackground(isPaused: Boolean = false) {
     // Stardust Silver & Ethereal Magic Palette
     val baseColors = listOf(
         Color(0xFFFFFFFF), // Pure Light
@@ -572,43 +578,58 @@ fun MatrixSwipeRainBackground() {
     val sparkles = remember { mutableStateListOf<Sparkle>() }
     var lastSpawnTime by remember { mutableStateOf(0L) }
 
-    // Animation Loop
-    LaunchedEffect(Unit) {
-        while (true) {
-            withFrameMillis { frameTime ->
-                val currentTime = System.currentTimeMillis()
+    // Track pause time to adjust animation timing when resuming
+    var pauseStartTime by remember { mutableStateOf(0L) }
+    var totalPausedDuration by remember { mutableStateOf(0L) }
 
-                // 1. Spawn new spells (Gestures)
-                // Less frequent but more impactful
-                if (currentTime - lastSpawnTime > Random.nextLong(600, 1200) && spells.size < 6) {
-                    spells.add(generateMagicSpell(baseColors, currentTime, screenWidth, screenHeight))
-                    lastSpawnTime = currentTime
-                }
+    // Animation Loop - pause when keyboard is visible to reduce input lag
+    LaunchedEffect(isPaused) {
+        if (isPaused) {
+            // Record when we paused
+            pauseStartTime = System.currentTimeMillis()
+        } else {
+            // Accumulate paused time when resuming
+            if (pauseStartTime > 0) {
+                totalPausedDuration += System.currentTimeMillis() - pauseStartTime
+                pauseStartTime = 0L
+            }
+            // Continue animation loop
+            while (true) {
+                withFrameMillis { frameTime ->
+                    val currentTime = System.currentTimeMillis()
 
-                // 2. Update & Spawn Sparkles from active spells
-                spells.forEach { spell ->
-                    val elapsed = currentTime - spell.startTime
-                    val progress = (elapsed.toFloat() / spell.duration).coerceIn(0f, 1f)
-                    
-                    if (progress < 1f && spell.points.isNotEmpty()) {
-                        val totalPoints = spell.points.size
-                        val currentPointIndex = (totalPoints * progress).toInt().coerceIn(0, totalPoints - 1)
-                        val currentPoint = spell.points[currentPointIndex]
+                    // 1. Spawn new spells (Gestures)
+                    // Less frequent but more impactful
+                    if (currentTime - lastSpawnTime > Random.nextLong(600, 1200) && spells.size < 6) {
+                        spells.add(generateMagicSpell(baseColors, currentTime, screenWidth, screenHeight))
+                        lastSpawnTime = currentTime
+                    }
 
-                        // Emit sparkles at the "tip" of the wand (The Casting Point)
-                        // Higher chance when moving
-                        if (progress < 0.9f) {
-                            // Multi-spawn for density
-                            repeat(Random.nextInt(1, 3)) {
-                                sparkles.add(generateSparkle(currentPoint, spell.color, currentTime))
+                    // 2. Update & Spawn Sparkles from active spells
+                    spells.forEach { spell ->
+                        val elapsed = currentTime - spell.startTime
+                        val progress = (elapsed.toFloat() / spell.duration).coerceIn(0f, 1f)
+
+                        if (progress < 1f && spell.points.isNotEmpty()) {
+                            val totalPoints = spell.points.size
+                            val currentPointIndex = (totalPoints * progress).toInt().coerceIn(0, totalPoints - 1)
+                            val currentPoint = spell.points[currentPointIndex]
+
+                            // Emit sparkles at the "tip" of the wand (The Casting Point)
+                            // Higher chance when moving
+                            if (progress < 0.9f) {
+                                // Multi-spawn for density
+                                repeat(Random.nextInt(1, 3)) {
+                                    sparkles.add(generateSparkle(currentPoint, spell.color, currentTime))
+                                }
                             }
                         }
                     }
-                }
 
-                // 3. Cleanup
-                spells.removeAll { currentTime - it.startTime > it.duration }
-                sparkles.removeAll { currentTime - it.startTime > it.duration }
+                    // 3. Cleanup
+                    spells.removeAll { currentTime - it.startTime > it.duration }
+                    sparkles.removeAll { currentTime - it.startTime > it.duration }
+                }
             }
         }
     }
