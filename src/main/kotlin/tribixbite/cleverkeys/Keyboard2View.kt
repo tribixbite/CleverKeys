@@ -385,6 +385,9 @@ class Keyboard2View @JvmOverloads constructor(
     fun set_shift_state(latched: Boolean, lock: Boolean) {
         val shiftKv = _shift_kv
         set_fake_ptr_latched(_shift_key, shiftKv, latched, lock)
+        // CRITICAL: Update _mods so swipe typing can detect shift state
+        _mods = _pointers.getModifiers()
+        invalidate() // Redraw keyboard to show shift state
     }
 
     /**

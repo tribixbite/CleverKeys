@@ -31,20 +31,16 @@ class Autocapitalisation(
     fun started(info: EditorInfo, ic: InputConnection) {
         this.ic = ic
         // Check inputType for CAP_MODE flags
-        val fieldCapsMode = info.inputType and SUPPORTED_CAPS_MODES
+        capsMode = info.inputType and SUPPORTED_CAPS_MODES
         val autocapEnabled = Config.globalConfig().autocapitalisation
 
-        Log.d(TAG, "AUTOCAP started: enabled=$autocapEnabled, fieldCapsMode=$fieldCapsMode, inputType=0x${info.inputType.toString(16)}")
+        Log.d(TAG, "AUTOCAP started: setting=$autocapEnabled, capsMode=$capsMode, inputType=0x${info.inputType.toString(16)}")
 
-        if (!autocapEnabled) {
+        if (!autocapEnabled || capsMode == 0) {
             enabled = false
-            Log.d(TAG, "AUTOCAP: Disabled by user setting")
+            Log.d(TAG, "AUTOCAP: Disabled (setting=$autocapEnabled, capsMode=$capsMode)")
             return
         }
-
-        // Use sentence caps mode even if field doesn't request it, as long as user has setting enabled
-        // This allows autocap to work in fields that don't explicitly request it
-        capsMode = if (fieldCapsMode != 0) fieldCapsMode else InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
 
         enabled = true
         shouldEnableShift = info.initialCapsMode != 0
