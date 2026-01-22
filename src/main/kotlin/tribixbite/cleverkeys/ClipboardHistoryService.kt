@@ -114,14 +114,14 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         _database.cleanupExpiredEntries()
         return try {
             val entries = _database.getActiveClipboardEntries()
-            // Issue #71: Limit number of entries to prevent TransactionTooLargeException
-            // Display truncation is handled by the adapter (ClipboardHistoryView)
-            // Full content is preserved for paste operations
-            if (entries.size > MAX_DISPLAY_ENTRIES) {
-                android.util.Log.w("ClipboardHistory", "Limiting clipboard display to $MAX_DISPLAY_ENTRIES entries")
-                entries.take(MAX_DISPLAY_ENTRIES)
+            // Issue #71: Original 100-entry limit was for TransactionTooLargeException prevention,
+            // but since ClipboardHistoryView accesses service in-process (no IPC), this isn't needed.
+            // Respect user's configured limit (0 = unlimited, otherwise use their setting)
+            val configLimit = Config.globalConfig().clipboard_history_limit
+            if (configLimit > 0 && entries.size > configLimit) {
+                entries.take(configLimit)
             } else {
-                entries
+                entries  // Return all entries (unlimited)
             }
         } catch (e: Exception) {
             android.util.Log.e("ClipboardHistory", "Error retrieving clipboard history: ${e.message}")
@@ -468,10 +468,6 @@ class ClipboardHistoryService private constructor(ctx: Context) {
          *  Set to 7 days to maintain useful history across app updates and restarts.
          *  Use pinning for permanent entries. */
         const val HISTORY_TTL_MS = 7 * 24 * 60 * 60 * 1000L // 7 days
-
-        /** Issue #71: Maximum entries to display at once to prevent TransactionTooLargeException.
-         *  Android Binder has ~1MB limit; large clipboard lists can exceed this during IPC. */
-        private const val MAX_DISPLAY_ENTRIES = 100
 
         private var _service: ClipboardHistoryService? = null
 
