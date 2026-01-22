@@ -2,14 +2,14 @@
 title: Smart Punctuation - Technical Specification
 user_guide: ../../typing/smart-punctuation.md
 status: implemented
-version: v1.2.7
+version: v1.2.8
 ---
 
 # Smart Punctuation Technical Specification
 
 ## Overview
 
-Smart punctuation automatically removes spaces before punctuation marks to attach them to the preceding word. As of v1.2.7, this behavior respects whether the space was auto-inserted (swipe/suggestion) vs manually typed.
+Smart punctuation automatically removes spaces before punctuation marks to attach them to the preceding word. As of v1.2.7, this behavior respects whether the space was auto-inserted (swipe/suggestion) vs manually typed. As of v1.2.8, sentence-ending punctuation (. ! ?) automatically adds a trailing space to enable autocapitalization for the next word.
 
 ## Key Components
 
@@ -78,6 +78,11 @@ if (smartPuncEnabled && (isPunctChar || isQuote)) {
 
     if (isPunctChar && lastCharIsSpace && spaceWasAutoInserted) {
         conn.deleteSurroundingText(1, 0)  // Remove space, attach punctuation
+        // v1.2.8: For sentence-ending punct, add space after for autocap
+        if (isSentenceEndingPunctuation(char)) {
+            textToCommit = "$char "
+            recv.setLastSpaceAutoInserted(true)
+        }
     } else if (isQuote && lastCharIsSpace && spaceWasAutoInserted) {
         // Quote logic...
     }
@@ -86,6 +91,20 @@ if (smartPuncEnabled && (isPunctChar || isQuote)) {
 // Clear flag AFTER check (for next character)
 recv.setLastSpaceAutoInserted(false)
 ```
+
+### Sentence-Ending Punctuation (v1.2.8)
+
+```kotlin
+// KeyEventHandler.kt:314-320
+private fun isSentenceEndingPunctuation(c: Char): Boolean {
+    return when (c) {
+        '.', '!', '?' -> true
+        else -> false
+    }
+}
+```
+
+When a sentence-ending punctuation mark is attached via smart punctuation, a space is automatically added after it. This enables Android's `getCursorCapsMode()` to detect the sentence boundary and trigger autocapitalization for the next word.
 
 ## Key Code Patterns
 
@@ -264,6 +283,7 @@ override fun setLastSpaceAutoInserted(value: Boolean) {
 
 | Version | Change |
 |---------|--------|
+| v1.2.8 | Auto-space after sentence-ending punctuation for autocap integration |
 | v1.2.7 | Added auto-inserted space tracking for manual space preservation |
 | v1.2.0 | Added quote handling (opening vs closing detection) |
 | v1.1.0 | Initial smart punctuation implementation |

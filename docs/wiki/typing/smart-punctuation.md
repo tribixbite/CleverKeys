@@ -70,8 +70,9 @@ Quotes have special handling:
 
 | Action | Result | Explanation |
 |--------|--------|-------------|
-| Swipe "The" → swipe "quick" → type "." | `The quick.` | Both spaces were auto-inserted |
+| Swipe "The" → swipe "quick" → type "." | `The quick. ` | Period attaches + space added for autocap |
 | Swipe "Hello" → type "," → swipe "world" | `Hello, world` | Comma attaches to "Hello" |
+| Swipe "Hello" → type "." → swipe "world" | `Hello. World` | Period adds space, next word capitalized |
 
 ### Touch Typing Flow
 
@@ -116,6 +117,9 @@ Type "Hello" → space → space → Result: "Hello. "
 
 > [!NOTE]
 > Apostrophes in contractions (like "don't", "it's") are never affected by smart punctuation.
+
+> [!TIP]
+> Sentence-ending punctuation (. ! ?) automatically adds a space after attachment, enabling autocapitalization for the next word you type or swipe.
 
 ## Common Questions
 
