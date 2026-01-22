@@ -6,29 +6,73 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-  <!-- Search bar with close button (at top like emoji pane) -->
+  <!-- Combined row: Tabs + Search + Close -->
   <LinearLayout
       android:id="@+id/clipboard_search_bar"
       android:layout_width="match_parent"
       android:layout_height="40dp"
       android:orientation="horizontal"
       android:gravity="center_vertical"
-      android:paddingStart="8dp"
+      android:paddingStart="4dp"
       android:paddingEnd="4dp"
       android:background="?attr/colorKey">
 
+    <!-- History tab (default, highlighted) -->
+    <TextView
+        android:id="@+id/tab_history"
+        android:text="📋"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:gravity="center"
+        android:textSize="20sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Recent clipboard history"/>
+
+    <!-- Pinned tab -->
+    <TextView
+        android:id="@+id/tab_pinned"
+        android:text="📌"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:gravity="center"
+        android:textSize="20sp"
+        android:alpha="0.5"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Pinned items"/>
+
+    <!-- Todos tab -->
+    <TextView
+        android:id="@+id/tab_todos"
+        android:text="✓"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:gravity="center"
+        android:textSize="20sp"
+        android:alpha="0.5"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="To-do items"/>
+
+    <!-- Search field (fills remaining space) -->
     <TextView
         android:id="@+id/clipboard_search"
-        android:hint="Tap to search..."
+        android:hint="Search..."
         android:layout_width="0dp"
         android:layout_height="32dp"
         android:layout_weight="1"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
         android:gravity="center_vertical"
         android:textSize="14sp"
         android:textColor="?attr/colorLabel"
         android:textColorHint="?attr/colorSubLabel"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
         android:singleLine="true"
         android:ellipsize="end"
         android:clickable="true"
@@ -38,10 +82,10 @@
     <TextView
         android:id="@+id/clipboard_date_filter"
         android:text="📅"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:gravity="center"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:clickable="true"
         android:focusable="true"
         android:background="?android:attr/selectableItemBackgroundBorderless"/>
@@ -49,75 +93,18 @@
     <!-- Close/dismiss clipboard pane button -->
     <ImageButton
         android:id="@+id/clipboard_close_button"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:src="@android:drawable/arrow_down_float"
         android:tint="?attr/colorLabel"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="Close clipboard"
         android:scaleType="centerInside"
-        android:padding="6dp"/>
+        android:padding="4dp"/>
 
   </LinearLayout>
 
-  <!-- Tab buttons: History, Pinned, Todos (icon-only) -->
-  <LinearLayout
-      android:id="@+id/clipboard_tabs"
-      android:layout_width="match_parent"
-      android:layout_height="40dp"
-      android:orientation="horizontal"
-      android:gravity="center"
-      android:background="?attr/colorKey"
-      android:paddingStart="16dp"
-      android:paddingEnd="16dp">
-
-    <!-- History tab (default, highlighted) -->
-    <TextView
-        android:id="@+id/tab_history"
-        android:text="📋"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:textSize="22sp"
-        android:clickable="true"
-        android:focusable="true"
-        android:background="?android:attr/selectableItemBackground"
-        android:contentDescription="Recent clipboard history"/>
-
-    <!-- Pinned tab -->
-    <TextView
-        android:id="@+id/tab_pinned"
-        android:text="📌"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:textSize="22sp"
-        android:alpha="0.5"
-        android:clickable="true"
-        android:focusable="true"
-        android:background="?android:attr/selectableItemBackground"
-        android:contentDescription="Pinned items"/>
-
-    <!-- Todos tab -->
-    <TextView
-        android:id="@+id/tab_todos"
-        android:text="✓"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:textSize="22sp"
-        android:alpha="0.5"
-        android:clickable="true"
-        android:focusable="true"
-        android:background="?android:attr/selectableItemBackground"
-        android:contentDescription="To-do items"/>
-
-  </LinearLayout>
-
-  <!-- Divider below tabs -->
+  <!-- Divider below header -->
   <View
       android:layout_width="match_parent"
       android:layout_height="1dp"
