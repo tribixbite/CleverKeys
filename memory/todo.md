@@ -44,9 +44,11 @@
 - ✅ Test keyboard fields use KeyboardCapitalization.Sentences (splash + settings)
 - ✅ Splash screen animation pauses when keyboard opens (eliminates input lag)
 - ✅ Smart punctuation respects manual spacebar (only attaches if space was auto-inserted)
+- ✅ Created smart punctuation wiki + spec pair (user guide + technical spec)
+- ✅ Fixed swipe capitalization at swipe START (autocap after period now works correctly)
 
 ## In Progress
-- 🔄 Build and test v1.2.7 features
+- 🔄 Build and test v1.2.8 features
 
 ## Completed (2026-01-20)
 - ✅ Swedish language pack (sv_enhanced.bin, sv.bin, sv_unigrams.txt)
