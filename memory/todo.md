@@ -11,6 +11,7 @@
 - ✅ Updated wiki (emoji.md) and spec (suggestion-bar-content-pane.md)
 - ✅ Created skills: emoji-panel.md, content-pane-layout.md
 - ✅ Created release-process.md skill (F-Droid API, fastlane changelogs, version codes)
+- ✅ Released v1.2.6 - Emoji Panel Polish (tooltip, name mappings, gap fixes)
 
 ## Completed (2026-01-20)
 - ✅ Swedish language pack (sv_enhanced.bin, sv.bin, sv_unigrams.txt)
