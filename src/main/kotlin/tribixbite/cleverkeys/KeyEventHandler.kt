@@ -250,8 +250,14 @@ class KeyEventHandler(
         } else if (text.length == 1) {
             val char = text[0]
 
+            // v1.2.7: Manual space clears auto-inserted flag
+            if (char == ' ') {
+                recv.setLastSpaceAutoInserted(false)
+            }
+
             // Smart punctuation: If typing punctuation and previous char is space, delete the space
             // This attaches punctuation to the end of the previous word (e.g., "word ." -> "word.")
+            // v1.2.7: Only attach if space was auto-inserted (respects manual space+punctuation)
             val smartPuncEnabled = Config.globalConfig().smart_punctuation
             val isPunctChar = isSmartPunctuationChar(char)
             val isQuote = isQuoteChar(char)
@@ -259,11 +265,12 @@ class KeyEventHandler(
             if (smartPuncEnabled && (isPunctChar || isQuote)) {
                 val textBefore = conn.getTextBeforeCursor(500, 0)  // Get enough context for quote counting
                 val lastCharIsSpace = textBefore?.lastOrNull() == ' '
+                val spaceWasAutoInserted = recv.wasLastSpaceAutoInserted()
 
-                if (isPunctChar && lastCharIsSpace) {
-                    // Regular punctuation: always attach to previous word
+                if (isPunctChar && lastCharIsSpace && spaceWasAutoInserted) {
+                    // Regular punctuation: attach to previous word only if space was auto-inserted
                     conn.deleteSurroundingText(1, 0)
-                } else if (isQuote && lastCharIsSpace) {
+                } else if (isQuote && lastCharIsSpace && spaceWasAutoInserted) {
                     // Quote handling: only attach if it's a CLOSING quote, not apostrophe
                     if (!isLikelyApostrophe(char, textBefore?.dropLast(1))) {
                         // Not an apostrophe - check if closing quote
@@ -636,6 +643,9 @@ class KeyEventHandler(
         fun isEmojiPaneOpen(): Boolean = false // Check if emoji pane is visible
         fun appendToEmojiSearch(text: String) {} // Append text to emoji search EditText
         fun backspaceEmojiSearch() {} // Handle backspace in emoji search
+        // v1.2.7: Smart punctuation - track if last space was auto-inserted
+        fun wasLastSpaceAutoInserted(): Boolean = false
+        fun setLastSpaceAutoInserted(value: Boolean) {}
     }
 
     private inner class AutocapitalisationCallback : Autocapitalisation.Callback {

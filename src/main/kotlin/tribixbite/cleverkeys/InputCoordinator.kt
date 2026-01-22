@@ -736,6 +736,11 @@ class InputCoordinator(
                 val commitDuration = System.currentTimeMillis() - commitStartTime
                 debugLogger?.invoke("⏱️ commitText('$textToInsert'): ${commitDuration}ms")
 
+                // v1.2.7: Mark space as auto-inserted for smart punctuation
+                if (shouldAddTrailingSpace) {
+                    contextTracker.lastSpaceWasAutoInserted = true
+                }
+
                 // Notify auto-capitalization system about the inserted text
                 // This ensures shift is enabled after sentence-ending punctuation (. ! ?)
                 keyeventhandler.notifyTextTyped(textToInsert)

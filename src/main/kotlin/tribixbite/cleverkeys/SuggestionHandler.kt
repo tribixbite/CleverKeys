@@ -656,6 +656,15 @@ class SuggestionHandler(
                 Log.d(TAG, "Committing text: '$textToInsert' (length=${textToInsert.length})")
                 inputConnection.commitText(textToInsert, 1)
 
+                // v1.2.7: Mark space as auto-inserted for smart punctuation
+                // Only the "else" branch (normal mode) adds trailing space
+                val addedTrailingSpace = !(!config.auto_space_after_suggestion && !isSwipeAutoInsert) &&
+                    !(config.termux_mode_enabled && !isSwipeAutoInsert && inTermuxApp) &&
+                    !hasSpaceAfter
+                if (addedTrailingSpace) {
+                    contextTracker.lastSpaceWasAutoInserted = true
+                }
+
                 // Track that this commit was from candidate selection (manual tap)
                 // Note: Auto-insertions set this separately to NEURAL_SWIPE
                 if (contextTracker.getLastCommitSource() != PredictionSource.NEURAL_SWIPE) {

@@ -96,6 +96,10 @@ class PredictionContextTracker {
     // Used for context-aware deletion behavior
     private var lastCommitSource = PredictionSource.UNKNOWN
 
+    // v1.2.7: Track whether last space was auto-inserted (swipe/suggestion) vs manually typed
+    // Used by smart punctuation to respect manual spaces (user typed space then punctuation)
+    var lastSpaceWasAutoInserted: Boolean = false
+
     // Original word that was autocorrected (for undo functionality)
     // When user types "subkeys" and it's autocorrected to "surveys",
     // this stores "subkeys" so tapping it can replace "surveys" with "subkeys"

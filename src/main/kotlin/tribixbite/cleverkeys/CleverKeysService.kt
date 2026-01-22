@@ -377,6 +377,7 @@ class CleverKeysService : InputMethodService(),
         _contractionManager = managers.contractionManager
         _clipboardManager = managers.clipboardManager
         _contextTracker = managers.contextTracker
+        _receiverBridge.setContextTracker(_contextTracker)  // v1.2.7: for smart punctuation
         _predictionCoordinator = managers.predictionCoordinator
         _inputCoordinator = managers.inputCoordinator
         _suggestionHandler = managers.suggestionHandler

@@ -28,6 +28,7 @@ class KeyEventReceiverBridge(
 ) : KeyEventHandler.IReceiver {
 
     private var receiver: KeyboardReceiver? = null
+    private var contextTracker: PredictionContextTracker? = null
 
     /**
      * Set the KeyboardReceiver instance.
@@ -37,6 +38,15 @@ class KeyEventReceiverBridge(
      */
     fun setReceiver(receiver: KeyboardReceiver) {
         this.receiver = receiver
+    }
+
+    /**
+     * Set the PredictionContextTracker instance.
+     * Must be called after contextTracker is created.
+     * v1.2.7: Used for smart punctuation auto-space tracking.
+     */
+    fun setContextTracker(tracker: PredictionContextTracker) {
+        this.contextTracker = tracker
     }
 
     override fun handle_event_key(ev: KeyValue.Event) {
@@ -102,6 +112,15 @@ class KeyEventReceiverBridge(
 
     override fun backspaceEmojiSearch() {
         receiver?.backspaceEmojiSearch()
+    }
+
+    // v1.2.7: Smart punctuation - track if last space was auto-inserted
+    override fun wasLastSpaceAutoInserted(): Boolean {
+        return contextTracker?.lastSpaceWasAutoInserted ?: false
+    }
+
+    override fun setLastSpaceAutoInserted(value: Boolean) {
+        contextTracker?.lastSpaceWasAutoInserted = value
     }
 
     companion object {
