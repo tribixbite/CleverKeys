@@ -8,6 +8,8 @@
 - ✅ Flag emoji name mappings (260+ countries, shows "japan" not "regional indicator")
 - ✅ Emoticon name mappings (100+ smileys/kaomoji, shows "shrug" not "emoticon")
 - ✅ Cleanup: removed debug logs from KeyboardReceiver, unused tooltip XML files
+- ✅ Updated wiki (emoji.md) and spec (suggestion-bar-content-pane.md)
+- ✅ Created skills: emoji-panel.md, content-pane-layout.md
 
 ## Completed (2026-01-20)
 - ✅ Swedish language pack (sv_enhanced.bin, sv.bin, sv_unigrams.txt)
