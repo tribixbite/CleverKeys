@@ -703,16 +703,21 @@ class InputCoordinator(
                 // for ALL predictions (including alternates), so we don't need to transform again here.
                 // The word from suggestion bar is already capitalized/uppercased as needed.
 
-                // Commit the selected word - use Termux mode if enabled
+                // Commit the selected word - check auto-space and Termux mode settings
+                // Logic: Add trailing space unless:
+                // 1. auto_space_after_suggestion is disabled (user preference #82)
+                // 2. OR Termux mode is enabled for non-swipe selections (terminal compatibility)
+                val shouldAddTrailingSpace = config.auto_space_after_suggestion &&
+                    !(config.termux_mode_enabled && !isSwipeAutoInsert)
+
                 val textToInsert = when {
-                    config.termux_mode_enabled && !isSwipeAutoInsert -> {
-                        // Termux mode (non-swipe): Insert word without automatic space for better terminal compatibility
-                        (if (needsSpaceBefore) " " else "") + processedWord
+                    shouldAddTrailingSpace -> {
+                        // Add trailing space (and space before if needed)
+                        (if (needsSpaceBefore) " $processedWord " else "$processedWord ")
                     }
                     else -> {
-                        // Normal mode OR swipe in Termux: Insert word with space after (and before if needed)
-                        // For swipe typing, we always add trailing spaces even in Termux mode for better UX
-                        (if (needsSpaceBefore) " $processedWord " else "$processedWord ")
+                        // No trailing space (Termux mode non-swipe OR user disabled auto-space)
+                        (if (needsSpaceBefore) " " else "") + processedWord
                     }
                 }
 
