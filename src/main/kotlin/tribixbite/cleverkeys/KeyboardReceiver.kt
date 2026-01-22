@@ -82,7 +82,6 @@ class KeyboardReceiver(
         suggestionBarHeight: Int = 0,
         contentPaneHeight: Int = 0
     ) {
-        android.util.Log.i("KeyboardReceiver", "setViewReferences: topPane=$topPane, scrollView=$scrollView, contentPaneContainer=$contentPaneContainer, suggestionBarHeight=$suggestionBarHeight, contentPaneHeight=$contentPaneHeight")
         this.emojiPane = emojiPane
         this.contentPaneContainer = contentPaneContainer
         this.topPane = topPane
@@ -96,15 +95,12 @@ class KeyboardReceiver(
      * Uses simple view swapping in topPane.
      */
     private fun showContentPane() {
-        android.util.Log.i("KeyboardReceiver", "showContentPane: topPane=$topPane, contentPaneHeight=$contentPaneHeight")
-
         val top = topPane ?: return
         val content = contentPaneContainer ?: return
         val scroll = scrollView ?: return
 
         SuggestionBarInitializer.switchToContentPaneMode(top, content, scroll, contentPaneHeight)
         isContentPaneShowing = true
-        android.util.Log.i("KeyboardReceiver", "showContentPane: switched to content pane, height=$contentPaneHeight")
     }
 
     /**
@@ -112,8 +108,6 @@ class KeyboardReceiver(
      * Uses simple view swapping in topPane.
      */
     private fun hideContentPane() {
-        android.util.Log.i("KeyboardReceiver", "hideContentPane: topPane=$topPane, suggestionBarHeight=$suggestionBarHeight")
-
         // CRITICAL: Always reset state flag, even if views are null
         // Otherwise toggle logic will think pane is still showing
         isContentPaneShowing = false
@@ -123,12 +117,10 @@ class KeyboardReceiver(
         val scroll = scrollView
 
         if (top == null || content == null || scroll == null) {
-            android.util.Log.w("KeyboardReceiver", "hideContentPane: views null, state reset only")
             return
         }
 
         SuggestionBarInitializer.switchToSuggestionBarMode(top, content, scroll, suggestionBarHeight)
-        android.util.Log.i("KeyboardReceiver", "hideContentPane: switched to suggestion bar, height=$suggestionBarHeight")
     }
 
     /**
@@ -138,10 +130,7 @@ class KeyboardReceiver(
     fun resetContentPaneState() {
         // CRITICAL: Always reset state, even if views are null
         // This prevents stale state after app switches
-        val wasShowing = isContentPaneShowing
-        android.util.Log.i("KeyboardReceiver", "resetContentPaneState: wasShowing=$wasShowing, currentPaneType=$currentPaneType")
-
-        if (wasShowing) {
+        if (isContentPaneShowing) {
             hideContentPane()  // This now always resets isContentPaneShowing
         }
 
@@ -160,7 +149,6 @@ class KeyboardReceiver(
     }
 
     override fun handle_event_key(ev: KeyValue.Event) {
-        android.util.Log.i("KeyboardReceiver", "handle_event_key: $ev")
         when (ev) {
             KeyValue.Event.CONFIG -> {
                 val intent = Intent(context, SettingsActivity::class.java).apply {
@@ -182,7 +170,6 @@ class KeyboardReceiver(
             }
 
             KeyValue.Event.SWITCH_EMOJI -> {
-                android.util.Log.i("KeyboardReceiver", "SWITCH_EMOJI triggered: currentPaneType=$currentPaneType, isContentPaneShowing=$isContentPaneShowing")
                 // Toggle behavior: if emoji pane already visible, close it
                 if (currentPaneType == PaneType.EMOJI && isContentPaneShowing) {
                     handle_event_key(KeyValue.Event.SWITCH_BACK_EMOJI)
@@ -206,7 +193,6 @@ class KeyboardReceiver(
                         contentPaneHeight
                     )
                     container.addView(pane)
-                    android.util.Log.i("KeyboardReceiver", "Added emoji pane to container, contentPaneHeight=$contentPaneHeight")
                     showContentPane()
                 } ?: run {
                     // Fallback for when predictions disabled (no container)
@@ -253,7 +239,6 @@ class KeyboardReceiver(
 
                 // SECURITY: Block clipboard access on lock screen (contains PII)
                 if (DirectBootManager.getInstance(context).isDeviceLocked) {
-                    android.util.Log.w("KeyboardReceiver", "Clipboard blocked: screen is locked")
                     return
                 }
 
@@ -274,7 +259,6 @@ class KeyboardReceiver(
                         contentPaneHeight
                     )
                     container.addView(clipboardPane)
-                    android.util.Log.i("KeyboardReceiver", "Added clipboard pane to container, contentPaneHeight=$contentPaneHeight")
                     showContentPane()
                 } ?: run {
                     // Fallback for when predictions disabled (no container)
@@ -323,28 +307,14 @@ class KeyboardReceiver(
             }
 
             KeyValue.Event.SWITCH_FORWARD -> {
-                val layoutCount = layoutManager.getLayoutCount()
-                val currentIndex = layoutManager.getCurrentLayoutIndex()
-                android.util.Log.d("KeyboardReceiver", "SWITCH_FORWARD: layoutCount=$layoutCount, currentIndex=$currentIndex")
-                if (layoutCount > 1) {
-                    val newLayout = layoutManager.incrTextLayout(1)
-                    android.util.Log.d("KeyboardReceiver", "SWITCH_FORWARD: switching to newIndex=${layoutManager.getCurrentLayoutIndex()}")
-                    keyboardView.setKeyboard(newLayout)
-                } else {
-                    android.util.Log.w("KeyboardReceiver", "SWITCH_FORWARD: Only $layoutCount layout(s) configured, cannot switch")
+                if (layoutManager.getLayoutCount() > 1) {
+                    keyboardView.setKeyboard(layoutManager.incrTextLayout(1))
                 }
             }
 
             KeyValue.Event.SWITCH_BACKWARD -> {
-                val layoutCount = layoutManager.getLayoutCount()
-                val currentIndex = layoutManager.getCurrentLayoutIndex()
-                android.util.Log.d("KeyboardReceiver", "SWITCH_BACKWARD: layoutCount=$layoutCount, currentIndex=$currentIndex")
-                if (layoutCount > 1) {
-                    val newLayout = layoutManager.incrTextLayout(-1)
-                    android.util.Log.d("KeyboardReceiver", "SWITCH_BACKWARD: switching to newIndex=${layoutManager.getCurrentLayoutIndex()}")
-                    keyboardView.setKeyboard(newLayout)
-                } else {
-                    android.util.Log.w("KeyboardReceiver", "SWITCH_BACKWARD: Only $layoutCount layout(s) configured, cannot switch")
+                if (layoutManager.getLayoutCount() > 1) {
+                    keyboardView.setKeyboard(layoutManager.incrTextLayout(-1))
                 }
             }
 
@@ -435,13 +405,10 @@ class KeyboardReceiver(
 
     // #41 v5: Emoji search routes typing to visible EditText (IME can't type into own views)
     override fun isEmojiPaneOpen(): Boolean {
-        val result = emojiSearchManager?.isEmojiPaneOpen() ?: false
-        android.util.Log.d("KeyboardReceiver", "isEmojiPaneOpen: manager=$emojiSearchManager, result=$result")
-        return result
+        return emojiSearchManager?.isEmojiPaneOpen() ?: false
     }
 
     override fun appendToEmojiSearch(text: String) {
-        android.util.Log.d("KeyboardReceiver", "appendToEmojiSearch: '$text', manager=$emojiSearchManager")
         emojiSearchManager?.appendToSearch(text)
     }
 

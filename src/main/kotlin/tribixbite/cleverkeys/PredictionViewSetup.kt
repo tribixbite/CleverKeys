@@ -144,7 +144,7 @@ class PredictionViewSetup(
                 // Register suggestion selection listener
                 suggestionBar?.setOnSuggestionSelectedListener(keyboard2)
 
-                // Calculate heights for ViewFlipper resizing
+                // Calculate heights for topPane resizing
                 val suggestionBarHeight = android.util.TypedValue.applyDimension(
                     android.util.TypedValue.COMPLEX_UNIT_DIP,
                     40f,
