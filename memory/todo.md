@@ -52,6 +52,7 @@
 - ✅ Fixed master vibration toggle not updating Config.haptic_enabled immediately
 - ✅ Added SWIPE_COMPLETE haptic trigger when swipe word is auto-inserted
 - ✅ Moved vibration/haptic settings to Accessibility section
+- ✅ Fixed vibration not triggering (vibrate_custom must be true for duration to work)
 
 ## In Progress
 - 🔄 Build and test v1.2.8 features
