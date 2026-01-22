@@ -182,6 +182,7 @@ object Defaults {
     const val CLIPBOARD_SIZE_LIMIT_MB = "5"  // Was "10" - reduced for safety
     const val CLIPBOARD_SIZE_LIMIT_MB_FALLBACK = 5
     const val CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS = true  // Skip clipboard from password managers
+    const val CLIPBOARD_RESPECT_SENSITIVE_FLAG = true  // #86: Respect Android 13+ IS_SENSITIVE flag
 
     // Common password manager package names (for clipboard exclusion)
     val PASSWORD_MANAGER_PACKAGES = setOf(
@@ -398,6 +399,7 @@ class Config private constructor(
     @JvmField var clipboard_limit_type: String? = null
     @JvmField var clipboard_size_limit_mb = 0
     @JvmField var clipboard_exclude_password_managers = true  // Skip clipboard from password managers
+    @JvmField var clipboard_respect_sensitive_flag = true  // #86: Respect Android 13+ IS_SENSITIVE flag
     @JvmField var swipe_typing_enabled = true  // Default to enabled for CleverKeys
     @JvmField var swipe_on_password_fields = false  // #39: Reenable swipe typing on password fields
     @JvmField var swipe_show_debug_scores = false
@@ -649,6 +651,8 @@ class Config private constructor(
         clipboard_size_limit_mb = safeGetString(_prefs, "clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
 
         clipboard_exclude_password_managers = _prefs.getBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
+
+        clipboard_respect_sensitive_flag = _prefs.getBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
 
         swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
         swipe_on_password_fields = _prefs.getBoolean("swipe_on_password_fields", Defaults.SWIPE_ON_PASSWORD_FIELDS)

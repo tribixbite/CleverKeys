@@ -336,6 +336,23 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             }
 
             val clip = _cm.primaryClip ?: return
+
+            // #86: Android 13+ (API 33): Respect IS_SENSITIVE flag set by password managers
+            // This is a more robust detection than package blocklisting
+            if (Config.globalConfig().clipboard_respect_sensitive_flag &&
+                VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val extras = clip.description?.extras
+                if (extras != null) {
+                    val isSensitive = extras.getBoolean("android.content.extra.IS_SENSITIVE", false)
+                    if (isSensitive) {
+                        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+                            android.util.Log.d("ClipboardHistory", "Skipping sensitive clipboard content (IS_SENSITIVE flag)")
+                        }
+                        return // Don't store sensitive content
+                    }
+                }
+            }
+
             val count = clip.itemCount
             for (i in 0 until count) {
                 val text = clip.getItemAt(i).text

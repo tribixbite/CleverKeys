@@ -24,6 +24,8 @@
 - ✅ Option to disable auto-space after suggestion (#82)
 - ✅ Separate backspace key repeat option (#81)
 - ✅ Respect Greek/Math disabled in numeric layer (#77)
+- ✅ Password manager clipboard exclusions: KeePassDX Libre, Chrome, Edge, Firefox (#86)
+- ✅ Android 13+ IS_SENSITIVE flag support (user setting, defaults on) (#86)
 
 ## In Progress
 - 🔄 Build and test v1.2.7 features

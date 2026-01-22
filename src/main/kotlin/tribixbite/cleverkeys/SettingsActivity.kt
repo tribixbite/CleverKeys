@@ -165,6 +165,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var clipboardLimitType by mutableStateOf("count") // "count" or "size"
     private var clipboardSizeLimitMb by mutableStateOf(10)
     private var clipboardExcludePasswordManagers by mutableStateOf(true)  // Privacy: skip password managers
+    private var clipboardRespectSensitiveFlag by mutableStateOf(true)  // #86: Respect IS_SENSITIVE flag
     private var autoCapitalizationEnabled by mutableStateOf(true)
 
     // Phase 1: Expose existing Config.kt settings
@@ -531,6 +532,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Clipboard Max Item Size", listOf("item", "size", "maximum"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_item_size"),
             SearchableSetting("Clipboard Pane Height", listOf("pane", "height", "size"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_height"),
             SearchableSetting("Exclude Password Managers", listOf("password", "exclude", "security"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_exclude_passwords"),
+            SearchableSetting("Respect Sensitive Flag", listOf("sensitive", "flag", "android", "13", "privacy"), "Clipboard", expandSection = { clipboardSectionExpanded = true }, settingId = "clipboard_sensitive_flag"),
 
             // ==================== MULTI-LANGUAGE ====================
             SearchableSetting("Enable Multi-Language", listOf("multilingual", "bilingual", "language"), "Multi-Language", expandSection = { multiLangSectionExpanded = true }, settingId = "multilang"),
@@ -2982,6 +2984,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         saveSetting("clipboard_exclude_password_managers", clipboardExcludePasswordManagers)
                     }
                 )
+
+                // #86: Privacy: Respect IS_SENSITIVE flag (Android 13+)
+                SettingsSwitch(
+                    title = "Respect Sensitive Flag",
+                    description = "Skip clipboard marked as sensitive by password managers (Android 13+)",
+                    checked = clipboardRespectSensitiveFlag,
+                    onCheckedChange = {
+                        clipboardRespectSensitiveFlag = it
+                        saveSetting("clipboard_respect_sensitive_flag", clipboardRespectSensitiveFlag)
+                    }
+                )
             }
 
             // Backup & Restore Section (Collapsible)
@@ -4427,6 +4440,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         clipboardLimitType = prefs.getSafeString("clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
         clipboardSizeLimitMb = prefs.getSafeString("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
         clipboardExcludePasswordManagers = prefs.getSafeBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
+        clipboardRespectSensitiveFlag = prefs.getSafeBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
         autoCapitalizationEnabled = prefs.getSafeBoolean("autocapitalisation", Defaults.AUTOCAPITALISATION)
 
         // Gesture sensitivity settings
