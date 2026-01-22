@@ -47,6 +47,11 @@
 - ✅ Created smart punctuation wiki + spec pair (user guide + technical spec)
 - ✅ Fixed swipe capitalization at swipe START (captures shift state when swipe begins)
 - ✅ Smart punct adds space after sentence-ending punct (. ! ?) for autocap trigger
+- ✅ Fixed Capitalize I Words for swipe (use globalConfig in InputCoordinator/SuggestionHandler)
+- ✅ Renamed "Prediction Tap" to "Suggestion Tap" in haptic settings
+- ✅ Fixed master vibration toggle not updating Config.haptic_enabled immediately
+- ✅ Added SWIPE_COMPLETE haptic trigger when swipe word is auto-inserted
+- ✅ Moved vibration/haptic settings to Accessibility section
 
 ## In Progress
 - 🔄 Build and test v1.2.8 features
