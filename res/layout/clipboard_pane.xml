@@ -126,4 +126,50 @@
 
   </ScrollView>
 
+  <!-- Pagination bar (hidden when ≤100 items) -->
+  <LinearLayout
+      android:id="@+id/clipboard_pagination_bar"
+      android:layout_width="match_parent"
+      android:layout_height="32dp"
+      android:orientation="horizontal"
+      android:gravity="center"
+      android:background="?attr/colorKey"
+      android:visibility="gone">
+
+    <TextView
+        android:id="@+id/clipboard_page_prev"
+        android:text="◀"
+        android:layout_width="48dp"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:textSize="16sp"
+        android:textColor="?attr/colorLabel"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?android:attr/selectableItemBackground"/>
+
+    <TextView
+        android:id="@+id/clipboard_page_info"
+        android:text="1 / 1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:textSize="12sp"
+        android:textColor="?attr/colorSubLabel"/>
+
+    <TextView
+        android:id="@+id/clipboard_page_next"
+        android:text="▶"
+        android:layout_width="48dp"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:textSize="16sp"
+        android:textColor="?attr/colorLabel"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?android:attr/selectableItemBackground"/>
+
+  </LinearLayout>
+
 </LinearLayout>

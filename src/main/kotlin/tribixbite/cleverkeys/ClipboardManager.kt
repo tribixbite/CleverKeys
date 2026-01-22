@@ -48,6 +48,12 @@ class ClipboardManager(
     private var tabPinned: TextView? = null
     private var tabTodos: TextView? = null
 
+    // Pagination views
+    private var paginationBar: View? = null
+    private var pagePrev: TextView? = null
+    private var pageInfo: TextView? = null
+    private var pageNext: TextView? = null
+
     // Current tab state
     private var currentTab = ClipboardTab.HISTORY
 
@@ -102,6 +108,27 @@ class ClipboardManager(
 
             // Set initial tab highlighting
             updateTabHighlighting()
+
+            // Set up pagination controls
+            paginationBar = clipboardPane?.findViewById(R.id.clipboard_pagination_bar)
+            pagePrev = clipboardPane?.findViewById(R.id.clipboard_page_prev)
+            pageInfo = clipboardPane?.findViewById(R.id.clipboard_page_info)
+            pageNext = clipboardPane?.findViewById(R.id.clipboard_page_next)
+
+            pagePrev?.setOnClickListener {
+                clipboardHistoryView?.previousPage()
+            }
+            pageNext?.setOnClickListener {
+                clipboardHistoryView?.nextPage()
+            }
+
+            // Listen for pagination state changes
+            clipboardHistoryView?.setOnPaginationChangeListener { needsPagination, currentPage, totalPages ->
+                paginationBar?.visibility = if (needsPagination) View.VISIBLE else View.GONE
+                pageInfo?.text = "$currentPage / $totalPages"
+                pagePrev?.alpha = if (clipboardHistoryView?.hasPreviousPage() == true) 1.0f else 0.3f
+                pageNext?.alpha = if (clipboardHistoryView?.hasNextPage() == true) 1.0f else 0.3f
+            }
         }
 
         return clipboardPane!!
@@ -354,6 +381,10 @@ class ClipboardManager(
         tabHistory = null
         tabPinned = null
         tabTodos = null
+        paginationBar = null
+        pagePrev = null
+        pageInfo = null
+        pageNext = null
         onCloseCallback = null
         searchMode = false
         currentTab = ClipboardTab.HISTORY
