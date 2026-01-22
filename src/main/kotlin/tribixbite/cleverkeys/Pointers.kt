@@ -577,7 +577,12 @@ class Pointers(
         // Use countActivePointers() == 0 instead of _ptrs.isEmpty() to handle latched Shift
         if ((_config.swipe_typing_enabled || _config.short_gestures_enabled) &&
             countActivePointers() == 0 && key != null) {
-            _swipeRecognizer.startSwipe(x, y, key)
+            // v1.2.8: Capture shift state at swipe START for proper autocap after period
+            // This must happen BEFORE the swipe, when autocap shift is still active
+            val currentMods = getModifiers(isOtherPointerDown())
+            val shiftActive = currentMods.has(KeyValue.Modifier.SHIFT)
+            val shiftLocked = _handler.isShiftLocked()
+            _swipeRecognizer.startSwipe(x, y, key, shiftActive, shiftLocked)
         }
 
         // Don't take latched modifiers into account if an other key is pressed.
@@ -1635,6 +1640,9 @@ class Pointers(
 
         /** Swipe typing gesture completed. */
         fun onSwipeEnd(recognizer: ImprovedSwipeGestureRecognizer)
+
+        /** v1.2.8: Check if shift is currently locked (caps lock mode) */
+        fun isShiftLocked(): Boolean
 
         /** Check if a point is within a key's bounding box. */
         fun isPointWithinKey(x: Float, y: Float, key: KeyboardData.Key): Boolean

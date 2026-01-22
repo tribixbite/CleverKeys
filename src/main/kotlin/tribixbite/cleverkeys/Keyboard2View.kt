@@ -406,7 +406,7 @@ class Keyboard2View @JvmOverloads constructor(
      * Used for ALL CAPS swipe typing: caps lock + swipe = ENTIRE WORD UPPERCASE.
      * @return true if shift is locked (caps lock), false if just latched or not active
      */
-    fun isShiftLocked(): Boolean {
+    override fun isShiftLocked(): Boolean {
         val shiftKv = _shift_kv ?: return false
         val flags = _pointers.getKeyFlags(shiftKv)
         return flags != -1 && (flags and Pointers.FLAG_P_LOCKED) != 0
@@ -477,10 +477,10 @@ class Keyboard2View @JvmOverloads constructor(
             val result = recognizer.endSwipe()
             if (_keyboard2 != null && result.keys != null && result.keys.isNotEmpty() &&
                 result.path != null && result.timestamps != null) {
-                // v1.32.926: Check if shift is active for capitalize first letter
-                val wasShiftActive = _mods.has(KeyValue.Modifier.SHIFT)
-                // v1.33.8: Check if shift is LOCKED (caps lock) for ALL CAPS swipe typing
-                val wasShiftLocked = isShiftLocked()
+                // v1.2.8: Use shift state captured at swipe START, not END
+                // This ensures autocap after period works correctly - shift was active when swipe began
+                val wasShiftActive = recognizer.wasShiftActiveAtStart()
+                val wasShiftLocked = recognizer.wasShiftLockedAtStart()
 
                 // Pass full swipe data for ML collection
                 _keyboard2!!.handleSwipeTyping(result.keys, result.path, result.timestamps, wasShiftActive, wasShiftLocked)

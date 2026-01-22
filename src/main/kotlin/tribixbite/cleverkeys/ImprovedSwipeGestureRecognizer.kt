@@ -52,6 +52,11 @@ open class ImprovedSwipeGestureRecognizer {
 
     // For velocity-based filtering
     private var _recentVelocity: Float = 0f
+
+    // v1.2.8: Track shift state at swipe START for proper autocap behavior after period
+    // This captures the shift state when the user begins swiping, not when they lift their finger
+    private var _shiftActiveAtStart: Boolean = false
+    private var _shiftLockedAtStart: Boolean = false
     
     /**
      * Set the current keyboard for probabilistic detection
@@ -66,9 +71,14 @@ open class ImprovedSwipeGestureRecognizer {
     
     /**
      * Start tracking a new swipe gesture
+     * @param shiftActive v1.2.8: Capture shift state at swipe start for proper autocap
+     * @param shiftLocked v1.2.8: Capture shift lock state at swipe start for caps lock
      */
-    fun startSwipe(x: Float, y: Float, key: KeyboardData.Key?) {
+    fun startSwipe(x: Float, y: Float, key: KeyboardData.Key?, shiftActive: Boolean = false, shiftLocked: Boolean = false) {
         reset()
+        // v1.2.8: Store shift state at start - critical for autocap after period
+        _shiftActiveAtStart = shiftActive
+        _shiftLockedAtStart = shiftLocked
 
         // Use object pool to reduce GC pressure
         val startPoint = TrajectoryObjectPool.obtainPointF(x, y)
@@ -439,7 +449,23 @@ open class ImprovedSwipeGestureRecognizer {
     fun isSwipeTyping(): Boolean {
         return _isSwipeTyping
     }
-    
+
+    /**
+     * v1.2.8: Check if shift was active at swipe START
+     * Used for autocap after period - capitalize first letter of swiped word
+     */
+    fun wasShiftActiveAtStart(): Boolean {
+        return _shiftActiveAtStart
+    }
+
+    /**
+     * v1.2.8: Check if shift was LOCKED at swipe START
+     * Used for caps lock - entire word should be uppercase
+     */
+    fun wasShiftLockedAtStart(): Boolean {
+        return _shiftLockedAtStart
+    }
+
     /**
      * Reset the recognizer for a new gesture.
      * Note: We don't recycle PointF objects here because they may still be referenced
@@ -457,5 +483,8 @@ open class ImprovedSwipeGestureRecognizer {
         _lastRegisteredKey = null
         _totalDistance = 0f
         _recentVelocity = 0f
+        // v1.2.8: Clear shift flags on reset
+        _shiftActiveAtStart = false
+        _shiftLockedAtStart = false
     }
 }
