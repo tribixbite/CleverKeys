@@ -83,12 +83,21 @@ src/main/kotlin/tribixbite/keyboard2/
 # Test compilation
 ./gradlew compileDebugKotlin
 
-# Full build & install
+# Full build & install (ALWAYS use this for testing)
 ./build-on-termux.sh
 
 # Run tests
 ./gradlew test
 ```
+
+### **IMPORTANT: Always Install RELEASE APK**
+**NEVER install debug APK for testing.** Always use release builds:
+- `build/outputs/apk/release/CleverKeys-v*.apk` ✅
+- `build/outputs/apk/debug/CleverKeys-v*.apk` ❌
+
+Debug logging is controlled by `BuildConfig.ENABLE_VERBOSE_LOGGING` which is set
+in build.gradle - release builds can have debug logging enabled when needed.
+This gives best of both worlds: release performance + debug visibility.
 
 ### **DEBUGGING:**
 ```bash
