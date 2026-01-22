@@ -30,10 +30,11 @@
 - ✅ Settings toggles now update Config immediately (fixes #81, #82 taking effect)
 - ✅ Added SettingsToggleTest for #81, #82, #86 verification
 - ✅ Fixed auto-space after tap suggestion (#82) - bug was in SuggestionHandler.kt
+- ✅ Fixed autocapitalization toggle not updating Config immediately
+- ✅ Added missing "Capitalize I Words" toggle UI (#72)
 
 ## In Progress
 - 🔄 Build and test v1.2.7 features
-- 🔄 Investigate auto-capitalization after period
 
 ## Completed (2026-01-20)
 - ✅ Swedish language pack (sv_enhanced.bin, sv.bin, sv_unigrams.txt)
