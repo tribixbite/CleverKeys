@@ -1,9 +1,12 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.util.TypedValue
 import android.view.Gravity
-import android.view.LayoutInflater
 import android.view.View
+import android.widget.LinearLayout
 import android.view.ViewGroup
 import android.widget.PopupWindow
 import android.widget.TextView
@@ -17,29 +20,60 @@ import android.widget.TextView
  * - Full control over positioning and styling
  * - Works reliably across all Android API levels (21+)
  *
+ * Creates views programmatically to avoid resource lookup issues with themed contexts.
+ *
  * @since v1.2.6
  */
 class EmojiTooltipManager(context: Context) {
 
-    private val tooltipView: View
+    private val tooltipView: LinearLayout
     private val emojiCharView: TextView
     private val emojiNameView: TextView
     private val popupWindow: PopupWindow
 
     init {
-        // Use hardcoded package name since context may be a themed wrapper
-        val packageName = "tribixbite.cleverkeys"
-        val layoutId = context.resources.getIdentifier("emoji_tooltip", "layout", packageName)
-        val emojiCharId = context.resources.getIdentifier("emoji_char", "id", packageName)
-        val emojiNameId = context.resources.getIdentifier("emoji_name", "id", packageName)
+        // Create tooltip view programmatically to avoid resource lookup issues
+        val density = context.resources.displayMetrics.density
+        val padding = (8 * density).toInt()
+        val cornerRadius = 8 * density
 
-        if (layoutId == 0) {
-            throw IllegalStateException("emoji_tooltip layout not found")
+        // Create background drawable
+        val background = GradientDrawable().apply {
+            setColor(0xDD333333.toInt())
+            this.cornerRadius = cornerRadius
         }
 
-        tooltipView = LayoutInflater.from(context).inflate(layoutId, null)
-        emojiCharView = tooltipView.findViewById(emojiCharId)
-        emojiNameView = tooltipView.findViewById(emojiNameId)
+        // Create container
+        tooltipView = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(padding, padding, padding, padding)
+            this.background = background
+        }
+
+        // Create emoji char text view
+        emojiCharView = TextView(context).apply {
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
+            setTextColor(Color.WHITE)
+        }
+        tooltipView.addView(emojiCharView)
+
+        // Create emoji name text view
+        emojiNameView = TextView(context).apply {
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            setTextColor(Color.WHITE)
+            maxWidth = (200 * density).toInt()
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            val marginStart = (8 * density).toInt()
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(marginStart, 0, 0, 0)
+            }
+        }
+        tooltipView.addView(emojiNameView)
 
         popupWindow = PopupWindow(
             tooltipView,
@@ -75,34 +109,20 @@ class EmojiTooltipManager(context: Context) {
         val tooltipWidth = tooltipView.measuredWidth
         val tooltipHeight = tooltipView.measuredHeight
 
-        // Get anchor position on screen
-        val anchorLocation = IntArray(2)
-        anchor.getLocationOnScreen(anchorLocation)
-
-        // Calculate position: center horizontally above the anchor
-        // Show above the finger to not obscure the emoji
-        val x = anchorLocation[0] + (anchor.width - tooltipWidth) / 2
-        val y = anchorLocation[1] - tooltipHeight - 16  // 16px gap above anchor
-
         // Dismiss any existing popup first
         if (popupWindow.isShowing) {
             popupWindow.dismiss()
         }
 
-        // Show at calculated position
-        // Use showAtLocation for precise positioning within IME window
+        // Use showAsDropDown for reliable positioning within IME window
+        // showAtLocation uses screen coords which don't work well in keyboard context
         try {
-            popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, x, y)
+            // Center horizontally, position above the anchor
+            val offsetX = (anchor.width - tooltipWidth) / 2
+            val offsetY = -anchor.height - tooltipHeight - 8  // 8px gap above anchor
+            popupWindow.showAsDropDown(anchor, offsetX, offsetY, Gravity.TOP or Gravity.START)
         } catch (e: Exception) {
-            // Fallback: try showAsDropDown if showAtLocation fails
-            android.util.Log.w("EmojiTooltipManager", "showAtLocation failed, trying showAsDropDown", e)
-            try {
-                val offsetX = (anchor.width - tooltipWidth) / 2
-                val offsetY = -anchor.height - tooltipHeight - 16
-                popupWindow.showAsDropDown(anchor, offsetX, offsetY, Gravity.TOP or Gravity.START)
-            } catch (e2: Exception) {
-                android.util.Log.e("EmojiTooltipManager", "Failed to show tooltip", e2)
-            }
+            android.util.Log.e("EmojiTooltipManager", "Failed to show tooltip", e)
         }
     }
 

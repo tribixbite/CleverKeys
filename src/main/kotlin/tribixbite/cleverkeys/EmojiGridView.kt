@@ -200,6 +200,7 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
 
     class EmojiView(context: Context) : TextView(context) {
         private var defaultTextSize: Float = 0f
+        private val density = context.resources.displayMetrics.density
 
         init {
             // Store the default text size from theme for regular emojis
@@ -207,6 +208,14 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
             // Ensure single line for emoticons
             maxLines = 1
             isSingleLine = true
+            // Add vertical padding to prevent overlap between rows
+            val verticalPadding = (4 * density).toInt()
+            val horizontalPadding = (2 * density).toInt()
+            setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
+            // Ensure minimum height for consistent row spacing
+            minHeight = (36 * density).toInt()
+            // Ellipsize very long emoticons
+            ellipsize = android.text.TextUtils.TruncateAt.END
         }
 
         fun setEmoji(emoji: Emoji) {
@@ -223,10 +232,10 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
                 // Column width is ~45sp, emoticons can be 2-20+ chars
                 val len = emojiStr.length
                 val scaledSize = when {
-                    len <= 3 -> 16f   // Short: :) :D
-                    len <= 6 -> 12f   // Medium: ;-) :-P
-                    len <= 10 -> 9f   // Long: (╯°□°)
-                    else -> 7f        // Very long: ¯\_(ツ)_/¯
+                    len <= 3 -> 14f   // Short: :) :D
+                    len <= 6 -> 11f   // Medium: ;-) :-P
+                    len <= 10 -> 8f   // Long: (╯°□°)
+                    else -> 6f        // Very long: ¯\_(ツ)_/¯
                 }
                 setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, scaledSize)
             } else {

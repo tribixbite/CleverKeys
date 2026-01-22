@@ -497,14 +497,52 @@ class Emoji protected constructor(bytecode: String) {
         /**
          * #41 v10: Get the display name for an emoji (for long-press tooltip).
          * @param emojiStr The emoji string (e.g., "😀")
-         * @return The emoji name (e.g., "grinning") or null if not found
+         * @return The emoji name (e.g., "grinning") or "emoticon" for text emoticons
          */
         @JvmStatic
         fun getEmojiName(emojiStr: String): String? {
             if (nameMap.isEmpty()) {
                 initNameMap()
             }
-            return emojiToName[emojiStr]
+
+            // Check if we have a mapped name
+            val mappedName = emojiToName[emojiStr]
+            if (mappedName != null) return mappedName
+
+            // For text emoticons (ASCII-based), return "emoticon"
+            if (isEmoticon(emojiStr)) return "emoticon"
+
+            // Try to get Unicode character name (API 19+)
+            try {
+                val codePoint = emojiStr.codePointAt(0)
+                val unicodeName = Character.getName(codePoint)
+                if (unicodeName != null) {
+                    // Convert from "GRINNING FACE" to "grinning face"
+                    return unicodeName.lowercase().replace("_", " ")
+                }
+            } catch (_: Exception) {
+                // Ignore - fall through to null
+            }
+
+            return null
+        }
+
+        /**
+         * Detect if a string is a text emoticon vs a Unicode emoji.
+         * Text emoticons contain ASCII punctuation/letters.
+         */
+        private fun isEmoticon(str: String): Boolean {
+            if (str.length <= 2) return false
+            var asciiCount = 0
+            var emojiCount = 0
+            for (char in str) {
+                when {
+                    char.code in 0x20..0x7E -> asciiCount++
+                    Character.isHighSurrogate(char) || Character.isLowSurrogate(char) -> emojiCount++
+                    char.code >= 0x2600 -> emojiCount++
+                }
+            }
+            return asciiCount > emojiCount
         }
 
         @JvmStatic

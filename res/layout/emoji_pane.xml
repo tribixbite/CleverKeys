@@ -87,6 +87,8 @@
         android:orientation="vertical"
         android:numColumns="auto_fit"
         android:columnWidth="45sp"
+        android:verticalSpacing="4dp"
+        android:horizontalSpacing="2dp"
         android:background="?attr/colorKeyboard"/>
 
     <!-- No results message (hidden by default) -->
