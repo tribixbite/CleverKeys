@@ -40,6 +40,7 @@
 - ✅ Fixed swipe predictions not applying user word case preservation (proper nouns)
 - ✅ Created wiki-documentation.md skill for consistent docs
 - ✅ Created user-dictionary wiki + spec pair (proper noun case preservation)
+- ✅ Fixed Android user dictionary case preservation (both sync/async loading paths)
 
 ## In Progress
 - 🔄 Build and test v1.2.7 features

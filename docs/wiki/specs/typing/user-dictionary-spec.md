@@ -66,10 +66,24 @@ Preserves user's typed capitalization for add-to-dictionary flow.
 ### Loading Custom Words with Case Preservation
 
 ```kotlin
-// WordPredictor.kt:1247-1251
+// WordPredictor.kt:1253-1263 (sync) and 1122-1131 (async)
 val originalWord = keys.next()  // Keep original case
 val lowerWord = originalWord.lowercase()
 // ... add to prediction index ...
+if (originalWord != lowerWord) {
+    userWordOriginalCase[lowerWord] = originalWord
+}
+```
+
+### Loading Android User Dictionary with Case Preservation
+
+```kotlin
+// WordPredictor.kt:1309-1318 (sync) and 1177-1186 (async)
+val originalWord = it.getString(wordIndex)
+val lowerWord = originalWord.lowercase()
+targetMap[lowerWord] = frequency
+loadedWords.add(lowerWord)
+// v1.2.7: Preserve original case for proper nouns (Issue #72)
 if (originalWord != lowerWord) {
     userWordOriginalCase[lowerWord] = originalWord
 }
