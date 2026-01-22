@@ -53,9 +53,11 @@
 - ✅ Added SWIPE_COMPLETE haptic trigger when swipe word is auto-inserted
 - ✅ Moved vibration/haptic settings to Accessibility section
 - ✅ Fixed vibration not triggering (vibrate_custom must be true for duration to work)
+- ✅ v1.2.8 released (includes all v1.2.6 changes for F-Droid)
+- ✅ Verified Direct Boot safety: swipe_on_password_fields, dictionary loading all use DirectBootAwarePreferences
 
 ## In Progress
-- 🔄 v1.2.8 release preparation
+(none)
 
 ## Completed (2026-01-20)
 - ✅ Swedish language pack (sv_enhanced.bin, sv.bin, sv_unigrams.txt)
