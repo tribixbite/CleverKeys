@@ -1,5 +1,11 @@
 # CleverKeys TODO
 
+## Completed (2026-01-22)
+- ✅ Emoji long-press tooltip (PopupWindow, positioned above pressed emoji)
+- ✅ Emoji name lookup with Unicode fallback for unmapped emojis
+- ✅ Emoticon search keywords (shrug, lenny, tableflip, kaomoji, etc)
+- ✅ Emoticon grid overlap fix (padding, minHeight, grid spacing)
+
 ## Completed (2026-01-20)
 - ✅ Swedish language pack (sv_enhanced.bin, sv.bin, sv_unigrams.txt)
 - ✅ Emoticons category in emoji picker (#76) - 119 text emoticons
