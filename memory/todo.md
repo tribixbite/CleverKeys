@@ -38,6 +38,8 @@
 - ✅ Added SettingsToggleTest tests for debug defaults, autocapitalization, I-words
 - ✅ All ew-cli instrumented tests passing
 - ✅ Fixed swipe predictions not applying user word case preservation (proper nouns)
+- ✅ Created wiki-documentation.md skill for consistent docs
+- ✅ Created user-dictionary wiki + spec pair (proper noun case preservation)
 
 ## In Progress
 - 🔄 Build and test v1.2.7 features

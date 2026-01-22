@@ -30,6 +30,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 |------|-------------|
 | [Swipe Typing](./typing/swipe-typing.md) | How neural swipe prediction works |
 | [Autocorrect & Predictions](./typing/autocorrect.md) | Smart text correction settings |
+| [User Dictionary](./typing/user-dictionary.md) | Custom words and case preservation |
 | [Special Characters](./typing/special-characters.md) | Symbols, accents, and compose key |
 | [Emoji & Symbols](./typing/emoji.md) | Emoji picker and symbol input |
 
@@ -94,6 +95,7 @@ Each user guide has a paired technical specification for developers:
 | User Guide | Tech Spec |
 |------------|-----------|
 | [Swipe Typing](./typing/swipe-typing.md) | [Neural Prediction Spec](../specs/neural-prediction.md) |
+| [User Dictionary](./typing/user-dictionary.md) | [User Dictionary Spec](./specs/typing/user-dictionary-spec.md) |
 | [Short Swipes](./gestures/short-swipes.md) | [Gesture System Spec](../specs/gesture-system.md) |
 | [TrackPoint Mode](./gestures/trackpoint-mode.md) | [TrackPoint Navigation Spec](../specs/trackpoint-navigation-mode.md) |
 | [Selection-Delete](./gestures/selection-delete.md) | [Selection-Delete Spec](../specs/selection-delete-mode.md) |
