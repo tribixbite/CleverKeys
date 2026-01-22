@@ -233,16 +233,36 @@ _scrollView = result.scrollView
 - `FrameLayout`: topPane and contentPaneContainer
 - `HorizontalScrollView`: Scrollable suggestions
 
+## Recent Enhancements (v1.2.6)
+
+### Emoji Long-Press Tooltip (Implemented)
+Long-pressing an emoji displays its name in a PopupWindow positioned above the pressed cell:
+- Uses `showAsDropDown()` for reliable IME positioning
+- Programmatic view creation (no XML inflation issues)
+- Auto-dismisses on scroll or after 2.5 seconds
+- Shows Unicode names for unmapped emojis
+- Shows country names for flag emojis (260+ mappings)
+- Shows descriptive names for emoticons (100+ mappings)
+
+Key files: `EmojiTooltipManager.kt`, `EmojiGridView.kt`, `Emoji.kt`
+
+### Emoticons Category
+Text emoticons added as final emoji category:
+- 119 text emoticons (smileys, kaomoji)
+- Searchable via keyword index ("shrug", "lenny", "tableflip")
+- Length-based text scaling for proper cell fit
+- Grid spacing prevents overlap
+
 ## Future Enhancements
 
-1. **Emoji Long-Press Tooltip**: Display emoji name in a PopupWindow when long-pressing (currently uses Toast).
+1. **Animation**: Add smooth crossfade when swapping content.
 
-2. **Animation**: Add smooth crossfade when swapping content.
+2. **Gesture Navigation**: Swipe up/down to show/hide content pane.
 
-3. **Gesture Navigation**: Swipe up/down to show/hide content pane.
+3. **Emoji Favorites**: Pin frequently used emoji to a favorites bar.
 
 ---
 
 **Created**: 2026-01-20
-**Last Updated**: 2026-01-21
+**Last Updated**: 2026-01-22
 **Owner**: tribixbite

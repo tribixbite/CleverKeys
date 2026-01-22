@@ -55,6 +55,7 @@ The emoji keyboard is organized into categories:
 | **Objects** | Lightbulb | Objects and tools |
 | **Symbols** | Heart | Symbols and signs |
 | **Flags** | Flag | Country flags |
+| **Emoticons** | `:)` | Text emoticons and kaomoji |
 
 ## Using Emoji
 
@@ -97,6 +98,15 @@ For emoji with skin tone options:
 2. Select your preferred skin tone
 3. This becomes the default for that emoji
 
+### Long-Press Emoji Name
+
+Long-press any emoji to see its name in a tooltip:
+- **Emoji**: Shows name like "grinning face", "red heart"
+- **Flags**: Shows country name like "japan", "united states"
+- **Emoticons**: Shows description like "shrug", "lenny", "table flip"
+
+The tooltip appears above the pressed emoji and auto-dismisses after 2.5 seconds.
+
 ## Tips and Tricks
 
 - **Context search**: Type the word, then open emoji - instant results
@@ -108,14 +118,28 @@ For emoji with skin tone options:
 > [!TIP]
 > The Recent category learns your habits - frequently used emoji rise to the top.
 
-## Emoticons vs Emoji
+## Emoticons Category
 
-| Type | Example | How to Access |
-|------|---------|---------------|
-| **Emoji** | 😀 🎉 ❤️ | Emoji keyboard |
-| **Emoticons** | :) :D ;) | Type characters directly |
+CleverKeys includes 119 text emoticons in the last category tab:
 
-Some apps auto-convert emoticons to emoji. CleverKeys does not do this by default.
+| Type | Examples | Search Keywords |
+|------|----------|-----------------|
+| **Basic Smileys** | :) :D ;) :P | smile, grin, wink, tongue |
+| **Kaomoji** | ¯\_(ツ)_/¯ (╯°□°)╯︵┻━┻ | shrug, tableflip, lenny |
+| **Faces** | ಠ_ಠ ( ͡° ͜ʖ ͡°) ʕ•ᴥ•ʔ | disapproval, lenny, bear |
+| **Expressions** | (◕‿◕) (ᵔᴥᵔ) (⌐■_■) | happy, cute, sunglasses |
+
+### Searching Emoticons
+
+Type keywords while the emoji keyboard is open:
+- `shrug` → ¯\_(ツ)_/¯
+- `lenny` → ( ͡° ͜ʖ ͡°)
+- `tableflip` → (╯°□°)╯︵┻━┻
+- `bear` → ʕ•ᴥ•ʔ
+- `kaomoji` → shows all kaomoji
+
+> [!NOTE]
+> Emoticons are text characters, not emoji. They work in all apps and render the same everywhere.
 
 ## Settings
 
