@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.os.Handler
 import android.text.InputType
 import android.text.TextUtils
+import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
@@ -29,17 +30,26 @@ class Autocapitalisation(
      */
     fun started(info: EditorInfo, ic: InputConnection) {
         this.ic = ic
-        // FIX: Check for both CAP_MODE_SENTENCES and CAP_MODE_WORDS, not just SENTENCES
-        // Some text fields (like search bars) may specify WORDS but not SENTENCES
-        capsMode = info.inputType and SUPPORTED_CAPS_MODES
+        // Check inputType for CAP_MODE flags
+        val fieldCapsMode = info.inputType and SUPPORTED_CAPS_MODES
         val autocapEnabled = Config.globalConfig().autocapitalisation
-        if (!autocapEnabled || capsMode == 0) {
+
+        Log.d(TAG, "AUTOCAP started: enabled=$autocapEnabled, fieldCapsMode=$fieldCapsMode, inputType=0x${info.inputType.toString(16)}")
+
+        if (!autocapEnabled) {
             enabled = false
+            Log.d(TAG, "AUTOCAP: Disabled by user setting")
             return
         }
+
+        // Use sentence caps mode even if field doesn't request it, as long as user has setting enabled
+        // This allows autocap to work in fields that don't explicitly request it
+        capsMode = if (fieldCapsMode != 0) fieldCapsMode else InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+
         enabled = true
         shouldEnableShift = info.initialCapsMode != 0
         shouldUpdateCapsMode = started_should_update_state(info.inputType)
+        Log.d(TAG, "AUTOCAP: Enabled, shouldEnableShift=$shouldEnableShift, shouldUpdateCapsMode=$shouldUpdateCapsMode")
         callback_now(true)
     }
 
@@ -115,9 +125,12 @@ class Autocapitalisation(
 
     private val delayed_callback = Runnable {
         if (shouldUpdateCapsMode && ic != null) {
-            shouldEnableShift = enabled && (ic?.getCursorCapsMode(capsMode) != 0)
+            val cursorCapsMode = ic?.getCursorCapsMode(capsMode) ?: 0
+            shouldEnableShift = enabled && (cursorCapsMode != 0)
+            Log.d(TAG, "AUTOCAP callback: enabled=$enabled, cursorCapsMode=$cursorCapsMode, shouldEnableShift=$shouldEnableShift")
             shouldUpdateCapsMode = false
         }
+        Log.d(TAG, "AUTOCAP update_shift_state: enable=$shouldEnableShift, disable=$shouldDisableShift")
         callback.update_shift_state(shouldEnableShift, shouldDisableShift)
     }
 
@@ -144,6 +157,7 @@ class Autocapitalisation(
         cursor++
         if (is_trigger_character(c)) {
             shouldUpdateCapsMode = true
+            Log.d(TAG, "AUTOCAP: Trigger char '$c' typed, will update caps mode")
         } else {
             shouldEnableShift = false
         }
@@ -178,6 +192,8 @@ class Autocapitalisation(
     }
 
     companion object {
+        private const val TAG = "Autocapitalisation"
+
         @JvmField
         val SUPPORTED_CAPS_MODES =
             InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
