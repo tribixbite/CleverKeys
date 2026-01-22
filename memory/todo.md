@@ -32,6 +32,7 @@
 - ✅ Fixed auto-space after tap suggestion (#82) - bug was in SuggestionHandler.kt
 - ✅ Fixed autocapitalization toggle not updating Config immediately
 - ✅ Added missing "Capitalize I Words" toggle UI (#72)
+- ✅ Fixed swipe capitalization after period (_mods not updated in set_shift_state)
 
 ## In Progress
 - 🔄 Build and test v1.2.7 features
