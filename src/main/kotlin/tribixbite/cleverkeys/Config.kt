@@ -199,6 +199,7 @@ object Defaults {
         "keepass2android.keepass2android_nonet",
         "com.kunzisoft.keepass.free",
         "com.kunzisoft.keepass.pro",
+        "com.kunzisoft.keepass.libre",  // #86: KeePassDX Libre (F-Droid)
         "de.slackspace.openkeepass",
         // Enpass
         "io.enpass.app",
@@ -217,7 +218,21 @@ object Defaults {
         // Zoho Vault
         "com.zoho.vault",
         // Sticky Password
-        "com.stickypassword.android"
+        "com.stickypassword.android",
+        // #86: Browser-based password managers (when copying credentials)
+        // Google/Chrome password manager
+        "com.android.chrome",
+        "com.chrome.beta",
+        "com.chrome.dev",
+        "com.chrome.canary",
+        // Microsoft Edge password manager
+        "com.microsoft.emmx",
+        // Samsung Pass
+        "com.samsung.android.samsungpass",
+        // Firefox password manager
+        "org.mozilla.firefox",
+        "org.mozilla.firefox_beta",
+        "org.mozilla.fenix"  // Firefox Nightly
     )
 
     // Multi-language
