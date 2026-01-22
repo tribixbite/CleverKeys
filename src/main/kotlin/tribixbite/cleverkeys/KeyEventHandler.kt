@@ -265,6 +265,13 @@ class KeyEventHandler(
                 if (isPunctChar && lastCharIsSpace && spaceWasAutoInserted) {
                     // Regular punctuation: attach to previous word only if space was auto-inserted
                     conn.deleteSurroundingText(1, 0)
+                    // v1.2.8: For sentence-ending punctuation, add space after so autocap triggers
+                    // "hello " + "." → "hello. " (enables getCursorCapsMode to detect sentence end)
+                    if (isSentenceEndingPunctuation(char)) {
+                        textToCommit = "$char "
+                        // Mark this space as auto-inserted for smart punctuation chaining
+                        recv.setLastSpaceAutoInserted(true)
+                    }
                 } else if (isQuote && lastCharIsSpace && spaceWasAutoInserted) {
                     // Quote handling: only attach if it's a CLOSING quote, not apostrophe
                     if (!isLikelyApostrophe(char, textBefore?.dropLast(1))) {
@@ -300,6 +307,14 @@ class KeyEventHandler(
             '.', ',', '!', '?', ';', ':', ')', ']', '}' -> true
             // Quotes handled separately by isClosingQuote()
             '\'', '"' -> false
+            else -> false
+        }
+    }
+
+    /** v1.2.8: Sentence-ending punctuation that should trigger autocap for next word. */
+    private fun isSentenceEndingPunctuation(c: Char): Boolean {
+        return when (c) {
+            '.', '!', '?' -> true
             else -> false
         }
     }
