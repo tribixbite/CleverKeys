@@ -5,6 +5,8 @@
 - ✅ Emoji name lookup with Unicode fallback for unmapped emojis
 - ✅ Emoticon search keywords (shrug, lenny, tableflip, kaomoji, etc)
 - ✅ Emoticon grid overlap fix (padding, minHeight, grid spacing)
+- ✅ Flag emoji name mappings (260+ countries, shows "japan" not "regional indicator")
+- ✅ Emoticon name mappings (100+ smileys/kaomoji, shows "shrug" not "emoticon")
 
 ## Completed (2026-01-20)
 - ✅ Swedish language pack (sv_enhanced.bin, sv.bin, sv_unigrams.txt)
