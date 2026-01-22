@@ -1,0 +1,66 @@
+v1.2.8 - Major Feature Update (since v1.2.5)
+
+200+ commits with 15+ new features and 10+ bug fixes!
+
+NEW FEATURES:
+
+Emoji Enhancements
+• Long-Press Tooltip - See emoji names on long-press
+  - 260+ country flag names, 100+ emoticon names
+• Emoticons Category (#76) - 119 text emoticons in picker
+  - Searchable via keywords (shrug, lenny, tableflip)
+• Emoji Search (#41) - Search 500+ emoji by name
+  - Context-aware results
+
+Language & Input
+• Language Packs - Swedish, Greek, Turkish added
+• Swipe Sensitivity Presets - Low/Medium/High/Custom
+• Auto-capitalize "I" and contractions (#72)
+• Cursor-Aware Predictions - Better mid-word editing
+• Swipe on Password Fields (#39) - Optional swipe in passwords
+• Smart Punctuation - Respects manual spacebar
+• Swipe Capitalization - Captures shift at swipe START
+
+Settings & UI
+• Settings Search - Expanded to 120+ searchable entries
+• Quick Settings Tile - Switch keyboards from shade
+• Test Keyboard Field - Practice typing in settings
+• System Theme Following (#35) - Auto dark/light mode
+• Numpad/PIN Keyboard (#58) - 20% larger keys
+• Haptic Feedback - Moved to Accessibility section
+  - SWIPE_COMPLETE vibration on word insert
+  - Per-event toggles work properly
+
+Clipboard & Dictionary
+• Clipboard Tabs - History, Pinned, Todos with icons
+• Close Buttons - For emoji/clipboard panes (#80)
+• Pagination - 100 items per page with search
+• History Limit Slider (#85) - 0-500, 0=unlimited
+• Tap-to-Add Dictionary (#42) - Single tap to add words
+• Clipboard Delete Button - Remove individual entries
+• Password Manager Exclusion (#62, #86)
+• Android 13+ IS_SENSITIVE flag support (#86)
+• Dictionary Manager Sort - Frequency/Match/A-Z/Z-A
+
+Productivity
+• Timestamp Keys - Insert formatted date/time
+• Option to disable auto-space after suggestion (#82)
+• Separate backspace key repeat option (#81)
+
+BUG FIXES:
+
+• Capitalize I words for swipe (#72)
+• Preserve proper noun case in dictionary (#72)
+• Swipe capitalization after period
+• Vibration not triggering (vibrate_custom fix)
+• Settings toggles update Config immediately
+• Greek/Math disabled in numeric layer (#77)
+• Clipboard TransactionTooLargeException (#71)
+• Vibration toggle properly disables haptics (#46)
+• Space key types space when text selected
+• Nav bar icons on Android 8-9 light themes
+• Monet theme crash on Android < 12
+• Nav bar overlap on Android 15
+• Emoji/clipboard panel gap eliminated
+• Panels no longer empty after app switch
+• Splash animation pauses when keyboard opens

@@ -55,7 +55,7 @@
 - ✅ Fixed vibration not triggering (vibrate_custom must be true for duration to work)
 
 ## In Progress
-- 🔄 Build and test v1.2.8 features
+- 🔄 v1.2.8 release preparation
 
 ## Completed (2026-01-20)
 - ✅ Swedish language pack (sv_enhanced.bin, sv.bin, sv_unigrams.txt)
@@ -96,7 +96,7 @@
 
 ### Settings UI Polish
 - [ ] Standardize units across distance settings (px vs dp vs %)
-- [ ] Move Vibration settings to Accessibility section
+- [x] Move Vibration settings to Accessibility section (v1.2.8)
 - [ ] Move Smart Punctuation to Auto-Correction section
 
 ### Web Demo P2
