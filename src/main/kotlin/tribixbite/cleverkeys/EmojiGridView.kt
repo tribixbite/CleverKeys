@@ -23,6 +23,11 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
     // #41 v10: Reference to service for suggestion bar messages (Toast suppressed on Android 13+ IME)
     private var service: CleverKeysService? = null
 
+    // v1.2.6: Tooltip manager for displaying emoji names on long-press
+    // Uses PopupWindow for reliable display within IME context
+    private val tooltipManager: EmojiTooltipManager by lazy { EmojiTooltipManager(context) }
+    private val tooltipDismissHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
     /**
      * Set the search manager reference.
      * #41 v8: Needed to temporarily disable search routing when emoji is selected.
@@ -42,9 +47,10 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
     init {
         Emoji.init(context.resources)
         onItemClickListener = this
-        onItemLongClickListener = this  // #41 v10: Long-press shows emoji name
+        onItemLongClickListener = this  // Long-press shows emoji name in tooltip
         loadLastUsed()
         setEmojiGroup(if (lastUsed.isEmpty()) 0 else GROUP_LAST_USE)
+        setupScrollListener()  // v1.2.6: Dismiss tooltip on scroll
     }
 
     fun setEmojiGroup(group: Int) {
@@ -103,20 +109,49 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
     }
 
     /**
-     * #41 v10: Long-press handler to show emoji name.
-     * Uses Toast since suggestion bar is hidden when emoji pane is visible.
+     * v1.2.6: Long-press handler to show emoji name in tooltip popup.
+     * Uses PopupWindow for reliable display within IME context (Toast has issues).
      */
     override fun onItemLongClick(parent: AdapterView<*>?, view: View?, pos: Int, id: Long): Boolean {
-        if (pos < 0 || pos >= emojiArray.size) return false
+        if (pos < 0 || pos >= emojiArray.size || view == null) return false
 
         val emoji = emojiArray[pos]
         val emojiStr = emoji.kv().getString()
-        val name = Emoji.getEmojiName(emojiStr) ?: emojiStr
+        val name = Emoji.getEmojiName(emojiStr) ?: "unknown"
 
-        // Format: "😀 grinning" or just the emoji if no name found
-        val displayText = if (name != emojiStr) "$emojiStr $name" else emojiStr
-        android.widget.Toast.makeText(context, displayText, android.widget.Toast.LENGTH_SHORT).show()
+        // Show tooltip anchored to the pressed emoji cell
+        tooltipManager.show(view, emojiStr, name)
+
+        // Auto-dismiss after 2 seconds
+        tooltipDismissHandler.removeCallbacksAndMessages(null)
+        tooltipDismissHandler.postDelayed({
+            tooltipManager.dismiss()
+        }, 2000)
+
         return true  // Consume the event
+    }
+
+    /**
+     * Set up scroll listener to dismiss tooltip when scrolling.
+     */
+    private fun setupScrollListener() {
+        setOnScrollListener(object : OnScrollListener {
+            override fun onScrollStateChanged(view: android.widget.AbsListView?, scrollState: Int) {
+                if (scrollState != OnScrollListener.SCROLL_STATE_IDLE) {
+                    tooltipDismissHandler.removeCallbacksAndMessages(null)
+                    tooltipManager.dismiss()
+                }
+            }
+
+            override fun onScroll(
+                view: android.widget.AbsListView?,
+                firstVisibleItem: Int,
+                visibleItemCount: Int,
+                totalItemCount: Int
+            ) {
+                // Not needed
+            }
+        })
     }
 
     private fun getLastEmojis(): List<Emoji> {
