@@ -340,8 +340,13 @@ class InputCoordinator(
             return
         }
 
+        // v1.2.7: Apply user word case preservation BEFORE shift transformation
+        // This preserves proper nouns like "Boston" → "Boston" from user dictionary
+        val casedPredictions = predictionCoordinator.getWordPredictor()
+            ?.applyUserWordCaseToList(predictions) ?: predictions
+
         // v1.33.9: Apply shift/caps-lock transformation to ALL predictions for consistent display
-        val transformedPredictions = predictions.map { applyShiftTransformation(it) }
+        val transformedPredictions = casedPredictions.map { applyShiftTransformation(it) }
 
         // Update suggestion bar
         suggestionBar?.let { bar ->

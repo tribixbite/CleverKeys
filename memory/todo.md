@@ -37,6 +37,7 @@
 - ✅ Fixed raw predictions appearing at front of suggestions (now stay at end)
 - ✅ Added SettingsToggleTest tests for debug defaults, autocapitalization, I-words
 - ✅ All ew-cli instrumented tests passing
+- ✅ Fixed swipe predictions not applying user word case preservation (proper nouns)
 
 ## In Progress
 - 🔄 Build and test v1.2.7 features
