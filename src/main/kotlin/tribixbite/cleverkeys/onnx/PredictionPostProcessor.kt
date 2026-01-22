@@ -136,36 +136,29 @@ class PredictionPostProcessor(
             scores.add(entry.score)
         }
 
-        // Add raw beam predictions if enabled
+        // Add raw beam predictions if enabled - always at the END (debug feature)
         if (showRawBeamPredictions && candidates.isNotEmpty()) {
-            // FIX: Uncap raw scores
             val numRawToAdd = min(3, candidates.size)
 
             for (i in 0 until numRawToAdd) {
                 val candidate = candidates[i]
                 var alreadyIncluded = false
                 for (word in words) {
-                    if (word.equals(candidate.word, ignoreCase = true)) {
+                    // Check both with and without "raw:" prefix
+                    val cleanWord = word.removePrefix("raw:")
+                    if (cleanWord.equals(candidate.word, ignoreCase = true)) {
                         alreadyIncluded = true
                         break
                     }
                 }
 
                 if (!alreadyIncluded) {
-                    val rawScore = (candidate.confidence * 1000).toInt()
+                    // Add at end with low score so they stay at the end
                     words.add("raw:${candidate.word}")
-                    scores.add(rawScore)
+                    scores.add(1) // Low score keeps them at end after sorting
                 }
             }
-
-            // Re-sort to rank raw candidates correctly
-            if (scores.size > 1) {
-                val combined = ArrayList<Pair<String, Int>>()
-                for (i in words.indices) combined.add(Pair(words[i], scores[i]))
-                combined.sortByDescending { it.second }
-                words.clear(); scores.clear()
-                for (p in combined) { words.add(p.first); scores.add(p.second) }
-            }
+            // NOTE: Do NOT re-sort - raw predictions stay at the end as debug info
         }
 
         if (showRawOutput && candidates.isNotEmpty()) {

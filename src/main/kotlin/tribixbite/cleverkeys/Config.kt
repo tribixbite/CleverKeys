@@ -247,8 +247,8 @@ object Defaults {
     const val DEBUG_ENABLED = false
     const val SWIPE_SHOW_DEBUG_SCORES = false
     const val SWIPE_DEBUG_DETAILED_LOGGING = false
-    const val SWIPE_DEBUG_SHOW_RAW_OUTPUT = true
-    const val SWIPE_SHOW_RAW_BEAM_PREDICTIONS = true
+    const val SWIPE_DEBUG_SHOW_RAW_OUTPUT = false  // Debug: show raw neural output in suggestions
+    const val SWIPE_SHOW_RAW_BEAM_PREDICTIONS = false  // Debug: show beam search predictions
     const val TERMUX_MODE_ENABLED = true
     const val AUTO_SPACE_AFTER_SUGGESTION = true  // Add trailing space after selecting suggestion
 

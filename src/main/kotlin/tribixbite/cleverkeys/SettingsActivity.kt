@@ -3686,7 +3686,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                     SettingsSwitch(
                         title = "Show Raw Output",
-                        description = "Display raw neural model outputs",
+                        description = "Log raw neural outputs to debug log (doesn't affect suggestions)",
                         checked = swipeDebugShowRawOutput,
                         onCheckedChange = {
                             swipeDebugShowRawOutput = it
@@ -3696,7 +3696,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
                     SettingsSwitch(
                         title = "Show Beam Predictions",
-                        description = "Display all beam search candidates",
+                        description = "Add raw:word items to suggestion bar for debugging",
                         checked = swipeShowRawBeamPredictions,
                         onCheckedChange = {
                             swipeShowRawBeamPredictions = it
