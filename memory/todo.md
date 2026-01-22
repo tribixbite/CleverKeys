@@ -45,7 +45,8 @@
 - ✅ Splash screen animation pauses when keyboard opens (eliminates input lag)
 - ✅ Smart punctuation respects manual spacebar (only attaches if space was auto-inserted)
 - ✅ Created smart punctuation wiki + spec pair (user guide + technical spec)
-- ✅ Fixed swipe capitalization at swipe START (autocap after period now works correctly)
+- ✅ Fixed swipe capitalization at swipe START (captures shift state when swipe begins)
+- ✅ Smart punct adds space after sentence-ending punct (. ! ?) for autocap trigger
 
 ## In Progress
 - 🔄 Build and test v1.2.8 features
