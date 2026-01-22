@@ -27,17 +27,19 @@ class EmojiTooltipManager(context: Context) {
     private val popupWindow: PopupWindow
 
     init {
-        @Suppress("DEPRECATION")
-        tooltipView = LayoutInflater.from(context).inflate(
-            context.resources.getIdentifier("emoji_tooltip", "layout", context.packageName),
-            null
-        )
-        emojiCharView = tooltipView.findViewById(
-            context.resources.getIdentifier("emoji_char", "id", context.packageName)
-        )
-        emojiNameView = tooltipView.findViewById(
-            context.resources.getIdentifier("emoji_name", "id", context.packageName)
-        )
+        // Use hardcoded package name since context may be a themed wrapper
+        val packageName = "tribixbite.cleverkeys"
+        val layoutId = context.resources.getIdentifier("emoji_tooltip", "layout", packageName)
+        val emojiCharId = context.resources.getIdentifier("emoji_char", "id", packageName)
+        val emojiNameId = context.resources.getIdentifier("emoji_name", "id", packageName)
+
+        if (layoutId == 0) {
+            throw IllegalStateException("emoji_tooltip layout not found")
+        }
+
+        tooltipView = LayoutInflater.from(context).inflate(layoutId, null)
+        emojiCharView = tooltipView.findViewById(emojiCharId)
+        emojiNameView = tooltipView.findViewById(emojiNameId)
 
         popupWindow = PopupWindow(
             tooltipView,
