@@ -2832,6 +2832,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         saveSetting("vibration_enabled", it)
                         // v1.2.8: Update Config immediately for haptic feedback
                         Config.globalConfig().haptic_enabled = it
+                        // v1.2.8: Enable custom vibration mode so duration slider actually works
+                        if (it) {
+                            saveSetting("vibrate_custom", true)
+                            Config.globalConfig().vibrate_custom = true
+                            Config.globalConfig().vibrate_duration = vibrationDuration.toLong()
+                        }
                     }
                 )
 
@@ -2845,6 +2851,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         onValueChange = {
                             vibrationDuration = it.toInt()
                             saveSetting("vibrate_duration", vibrationDuration)
+                            // v1.2.8: Also enable custom vibration mode and update Config
+                            saveSetting("vibrate_custom", true)
+                            Config.globalConfig().vibrate_custom = true
+                            Config.globalConfig().vibrate_duration = vibrationDuration.toLong()
                         },
                         displayValue = "${vibrationDuration}ms"
                     )
