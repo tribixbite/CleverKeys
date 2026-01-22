@@ -41,6 +41,8 @@
 - ✅ Created wiki-documentation.md skill for consistent docs
 - ✅ Created user-dictionary wiki + spec pair (proper noun case preservation)
 - ✅ Fixed Android user dictionary case preservation (both sync/async loading paths)
+- ✅ Test keyboard fields use KeyboardCapitalization.Sentences (splash + settings)
+- ✅ Splash screen animation pauses when keyboard opens (eliminates input lag)
 
 ## In Progress
 - 🔄 Build and test v1.2.7 features
