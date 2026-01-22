@@ -248,7 +248,17 @@ object KeyModifier {
 
     private fun applyFnEvent(ev: KeyValue.Event): String? {
         return when (ev) {
-            KeyValue.Event.SWITCH_NUMERIC -> "switch_greekmath"
+            KeyValue.Event.SWITCH_NUMERIC -> {
+                // #77: Only transform to switch_greekmath if it's enabled in extra keys
+                val config = Config.globalConfig()
+                val greekMathKey = KeyValue.getKeyByName("switch_greekmath")
+                if (config.extra_keys_param.containsKey(greekMathKey) ||
+                    config.extra_keys_custom.containsKey(greekMathKey)) {
+                    "switch_greekmath"
+                } else {
+                    null  // Greek/Math not enabled, don't transform
+                }
+            }
             else -> null
         }
     }
