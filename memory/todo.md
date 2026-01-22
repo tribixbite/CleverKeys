@@ -12,6 +12,16 @@
 - ✅ Created skills: emoji-panel.md, content-pane-layout.md
 - ✅ Created release-process.md skill (F-Droid API, fastlane changelogs, version codes)
 - ✅ Released v1.2.6 - Emoji Panel Polish (tooltip, name mappings, gap fixes)
+- ✅ Fixed clipboard history limit slider (0-500, 0 = unlimited) (#85)
+- ✅ GitHub issues triage (memory/issue-triage-2026-01-22.md)
+- ✅ Clipboard tabs: History (📋), Pinned (📌), Todos (✓) with icon-only UI
+- ✅ Close buttons for emoji/clipboard panes (#80)
+- ✅ Database migration v2: added is_todo column
+- ✅ Backwards-compatible todo export/import (export_version 2)
+- ✅ Fixed emoji close button triggering wrong event
+
+## In Progress
+- 🔄 Clipboard tabs testing (needs ADB for UI verification)
 
 ## Completed (2026-01-20)
 - ✅ Swedish language pack (sv_enhanced.bin, sv.bin, sv_unigrams.txt)
