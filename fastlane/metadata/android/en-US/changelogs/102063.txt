@@ -1,23 +1,53 @@
-v1.2.6 - Emoji Panel Polish
+v1.2.6 - Major Feature Update
 
 NEW FEATURES:
 
-• Emoji Long-Press Tooltip
-  - Long-press any emoji to see its name
-  - Works with all 4000+ emoji, flags, and emoticons
-  - Shows country names for flags (e.g., "japan" not "regional indicator")
-  - Shows descriptive names for emoticons (e.g., "shrug", "lenny face")
-  - Auto-dismisses after 2.5 seconds
-
-• Enhanced Emoji Name Mappings
-  - 260+ country flag names added
-  - 100+ emoticon/kaomoji names added
+• Emoji Long-Press Tooltip - See emoji names on long-press
+  - 260+ country flag names, 100+ emoticon names
   - Unicode fallback for unmapped emoji
+
+• Emoticons Category (#76) - 119 text emoticons in emoji picker
+  - Searchable via keywords (shrug, lenny, tableflip)
+
+• Emoji Search (#41) - Search 500+ emoji by name
+  - Context-aware: type word, open emoji, instant results
+  - Redesigned to use suggestion bar
+
+• Language Packs - Swedish, Greek, Turkish added
+
+• Swipe Sensitivity Presets - Low/Medium/High/Custom options
+
+• Settings Search - Expanded from 38 to 120+ searchable entries
+
+• Quick Settings Tile (#1113) - Switch keyboards from notification shade
+
+• Timestamp Keys (#1103) - Insert formatted date/time with shortcuts
+
+• Tap-to-Add Dictionary (#42) - Add typed words with single tap
+
+• Clipboard Improvements
+  - Delete button for history entries (#940)
+  - Password manager exclusion (#62)
+
+• Test Keyboard Field (#1134) - Practice typing in settings
+
+• Numpad/PIN Keyboard - 20% larger keys (#58)
+
+• Dictionary Manager - Sort by Frequency/Match/A-Z/Z-A
+
+• Cursor-Aware Predictions - Better mid-word editing
+
+• System Theme Following (#35) - Auto dark/light mode
 
 FIXES:
 
-• Fixed emoji/clipboard panel gap above keyboard
-• Fixed panels appearing empty after app switch
-• Fixed content pane state not resetting properly
-• Removed debug logging for cleaner logs
-• Cleaned up unused tooltip XML files
+• Auto-capitalize "I" and contractions (#72)
+• Preserve proper noun case in dictionary (#72)
+• Clipboard TransactionTooLargeException (#71)
+• Vibration toggle now properly disables haptics (#46)
+• Space key types space when text selected (#1142)
+• Nav bar icons on Android 8-9 light themes (#1116)
+• Monet theme crash on Android < 12 (#1107)
+• Nav bar overlap on Android 15
+• Emoji/clipboard panel gap eliminated
+• Panels no longer empty after app switch
