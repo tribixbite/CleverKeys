@@ -88,6 +88,11 @@ class KeyboardReceiver(
         this.scrollView = scrollView
         this.suggestionBarHeight = suggestionBarHeight
         this.contentPaneHeight = contentPaneHeight
+
+        // Set up clipboard close button callback to trigger SWITCH_BACK_CLIPBOARD event
+        clipboardManager.setOnCloseCallback {
+            handle_event_key(KeyValue.Event.SWITCH_BACK_CLIPBOARD)
+        }
     }
 
     /**
@@ -225,7 +230,7 @@ class KeyboardReceiver(
 
                     // #41 v10: Close button callback to return to keyboard
                     emojiSearchManager?.setOnCloseCallback {
-                        handle_event_key(KeyValue.Event.SWITCH_BACK_CLIPBOARD)
+                        handle_event_key(KeyValue.Event.SWITCH_BACK_EMOJI)
                     }
                 }
             }

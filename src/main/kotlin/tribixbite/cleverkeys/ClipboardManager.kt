@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.DatePicker
+import android.widget.ImageButton
 import android.widget.RadioButton
 import android.widget.Switch
 import android.widget.TextView
@@ -42,6 +43,17 @@ class ClipboardManager(
     private var clipboardSearchBox: TextView? = null
     private var clipboardHistoryView: ClipboardHistoryView? = null
 
+    // Tab buttons
+    private var tabHistory: TextView? = null
+    private var tabPinned: TextView? = null
+    private var tabTodos: TextView? = null
+
+    // Current tab state
+    private var currentTab = ClipboardTab.HISTORY
+
+    // Close callback (set by CleverKeysService to hide clipboard pane)
+    private var onCloseCallback: (() -> Unit)? = null
+
     // Search state
     private var searchMode = false
 
@@ -73,10 +85,72 @@ class ClipboardManager(
             clipboardPane?.findViewById<View>(R.id.clipboard_date_filter)?.setOnClickListener { v ->
                 showDateFilterDialog(v)
             }
+
+            // Set up close button
+            clipboardPane?.findViewById<ImageButton>(R.id.clipboard_close_button)?.setOnClickListener {
+                onCloseCallback?.invoke()
+            }
+
+            // Set up tab buttons
+            tabHistory = clipboardPane?.findViewById(R.id.tab_history)
+            tabPinned = clipboardPane?.findViewById(R.id.tab_pinned)
+            tabTodos = clipboardPane?.findViewById(R.id.tab_todos)
+
+            tabHistory?.setOnClickListener { switchToTab(ClipboardTab.HISTORY) }
+            tabPinned?.setOnClickListener { switchToTab(ClipboardTab.PINNED) }
+            tabTodos?.setOnClickListener { switchToTab(ClipboardTab.TODOS) }
+
+            // Set initial tab highlighting
+            updateTabHighlighting()
         }
 
         return clipboardPane!!
     }
+
+    /**
+     * Sets the callback to be invoked when close button is pressed.
+     *
+     * @param callback Callback to hide clipboard pane
+     */
+    fun setOnCloseCallback(callback: () -> Unit) {
+        onCloseCallback = callback
+    }
+
+    /**
+     * Switches to the specified tab and updates UI.
+     *
+     * @param tab Target tab to switch to
+     */
+    private fun switchToTab(tab: ClipboardTab) {
+        if (currentTab == tab) return
+
+        currentTab = tab
+        clipboardHistoryView?.setTab(tab)
+        updateTabHighlighting()
+
+        // Clear search when switching tabs
+        clearSearch()
+    }
+
+    /**
+     * Updates tab button highlighting based on current tab.
+     * Active tab has full alpha (1.0), inactive tabs are dimmed (0.5).
+     */
+    private fun updateTabHighlighting() {
+        val activeAlpha = 1.0f
+        val inactiveAlpha = 0.5f
+
+        tabHistory?.alpha = if (currentTab == ClipboardTab.HISTORY) activeAlpha else inactiveAlpha
+        tabPinned?.alpha = if (currentTab == ClipboardTab.PINNED) activeAlpha else inactiveAlpha
+        tabTodos?.alpha = if (currentTab == ClipboardTab.TODOS) activeAlpha else inactiveAlpha
+    }
+
+    /**
+     * Gets the current active tab.
+     *
+     * @return Current ClipboardTab
+     */
+    fun getCurrentTab(): ClipboardTab = currentTab
 
     /**
      * Checks if clipboard search mode is active.
@@ -137,8 +211,8 @@ class ClipboardManager(
     }
 
     /**
-     * Resets search state when showing clipboard pane.
-     * Clears any previous search and exits search mode.
+     * Resets search state and tab when showing clipboard pane.
+     * Clears any previous search, exits search mode, and returns to History tab.
      */
     fun resetSearchOnShow() {
         searchMode = false
@@ -147,6 +221,11 @@ class ClipboardManager(
             hint = "Tap to search..."
         }
         clipboardHistoryView?.setSearchFilter("")
+
+        // Reset to History tab when showing pane
+        currentTab = ClipboardTab.HISTORY
+        clipboardHistoryView?.setTab(ClipboardTab.HISTORY)
+        updateTabHighlighting()
     }
 
     /**
@@ -272,7 +351,12 @@ class ClipboardManager(
         clipboardPane = null
         clipboardSearchBox = null
         clipboardHistoryView = null
+        tabHistory = null
+        tabPinned = null
+        tabTodos = null
+        onCloseCallback = null
         searchMode = false
+        currentTab = ClipboardTab.HISTORY
     }
 
     /**

@@ -22,6 +22,7 @@ class ClipboardDatabase private constructor(context: Context) :
                 $COLUMN_TIMESTAMP INTEGER NOT NULL,
                 $COLUMN_EXPIRY_TIMESTAMP INTEGER NOT NULL,
                 $COLUMN_IS_PINNED INTEGER DEFAULT 0,
+                $COLUMN_IS_TODO INTEGER DEFAULT 0,
                 $COLUMN_CONTENT_HASH TEXT NOT NULL
             )
         """.trimIndent()
@@ -32,8 +33,15 @@ class ClipboardDatabase private constructor(context: Context) :
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_CLIPBOARD")
-        onCreate(db)
+        // Migrate from v1 to v2: add is_todo column
+        if (oldVersion < 2) {
+            try {
+                db.execSQL("ALTER TABLE $TABLE_CLIPBOARD ADD COLUMN $COLUMN_IS_TODO INTEGER DEFAULT 0")
+                Log.d(TAG, "Database upgraded: added is_todo column")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error upgrading database: ${e.message}")
+            }
+        }
     }
 
     fun addClipboardEntry(content: String?, expiryTimestamp: Long): Boolean {
@@ -113,6 +121,43 @@ class ClipboardDatabase private constructor(context: Context) :
         }
         Log.d(TAG, "Retrieved ${entries.size} pinned entries")
         return entries
+    }
+
+    fun getTodoEntries(): List<ClipboardEntry> {
+        val entries = mutableListOf<ClipboardEntry>()
+        val db = readableDatabase
+        val query = """
+            SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP FROM $TABLE_CLIPBOARD
+            WHERE $COLUMN_IS_TODO = 1 ORDER BY $COLUMN_TIMESTAMP DESC
+        """.trimIndent()
+        try {
+            db.rawQuery(query, null).use { cursor ->
+                if (cursor.moveToFirst()) {
+                    do {
+                        entries.add(ClipboardEntry(cursor.getString(0), cursor.getLong(1)))
+                    } while (cursor.moveToNext())
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error retrieving todo entries: ${e.message}")
+        }
+        Log.d(TAG, "Retrieved ${entries.size} todo entries")
+        return entries
+    }
+
+    fun setTodoStatus(content: String?, isTodo: Boolean): Boolean {
+        if (content.isNullOrBlank()) return false
+        val trimmedContent = content.trim()
+        return try {
+            val db = writableDatabase
+            val values = ContentValues().apply { put(COLUMN_IS_TODO, if (isTodo) 1 else 0) }
+            val updatedRows = db.update(TABLE_CLIPBOARD, values, "$COLUMN_CONTENT = ?", arrayOf(trimmedContent))
+            Log.d(TAG, "Updated todo status for $updatedRows entries: ${trimmedContent.take(20)}... (todo=$isTodo)")
+            updatedRows > 0
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating todo status: ${e.message}")
+            false
+        }
     }
 
     fun removeClipboardEntry(content: String?): Boolean {
@@ -292,10 +337,10 @@ class ClipboardDatabase private constructor(context: Context) :
 
     fun exportToJSON(): JSONObject? {
         return try {
-            val activeEntries = JSONArray(); val pinnedEntries = JSONArray()
-            var activeCount = 0; var pinnedCount = 0
+            val activeEntries = JSONArray(); val pinnedEntries = JSONArray(); val todoEntries = JSONArray()
+            var activeCount = 0; var pinnedCount = 0; var todoCount = 0
             readableDatabase.rawQuery("""
-                SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP, $COLUMN_IS_PINNED, $COLUMN_EXPIRY_TIMESTAMP
+                SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP, $COLUMN_IS_PINNED, $COLUMN_EXPIRY_TIMESTAMP, $COLUMN_IS_TODO
                 FROM $TABLE_CLIPBOARD ORDER BY $COLUMN_TIMESTAMP DESC
             """.trimIndent(), null).use { cursor ->
                 if (cursor.moveToFirst()) {
@@ -305,17 +350,26 @@ class ClipboardDatabase private constructor(context: Context) :
                             put("timestamp", cursor.getLong(1))
                             put("expiry_timestamp", cursor.getLong(3))
                         }
-                        if (cursor.getInt(2) == 1) { pinnedEntries.put(entry); pinnedCount++ }
-                        else { activeEntries.put(entry); activeCount++ }
+                        val isPinned = cursor.getInt(2) == 1
+                        val isTodo = cursor.getInt(4) == 1
+                        when {
+                            isTodo -> { todoEntries.put(entry); todoCount++ }
+                            isPinned -> { pinnedEntries.put(entry); pinnedCount++ }
+                            else -> { activeEntries.put(entry); activeCount++ }
+                        }
                     } while (cursor.moveToNext())
                 }
             }
             JSONObject().apply {
-                put("active_entries", activeEntries); put("pinned_entries", pinnedEntries)
-                put("export_version", 1)
+                put("active_entries", activeEntries)
+                put("pinned_entries", pinnedEntries)
+                put("todo_entries", todoEntries)
+                put("export_version", 2)  // v2: includes todo_entries
                 put("export_date", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date()))
-                put("total_active", activeCount); put("total_pinned", pinnedCount)
-            }.also { Log.d(TAG, "Exported $activeCount active and $pinnedCount pinned clipboard entries") }
+                put("total_active", activeCount)
+                put("total_pinned", pinnedCount)
+                put("total_todo", todoCount)
+            }.also { Log.d(TAG, "Exported $activeCount active, $pinnedCount pinned, $todoCount todo clipboard entries") }
         } catch (e: Exception) {
             Log.e(TAG, "Error exporting clipboard data: ${e.message}")
             null
@@ -323,7 +377,7 @@ class ClipboardDatabase private constructor(context: Context) :
     }
 
     fun importFromJSON(importData: JSONObject): IntArray {
-        var activeAdded = 0; var pinnedAdded = 0; var duplicatesSkipped = 0
+        var activeAdded = 0; var pinnedAdded = 0; var todoAdded = 0; var duplicatesSkipped = 0
         try {
             val db = writableDatabase
             if (importData.has("active_entries")) {
@@ -346,6 +400,7 @@ class ClipboardDatabase private constructor(context: Context) :
                         put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
                         put(COLUMN_EXPIRY_TIMESTAMP, entry.getLong("expiry_timestamp"))
                         put(COLUMN_IS_PINNED, 0)
+                        put(COLUMN_IS_TODO, 0)
                         put(COLUMN_CONTENT_HASH, contentHash)
                     }
                     if (db.insert(TABLE_CLIPBOARD, null, values) != -1L) activeAdded++
@@ -372,27 +427,57 @@ class ClipboardDatabase private constructor(context: Context) :
                         put(COLUMN_EXPIRY_TIMESTAMP, if (entry.has("expiry_timestamp"))
                             entry.getLong("expiry_timestamp") else System.currentTimeMillis() + HISTORY_TTL_MS)
                         put(COLUMN_IS_PINNED, 1)
+                        put(COLUMN_IS_TODO, 0)
                         put(COLUMN_CONTENT_HASH, contentHash)
                     }
                     if (db.insert(TABLE_CLIPBOARD, null, values) != -1L) pinnedAdded++
                 }
             }
-            Log.d(TAG, "Import complete: $activeAdded active, $pinnedAdded pinned added, $duplicatesSkipped duplicates skipped")
+            // v2: Import todo entries (backwards compatible - older exports won't have this)
+            if (importData.has("todo_entries")) {
+                val todoEntries = importData.getJSONArray("todo_entries")
+                for (i in 0 until todoEntries.length()) {
+                    val entry = todoEntries.getJSONObject(i)
+                    val content = entry.getString("content")
+                    val contentHash = content.hashCode().toString()
+                    // Check for duplicate
+                    val isDuplicate = db.rawQuery(
+                        "SELECT $COLUMN_ID FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ?",
+                        arrayOf(contentHash, content)
+                    ).use { it.count > 0 }
+                    if (isDuplicate) {
+                        duplicatesSkipped++
+                        continue
+                    }
+                    val values = ContentValues().apply {
+                        put(COLUMN_CONTENT, content)
+                        put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
+                        put(COLUMN_EXPIRY_TIMESTAMP, if (entry.has("expiry_timestamp"))
+                            entry.getLong("expiry_timestamp") else System.currentTimeMillis() + HISTORY_TTL_MS)
+                        put(COLUMN_IS_PINNED, 0)
+                        put(COLUMN_IS_TODO, 1)
+                        put(COLUMN_CONTENT_HASH, contentHash)
+                    }
+                    if (db.insert(TABLE_CLIPBOARD, null, values) != -1L) todoAdded++
+                }
+            }
+            Log.d(TAG, "Import complete: $activeAdded active, $pinnedAdded pinned, $todoAdded todo added, $duplicatesSkipped duplicates skipped")
         } catch (e: Exception) {
             Log.e(TAG, "Error importing clipboard data: ${e.message}")
         }
-        return intArrayOf(activeAdded, pinnedAdded, duplicatesSkipped)
+        return intArrayOf(activeAdded, pinnedAdded, todoAdded, duplicatesSkipped)
     }
 
     companion object {
         private const val DATABASE_NAME = "clipboard_history.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 2  // v2: Added is_todo column
         private const val TABLE_CLIPBOARD = "clipboard_entries"
         private const val COLUMN_ID = "id"
         private const val COLUMN_CONTENT = "content"
         private const val COLUMN_TIMESTAMP = "timestamp"
         private const val COLUMN_EXPIRY_TIMESTAMP = "expiry_timestamp"
         private const val COLUMN_IS_PINNED = "is_pinned"
+        private const val COLUMN_IS_TODO = "is_todo"
         private const val COLUMN_CONTENT_HASH = "content_hash"
         private const val TAG = "ClipboardDatabase"
         private const val HISTORY_TTL_MS = 7 * 24 * 60 * 60 * 1000L
