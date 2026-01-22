@@ -167,6 +167,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var clipboardExcludePasswordManagers by mutableStateOf(true)  // Privacy: skip password managers
     private var clipboardRespectSensitiveFlag by mutableStateOf(true)  // #86: Respect IS_SENSITIVE flag
     private var autoCapitalizationEnabled by mutableStateOf(true)
+    private var capitalizeIWords by mutableStateOf(true)  // #72: Auto-capitalize I, I'm, I'll, etc.
 
     // Phase 1: Expose existing Config.kt settings
     private var swipeTypingEnabled by mutableStateOf(true)  // Master switch for swipe typing (default ON for CleverKeys)
@@ -744,6 +745,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             }
             "autocapitalisation" -> {
                 autoCapitalizationEnabled = prefs.getBoolean(key, Defaults.AUTOCAPITALISATION)
+            }
+            "autocapitalize_i_words" -> {
+                capitalizeIWords = prefs.getBoolean(key, Defaults.AUTOCAPITALIZE_I_WORDS)
             }
             "sticky_keys_enabled" -> {
                 stickyKeysEnabled = prefs.getBoolean(key, Defaults.STICKY_KEYS_ENABLED)
@@ -2017,6 +2021,21 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     onCheckedChange = {
                         autoCapitalizationEnabled = it
                         saveSetting("autocapitalisation", it)
+                        // Update Config immediately so change takes effect without restart
+                        Config.globalConfig()?.autocapitalisation = it
+                    }
+                )
+
+                // #72: Capitalize I words (I, I'm, I'll, I'd, I've)
+                SettingsSwitch(
+                    title = "Capitalize I Words",
+                    description = "Auto-capitalize \"I\" and contractions (I'm, I'll, I'd, I've)",
+                    checked = capitalizeIWords,
+                    onCheckedChange = {
+                        capitalizeIWords = it
+                        saveSetting("autocapitalize_i_words", it)
+                        // Update Config immediately
+                        Config.globalConfig()?.autocapitalize_i_words = it
                     }
                 )
 
@@ -4444,6 +4463,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         clipboardExcludePasswordManagers = prefs.getSafeBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
         clipboardRespectSensitiveFlag = prefs.getSafeBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
         autoCapitalizationEnabled = prefs.getSafeBoolean("autocapitalisation", Defaults.AUTOCAPITALISATION)
+        capitalizeIWords = prefs.getSafeBoolean("autocapitalize_i_words", Defaults.AUTOCAPITALIZE_I_WORDS)
 
         // Gesture sensitivity settings
         swipeDistance = prefs.getSafeString("swipe_dist", Defaults.SWIPE_DIST).toIntOrNull() ?: Defaults.SWIPE_DIST_FALLBACK.toInt()
@@ -4890,6 +4910,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     editor.putInt("longpress_timeout", Defaults.LONGPRESS_TIMEOUT)
                     editor.putBoolean("keyrepeat_enabled", Defaults.KEYREPEAT_ENABLED)
                     editor.putBoolean("autocapitalisation", Defaults.AUTOCAPITALISATION)
+                    editor.putBoolean("autocapitalize_i_words", Defaults.AUTOCAPITALIZE_I_WORDS)
                     editor.putBoolean("double_space_to_period", Defaults.DOUBLE_SPACE_TO_PERIOD)
                     editor.putBoolean("smart_punctuation", Defaults.SMART_PUNCTUATION)
                     editor.putInt("tap_duration_threshold", Defaults.TAP_DURATION_THRESHOLD)
