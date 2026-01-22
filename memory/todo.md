@@ -26,9 +26,13 @@
 - ✅ Respect Greek/Math disabled in numeric layer (#77)
 - ✅ Password manager clipboard exclusions: KeePassDX Libre, Chrome, Edge, Firefox (#86)
 - ✅ Android 13+ IS_SENSITIVE flag support (user setting, defaults on) (#86)
+- ✅ Created ew-cli testing skill (.claude/skills/ew-cli-testing.md)
+- ✅ Settings toggles now update Config immediately (fixes #81, #82 taking effect)
+- ✅ Added SettingsToggleTest for #81, #82, #86 verification
 
 ## In Progress
 - 🔄 Build and test v1.2.7 features
+- 🔄 Investigate auto-capitalization after period (may need keyboard restart to test)
 
 ## Completed (2026-01-20)
 - ✅ Swedish language pack (sv_enhanced.bin, sv.bin, sv_unigrams.txt)
