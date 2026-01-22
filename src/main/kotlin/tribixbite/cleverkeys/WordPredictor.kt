@@ -65,7 +65,8 @@ class WordPredictor {
 
     // Issue #72: Track original case of user-added words (proper nouns)
     // Maps lowercase word to original case: "boston" -> "Boston"
-    private val userWordOriginalCase: MutableMap<String, String> = mutableMapOf()
+    // v1.2.7: Use ConcurrentHashMap for thread-safety (accessed from async loader thread)
+    private val userWordOriginalCase: MutableMap<String, String> = java.util.concurrent.ConcurrentHashMap()
 
     // OPTIMIZATION: Async loading state
     @Volatile
@@ -1119,10 +1120,15 @@ class WordPredictor {
                     val keys = jsonObj.keys()
                     var customCount = 0
                     while (keys.hasNext()) {
-                        val word = keys.next().lowercase()
-                        val frequency = jsonObj.optInt(word, 1000)
-                        targetMap[word] = frequency  // Write to target map, not dictionary
-                        loadedWords.add(word)
+                        val originalWord = keys.next()
+                        val lowerWord = originalWord.lowercase()
+                        val frequency = jsonObj.optInt(originalWord, 1000)
+                        targetMap[lowerWord] = frequency  // Write to target map, not dictionary
+                        loadedWords.add(lowerWord)
+                        // v1.2.7: Preserve original case for proper nouns (Issue #72)
+                        if (originalWord != lowerWord) {
+                            userWordOriginalCase[lowerWord] = originalWord
+                        }
                         customCount++
                     }
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -1169,10 +1175,15 @@ class WordPredictor {
                     var userCount = 0
 
                     while (it.moveToNext()) {
-                        val word = it.getString(wordIndex).lowercase()
+                        val originalWord = it.getString(wordIndex)
+                        val lowerWord = originalWord.lowercase()
                         val frequency = if (freqIndex >= 0) it.getInt(freqIndex) else 1000
-                        targetMap[word] = frequency  // Write to target map, not dictionary
-                        loadedWords.add(word)
+                        targetMap[lowerWord] = frequency  // Write to target map, not dictionary
+                        loadedWords.add(lowerWord)
+                        // v1.2.7: Preserve original case for proper nouns (Issue #72)
+                        if (originalWord != lowerWord) {
+                            userWordOriginalCase[lowerWord] = originalWord
+                        }
                         userCount++
                     }
 
@@ -1296,10 +1307,15 @@ class WordPredictor {
                     var userCount = 0
 
                     while (it.moveToNext()) {
-                        val word = it.getString(wordIndex).lowercase()
+                        val originalWord = it.getString(wordIndex)
+                        val lowerWord = originalWord.lowercase()
                         val frequency = if (freqIndex >= 0) it.getInt(freqIndex) else 1000
-                        dictionary.get()[word] = frequency
-                        loadedWords.add(word)  // Track loaded word
+                        dictionary.get()[lowerWord] = frequency
+                        loadedWords.add(lowerWord)  // Track loaded word
+                        // v1.2.7: Preserve original case for proper nouns (Issue #72)
+                        if (originalWord != lowerWord) {
+                            userWordOriginalCase[lowerWord] = originalWord
+                        }
                         userCount++
                     }
 
