@@ -626,9 +626,16 @@ class SuggestionHandler(
                 }
 
                 // Commit the selected word
-                // Only skip trailing space if actually IN Termux app (not just termux_mode_enabled)
-                // v1.2.6: Also skip trailing space if there's already a space after cursor
-                val textToInsert = if (config.termux_mode_enabled && !isSwipeAutoInsert && inTermuxApp) {
+                // Only skip trailing space if:
+                // 1. auto_space_after_suggestion is disabled (user preference #82)
+                // 2. OR actually IN Termux app (not just termux_mode_enabled) for non-swipe
+                // 3. OR there's already a space after cursor (mid-sentence replacement)
+                val textToInsert = if (!config.auto_space_after_suggestion && !isSwipeAutoInsert) {
+                    // #82: User disabled auto-space after suggestion (tap selection only)
+                    if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord.also {
+                        Log.d(TAG, "AUTO-SPACE DISABLED: textToInsert = '$it'")
+                    }
+                } else if (config.termux_mode_enabled && !isSwipeAutoInsert && inTermuxApp) {
                     // Termux app: Insert word without automatic space for terminal compatibility
                     if (needsSpaceBefore) " $capitalizedWord" else capitalizedWord.also {
                         Log.d(TAG, "TERMUX APP (non-swipe): textToInsert = '$it'")

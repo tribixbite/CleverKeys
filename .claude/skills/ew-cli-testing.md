@@ -16,14 +16,14 @@ which ew-cli || pip install emulatorwtf-cli
 ## Build APKs for Testing
 
 ```bash
-# Build debug APK (app under test)
-./build-on-termux.sh
+# Build debug APK (uses native ARM64 AAPT2)
+./gradlew assembleDebug -Pandroid.aapt2FromMavenOverride="/data/data/com.termux/files/usr/bin/aapt2"
 
-# Build test APK
-./gradlew assembleDebugAndroidTest
+# Build test APK (uses native ARM64 AAPT2)
+./gradlew assembleDebugAndroidTest -Pandroid.aapt2FromMavenOverride="/data/data/com.termux/files/usr/bin/aapt2"
 
 # APK locations
-APP_APK="build/outputs/apk/debug/CleverKeys-*-x86_64.apk"
+APP_APK="build/outputs/apk/debug/CleverKeys-v1.2.6-x86_64.apk"
 TEST_APK="build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk"
 ```
 
@@ -44,12 +44,12 @@ ew-cli \
 ```bash
 source ~/.bashrc
 ew-cli \
-  --app build/outputs/apk/debug/CleverKeys-*-x86_64.apk \
+  --app build/outputs/apk/debug/CleverKeys-v1.2.6-x86_64.apk \
   --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
   --device model=Pixel7,version=35 \
   --use-orchestrator \
   --clear-package-data \
-  -- -e class tribixbite.cleverkeys.AutocapitalizationTest
+  --test-targets "class tribixbite.cleverkeys.AutocapitalizationTest"
 ```
 
 ## Run Specific Test Method
@@ -57,26 +57,26 @@ ew-cli \
 ```bash
 source ~/.bashrc
 ew-cli \
-  --app build/outputs/apk/debug/CleverKeys-*-x86_64.apk \
+  --app build/outputs/apk/debug/CleverKeys-v1.2.6-x86_64.apk \
   --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
   --device model=Pixel7,version=35 \
   --use-orchestrator \
   --clear-package-data \
-  -- -e class tribixbite.cleverkeys.AutocapitalizationTest#testIWordCapitalization_SingleI
+  --test-targets "class tribixbite.cleverkeys.AutocapitalizationTest#testIWordCapitalization_SingleI"
 ```
 
 ## Run Tests by Pattern (Multiple Classes)
 
 ```bash
 source ~/.bashrc
-# Run all Config-related tests
+# Run all tests in package
 ew-cli \
-  --app build/outputs/apk/debug/CleverKeys-*-x86_64.apk \
+  --app build/outputs/apk/debug/CleverKeys-v1.2.6-x86_64.apk \
   --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
   --device model=Pixel7,version=35 \
   --use-orchestrator \
   --clear-package-data \
-  -- -e package tribixbite.cleverkeys
+  --test-targets "package tribixbite.cleverkeys"
 ```
 
 ## Device Options
