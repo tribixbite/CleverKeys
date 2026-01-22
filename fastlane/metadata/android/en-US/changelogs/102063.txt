@@ -1,0 +1,23 @@
+v1.2.6 - Emoji Panel Polish
+
+NEW FEATURES:
+
+• Emoji Long-Press Tooltip
+  - Long-press any emoji to see its name
+  - Works with all 4000+ emoji, flags, and emoticons
+  - Shows country names for flags (e.g., "japan" not "regional indicator")
+  - Shows descriptive names for emoticons (e.g., "shrug", "lenny face")
+  - Auto-dismisses after 2.5 seconds
+
+• Enhanced Emoji Name Mappings
+  - 260+ country flag names added
+  - 100+ emoticon/kaomoji names added
+  - Unicode fallback for unmapped emoji
+
+FIXES:
+
+• Fixed emoji/clipboard panel gap above keyboard
+• Fixed panels appearing empty after app switch
+• Fixed content pane state not resetting properly
+• Removed debug logging for cleaner logs
+• Cleaned up unused tooltip XML files
