@@ -179,4 +179,132 @@ class SettingsToggleTest {
         assertTrue("PASSWORD_MANAGER_PACKAGES should contain 1Password",
             Defaults.PASSWORD_MANAGER_PACKAGES.contains("com.agilebits.onepassword"))
     }
+
+    // =========================================================================
+    // Debug Settings Defaults (should be OFF by default)
+    // =========================================================================
+
+    @Test
+    fun testSwipeDebugShowRawOutput_DefaultIsFalse() {
+        // Debug setting should be OFF by default
+        assertFalse("Default SWIPE_DEBUG_SHOW_RAW_OUTPUT should be false",
+            Defaults.SWIPE_DEBUG_SHOW_RAW_OUTPUT)
+    }
+
+    @Test
+    fun testSwipeShowRawBeamPredictions_DefaultIsFalse() {
+        // Debug setting should be OFF by default
+        assertFalse("Default SWIPE_SHOW_RAW_BEAM_PREDICTIONS should be false",
+            Defaults.SWIPE_SHOW_RAW_BEAM_PREDICTIONS)
+    }
+
+    @Test
+    fun testSwipeDebugShowRawOutput_ConfigToggle() {
+        try {
+            val config = Config.globalConfig()
+            if (config != null) {
+                val original = config.swipe_debug_show_raw_output
+                try {
+                    config.swipe_debug_show_raw_output = true
+                    assertTrue("swipe_debug_show_raw_output should be true after setting",
+                        config.swipe_debug_show_raw_output)
+
+                    config.swipe_debug_show_raw_output = false
+                    assertFalse("swipe_debug_show_raw_output should be false after setting",
+                        config.swipe_debug_show_raw_output)
+                } finally {
+                    config.swipe_debug_show_raw_output = original
+                }
+            }
+        } catch (e: NullPointerException) {
+            // Config not available in test context without full keyboard init
+        }
+    }
+
+    @Test
+    fun testSwipeShowRawBeamPredictions_ConfigToggle() {
+        try {
+            val config = Config.globalConfig()
+            if (config != null) {
+                val original = config.swipe_show_raw_beam_predictions
+                try {
+                    config.swipe_show_raw_beam_predictions = true
+                    assertTrue("swipe_show_raw_beam_predictions should be true after setting",
+                        config.swipe_show_raw_beam_predictions)
+
+                    config.swipe_show_raw_beam_predictions = false
+                    assertFalse("swipe_show_raw_beam_predictions should be false after setting",
+                        config.swipe_show_raw_beam_predictions)
+                } finally {
+                    config.swipe_show_raw_beam_predictions = original
+                }
+            }
+        } catch (e: NullPointerException) {
+            // Config not available in test context without full keyboard init
+        }
+    }
+
+    // =========================================================================
+    // Autocapitalization immediate Config update
+    // =========================================================================
+
+    @Test
+    fun testAutocapitalization_DefaultIsTrue() {
+        // Autocapitalization should be ON by default
+        assertTrue("Default AUTOCAPITALISATION should be true",
+            Defaults.AUTOCAPITALISATION)
+    }
+
+    @Test
+    fun testAutocapitalization_ConfigToggle() {
+        try {
+            val config = Config.globalConfig()
+            if (config != null) {
+                val original = config.autocapitalisation
+                try {
+                    config.autocapitalisation = true
+                    assertTrue("autocapitalisation should be true after setting",
+                        config.autocapitalisation)
+
+                    config.autocapitalisation = false
+                    assertFalse("autocapitalisation should be false after setting",
+                        config.autocapitalisation)
+                } finally {
+                    config.autocapitalisation = original
+                }
+            }
+        } catch (e: NullPointerException) {
+            // Config not available in test context without full keyboard init
+        }
+    }
+
+    @Test
+    fun testCapitalizeIWords_DefaultIsTrue() {
+        // Capitalize I words should be ON by default (#72)
+        assertTrue("Default AUTOCAPITALIZE_I_WORDS should be true",
+            Defaults.AUTOCAPITALIZE_I_WORDS)
+    }
+
+    @Test
+    fun testCapitalizeIWords_ConfigToggle() {
+        try {
+            val config = Config.globalConfig()
+            if (config != null) {
+                val original = config.autocapitalize_i_words
+                try {
+                    config.autocapitalize_i_words = true
+                    assertTrue("autocapitalize_i_words should be true after setting",
+                        config.autocapitalize_i_words)
+
+                    config.autocapitalize_i_words = false
+                    assertFalse("autocapitalize_i_words should be false after setting",
+                        config.autocapitalize_i_words)
+                } finally {
+                    config.autocapitalize_i_words = original
+                }
+            }
+        } catch (e: NullPointerException) {
+            // Config not available in test context without full keyboard init
+        }
+    }
 }

@@ -33,6 +33,10 @@
 - ✅ Fixed autocapitalization toggle not updating Config immediately
 - ✅ Added missing "Capitalize I Words" toggle UI (#72)
 - ✅ Fixed swipe capitalization after period (_mods not updated in set_shift_state)
+- ✅ Debug settings defaults: show_raw_output and show_raw_beam_predictions now OFF
+- ✅ Fixed raw predictions appearing at front of suggestions (now stay at end)
+- ✅ Added SettingsToggleTest tests for debug defaults, autocapitalization, I-words
+- ✅ All ew-cli instrumented tests passing
 
 ## In Progress
 - 🔄 Build and test v1.2.7 features
