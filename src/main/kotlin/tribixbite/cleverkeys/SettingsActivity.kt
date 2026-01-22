@@ -201,6 +201,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var longPressTimeout by mutableStateOf(600)
     private var longPressInterval by mutableStateOf(65)
     private var keyRepeatEnabled by mutableStateOf(true)
+    private var keyRepeatBackspaceOnly by mutableStateOf(false)  // #81: Only repeat backspace/nav
 
     // Visual customization settings
     private var labelBrightness by mutableStateOf(100)
@@ -488,6 +489,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Long Press Timeout", listOf("hold", "delay", "duration", "timeout"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "long_press"),
             SearchableSetting("Long Press Interval", listOf("interval", "repeat", "speed"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "long_press_interval"),
             SearchableSetting("Key Repeat", listOf("hold", "backspace", "delete", "repeat"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "key_repeat"),
+            SearchableSetting("Backspace Only Repeat", listOf("backspace", "only", "character", "repeat"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "backspace_only_repeat"),
             SearchableSetting("Double Tap Shift Lock", listOf("caps lock", "shift", "double tap"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "double_tap_shift"),
             SearchableSetting("Smart Punctuation", listOf("punctuation", "smart", "space"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "smart_punctuation"),
             SearchableSetting("Immediate Keyboard Switch", listOf("switch", "keyboard", "immediate"), "Input", expandSection = { inputSectionExpanded = true }, settingId = "immediate_switch"),
@@ -2191,6 +2193,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         saveSetting("keyrepeat_enabled", it)
                     }
                 )
+
+                // #81: Only show when key repeat is enabled
+                if (keyRepeatEnabled) {
+                    SettingsSwitch(
+                        title = "Backspace Only Repeat",
+                        description = "Only repeat backspace/navigation keys, not character keys",
+                        checked = keyRepeatBackspaceOnly,
+                        onCheckedChange = {
+                            keyRepeatBackspaceOnly = it
+                            saveSetting("keyrepeat_backspace_only", it)
+                        }
+                    )
+                }
 
                 SettingsSwitch(
                     title = "Double Tap Shift for Caps Lock",
@@ -4423,6 +4438,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         longPressTimeout = prefs.getSafeInt("longpress_timeout", Defaults.LONGPRESS_TIMEOUT)
         longPressInterval = prefs.getSafeInt("longpress_interval", Defaults.LONGPRESS_INTERVAL)
         keyRepeatEnabled = prefs.getSafeBoolean("keyrepeat_enabled", Defaults.KEYREPEAT_ENABLED)
+        keyRepeatBackspaceOnly = prefs.getSafeBoolean("keyrepeat_backspace_only", Defaults.KEYREPEAT_BACKSPACE_ONLY)
 
         // Behavior settings
         doubleTapLockShift = prefs.getSafeBoolean("lock_double_tap", Defaults.DOUBLE_TAP_LOCK_SHIFT)

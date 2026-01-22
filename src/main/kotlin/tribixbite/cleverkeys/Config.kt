@@ -70,6 +70,7 @@ object Defaults {
     const val LONGPRESS_TIMEOUT = 600
     const val LONGPRESS_INTERVAL = 25
     const val KEYREPEAT_ENABLED = true
+    const val KEYREPEAT_BACKSPACE_ONLY = false  // #81: When true, only backspace/nav keys repeat
     const val DOUBLE_TAP_LOCK_SHIFT = true
     const val AUTOCAPITALISATION = true
     const val SWITCH_INPUT_IMMEDIATE = false
@@ -349,6 +350,7 @@ class Config private constructor(
     @JvmField var longPressTimeout = 0L
     @JvmField var longPressInterval = 0L
     @JvmField var keyrepeat_enabled = false
+    @JvmField var keyrepeat_backspace_only = false  // #81: Only repeat backspace/nav keys
     @JvmField var margin_bottom = 0f  // In pixels (calculated from % of screen height)
     @JvmField var margin_left = 0f    // In pixels (calculated from % of screen width)
     @JvmField var margin_right = 0f   // In pixels (calculated from % of screen width)
@@ -570,6 +572,7 @@ class Config private constructor(
         longPressTimeout = safeGetInt(_prefs, "longpress_timeout", Defaults.LONGPRESS_TIMEOUT).toLong()
         longPressInterval = safeGetInt(_prefs, "longpress_interval", Defaults.LONGPRESS_INTERVAL).toLong()
         keyrepeat_enabled = _prefs.getBoolean("keyrepeat_enabled", Defaults.KEYREPEAT_ENABLED)
+        keyrepeat_backspace_only = _prefs.getBoolean("keyrepeat_backspace_only", Defaults.KEYREPEAT_BACKSPACE_ONLY)
 
         // Screen dimensions for percentage calculations
         screenHeightPixels = dm.heightPixels

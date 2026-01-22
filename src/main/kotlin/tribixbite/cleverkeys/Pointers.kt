@@ -1220,7 +1220,9 @@ class Pointers(
             return
         }
         // For every other keys, key-repeat
-        if (_config.keyrepeat_enabled) {
+        // #81: If keyrepeat_backspace_only is enabled, skip repeat for non-backspace/nav keys
+        val isBackspaceOrNav = isBackspaceKey(kv) || hasNavigationSubkeys(ptr)
+        if (_config.keyrepeat_enabled && (!_config.keyrepeat_backspace_only || isBackspaceOrNav)) {
             // If this was a deferred down (potential swipe), output the initial character first
             // This handles holding space/letters without moving - outputs initial char then repeats
             if (ptr.hasFlagsAny(FLAG_P_DEFERRED_DOWN)) {
