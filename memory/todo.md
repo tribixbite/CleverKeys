@@ -19,9 +19,14 @@
 - ✅ Database migration v2: added is_todo column
 - ✅ Backwards-compatible todo export/import (export_version 2)
 - ✅ Fixed emoji close button triggering wrong event
+- ✅ Clipboard pagination (100 items per page, search all items)
+- ✅ Fixed clipboard import (fresh expiry, correct count indices)
+- ✅ Option to disable auto-space after suggestion (#82)
+- ✅ Separate backspace key repeat option (#81)
+- ✅ Respect Greek/Math disabled in numeric layer (#77)
 
 ## In Progress
-- 🔄 Clipboard tabs testing (needs ADB for UI verification)
+- 🔄 Build and test v1.2.7 features
 
 ## Completed (2026-01-20)
 - ✅ Swedish language pack (sv_enhanced.bin, sv.bin, sv_unigrams.txt)
