@@ -5102,8 +5102,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         lifecycleScope.launch {
             try {
                 val backupManager = BackupRestoreManager(this@SettingsActivity)
-                backupManager.exportClipboardHistory(uri)
-                Toast.makeText(this@SettingsActivity, "Clipboard exported successfully", Toast.LENGTH_SHORT).show()
+                val result = backupManager.exportClipboardHistory(uri)
+                Toast.makeText(this@SettingsActivity, "Clipboard exported: ${result.exportedCount} entries", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
@@ -5118,9 +5118,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     val json = org.json.JSONObject(jsonText)
 
                     val clipboardDb = ClipboardDatabase.getInstance(this@SettingsActivity)
+                    // result = [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped]
                     val result = clipboardDb.importFromJSON(json)
-                    val imported = result[0]
-                    val duplicates = result[1]
+                    val imported = result[0] + result[1] + result[2]  // active + pinned + todo
+                    val duplicates = result[3]
 
                     Toast.makeText(
                         this@SettingsActivity,

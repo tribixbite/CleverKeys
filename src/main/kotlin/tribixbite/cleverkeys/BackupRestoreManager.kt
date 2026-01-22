@@ -1130,8 +1130,9 @@ class BackupRestoreManager(private val context: Context) {
     /**
      * Export clipboard history to JSON file
      * @param uri URI from Storage Access Framework (ACTION_CREATE_DOCUMENT)
+     * @return ClipboardExportResult with statistics
      */
-    fun exportClipboardHistory(uri: Uri) {
+    fun exportClipboardHistory(uri: Uri): ClipboardExportResult {
         try {
             val clipboardDb = ClipboardDatabase.getInstance(context)
             val exportData = clipboardDb.exportToJSON()
@@ -1144,7 +1145,12 @@ class BackupRestoreManager(private val context: Context) {
                 }
             }
 
-            Log.i(TAG, "Exported clipboard history")
+            val activeCount = exportData.optInt("total_active", 0)
+            val pinnedCount = exportData.optInt("total_pinned", 0)
+            val todoCount = exportData.optInt("total_todo", 0)
+
+            Log.i(TAG, "Exported clipboard history: $activeCount active, $pinnedCount pinned, $todoCount todo")
+            return ClipboardExportResult(activeCount + pinnedCount + todoCount)
         } catch (e: Exception) {
             Log.e(TAG, "Clipboard export failed", e)
             throw Exception("Clipboard export failed: ${e.message}", e)
@@ -1171,9 +1177,10 @@ class BackupRestoreManager(private val context: Context) {
             val clipboardDb = ClipboardDatabase.getInstance(context)
             val importResult = clipboardDb.importFromJSON(importData)
 
+            // importResult = [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped]
             val result = ClipboardImportResult()
-            result.importedCount = importResult[0] + importResult[1]
-            result.skippedCount = importResult[2]
+            result.importedCount = importResult[0] + importResult[1] + importResult[2]  // active + pinned + todo
+            result.skippedCount = importResult[3]  // duplicates skipped
 
             if (importData.has("export_date")) {
                 result.sourceVersion = importData.getString("export_date")
@@ -1203,6 +1210,13 @@ class BackupRestoreManager(private val context: Context) {
         @JvmField var importedCount: Int = 0,
         @JvmField var skippedCount: Int = 0,
         @JvmField var sourceVersion: String = "unknown"
+    )
+
+    /**
+     * Result of clipboard export operation
+     */
+    data class ClipboardExportResult(
+        @JvmField var exportedCount: Int = 0
     )
 
     companion object {

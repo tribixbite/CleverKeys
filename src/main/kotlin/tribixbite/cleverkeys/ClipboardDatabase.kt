@@ -395,10 +395,12 @@ class ClipboardDatabase private constructor(context: Context) :
                         duplicatesSkipped++
                         continue
                     }
+                    // Use fresh expiry timestamp so imported entries don't expire immediately
+                    val freshExpiry = System.currentTimeMillis() + HISTORY_TTL_MS
                     val values = ContentValues().apply {
                         put(COLUMN_CONTENT, content)
                         put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
-                        put(COLUMN_EXPIRY_TIMESTAMP, entry.getLong("expiry_timestamp"))
+                        put(COLUMN_EXPIRY_TIMESTAMP, freshExpiry)
                         put(COLUMN_IS_PINNED, 0)
                         put(COLUMN_IS_TODO, 0)
                         put(COLUMN_CONTENT_HASH, contentHash)
@@ -421,11 +423,12 @@ class ClipboardDatabase private constructor(context: Context) :
                         duplicatesSkipped++
                         continue
                     }
+                    // Pinned entries use fresh expiry (they don't expire anyway due to is_pinned=1)
+                    val freshExpiry = System.currentTimeMillis() + HISTORY_TTL_MS
                     val values = ContentValues().apply {
                         put(COLUMN_CONTENT, content)
                         put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
-                        put(COLUMN_EXPIRY_TIMESTAMP, if (entry.has("expiry_timestamp"))
-                            entry.getLong("expiry_timestamp") else System.currentTimeMillis() + HISTORY_TTL_MS)
+                        put(COLUMN_EXPIRY_TIMESTAMP, freshExpiry)
                         put(COLUMN_IS_PINNED, 1)
                         put(COLUMN_IS_TODO, 0)
                         put(COLUMN_CONTENT_HASH, contentHash)
@@ -449,11 +452,12 @@ class ClipboardDatabase private constructor(context: Context) :
                         duplicatesSkipped++
                         continue
                     }
+                    // Todo entries use fresh expiry
+                    val freshExpiry = System.currentTimeMillis() + HISTORY_TTL_MS
                     val values = ContentValues().apply {
                         put(COLUMN_CONTENT, content)
                         put(COLUMN_TIMESTAMP, entry.getLong("timestamp"))
-                        put(COLUMN_EXPIRY_TIMESTAMP, if (entry.has("expiry_timestamp"))
-                            entry.getLong("expiry_timestamp") else System.currentTimeMillis() + HISTORY_TTL_MS)
+                        put(COLUMN_EXPIRY_TIMESTAMP, freshExpiry)
                         put(COLUMN_IS_PINNED, 0)
                         put(COLUMN_IS_TODO, 1)
                         put(COLUMN_CONTENT_HASH, contentHash)
