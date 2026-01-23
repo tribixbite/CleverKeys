@@ -246,6 +246,5 @@ val adjustedKeyBg = applyOpacity(theme.keyBackground, config.key_opacity / 100f)
 
 ## Related Specifications
 
-- [Appearance Settings](appearance-spec.md) - Height, margins
 - [Profile System](../../../specs/profile_system_restoration.md) - Theme export/import
 - [Settings System](../../../specs/settings-system.md) - Preferences

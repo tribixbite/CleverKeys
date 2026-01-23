@@ -200,7 +200,7 @@ userWordOriginalCase.clear()  // Reset before reloading
 
 - [Autocorrect Spec](autocorrect-spec.md) - Spelling corrections
 - [Swipe Typing Spec](swipe-typing-spec.md) - Neural prediction
-- [Neural Prediction Spec](../../specs/neural-prediction.md) - ONNX model
+- [Neural Prediction Spec](../../../specs/neural-prediction.md) - ONNX model
 
 ## Version History
 

@@ -218,6 +218,6 @@ A: Yes, they're JSON. But be careful not to corrupt the format.
 
 ## Related Topics
 
-- [Profiles](../layouts/profiles.md) - Profile management
+- [Profile System](../../specs/profile_system_restoration.md) - Profile management
 - [Reset Defaults](reset-defaults.md) - When backup isn't enough
 - [Privacy](../settings/privacy.md) - What data is stored
