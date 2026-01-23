@@ -1,6 +1,8 @@
 package tribixbite.cleverkeys
 
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -24,6 +26,12 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], manifest = Config.NONE)
 class ComposeKeyTest {
+
+    @Before
+    fun setUp() {
+        // Initialize ComposeKeyData with application context before running tests
+        ComposeKeyData.initialize(ApplicationProvider.getApplicationContext())
+    }
 
     /**
      * Test compose key sequences from various data files.

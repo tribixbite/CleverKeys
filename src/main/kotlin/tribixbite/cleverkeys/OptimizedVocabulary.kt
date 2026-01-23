@@ -782,34 +782,54 @@ class OptimizedVocabulary(private val context: Context) {
                     }
 
                     // Check for non-paired contractions (apostrophe-free form -> contraction)
-                    // REPLACE the apostrophe-free form with the contraction
                     // Example: "cant" (not a real word) → "can't" (the actual word)
-                    // v1.2.2 FIX: Skip replacement if word is a real vocabulary word:
-                    // - Check contractionPairings (English: "were", "well", "shed")
-                    // - Check vocabulary frequency (French "dans" loaded from dict has freq > 0.6)
-                    // Synthetic contraction keys have frequency=0.6, real words have higher freq
+                    // v1.2.2 FIX: Skip replacement if word is a real vocabulary word
+                    // v1.2.9 FIX: For non-English, add contraction as variant if base is real word
+                    // This allows both "quest" and "qu'est" to appear for French
                     val wordInfo = vocabulary[word]
                     val isRealVocabWord = wordInfo != null && wordInfo.frequency > 0.65f
                     val isPairedBase = contractionPairings.containsKey(word)
-                    if (nonPairedContractions.containsKey(word) && !isPairedBase && !isRealVocabWord) {
+                    if (nonPairedContractions.containsKey(word) && !isPairedBase) {
                         val contraction = nonPairedContractions[word]!!
 
-                        // REPLACE the current prediction with the contraction (same score)
-                        // This prevents invalid forms like "cant", "dont" from appearing
-                        validPredictions[i] = FilteredPrediction(
-                            contraction,             // word for insertion (with apostrophe: "can't")
-                            contraction,             // displayText for UI (with apostrophe: "can't")
-                            pred.score,              // Keep same score (not a variant, a replacement)
-                            pred.confidence,
-                            pred.frequency,
-                            pred.source + "-contraction"
-                        )
+                        if (!isRealVocabWord) {
+                            // Not a real word - REPLACE with contraction (English: "cant" → "can't")
+                            validPredictions[i] = FilteredPrediction(
+                                contraction,
+                                contraction,
+                                pred.score,
+                                pred.confidence,
+                                pred.frequency,
+                                pred.source + "-contraction"
+                            )
 
-                        if (debugMode) {
-                            val msg = String.format("📝 NON-PAIRED CONTRACTION: \"%s\" → REPLACED with \"%s\" (score=%.4f)\n",
-                                word, contraction, pred.score)
-                            Log.d(TAG, msg)
-                            sendDebugLog(msg)
+                            if (debugMode) {
+                                val msg = String.format("📝 NON-PAIRED CONTRACTION: \"%s\" → REPLACED with \"%s\" (score=%.4f)\n",
+                                    word, contraction, pred.score)
+                                Log.d(TAG, msg)
+                                sendDebugLog(msg)
+                            }
+                        } else {
+                            // Real vocab word - ADD contraction as variant (French: "quest" + "qu'est")
+                            // Use slightly lower score so base word appears first
+                            val variantScore = pred.score * 0.95f
+                            contractionVariants.add(
+                                FilteredPrediction(
+                                    contraction,
+                                    contraction,
+                                    variantScore,
+                                    pred.confidence,
+                                    pred.frequency,
+                                    pred.source + "-contraction-variant"
+                                )
+                            )
+
+                            if (debugMode) {
+                                val msg = String.format("📝 CONTRACTION VARIANT: \"%s\" → added \"%s\" as variant (score=%.4f)\n",
+                                    word, contraction, variantScore)
+                                Log.d(TAG, msg)
+                                sendDebugLog(msg)
+                            }
                         }
                     }
                 }

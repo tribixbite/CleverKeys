@@ -5,7 +5,7 @@ import android.graphics.Canvas
 import android.graphics.RectF
 import android.os.Handler
 import android.os.Looper
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
