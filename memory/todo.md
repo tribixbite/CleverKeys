@@ -59,6 +59,12 @@
 ## In Progress
 (none)
 
+## Completed (2026-01-23)
+- ✅ Fixed French contractions showing both forms (quest + qu'est)
+- ✅ Fixed CI test failures (ComposeKeyTest, OnnxPredictionTest)
+- ✅ Partial AndroidX migration (PreferenceManager classes)
+- ✅ Fixed 3 broken wiki links
+
 ## Completed (2026-01-20)
 - ✅ Swedish language pack (sv_enhanced.bin, sv.bin, sv_unigrams.txt)
 - ✅ Emoticons category in emoji picker (#76) - 119 text emoticons
