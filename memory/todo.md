@@ -57,7 +57,13 @@
 - ✅ Verified Direct Boot safety: swipe_on_password_fields, dictionary loading all use DirectBootAwarePreferences
 
 ## In Progress
-(none)
+- 🔄 Subkey System Unification (Option D) - awaiting user answers to clarifying questions
+  - See: `memory/subkey-unification-research.md`
+
+## Completed (2026-01-25)
+- ✅ Subkey system investigation: XML subkeys, ShortSwipeCustomizationActivity, ExtraKeys
+- ✅ Created research doc with Options A-D analysis
+- ✅ Documented 5 clarifying questions for Option D implementation
 
 ## Completed (2026-01-24)
 - ✅ French contraction frequency ordering (qu'est can now appear before quest if higher frequency)
