@@ -4,24 +4,24 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.os.Build
-import android.preference.CheckBoxPreference
-import android.preference.PreferenceCategory
 import android.util.AttributeSet
-import android.view.View
 import android.widget.TextView
+import androidx.preference.CheckBoxPreference
+import androidx.preference.PreferenceCategory
+import androidx.preference.PreferenceViewHolder
 import tribixbite.cleverkeys.*
 
 /** This class implements the "extra keys" preference but also defines the
-    possible extra keys. */
-@Suppress("DEPRECATION")
+    possible extra keys. Migrated to AndroidX Preference library. */
 class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCategory(context, attrs) {
     private var attached = false /** Whether it has already been attached. */
 
     init {
-        setOrderingAsAdded(true)
+        isOrderingAsAdded = true
     }
 
-    override fun onAttachedToActivity() {
+    override fun onAttached() {
+        super.onAttached()
         if (attached) return
         attached = true
         for (keyName in EXTRA_KEYS) {
@@ -48,10 +48,10 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             }
         }
 
-        override fun onBindView(view: View) {
-            super.onBindView(view)
-            val title = view.findViewById<TextView>(android.R.id.title)
-            title.typeface = Theme.getKeyFont(context)
+        override fun onBindViewHolder(holder: PreferenceViewHolder) {
+            super.onBindViewHolder(holder)
+            val title = holder.findViewById(android.R.id.title) as? TextView
+            title?.typeface = Theme.getKeyFont(context)
         }
     }
 

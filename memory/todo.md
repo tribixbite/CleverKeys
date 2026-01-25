@@ -59,6 +59,11 @@
 ## In Progress
 (none)
 
+## Completed (2026-01-24)
+- ✅ French contraction frequency ordering (qu'est can now appear before quest if higher frequency)
+- ✅ Full AndroidX migration (ExtraKeysPreference, ListGroupPreference)
+- ✅ Added ONNX JVM runtime for unit tests (onnxruntime:1.20.0)
+
 ## Completed (2026-01-23)
 - ✅ Fixed French contractions showing both forms (quest + qu'est)
 - ✅ Fixed CI test failures (ComposeKeyTest, OnnxPredictionTest)
@@ -112,7 +117,7 @@
 - [ ] PWA/Service Worker for offline support
 
 ### Legacy Code Cleanup
-- [ ] Migrate deprecated `android.preference.*` to `androidx.preference.*`
+- [x] Migrate deprecated `android.preference.*` to `androidx.preference.*` (v1.2.10)
 
 ### Documentation
 - [ ] Consolidate duplicate specs (top-level → wiki/specs)

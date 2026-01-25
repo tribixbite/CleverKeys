@@ -40,6 +40,8 @@ dependencies {
   testImplementation "androidx.test:core:1.5.0"
   testImplementation "io.mockk:mockk:1.13.8"
   testImplementation "com.google.truth:truth:1.1.5"
+  // ONNX Runtime for JVM unit tests (Android runtime doesn't work on host JVM)
+  testImplementation "com.microsoft.onnxruntime:onnxruntime:1.20.0"
 
   androidTestImplementation "androidx.test.ext:junit:1.1.5"
   androidTestImplementation "androidx.test:runner:1.5.2"

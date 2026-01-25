@@ -2,11 +2,11 @@ package tribixbite.cleverkeys.prefs
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.preference.Preference
-import android.preference.PreferenceGroup
 import android.util.AttributeSet
 import android.view.View
-import android.view.ViewGroup
+import androidx.preference.Preference
+import androidx.preference.PreferenceGroup
+import androidx.preference.PreferenceViewHolder
 import tribixbite.cleverkeys.Logs
 import tribixbite.cleverkeys.R
 import org.json.JSONArray
@@ -15,9 +15,8 @@ import org.json.JSONException
 /**
  * A list of preferences where the users can add items to the end and modify
  * and remove items. Backed by a string list. Implement user selection in
- * [select].
+ * [select]. Migrated to AndroidX Preference library.
  */
-@Suppress("DEPRECATION")
 abstract class ListGroupPreference<E>(context: Context, attrs: AttributeSet?) : PreferenceGroup(context, attrs) {
     private var attached = false
     protected var values: MutableList<E> = mutableListOf()
@@ -98,8 +97,8 @@ abstract class ListGroupPreference<E>(context: Context, attrs: AttributeSet?) : 
         }
     }
 
-    override fun onAttachedToActivity() {
-        super.onAttachedToActivity()
+    override fun onAttached() {
+        super.onAttached()
         if (attached) return
         attached = true
         reattach()
@@ -127,8 +126,9 @@ abstract class ListGroupPreference<E>(context: Context, attrs: AttributeSet?) : 
             }
         }
 
-        override fun onCreateView(parent: ViewGroup): View {
-            val v = super.onCreateView(parent)
+        override fun onBindViewHolder(holder: PreferenceViewHolder) {
+            super.onBindViewHolder(holder)
+            val v = holder.itemView
 
             v.findViewById<View>(R.id.pref_listgroup_remove_btn)?.setOnClickListener {
                 removeItem(index)
@@ -147,8 +147,6 @@ abstract class ListGroupPreference<E>(context: Context, attrs: AttributeSet?) : 
                     override fun allowRemove(): Boolean = true
                 }, value)
             }
-
-            return v
         }
     }
 

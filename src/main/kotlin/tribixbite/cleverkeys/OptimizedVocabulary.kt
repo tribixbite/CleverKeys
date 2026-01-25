@@ -811,22 +811,44 @@ class OptimizedVocabulary(private val context: Context) {
                             }
                         } else {
                             // Real vocab word - ADD contraction as variant (French: "quest" + "qu'est")
-                            // Use slightly lower score so base word appears first
-                            val variantScore = pred.score * 0.95f
+                            // v1.2.10 FIX: Look up ACTUAL frequency of contraction in primary dictionary
+                            // This allows "qu'est" to appear BEFORE "quest" if it has higher frequency
+                            val index = normalizedIndex
+                            var contractionFreq = 0.6f  // Default if not found in dictionary
+
+                            if (index != null) {
+                                // Look up contraction in primary dictionary
+                                // "qu'est" normalized is still "qu'est" (apostrophe preserved)
+                                val results = index.getWordsWithPrefix(contraction)
+                                val exactMatch = results.find { it.normalized == contraction }
+                                if (exactMatch != null) {
+                                    // Convert rank (0-255, 0=most common) to frequency (0-1, 1=most common)
+                                    contractionFreq = 1.0f - (exactMatch.bestFrequencyRank / 255.0f)
+                                }
+                            }
+
+                            // Calculate score using actual contraction frequency
+                            // Use same scoring formula as regular words for fair comparison
+                            val boost = if (contractionFreq > 0.8f) commonBoost else top5000Boost
+                            val effectiveFrequencyWeight = frequencyWeight * _neuralFrequencyWeight
+                            val variantScore = VocabularyUtils.calculateCombinedScore(
+                                pred.confidence, contractionFreq, boost, confidenceWeight, effectiveFrequencyWeight
+                            )
+
                             contractionVariants.add(
                                 FilteredPrediction(
                                     contraction,
                                     contraction,
                                     variantScore,
                                     pred.confidence,
-                                    pred.frequency,
+                                    contractionFreq,
                                     pred.source + "-contraction-variant"
                                 )
                             )
 
                             if (debugMode) {
-                                val msg = String.format("📝 CONTRACTION VARIANT: \"%s\" → added \"%s\" as variant (score=%.4f)\n",
-                                    word, contraction, variantScore)
+                                val msg = String.format("📝 CONTRACTION VARIANT: \"%s\" → added \"%s\" (freq=%.4f, score=%.4f vs base=%.4f)\n",
+                                    word, contraction, contractionFreq, variantScore, pred.score)
                                 Log.d(TAG, msg)
                                 sendDebugLog(msg)
                             }

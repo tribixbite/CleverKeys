@@ -39,7 +39,9 @@ object DirectBootAwarePreferences {
     }
 
     private fun getProtectedPrefs(context: Context): SharedPreferences {
-        val prefName = PreferenceManager.getDefaultSharedPreferencesName(context)
+        // AndroidX PreferenceManager.getDefaultSharedPreferencesName is private
+        // The standard default name is "${packageName}_preferences"
+        val prefName = "${context.packageName}_preferences"
         return context.createDeviceProtectedStorageContext()
             .getSharedPreferences(prefName, Context.MODE_PRIVATE)
     }
