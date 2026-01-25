@@ -173,17 +173,27 @@ Current extra key → preferred position mapping:
 "redo" -> mkPreferredPos("y", 0, 5, true)     // Next to Y, row 0, col 5
 ```
 
-**IMPORTANT**: Currently these place ADJACENT keys, not subkeys! `d=4` means SE **adjacent position**, not SE subkey.
+**CORRECTION**: I initially misread this as "adjacent keys". Re-examining `add_key_to_pos()` (KeyboardData.kt:111-114):
 
-#### 3. Conceptual Change Required
+```kotlin
+if (col.getKeyValue(i_dir) == null) {
+    rows[i_row] = row.copy(keys = row.keys.toMutableList().apply {
+        set(i_col, col.withKeyValue(i_dir, kv))  // Sets keys[i_dir] on EXISTING key!
+    })
+}
+```
 
-Option D fundamentally changes Extra Keys from **adjacent keys** to **subkeys**:
+**Extra Keys ARE subkeys!** They populate `Key.keys[]` at direction `i_dir` - the SAME array as XML subkeys. When "copy" is enabled, it places `keys[4]` (SE) on the "c" key.
 
-| Current System | Option D |
-|----------------|----------|
-| "copy" adds a new key NEXT TO "c" | "copy" becomes a subkey ON "c" at SE |
-| User taps separate "copy" key | User swipes SE on "c" to copy |
-| 90+ extra keys as standalone | 90+ extra keys as subkey mappings |
+#### 3. All Three Systems Already Share the Same Data Model
+
+| System | When | Where | How |
+|--------|------|-------|-----|
+| XML Subkeys | Parse time | `Key.keys[]` | XML attributes → array |
+| Extra Keys | After parse | `Key.keys[]` | `addExtraKeys()` → array |
+| Custom Mappings | Runtime | Pointers.kt check | Override before array lookup |
+
+**The underlying data model is already unified.** The problem is the UI doesn't reflect this.
 
 #### 4. XmlLayoutExporter Already Exists
 
@@ -199,22 +209,21 @@ This infrastructure supports Option D's "modified layout XML" approach.
 
 ## Questions for Clarification
 
-### Q1: Extra Keys Without Natural Key Associations
+### Q1: Extra Keys With DEFAULT Position
 
-Many extra keys don't have obvious key placements:
+Many extra keys use `PreferredPos.DEFAULT` which means "place anywhere there's an empty slot":
 
-| Extra Key | Current Placement | Proposed Subkey Location? |
-|-----------|-------------------|---------------------------|
-| `voice_typing` | DEFAULT position | ??? |
-| `switch_clipboard` | DEFAULT position | ??? |
-| `compose` | DEFAULT position | ??? |
-| `accent_aigu` | DEFAULT position | ??? |
-| `€`, `ß`, `£` | DEFAULT position | ??? |
-| `zwj`, `zwnj` | DEFAULT position | ??? |
-| `capslock` | DEFAULT position | ??? |
-| `tab`, `esc` | DEFAULT position | ??? |
+| Extra Key | Current Behavior |
+|-----------|------------------|
+| `voice_typing` | Finds any empty subkey slot on any key |
+| `switch_clipboard` | Finds any empty subkey slot on any key |
+| `compose` | Finds any empty subkey slot on any key |
+| `accent_aigu` | Finds any empty subkey slot on any key |
+| `€`, `ß`, `£` | Finds any empty subkey slot on any key |
 
-**Question**: Should these remain as separate keys (not converted to subkeys), or should we define default subkey positions for all 90+ extra keys?
+These are ALREADY subkeys - just placed wherever there's room rather than at a specific location.
+
+**Question**: For these "floating" extra keys, should ShortSwipeCustomizationActivity show them at their actual placed position (which varies by layout), or should we define fixed default positions for consistency?
 
 ### Q2: Slot Conflicts
 
