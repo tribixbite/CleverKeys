@@ -152,7 +152,7 @@ The default QWERTY US layout has these subkeys that would appear as "custom mapp
 | **L** | SE | `\` | Backslash |
 | **L** | SW | `/` | Slash |
 
-**Total: 8 subkeys from K and L** (not 4 as originally mentioned - each key has 4).
+**Total: 8 subkeys from K and L** (4 each, as you mentioned).
 
 Many other keys also have subkeys:
 - `Q`: ne="1", nw="~", sw="`", se="loc esc"
