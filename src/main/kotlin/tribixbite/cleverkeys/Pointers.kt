@@ -372,16 +372,20 @@ class Pointers(
                     // Use the easier (smaller) of the two thresholds for minimum
                     val minDistance = min(percentMinThreshold, effectiveAbsolute)
 
-                    // Max distance is now handled by hasLeftStartingKey calculation during MOVE
-                    // If we got here, hasLeftStartingKey is false, meaning we're within max_distance
+                    // v1.2.3 FIX: Restore max distance check that was removed in 7c2131f7
+                    // The hasLeftStartingKey flag alone creates a gap where medium swipes (e.g., 140px)
+                    // that don't exceed max_distance still trigger short gestures instead of neural swipe.
+                    // By checking max explicitly here, swipes exceeding max fall through to neural prediction.
+                    val maxDistance = keyHypotenuse * (_config.short_gesture_max_distance / 100.0f)
+
                     Log.d(
                         "Pointers", "Short gesture check: distance=$distance " +
-                            "minDistance=$minDistance " +
+                            "minDistance=$minDistance maxDistance=$maxDistance " +
                             "(min=${_config.short_gesture_min_distance}% max=${_config.short_gesture_max_distance}% of $keyHypotenuse) " +
                             "hasLeftKey=${ptr.hasLeftStartingKey}"
                     )
 
-                    if (distance >= minDistance) {
+                    if (distance >= minDistance && distance <= maxDistance) {
                         // Trigger short gesture - calculate direction (same as original repo)
                         val a = atan2(dy, dx) + Math.PI
                         // a is between 0 and 2pi, 0 is pointing to the left
