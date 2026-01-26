@@ -59,13 +59,15 @@ class ModelLoader(
      * @param modelPath Asset path (e.g., "models/encoder.onnx") or content URI
      * @param sessionName Human-readable name for logging (e.g., "encoder", "decoder")
      * @param enableHardwareAcceleration Whether to attempt hardware acceleration
+     * @param xnnpackThreads Number of threads for XNNPACK (1-8, default 2)
      * @return LoadResult with session and metadata
      * @throws RuntimeException if loading fails
      */
     fun loadModel(
         modelPath: String,
         sessionName: String,
-        enableHardwareAcceleration: Boolean = true
+        enableHardwareAcceleration: Boolean = true,
+        xnnpackThreads: Int = 2
     ): LoadResult {
         try {
             // Load model bytes
@@ -77,7 +79,7 @@ class ModelLoader(
 
             // Try hardware acceleration if enabled
             val executionProvider = if (enableHardwareAcceleration) {
-                tryEnableHardwareAcceleration(sessionOptions, sessionName)
+                tryEnableHardwareAcceleration(sessionOptions, sessionName, xnnpackThreads)
             } else {
                 "CPU"
             }
@@ -202,14 +204,16 @@ class ModelLoader(
      *
      * @param sessionOptions Session options to configure
      * @param sessionName Session name for logging
+     * @param xnnpackThreads Number of threads for XNNPACK (1-8)
      * @return Name of execution provider being used
      */
     private fun tryEnableHardwareAcceleration(
         sessionOptions: OrtSession.SessionOptions,
-        sessionName: String
+        sessionName: String,
+        xnnpackThreads: Int
     ): String {
         // Try XNNPACK first (optimized CPU inference) - Most stable
-        if (tryXnnpack(sessionOptions, sessionName)) {
+        if (tryXnnpack(sessionOptions, sessionName, xnnpackThreads)) {
             return "XNNPACK"
         }
 
@@ -259,14 +263,23 @@ class ModelLoader(
 
     /**
      * Try to enable XNNPACK execution provider.
+     *
+     * @param sessionOptions Session options to configure
+     * @param sessionName Session name for logging
+     * @param threadCount Number of threads (1-8, default 2)
      */
-    private fun tryXnnpack(sessionOptions: OrtSession.SessionOptions, sessionName: String): Boolean {
+    private fun tryXnnpack(
+        sessionOptions: OrtSession.SessionOptions,
+        sessionName: String,
+        threadCount: Int
+    ): Boolean {
         return try {
-            // Configure XNNPACK with 4 threads for performance
-            val options = mapOf("intra_op_num_threads" to "4")
+            // Configure XNNPACK with user-specified thread count
+            val threads = threadCount.coerceIn(1, 8)
+            val options = mapOf("intra_op_num_threads" to threads.toString())
             sessionOptions.addXnnpack(options)
-            sessionOptions.setIntraOpNumThreads(4)
-            Log.i(TAG, "✅ XNNPACK enabled for $sessionName with 4 threads")
+            sessionOptions.setIntraOpNumThreads(threads)
+            Log.i(TAG, "✅ XNNPACK enabled for $sessionName with $threads threads")
             true
         } catch (e: Exception) {
             Log.d(TAG, "XNNPACK not available for $sessionName: ${e.message}")

@@ -190,8 +190,13 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             )
 
             // Use SessionConfigurator logic inside ModelLoader
-            val encResult = modelLoader.loadModel(encoderPath, "Encoder", !forceCpuFallback)
-            val decResult = modelLoader.loadModel(decoderPath, "Decoder", !forceCpuFallback)
+            // Get XNNPACK thread count from config or prefs (config may not be set yet at init time)
+            val xnnpackThreads = config?.onnx_xnnpack_threads
+                ?: DirectBootAwarePreferences.get_shared_preferences(context)
+                    .getInt("onnx_xnnpack_threads", Defaults.ONNX_XNNPACK_THREADS)
+
+            val encResult = modelLoader.loadModel(encoderPath, "Encoder", !forceCpuFallback, xnnpackThreads)
+            val decResult = modelLoader.loadModel(decoderPath, "Decoder", !forceCpuFallback, xnnpackThreads)
 
             encoderSession = encResult.session
             decoderSession = decResult.session

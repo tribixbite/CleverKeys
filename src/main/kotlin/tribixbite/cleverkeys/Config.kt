@@ -243,6 +243,9 @@ object Defaults {
     const val LANGUAGE_DETECTION_SENSITIVITY = 0.6f
     const val SECONDARY_PREDICTION_WEIGHT = 0.9f  // v1.1.94: Multiplier for secondary dictionary predictions
 
+    // ONNX Runtime settings
+    const val ONNX_XNNPACK_THREADS = 2  // Default to 2 (optimal for most ARM devices)
+
     // Debug
     const val DEBUG_ENABLED = false
     const val SWIPE_SHOW_DEBUG_SCORES = false
@@ -511,6 +514,9 @@ class Config private constructor(
     @JvmField var neural_max_cumulative_boost = Defaults.NEURAL_MAX_CUMULATIVE_BOOST
     @JvmField var neural_strict_start_char = Defaults.NEURAL_STRICT_START_CHAR
 
+    // ONNX Runtime settings (requires app restart to take effect)
+    @JvmField var onnx_xnnpack_threads = Defaults.ONNX_XNNPACK_THREADS
+
     // Dynamically set
     @JvmField var shouldOfferVoiceTyping = false
     @JvmField var actionLabel: String? = null
@@ -763,6 +769,10 @@ class Config private constructor(
             Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
         neural_strict_start_char = _prefs.getBoolean("neural_strict_start_char",
             Defaults.NEURAL_STRICT_START_CHAR)
+
+        // ONNX Runtime settings (requires app restart to take effect)
+        onnx_xnnpack_threads = safeGetInt(_prefs, "onnx_xnnpack_threads", Defaults.ONNX_XNNPACK_THREADS)
+            .coerceIn(1, 8)  // Clamp to valid range
 
         val screen_width_dp = dm.widthPixels / dm.density
         wide_screen = screen_width_dp >= WIDE_DEVICE_THRESHOLD
