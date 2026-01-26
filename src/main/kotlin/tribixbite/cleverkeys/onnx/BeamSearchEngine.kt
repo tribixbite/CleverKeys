@@ -126,37 +126,38 @@ class BeamSearchEngine(
     fun search(memory: OnnxTensor, actualSrcLength: Int, useBatched: Boolean = false): List<BeamSearchCandidate> {
         val beams = ArrayList<BeamState>()
         beams.add(BeamState(SOS_IDX, 0.0f))
-        
+
         var step = 0
         var totalInferenceTime = 0L
-        
-        // Main decoding loop
-        while (step < maxLength) {
-            val candidates = ArrayList<BeamState>()
-            val activeBeams = beams.filter { !it.finished }
-            val finishedBeams = beams.filter { it.finished }
-            
-            // Pass finished beams to candidates for next step ranking
-            candidates.addAll(finishedBeams.map { BeamState(it) })
-            
-            if (activeBeams.isEmpty()) break
-            
-            // Log every 5th step
-            if (step % 5 == 0) {
-                // logDebug("Step $step: ${activeBeams.size} active beams")
-            }
 
-            try {
-                val startInf = System.nanoTime()
-                
-                // Decide strategy: Batched vs Sequential
-                // Batched mode makes a single decoder call for all beams per step (5x fewer calls)
-                // Sequential mode is more robust but slower
-                val nextBeams = if (useBatched && activeBeams.size > 1) {
-                    processBatched(activeBeams, memory, actualSrcLength, step)
-                } else {
-                    processSequential(activeBeams, memory, actualSrcLength, step)
+        try {
+            // Main decoding loop
+            while (step < maxLength) {
+                val candidates = ArrayList<BeamState>()
+                val activeBeams = beams.filter { !it.finished }
+                val finishedBeams = beams.filter { it.finished }
+
+                // Pass finished beams to candidates for next step ranking
+                candidates.addAll(finishedBeams.map { BeamState(it) })
+
+                if (activeBeams.isEmpty()) break
+
+                // Log every 5th step
+                if (step % 5 == 0) {
+                    // logDebug("Step $step: ${activeBeams.size} active beams")
                 }
+
+                try {
+                    val startInf = System.nanoTime()
+
+                    // Decide strategy: Batched vs Sequential
+                    // Batched mode makes a single decoder call for all beams per step (5x fewer calls)
+                    // Sequential mode is more robust but slower
+                    val nextBeams = if (useBatched && activeBeams.size > 1) {
+                        processBatched(activeBeams, memory, actualSrcLength, step)
+                    } else {
+                        processSequential(activeBeams, memory, actualSrcLength, step)
+                    }
                 candidates.addAll(nextBeams)
 
                 // Strict start char filtering: after step 0, remove beams whose first char
@@ -242,15 +243,19 @@ class BeamSearchEngine(
                 }
             }
             
-            // All finished check
-            if (beams.all { it.finished } || beams.count { it.finished } >= beamWidth) {
-                break
+                // All finished check
+                if (beams.all { it.finished } || beams.count { it.finished } >= beamWidth) {
+                    break
+                }
+
+                step++
             }
-            
-            step++
+
+            return beams.mapNotNull { convertToCandidate(it) }
+        } finally {
+            // Release cached tensors to prevent native memory leak
+            cleanup()
         }
-        
-        return beams.mapNotNull { convertToCandidate(it) }
     }
     
     private fun processSequential(
@@ -409,8 +414,13 @@ class BeamSearchEngine(
             batchedShape
         )
 
-        // 2. Create src_length tensor (broadcast model uses single value)
-        val srcLengthTensor = OnnxTensor.createTensor(ortEnvironment, intArrayOf(actualSrcLength))
+        // 2. OPTIMIZATION: Reuse cachedSrcLengthTensor if length unchanged (same as processSequential)
+        if (actualSrcLength != cachedSrcLength) {
+            cachedSrcLengthTensor?.close()
+            cachedSrcLengthTensor = OnnxTensor.createTensor(ortEnvironment, intArrayOf(actualSrcLength))
+            cachedSrcLength = actualSrcLength
+        }
+        val srcLengthTensor = cachedSrcLengthTensor!!
 
         try {
             // 3. Single decoder call for ALL beams
@@ -490,7 +500,7 @@ class BeamSearchEngine(
 
         } finally {
             batchedTokensTensor.close()
-            srcLengthTensor.close()
+            // NOTE: Don't close srcLengthTensor - it's cached for reuse across steps
         }
 
         return newCandidates
