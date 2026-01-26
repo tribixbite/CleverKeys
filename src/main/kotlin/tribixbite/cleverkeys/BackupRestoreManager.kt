@@ -224,6 +224,7 @@ class BackupRestoreManager(private val context: Context) {
         "swipe_smoothing_window" to Defaults.SWIPE_SMOOTHING_WINDOW,
         "neural_resampling_mode" to Defaults.NEURAL_RESAMPLING_MODE,
         "neural_user_max_seq_length" to Defaults.NEURAL_USER_MAX_SEQ_LENGTH,
+        "onnx_xnnpack_threads" to Defaults.ONNX_XNNPACK_THREADS,
 
         // Word prediction
         "swipe_typing_enabled" to Defaults.SWIPE_TYPING_ENABLED,

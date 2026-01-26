@@ -296,6 +296,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Neural model config settings
     private var neuralResamplingMode by mutableStateOf("discard")
     private var neuralUserMaxSeqLength by mutableStateOf(0)
+    private var onnxXnnpackThreads by mutableStateOf(Defaults.ONNX_XNNPACK_THREADS)
 
     // Multi-language settings
     private var multiLangEnabled by mutableStateOf(false)
@@ -449,6 +450,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Beam Width", listOf("accuracy", "prediction", "candidates", "beam"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "beam_width"),
             SearchableSetting("Confidence Threshold", listOf("accuracy", "filter", "confidence"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "confidence_threshold"),
             SearchableSetting("Max Sequence Length", listOf("sequence", "length", "maximum", "resampling"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "max_seq_length"),
+            SearchableSetting("ONNX Threads", listOf("threads", "cpu", "xnnpack", "performance", "onnx"), "Neural Prediction", expandSection = { neuralSectionExpanded = true; neuralAdvancedExpanded = true }, gatedBy = "swipe_typing", settingId = "onnx_threads"),
 
             // ==================== WORD PREDICTION & AUTOCORRECT ====================
             SearchableSetting("Word Predictions", listOf("prediction", "suggestions", "completion", "autocomplete"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "word_prediction"),
@@ -1493,6 +1495,19 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                                     neuralGreedySearch = it
                                     saveSetting("neural_greedy_search", it)
                                 }
+                            )
+
+                            SettingsSlider(
+                                title = "ONNX Threads",
+                                description = "CPU threads for inference (restart required)",
+                                value = onnxXnnpackThreads.toFloat(),
+                                valueRange = 1f..8f,
+                                steps = 6,
+                                onValueChange = {
+                                    onnxXnnpackThreads = it.toInt()
+                                    saveSetting("onnx_xnnpack_threads", onnxXnnpackThreads)
+                                },
+                                displayValue = "$onnxXnnpackThreads threads"
                             )
 
                             // NOTE: Pruning Confidence and Early Stop Gap moved to Full Neural Settings
@@ -4593,6 +4608,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Neural model config settings
         neuralResamplingMode = prefs.getSafeString("neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE)
         neuralUserMaxSeqLength = Config.safeGetInt(prefs, "neural_user_max_seq_length", Defaults.NEURAL_USER_MAX_SEQ_LENGTH)
+        onnxXnnpackThreads = Config.safeGetInt(prefs, "onnx_xnnpack_threads", Defaults.ONNX_XNNPACK_THREADS)
 
         // Multi-language settings
         multiLangEnabled = prefs.getSafeBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)
@@ -4929,6 +4945,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     editor.putFloat("neural_temperature", Defaults.NEURAL_TEMPERATURE)
                     editor.putFloat("neural_frequency_weight", Defaults.NEURAL_FREQUENCY_WEIGHT)
                     editor.putInt("swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
+                    editor.putBoolean("neural_batch_beams", Defaults.NEURAL_BATCH_BEAMS)
+                    editor.putBoolean("neural_greedy_search", Defaults.NEURAL_GREEDY_SEARCH)
+                    editor.putInt("onnx_xnnpack_threads", Defaults.ONNX_XNNPACK_THREADS)
 
                     // Input behavior
                     editor.putBoolean("vibrate_custom", Defaults.VIBRATE_CUSTOM)
