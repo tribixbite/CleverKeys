@@ -64,9 +64,9 @@ A: Several options depending on your layout configuration:
 
 **Q: How do I switch between languages?**
 
-A: Use the **primary/secondary language toggle**:
+A: Use the **primary/secondary language toggle subkeys**:
 1. Set your languages in **Settings → Multi-Language** (Primary and Secondary)
-2. The toggle cycles between them
+2. The toggle subkeys cycle between them
 3. Both languages contribute to swipe predictions when Multi-Language mode is enabled
 
 You can also configure layouts in **Settings → Activities → Layout Manager**.
@@ -91,7 +91,7 @@ A: **Swipe SOUTHWEST on the Fn key** to open the emoji picker:
 
 **Q: How do I use the clipboard?**
 
-A: **Swipe on the Fn key** to open clipboard history:
+A: **Swipe SOUTHWEST on the Ctrl key** to open clipboard history:
 - **History tab**: Recent clipboard items
 - **Pinned tab**: Items you've pinned for quick access
 - **Todos tab**: Items marked as todos

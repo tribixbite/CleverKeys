@@ -4162,7 +4162,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             ),
             FAQItem(
                 question = "How do I switch between languages?",
-                answer = "Use the primary/secondary language toggle. Set your languages in Settings → Multi-Language (Primary and Secondary). The toggle cycles between them, and both contribute to swipe predictions when Multi-Language mode is enabled."
+                answer = "Use the primary/secondary language toggle subkeys. Set your languages in Settings → Multi-Language (Primary and Secondary). The toggle subkeys cycle between them, and both languages contribute to swipe predictions when Multi-Language mode is enabled."
             ),
             FAQItem(
                 question = "How do I access emojis?",
@@ -4170,7 +4170,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             ),
             FAQItem(
                 question = "How do I use the clipboard?",
-                answer = "Swipe on the Fn key to open clipboard history. The clipboard panel has tabs for History, Pinned items, and Todos. Tap an item to paste it. Long-press to pin/unpin. Password manager apps (KeePassDX, Chrome, Firefox, Edge) are excluded from history by default."
+                answer = "Swipe SOUTHWEST on the Ctrl key to open clipboard history. The clipboard panel has tabs for History, Pinned items, and Todos. Tap an item to paste it. Long-press to pin/unpin. Password manager apps (KeePassDX, Chrome, Firefox, Edge) are excluded from history by default."
             ),
             FAQItem(
                 question = "How does swipe typing work?",
