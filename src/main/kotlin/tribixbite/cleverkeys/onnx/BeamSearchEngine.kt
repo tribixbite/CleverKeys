@@ -131,13 +131,13 @@ class BeamSearchEngine(
                 val startInf = System.nanoTime()
                 
                 // Decide strategy: Batched vs Sequential
-                // Note: Batched logic is complex to port directly without tensor utilities.
-                // For this extraction, we'll focus on correcting the logic first in sequential mode, 
-                // effectively fixing "Critical Issue #1" (Score Accumulation).
-                // Re-enabling batching is a TODO for tensor shape verification.
-                
-                // SEQUENTIAL PROCESSING (Robust default)
-                val nextBeams = processSequential(activeBeams, memory, actualSrcLength, step)
+                // Batched mode makes a single decoder call for all beams per step (5x fewer calls)
+                // Sequential mode is more robust but slower
+                val nextBeams = if (useBatched && activeBeams.size > 1) {
+                    processBatched(activeBeams, memory, actualSrcLength, step)
+                } else {
+                    processSequential(activeBeams, memory, actualSrcLength, step)
+                }
                 candidates.addAll(nextBeams)
 
                 // Strict start char filtering: after step 0, remove beams whose first char
@@ -343,7 +343,131 @@ class BeamSearchEngine(
         
         return newCandidates
     }
-    
+
+    /**
+     * Process all active beams in a single batched decoder call.
+     * This is ~5x faster than sequential processing (1 call vs N calls per step).
+     *
+     * The decoder model supports batched input:
+     * - memory: [1, seq_len, hidden_dim] (broadcast internally)
+     * - target_tokens: [num_beams, DECODER_SEQ_LEN]
+     * - actual_src_length: [1] (broadcast)
+     * - output logits: [num_beams, DECODER_SEQ_LEN, vocab_size]
+     */
+    private fun processBatched(
+        activeBeams: List<BeamState>,
+        memory: OnnxTensor,
+        actualSrcLength: Int,
+        step: Int
+    ): List<BeamState> {
+        val newCandidates = ArrayList<BeamState>()
+        val numBeams = activeBeams.size
+
+        // 1. Prepare batched input tensor [numBeams, DECODER_SEQ_LEN]
+        val batchedTokens = IntArray(numBeams * DECODER_SEQ_LEN)
+        for (b in activeBeams.indices) {
+            val beam = activeBeams[b]
+            val len = min(beam.tokens.size, DECODER_SEQ_LEN)
+            for (i in 0 until len) {
+                batchedTokens[b * DECODER_SEQ_LEN + i] = beam.tokens[i].toInt()
+            }
+            // Rest is already PAD_IDX (0) from array initialization
+        }
+
+        val batchedShape = longArrayOf(numBeams.toLong(), DECODER_SEQ_LEN.toLong())
+        val batchedTokensTensor = OnnxTensor.createTensor(
+            ortEnvironment,
+            java.nio.IntBuffer.wrap(batchedTokens),
+            batchedShape
+        )
+
+        // 2. Create src_length tensor (broadcast model uses single value)
+        val srcLengthTensor = OnnxTensor.createTensor(ortEnvironment, intArrayOf(actualSrcLength))
+
+        try {
+            // 3. Single decoder call for ALL beams
+            val inputs = mapOf(
+                "memory" to memory,
+                "actual_src_length" to srcLengthTensor,
+                "target_tokens" to batchedTokensTensor
+            )
+
+            val result = decoderSession.run(inputs)
+            val logitsTensor = result.get(0) as OnnxTensor
+
+            // 4. Extract logits [numBeams, DECODER_SEQ_LEN, vocabSize]
+            @Suppress("UNCHECKED_CAST")
+            val logits3D = logitsTensor.value as Array<Array<FloatArray>>
+
+            // 5. Process each beam's logits
+            for (b in activeBeams.indices) {
+                val beam = activeBeams[b]
+                val currentPos = beam.tokens.size - 1
+
+                if (currentPos in 0 until DECODER_SEQ_LEN) {
+                    // Get this beam's logits at current position
+                    val logits = logits3D[b][currentPos].copyOf() // Copy to avoid modifying cached tensor
+
+                    // Apply Trie Masking
+                    applyTrieMasking(beam, logits)
+
+                    // Apply Language-Specific Prefix Boosts (before softmax)
+                    val appliedBoosts = applyPrefixBoosts(beam, logits)
+
+                    // Log-Softmax for numerical stability
+                    val logProbs = logSoftmax(logits)
+
+                    // Get Top K
+                    val topIndices = getTopKIndices(logProbs, beamWidth)
+
+                    for (idx in topIndices) {
+                        // Skip SOS and PAD tokens
+                        if (idx == SOS_IDX || idx == PAD_IDX) {
+                            continue
+                        }
+
+                        // EOS marks end of word
+                        if (idx == EOS_IDX) {
+                            val newBeam = BeamState(beam)
+                            newBeam.tokens.add(idx.toLong())
+                            newBeam.score += -logProbs[idx]
+                            newBeam.finished = true
+                            newCandidates.add(newBeam)
+                            continue
+                        }
+
+                        // Regular character tokens
+                        val newBeam = BeamState(beam)
+                        newBeam.tokens.add(idx.toLong())
+                        newBeam.score += -logProbs[idx]
+                        newBeam.finished = false
+
+                        // Track cumulative boost for this path
+                        newBeam.cumulativeBoost = beam.cumulativeBoost + appliedBoosts[idx]
+
+                        // Advance the Aho-Corasick trie state for prefix boost lookups
+                        if (prefixBoostTrie != null && prefixBoostTrie.hasBoosts()) {
+                            val c = tokenizer.indexToChar(idx)
+                            if (c in 'a'..'z') {
+                                newBeam.boostState = prefixBoostTrie.getNextState(beam.boostState, c)
+                            }
+                        }
+
+                        newCandidates.add(newBeam)
+                    }
+                }
+            }
+
+            result.close()
+
+        } finally {
+            batchedTokensTensor.close()
+            srcLengthTensor.close()
+        }
+
+        return newCandidates
+    }
+
     // Track if we've logged trie status for this search (only when debug enabled)
     private var trieStatusLogged = false
 
