@@ -1,10 +1,12 @@
 package tribixbite.cleverkeys
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -163,6 +167,11 @@ private fun ShortSwipeCalibrationScreen(
                     }
                 }
             )
+
+            Spacer(Modifier.height(24.dp))
+
+            // Section 4: Navigation to Per-Key Customization
+            PerKeyCustomizationButton()
         }
     }
 }
@@ -374,7 +383,7 @@ private fun ConfigurationSection(
                 )
                 Text(
                     text = "${minDistance.toInt()}px",
-                    modifier = Modifier.width(50.dp),
+                    modifier = Modifier.width(60.dp),
                     textAlign = TextAlign.End,
                     fontWeight = FontWeight.Medium
                 )
@@ -406,11 +415,58 @@ private fun ConfigurationSection(
                 )
                 Text(
                     text = "${maxDistance.toInt()}px",
-                    modifier = Modifier.width(50.dp),
+                    modifier = Modifier.width(60.dp),
                     textAlign = TextAlign.End,
                     fontWeight = FontWeight.Medium
                 )
             }
+        }
+    }
+}
+
+/**
+ * Reusable button for navigating to Per-Key Customization activity.
+ * Used in both ShortSwipeCalibrationActivity and SettingsActivity.
+ */
+@Composable
+fun PerKeyCustomizationButton() {
+    val context = LocalContext.current
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                context.startActivity(Intent(context, ShortSwipeCustomizationActivity::class.java))
+            },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "⌨️", fontSize = 28.sp)
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Customize Per-Key Actions",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+                Text(
+                    text = "Short swipes, custom commands per key direction",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                )
+            }
+            Icon(
+                imageVector = Icons.Default.ArrowForward,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }

@@ -1193,42 +1193,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     }
                 }
 
-                // Short Swipe Customization Card (Per-Key Actions)
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                        .clickable { openShortSwipeCustomization() },
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = "⌨️", fontSize = 28.sp)
-                        Spacer(Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Customize Per-Key Actions",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            Text(
-                                text = "Short swipes, custom commands per key direction",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.Default.ArrowForward,
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
+                // Short Swipe Customization Card (Per-Key Actions) - shared component
+                Box(modifier = Modifier.padding(bottom = 8.dp)) {
+                    PerKeyCustomizationButton()
                 }
 
                 // Extra Keys Configuration Card
@@ -3818,7 +3785,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
             // Help Section (Collapsible) - FAQ and Wiki
             CollapsibleSettingsSection(
-                title = "Help & FAQ",
+                title = "❓ Help & FAQ",
                 expanded = helpSectionExpanded,
                 onExpandChange = { helpSectionExpanded = it }
             ) {
@@ -4174,38 +4141,39 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     /**
      * FAQ Section with expandable items covering common questions.
+     * NOTE: All answers verified against actual code implementation.
      */
     @Composable
     private fun FAQSection() {
-        // FAQ data - each item is a question/answer pair
+        // FAQ data - each item is a question/answer pair (verified against source code)
         val faqItems = listOf(
             FAQItem(
                 question = "How do I type numbers and symbols?",
-                answer = "Use short swipes (subkeys) on letter keys. Each key has up to 8 hidden characters accessible by swiping in different directions. Swipe up on Q for 1, W for 2, etc. Long-press any key to see all available subkeys."
+                answer = "Use short swipes (subkeys) on letter keys. Each key has up to 8 hidden characters in different directions (N, NE, E, SE, S, SW, W, NW). For example, swipe NORTHEAST on Q for '1'. Use Settings → Activities → Per-Key Customization to see and modify all subkey assignments."
             ),
             FAQItem(
                 question = "How do I move the cursor?",
-                answer = "Swipe left/right on the spacebar to move the cursor one character at a time. For continuous navigation, long-press the spacebar to enter trackpoint mode, then swipe in any direction."
+                answer = "Swipe on the spacebar - cursor movement speed is proportional to how far you swipe. For precision navigation, long-press a key that has arrow subkeys (like spacebar or nav keys) to enter TrackPoint mode, then move your finger like a joystick."
             ),
             FAQItem(
                 question = "How do I select and delete text?",
-                answer = "Hold Shift while swiping on spacebar to extend selection. Swipe left on backspace to delete the entire word before the cursor. Backspace deletes any selected text."
+                answer = "For Selection-Delete mode: short swipe on backspace then HOLD - move your finger like a joystick to select text (left/right for characters, up/down for lines). Release to delete selected text. Swipe left on backspace deletes the word before cursor."
             ),
             FAQItem(
                 question = "How do I switch between languages?",
-                answer = "Add a language toggle to a subkey via Settings → Activities → Per-Key Customization. Assign the 'Language Toggle' action to a direction on any key, then swipe to cycle through enabled languages."
+                answer = "Use Settings → Activities → Per-Key Customization to assign 'switch_forward' or 'switch_backward' to a subkey direction. You can also enable Multi-Language mode in Settings to blend multiple dictionaries for predictions."
             ),
             FAQItem(
                 question = "How do I access emojis?",
-                answer = "Long-press the Enter key to open the emoji picker. You can also use contextual emoji search - type a word like 'happy' or 'food' and see related emoji suggestions appear."
+                answer = "Swipe on the Ctrl key (SW direction opens clipboard, other directions may open emoji depending on layout). You can also assign 'switch_emoji' to any subkey via Per-Key Customization. The emoji picker includes search and 119 text emoticons."
             ),
             FAQItem(
                 question = "How does swipe typing work?",
-                answer = "Touch the first letter of your word, slide your finger through each letter without lifting, then release on the last letter. CleverKeys uses on-device AI to predict your word from the gesture."
+                answer = "Touch the first letter of your word, slide your finger through each letter without lifting, then release on the last letter. CleverKeys uses an on-device ONNX neural network with beam search to predict your word from the gesture path."
             ),
             FAQItem(
                 question = "Is my typing data private?",
-                answer = "Yes! CleverKeys is fully offline. All text prediction happens on-device using local AI. No network connections are made for typing features. Your personal dictionary and clipboard history stay on your device."
+                answer = "Yes! CleverKeys is fully offline - no INTERNET permission. All text prediction happens on-device using local AI. Your personal dictionary and clipboard history stay on your device. Password manager apps are excluded from clipboard history by default."
             )
         )
 
