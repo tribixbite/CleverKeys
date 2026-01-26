@@ -72,6 +72,12 @@
   - Emoji: switch_emoji event, layout-dependent
   - Removed non-existent long-press popup references
 - ✅ Wiki audit: identified extensive hallucinations in multiple pages (accessibility, themes, backup-restore, layouts)
+- ✅ Further FAQ corrections:
+  - TrackPoint: only nav key (between spacebar and enter), not generic "nav keys"
+  - Language switch: primary/secondary toggle, not switch_forward/switch_backward
+  - Emoji: SW on Fn key, not Ctrl
+  - Added clipboard FAQ (Fn swipe, History/Pinned/Todos tabs)
+- ✅ Calibration step persistence: shows checked forever after first click
 
 ## In Progress
 - 🔄 Subkey System Unification (Option D) - awaiting user answers to clarifying questions
