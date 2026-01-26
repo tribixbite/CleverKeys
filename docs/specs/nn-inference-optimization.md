@@ -1,8 +1,8 @@
 # Neural Network Inference Optimization Specification
 
-**Status**: Planning Complete
+**Status**: Implemented (3 of 4 optimizations)
 **Priority**: High (latency-sensitive)
-**Last Updated**: 2026-01-25
+**Last Updated**: 2026-01-26
 
 ---
 
@@ -594,12 +594,12 @@ SearchableSetting(
 
 ## 4. Implementation Priority
 
-| Optimization | Impact | Effort | Priority |
-|-------------|--------|--------|----------|
-| **Batched Decoding** | High (5x fewer decoder calls) | Medium | 1 |
-| **Tensor Reuse** | High (40% fewer allocations) | Low | 2 |
-| **XNNPACK Threads Setting** | Low-Medium | Low | 3 |
-| **Encoder Caching** | Medium (cache hits only) | Medium | 4 |
+| Optimization | Impact | Effort | Priority | Status |
+|-------------|--------|--------|----------|--------|
+| **Batched Decoding** | High (5x fewer decoder calls) | Medium | 1 | ✅ Implemented (c6cbb991) |
+| **Tensor Reuse** | High (40% fewer allocations) | Low | 2 | ✅ Implemented (6aaf550f) |
+| **XNNPACK Threads Setting** | Low-Medium | Low | 3 | ✅ Implemented (daab4ede) |
+| **Encoder Caching** | Medium (cache hits only) | Medium | 4 | ⏸️ Deferred (complexity vs. benefit)
 
 ---
 
