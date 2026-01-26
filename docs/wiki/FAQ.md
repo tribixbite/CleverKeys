@@ -93,10 +93,11 @@ A: **Swipe SOUTHWEST on the Fn key** to open the emoji picker:
 
 A: **Swipe SOUTHWEST on the Ctrl key** to open clipboard history:
 - **History tab**: Recent clipboard items
-- **Pinned tab**: Items you've pinned for quick access
+- **Pinned tab**: Items you've saved for quick access
 - **Todos tab**: Items marked as todos
-- Tap any item to paste it
-- Long-press to pin/unpin items
+- Tap an item to expand it
+- Use the icon buttons to paste, move to pinned, or copy as todo
+- Re-copying an item already in history won't duplicate or reorder it
 - Password manager apps (KeePassDX, Chrome, Firefox, Edge) are excluded by default
 
 **Q: What is contextual emoji search?**

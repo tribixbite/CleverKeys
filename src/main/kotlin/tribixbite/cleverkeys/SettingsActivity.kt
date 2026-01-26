@@ -4170,7 +4170,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             ),
             FAQItem(
                 question = "How do I use the clipboard?",
-                answer = "Swipe SOUTHWEST on the Ctrl key to open clipboard history. The clipboard panel has tabs for History, Pinned items, and Todos. Tap an item to paste it. Long-press to pin/unpin. Password manager apps (KeePassDX, Chrome, Firefox, Edge) are excluded from history by default."
+                answer = "Swipe SOUTHWEST on the Ctrl key to open clipboard history. The panel has tabs for History, Pinned, and Todos. Tap an item to expand it, then use the icon buttons to paste, move to pinned, or copy as todo. Note: re-copying an item already in history won't duplicate or reorder it. Password manager apps are excluded by default."
             ),
             FAQItem(
                 question = "How does swipe typing work?",
