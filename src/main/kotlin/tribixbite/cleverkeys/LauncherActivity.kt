@@ -31,6 +31,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -108,6 +109,7 @@ class LauncherActivity : ComponentActivity() {
                     LauncherScreen(
                         onEnableKeyboard = { launchKeyboardSettings() },
                         onSelectKeyboard = { launchInputMethodPicker() },
+                        onCalibrateGestures = { launchGestureCalibration() },
                         onOpenSettings = { launchAppSettings() },
                         onOpenGitHub = { openGitHub() }
                     )
@@ -143,6 +145,14 @@ class LauncherActivity : ComponentActivity() {
         }
     }
 
+    private fun launchGestureCalibration() {
+        try {
+            startActivity(Intent(this, ShortSwipeCalibrationActivity::class.java))
+        } catch (e: Exception) {
+            Log.e(TAG, "Error launching gesture calibration", e)
+        }
+    }
+
     private fun openGitHub() {
         try {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_URL))
@@ -158,6 +168,7 @@ class LauncherActivity : ComponentActivity() {
 fun LauncherScreen(
     onEnableKeyboard: () -> Unit,
     onSelectKeyboard: () -> Unit,
+    onCalibrateGestures: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenGitHub: () -> Unit
 ) {
@@ -328,6 +339,15 @@ fun LauncherScreen(
                     icon = Icons.Default.CheckCircle,
                     isCompleted = isKeyboardSelected,
                     onClick = onSelectKeyboard
+                )
+
+                SetupCard(
+                    number = "3",
+                    title = "Calibrate Per-Key Gestures",
+                    description = "Configure up to 8 subkey actions per key",
+                    icon = Icons.Default.Edit,
+                    isCompleted = false, // Optional calibration, never shows as "completed"
+                    onClick = onCalibrateGestures
                 )
             }
 

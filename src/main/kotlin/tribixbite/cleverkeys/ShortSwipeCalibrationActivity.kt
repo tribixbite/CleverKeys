@@ -199,7 +199,7 @@ private fun TutorialSection() {
             Spacer(Modifier.height(16.dp))
 
             Text(
-                text = "Short swipes trigger quick actions on keys. " +
+                text = "Short swipes trigger up to 8 subkey actions per key based on direction. " +
                        "Move your finger a small distance to activate.",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

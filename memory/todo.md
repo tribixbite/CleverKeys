@@ -56,6 +56,14 @@
 - ✅ v1.2.8 released (includes all v1.2.6 changes for F-Droid)
 - ✅ Verified Direct Boot safety: swipe_on_password_fields, dictionary loading all use DirectBootAwarePreferences
 
+## Completed (2026-01-26)
+- ✅ Added "Calibrate Per-Key Gestures" as third setup box on launcher screen
+- ✅ Updated calibration activity text: "trigger up to 8 subkey actions per key based on direction"
+- ✅ Created FAQ document (docs/wiki/FAQ.md) covering common questions
+- ✅ Added Help & FAQ section to Settings (bottom, collapsible with expandable FAQ items)
+- ✅ Added "Open Full Wiki" button linking to https://tribixbite.github.io/CleverKeys/wiki
+- ✅ Made FAQ searchable via Settings search
+
 ## In Progress
 - 🔄 Subkey System Unification (Option D) - awaiting user answers to clarifying questions
   - See: `memory/subkey-unification-research.md`

@@ -9,6 +9,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 
 ## Quick Links
 
+- [FAQ](./FAQ.md) - Frequently asked questions
 - [Installation Guide](./getting-started/installation.md) - Get started in 2 minutes
 - [Swipe Typing Tutorial](./typing/swipe-typing.md) - Master gesture-based input
 - [Settings Reference](./settings/appearance.md) - Customize your experience

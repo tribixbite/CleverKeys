@@ -353,6 +353,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var backupRestoreSectionExpanded by mutableStateOf(false)
     private var advancedSectionExpanded by mutableStateOf(false)
     private var infoSectionExpanded by mutableStateOf(false)
+    private var helpSectionExpanded by mutableStateOf(false)
 
     // Test keyboard field (#1134: test input without leaving settings)
     private var testKeyboardExpanded by mutableStateOf(false)
@@ -411,6 +412,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         backupRestoreSectionExpanded = false
         advancedSectionExpanded = false
         infoSectionExpanded = false
+        helpSectionExpanded = false
     }
 
     /**
@@ -557,7 +559,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Debug Logging", listOf("log", "developer", "verbose", "debug"), "Advanced", expandSection = { advancedSectionExpanded = true }, settingId = "debug_logging"),
             SearchableSetting("Terminal Mode", listOf("terminal", "termux", "mode"), "Advanced", expandSection = { advancedSectionExpanded = true }, settingId = "terminal_mode"),
             SearchableSetting("Detailed Swipe Logging", listOf("detailed", "swipe", "logging"), "Advanced", expandSection = { advancedSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "detailed_logging"),
-            SearchableSetting("Show Debug Scores", listOf("debug", "scores", "prediction"), "Advanced", expandSection = { advancedSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "debug_scores")
+            SearchableSetting("Show Debug Scores", listOf("debug", "scores", "prediction"), "Advanced", expandSection = { advancedSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "debug_scores"),
+
+            // ==================== HELP & FAQ ====================
+            SearchableSetting("Help & FAQ", listOf("help", "faq", "documentation", "wiki", "questions"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "help_faq"),
+            SearchableSetting("Type Numbers & Symbols", listOf("numbers", "symbols", "subkey", "short swipe"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_numbers"),
+            SearchableSetting("Cursor Control", listOf("cursor", "navigation", "spacebar", "move"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_cursor"),
+            SearchableSetting("Select & Delete Text", listOf("selection", "delete", "text", "backspace"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_selection"),
+            SearchableSetting("Language Switching", listOf("language", "switch", "toggle", "multilingual"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_language"),
+            SearchableSetting("Emoji Access", listOf("emoji", "emoticon", "symbols"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_emoji"),
+            SearchableSetting("Swipe Typing Help", listOf("swipe", "typing", "glide", "gesture"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_swipe"),
+            SearchableSetting("Privacy Info", listOf("privacy", "offline", "data", "secure"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_privacy")
         )
     }
 
@@ -3803,6 +3815,38 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 // F-Droid handles updates automatically
 
             }
+
+            // Help Section (Collapsible) - FAQ and Wiki
+            CollapsibleSettingsSection(
+                title = "Help & FAQ",
+                expanded = helpSectionExpanded,
+                onExpandChange = { helpSectionExpanded = it }
+            ) {
+                // FAQ Items
+                FAQSection()
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Online Wiki Button
+                Button(
+                    onClick = { openWikiInBrowser() },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text("Open Full Wiki")
+                }
+            }
+        }
+    }
+
+    private fun openWikiInBrowser() {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://tribixbite.github.io/CleverKeys/wiki"))
+            startActivity(intent)
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Failed to open wiki", e)
         }
     }
 
@@ -4124,6 +4168,101 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     fontSize = 11.sp,
                     modifier = Modifier.padding(top = 4.dp)
                 )
+            }
+        }
+    }
+
+    /**
+     * FAQ Section with expandable items covering common questions.
+     */
+    @Composable
+    private fun FAQSection() {
+        // FAQ data - each item is a question/answer pair
+        val faqItems = listOf(
+            FAQItem(
+                question = "How do I type numbers and symbols?",
+                answer = "Use short swipes (subkeys) on letter keys. Each key has up to 8 hidden characters accessible by swiping in different directions. Swipe up on Q for 1, W for 2, etc. Long-press any key to see all available subkeys."
+            ),
+            FAQItem(
+                question = "How do I move the cursor?",
+                answer = "Swipe left/right on the spacebar to move the cursor one character at a time. For continuous navigation, long-press the spacebar to enter trackpoint mode, then swipe in any direction."
+            ),
+            FAQItem(
+                question = "How do I select and delete text?",
+                answer = "Hold Shift while swiping on spacebar to extend selection. Swipe left on backspace to delete the entire word before the cursor. Backspace deletes any selected text."
+            ),
+            FAQItem(
+                question = "How do I switch between languages?",
+                answer = "Add a language toggle to a subkey via Settings → Activities → Per-Key Customization. Assign the 'Language Toggle' action to a direction on any key, then swipe to cycle through enabled languages."
+            ),
+            FAQItem(
+                question = "How do I access emojis?",
+                answer = "Long-press the Enter key to open the emoji picker. You can also use contextual emoji search - type a word like 'happy' or 'food' and see related emoji suggestions appear."
+            ),
+            FAQItem(
+                question = "How does swipe typing work?",
+                answer = "Touch the first letter of your word, slide your finger through each letter without lifting, then release on the last letter. CleverKeys uses on-device AI to predict your word from the gesture."
+            ),
+            FAQItem(
+                question = "Is my typing data private?",
+                answer = "Yes! CleverKeys is fully offline. All text prediction happens on-device using local AI. No network connections are made for typing features. Your personal dictionary and clipboard history stay on your device."
+            )
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            faqItems.forEach { item ->
+                FAQItemCard(item)
+            }
+        }
+    }
+
+    private data class FAQItem(val question: String, val answer: String)
+
+    @Composable
+    private fun FAQItemCard(item: FAQItem) {
+        var expanded by remember { mutableStateOf(false) }
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = !expanded },
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = item.question,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = if (expanded) "Collapse" else "Expand",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                AnimatedVisibility(
+                    visible = expanded,
+                    enter = expandVertically(),
+                    exit = shrinkVertically()
+                ) {
+                    Text(
+                        text = item.answer,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 13.sp,
+                        lineHeight = 18.sp,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
             }
         }
     }
