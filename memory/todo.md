@@ -63,6 +63,15 @@
 - ✅ Added Help & FAQ section to Settings (bottom, collapsible with expandable FAQ items)
 - ✅ Added "Open Full Wiki" button linking to https://tribixbite.github.io/CleverKeys/wiki
 - ✅ Made FAQ searchable via Settings search
+- ✅ Fixed 240px overflow in calibration slider (50dp → 60dp)
+- ✅ Added shared PerKeyCustomizationButton composable (DRY between Settings/Calibration)
+- ✅ Corrected FAQ content with verified code behavior:
+  - Q subkey: NORTHEAST not north
+  - Spacebar cursor: proportional to distance
+  - TrackPoint: long-press nav keys, not spacebar
+  - Emoji: switch_emoji event, layout-dependent
+  - Removed non-existent long-press popup references
+- ✅ Wiki audit: identified extensive hallucinations in multiple pages (accessibility, themes, backup-restore, layouts)
 
 ## In Progress
 - 🔄 Subkey System Unification (Option D) - awaiting user answers to clarifying questions
