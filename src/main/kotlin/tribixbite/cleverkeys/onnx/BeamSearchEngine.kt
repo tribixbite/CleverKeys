@@ -72,22 +72,8 @@ class BeamSearchEngine(
         private const val DIVERSITY_LAMBDA = 0.5f // Penalty weight for similar beams
     }
 
-    // ===== Pre-allocated buffers for tensor reuse =====
-    // These reduce GC pressure by avoiding allocations in the hot path
-
-    // Reusable IntArray for target tokens (cleared and refilled each beam)
-    private val reusableTgtTokens = IntArray(DECODER_SEQ_LEN)
-
-    // Direct ByteBuffer for ONNX tensor creation (avoids IntBuffer.wrap allocation)
-    private val tgtTokensByteBuffer: java.nio.ByteBuffer = java.nio.ByteBuffer
-        .allocateDirect(DECODER_SEQ_LEN * 4)
-        .order(java.nio.ByteOrder.nativeOrder())
-    private val tgtTokensIntBuffer: java.nio.IntBuffer = tgtTokensByteBuffer.asIntBuffer()
-
-    // Pre-allocated shape array (avoids longArrayOf allocation each call)
-    private val singleBeamShape = longArrayOf(1, DECODER_SEQ_LEN.toLong())
-
     // Cached actualSrcLength tensor (recreated only when length changes)
+    // Saves ~15 OnnxTensor creations per prediction (one per step -> one per search)
     private var cachedSrcLength: Int = -1
     private var cachedSrcLengthTensor: OnnxTensor? = null
 
@@ -277,20 +263,17 @@ class BeamSearchEngine(
         // NOTE: Don't close actualSrcLengthTensor in finally - it's cached for reuse
 
         for (beam in activeBeams) {
-            // OPTIMIZATION: Reuse IntArray buffer instead of creating new one
-            java.util.Arrays.fill(reusableTgtTokens, PAD_IDX)
+            // Prepare target tokens - simple allocation (JVM optimized for small arrays)
+            val tgtTokens = IntArray(DECODER_SEQ_LEN) { PAD_IDX }
             val len = min(beam.tokens.size, DECODER_SEQ_LEN)
             for (i in 0 until len) {
-                reusableTgtTokens[i] = beam.tokens[i].toInt()
+                tgtTokens[i] = beam.tokens[i].toInt()
             }
 
-            // OPTIMIZATION: Use direct buffer for tensor creation
-            tgtTokensIntBuffer.clear()
-            tgtTokensIntBuffer.put(reusableTgtTokens)
-            tgtTokensIntBuffer.rewind()
-
             val targetTokensTensor = OnnxTensor.createTensor(
-                ortEnvironment, tgtTokensIntBuffer, singleBeamShape
+                ortEnvironment,
+                java.nio.IntBuffer.wrap(tgtTokens),
+                longArrayOf(1, DECODER_SEQ_LEN.toLong())
             )
 
             try {
