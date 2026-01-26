@@ -1,6 +1,6 @@
 # Neural Network Inference Optimization Specification
 
-**Status**: Implemented (3 of 4 optimizations)
+**Status**: Complete (3 of 4 optimizations - encoder caching deferred)
 **Priority**: High (latency-sensitive)
 **Last Updated**: 2026-01-26
 
@@ -110,94 +110,61 @@ sessionOptions.setIntraOpNumThreads(4)
 
 ## 3. Detailed Implementation Plans
 
-### 3.1 Tensor Reuse Implementation
+### 3.1 Tensor Reuse Implementation (Simplified)
 
-**Goal**: Pre-allocate reusable buffers at engine construction time.
+**Goal**: Cache the `actual_src_length` tensor across beam search steps.
 
-**Changes to BeamSearchEngine.kt**:
+**Background**: Initial implementation included pre-allocated IntArray buffers and Direct ByteBuffers
+for target tokens. Performance analysis revealed JVM is highly optimized for small, short-lived
+allocations (80-byte arrays). The overhead of Direct ByteBuffer management outweighed savings.
+
+**Final Implementation** - only `cachedSrcLengthTensor` is reused:
 
 ```kotlin
-class BeamSearchEngine(
-    // ... existing params ...
-) {
-    companion object {
-        // ... existing constants ...
-    }
-
-    // ===== NEW: Pre-allocated buffers for tensor reuse =====
-
-    // Single IntArray reused across all steps (cleared each step)
-    private val reusableTgtTokens = IntArray(DECODER_SEQ_LEN)
-
-    // Direct ByteBuffer for ONNX tensor creation (avoids IntBuffer.wrap allocation)
-    private val tgtTokensByteBuffer = java.nio.ByteBuffer
-        .allocateDirect(DECODER_SEQ_LEN * 4)
-        .order(java.nio.ByteOrder.nativeOrder())
-    private val tgtTokensIntBuffer = tgtTokensByteBuffer.asIntBuffer()
-
-    // Pre-allocated shape array (avoids longArrayOf allocation each call)
-    private val singleBeamShape = longArrayOf(1, DECODER_SEQ_LEN.toLong())
-
-    // Reusable actualSrcLength tensor (recreated only when length changes)
+class BeamSearchEngine(...) {
+    // Cached actualSrcLength tensor (recreated only when length changes)
+    // Saves ~15 OnnxTensor creations per prediction (one per step -> one per search)
     private var cachedSrcLength: Int = -1
     private var cachedSrcLengthTensor: OnnxTensor? = null
-```
 
-**Modified processSequential() method**:
-
-```kotlin
-private fun processSequential(
-    activeBeams: List<BeamState>,
-    memory: OnnxTensor,
-    actualSrcLength: Int,
-    step: Int
-): List<BeamState> {
-    val newCandidates = ArrayList<BeamState>()
-
-    // OPTIMIZATION: Reuse actualSrcLengthTensor if length unchanged
-    if (actualSrcLength != cachedSrcLength) {
-        cachedSrcLengthTensor?.close()
-        cachedSrcLengthTensor = OnnxTensor.createTensor(ortEnvironment, intArrayOf(actualSrcLength))
-        cachedSrcLength = actualSrcLength
+    fun search(...): List<BeamSearchCandidate> {
+        try {
+            // Main decoding loop...
+        } finally {
+            cleanup()  // Release native memory
+        }
     }
-    val actualSrcLengthTensor = cachedSrcLengthTensor!!
 
-    for (beam in activeBeams) {
-        // OPTIMIZATION: Reuse IntArray buffer instead of creating new one
-        reusableTgtTokens.fill(PAD_IDX)
-        val len = min(beam.tokens.size, DECODER_SEQ_LEN)
-        for (i in 0 until len) {
-            reusableTgtTokens[i] = beam.tokens[i].toInt()
+    private fun processSequential(...) {
+        // OPTIMIZATION: Reuse actualSrcLengthTensor if length unchanged
+        if (actualSrcLength != cachedSrcLength) {
+            cachedSrcLengthTensor?.close()
+            cachedSrcLengthTensor = OnnxTensor.createTensor(ortEnvironment, intArrayOf(actualSrcLength))
+            cachedSrcLength = actualSrcLength
         }
 
-        // OPTIMIZATION: Use direct buffer for tensor creation
-        tgtTokensIntBuffer.clear()
-        tgtTokensIntBuffer.put(reusableTgtTokens)
-        tgtTokensIntBuffer.rewind()
-
-        val targetTokensTensor = OnnxTensor.createTensor(
-            ortEnvironment, tgtTokensIntBuffer, singleBeamShape
-        )
-
-        // ... rest of beam processing (unchanged) ...
+        for (beam in activeBeams) {
+            // Simple allocation - JVM optimized for small arrays
+            val tgtTokens = IntArray(DECODER_SEQ_LEN) { PAD_IDX }
+            // ... populate and create tensor
+        }
     }
 
-    // NOTE: Don't close cachedSrcLengthTensor here - it's reused
-    return newCandidates
+    fun cleanup() {
+        cachedSrcLengthTensor?.close()
+        cachedSrcLengthTensor = null
+        cachedSrcLength = -1
+    }
 }
 ```
 
-**Cleanup method addition**:
+**Why only srcLength caching?**
+- `actual_src_length` is a native OnnxTensor wrapping a single int
+- Created ~15 times per prediction (once per decoding step)
+- Native tensor allocation has higher overhead than JVM arrays
+- Target token IntArrays (80 bytes) are efficiently allocated by JVM
 
-```kotlin
-fun cleanup() {
-    cachedSrcLengthTensor?.close()
-    cachedSrcLengthTensor = null
-    cachedSrcLength = -1
-}
-```
-
-**Estimated Impact**: ~40% reduction in per-step allocations
+**Estimated Impact**: ~15 native tensor allocations saved per prediction
 
 ---
 
@@ -596,10 +563,16 @@ SearchableSetting(
 
 | Optimization | Impact | Effort | Priority | Status |
 |-------------|--------|--------|----------|--------|
-| **Batched Decoding** | High (5x fewer decoder calls) | Medium | 1 | ✅ Implemented (c6cbb991) |
-| **Tensor Reuse** | High (40% fewer allocations) | Low | 2 | ✅ Implemented (6aaf550f) |
-| **XNNPACK Threads Setting** | Low-Medium | Low | 3 | ✅ Implemented (daab4ede) |
+| **Batched Decoding** | High (5x fewer decoder calls) | Medium | 1 | ✅ Implemented - disabled by default |
+| **Tensor Reuse** | Medium (15 allocations saved) | Low | 2 | ✅ Simplified - srcLength only |
+| **XNNPACK Threads Setting** | Low-Medium | Low | 3 | ✅ Implemented with UI slider (1-8 threads) |
 | **Encoder Caching** | Medium (cache hits only) | Medium | 4 | ⏸️ Deferred (complexity vs. benefit)
+
+**Implementation Notes:**
+- **Batched Decoding**: Uses broadcast-enabled model (memory [1,...] broadcasts to [N,...])
+- **Tensor Reuse**: IntArray/ByteBuffer pre-allocation reverted (JVM optimized for small allocations)
+- **XNNPACK UI**: Settings slider + backup/export support + reset-to-defaults profile
+- **Memory Safety**: try-finally ensures cleanup() called after every search()
 
 ---
 
