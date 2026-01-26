@@ -184,6 +184,10 @@ fun LauncherScreen(
     var isKeyboardEnabled by remember { mutableStateOf(isCleverKeysEnabled(context)) }
     var isKeyboardSelected by remember { mutableStateOf(isCleverKeysSelected(context)) }
 
+    // Check if user has visited calibration (persisted in SharedPreferences)
+    val prefs = remember { context.getSharedPreferences("cleverkeys_launcher", Context.MODE_PRIVATE) }
+    var hasVisitedCalibration by remember { mutableStateOf(prefs.getBoolean("has_visited_calibration", false)) }
+
     // Auto-refresh completion status every 500ms when screen is visible
     LaunchedEffect(Unit) {
         while (true) {
@@ -346,8 +350,15 @@ fun LauncherScreen(
                     title = "Calibrate Per-Key Gestures",
                     description = "Configure up to 8 subkey actions per key",
                     icon = Icons.Default.Edit,
-                    isCompleted = false, // Optional calibration, never shows as "completed"
-                    onClick = onCalibrateGestures
+                    isCompleted = hasVisitedCalibration,
+                    onClick = {
+                        // Mark as visited on first click
+                        if (!hasVisitedCalibration) {
+                            prefs.edit().putBoolean("has_visited_calibration", true).apply()
+                            hasVisitedCalibration = true
+                        }
+                        onCalibrateGestures()
+                    }
                 )
             }
 

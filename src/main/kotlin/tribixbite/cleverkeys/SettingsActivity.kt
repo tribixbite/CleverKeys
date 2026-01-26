@@ -567,7 +567,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Cursor Control", listOf("cursor", "navigation", "spacebar", "move"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_cursor"),
             SearchableSetting("Select & Delete Text", listOf("selection", "delete", "text", "backspace"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_selection"),
             SearchableSetting("Language Switching", listOf("language", "switch", "toggle", "multilingual"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_language"),
-            SearchableSetting("Emoji Access", listOf("emoji", "emoticon", "symbols"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_emoji"),
+            SearchableSetting("Emoji Access", listOf("emoji", "emoticon", "symbols", "fn"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_emoji"),
+            SearchableSetting("Clipboard History", listOf("clipboard", "paste", "history", "pinned", "fn"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_clipboard"),
             SearchableSetting("Swipe Typing Help", listOf("swipe", "typing", "glide", "gesture"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_swipe"),
             SearchableSetting("Privacy Info", listOf("privacy", "offline", "data", "secure"), "Help & FAQ", expandSection = { helpSectionExpanded = true }, settingId = "faq_privacy")
         )
@@ -4153,7 +4154,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             ),
             FAQItem(
                 question = "How do I move the cursor?",
-                answer = "Swipe on the spacebar - cursor movement speed is proportional to how far you swipe. For precision navigation, long-press a key that has arrow subkeys (like spacebar or nav keys) to enter TrackPoint mode, then move your finger like a joystick."
+                answer = "Swipe on the spacebar - cursor movement speed is proportional to how far you swipe. For precision navigation, long-press the nav key (between spacebar and enter) to enter TrackPoint mode, then move your finger like a joystick."
             ),
             FAQItem(
                 question = "How do I select and delete text?",
@@ -4161,11 +4162,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             ),
             FAQItem(
                 question = "How do I switch between languages?",
-                answer = "Use Settings → Activities → Per-Key Customization to assign 'switch_forward' or 'switch_backward' to a subkey direction. You can also enable Multi-Language mode in Settings to blend multiple dictionaries for predictions."
+                answer = "Use the primary/secondary language toggle. Set your languages in Settings → Multi-Language (Primary and Secondary). The toggle cycles between them, and both contribute to swipe predictions when Multi-Language mode is enabled."
             ),
             FAQItem(
                 question = "How do I access emojis?",
-                answer = "Swipe on the Ctrl key (SW direction opens clipboard, other directions may open emoji depending on layout). You can also assign 'switch_emoji' to any subkey via Per-Key Customization. The emoji picker includes search and 119 text emoticons."
+                answer = "Swipe SOUTHWEST on the Fn key to open the emoji picker. The picker includes categories, recents, search, and 119 text emoticons (kaomoji). You can search by keyword or emoji name."
+            ),
+            FAQItem(
+                question = "How do I use the clipboard?",
+                answer = "Swipe on the Fn key to open clipboard history. The clipboard panel has tabs for History, Pinned items, and Todos. Tap an item to paste it. Long-press to pin/unpin. Password manager apps (KeePassDX, Chrome, Firefox, Edge) are excluded from history by default."
             ),
             FAQItem(
                 question = "How does swipe typing work?",

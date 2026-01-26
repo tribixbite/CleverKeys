@@ -35,7 +35,7 @@ A: **Swipe on the spacebar** to move the cursor:
 **Q: What is TrackPoint Mode?**
 
 A: TrackPoint mode provides laptop-style continuous cursor navigation:
-- **Long-press a key that has navigation subkeys** (like spacebar or dedicated nav keys) to enter trackpoint mode
+- **Long-press the nav key** (between spacebar and enter) to enter trackpoint mode
 - Move your finger like a joystick to control cursor direction
 - Release to exit trackpoint mode
 
@@ -64,10 +64,10 @@ A: Several options depending on your layout configuration:
 
 **Q: How do I switch between languages?**
 
-A: Language switching via subkeys:
-1. Go to **Settings → Activities → Per-Key Customization**
-2. Find or create a **switch_language** action on a convenient key direction
-3. Now swipe in that direction to cycle through enabled languages
+A: Use the **primary/secondary language toggle**:
+1. Set your languages in **Settings → Multi-Language** (Primary and Secondary)
+2. The toggle cycles between them
+3. Both languages contribute to swipe predictions when Multi-Language mode is enabled
 
 You can also configure layouts in **Settings → Activities → Layout Manager**.
 
@@ -79,14 +79,25 @@ A: Go to **Settings → Multi-Language** to:
 
 ---
 
-## Emoji & Special Input
+## Emoji & Clipboard
 
 **Q: How do I access emojis?**
 
-A: Emoji access is **layout-dependent**:
-- Use the **switch_emoji** action assigned to a key or subkey in your layout
-- Check your layout configuration for the emoji switch location
-- The emoji panel includes categories, recents, and search
+A: **Swipe SOUTHWEST on the Fn key** to open the emoji picker:
+- Categories tab with all emoji groups
+- Recents for quick access to frequently used
+- Search by keyword or emoji name
+- 119 text emoticons (kaomoji) also included
+
+**Q: How do I use the clipboard?**
+
+A: **Swipe on the Fn key** to open clipboard history:
+- **History tab**: Recent clipboard items
+- **Pinned tab**: Items you've pinned for quick access
+- **Todos tab**: Items marked as todos
+- Tap any item to paste it
+- Long-press to pin/unpin items
+- Password manager apps (KeePassDX, Chrome, Firefox, Edge) are excluded by default
 
 **Q: What is contextual emoji search?**
 
