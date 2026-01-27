@@ -1,43 +1,38 @@
 ---
 title: Emoji
-description: Access emoji keyboard and shortcuts
+description: Access emoji keyboard and emoticons
 category: Typing
 difficulty: beginner
-related_spec: ../specs/typing/emoji-spec.md
 ---
 
 # Emoji
 
-CleverKeys includes a full emoji keyboard with categories, search, and recent emoji history.
+CleverKeys includes a full emoji keyboard with categories, search, recent emoji history, and 119 text emoticons.
 
 ## Quick Summary
 
 | What | Description |
 |------|-------------|
 | **Purpose** | Insert emoji and emoticons |
-| **Access** | Emoji key or long-press Enter |
-| **Features** | Categories, recents, skin tones |
+| **Access** | Swipe SW on Fn key |
+| **Features** | Categories, recents, search, emoticons |
 
 ## Accessing Emoji
 
-### Method 1: Emoji Key
+### Primary Method: Fn Key Swipe
 
-If your layout has an emoji key (smiley face icon):
-1. Tap the **emoji key** on the bottom row
-2. Browse or search emoji
-3. Tap to insert
-
-### Method 2: Long-Press Enter
-
-1. **Long-press** the Enter key
-2. Select the emoji option from popup
+1. Find the **Fn** key on the bottom row (between Ctrl and spacebar)
+2. **Swipe SOUTHWEST** (down-left) to trigger `switch_emoji`
 3. Emoji keyboard opens
+4. Tap any emoji to insert
 
-### Method 3: Long-Press Comma
+### Alternative: Per-Key Customization
 
-On some layouts:
-1. **Long-press** the comma key
-2. Select emoji from the popup menu
+You can assign emoji access to any key's short swipe:
+
+1. Go to **Settings > Activities > Per-Key Customization**
+2. Select any key
+3. Assign `switch_emoji` to a swipe direction
 
 ## Emoji Keyboard Layout
 
@@ -91,13 +86,6 @@ The search matches 500+ emoji names including:
 
 Your most recently used emoji appear in the first category (clock icon) for quick access.
 
-### Skin Tone Variations
-
-For emoji with skin tone options:
-1. **Long-press** the emoji
-2. Select your preferred skin tone
-3. This becomes the default for that emoji
-
 ### Long-Press Emoji Name
 
 Long-press any emoji to see its name in a tooltip:
@@ -112,7 +100,7 @@ The tooltip appears above the pressed emoji and auto-dismisses after 2.5 seconds
 - **Context search**: Type the word, then open emoji - instant results
 - **Recents**: Check recents first for frequently used emoji
 - **Scroll**: Swipe left/right to see more in each category
-- **Return to letters**: Tap ABC or the keyboard icon
+- **Return to letters**: Tap the close button or ABC key
 - **Multiple emoji**: Stay on emoji keyboard to insert several
 
 > [!TIP]
@@ -141,13 +129,6 @@ Type keywords while the emoji keyboard is open:
 > [!NOTE]
 > Emoticons are text characters, not emoji. They work in all apps and render the same everywhere.
 
-## Settings
-
-| Setting | Location | Description |
-|---------|----------|-------------|
-| **Show Emoji Key** | Layout | Toggle emoji key visibility |
-| **Emoji Style** | Appearance | System or custom emoji |
-
 ## Common Questions
 
 ### Q: Why do emoji look different in some apps?
@@ -162,8 +143,4 @@ A: CleverKeys uses standard Unicode emoji. Custom emoji/stickers depend on the a
 ## Related Features
 
 - [Special Characters](special-characters.md) - Symbols and accents
-- [Basic Typing](../getting-started/basic-typing.md) - Keyboard fundamentals
-
-## Technical Details
-
-See [Emoji Technical Specification](../specs/typing/emoji-spec.md).
+- [Clipboard History](../clipboard/clipboard-history.md) - Access clipboard via Ctrl SW

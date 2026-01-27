@@ -50,18 +50,10 @@ You can assign clipboard access to any key's short swipe:
 2. **Tap** any item
 3. Item is pasted at cursor position
 
-### Copy Item Again
-
-1. Open clipboard history
-2. **Long-press** item
-3. Select **Copy**
-4. Item moves to top of history
-
 ### Delete Item
 
 1. Open clipboard history
-2. Tap the **delete button** on the item
-3. Or swipe left and tap delete
+2. Tap the **🗑 delete button** on the item
 
 ## Pin Items
 
@@ -202,17 +194,7 @@ CleverKeys automatically detects password fields:
 
 ## Clear History
 
-### Clear All Items
-
-1. Open clipboard history
-2. Tap **Clear All**
-3. Confirm deletion
-
-### Clear Unpinned Only
-
-1. Long-press **Clear All**
-2. Select **Clear Unpinned**
-3. Pinned items preserved
+To clear clipboard history, use the export/import features in Settings > Backup & Restore, or delete items individually using the delete button on each item.
 
 ## Common Questions
 
@@ -222,7 +204,7 @@ A: Check that it's enabled in **Settings > Clipboard** section (expand it).
 
 ### Q: How do I access clipboard quickly?
 
-A: Swipe NW from the Ctrl key, or add a clipboard key to your Extra Keys.
+A: Swipe SW (southwest/down-left) on the Ctrl key, or add a clipboard key to your Extra Keys.
 
 ### Q: Why wasn't my copied text saved?
 

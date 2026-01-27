@@ -49,31 +49,32 @@ Lift your finger. The subkey character appears.
 
 ### Example: Typing Numbers
 
-On QWERTY layout, numbers are above letters:
+On QWERTY layout, numbers are on the NORTHEAST (up-right) direction:
 
-| Key | Flick North | Result |
-|-----|-------------|--------|
-| Q | ↑ | 1 |
-| W | ↑ | 2 |
-| E | ↑ | 3 |
-| R | ↑ | 4 |
+| Key | Flick NE | Result |
+|-----|----------|--------|
+| Q | ↗ | 1 |
+| W | ↗ | 2 |
+| E | ↗ | 3 |
+| R | ↗ | 4 |
 | ... | ... | ... |
+
+> [!TIP]
+> Think "start from the SW corner of the key" to access the NE subkey.
 
 ## Common Subkey Layouts
 
-### Letters
-- **North**: Numbers (on top row)
-- **South**: Accented versions (é, ñ, etc.)
-- **East/West**: Related punctuation
-
-### Shift Key
-- **NW**: Escape
-- **SE**: Tab
-- **South**: Caps Lock
+### Letters (Top Row)
+- **Northeast**: Numbers (1-0)
+- **Northwest**: Symbols (~, @, #, $, etc.)
+- **Southeast**: Escape (on Q)
 
 ### Backspace
 - **West**: Delete entire word
-- **Hold + drag**: Selection delete mode
+- **Short swipe + hold**: Selection delete mode
+
+> [!NOTE]
+> Subkey assignments vary by layout. Check Per-Key Customization to see and modify your layout's subkeys.
 
 ## Calibrating Short Swipes
 

@@ -27,6 +27,24 @@ CleverKeys uses an ONNX neural network to predict words from swipe gestures. The
 
 ## Key Settings
 
+### Swipe Typing
+
+Master toggle to enable/disable swipe input:
+
+| Setting | Effect |
+|---------|--------|
+| **On** | Swipe typing enabled |
+| **Off** | Swipe gestures disabled |
+
+### Swipe on Password Fields
+
+Allow swipe typing in password fields:
+
+| Setting | Effect |
+|---------|--------|
+| **On** | Swipe works in password fields |
+| **Off** | Only tap typing in password fields (default) |
+
 ### Beam Width
 
 The most important setting for prediction quality. Controls how many parallel word candidates the decoder tracks:
@@ -35,73 +53,37 @@ The most important setting for prediction quality. Controls how many parallel wo
 |-------|--------|
 | **3-4** | Faster, may miss less common words |
 | **6** | Balanced (default) |
-| **8-10** | More thorough search, finds rare words |
+| **8-12** | More thorough search, finds rare words |
+| **16-20** | Maximum accuracy, slower |
 
 > [!NOTE]
-> Higher beam width = more word candidates explored = better accuracy but slightly slower.
-
-### Show Suggestions
-
-Toggle the prediction/suggestion bar above the keyboard:
-
-| Setting | Effect |
-|---------|--------|
-| **On** | Shows word predictions above keyboard |
-| **Off** | Hides prediction bar (more screen space) |
-
-### Autocorrect from Beam
-
-When enabled, uses neural predictions for autocorrection:
-
-| Setting | Effect |
-|---------|--------|
-| **On** | Neural model helps with tap-typing corrections |
-| **Off** | Only dictionary-based autocorrect |
-
-## Advanced Settings
+> Higher beam width = more word candidates explored = better accuracy but slightly slower. Range: 1-20.
 
 ### Confidence Threshold
 
-Minimum score for a prediction to be shown (default: 0.01):
+Minimum score for a prediction to be shown:
 
 - Lower = more suggestions, some may be weak
 - Higher = only confident predictions shown
 
-### Frequency Weight
+### Max Sequence Length
 
-How much word frequency influences scoring (default: 0.57):
+Maximum number of swipe sample points to process. Affects long word handling.
 
-| Weight | Effect |
-|--------|--------|
-| **0.0** | Neural model only |
-| **0.5** | Balanced |
-| **1.0+** | Favor common words heavily |
+## Advanced Settings
 
-### Length Penalty (Beam Alpha)
+Expand the Advanced subsection for additional tuning:
 
-Normalizes scores by word length (default: 1.0):
+### ONNX Threads
 
-- Lower = favors shorter words
-- Higher = allows longer words to compete
-
-## Neural Profiles
-
-CleverKeys includes preset profiles optimizing for different use cases:
-
-| Profile | Beam Width | Use Case |
-|---------|------------|----------|
-| **Speed** | 4 | Fast typing, acceptable accuracy |
-| **Balanced** | 6 | Default experience |
-| **Accuracy** | 8+ | Best predictions, slower |
-
-Access via the Neural Prediction section settings.
+Number of CPU threads for neural inference. Auto-detected by default.
 
 ## Tips and Tricks
 
 - **Accuracy issues**: Increase beam width from 6 to 8 or 10
 - **Slow predictions**: Reduce beam width to 4-5
 - **Missing words**: Check that multi-language is configured correctly
-- **Long words wrong**: Increase beam width or adjust beam alpha
+- **Long words wrong**: Increase beam width
 
 > [!TIP]
 > Start with the default beam width of 6. Only adjust if you notice specific issues.
@@ -110,12 +92,12 @@ Access via the Neural Prediction section settings.
 
 | Setting | Default | Range/Options |
 |---------|---------|---------------|
-| **Beam Width** | 6 | 3-10 |
-| **Show Suggestions** | On | On/Off |
+| **Swipe Typing** | On | On/Off |
+| **Swipe on Password Fields** | Off | On/Off |
+| **Beam Width** | 6 | 1-20 |
 | **Confidence Threshold** | 0.01 | 0.01-0.5 |
-| **Frequency Weight** | 0.57 | 0.0-2.0 |
-| **Beam Alpha** | 1.0 | 0.5-2.0 |
-| **Beam Autocorrect** | On | On/Off |
+| **Max Sequence Length** | varies | configurable |
+| **ONNX Threads** | auto | 1-8 |
 
 ## Common Questions
 
@@ -129,11 +111,11 @@ A: Try increasing beam width for more thorough search. Also ensure your primary 
 
 ### Q: How do I add words to the dictionary?
 
-A: Type the word and tap it in predictions, or long-press a word and select "Add to dictionary" if supported.
+A: Type the word and tap it in predictions to add it to your personal dictionary.
 
 ### Q: Can I reset neural settings?
 
-A: Go to Settings and look for reset options, or use Backup & Restore to reset to defaults.
+A: Use Settings > Backup & Restore to reset to defaults.
 
 ## Technical Details
 
@@ -147,5 +129,4 @@ The neural model is:
 ## Related Features
 
 - [Swipe Typing](../typing/swipe-typing.md) - How to swipe type
-- [Autocorrect](../typing/autocorrect.md) - Text correction
 - [Multi-Language](../layouts/multi-language.md) - Multi-language predictions

@@ -14,23 +14,23 @@ Configure vibration feedback for key presses, gestures, and special events.
 | What | Description |
 |------|-------------|
 | **Purpose** | Control vibration feedback |
-| **Access** | Scroll to **Haptics** section in Settings |
+| **Access** | Scroll to **Accessibility** section in Settings |
 | **Events** | 5 configurable haptic events |
 
 ## Settings Location
 
-In **Settings**, scroll to the **Haptics** section (collapsible). All haptic settings are here.
+In **Settings**, scroll to the **Accessibility** section (collapsible). All haptic/vibration settings are here.
 
 ## Master Settings
 
-### Haptic Feedback Toggle
+### Vibration Toggle
 
 | Setting | Effect |
 |---------|--------|
 | **On** | Haptics enabled for selected events |
 | **Off** | All haptics disabled |
 
-### Haptic Feedback Duration
+### Vibration Duration
 
 Control vibration intensity via duration:
 
@@ -44,13 +44,13 @@ Control vibration intensity via duration:
 
 CleverKeys supports 5 specific haptic events:
 
-| Event | Setting Key | Default | Description |
-|-------|-------------|---------|-------------|
-| **Key Press** | `haptic_key_press` | On | Vibrate on every key tap |
-| **Prediction Tap** | `haptic_prediction_tap` | On | Vibrate when tapping a suggestion |
-| **TrackPoint Activate** | `haptic_trackpoint_activate` | On | Vibrate when entering navigation mode |
-| **Long Press** | `haptic_long_press` | On | Vibrate when long-press detected |
-| **Swipe Complete** | `haptic_swipe_complete` | Off | Vibrate when swipe word completes |
+| Event | Default | Description |
+|-------|---------|-------------|
+| **Key Press** | On | Vibrate on every key tap |
+| **Suggestion Tap** | On | Vibrate when tapping a suggestion |
+| **TrackPoint Activate** | On | Vibrate when entering navigation mode |
+| **Long Press** | On | Vibrate when long-press detected |
+| **Swipe Complete** | Off | Vibrate when swipe word completes |
 
 > [!NOTE]
 > Swipe Complete is disabled by default as it can be distracting during rapid typing.
@@ -62,13 +62,13 @@ CleverKeys supports 5 specific haptic events:
 Each of the 5 events can be toggled independently:
 
 1. Open **Settings**
-2. Scroll to **Haptics** section
+2. Scroll to **Accessibility** section
 3. Toggle individual event switches
 
 ### Adjust Intensity
 
-1. In **Haptics** section
-2. Find **Haptic Feedback Duration** slider
+1. In **Accessibility** section
+2. Find **Vibration Duration** slider
 3. Adjust for desired intensity
 
 ## Recommended Settings
@@ -97,7 +97,7 @@ Or reduce duration to minimum.
 | Event | Setting |
 |-------|---------|
 | Key Press | Off |
-| Prediction Tap | On |
+| Suggestion Tap | On |
 | Swipe Complete | On |
 
 Feedback on completions, not every key.
@@ -110,14 +110,14 @@ Feedback on completions, not every key.
 - **No vibration?**: Check Android system settings for vibration permissions
 
 > [!TIP]
-> Enable TrackPoint Activate haptic to clearly feel when you enter navigation mode with the navigation keys.
+> Enable TrackPoint Activate haptic to clearly feel when you enter navigation mode.
 
 ## Common Questions
 
 ### Q: Why don't I feel any haptics?
 
 A: Check these in order:
-1. Master haptic toggle is On
+1. Master Vibration toggle is On
 2. Specific event toggle is On
 3. Duration is not at minimum
 4. Android system haptics/vibration is enabled
@@ -135,19 +135,8 @@ A: No, haptic settings apply to event types (all key presses, all predictions, e
 
 A: It vibrates after every swipe word, which many users find distracting during continuous typing. Enable it if you want confirmation that swipes are recognized.
 
-## Technical Details
-
-| Setting | Preference Key | Default |
-|---------|----------------|---------|
-| Key Press | `haptic_key_press` | `true` |
-| Prediction Tap | `haptic_prediction_tap` | `true` |
-| TrackPoint Activate | `haptic_trackpoint_activate` | `true` |
-| Long Press | `haptic_long_press` | `true` |
-| Swipe Complete | `haptic_swipe_complete` | `false` |
-| Custom Duration | `vibrate_duration` | System default |
-
 ## Related Features
 
-- [Appearance](appearance.md) - Visual feedback options
+- [Appearance](appearance.md) - Visual settings
 - [TrackPoint Mode](../gestures/trackpoint-mode.md) - Navigation mode
 - [Swipe Typing](../typing/swipe-typing.md) - Gesture typing
