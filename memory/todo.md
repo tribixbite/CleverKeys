@@ -78,6 +78,12 @@
   - Emoji: SW on Fn key, not Ctrl
   - Added clipboard FAQ (Fn swipe, History/Pinned/Todos tabs)
 - ✅ Calibration step persistence: shows checked forever after first click
+- ✅ Wiki hallucination fixes:
+  - FAQ.md synced with SettingsActivity (DRY)
+  - installation.md: Android 5.0 not 8.0
+  - accessibility.md: rewrote with actual features (haptics/sound only)
+  - backup-restore.md: removed fabricated auto-backup, QR, cloud features
+  - themes.md: corrected to 35+ themes
 
 ## In Progress
 - 🔄 Subkey System Unification (Option D) - awaiting user answers to clarifying questions
