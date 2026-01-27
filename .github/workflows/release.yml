@@ -204,55 +204,67 @@ jobs:
         echo "## What's New in ${{ env.TAG_NAME }}" > CHANGELOG.md
         echo "" >> CHANGELOG.md
 
-        # Read from fastlane changelog (use arm64 versionCode suffix = 2)
-        # VersionCode = VERSION_CODE * 10 + ABI_SUFFIX
-        CHANGELOG_CODE=$((${{ env.VERSION_CODE }} * 10 + 2))
-        CHANGELOG_FILE="fastlane/metadata/android/en-US/changelogs/${CHANGELOG_CODE}.txt"
-
-        if [ -f "$CHANGELOG_FILE" ]; then
-          # Skip the first line (version title) since we already have it in the header
-          tail -n +2 "$CHANGELOG_FILE" >> CHANGELOG.md
-          echo "📋 Read changelog from $CHANGELOG_FILE"
+        # Priority 1: Use RELEASE_NOTES.md if it exists (single source of truth)
+        if [ -f "RELEASE_NOTES.md" ]; then
+          cat RELEASE_NOTES.md >> CHANGELOG.md
+          echo "📋 Read changelog from RELEASE_NOTES.md"
         else
-          # Fallback: check for base versionCode without ABI suffix
-          CHANGELOG_FILE_ALT="fastlane/metadata/android/en-US/changelogs/${{ env.VERSION_CODE }}.txt"
-          if [ -f "$CHANGELOG_FILE_ALT" ]; then
-            tail -n +2 "$CHANGELOG_FILE_ALT" >> CHANGELOG.md
-            echo "📋 Read changelog from $CHANGELOG_FILE_ALT"
+          # Priority 2: Read from fastlane changelog (use arm64 versionCode suffix = 2)
+          CHANGELOG_CODE=$((${{ env.VERSION_CODE }} * 10 + 2))
+          CHANGELOG_FILE="fastlane/metadata/android/en-US/changelogs/${CHANGELOG_CODE}.txt"
+
+          if [ -f "$CHANGELOG_FILE" ]; then
+            cat "$CHANGELOG_FILE" >> CHANGELOG.md
+            echo "📋 Read changelog from $CHANGELOG_FILE"
           else
-            # Final fallback: generate from commits
-            echo "⚠️ No fastlane changelog found, generating from commits"
-            LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-            if [ -n "$LAST_TAG" ]; then
-              git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" >> CHANGELOG.md
+            # Priority 3: check for base versionCode without ABI suffix
+            CHANGELOG_FILE_ALT="fastlane/metadata/android/en-US/changelogs/${{ env.VERSION_CODE }}.txt"
+            if [ -f "$CHANGELOG_FILE_ALT" ]; then
+              cat "$CHANGELOG_FILE_ALT" >> CHANGELOG.md
+              echo "📋 Read changelog from $CHANGELOG_FILE_ALT"
             else
-              echo "- Initial release with neural swipe typing" >> CHANGELOG.md
+              # Final fallback: generate from commits
+              echo "⚠️ No changelog found, generating from commits"
+              LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+              if [ -n "$LAST_TAG" ]; then
+                echo "Changes since $LAST_TAG:" >> CHANGELOG.md
+                echo "" >> CHANGELOG.md
+                git log $LAST_TAG..HEAD --pretty=format:"- %s" >> CHANGELOG.md
+              else
+                echo "- Initial release with neural swipe typing" >> CHANGELOG.md
+              fi
             fi
           fi
         fi
 
         echo "" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "---" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
         echo "## Build Information" >> CHANGELOG.md
-        # Plain text format for F-Droid UpdateCheckData regex parsing
-        echo "Version: ${{ env.VERSION }}" >> CHANGELOG.md
-        echo "VersionCode: ${{ env.VERSION_CODE }}" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "- **Package**: tribixbite.cleverkeys" >> CHANGELOG.md
-        echo "- **Min Android**: 5.0 (API 21)" >> CHANGELOG.md
-        echo "- **Target Android**: 14 (API 34)" >> CHANGELOG.md
+        echo "| Property | Value |" >> CHANGELOG.md
+        echo "|----------|-------|" >> CHANGELOG.md
+        echo "| Version | ${{ env.VERSION }} |" >> CHANGELOG.md
+        echo "| VersionCode | ${{ env.VERSION_CODE }} |" >> CHANGELOG.md
+        echo "| Package | tribixbite.cleverkeys |" >> CHANGELOG.md
+        echo "| Min Android | 5.0 (API 21) |" >> CHANGELOG.md
+        echo "| Target Android | 14 (API 34) |" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "## Install Options" >> CHANGELOG.md
-        echo "| Source | Link |" >> CHANGELOG.md
-        echo "|--------|------|" >> CHANGELOG.md
-        echo "| GitHub | Download APK below for your device |" >> CHANGELOG.md
-        echo "| F-Droid | Coming soon (auto-update enabled) |" >> CHANGELOG.md
+        echo "## Download" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "| Source | Status |" >> CHANGELOG.md
+        echo "|--------|--------|" >> CHANGELOG.md
+        echo "| **GitHub** | Download APK below for your device |" >> CHANGELOG.md
+        echo "| **F-Droid** | Auto-updates within 24-48 hours |" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
         echo "## APK Variants" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
         echo "| ABI | Devices | VersionCode |" >> CHANGELOG.md
         echo "|-----|---------|-------------|" >> CHANGELOG.md
-        echo "| arm64 | Most modern phones (2016+) | $((${{ env.VERSION_CODE }} * 10 + 2)) |" >> CHANGELOG.md
-        echo "| armv7 | Older 32-bit devices | $((${{ env.VERSION_CODE }} * 10 + 1)) |" >> CHANGELOG.md
-        echo "| x86_64 | Emulators, Chromebooks | $((${{ env.VERSION_CODE }} * 10 + 3)) |" >> CHANGELOG.md
+        echo "| **arm64** | Most modern phones (2016+) | $((${{ env.VERSION_CODE }} * 10 + 2)) |" >> CHANGELOG.md
+        echo "| **armv7** | Older 32-bit devices | $((${{ env.VERSION_CODE }} * 10 + 1)) |" >> CHANGELOG.md
+        echo "| **x86_64** | Emulators, Chromebooks | $((${{ env.VERSION_CODE }} * 10 + 3)) |" >> CHANGELOG.md
 
     - name: Create Release
       uses: softprops/action-gh-release@v2
