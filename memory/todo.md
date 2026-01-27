@@ -84,6 +84,14 @@
   - accessibility.md: rewrote with actual features (haptics/sound only)
   - backup-restore.md: removed fabricated auto-backup, QR, cloud features
   - themes.md: corrected to 35+ themes
+- ✅ Additional wiki hallucination fixes (7 more pages):
+  - appearance.md: removed fabricated presets, animation, pop-up settings
+  - input-behavior.md: removed fabricated auto-cap modes, delete behavior
+  - cursor-navigation.md: removed fabricated Home/End on 'A' key
+  - first-time-setup.md: fixed Haptics→Accessibility, beam max 10→20
+  - swipe-typing.md: removed Neural Profile, Prediction Count
+  - custom-layouts.md: removed fabricated visual editor (it's text-based XML)
+  - adding-layouts.md: removed fabricated "Programmer" layout
 
 ## In Progress
 - 🔄 Subkey System Unification (Option D) - awaiting user answers to clarifying questions
