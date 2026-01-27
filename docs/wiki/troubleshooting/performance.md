@@ -14,7 +14,7 @@ Optimize CleverKeys for better speed, responsiveness, and battery efficiency.
 | Issue | Common Cause | Solution |
 |-------|--------------|----------|
 | **Slow typing** | Neural predictions | Reduce beam width |
-| **Lag on open** | Large dictionary | Reduce history |
+| **Lag on open** | Large clipboard | Reduce history limit |
 | **Battery drain** | Haptics, animations | Reduce feedback |
 
 ## Typing Speed Issues
@@ -32,32 +32,25 @@ Optimize CleverKeys for better speed, responsiveness, and battery efficiency.
 **Solutions:**
 
 1. **Reduce beam width**
-   - Settings > Neural > Beam Width
-   - Try 3-5 instead of 8-10
+   - Settings > Neural Prediction section > Beam Width
+   - Try 3-4 instead of 6+
 
-2. **Reduce prediction count**
-   - Settings > Predictions > Count
-   - Show fewer suggestions
-
-3. **Disable unused languages**
-   - Settings > Languages
-   - Keep only languages you use
+2. **Reduce languages**
+   - Keep only languages you actively use
+   - Each language adds processing overhead
 
 ### Issue: Key press feels delayed
 
 **Solutions:**
 
-1. **Reduce animations**
-   - Settings > Appearance > Press Animation
-   - Set to "None" or "Highlight"
+1. **Check haptic timing**
+   - Haptic feedback adds slight delay
+   - Settings > Accessibility > Vibration Duration
+   - Try reducing or disabling
 
 2. **Disable key popup**
-   - Settings > Appearance > Key Pop-up
-   - Set to "Off"
-
-3. **Check haptic timing**
-   - Haptic feedback adds slight delay
-   - Try reducing intensity
+   - If your device has slow rendering
+   - Key popup can add visual delay
 
 ## Startup Performance
 
@@ -66,28 +59,27 @@ Optimize CleverKeys for better speed, responsiveness, and battery efficiency.
 **Solutions:**
 
 1. **Reduce clipboard history**
-   - Settings > Privacy > History Size
-   - Use smaller limit
+   - Settings > Clipboard section > History Limit
+   - Use smaller limit (e.g., 25 instead of 50)
 
 2. **Clear unused profiles**
-   - Settings > Profiles
-   - Delete unused profiles
+   - Settings > Activities > Backup & Restore
+   - Delete unused exports
 
 3. **Reduce installed layouts**
-   - Settings > Layouts
+   - Settings > Activities > Layout Manager
    - Remove layouts you don't use
 
 ### Issue: First swipe word slow
 
 **Explanation:**
 
-Neural model loads on first use. This is normal.
+Neural model loads on first use. This is normal behavior.
 
-**Solutions:**
-
-1. **Enable background loading**
-   - Settings > Neural > Background Processing
-   - Model preloads during idle time
+**Why this happens:**
+- The ONNX model is loaded into memory on first swipe
+- Subsequent swipes are fast as the model is cached
+- This is a one-time delay per keyboard session
 
 ## Memory Usage
 
@@ -95,7 +87,7 @@ Neural model loads on first use. This is normal.
 
 | Factor | Memory Impact |
 |--------|---------------|
-| **Language packs** | 5-30 MB each |
+| **Language dictionaries** | 5-30 MB each |
 | **Clipboard history** | Varies with content |
 | **Neural model** | ~10 MB |
 | **Personal dictionary** | Usually < 1 MB |
@@ -103,11 +95,11 @@ Neural model loads on first use. This is normal.
 ### Reduce Memory Usage
 
 1. **Remove unused language packs**
-   - Settings > Language Packs > Downloaded
-   - Delete unneeded packs
+   - Via Settings > Activities > Layout Manager
+   - Delete unneeded layouts
 
 2. **Reduce clipboard history**
-   - Settings > Privacy > History Size
+   - Settings > Clipboard > History Limit
    - Smaller = less memory
 
 3. **Clear cache periodically**
@@ -121,92 +113,59 @@ Neural model loads on first use. This is normal.
 | Feature | Battery Impact |
 |---------|----------------|
 | **Haptics** | Medium |
-| **Animations** | Low-Medium |
 | **Neural predictions** | Medium |
-| **Background processing** | Low |
+| **Clipboard monitoring** | Low |
 
 ### Reduce Battery Usage
 
 1. **Reduce haptics**
-   - Settings > Haptics > Intensity
-   - Use "Light" or disable
+   - Settings > Accessibility > Vibration Duration
+   - Use lower duration or disable
 
 2. **Disable unneeded haptic events**
-   - Settings > Haptics
-   - Turn off events you don't need
-
-3. **Reduce animations**
-   - Settings > Appearance > Press Animation
-   - Set to "None"
-
-4. **Disable background processing**
-   - Settings > Neural > Background Processing
-   - Turn off if battery is critical
+   - Settings > Accessibility section
+   - Turn off Haptic Key Press, Haptic Suggestion Tap, etc.
 
 ## Performance Settings
 
 ### Quick Performance Profile
 
-For maximum speed:
+For maximum speed on older devices:
 
 | Setting | Value |
 |---------|-------|
-| Beam Width | 3 |
-| Prediction Count | 3 |
-| Press Animation | None |
-| Key Pop-up | Off |
-| Haptics | Off or Light |
+| Beam Width | 3-4 |
+| Vibration | Off or Light |
+| Clipboard Limit | 25 items |
 
 ### Quality vs Speed
 
 | Priority | Settings |
 |----------|----------|
-| **Speed** | Lower beam, fewer predictions, no animations |
-| **Quality** | Higher beam, more predictions |
+| **Speed** | Lower beam width, fewer haptics |
+| **Quality** | Higher beam width (6-10), full haptics |
 | **Balanced** | Default settings |
 
 ## Device-Specific Tips
 
 ### Older Devices
 
-- Use lower neural settings
-- Disable animations
+- Use lower neural settings (Beam Width 3-4)
+- Disable haptics if laggy
 - Keep fewer layouts installed
-- Use compact keyboard height
+- Reduce clipboard history
 
 ### Low-Memory Devices
 
 - Remove unused language packs
-- Reduce clipboard history to 10 items
+- Reduce clipboard history to 10-25 items
 - Clear cache weekly
-- Disable background processing
 
 ### High-Performance Devices
 
-- Can use maximum neural settings
-- Enable all animations
+- Can use maximum neural settings (Beam Width 10-12)
+- Enable all haptics
 - Keep many languages
-
-## Monitoring Performance
-
-### Check Response Time
-
-Settings > About > Show Debug Info
-
-Shows:
-- Prediction time
-- Render time
-- Memory usage
-
-### Identify Issues
-
-If prediction time > 100ms:
-- Reduce beam width
-- Disable unused languages
-
-If render time > 16ms:
-- Reduce animations
-- Simplify theme
 
 ## Tips for Best Performance
 
@@ -222,7 +181,7 @@ If render time > 16ms:
 
 ### Q: Will disabling predictions make typing faster?
 
-A: Yes, but you lose a key feature. Try reducing instead of disabling.
+A: Yes, but you lose a key feature. Try reducing beam width instead of disabling.
 
 ### Q: Does keyboard size affect performance?
 
@@ -239,5 +198,5 @@ A: No. Battery optimization may cause keyboard to be killed, making it slow to a
 ## Related Topics
 
 - [Neural Settings](../settings/neural-settings.md) - Prediction configuration
-- [Appearance](../settings/appearance.md) - Animation settings
 - [Haptics](../settings/haptics.md) - Vibration settings
+- [Common Issues](common-issues.md) - General troubleshooting

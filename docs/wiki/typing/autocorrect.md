@@ -71,13 +71,14 @@ Access your personal dictionary:
 
 ## Autocorrect Settings
 
-Customize autocorrect behavior in Settings:
+Customize autocorrect behavior in the **Word Prediction** section of Settings:
 
 | Setting | Description |
 |---------|-------------|
 | **Autocorrect** | Enable/disable automatic corrections |
-| **Autocorrect Threshold** | How similar words must be to trigger |
-| **Suggest Contact Names** | Include contact names in suggestions |
+| **Autocorrect Min Word Length** | Minimum characters before autocorrect applies |
+| **Beam Autocorrect** | Autocorrect during swipe typing |
+| **Final Autocorrect** | Apply correction on word completion |
 
 ## Tips and Tricks
 
@@ -92,14 +93,15 @@ Customize autocorrect behavior in Settings:
 A: The similar word had higher frequency. Add your word to dictionary to prevent this.
 
 ### Q: Can I turn off autocorrect completely?
-A: Yes, in Settings > Input Behavior > Autocorrect.
+A: Yes, in Settings > Word Prediction section > Autocorrect toggle.
 
 ### Q: Does autocorrect work with swipe typing?
-A: Swipe typing uses neural predictions instead of autocorrect.
+A: Swipe typing uses neural predictions. Use the Beam Autocorrect and Final Autocorrect settings to control this behavior.
 
 ## Related Features
 
 - [Swipe Typing](swipe-typing.md) - Neural word prediction
+- [User Dictionary](user-dictionary.md) - Add custom words
 - [Special Characters](special-characters.md) - Symbols and accents
 
 ## Technical Details

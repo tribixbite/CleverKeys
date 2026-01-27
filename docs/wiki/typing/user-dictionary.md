@@ -15,7 +15,7 @@ CleverKeys learns new words you add and preserves their original capitalization.
 | What | Description |
 |------|-------------|
 | **Purpose** | Add custom words with preserved capitalization |
-| **Access** | Automatic prompts or Settings > Dictionary Manager |
+| **Access** | Automatic prompts or Settings > Activities > Dictionary Manager |
 | **Works with** | Tap typing, swipe typing, and suggestions |
 
 ## How It Works
@@ -57,12 +57,6 @@ This works for:
 2. Go to **Activities > Dictionary Manager**
 3. Tap **Custom** tab
 4. Use the add button to enter new words
-
-### Method 3: Long-Press on Suggestion
-
-1. Type part of a word
-2. Long-press on a suggestion
-3. Choose "Add to dictionary"
 
 ## Using Custom Words
 
@@ -109,8 +103,7 @@ When you swipe a pattern matching a custom word:
 | Setting | Location | Description |
 |---------|----------|-------------|
 | **Dictionary Manager** | Settings > Activities | View and manage custom words |
-| **Suggest Contact Names** | Settings > Predictions | Include contact names in suggestions |
-| **Auto-add Words** | Automatic | Prompted when typing unknown words |
+| **Personalized Learning** | Word Prediction section | Adapt to your typing patterns |
 
 ## How Capitalization Works
 
@@ -142,7 +135,7 @@ Final output: "Boston"
 - **Add proper nouns early**: Prevents frustration with miscapitalization
 - **Include variations**: Add both "API" and "APIs" if you use both
 - **Brand names matter**: "GitHub" vs "Github" - add your preferred form
-- **Sync across devices**: Export/import via Settings > Data > Export
+- **Export settings**: Use Backup & Restore to preserve your dictionary
 
 > [!NOTE]
 > Words in the main dictionary cannot have their case changed. Custom words override the main dictionary for your entries.
@@ -162,7 +155,7 @@ A: Delete and re-add with new capitalization, or edit in Dictionary Manager.
 
 ### Q: Does this work with swipe typing?
 
-A: Yes! As of v1.2.7, swipe predictions apply your custom word capitalization.
+A: Yes! Swipe predictions apply your custom word capitalization.
 
 ## Related Features
 

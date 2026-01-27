@@ -60,17 +60,17 @@ Solutions for the most frequently encountered problems with CleverKeys.
 
 | Cause | Solution |
 |-------|----------|
-| Wrong layout | Check active layout in settings |
-| Auto-correct | Adjust autocorrect settings |
+| Wrong layout | Check active layout in Layout Manager |
+| Autocorrect | Adjust autocorrect in Word Prediction section |
 | Language mismatch | Check language configuration |
 
 ### Issue: Autocorrect making wrong corrections
 
 **Solutions:**
 
-1. **Adjust autocorrect strength**
-   - Settings > Input > Autocorrect
-   - Choose a lower level
+1. **Adjust autocorrect settings**
+   - Settings > Word Prediction section (expand it)
+   - Toggle Autocorrect on/off or adjust Min Word Length
 
 2. **Add words to dictionary**
    - When corrected wrongly, tap suggestion bar
@@ -85,15 +85,12 @@ Solutions for the most frequently encountered problems with CleverKeys.
 **Solutions:**
 
 1. Check if predictions enabled:
-   - Settings > Predictions > Enable Predictions
+   - Settings > Word Prediction section
+   - Ensure **Word Predictions** is enabled
 
-2. Check prediction bar visibility:
-   - Settings > Appearance > Prediction Bar Height
-   - Ensure not set to "Hidden"
-
-3. Check language pack:
-   - Predictions require language pack
-   - Go to Settings > Language Packs
+2. Check language support:
+   - Predictions require a dictionary for your language
+   - English is bundled by default
 
 ## Gesture Issues
 
@@ -102,11 +99,11 @@ Solutions for the most frequently encountered problems with CleverKeys.
 **Solutions:**
 
 1. **Adjust swipe distance**
-   - Settings > Gestures > Short Swipe Distance
-   - Try "Short" setting
+   - Settings > Gesture Tuning section
+   - Adjust **Short Gesture Min Distance**
 
 2. **Check if enabled**
-   - Settings > Gestures > Enable Short Swipes
+   - Settings > Gesture Tuning > Short Gestures toggle
 
 3. **Practice technique**
    - Swipe must be from key center, not edge
@@ -117,16 +114,15 @@ Solutions for the most frequently encountered problems with CleverKeys.
 **Solutions:**
 
 1. **Check gesture**
-   - Long swipe (not tap) from spacebar
-   - Continue holding after swipe
+   - Long-press the nav key (between spacebar and enter)
+   - Wait for haptic feedback
 
 2. **Adjust threshold**
-   - Settings > Gestures > Long Swipe Threshold
-   - Try lower value
+   - Settings > Input section > Long Press Timeout
 
 3. **Wait for feedback**
    - Haptic vibration indicates activation
-   - Ensure haptics are enabled
+   - Enable haptics in Accessibility section
 
 ### Issue: Circle gestures not recognized
 
@@ -137,7 +133,7 @@ Solutions for the most frequently encountered problems with CleverKeys.
    - End near start point
 
 2. **Adjust sensitivity**
-   - Settings > Gestures > Circle Sensitivity
+   - Settings > Gesture Tuning > Circle Sensitivity
 
 3. **Practice size**
    - Circle should span 2-3 keys
@@ -161,7 +157,7 @@ Some apps override keyboard behavior:
 **Solutions:**
 
 1. **Add extra keys for terminals**
-   - Settings > Extra Keys
+   - Settings > Activities > Extra Keys
    - Add Ctrl, Tab, Escape
 
 2. **Check app permissions**
@@ -193,8 +189,8 @@ Some apps override keyboard behavior:
 
 1. **Disable neural swipe typing**
    - Open CleverKeys Settings
-   - Go to **Input Behavior** or **Swipe Typing**
-   - Disable **Enable Swipe Typing**
+   - Go to **Neural Prediction** section
+   - Disable **Swipe Typing**
    - Use tap typing instead
 
 2. **Why this happens**
@@ -210,11 +206,12 @@ Some apps override keyboard behavior:
 **Solutions:**
 
 1. **Reduce prediction beam width**
-   - Settings > Neural > Beam Width
-   - Try "Fast" or "Minimal" setting
+   - Settings > Neural Prediction > Beam Width
+   - Try 3-4 instead of 6+
 
 2. **Disable haptic feedback**
-   - Settings > Haptics > Disable
+   - Settings > Accessibility section
+   - Disable Vibration
    - Haptics can cause lag on some devices
 
 3. **Clear app cache**
@@ -225,19 +222,19 @@ Some apps override keyboard behavior:
 
 ### Issue: Navigation bar covers keyboard (Android 15)
 
-**Status:** ✅ Fixed in v1.2.8
+**Status:** Fixed in v1.2.8
 
 If you see this issue, update to v1.2.8 or later. The keyboard now properly handles Android 15's edge-to-edge display mode.
 
 ### Issue: White navigation buttons (Android 8-9)
 
-**Status:** ✅ Fixed in v1.2.8
+**Status:** Fixed in v1.2.8
 
 Update to v1.2.8 or later. Navigation button colors now properly adapt to theme.
 
 ### Issue: Monet theme crash on tablets
 
-**Status:** ✅ Fixed in v1.2.8
+**Status:** Fixed in v1.2.8
 
 Tablets running Android 12+ with limited color extraction now fall back gracefully to default themes.
 
@@ -249,7 +246,7 @@ Tablets running Android 12+ with limited color extraction now fall back graceful
 
 **Solution:**
 
-1. Go to **Settings > Appearance > Background Opacity**
+1. Go to **Settings > Appearance > Keyboard Opacity**
 2. Increase to 100% for solid background
 3. Also check **Key Opacity** if keys appear transparent
 
@@ -260,7 +257,7 @@ Tablets running Android 12+ with limited color extraction now fall back graceful
 
 **Solution:**
 
-- Settings > Appearance > Keyboard Height
+- Settings > Appearance section > Key Height
 - Adjust to preference
 
 ### Issue: Keys hard to see
@@ -268,14 +265,14 @@ Tablets running Android 12+ with limited color extraction now fall back graceful
 **Solutions:**
 
 1. **Try different theme**
-   - Settings > Theme
+   - Settings > Activities > Theme Manager
    - Choose high contrast theme
 
-2. **Increase font size**
-   - Settings > Accessibility > Font Size
+2. **Increase label visibility**
+   - Settings > Appearance > Label Brightness
 
-3. **Enable high contrast**
-   - Settings > Accessibility > High Contrast
+3. **Enable key borders**
+   - Settings > Appearance > Key Borders
 
 ### Issue: Theme not applying
 
@@ -292,7 +289,7 @@ Tablets running Android 12+ with limited color extraction now fall back graceful
 **Solutions:**
 
 1. **Check CleverKeys setting**
-   - Settings > Haptics > Enable
+   - Settings > Accessibility section > Vibration
 
 2. **Check system setting**
    - Android Settings > Sound > Vibration
@@ -304,7 +301,7 @@ Tablets running Android 12+ with limited color extraction now fall back graceful
 
 **Solution:**
 
-- Settings > Haptics > Intensity
+- Settings > Accessibility section > Vibration Duration
 - Adjust to preference
 
 ## Testing Your Keyboard
@@ -312,8 +309,8 @@ Tablets running Android 12+ with limited color extraction now fall back graceful
 Use the built-in test field to troubleshoot without switching apps:
 
 1. Open CleverKeys Settings
-2. Look for "⌨️ Test Keyboard" at the top
-3. Tap to expand and test gestures, layouts, and features
+2. Look for the test keyboard area at the top
+3. Test gestures, layouts, and features
 
 ## Still Having Issues?
 

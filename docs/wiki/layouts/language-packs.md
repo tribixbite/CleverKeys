@@ -1,6 +1,6 @@
 ---
 title: Language Packs
-description: Download language support packages
+description: Add language support via file import
 category: Layouts
 difficulty: beginner
 related_spec: ../specs/layouts/language-packs-spec.md
@@ -8,15 +8,15 @@ related_spec: ../specs/layouts/language-packs-spec.md
 
 # Language Packs
 
-Download language packs to add dictionaries, layouts, and predictions for additional languages.
+Add language dictionaries and layouts by importing language pack files.
 
 ## Quick Summary
 
 | What | Description |
 |------|-------------|
 | **Purpose** | Add language support |
-| **Access** | Settings > Language Packs |
-| **Contents** | Dictionary, layout, predictions |
+| **Access** | Settings > Backup & Restore > Import |
+| **Contents** | Dictionary, contractions, layouts |
 
 ## What's in a Language Pack
 
@@ -24,132 +24,51 @@ Each language pack includes:
 
 | Component | Description |
 |-----------|-------------|
-| **Dictionary** | Word list for predictions |
+| **Dictionary** | Binary word list for predictions |
+| **Contractions** | Language-specific contractions (if available) |
 | **Layout** | Keyboard layout with special keys |
-| **Autocorrect** | Language-specific corrections |
-| **Predictions** | Neural model vocabulary |
 
-## How to Download
+## Bundled Languages
 
-### Step 1: Open Language Packs
+CleverKeys includes English by default. The following dictionaries are bundled in the app:
+
+- English (US) - default
+- Additional layouts available via import
+
+## Importing Language Packs
+
+### Step 1: Obtain the Language Pack
+
+Language packs are `.zip` files you can:
+- Build yourself using the provided scripts
+- Obtain from community resources
+
+### Step 2: Import via Backup & Restore
 
 1. Open **Settings**
-2. Navigate to **Language Packs**
-3. See list of available packs
+2. Go to **Activities > Backup & Restore**
+3. Select **Import**
+4. Choose the language pack `.zip` file
+5. The pack is extracted and installed
 
-### Step 2: Browse Languages
+### Step 3: Configure Language
 
-Languages are organized by region:
+After import:
 
-| Region | Languages |
-|--------|-----------|
-| **European** | French, German, Spanish, Italian, Portuguese |
-| **Nordic** | Swedish, Norwegian, Danish, Finnish |
-| **Slavic** | Russian, Polish, Czech, Ukrainian |
-| **Asian** | Japanese, Korean, Chinese (Pinyin) |
-| **Middle Eastern** | Arabic, Hebrew, Farsi |
-| **Indian** | Hindi, Tamil, Bengali |
+1. The new layout appears in Layout Manager
+2. Dictionary is automatically loaded for predictions
+3. Configure in Settings > Layout Manager
 
-### Step 3: Download Pack
+## Building Custom Language Packs
 
-1. Tap the language you need
-2. View pack details (size, version)
-3. Tap **Download**
-4. Wait for download to complete
+For languages not bundled, you can create your own using the provided Python scripts:
 
-### Step 4: Activate Language
+### Requirements
 
-After download:
+- Python 3.x
+- wordfreq package (optional, for frequency data)
 
-1. Go to **Settings > Languages**
-2. Tap **Add Language**
-3. Select the downloaded language
-4. Configure layout association
-
-## Managing Language Packs
-
-### View Installed Packs
-
-1. Go to **Settings > Language Packs**
-2. **Downloaded** tab shows installed packs
-3. See version and size for each
-
-### Update Packs
-
-1. Go to **Downloaded** tab
-2. Packs with updates show indicator
-3. Tap **Update** or **Update All**
-
-### Remove Packs
-
-1. Go to **Downloaded** tab
-2. Swipe left on the pack
-3. Tap **Remove**
-4. Confirm removal
-
-## Pack Sizes
-
-| Pack Type | Approximate Size |
-|-----------|------------------|
-| **Basic** | 1-5 MB |
-| **Standard** | 5-15 MB |
-| **Enhanced** | 15-30 MB |
-
-Enhanced packs include larger dictionaries and better prediction models.
-
-## Offline vs Online
-
-| Feature | Offline | Online |
-|---------|---------|--------|
-| **Basic typing** | ✅ | ✅ |
-| **Autocorrect** | ✅ | ✅ |
-| **Predictions** | ✅ | ✅ |
-| **Updates** | ❌ | ✅ |
-
-Once downloaded, all features work offline.
-
-## Tips and Tricks
-
-- **Download over WiFi**: Packs can be large; use WiFi when possible
-- **Remove unused**: Free storage by removing languages you don't use
-- **Check updates**: Updated packs have improved dictionaries
-- **Enhanced packs**: Worth it for primary languages
-
-> [!TIP]
-> Download language packs before traveling to areas with limited internet.
-
-## Settings
-
-| Setting | Location | Description |
-|---------|----------|-------------|
-| **Available Packs** | Language Packs | Browse all packs |
-| **Downloaded** | Language Packs | Manage installed |
-| **Auto-Update** | Language Packs | Update automatically |
-| **Download on WiFi Only** | Language Packs | Limit data usage |
-
-## Common Questions
-
-### Q: How much storage do language packs use?
-
-A: Basic packs use 1-5 MB each. Enhanced packs use up to 30 MB. Check available storage before downloading.
-
-### Q: Can I use a language without downloading its pack?
-
-A: Basic typing works, but you won't get predictions, autocorrect, or special layouts without the pack.
-
-### Q: Why is my language not available?
-
-A: Some languages are still in development. Check back for updates or request support through feedback.
-
-### Q: Do I need to download English?
-
-A: No, English is included by default. You can download enhanced English for a larger dictionary.
-
-## Creating Custom Language Packs
-
-For languages not yet available (Swedish, Turkish, etc.), you can create your own:
-
-### Using Python Scripts
+### Using Build Scripts
 
 ```bash
 # Navigate to scripts directory
@@ -179,18 +98,65 @@ python build_dictionary.py --input my_words.csv --output custom.bin
 langpack-{lang}.zip
 ├── {lang}_enhanced.bin    # Binary dictionary
 ├── {lang}_enhanced.json   # Human-readable word list
+├── contractions.json      # Language contractions (optional)
 └── manifest.json          # Metadata
 ```
 
-### Supported by wordfreq
+### Languages Supported by wordfreq
 
-Languages available through wordfreq include:
-- European: Swedish (sv), Norwegian (nb), Danish (da), Finnish (fi), Polish (pl), Czech (cs)
-- Asian: Japanese (ja), Korean (ko), Chinese (zh)
-- Other: Russian (ru), Arabic (ar), Hebrew (he), Hindi (hi), Turkish (tr)
+Languages available through the wordfreq Python package:
 
-> [!TIP]
-> See the [README](https://github.com/tribixbite/CleverKeys#creating-custom-language-packs) for detailed instructions.
+- **European**: Swedish (sv), Norwegian (nb), Danish (da), Finnish (fi), Polish (pl), Czech (cs), German (de), French (fr), Spanish (es), Italian (it), Portuguese (pt)
+- **Asian**: Japanese (ja), Korean (ko), Chinese (zh)
+- **Other**: Russian (ru), Arabic (ar), Hebrew (he), Hindi (hi), Turkish (tr)
+
+## Managing Language Packs
+
+### View Installed
+
+1. Go to **Settings > Activities > Layout Manager**
+2. Installed layouts show available languages
+
+### Remove a Language Pack
+
+1. Delete the language files from the app's internal storage
+2. Or use Backup & Restore to reset to defaults
+
+## Offline Operation
+
+Once imported, all language features work offline:
+
+| Feature | Works Offline |
+|---------|---------------|
+| **Typing** | ✅ |
+| **Predictions** | ✅ |
+| **Autocorrect** | ✅ |
+| **Contractions** | ✅ |
+
+## Tips and Tricks
+
+- **Start with English**: English is fully bundled and ready to use
+- **Build for your language**: Use the scripts to create packs for unsupported languages
+- **Share packs**: Language pack files can be shared with other users
+- **Backup first**: Export your settings before major imports
+
+## Common Questions
+
+### Q: How do I add a new language?
+
+A: Build a language pack using the provided Python scripts, then import it via Settings > Backup & Restore.
+
+### Q: Can I use a language without importing a pack?
+
+A: Basic typing works with any layout, but predictions and autocorrect require a dictionary.
+
+### Q: Why is my language not available?
+
+A: Build it yourself using the `build_langpack.py` script with the wordfreq package.
+
+### Q: Do I need to download English?
+
+A: No, English is included by default.
 
 ## Related Features
 

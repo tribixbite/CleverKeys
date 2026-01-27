@@ -14,7 +14,7 @@ Control what data CleverKeys collects, stores, and how your information is handl
 | What | Description |
 |------|-------------|
 | **Purpose** | Manage privacy and data |
-| **Access** | Settings > Privacy |
+| **Access** | Settings > Clipboard / Privacy sections |
 | **Principle** | Local-first, no cloud by default |
 
 ## Privacy Philosophy
@@ -26,40 +26,41 @@ CleverKeys is designed with privacy as a core principle:
 - **No analytics**: No usage tracking or telemetry
 - **You control data**: Export or delete anytime
 
-## Learning Data
-
-### Personal Dictionary
-
-| Setting | Description |
-|---------|-------------|
-| **Save Words** | Remember words you add |
-| **Auto-Learn** | Automatically learn new words |
-| **Clear Dictionary** | Delete all learned words |
-
-### Usage Patterns
-
-| Setting | Description |
-|---------|-------------|
-| **Remember Frequency** | Track word usage for better predictions |
-| **Clear Patterns** | Reset frequency data |
-
 ## Clipboard Privacy
 
-### Clipboard History
+### Clipboard Settings
+
+Found under the **Clipboard** section in Settings:
 
 | Setting | Description |
 |---------|-------------|
-| **Enable History** | Keep clipboard history |
-| **History Duration** | How long to keep items |
-| **Auto-Clear** | Clear after time period |
-| **Clear Now** | Immediately clear history |
+| **Clipboard History** | Enable/disable clipboard history |
+| **Clipboard History Limit** | Maximum items to keep (default: 50) |
+| **Clipboard Size Limit** | Total size limit in MB |
+| **Clipboard Max Item Size** | Maximum size per item in KB |
+| **Exclude Password Managers** | Don't save clips from 1Password, Bitwarden, etc. |
+| **Respect Sensitive Flag** | Honor Android 13+ IS_SENSITIVE flag |
 
-### Sensitive Fields
+### Sensitive Content Protection
 
-| Setting | Description |
-|---------|-------------|
-| **Detect Password Fields** | Don't save to history |
-| **Incognito Mode** | Never save clipboard |
+CleverKeys automatically protects sensitive content:
+
+| Protection | How It Works |
+|------------|--------------|
+| **Password Fields** | Detected automatically, clipboard disabled |
+| **Password Managers** | Clips from password apps excluded (when enabled) |
+| **Sensitive Flag** | Android 13+ apps can mark content as sensitive |
+
+## Incognito Mode
+
+Found in the **Privacy** section:
+
+When enabled:
+- Predictions disabled
+- Learning disabled
+- Nothing saved to history
+
+Useful for entering sensitive information in any app.
 
 ## Data Storage
 
@@ -70,17 +71,17 @@ CleverKeys is designed with privacy as a core principle:
 | **Settings** | App preferences | Your configuration |
 | **Dictionary** | App data | Personal words |
 | **Profiles** | App data | Saved configurations |
-| **Clipboard** | App cache | Recent clips |
+| **Clipboard** | App data | Recent clips (up to limit) |
 
 ### Storage Location
 
 All data is stored locally on your device:
 
 ```
-/data/data/app.cleverkeys/
+/data/data/tribixbite.cleverkeys/
 ├── shared_prefs/     # Settings
 ├── files/            # Dictionary, profiles
-└── cache/            # Temporary data
+└── databases/        # Clipboard history
 ```
 
 ## Secure Input
@@ -92,55 +93,33 @@ When a text field is marked as password:
 - Predictions disabled
 - Learning disabled
 - Clipboard disabled
-- Incognito indicators shown
-
-### Incognito Mode
-
-Manual incognito for any field:
-
-1. Long-press the keyboard settings key
-2. Toggle **Incognito Mode**
-3. All learning and history disabled
-4. Indicator shows incognito active
+- Keyboard behaves in secure mode
 
 ## Data Export and Deletion
 
 ### Export Your Data
 
-1. Settings > Privacy > Export Data
-2. Choose what to export:
-   - Personal dictionary
-   - Usage patterns
-   - Profiles
-3. Save to file
+Use Settings > Backup & Restore to:
+- Export settings and preferences
+- Export clipboard history
+- Export profiles
 
-### Delete Data
+### Clear Data
 
-| Option | What's Deleted |
+| Method | What's Cleared |
 |--------|----------------|
-| **Clear Dictionary** | Personal words only |
-| **Clear Patterns** | Usage frequency data |
-| **Clear Clipboard** | Clipboard history |
-| **Reset All** | All personal data |
-
-## Tips and Tricks
-
-- **Shared devices**: Use incognito mode
-- **Sensitive apps**: Enable incognito per-app
-- **New start**: Clear all data for fresh experience
-- **Backup first**: Export before clearing
-
-> [!TIP]
-> Enable auto-clear for clipboard to maintain privacy without manual intervention.
+| **Clear Clipboard** | Delete items via clipboard panel |
+| **Reset Settings** | Settings > Backup & Restore > Reset |
+| **Clear App Data** | Android Settings > Apps > CleverKeys > Clear Data |
 
 ## Privacy Settings Reference
 
-| Setting | Location | Default |
-|---------|----------|---------|
-| **Auto-Learn Words** | Privacy | On |
-| **Clipboard History** | Privacy | On |
-| **History Duration** | Privacy | 24 hours |
-| **Detect Password** | Privacy | On |
+| Setting | Section | Default |
+|---------|---------|---------|
+| **Clipboard History** | Clipboard | On |
+| **History Limit** | Clipboard | 50 items |
+| **Exclude Password Managers** | Clipboard | On |
+| **Respect Sensitive Flag** | Clipboard | On |
 | **Incognito Mode** | Privacy | Off |
 
 ## Network Privacy
@@ -153,13 +132,14 @@ CleverKeys does not require network access for core functionality:
 | **Predictions** | No |
 | **Autocorrect** | No |
 | **Themes** | No |
-| **Language Packs** | Yes (download only) |
+
+All processing happens locally on your device.
 
 ## Common Questions
 
 ### Q: Does CleverKeys send data to servers?
 
-A: No. All processing happens locally on your device. The only network use is downloading language packs.
+A: No. All processing happens locally on your device.
 
 ### Q: Are my passwords safe?
 
@@ -167,14 +147,13 @@ A: Password fields are automatically protected - no learning, no clipboard, no p
 
 ### Q: How do I completely clear my data?
 
-A: Settings > Privacy > Reset All Data. This removes all personal data while keeping the app installed.
+A: Go to Android Settings > Apps > CleverKeys > Storage > Clear Data. This removes all personal data while keeping the app installed.
 
 ### Q: Can I use CleverKeys without any data storage?
 
-A: Enable Incognito Mode permanently for zero data retention (note: predictions will be less personalized).
+A: Enable Incognito Mode for reduced data retention (predictions will be less personalized).
 
 ## Related Features
 
 - [Clipboard History](../clipboard/clipboard-history.md) - Manage clipboard
-- [Profiles](../troubleshooting/backup-restore.md) - Export/import settings
 - [Backup & Restore](../troubleshooting/backup-restore.md) - Data management
