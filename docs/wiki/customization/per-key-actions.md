@@ -15,7 +15,7 @@ Customize what happens when you swipe in each of the 8 directions from any key. 
 | What | Description |
 |------|-------------|
 | **Purpose** | Customize subkey actions per direction |
-| **Access** | Settings > Customization > Per-Key Actions |
+| **Access** | Settings > Activities > Per-Key Customization |
 | **Directions** | 8 directions (N, NE, E, SE, S, SW, W, NW) |
 
 ## Understanding Subkeys
@@ -37,8 +37,8 @@ When you short swipe in a direction, the corresponding subkey is activated.
 ### Step 1: Open Customization
 
 1. Open CleverKeys Settings (gear icon)
-2. Navigate to **Customization**
-3. Select **Per-Key Actions** or **Subkey Editor**
+2. Navigate to **Activities** section
+3. Tap **Per-Key Customization**
 
 ### Step 2: Select a Key
 
@@ -141,9 +141,9 @@ See [Profiles](../troubleshooting/backup-restore.md) for details.
 
 | Setting | Location | Description |
 |---------|----------|-------------|
-| **Per-Key Editor** | Customization | Visual subkey editor |
+| **Per-Key Customization** | Activities section | Visual subkey editor |
 | **Reset Key** | Per-key detail | Reset single key |
-| **Reset All** | Settings > Reset | Reset all customizations |
+| **Reset All** | Backup & Restore | Reset all customizations |
 
 ## Related Features
 

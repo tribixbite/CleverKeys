@@ -15,7 +15,7 @@ Add custom keys to the bottom row of your keyboard for quick access to frequentl
 | What | Description |
 |------|-------------|
 | **Purpose** | Add custom keys to bottom row |
-| **Access** | Settings > Extra Keys |
+| **Access** | Settings > Activities > Extra Keys |
 | **Position** | Left or right of spacebar |
 
 ## What Are Extra Keys?
@@ -32,7 +32,8 @@ Extra keys appear on the bottom row alongside the spacebar. They provide quick a
 ### Step 1: Open Settings
 
 1. Open CleverKeys Settings (gear icon)
-2. Navigate to **Extra Keys** or **Bottom Row**
+2. Navigate to **Activities** section
+3. Tap **Extra Keys**
 
 ### Step 2: Select Position
 
@@ -119,7 +120,7 @@ Extra keys affect bottom row layout:
 
 | Setting | Location | Description |
 |---------|----------|-------------|
-| **Extra Keys** | Settings > Extra Keys | Add/remove keys |
+| **Extra Keys** | Activities section | Add/remove keys |
 | **Key Order** | Extra Keys | Drag to reorder |
 | **Key Size** | Extra Keys | Auto-sized |
 

@@ -31,13 +31,13 @@ CleverKeys includes several pre-installed layouts:
 
 ## Adding Language Layouts
 
-### Via Language Packs
+### Via Language Pack Import
 
 To add layouts for other languages:
 
-1. Go to **Settings** and tap **Language Packs** in the Activities section
-2. Browse available language packs
-3. Download the pack for your language
+1. Build or obtain a language pack (see [Language Packs](language-packs.md))
+2. Go to **Settings > Activities > Backup & Restore**
+3. Tap **Import** and select the language pack file
 4. The layout and dictionary are installed together
 
 See [Language Packs](language-packs.md) for details.
