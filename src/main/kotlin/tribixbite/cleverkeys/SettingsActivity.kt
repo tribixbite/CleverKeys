@@ -4150,7 +4150,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         val faqItems = listOf(
             FAQItem(
                 question = "How do I type numbers and symbols?",
-                answer = "Use short swipes (subkeys) on letter keys. Each key has up to 8 hidden characters in different directions (N, NE, E, SE, S, SW, W, NW). For example, swipe NORTHEAST on Q for '1'. Use Settings → Activities → Per-Key Customization to see and modify all subkey assignments."
+                answer = "Use short swipes (subkeys) on letter keys. Each key has up to 8 subkeys mapped to the cardinal directions N, NE, E, SE, S, SW, W, NW. For example, swipe NORTHEAST on Q for '1' (hint: start in the SW corner). Use Settings → Activities → Per-Key Customization to add your own subkey assignments."
             ),
             FAQItem(
                 question = "How do I move the cursor?",
@@ -4161,24 +4161,24 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 answer = "For Selection-Delete mode: short swipe on backspace then HOLD - move your finger like a joystick to select text (left/right for characters, up/down for lines). Release to delete selected text. Swipe left on backspace deletes the word before cursor."
             ),
             FAQItem(
-                question = "How do I switch between languages?",
-                answer = "Use the primary/secondary language toggle subkeys. Set your languages in Settings → Multi-Language (Primary and Secondary). The toggle subkeys cycle between them, and both languages contribute to swipe predictions when Multi-Language mode is enabled."
+                question = "How do I quickly switch between languages?",
+                answer = "Add the primary and/or secondary language toggle subkeys. Set your languages in Settings → Multi-Language (Primary and Secondary). The toggle subkeys cycle between them, and both languages contribute to swipe predictions when Multi-Language mode is enabled."
             ),
             FAQItem(
                 question = "How do I access emojis?",
-                answer = "Swipe SOUTHWEST on the Fn key to open the emoji picker. The picker includes categories, recents, search, and 119 text emoticons (kaomoji). You can search by keyword or emoji name."
+                answer = "Swipe SOUTHWEST on the Fn key to open the emoji picker. Search will auto-populate with nearby text. The picker includes categories, recents, search, and 119 text emoticons (kaomoji). You can search by keyword or emoji name."
             ),
             FAQItem(
                 question = "How do I use the clipboard?",
-                answer = "Swipe SOUTHWEST on the Ctrl key to open clipboard history. The panel has tabs for History, Pinned, and Todos. Tap an item to expand it, then use the icon buttons to paste, move to pinned, or copy as todo. Note: re-copying an item already in history won't duplicate or reorder it. Password manager apps are excluded by default."
+                answer = "Swipe SOUTHWEST on the Ctrl key to open clipboard history. The panel has tabs for History, Pinned, and Todos. Tap an item's content to expand it; use the icon buttons to paste, move to pinned, or copy as todo. Note: re-copying text already in history won't duplicate or reorder it (tip: use search instead). Password manager and 'sensitive' flagged clippings are excluded by default."
             ),
             FAQItem(
                 question = "How does swipe typing work?",
-                answer = "Touch the first letter of your word, slide your finger through each letter without lifting, then release on the last letter. CleverKeys uses an on-device ONNX neural network with beam search to predict your word from the gesture path."
+                answer = "Touch the first letter of your word, slide your finger through each letter without lifting, then release on the last letter. Faster may yield better results. Tip: increase 'Length Penalty (Alpha)' for English (~1.5), decrease for other languages (and increase Vocab Frequency Weight)."
             ),
             FAQItem(
-                question = "Is my typing data private?",
-                answer = "Yes! CleverKeys is fully offline - no INTERNET permission. All text prediction happens on-device using local AI. Your personal dictionary and clipboard history stay on your device. Password manager apps are excluded from clipboard history by default."
+                question = "Can I swipe other languages?",
+                answer = "Yes, but this currently requires using the qwerty latin layout and manually tuning several settings to achieve useable output- see FAQ entry above and Prefix Boost settings (these are very sensitive; try small changes)."
             )
         )
 
