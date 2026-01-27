@@ -57,7 +57,7 @@
 - ✅ Verified Direct Boot safety: swipe_on_password_fields, dictionary loading all use DirectBootAwarePreferences
 
 ## Completed (2026-01-27)
-- ✅ Wiki hallucination fixes (6 more pages from subagent audit):
+- ✅ Wiki hallucination fixes (batch 4 - 6 pages from subagent audit):
   - privacy.md: removed fabricated Personal Dictionary/Usage Patterns sections
   - privacy.md: fixed clipboard settings (50 items, not 24h duration)
   - language-packs.md: removed fabricated download UI and server browsing
@@ -69,7 +69,11 @@
   - common-issues.md: removed fabricated "Prediction Bar Height" setting
   - performance.md: removed fabricated "Background Processing" setting
   - performance.md: removed fabricated "Prediction Count" setting
-  - All settings paths verified against SettingsActivity.kt SearchableSettings
+- ✅ Final verification audit (batch 5 - 3 pages):
+  - adding-layouts.md: removed fabricated "Language Packs" activity
+  - per-key-actions.md: fixed path "Customization" → "Activities"
+  - extra-keys.md: fixed path to "Activities > Extra Keys"
+- ✅ All 69 wiki pages audited, all settings paths verified against SettingsActivity.kt
 
 ## Completed (2026-01-26)
 - ✅ Added "Calibrate Per-Key Gestures" as third setup box on launcher screen
