@@ -91,7 +91,7 @@ CleverKeys also supports exporting swipe training data:
 | **JSON** | Structured swipe data |
 | **NDJSON** | Newline-delimited JSON for ML pipelines |
 
-Access via **Settings > Privacy > View Collected Data > Export**.
+Access via **Settings > Privacy & Data section > Export JSON/NDJSON**.
 
 ## Troubleshooting
 

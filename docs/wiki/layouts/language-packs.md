@@ -15,7 +15,7 @@ Add language dictionaries and layouts by importing language pack files.
 | What | Description |
 |------|-------------|
 | **Purpose** | Add language support |
-| **Access** | Settings > Backup & Restore > Import |
+| **Access** | Settings > Activities > Backup & Restore > Import |
 | **Contents** | Dictionary, contractions, layouts |
 
 ## What's in a Language Pack
@@ -57,7 +57,7 @@ After import:
 
 1. The new layout appears in Layout Manager
 2. Dictionary is automatically loaded for predictions
-3. Configure in Settings > Layout Manager
+3. Configure in Settings > Activities > Layout Manager
 
 ## Building Custom Language Packs
 
@@ -144,7 +144,7 @@ Once imported, all language features work offline:
 
 ### Q: How do I add a new language?
 
-A: Build a language pack using the provided Python scripts, then import it via Settings > Backup & Restore.
+A: Build a language pack using the provided Python scripts, then import it via Settings > Activities > Backup & Restore.
 
 ### Q: Can I use a language without importing a pack?
 

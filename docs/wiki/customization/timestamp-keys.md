@@ -25,7 +25,7 @@ CleverKeys includes 8 ready-to-use timestamp keys:
 
 ### Adding to Extra Keys
 
-1. Go to **Settings → Layout → Extra Keys**
+1. Go to **Settings → Activities → Extra Keys**
 2. Add any of the key names above (e.g., `timestamp_date`)
 3. The key will appear in your extra keys row
 
@@ -100,7 +100,7 @@ Use `timestamp_date_short` for forms:
 
 You can also assign timestamp keys to any key's short swipe:
 
-1. Go to **Settings → Per-Key Customization**
+1. Go to **Settings → Activities → Per-Key Customization**
 2. Select a key
 3. Choose a direction
 4. Enter `timestamp:'yyyy-MM-dd'` or a pre-defined key name

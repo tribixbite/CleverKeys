@@ -73,6 +73,16 @@
   - adding-layouts.md: removed fabricated "Language Packs" activity
   - per-key-actions.md: fixed path "Customization" → "Activities"
   - extra-keys.md: fixed path to "Activities > Extra Keys"
+- ✅ Comprehensive line-by-line audit (batch 6 - 10 fixes from deep verification):
+  - short-swipes.md: fixed path "Settings > Customization" → "Settings > Activities > Per-Key Customization"
+  - short-swipes.md: fixed location "Input Behavior" → "Gesture Tuning" for Enable Short Swipes
+  - clipboard-history.md: fixed default capacity "25 items" → "50 items"
+  - timestamp-keys.md: fixed path "Settings → Layout → Extra Keys" → "Settings → Activities → Extra Keys"
+  - timestamp-keys.md: fixed path "Settings → Per-Key Customization" → "Settings → Activities → Per-Key Customization"
+  - language-packs.md: fixed 3 paths missing "Activities" level for Backup & Restore
+  - adding-layouts.md: removed fabricated "Language Packs activity" reference
+  - backup-restore.md: fixed fabricated "View Collected Data" path → "Privacy & Data section"
+  - themes.md: fixed path "Settings > Backup & Restore" → "Settings > Activities > Backup & Restore"
 - ✅ All 69 wiki pages audited, all settings paths verified against SettingsActivity.kt
 
 ## Completed (2026-01-26)
@@ -122,6 +132,18 @@
 ## In Progress
 - 🔄 Subkey System Unification (Option D) - awaiting user answers to clarifying questions
   - See: `memory/subkey-unification-research.md`
+- 🔄 **GIF Panel (Offline)** - infrastructure complete, data pipeline ready
+  - Branch: `feature/gif-panel` (git worktree at `../cleverkeys-gif-module`)
+  - Spec: `docs/specs/gif-panel-spec.md`
+  - Kotlin: `gif/Gif.kt`, `gif/GifCategory.kt`, `gif/GifDatabase.kt`
+  - Python pipeline: `tools/gif_pipeline/` (download, process, build DB)
+  - Data sources: TGIF (100K), Video2GIF (100K), GIFGIF+ (23K), ReactionGIF (4K)
+  - Next steps:
+    - [ ] Download TGIF dataset from Hugging Face
+    - [ ] Process to WebP format (thumbnails + animated)
+    - [ ] Build database with FTS5 search index
+    - [ ] Create GifGridView.kt and UI components
+    - [ ] Add GIF tab to keyboard panel
 
 ## Completed (2026-01-25)
 - ✅ Subkey system investigation: XML subkeys, ShortSwipeCustomizationActivity, ExtraKeys

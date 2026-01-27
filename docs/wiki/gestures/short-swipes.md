@@ -94,7 +94,7 @@ Adjust sensitivity in Settings:
 - **Practice direction**: North is straight up, not diagonal
 - **Speed matters**: Quick flicks work best
 - **Visual feedback**: The trail shows your swipe direction
-- **Customize**: Change subkey actions in Settings > Customization
+- **Customize**: Change subkey actions in Settings > Activities > Per-Key Customization
 
 > [!TIP]
 > If short swipes accidentally trigger, increase the minimum distance setting.
@@ -113,7 +113,7 @@ Adjust sensitivity in Settings:
 |---------|----------|-------------|
 | **Min Distance** | Gesture Tuning | Minimum swipe length |
 | **Max Distance** | Gesture Tuning | Maximum swipe length |
-| **Enable Short Swipes** | Input Behavior | Toggle feature on/off |
+| **Enable Short Swipes** | Gesture Tuning | Toggle feature on/off |
 
 ## Related Features
 

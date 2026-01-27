@@ -15,7 +15,7 @@ CleverKeys maintains a history of text you've copied, making it easy to paste it
 |------|-------------|
 | **Purpose** | Access previous clipboard items |
 | **Access** | Swipe SW from Ctrl key, or add Clipboard to Extra Keys |
-| **Capacity** | Configurable (default 25 items) |
+| **Capacity** | Configurable (default 50 items) |
 
 ## Accessing Clipboard History
 

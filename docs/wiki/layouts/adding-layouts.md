@@ -116,7 +116,7 @@ For specific use cases:
 
 ### Q: How do I get layouts for my language?
 
-A: Download the appropriate language pack from the Language Packs activity. It includes both the layout and dictionary.
+A: Build a language pack using the provided Python scripts, then import via Settings > Activities > Backup & Restore. It includes both the layout and dictionary.
 
 ### Q: Can I create custom layouts?
 
