@@ -8,11 +8,14 @@ Frequently asked questions about using CleverKeys keyboard.
 
 **Q: How do I type numbers and symbols quickly?**
 
-A: Use **short swipes** (subkeys) on letter keys. Each key has up to 8 subkeys mapped to the cardinal directions N, NE, E, SE, S, SW, W, NW. For example, swipe NORTHEAST on Q for '1' (hint: start in the SW corner). Use **Settings → Activities → Per-Key Customization** to add your own subkey assignments.
+A: Use **short swipes** (subkeys) on letter keys. Each key has up to 8 subkeys mapped to the cardinal directions N, NE, E, SE, S, SW, W, NW:
+- **Swipe NORTHEAST** on `Q` for `1` (hint: start in the SW corner)
+- Each direction on each key can trigger a different character or action
+- Directions are determined by the angle of your swipe
 
-**Q: How do I see what subkeys are available?**
+**Q: How do I customize what short swipes do?**
 
-A: Go to **Settings → Activities → Per-Key Customization** to view and modify all subkey assignments. There is no long-press popup - subkeys are triggered by direct short swipes.
+A: Go to **Settings → Activities → Per-Key Customization** to assign custom actions (characters, symbols, or commands) to each of the 8 directions on any key.
 
 ---
 
@@ -20,7 +23,17 @@ A: Go to **Settings → Activities → Per-Key Customization** to view and modif
 
 **Q: How do I move the cursor without tapping the screen?**
 
-A: **Swipe on the spacebar** - cursor movement speed is proportional to how far you swipe. For precision navigation, long-press the **nav key** (between spacebar and enter) to enter TrackPoint mode, then move your finger like a joystick.
+A: **Swipe on the spacebar** to move the cursor:
+- Cursor movement is **proportional to your swipe speed and distance**
+- Faster/longer swipes move further; slow precise swipes give fine control
+- Works in both directions
+
+**Q: What is TrackPoint Mode?**
+
+A: TrackPoint mode provides laptop-style continuous cursor navigation:
+- **Long-press the nav key** (between spacebar and enter) to enter trackpoint mode
+- Move your finger like a joystick to control cursor direction
+- Release to exit trackpoint mode
 
 ---
 
@@ -28,7 +41,13 @@ A: **Swipe on the spacebar** - cursor movement speed is proportional to how far 
 
 **Q: How do I select and delete text?**
 
-A: For **Selection-Delete mode**: short swipe on backspace then HOLD - move your finger like a joystick to select text (left/right for characters, up/down for lines). Release to delete selected text. Swipe left on backspace deletes the word before cursor.
+A: For **Selection-Delete mode**:
+1. **Short swipe on the backspace key** to initiate
+2. **Keep your finger held down** after the swipe
+3. **Move your finger like a joystick** to select text (left/right for characters, up/down for lines)
+4. Release to delete the selected text
+
+Swipe left on backspace deletes the word before cursor.
 
 ---
 
@@ -36,7 +55,10 @@ A: For **Selection-Delete mode**: short swipe on backspace then HOLD - move your
 
 **Q: How do I quickly switch between languages?**
 
-A: Add the **primary and/or secondary language toggle subkeys**. Set your languages in **Settings → Multi-Language** (Primary and Secondary). The toggle subkeys cycle between them, and both languages contribute to swipe predictions when Multi-Language mode is enabled.
+A: Use the **primary/secondary language toggle subkeys**:
+1. Set your languages in **Settings → Multi-Language** (Primary and Secondary)
+2. The toggle subkeys cycle between them
+3. Both languages contribute to swipe predictions when Multi-Language mode is enabled
 
 ---
 
@@ -44,11 +66,23 @@ A: Add the **primary and/or secondary language toggle subkeys**. Set your langua
 
 **Q: How do I access emojis?**
 
-A: **Swipe SOUTHWEST on the Fn key** to open the emoji picker. Search will auto-populate with nearby text. The picker includes categories, recents, search, and 119 text emoticons (kaomoji). You can search by keyword or emoji name.
+A: **Swipe SOUTHWEST on the Fn key** to open the emoji picker:
+- Search will auto-populate with nearby text
+- Categories tab with all emoji groups
+- Recents for quick access to frequently used
+- Search by keyword or emoji name
+- 119 text emoticons (kaomoji) also included
 
 **Q: How do I use the clipboard?**
 
-A: **Swipe SOUTHWEST on the Ctrl key** to open clipboard history. The panel has tabs for History, Pinned, and Todos. Tap an item's content to expand it; use the icon buttons to paste, move to pinned, or copy as todo. Note: re-copying text already in history won't duplicate or reorder it (tip: use search instead). Password manager and 'sensitive' flagged clippings are excluded by default.
+A: **Swipe SOUTHWEST on the Ctrl key** to open clipboard history:
+- **History tab**: Recent clipboard items
+- **Pinned tab**: Items you've saved for quick access
+- **Todos tab**: Items marked as todos
+- Tap an item's content to expand it
+- Use the icon buttons to paste, move to pinned, or copy as todo
+- Re-copying text already in history won't duplicate or reorder it (tip: use search instead)
+- Password manager and 'sensitive' flagged clippings are excluded by default
 
 ---
 
