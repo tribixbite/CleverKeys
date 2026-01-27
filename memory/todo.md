@@ -56,6 +56,21 @@
 - ✅ v1.2.8 released (includes all v1.2.6 changes for F-Droid)
 - ✅ Verified Direct Boot safety: swipe_on_password_fields, dictionary loading all use DirectBootAwarePreferences
 
+## Completed (2026-01-27)
+- ✅ Wiki hallucination fixes (6 more pages from subagent audit):
+  - privacy.md: removed fabricated Personal Dictionary/Usage Patterns sections
+  - privacy.md: fixed clipboard settings (50 items, not 24h duration)
+  - language-packs.md: removed fabricated download UI and server browsing
+  - language-packs.md: corrected to file import via Backup & Restore
+  - autocorrect.md: fixed settings path to Word Prediction section
+  - autocorrect.md: removed fabricated "Suggest Contact Names" setting
+  - user-dictionary.md: removed fabricated "Long-Press on Suggestion" method
+  - common-issues.md: fixed all settings paths to actual section names
+  - common-issues.md: removed fabricated "Prediction Bar Height" setting
+  - performance.md: removed fabricated "Background Processing" setting
+  - performance.md: removed fabricated "Prediction Count" setting
+  - All settings paths verified against SettingsActivity.kt SearchableSettings
+
 ## Completed (2026-01-26)
 - ✅ Added "Calibrate Per-Key Gestures" as third setup box on launcher screen
 - ✅ Updated calibration activity text: "trigger up to 8 subkey actions per key based on direction"
@@ -78,13 +93,13 @@
   - Emoji: SW on Fn key, not Ctrl
   - Added clipboard FAQ (Fn swipe, History/Pinned/Todos tabs)
 - ✅ Calibration step persistence: shows checked forever after first click
-- ✅ Wiki hallucination fixes:
+- ✅ Wiki hallucination fixes (batch 1 - 5 pages):
   - FAQ.md synced with SettingsActivity (DRY)
   - installation.md: Android 5.0 not 8.0
   - accessibility.md: rewrote with actual features (haptics/sound only)
   - backup-restore.md: removed fabricated auto-backup, QR, cloud features
   - themes.md: corrected to 35+ themes
-- ✅ Additional wiki hallucination fixes (7 more pages):
+- ✅ Wiki hallucination fixes (batch 2 - 7 pages):
   - appearance.md: removed fabricated presets, animation, pop-up settings
   - input-behavior.md: removed fabricated auto-cap modes, delete behavior
   - cursor-navigation.md: removed fabricated Home/End on 'A' key
@@ -92,6 +107,13 @@
   - swipe-typing.md: removed Neural Profile, Prediction Count
   - custom-layouts.md: removed fabricated visual editor (it's text-based XML)
   - adding-layouts.md: removed fabricated "Programmer" layout
+- ✅ Wiki hallucination fixes (batch 3 - 6 pages):
+  - haptics.md: section name Haptics→Accessibility
+  - neural-settings.md: removed Show Suggestions, Neural Profiles
+  - trackpoint-mode.md: fixed trigger to nav key (not arrow keys)
+  - emoji.md: removed fabricated long-press Enter/comma access
+  - clipboard-history.md: fixed NW→SW, removed long-press features
+  - short-swipes.md: fixed numbers direction N→NE
 
 ## In Progress
 - 🔄 Subkey System Unification (Option D) - awaiting user answers to clarifying questions
