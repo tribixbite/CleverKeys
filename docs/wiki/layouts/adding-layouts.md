@@ -28,7 +28,6 @@ CleverKeys includes several pre-installed layouts:
 | **QWERTZ** | German keyboard layout |
 | **Dvorak** | Alternative English layout |
 | **Colemak** | Ergonomic alternative layout |
-| **Programmer** | Symbols-optimized layout |
 
 ## Adding Language Layouts
 
@@ -92,7 +91,6 @@ For specific use cases:
 
 | Layout | Use Case |
 |--------|----------|
-| **Programmer** | Easier symbol access |
 | **Number Pad** | Numeric input |
 | **Emoji** | Emoji keyboard |
 

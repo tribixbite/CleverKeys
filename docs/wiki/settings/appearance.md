@@ -3,12 +3,11 @@ title: Appearance Settings
 description: Customize keyboard size, shape, and visual options
 category: Settings
 difficulty: beginner
-related_spec: ../specs/settings/appearance-spec.md
 ---
 
 # Appearance Settings
 
-Configure how the keyboard looks on screen, including size, margins, key shapes, and visual effects.
+Configure how the keyboard looks on screen, including size, margins, and visual options.
 
 ## Quick Summary
 
@@ -16,7 +15,7 @@ Configure how the keyboard looks on screen, including size, margins, key shapes,
 |------|-------------|
 | **Purpose** | Customize keyboard appearance |
 | **Access** | Settings > Appearance |
-| **Options** | Height, margins, key shape, effects |
+| **Options** | Height, margins, borders, opacity |
 
 ## Keyboard Height
 
@@ -24,150 +23,88 @@ Adjust the overall keyboard height:
 
 | Setting | Description |
 |---------|-------------|
-| **Extra Small** | Compact keyboard for small screens |
-| **Small** | Reduced height |
-| **Normal** | Default height |
-| **Large** | Increased height |
-| **Extra Large** | Maximum height for easier tapping |
+| **Portrait Height** | Height percentage for vertical orientation |
+| **Landscape Height** | Height percentage for horizontal orientation |
 
 ### How to Change
 
-1. Open **Settings > Appearance**
-2. Find **Keyboard Height**
-3. Drag slider or select preset
-4. Preview shows change immediately
+1. Open **Settings**
+2. Scroll to **Appearance** section
+3. Adjust **Keyboard Height Portrait** or **Landscape** slider
+4. Changes apply immediately
 
-## Bottom Margin
+## Margins
+
+### Bottom Margin
 
 Add space between keyboard and screen edge:
 
 | Setting | Effect |
 |---------|--------|
 | **0** | Keyboard touches screen edge |
-| **Small** | Minimal gap |
-| **Medium** | Comfortable gap |
-| **Large** | Significant gap (for gestures) |
+| **Higher values** | More gap (useful for gesture navigation) |
 
-Useful for phones with gesture navigation.
-
-## Horizontal Margins
+### Horizontal Margin
 
 Add space on left and right sides:
 
 | Setting | Use Case |
 |---------|----------|
-| **None** | Full-width keyboard |
-| **Small** | Slight inset |
-| **Medium** | One-handed reaching |
-| **Large** | Centered narrow keyboard |
+| **0** | Full-width keyboard |
+| **Higher values** | Narrower keyboard (one-handed use) |
 
-## Key Shape
+## Key Borders
 
-Customize individual key appearance:
-
-| Option | Description |
-|--------|-------------|
-| **Rounded** | Smooth rounded corners |
-| **Square** | Sharp corners |
-| **Pill** | Highly rounded (oval) |
-| **Minimal** | Very subtle key borders |
-
-### Key Gap
-
-Space between keys:
-
-| Gap | Effect |
-|-----|--------|
-| **None** | Keys touch each other |
-| **Tight** | Minimal separation |
-| **Normal** | Default spacing |
-| **Wide** | Clear separation |
-
-## Visual Effects
-
-### Key Press Animation
-
-| Option | Description |
-|--------|-------------|
-| **None** | No visual feedback |
-| **Highlight** | Key brightens on press |
-| **Scale** | Key slightly enlarges |
-| **Both** | Highlight + scale |
-
-### Key Pop-up
-
-Show character preview on press:
-
-| Setting | Behavior |
-|---------|----------|
-| **Enabled** | Shows pop-up above pressed key |
-| **Disabled** | No pop-up preview |
-| **On Hold Only** | Pop-up for long press only |
-
-## Prediction Bar
-
-### Bar Height
+Customize key outline appearance:
 
 | Setting | Description |
 |---------|-------------|
-| **Hidden** | No prediction bar |
-| **Compact** | Single-row, small |
-| **Normal** | Standard height |
-| **Expanded** | Taller, easier to tap |
+| **Key Borders** | Enable/disable visible key outlines |
+| **Border Radius** | Corner roundness (0 = square, higher = rounder) |
+| **Border Width** | Thickness of key outlines |
 
-### Suggestion Count
+## Opacity Settings
 
-Number of visible suggestions:
+Control transparency levels:
 
-| Count | Layout |
-|-------|--------|
-| **3** | Three evenly spaced |
-| **5** | Five suggestions |
-| **Auto** | Adapts to screen width |
+| Setting | Range | Description |
+|---------|-------|-------------|
+| **Keyboard Opacity** | 0-100% | Overall keyboard transparency |
+| **Key Opacity** | 0-100% | Transparency of key backgrounds |
+
+## Other Appearance Settings
+
+| Setting | Description |
+|---------|-------------|
+| **Character Size** | Font size of key labels |
+| **Label Brightness** | Visibility of key text |
+| **Vertical Key Spacing** | Gap between keyboard rows |
+| **Number Row** | Show dedicated number row above letters |
+| **Show Numpad** | Show numeric keypad option |
+| **Numpad Layout** | Order of numpad keys (123 or 789 first) |
 
 ## Tips and Tricks
 
-- **Large screens**: Use larger height and keys
-- **Small screens**: Reduce margins and gaps
+- **Large screens**: Increase height percentage
+- **Small screens**: Reduce margins
 - **One-handed**: Add horizontal margin on one side
-- **Gesture nav**: Add bottom margin
-
-> [!TIP]
-> Use "Preview" mode in settings to see changes before applying.
-
-## All Appearance Settings
-
-| Setting | Location | Options |
-|---------|----------|---------|
-| **Height** | Appearance | XS/S/M/L/XL or slider |
-| **Bottom Margin** | Appearance | 0-48dp |
-| **Side Margins** | Appearance | 0-32dp |
-| **Key Shape** | Appearance | Rounded/Square/Pill/Minimal |
-| **Key Gap** | Appearance | None/Tight/Normal/Wide |
-| **Press Animation** | Appearance | None/Highlight/Scale/Both |
-| **Key Pop-up** | Appearance | On/Off/Hold Only |
-| **Bar Height** | Predictions | Hidden/Compact/Normal/Expanded |
+- **Gesture nav phones**: Add bottom margin
 
 ## Common Questions
 
 ### Q: How do I make the keyboard smaller?
 
-A: Reduce keyboard height and add side margins for a narrower, shorter keyboard.
-
-### Q: Why does my keyboard look different in some apps?
-
-A: Some apps apply their own styling. CleverKeys tries to maintain your settings.
+A: Reduce keyboard height percentage and add horizontal margins for a narrower, shorter keyboard.
 
 ### Q: Can I have different sizes for portrait and landscape?
 
-A: Yes, configure separate height settings for each orientation in Settings > Appearance > Orientation.
+A: Yes, there are separate height sliders for portrait and landscape orientation.
+
+### Q: The keyboard background is transparent!
+
+A: Increase **Keyboard Opacity** in the Appearance section.
 
 ## Related Features
 
 - [Themes](../customization/themes.md) - Colors and styling
-- [Accessibility](accessibility.md) - High contrast options
-- [Profiles](../troubleshooting/backup-restore.md) - Save appearance settings
-
-## Technical Details
-
-See [Appearance Technical Specification](../specs/settings/appearance-spec.md).
+- [Accessibility](accessibility.md) - Haptic feedback settings

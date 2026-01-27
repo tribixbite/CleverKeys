@@ -23,17 +23,16 @@ When you first use CleverKeys, we recommend:
 Open CleverKeys settings:
 
 1. Find **CleverKeys** in your app drawer and tap it
-2. Or long-press the **gear icon** on the keyboard (if visible)
-3. Or go to **Android Settings > System > Languages & input > On-screen keyboard > CleverKeys**
+2. Or go to **Android Settings > System > Languages & input > On-screen keyboard > CleverKeys**
 
 ## Recommended First Settings
 
 ### Keyboard Height
 
 - **Location**: Scroll to **Appearance** section in Settings
-- **Setting**: Keyboard Height slider
+- **Setting**: Keyboard Height Portrait/Landscape sliders
 - **Default**: 100%
-- **Tip**: Try 85-95% for most phones. 100% may be too large.
+- **Tip**: Try 85-95% for most phones
 
 ### Theme
 
@@ -43,10 +42,10 @@ Open CleverKeys settings:
 
 ### Haptic Feedback
 
-- **Location**: Scroll to **Haptics** section in Settings
+- **Location**: Scroll to **Accessibility** section in Settings
 - **Settings**:
-  - Haptic Feedback: On/Off toggle
-  - Haptic Feedback Duration: Adjust vibration strength
+  - Vibration: On/Off toggle
+  - Vibration Duration: Adjust vibration length
 - **Tip**: Start with default duration, adjust if too weak or strong
 
 ### Primary Language
@@ -70,18 +69,18 @@ Add a row of function keys above the keyboard:
 Adjust how sensitive swipe detection is:
 
 - **Location**: Scroll to **Gesture Tuning** section in Settings
-- **Settings**: Short Swipe Threshold, Swipe Velocity Threshold
+- **Settings**: Swipe Distance Threshold slider
 - **Lower threshold**: More sensitive (easier to trigger)
 - **Higher threshold**: Less sensitive (requires more deliberate swipes)
 
-### Prediction Bar
+### Prediction Settings
 
-Configure word suggestions:
+Configure neural prediction:
 
 - **Location**: Scroll to **Neural Prediction** section in Settings
 - **Settings**:
-  - Show Suggestions: On/Off
-  - Beam Width: Higher = more candidates (default: 6)
+  - Swipe Typing: Enable/disable swipe input
+  - Beam Width: Number of candidates (default: 6, max: 20)
 
 ## Quick Test
 
@@ -89,7 +88,7 @@ Try these to verify your setup:
 
 1. **Tap test**: Type "hello" by tapping each letter
 2. **Swipe test**: Swipe "keyboard" without lifting
-3. **Gesture test**: Swipe up on any letter to see the subkey
+3. **Gesture test**: Short swipe on any letter to trigger subkey
 4. **Backspace test**: Long-press backspace to delete continuously
 
 > [!TIP]
@@ -99,17 +98,17 @@ Try these to verify your setup:
 
 ### Keyboard is too small/large
 
-Adjust **Keyboard Height** in the Appearance section of Settings.
+Adjust **Keyboard Height** sliders in the Appearance section of Settings.
 
 ### Predictions are inaccurate
 
 - Set correct primary language in Multi-Language section
 - Type more words to train the neural model
-- Increase **Beam Width** in Neural Prediction section (default: 6, max: 10)
+- Increase **Beam Width** in Neural Prediction section (default: 6)
 
 ### Haptics don't work
 
-- Check that **Haptic Feedback** is enabled in Haptics section
+- Check that **Vibration** is enabled in Accessibility section
 - Verify device vibration is not disabled in Android system settings
 - Some devices have separate "Touch vibration" system settings
 

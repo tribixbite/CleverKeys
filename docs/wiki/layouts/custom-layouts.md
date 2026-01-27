@@ -1,205 +1,105 @@
 ---
 title: Custom Layouts
-description: Create and edit your own keyboard layouts
+description: Create keyboard layouts using XML format
 category: Layouts
 difficulty: advanced
 ---
 
 # Custom Layouts
 
-Design your own keyboard layouts from scratch or modify existing layouts to match your preferences.
+Create custom keyboard layouts using XML syntax.
 
 ## Quick Summary
 
 | What | Description |
 |------|-------------|
-| **Purpose** | Create personalized layouts |
-| **Access** | Settings > Layouts > Custom Layouts |
-| **Features** | Visual editor, templates, import/export |
+| **Purpose** | Define custom keyboard layouts |
+| **Access** | Settings > Layouts preference |
+| **Format** | XML-based layout definition |
 
-## Creating a Custom Layout
+## How Custom Layouts Work
 
-### Step 1: Open Custom Layouts
+CleverKeys supports custom layout definitions in XML format. This is an advanced feature requiring knowledge of the layout XML syntax.
 
-1. Open **Settings > Layouts**
-2. Tap **Custom Layouts**
-3. Tap **Create New Layout**
+### Layout XML Syntax
 
-### Step 2: Choose Starting Point
+Custom layouts use the same XML format as the bundled layouts. A layout is defined by rows of keys, each key having:
 
-| Option | Description |
-|--------|-------------|
-| **Blank** | Start from scratch |
-| **Template** | QWERTY, AZERTY, etc. |
-| **Clone** | Copy existing layout |
+- **Primary character** (`c="a"`)
+- **Subkeys** by direction (`ne="1"` for northeast)
+- **Width** (`width="2.0"` for wider keys)
+- **Shift variants** (`shift="0.5"` for indent)
 
-### Step 3: Design Layout
+### Example Layout Row
 
-The visual editor shows:
-
-```
-┌─────────────────────────────────────────┐
-│ Layout Name: [My Custom Layout    ]     │
-├─────────────────────────────────────────┤
-│ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ...      │
-│ │ Q │ │ W │ │ E │ │ R │ │ T │           │
-│ └───┘ └───┘ └───┘ └───┘ └───┘           │
-│   ↑ Tap to edit key                     │
-├─────────────────────────────────────────┤
-│ [Add Row] [Remove Row] [Key Width]      │
-└─────────────────────────────────────────┘
+```xml
+<row>
+  <key c="q" ne="1"/>
+  <key c="w" ne="2"/>
+  <key c="e" ne="3"/>
+  <key c="r" ne="4"/>
+  <key c="t" ne="5"/>
+</row>
 ```
 
-### Step 4: Edit Individual Keys
+## Accessing Custom Layouts
 
-Tap any key to edit:
+1. Open Settings
+2. Find the **Layouts** preference
+3. Use the text entry dialog to specify layout XML
 
-| Setting | Description |
+The dialog includes:
+- Multi-line text entry with line numbers
+- Real-time validation for syntax errors
+- Option to remove custom layout
+
+## Layout Structure
+
+A complete layout consists of:
+
+| Element | Description |
 |---------|-------------|
-| **Primary** | Main character |
-| **Shifted** | Shift character |
-| **Subkeys** | 8-direction subkeys |
-| **Width** | Key width multiplier |
+| **Rows** | Horizontal groups of keys |
+| **Keys** | Individual key definitions |
+| **Modkeys** | Modified key layers |
 
-### Step 5: Save and Test
+### Key Properties
 
-1. Tap **Save Layout**
-2. Tap **Test Layout** to preview
-3. Make adjustments as needed
-4. Tap **Done** when satisfied
+| Property | Example | Description |
+|----------|---------|-------------|
+| `c` | `c="a"` | Primary character |
+| `ne`, `nw`, `se`, `sw`, `n`, `s`, `e`, `w` | `ne="1"` | Subkey directions |
+| `width` | `width="1.5"` | Key width multiplier |
+| `shift` | `shift="0.5"` | Left margin/indent |
 
-## Layout Elements
+## For Developers
 
-### Row Configuration
+Custom layouts use the same XML format as `src/main/layouts/*.xml` in the source code. Review existing layouts for syntax examples.
 
-| Row | Typical Contents |
-|-----|------------------|
-| **Row 1** | Number row (optional) |
-| **Row 2** | QWERTY top row |
-| **Row 3** | Home row (ASDF...) |
-| **Row 4** | Bottom row (ZXCV...) |
-| **Row 5** | Space row |
+## Limitations
 
-### Key Types
-
-| Type | Examples | Properties |
-|------|----------|------------|
-| **Letter** | A, B, C | Has shift variant |
-| **Number** | 1, 2, 3 | Symbol on shift |
-| **Symbol** | @, #, $ | May have shift variant |
-| **Action** | Shift, Backspace | Special behavior |
-| **Space** | Spacebar | Wide key |
-
-### Key Width
-
-| Width | Use Case |
-|-------|----------|
-| **0.5x** | Narrow keys |
-| **1.0x** | Standard letters |
-| **1.5x** | Shift, Tab |
-| **2.0x** | Enter key |
-| **5.0x** | Spacebar |
-
-## Advanced Features
-
-### Subkey Configuration
-
-For each key, define 8 subkeys:
-
-```
-    [1]   [2]   [3]
-      \   |   /
- [4] -- [Key] -- [5]
-      /   |   \
-    [6]   [7]   [8]
-```
-
-### Key Actions
-
-Assign special actions to keys:
-
-| Action | Description |
-|--------|-------------|
-| **Switch Layout** | Change to specific layout |
-| **Emoji** | Open emoji picker |
-| **Symbols** | Open symbol keyboard |
-| **Voice** | Start voice input |
-| **Macro** | Execute key sequence |
-
-## Import and Export
-
-### Export Layout
-
-1. Open your custom layout
-2. Tap **Export**
-3. Choose format (JSON or XML)
-4. Share or save file
-
-### Import Layout
-
-1. Go to **Custom Layouts**
-2. Tap **Import**
-3. Select file to import
-4. Layout appears in list
-
-### Share with Others
-
-1. Export your layout
-2. Share the file
-3. Recipients import via CleverKeys
-
-## Tips and Tricks
-
-- **Start with template**: Easier than blank canvas
-- **Test frequently**: Use the test feature often
-- **Small changes**: Make incremental adjustments
-- **Backup first**: Export before major changes
-
-> [!TIP]
-> Clone a layout you like and modify just the keys you want to change.
-
-## Examples
-
-### Programming Layout
-
-Optimize for coding with symbols accessible:
-
-- Add `{` `}` `[` `]` as subkeys
-- Place `=` and `;` in easy positions
-- Add Tab key in convenient location
-
-### One-Handed Layout
-
-Compact layout for single-hand typing:
-
-- All keys within thumb reach
-- Larger key targets
-- Essential keys only
-
-## Settings
-
-| Setting | Location | Description |
-|---------|----------|-------------|
-| **Custom Layouts** | Layouts | Manage custom layouts |
-| **Edit Layout** | Custom Layouts | Open editor |
-| **Export/Import** | Custom Layouts | Share layouts |
+| Feature | Status |
+|---------|--------|
+| **Visual editor** | Not available |
+| **Layout import** | Via text entry only |
+| **Sharing** | Copy/paste XML text |
 
 ## Common Questions
 
-### Q: Can I make a layout with fewer rows?
+### Q: Can I create layouts with a visual editor?
 
-A: Yes, you can remove rows for a more compact layout. Minimum is 2 rows.
+A: No, layouts are defined using XML text entry. Review existing layout files for examples.
 
-### Q: What happens if I delete a custom layout I'm using?
+### Q: Where can I find layout examples?
 
-A: CleverKeys switches to the next available layout automatically.
+A: Check the `src/main/layouts/` directory in the source code for XML layout examples.
 
-### Q: Can I share layouts between devices?
+### Q: How do I share a custom layout?
 
-A: Yes, export on one device and import on another.
+A: Copy the XML text and share it. Recipients paste it into their custom layout dialog.
 
 ## Related Features
 
-- [Adding Layouts](adding-layouts.md) - Add custom layouts to keyboard
+- [Adding Layouts](adding-layouts.md) - Built-in layout options
 - [Per-Key Actions](../customization/per-key-actions.md) - Customize subkeys
-- [Profiles](../troubleshooting/backup-restore.md) - Save layout configurations
+- [Language Packs](language-packs.md) - Download language support

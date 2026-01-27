@@ -3,41 +3,84 @@ title: Input Behavior Settings
 description: Configure typing behavior and text processing
 category: Settings
 difficulty: intermediate
-related_spec: ../specs/settings/input-behavior-spec.md
 ---
 
 # Input Behavior Settings
 
-Configure how CleverKeys processes your input, including auto-capitalization, punctuation, and special behaviors.
+Configure how CleverKeys processes your input, including capitalization, punctuation, and gesture behavior.
 
 ## Quick Summary
 
 | What | Description |
 |------|-------------|
 | **Purpose** | Control typing behavior |
-| **Access** | Settings > Input |
-| **Options** | Auto-cap, double-space, smart punct |
+| **Access** | Settings > Input (and related sections) |
+| **Options** | Auto-cap, double-space, smart punct, gestures |
 
-## Auto-Capitalization
+## Word Prediction Section
 
-Automatically capitalize letters:
+### Auto-Space After Suggestion
+
+Automatically add a space after tapping a suggestion:
+
+| Setting | Result |
+|---------|--------|
+| **Enabled** | "hello" → "hello " (space added) |
+| **Disabled** | "hello" → "hello" (no space) |
+
+### Capitalize I Words
+
+Automatically capitalize "I" and its contractions:
+
+| Words Affected |
+|----------------|
+| I, I'm, I'll, I'd, I've |
+
+## Input Section
+
+### Autocapitalization
+
+Automatically capitalize letters after sentence-ending punctuation:
 
 | Setting | Behavior |
 |---------|----------|
-| **Off** | Never auto-capitalize |
-| **Sentences** | Capitalize after . ! ? |
-| **Words** | Capitalize each word (for names) |
-| **Characters** | All uppercase |
+| **Enabled** | Capitalize after . ! ? |
+| **Disabled** | Never auto-capitalize |
 
-### How Auto-Cap Works
+### Smart Punctuation
 
-```
-Sentence mode:
-"hello world. " → next letter capitalized
-"what?! " → next letter capitalized
-```
+Automatic punctuation formatting:
 
-## Double-Space Period
+| Feature | Example |
+|---------|---------|
+| **Auto-space after punct** | "hello," → "hello, " |
+| **Remove space before punct** | "hello ," → "hello," |
+
+### Long Press Timeout
+
+Time before long press activates:
+
+| Duration | Use Case |
+|----------|----------|
+| **Shorter** | Fast access to long-press actions |
+| **Longer** | Avoid accidental activation |
+
+### Long Press Interval
+
+Repeat rate when holding a key:
+
+| Setting | Effect |
+|---------|--------|
+| **Shorter** | Faster key repeating |
+| **Longer** | Slower key repeating |
+
+### Double Tap Shift for Caps Lock
+
+Double-tap shift key to enable caps lock mode.
+
+## Gesture Tuning Section
+
+### Double-Space to Period
 
 Insert period and space when tapping space twice:
 
@@ -46,142 +89,39 @@ Insert period and space when tapping space twice:
 | **Enabled** | "hello  " → "hello. " |
 | **Disabled** | "hello  " → "hello  " |
 
-### Behavior Details
+### Double-Space Timing
 
-- Works after letters, not punctuation
-- Adds period and capitalizes next word
-- Can be disabled per-app
+Adjust the timing window for double-space detection.
 
-## Smart Punctuation
+### Swipe Distance Threshold
 
-Automatic punctuation formatting:
-
-| Feature | Example |
-|---------|---------|
-| **Auto-space after punct** | "hello," → "hello, " |
-| **Remove space before punct** | "hello ," → "hello," |
-| **Smart quotes** | "test" → "test" |
-
-## Delete Behavior
-
-### Backspace Mode
-
-| Option | Behavior |
-|--------|----------|
-| **Character** | Delete one character |
-| **Selection** | Delete selection first |
-
-### Delete Word
-
-| Setting | Effect |
-|---------|--------|
-| **Whole Word** | Delete entire word |
-| **To Word Boundary** | Delete to space/punctuation |
-
-## Swipe Sensitivity
-
-### Swipe Threshold
-
-How far to swipe before registering:
+How far to swipe before recognizing a short swipe gesture:
 
 | Level | Use Case |
 |-------|----------|
-| **Low** | Very sensitive, easy activation |
-| **Normal** | Balanced |
-| **High** | Requires intentional swipe |
-
-### Swipe Speed
-
-Minimum swipe velocity:
-
-| Setting | Effect |
-|---------|--------|
-| **Slow** | Accept slow swipes |
-| **Normal** | Standard speed requirement |
-| **Fast** | Require quick swipes |
-
-## Gesture Tuning
-
-### Long Press Delay
-
-Time before long press activates:
-
-| Duration | Use Case |
-|----------|----------|
-| **Short (200ms)** | Fast access |
-| **Normal (600ms)** | Balanced |
-| **Long (600ms)** | Avoid accidental activation |
-
-### Short Swipe Distance
-
-How far to swipe for subkey:
-
-| Distance | Effect |
-|----------|--------|
-| **Short** | Easy activation, may be accidental |
-| **Normal** | Balanced |
-| **Long** | Requires intentional swipe |
-
-## Cursor Control
-
-### Cursor Movement Speed
-
-In trackpoint/cursor mode:
-
-| Speed | Behavior |
-|-------|----------|
-| **Slow** | Precise movement |
-| **Normal** | Balanced |
-| **Fast** | Quick navigation |
-
-### Snap to Words
-
-| Setting | Effect |
-|---------|--------|
-| **Enabled** | Cursor snaps to word boundaries |
-| **Disabled** | Free movement |
+| **Lower** | More sensitive, easier activation |
+| **Higher** | Requires more intentional swipes |
 
 ## Tips and Tricks
 
-- **Fast typing**: Lower thresholds and delays
-- **Precision**: Higher thresholds, longer delays
-- **One-handed**: Increase sensitivity
-- **Error-prone**: Raise thresholds
+- **Fast typing**: Lower thresholds and shorter timeouts
+- **Precision**: Higher thresholds, longer timeouts
+- **Error-prone**: Raise swipe distance threshold
 
 > [!TIP]
-> If you're getting accidental swipes, increase the swipe threshold.
-
-## All Input Settings
-
-| Setting | Location | Default |
-|---------|----------|---------|
-| **Auto-Capitalize** | Input | Sentences |
-| **Double-Space Period** | Input | On |
-| **Smart Punctuation** | Input | On |
-| **Long Press Delay** | Input | 600ms |
-| **Swipe Threshold** | Input | Normal |
-| **Short Swipe Distance** | Gestures | Normal |
+> If you're getting accidental short swipes, increase the swipe distance threshold.
 
 ## Common Questions
 
-### Q: Why isn't auto-capitalize working?
+### Q: Why isn't autocapitalization working?
 
-A: Check if it's enabled in Settings > Input. Some apps override keyboard behavior.
+A: Check if it's enabled in Settings > Input section. Some apps may override keyboard behavior.
 
 ### Q: How do I disable double-space period?
 
-A: Settings > Input > Double-Space Period > Off.
-
-### Q: Can I have different settings per app?
-
-A: Some settings (like auto-cap) respect app hints. Full per-app settings may be added in future.
+A: Settings > Gesture Tuning > Double-Space to Period > Off.
 
 ## Related Features
 
-- [Autocorrect](../typing/autocorrect.md) - Text correction
-- [Gestures](../gestures/short-swipes.md) - Gesture configuration
-- [Accessibility](accessibility.md) - Touch accommodation
-
-## Technical Details
-
-See [Input Behavior Technical Specification](../specs/settings/input-behavior-spec.md).
+- [Short Swipes](../gestures/short-swipes.md) - Gesture configuration
+- [Accessibility](accessibility.md) - Haptic feedback settings

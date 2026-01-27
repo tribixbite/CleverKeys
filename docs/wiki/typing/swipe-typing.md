@@ -4,7 +4,6 @@ description: Draw paths through letters to type words
 category: Typing
 difficulty: beginner
 featured: true
-related_spec: ../specs/typing/swipe-typing-spec.md
 ---
 
 # Swipe Typing
@@ -63,7 +62,7 @@ If the wrong word appears:
 
 ## Prediction Bar
 
-After swiping, three predictions appear:
+After swiping, predictions appear:
 
 | Position | Meaning |
 |----------|---------|
@@ -75,27 +74,24 @@ Tap any prediction to use it instead.
 
 ## Settings
 
-Tune swipe typing in Settings > Neural:
+Tune swipe typing in Settings > Neural Prediction:
 
 | Setting | Description |
 |---------|-------------|
-| **Beam Width** | More candidates = more accurate but slower |
-| **Neural Profile** | Balanced, Fast, or Accurate presets |
-| **Prediction Count** | Number of suggestions to show |
+| **Swipe Typing** | Enable/disable swipe input |
+| **Beam Width** | More candidates = more accurate but slower (default: 6, max: 20) |
+| **Confidence Threshold** | Minimum confidence for predictions |
+| **Max Sequence Length** | Maximum swipe sample points |
 
 ## When Swipe Typing Doesn't Work
 
 Swipe typing may not activate when:
-- Typing in password fields
+- Swipe typing is disabled in settings
+- Typing in password fields (unless enabled in settings)
 - The swipe is too short (detected as tap)
-- No language pack is downloaded
+- No language pack is available
 
 ## Related Features
 
-- [Autocorrect](autocorrect.md) - Fix mistakes automatically
 - [Short Swipes](../gestures/short-swipes.md) - Quick access to subkeys
-- [Neural Settings](../settings/neural-settings.md) - Tune prediction
-
-## Technical Details
-
-See [Swipe Typing Technical Specification](../specs/typing/swipe-typing-spec.md) for details on the ONNX model and beam search algorithm.
+- [Autocorrect](autocorrect.md) - Fix mistakes automatically
