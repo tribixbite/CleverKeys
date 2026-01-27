@@ -15,7 +15,7 @@ Customize the appearance of your keyboard with different color themes, from dark
 |------|-------------|
 | **Purpose** | Change keyboard colors and appearance |
 | **Access** | Settings > Theme Manager (in Activities section) |
-| **Options** | 18+ built-in themes + custom DIY colors |
+| **Options** | 35+ built-in themes + custom DIY colors |
 
 ## Built-in Themes
 

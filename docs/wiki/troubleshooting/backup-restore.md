@@ -1,223 +1,118 @@
 ---
 title: Backup & Restore
-description: Save and restore your keyboard configuration
+description: Export and import your keyboard configuration
 category: Troubleshooting
 difficulty: beginner
 ---
 
 # Backup & Restore
 
-Protect your keyboard configuration by creating backups that can be restored later or transferred to another device.
+Export and import your keyboard settings, dictionary, and clipboard history.
 
 ## Quick Summary
 
 | What | How |
 |------|-----|
-| **Backup** | Settings > Profiles > Export |
-| **Restore** | Settings > Profiles > Import |
-| **Format** | JSON file |
+| **Settings** | Settings > Backup & Restore > Export/Import Config |
+| **Dictionary** | Settings > Backup & Restore > Export/Import Dictionary |
+| **Clipboard** | Settings > Backup & Restore > Export/Import Clipboard |
+| **Format** | JSON files |
 
-## What Gets Backed Up
+## Available Exports
 
-### Full Profile Backup
+### Configuration Export
 
-| Component | Included |
-|-----------|----------|
-| **Settings** | All preferences |
-| **Theme** | Colors, appearance |
-| **Customizations** | Per-key actions |
-| **Extra Keys** | Bottom row setup |
-| **Layouts** | Installed layouts, order |
-| **Personal Dictionary** | Optional |
+Exports all keyboard settings to a JSON file:
 
-### Backup Contents
+| Included | Description |
+|----------|-------------|
+| **All Settings** | Appearance, behavior, neural settings |
+| **Theme Selection** | Current theme choice |
+| **Custom Subkeys** | Per-key customizations |
 
-```json
-{
-  "version": 1,
-  "exported": "2024-12-15T10:30:00Z",
-  "profile": {
-    "name": "My Profile",
-    "settings": { ... },
-    "theme": { ... },
-    "customizations": { ... },
-    "layouts": [ ... ],
-    "dictionary": [ ... ]  // If included
-  }
-}
-```
-
-## Creating a Backup
-
-### Step 1: Open Profiles
-
+**How to export:**
 1. Open **Settings**
-2. Navigate to **Profiles**
-3. Tap **Export Profile**
+2. Scroll to **Backup & Restore** section
+3. Tap **Export Config**
+4. Choose save location
 
-### Step 2: Choose What to Include
+### Dictionary Export
 
-| Option | Description |
-|--------|-------------|
-| **Include Dictionary** | Personal words |
-| **Include History** | Clipboard history |
-| **Include Language Packs** | Downloaded packs |
+Exports your personal dictionary:
 
-### Step 3: Save File
+| Included | Description |
+|----------|-------------|
+| **User Words** | Words you've added |
+| **Learned Words** | Words the keyboard learned |
 
-1. Choose location (Downloads, Cloud, etc.)
-2. Enter filename
-3. Tap **Save**
+### Clipboard Export
 
-### Step 4: Verify Backup
+Exports clipboard history:
 
-- Check file exists in chosen location
-- File should be several KB to MB depending on contents
+| Included | Description |
+|----------|-------------|
+| **History** | Recent clipboard items |
+| **Pinned** | Pinned items |
+| **Todos** | Todo items |
 
-## Restoring from Backup
+## Importing
 
-### Step 1: Access Import
+### Import Config
 
-1. Open **Settings > Profiles**
-2. Tap **Import Profile**
-3. Browse to backup file
+1. Open **Settings > Backup & Restore**
+2. Tap **Import Config**
+3. Browse to your backup JSON file
+4. Settings will be applied immediately
 
-### Step 2: Choose What to Restore
+### Import Dictionary
 
-| Option | Description |
-|--------|-------------|
-| **Replace All** | Overwrite current config |
-| **Merge** | Add to existing config |
-| **Preview** | See contents first |
+1. Tap **Import Dictionary**
+2. Select dictionary JSON file
+3. Words are merged with existing dictionary
 
-### Step 3: Confirm Import
+### Import Clipboard
 
-1. Review what will be changed
-2. Tap **Import**
-3. Restart keyboard if prompted
-
-## Automatic Backups
-
-### Enable Auto-Backup
-
-1. Go to **Settings > Profiles**
-2. Enable **Auto-Backup**
-3. Choose frequency:
-   - Daily
-   - Weekly
-   - On change
-
-### Backup Location
-
-Auto-backups are stored in:
-
-```
-/storage/emulated/0/Android/data/app.cleverkeys/backups/
-```
-
-Or cloud location if configured.
-
-### Manage Auto-Backups
-
-| Setting | Options |
-|---------|---------|
-| **Keep** | Last 5, 10, 20 backups |
-| **Location** | Local, Google Drive |
-| **Include Dictionary** | Yes/No |
+1. Tap **Import Clipboard**
+2. Select clipboard JSON file
+3. Items are added to history
 
 ## Transfer to New Device
 
-### Method 1: File Transfer
+1. **Export** config, dictionary, and clipboard on old device
+2. **Transfer** the JSON files (USB, email, cloud storage)
+3. **Import** each file on new device
 
-1. Export profile on old device
-2. Transfer file (USB, email, cloud)
-3. Import on new device
+## Data Export for ML
 
-### Method 2: Cloud Storage
+CleverKeys also supports exporting swipe training data:
 
-1. Export to Google Drive
-2. On new device, import from Drive
+| Format | Description |
+|--------|-------------|
+| **JSON** | Structured swipe data |
+| **NDJSON** | Newline-delimited JSON for ML pipelines |
 
-### Method 3: QR Code
+Access via **Settings > Privacy > View Collected Data > Export**.
 
-1. Generate QR code from profile
-2. Scan on new device
-3. Profile imports automatically
-
-## Backup Best Practices
-
-- **Regular backups**: Weekly or after major changes
-- **Multiple copies**: Keep backups in different locations
-- **Test restores**: Occasionally verify backups work
-- **Before updates**: Backup before app updates
-- **Before reset**: Always backup before resetting
-
-> [!TIP]
-> Enable auto-backup to ensure you always have a recent backup available.
-
-## Troubleshooting Backups
+## Troubleshooting
 
 ### Import Fails
 
 | Issue | Solution |
 |-------|----------|
-| **File corrupt** | Try different backup |
-| **Version mismatch** | Update app first |
-| **Permission denied** | Grant storage permission |
+| **File corrupt** | Re-export from source device |
+| **Wrong format** | Ensure file is CleverKeys JSON export |
+| **Permission denied** | Grant storage permission to CleverKeys |
 
 ### Settings Not Applied
 
-1. Force stop keyboard
-2. Re-enable in system settings
-3. Try import again
+1. Close and reopen the keyboard
+2. If needed, disable and re-enable CleverKeys in system settings
 
-### Partial Restore
+## File Locations
 
-If only some settings restored:
-
-1. Check what was included in backup
-2. Try **Replace All** instead of **Merge**
-
-## Export Individual Components
-
-### Dictionary Only
-
-1. Settings > Privacy
-2. Export Dictionary
-3. Imports as separate file
-
-### Theme Only
-
-1. Settings > Theme
-2. Export Theme
-3. Share with others
-
-### Customizations Only
-
-1. Settings > Customization
-2. Export Customizations
-3. Apply to other profiles
-
-## Common Questions
-
-### Q: How large are backup files?
-
-A: Typically 10KB-1MB without dictionary, up to 5MB with large dictionary.
-
-### Q: Can I share backups with others?
-
-A: Yes, but personal dictionary may contain private words.
-
-### Q: Will backup work across app versions?
-
-A: Yes, backups include version info for compatibility.
-
-### Q: Can I edit backup files manually?
-
-A: Yes, they're JSON. But be careful not to corrupt the format.
+Exported files are saved to the location you choose via Android's file picker (typically Downloads folder).
 
 ## Related Topics
 
-- [Profile System](../../specs/profile_system_restoration.md) - Profile management
-- [Reset Defaults](reset-defaults.md) - When backup isn't enough
-- [Privacy](../settings/privacy.md) - What data is stored
+- [Privacy](../settings/privacy.md) - Data collection settings
+- [Per-Key Customization](../customization/custom-layouts.md) - Subkey settings
