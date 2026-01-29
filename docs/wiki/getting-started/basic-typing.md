@@ -35,8 +35,8 @@ The neural prediction engine analyzes your path and suggests "hello".
 The prediction bar appears above the keyboard showing word suggestions:
 
 - **Tap** a suggestion to insert it
-- The **center** suggestion is usually the best match
-- **Long-press** a suggestion to see alternatives
+- Suggestions are ordered by confidence, with the **best match on the left**
+- Up to 6 alternatives may appear depending on beam width
 
 ## Auto-Corrections
 
@@ -60,8 +60,8 @@ CleverKeys automatically corrects common typos:
 
 Each key supports directional swipes:
 
-- **Swipe up** on a letter: often types the uppercase version
-- **Swipe in any direction**: customizable actions
+- **Quick flick in any direction**: types the assigned subkey character (e.g., numbers, symbols)
+- Subkey assignments are customizable per-key
 
 See [Short Swipes](../gestures/short-swipes.md) for gesture details.
 

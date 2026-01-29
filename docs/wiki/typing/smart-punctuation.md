@@ -104,8 +104,8 @@ Type "Hello" → space → space → Result: "Hello. "
 
 | Setting | Location | Default | Description |
 |---------|----------|---------|-------------|
-| **Double Space to Period** | Settings > Input Behavior | On | Enable double-space shortcut |
-| **Threshold** | Settings > Input Behavior | 500ms | Max time between spaces |
+| **Double Space to Period** | Settings > Gesture Tuning | On | Enable double-space shortcut |
+| **Threshold** | Settings > Gesture Tuning | 500ms | Max time between spaces |
 
 ## Tips and Tricks
 

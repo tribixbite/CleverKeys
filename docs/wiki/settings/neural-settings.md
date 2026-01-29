@@ -70,13 +70,9 @@ Minimum score for a prediction to be shown:
 
 Maximum predicted word length in characters (default: 20). Longer words will be truncated.
 
-## Advanced Settings
+## Full Neural Settings
 
-Expand the Advanced subsection for additional tuning:
-
-### ONNX Threads
-
-Number of CPU threads for XNNPACK neural inference. Default: 2 (optimal for most ARM devices). Range: 1-8.
+For advanced tuning (batch processing, greedy search, ONNX threads, beam search parameters, inference tuning, and presets), tap the **Full Neural Settings** button at the bottom of the Neural Prediction section. This opens a dedicated activity with all neural parameters.
 
 ## Tips and Tricks
 
