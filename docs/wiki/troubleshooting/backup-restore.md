@@ -13,9 +13,9 @@ Export and import your keyboard settings, dictionary, and clipboard history.
 
 | What | How |
 |------|-----|
-| **Settings** | Settings > Backup & Restore > Export/Import Config |
-| **Dictionary** | Settings > Backup & Restore > Export/Import Dictionary |
-| **Clipboard** | Settings > Backup & Restore > Export/Import Clipboard |
+| **Settings** | Settings > Activities > Backup & Restore > Export/Import Config |
+| **Dictionary** | Settings > Activities > Backup & Restore > Export/Import Dictionary |
+| **Clipboard** | Settings > Activities > Backup & Restore > Export/Import Clipboard |
 | **Format** | JSON files |
 
 ## Available Exports
@@ -32,7 +32,7 @@ Exports all keyboard settings to a JSON file:
 
 **How to export:**
 1. Open **Settings**
-2. Scroll to **Backup & Restore** section
+2. Tap **Backup & Restore** in the Activities section
 3. Tap **Export Config**
 4. Choose save location
 
@@ -59,7 +59,7 @@ Exports clipboard history:
 
 ### Import Config
 
-1. Open **Settings > Backup & Restore**
+1. Open **Settings > Activities > Backup & Restore**
 2. Tap **Import Config**
 3. Browse to your backup JSON file
 4. Settings will be applied immediately

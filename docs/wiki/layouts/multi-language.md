@@ -144,7 +144,7 @@ A: The neural model outputs base letters. The dictionary lookup maps "espanol" t
 
 ### Q: What if I need characters not on QWERTY?
 
-A: Use subkeys! Long-press or swipe on keys to access accented characters directly (e.g., swipe up on 'n' for 'ñ').
+A: Use subkeys! Swipe on keys to access accented characters directly (e.g., swipe on 'n' for 'ñ').
 
 ### Q: Can I use more than two languages?
 

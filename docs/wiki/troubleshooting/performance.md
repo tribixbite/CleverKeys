@@ -48,9 +48,9 @@ Optimize CleverKeys for better speed, responsiveness, and battery efficiency.
    - Settings > Accessibility > Vibration Duration
    - Try reducing or disabling
 
-2. **Disable key popup**
+2. **Reduce visual feedback**
    - If your device has slow rendering
-   - Key popup can add visual delay
+   - Disable key borders or reduce opacity in Appearance settings
 
 ## Startup Performance
 

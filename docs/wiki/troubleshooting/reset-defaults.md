@@ -76,7 +76,7 @@ Before any destructive reset, consider backing up:
 
 1. Open CleverKeys **Settings**
 2. Tap **Backup & Restore** in Activities section
-3. Tap **Export Settings**
+3. Tap **Export Config**
 4. Save the backup file
 
 See [Backup & Restore](backup-restore.md) for details.
@@ -108,7 +108,7 @@ If you exported a backup:
 
 1. Open CleverKeys **Settings**
 2. Tap **Backup & Restore** in Activities section
-3. Tap **Import Settings**
+3. Tap **Import Config**
 4. Select your backup file
 5. Settings are restored
 
