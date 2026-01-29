@@ -286,9 +286,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     private var autocorrectCharMatchThreshold by mutableStateOf(0.67f)
     private var autocorrectMinFrequency by mutableStateOf(500)
 
-    // Neural beam search advanced settings
-    private var neuralBatchBeams by mutableStateOf(false)
-    private var neuralGreedySearch by mutableStateOf(false)
+    // Neural beam search advanced settings (batch/greedy/onnx threads moved to NeuralSettingsActivity)
     private var neuralBeamAlpha by mutableStateOf(1.55f)
     private var neuralBeamPruneConfidence by mutableStateOf(0.33f)
     private var neuralBeamScoreGap by mutableStateOf(50.0f)
@@ -296,7 +294,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Neural model config settings
     private var neuralResamplingMode by mutableStateOf("discard")
     private var neuralUserMaxSeqLength by mutableStateOf(0)
-    private var onnxXnnpackThreads by mutableStateOf(Defaults.ONNX_XNNPACK_THREADS)
 
     // Multi-language settings
     private var multiLangEnabled by mutableStateOf(false)
@@ -337,7 +334,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     // Section expanded states
     private var wordPredictionAdvancedExpanded by mutableStateOf(false)
-    private var neuralAdvancedExpanded by mutableStateOf(false)
     private var activitiesSectionExpanded by mutableStateOf(true)  // Activities at top, default expanded
     private var multiLangSectionExpanded by mutableStateOf(false)
     private var privacySectionExpanded by mutableStateOf(false)
@@ -452,7 +448,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             SearchableSetting("Beam Width", listOf("accuracy", "prediction", "candidates", "beam"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "beam_width"),
             SearchableSetting("Confidence Threshold", listOf("accuracy", "filter", "confidence"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "confidence_threshold"),
             SearchableSetting("Max Sequence Length", listOf("sequence", "length", "maximum", "resampling"), "Neural Prediction", expandSection = { neuralSectionExpanded = true }, gatedBy = "swipe_typing", settingId = "max_seq_length"),
-            SearchableSetting("ONNX Threads", listOf("threads", "cpu", "xnnpack", "performance", "onnx"), "Neural Prediction", expandSection = { neuralSectionExpanded = true; neuralAdvancedExpanded = true }, gatedBy = "swipe_typing", settingId = "onnx_threads"),
+            SearchableSetting("ONNX Threads", listOf("threads", "cpu", "xnnpack", "performance", "onnx"), "Neural Prediction", NeuralSettingsActivity::class.java, gatedBy = "swipe_typing", settingId = "onnx_threads"),
 
             // ==================== WORD PREDICTION & AUTOCORRECT ====================
             SearchableSetting("Word Predictions", listOf("prediction", "suggestions", "completion", "autocomplete"), "Word Prediction", expandSection = { inputSectionExpanded = true }, settingId = "word_prediction"),
@@ -1432,74 +1428,14 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         displayValue = "%.3f".format(confidenceThreshold)
                     )
 
-                    // Neural Advanced settings (expandable)
-                    Row(
+                    // Full Neural Settings Activity button (batch/greedy/onnx threads moved there)
+                    Button(
+                        onClick = { openNeuralSettings() },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { neuralAdvancedExpanded = !neuralAdvancedExpanded }
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(top = 8.dp)
                     ) {
-                        Text("Advanced Neural Settings", fontWeight = FontWeight.SemiBold)
-                        Icon(
-                            imageVector = if (neuralAdvancedExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                            contentDescription = null
-                        )
-                    }
-
-                    AnimatedVisibility(visible = neuralAdvancedExpanded) {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            // Beam Search Config
-                            Text(
-                                text = "Beam Search",
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
-                            )
-
-                            SettingsSwitch(
-                                title = "Batch Processing",
-                                description = "Process all beams in single inference (faster but experimental)",
-                                checked = neuralBatchBeams,
-                                onCheckedChange = {
-                                    neuralBatchBeams = it
-                                    saveSetting("neural_batch_beams", it)
-                                }
-                            )
-
-                            SettingsSwitch(
-                                title = "Greedy Search",
-                                description = "Single-pass decoding (fastest, single result only)",
-                                checked = neuralGreedySearch,
-                                onCheckedChange = {
-                                    neuralGreedySearch = it
-                                    saveSetting("neural_greedy_search", it)
-                                }
-                            )
-
-                            SettingsSlider(
-                                title = "ONNX Threads",
-                                description = "CPU threads for inference (restart required)",
-                                value = onnxXnnpackThreads.toFloat(),
-                                valueRange = 1f..8f,
-                                steps = 6,
-                                onValueChange = {
-                                    onnxXnnpackThreads = it.toInt()
-                                    saveSetting("onnx_xnnpack_threads", onnxXnnpackThreads)
-                                },
-                                displayValue = "$onnxXnnpackThreads threads"
-                            )
-
-                            // NOTE: Pruning Confidence and Early Stop Gap moved to Full Neural Settings
-                            // to avoid overwhelming users with duplicate controls
-
-                            Button(
-                                onClick = { openNeuralSettings() },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text("Full Neural Settings Activity")
-                            }
-                        }
+                        Text("Full Neural Settings")
                     }
                 }
             }
@@ -4710,9 +4646,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         autocorrectCharMatchThreshold = Config.safeGetFloat(prefs, "autocorrect_char_match_threshold", Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD)
         autocorrectMinFrequency = Config.safeGetInt(prefs, "autocorrect_confidence_min_frequency", Defaults.AUTOCORRECT_MIN_FREQUENCY)
 
-        // Neural beam search advanced settings
-        neuralBatchBeams = prefs.getSafeBoolean("neural_batch_beams", Defaults.NEURAL_BATCH_BEAMS)
-        neuralGreedySearch = prefs.getSafeBoolean("neural_greedy_search", Defaults.NEURAL_GREEDY_SEARCH)
+        // Neural beam search advanced settings (batch/greedy/onnx threads now in NeuralSettingsActivity)
         neuralBeamAlpha = Config.safeGetFloat(prefs, "neural_beam_alpha", Defaults.NEURAL_BEAM_ALPHA)
         neuralBeamPruneConfidence = Config.safeGetFloat(prefs, "neural_beam_prune_confidence", Defaults.NEURAL_BEAM_PRUNE_CONFIDENCE)
         neuralBeamScoreGap = Config.safeGetFloat(prefs, "neural_beam_score_gap", Defaults.NEURAL_BEAM_SCORE_GAP)
@@ -4720,7 +4654,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Neural model config settings
         neuralResamplingMode = prefs.getSafeString("neural_resampling_mode", Defaults.NEURAL_RESAMPLING_MODE)
         neuralUserMaxSeqLength = Config.safeGetInt(prefs, "neural_user_max_seq_length", Defaults.NEURAL_USER_MAX_SEQ_LENGTH)
-        onnxXnnpackThreads = Config.safeGetInt(prefs, "onnx_xnnpack_threads", Defaults.ONNX_XNNPACK_THREADS)
 
         // Multi-language settings
         multiLangEnabled = prefs.getSafeBoolean("pref_enable_multilang", Defaults.ENABLE_MULTILANG)

@@ -53,6 +53,11 @@ class NeuralSettingsActivity : ComponentActivity() {
     private var maxCumulativeBoost by mutableStateOf(Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
     private var strictStartChar by mutableStateOf(Defaults.NEURAL_STRICT_START_CHAR)
 
+    // Runtime Configuration - MUST match Defaults in Config.kt
+    private var batchBeams by mutableStateOf(Defaults.NEURAL_BATCH_BEAMS)
+    private var greedySearch by mutableStateOf(Defaults.NEURAL_GREEDY_SEARCH)
+    private var onnxThreads by mutableStateOf(Defaults.ONNX_XNNPACK_THREADS)
+
     // Currently selected preset (null = custom settings)
     private var selectedPreset by mutableStateOf<NeuralPreset?>(null)
 
@@ -291,16 +296,52 @@ class NeuralSettingsActivity : ComponentActivity() {
                 )
             }
 
+            // Runtime Configuration Section (moved from main settings Advanced Neural)
+            ParameterSection("Runtime Configuration") {
+                ParameterToggle(
+                    title = "Batch Processing",
+                    description = "Process all beams in single inference (faster but experimental)",
+                    checked = batchBeams,
+                    onCheckedChange = {
+                        batchBeams = it
+                        updateNeuralParameters()
+                    }
+                )
+
+                ParameterToggle(
+                    title = "Greedy Search",
+                    description = "Single-pass decoding (fastest, single result only)",
+                    checked = greedySearch,
+                    onCheckedChange = {
+                        greedySearch = it
+                        updateNeuralParameters()
+                    }
+                )
+
+                ParameterSlider(
+                    title = "ONNX Threads",
+                    description = "CPU threads for XNNPACK inference (restart required)",
+                    value = onnxThreads.toFloat(),
+                    valueRange = 1f..8f,
+                    steps = 6,
+                    onValueChange = {
+                        onnxThreads = it.toInt()
+                        updateNeuralParameters()
+                    },
+                    displayValue = "$onnxThreads threads"
+                )
+            }
+
             // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
-                    onClick = { resetToDefaults() },
+                    onClick = { finish() },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Reset Defaults")
+                    Text("Cancel")
                 }
 
                 Button(
@@ -494,6 +535,9 @@ class NeuralSettingsActivity : ComponentActivity() {
                 config.swipe_smoothing_window = smoothingWindow
                 config.neural_max_cumulative_boost = maxCumulativeBoost
                 config.neural_strict_start_char = strictStartChar
+                config.neural_batch_beams = batchBeams
+                config.neural_greedy_search = greedySearch
+                config.onnx_xnnpack_threads = onnxThreads
 
                 // Re-detect preset: if values were manually changed, this clears the preset
                 // If values match a preset (including after applyPreset), it stays selected
@@ -511,13 +555,6 @@ class NeuralSettingsActivity : ComponentActivity() {
                 android.util.Log.e("NeuralSettings", "Error updating configuration", e)
             }
         }
-    }
-
-    private fun resetToDefaults() {
-        // Use Defaults.* constants for consistency across all settings
-        // This is equivalent to applying the BALANCED preset
-        applyPreset(NeuralPreset.BALANCED)
-        // Note: applyPreset already shows a toast
     }
 
     private fun saveAndApplyParameters() {
@@ -553,6 +590,9 @@ class NeuralSettingsActivity : ComponentActivity() {
         smoothingWindow = Config.safeGetInt(prefs, "swipe_smoothing_window", Defaults.SWIPE_SMOOTHING_WINDOW)
         maxCumulativeBoost = Config.safeGetFloat(prefs, "neural_max_cumulative_boost", Defaults.NEURAL_MAX_CUMULATIVE_BOOST)
         strictStartChar = prefs.getBoolean("neural_strict_start_char", Defaults.NEURAL_STRICT_START_CHAR)
+        batchBeams = prefs.getBoolean("neural_batch_beams", Defaults.NEURAL_BATCH_BEAMS)
+        greedySearch = prefs.getBoolean("neural_greedy_search", Defaults.NEURAL_GREEDY_SEARCH)
+        onnxThreads = Config.safeGetInt(prefs, "onnx_xnnpack_threads", Defaults.ONNX_XNNPACK_THREADS)
 
         // Detect if current settings match any preset
         selectedPreset = detectCurrentPreset()
@@ -578,6 +618,9 @@ class NeuralSettingsActivity : ComponentActivity() {
         editor.putInt("swipe_smoothing_window", smoothingWindow)
         editor.putFloat("neural_max_cumulative_boost", maxCumulativeBoost)
         editor.putBoolean("neural_strict_start_char", strictStartChar)
+        editor.putBoolean("neural_batch_beams", batchBeams)
+        editor.putBoolean("neural_greedy_search", greedySearch)
+        editor.putInt("onnx_xnnpack_threads", onnxThreads)
 
         // Save selected preset name (or "custom" if manually tweaked)
         editor.putString("neural_preset", selectedPreset?.name ?: "custom")
@@ -658,9 +701,12 @@ class NeuralSettingsActivity : ComponentActivity() {
         scoreGapStep = preset.scoreGapStep
         temperature = preset.temperature
         frequencyWeight = preset.frequencyWeight
-        // Reset multilingual safety to defaults (not part of preset)
+        // Reset non-preset settings to defaults
         maxCumulativeBoost = Defaults.NEURAL_MAX_CUMULATIVE_BOOST
         strictStartChar = Defaults.NEURAL_STRICT_START_CHAR
+        batchBeams = Defaults.NEURAL_BATCH_BEAMS
+        greedySearch = Defaults.NEURAL_GREEDY_SEARCH
+        onnxThreads = Defaults.ONNX_XNNPACK_THREADS
 
         selectedPreset = preset
 
