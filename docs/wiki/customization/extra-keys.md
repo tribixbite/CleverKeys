@@ -56,9 +56,9 @@ Available extra keys:
 | **Arrows** | Navigation arrows |
 | **Fn** | Function key |
 
-### Step 4: Arrange Order
+### Step 4: Review Selection
 
-Drag keys to reorder them. Keys closest to spacebar are easiest to reach.
+Enabled keys appear on the bottom row. The order follows a built-in layout.
 
 ## Use Cases
 
@@ -120,9 +120,7 @@ Extra keys affect bottom row layout:
 
 | Setting | Location | Description |
 |---------|----------|-------------|
-| **Extra Keys** | Activities section | Add/remove keys |
-| **Key Order** | Extra Keys | Drag to reorder |
-| **Key Size** | Extra Keys | Auto-sized |
+| **Extra Keys** | Activities section | Toggle keys on/off |
 
 ## Common Questions
 
@@ -133,7 +131,7 @@ A: Currently, extra keys are limited to predefined actions. For custom character
 A: Too many extra keys. Remove some to restore spacebar size.
 
 ### Q: Do extra keys have subkeys?
-A: Most extra keys have subkeys. Long-press or short swipe to access.
+A: Most extra keys have subkeys. Short swipe in a direction to access them.
 
 ## Related Features
 

@@ -15,7 +15,7 @@ Short swipes let you quickly access additional characters by flicking in 8 direc
 
 | What | Description |
 |------|-------------|
-| **Purpose** | Quick access to subkeys without long-press |
+| **Purpose** | Quick access to subkeys via directional flick |
 | **Gesture** | Quick flick from key in any of 8 directions |
 | **Directions** | N, NE, E, SE, S, SW, W, NW |
 
@@ -103,9 +103,9 @@ Adjust sensitivity in Settings:
 
 | Action | Short Swipe | Long Press |
 |--------|-------------|------------|
-| **Speed** | Fast (instant) | Slow (wait for popup) |
-| **Access** | 8 directions | Popup menu |
-| **Characters** | Common ones | All variations |
+| **Speed** | Fast (instant) | Slow (wait 600ms) |
+| **Behavior** | Types subkey character | Key repeat |
+| **Access** | 8 directional subkeys | Repeats the main key |
 
 ## Settings
 

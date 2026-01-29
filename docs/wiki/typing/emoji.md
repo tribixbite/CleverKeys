@@ -93,7 +93,7 @@ Long-press any emoji to see its name in a tooltip:
 - **Flags**: Shows country name like "japan", "united states"
 - **Emoticons**: Shows description like "shrug", "lenny", "table flip"
 
-The tooltip appears above the pressed emoji and auto-dismisses after 2.5 seconds.
+The tooltip appears above the pressed emoji and auto-dismisses after 2 seconds.
 
 ## Tips and Tricks
 

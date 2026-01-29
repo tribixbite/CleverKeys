@@ -116,39 +116,22 @@ Put navigation actions where you can reach them:
 
 ## Resetting Customizations
 
-To restore defaults for a key:
+To restore defaults:
 
-1. Open Per-Key Actions
-2. Select the key
-3. Tap **Reset to Default**
-
-To reset all customizations:
-
-1. Go to Settings > Reset
-2. Choose **Reset Customizations Only**
-
-## Import/Export
-
-Save and share your customizations:
-
-1. Go to Settings > **Profiles**
-2. Select **Export Profile**
-3. Choose to include customizations
-
-See [Profiles](../troubleshooting/backup-restore.md) for details.
+1. Go to **Settings > Activities > Backup & Restore**
+2. Use the restore function to reset to default configuration
 
 ## Settings
 
 | Setting | Location | Description |
 |---------|----------|-------------|
 | **Per-Key Customization** | Activities section | Visual subkey editor |
-| **Reset Key** | Per-key detail | Reset single key |
-| **Reset All** | Backup & Restore | Reset all customizations |
+| **Backup & Restore** | Activities section | Save/restore customizations |
 
 ## Related Features
 
 - [Short Swipes](../gestures/short-swipes.md) - How to trigger subkeys
-- [Profiles](../troubleshooting/backup-restore.md) - Save customizations
+- [Backup & Restore](../troubleshooting/backup-restore.md) - Save customizations
 - [Extra Keys](extra-keys.md) - Add custom keys to bottom row
 
 ## Technical Details
