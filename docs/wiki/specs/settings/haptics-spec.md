@@ -2,10 +2,27 @@
 title: Haptics Settings - Technical Specification
 user_guide: ../../settings/haptics.md
 status: implemented
-version: v1.2.7
+version: v1.2.9
 ---
 
 # Haptics Settings Technical Specification
+
+## Source Location Reference
+
+All facts in the [Haptics wiki page](../../settings/haptics.md) are sourced from:
+
+| Fact | Source File | Line(s) | Value |
+|------|------------|---------|-------|
+| Master haptic toggle default | `Config.kt` | 63 | `HAPTIC_ENABLED = true` |
+| Key press haptic default | `Config.kt` | 65 | `HAPTIC_KEY_PRESS = true` |
+| Prediction tap haptic default | `Config.kt` | 66 | `HAPTIC_PREDICTION_TAP = true` |
+| TrackPoint activate haptic default | `Config.kt` | 67 | `HAPTIC_TRACKPOINT_ACTIVATE = true` |
+| Long press haptic default | `Config.kt` | 68 | `HAPTIC_LONG_PRESS = true` |
+| Swipe complete haptic default (off) | `Config.kt` | 69 | `HAPTIC_SWIPE_COMPLETE = false` |
+| VIBRATE permission required | `AndroidManifest.xml` | 5 | `android.permission.VIBRATE` |
+| Settings UI section | `SettingsActivity.kt` | "Accessibility" section | Haptic toggles |
+
+> **Note:** The code examples below are illustrative architecture diagrams, not verbatim source. Actual haptic logic is in `Pointers.kt` and `CleverKeysService.kt`.
 
 ## Overview
 
@@ -15,10 +32,10 @@ The haptic feedback system provides tactile feedback for key presses, gestures, 
 
 | Component | File | Purpose |
 |-----------|------|---------|
-| HapticManager | `HapticManager.kt` | Feedback coordination |
-| VibrationController | `VibrationController.kt` | Hardware interface |
-| HapticPatterns | `HapticPatterns.kt` | Pattern definitions |
-| Config | `Config.kt` | Haptic preferences |
+| Haptic Config | `Config.kt` (lines 63-69) | Default haptic settings |
+| Pointer Handler | `Pointers.kt` | Triggers haptic feedback on events |
+| Keyboard Service | `CleverKeysService.kt` | Android Vibrator service access |
+| Settings UI | `SettingsActivity.kt` | Accessibility section toggles |
 
 ## Haptic Events
 

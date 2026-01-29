@@ -2,10 +2,20 @@
 title: Appearance Settings - Technical Specification
 user_guide: ../../settings/appearance.md
 status: implemented
-version: v1.2.7
+version: v1.2.9
 ---
 
 # Appearance Settings Technical Specification
+
+## Source Location Reference
+
+| Fact | Source File | Line(s) | Value |
+|------|------------|---------|-------|
+| Portrait height default | `Config.kt` | 21 | `KEYBOARD_HEIGHT_PORTRAIT = 30` |
+| Landscape height default | `Config.kt` | 22 | `KEYBOARD_HEIGHT_LANDSCAPE = 40` |
+| Default theme | `Config.kt` | 20 | `THEME = "cleverkeysdark"` |
+| Key borders default | `Config.kt` | ~25-30 | Key border settings |
+| Settings UI section | `SettingsActivity.kt` | "Appearance" section | Height, margins, borders |
 
 ## Overview
 

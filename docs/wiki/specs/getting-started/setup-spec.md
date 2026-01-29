@@ -2,7 +2,7 @@
 title: First Time Setup - Technical Specification
 user_guide: ../../getting-started/first-time-setup.md
 status: implemented
-version: v1.2.7
+version: v1.2.9
 ---
 
 # First Time Setup Technical Specification
@@ -48,14 +48,28 @@ Normal keyboard operation
 
 ## Default Values
 
-Key defaults from `Config.kt:Defaults`:
+Key defaults from `Config.kt` `object Defaults` (line 18+):
 
-| Setting | Default | Line |
-|---------|---------|------|
-| `keyboard_height_portrait` | 30% | ~150 |
-| `short_gesture_min_distance` | 28% | ~160 |
-| `theme` | "cleverkeysdark" | ~140 |
-| `autocorrect_enabled` | true | ~180 |
+| Setting | Default | Source (`Config.kt` line) |
+|---------|---------|--------------------------|
+| `THEME` | `"cleverkeysdark"` | 20 |
+| `KEYBOARD_HEIGHT_PORTRAIT` | 30 | 21 |
+| `KEYBOARD_HEIGHT_LANDSCAPE` | 40 | 22 |
+| `SHORT_GESTURE_MIN_DISTANCE` | 28 | 99 |
+| `SHORT_GESTURE_MAX_DISTANCE` | 141 | 100 |
+| `AUTOCORRECT_ENABLED` | true | 153 |
+| `LONGPRESS_TIMEOUT` | 600 | 70 |
+| `NEURAL_BEAM_WIDTH` | 6 | 114 |
+| `NEURAL_MAX_LENGTH` | 20 | 115 |
+| `NEURAL_CONFIDENCE_THRESHOLD` | 0.01f | 116 |
+| `ONNX_XNNPACK_THREADS` | 2 | 247 |
+| `HAPTIC_ENABLED` | true | 63 |
+| `HAPTIC_SWIPE_COMPLETE` | false | 69 |
+| `SMART_PUNCTUATION` | true | 77 |
+| `DOUBLE_SPACE_TO_PERIOD` | true | 86 |
+| `DOUBLE_SPACE_THRESHOLD` | 500 | 87 |
+| `LANGUAGE_DETECTION_SENSITIVITY` | 0.6f | 243 |
+| `CLIPBOARD_HISTORY_LIMIT` | 50 | 176-177 |
 
 ## Language Pack Download
 
