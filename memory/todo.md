@@ -10,6 +10,23 @@
 - ✅ Wiki audit: verified all remaining pages against source code (typing, gestures, customization, settings, clipboard, troubleshooting, layouts)
 - ✅ Spec files: created neural-settings-spec.md with source references
 - ✅ Spec files: updated installation-spec, setup-spec, haptics-spec, appearance-spec with source location tables
+- ✅ Deep line-by-line wiki audit (batches 7-10, 35+ pages re-verified):
+  - swipe-typing.md: fixed suggestion bar layout (Center/Left/Right → left-to-right by confidence)
+  - swipe-typing.md: fixed "Encoder-only" → "Encoder-decoder transformer"
+  - autocorrect.md: removed fabricated "tap prediction twice to never autocorrect"
+  - special-characters.md: major rewrite — removed fabricated long-press popup section entirely
+  - emoji.md: fixed tooltip duration 2.5s → 2s (code: 2000ms)
+  - short-swipes.md: fixed long press comparison ("Popup menu" → "Key repeat")
+  - extra-keys.md: removed fabricated "Drag to reorder", "Key Order/Size" settings
+  - per-key-actions.md: removed fabricated "Reset Customizations Only", "Export Profile"
+  - neural-settings.md: fixed "Max Sequence Length" → "Max Word Length", encoder-decoder
+  - clipboard-history.md: fixed Per-Key Customization path (added "Activities >")
+  - shortcuts.md: removed fabricated "Long-press settings key", "Long-press paste", "Double-tap paste"
+  - text-selection.md: fixed TrackPoint activation ("Long swipe from spacebar" → "Long-press nav key")
+  - performance.md: removed fabricated "key popup" reference
+  - backup-restore.md: fixed all paths to include "Activities >" prefix
+  - reset-defaults.md: fixed "Export/Import Settings" → "Export/Import Config"
+  - multi-language.md: removed "Long-press or" from subkey access
 
 ## Completed (2026-01-22)
 - ✅ Emoji long-press tooltip (PopupWindow, positioned above pressed emoji)
