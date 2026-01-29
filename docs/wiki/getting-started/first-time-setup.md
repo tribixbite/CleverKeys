@@ -31,8 +31,8 @@ Open CleverKeys settings:
 
 - **Location**: Scroll to **Appearance** section in Settings
 - **Setting**: Keyboard Height Portrait/Landscape sliders
-- **Default**: 100%
-- **Tip**: Try 85-95% for most phones
+- **Default**: 30% portrait / 40% landscape (of screen height)
+- **Tip**: Adjust up or down depending on your screen size and preference
 
 ### Theme
 
@@ -112,8 +112,6 @@ Adjust **Keyboard Height** sliders in the Appearance section of Settings.
 - Verify device vibration is not disabled in Android system settings
 - Some devices have separate "Touch vibration" system settings
 
-## Next Steps
+---
 
-- [Swipe Typing](../typing/swipe-typing.md) - Master the neural prediction
-- [Themes](../customization/themes.md) - Customize appearance
-- [Per-Key Actions](../customization/per-key-actions.md) - Customize gestures
+**Next:** [Swipe Typing](../typing/swipe-typing.md) | [Themes](../customization/themes.md) | [Per-Key Actions](../customization/per-key-actions.md)

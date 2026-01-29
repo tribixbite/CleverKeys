@@ -72,8 +72,6 @@ See [Short Swipes](../gestures/short-swipes.md) for gesture details.
 3. **Trust the predictions** - lift your finger and see the suggestions
 4. **Use the prediction bar** to save keystrokes
 
-## Next Steps
+---
 
-- [Swipe Typing](../typing/swipe-typing.md) - Master neural swipe
-- [Short Swipes](../gestures/short-swipes.md) - Learn key gestures
-- [Cursor Navigation](../gestures/cursor-navigation.md) - Navigate text efficiently
+**Next:** [Swipe Typing](../typing/swipe-typing.md) | [Short Swipes](../gestures/short-swipes.md) | [Cursor Navigation](../gestures/cursor-navigation.md)

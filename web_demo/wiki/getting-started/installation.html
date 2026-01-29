@@ -80,9 +80,9 @@
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Requirements</h2>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Android 8.0 (Oreo)</strong> or higher</li>
-<li class="ml-4 text-gray-300">&#8226; <strong class="text-white">50 MB</strong> of storage space</li>
-<li class="ml-4 text-gray-300">&#8226; No internet connection required after installation</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; <strong class="text-white">Android 5.0 (Lollipop)</strong> or higher (minSdk 21)</li>
+<li class="ml-4 text-gray-300">&#8226; Approximately <strong class="text-white">25 MB</strong> of storage space (includes ONNX neural model)</li>
+<li class="ml-4 text-gray-300">&#8226; No internet connection required - works fully offline</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Installation Methods</h2>
 
@@ -118,23 +118,25 @@
 
 <p class="mb-4 text-gray-300 leading-relaxed">CleverKeys requests minimal permissions:</p>
 
-<table class="w-full mb-6 border-collapse"><tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">Permission</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Purpose</th></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table><table class="w-full mb-6 border-collapse"><tr><td class="px-4 py-2 border-t border-gray-700">Vibration</td><td class="px-4 py-2 border-t border-gray-700">Haptic feedback on key presses</td></tr></p>
-<tr><td class="px-4 py-2 border-t border-gray-700">Storage</td><td class="px-4 py-2 border-t border-gray-700">Saving user dictionary and preferences</td></tr>
-<p class="mb-4 text-gray-300 leading-relaxed"></table></p>
-<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">No internet permission</strong> - CleverKeys never sends data to any server.</p>
+<table class="w-full mb-6 border-collapse">
+<tr><th class="px-4 py-2 text-left font-semibold bg-ck-card">Permission</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Android Name</th><th class="px-4 py-2 text-left font-semibold bg-ck-card">Purpose</th></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">Vibration</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">android.permission.VIBRATE</code></td><td class="px-4 py-2 border-t border-gray-700">Haptic feedback on key presses</td></tr>
+<tr><td class="px-4 py-2 border-t border-gray-700">User Dictionary</td><td class="px-4 py-2 border-t border-gray-700"><code class="bg-ck-dark px-1.5 py-0.5 rounded text-green-300">android.permission.READ_USER_DICTIONARY</code></td><td class="px-4 py-2 border-t border-gray-700">Reading system user dictionary for word suggestions</td></tr>
+</table>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">No internet permission</strong> &#8212; CleverKeys never sends data to any server.</p>
+<p class="mb-4 text-gray-300 leading-relaxed"><strong class="text-white">No storage permission</strong> &#8212; Uses app-private storage and Android's Storage Access Framework (SAF) for backup/restore.</p>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Troubleshooting</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">APK won't install</h3>
 
 <ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Check that "Install from unknown sources" is enabled for your file manager</li>
-<li class="ml-4 text-gray-300">&#8226; Ensure you have enough storage space (50 MB)</li>
+<li class="ml-4 text-gray-300">&#8226; Ensure you have enough storage space (~25 MB)</li>
 <li class="ml-4 text-gray-300">&#8226; Try downloading the APK again (file may be corrupted)</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-green-300">App crashes on first launch</h3>
 
-<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Ensure you're running Android 8.0 or higher</li>
+<ul class="mb-4 space-y-2"><li class="ml-4 text-gray-300">&#8226; Ensure you're running Android 5.0 or higher</li>
 <li class="ml-4 text-gray-300">&#8226; Try clearing app data: Settings → Apps → CleverKeys → Clear Data</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-green-400">Next Steps</h2>
@@ -147,7 +149,7 @@
         <!-- Prev/Next Navigation -->
         <div class="max-w-4xl mt-8 flex justify-between">
             <div></div>
-            <a href="getting-started/first-time-setup.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
+            <a href="./first-time-setup.html" class="flex items-center gap-2 px-4 py-2 bg-ck-card rounded-lg hover:bg-ck-surface transition-colors">
                 <span class="text-sm text-gray-400">First-Time Setup</span>
                 <span>&rarr;</span>
             </a>

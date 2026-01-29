@@ -76,7 +76,7 @@ Expand the Advanced subsection for additional tuning:
 
 ### ONNX Threads
 
-Number of CPU threads for neural inference. Auto-detected by default.
+Number of CPU threads for XNNPACK neural inference. Default: 2 (optimal for most ARM devices). Range: 1-8.
 
 ## Tips and Tricks
 
@@ -96,8 +96,8 @@ Number of CPU threads for neural inference. Auto-detected by default.
 | **Swipe on Password Fields** | Off | On/Off |
 | **Beam Width** | 6 | 1-20 |
 | **Confidence Threshold** | 0.01 | 0.01-0.5 |
-| **Max Sequence Length** | varies | configurable |
-| **ONNX Threads** | auto | 1-8 |
+| **Max Sequence Length** | 20 | 5-50 |
+| **ONNX Threads** | 2 | 1-8 |
 
 ## Common Questions
 

@@ -63,7 +63,6 @@ To verify CleverKeys is working:
 
 Search for "keyboard" or "input" in your Settings app. Different manufacturers place this in different locations.
 
-## Next Steps
+---
 
-- [Basic Typing](./basic-typing.md) - Learn tap and swipe typing
-- [Swipe Typing](../typing/swipe-typing.md) - Master neural prediction
+**Next:** [Basic Typing](./basic-typing.md) | [Swipe Typing](../typing/swipe-typing.md)

@@ -242,7 +242,7 @@ Tablets running Android 12+ with limited color extraction now fall back graceful
 
 ### Issue: Keyboard background is transparent
 
-**Common on:** Android 16 with blur disabled in accessibility settings
+**Common on:** Devices with blur disabled in accessibility settings
 
 **Solution:**
 
@@ -323,7 +323,7 @@ If problems persist:
    - See [Reset Defaults](reset-defaults.md)
 
 3. **Collect logs**
-   - Settings > About > Export Debug Info
+   - Use `adb logcat -s CleverKeys` to capture debug output
    - Include with bug report
 
 4. **Report issue**
