@@ -66,9 +66,9 @@ Minimum score for a prediction to be shown:
 - Lower = more suggestions, some may be weak
 - Higher = only confident predictions shown
 
-### Max Sequence Length
+### Max Word Length
 
-Maximum number of swipe sample points to process. Affects long word handling.
+Maximum predicted word length in characters (default: 20). Longer words will be truncated.
 
 ## Advanced Settings
 
@@ -96,7 +96,7 @@ Number of CPU threads for XNNPACK neural inference. Default: 2 (optimal for most
 | **Swipe on Password Fields** | Off | On/Off |
 | **Beam Width** | 6 | 1-20 |
 | **Confidence Threshold** | 0.01 | 0.01-0.5 |
-| **Max Sequence Length** | 20 | 5-50 |
+| **Max Word Length** | 20 | 5-50 |
 | **ONNX Threads** | 2 | 1-8 |
 
 ## Common Questions
@@ -121,7 +121,7 @@ A: Use Settings > Backup & Restore to reset to defaults.
 
 The neural model is:
 - **Format**: ONNX (Open Neural Network Exchange)
-- **Architecture**: Encoder-only transformer
+- **Architecture**: Encoder-decoder transformer
 - **Input**: Normalized swipe coordinates (x, y, time)
 - **Output**: Per-position letter probabilities
 - **Decoding**: Beam search with vocabulary constraint

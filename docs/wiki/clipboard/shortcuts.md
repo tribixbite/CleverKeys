@@ -34,7 +34,7 @@ Add Ctrl as an extra key to use standard shortcuts:
 
 ### Setting Up Ctrl Key
 
-1. Go to **Settings > Extra Keys**
+1. Go to **Settings > Activities > Extra Keys**
 2. Add **Ctrl** to left or right side
 3. Ctrl key appears on bottom row
 4. Tap Ctrl, then the letter key
@@ -63,36 +63,14 @@ Swipe from Ctrl key for quick access:
 | **Swipe Down (S)** | Paste (Ctrl+V) |
 | **Swipe Left (W)** | Cut (Ctrl+X) |
 
-## Command Palette Shortcuts
+## Paste from Clipboard
 
-Access via command palette:
+To paste the most recently copied text:
 
-1. **Long-press settings key**
-2. Type action name:
-   - "copy"
-   - "cut"
-   - "paste"
-   - "undo"
-   - "select"
-3. Tap to execute
+- Use **Ctrl+V** (with Ctrl extra key)
+- Or swipe S on Ctrl key (Ctrl→S subkey)
 
-## Paste Shortcuts
-
-### Quick Paste
-
-- **Tap paste key**: Paste most recent
-- **Long-press paste**: Open clipboard history
-- **Double-tap paste**: Paste previous item
-
-### Paste Menu
-
-Some apps show paste options:
-
-| Option | Description |
-|--------|-------------|
-| **Paste** | Plain paste |
-| **Paste as plain text** | Strip formatting |
-| **Paste from history** | Choose from history |
+To paste from clipboard history, open the clipboard panel (Ctrl SW swipe) and tap an item.
 
 ## Customizing Shortcuts
 
@@ -100,7 +78,7 @@ Some apps show paste options:
 
 Assign clipboard actions to swipe directions:
 
-1. Go to **Settings > Per-Key Actions**
+1. Go to **Settings > Activities > Per-Key Customization**
 2. Select a key (e.g., Shift)
 3. Choose a direction
 4. Select action (Copy, Paste, etc.)
@@ -125,7 +103,7 @@ See [Per-Key Actions](../customization/per-key-actions.md).
 | **Select All** | Ctrl+A | Ctrl→N | "select" |
 | **Undo** | Ctrl+Z | CCW circle | "undo" |
 | **Redo** | Ctrl+Y | CW circle | "redo" |
-| **History** | - | Long-press paste | "history" |
+| **History** | - | Ctrl→SW | "history" |
 
 ## Tips and Tricks
 
@@ -152,9 +130,8 @@ If you don't want the Ctrl key:
 
 | Setting | Location | Description |
 |---------|----------|-------------|
-| **Extra Keys** | Settings | Add Ctrl key |
-| **Per-Key Actions** | Customization | Custom shortcuts |
-| **Ctrl Subkeys** | Per-Key Actions | Ctrl swipe actions |
+| **Extra Keys** | Activities section | Add Ctrl key |
+| **Per-Key Customization** | Activities section | Custom shortcuts |
 
 ## Common Questions
 

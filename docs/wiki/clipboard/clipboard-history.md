@@ -38,7 +38,7 @@ If you've added a clipboard key to Extra Keys:
 
 You can assign clipboard access to any key's short swipe:
 
-1. Go to **Settings > Per-Key Customization**
+1. Go to **Settings > Activities > Per-Key Customization**
 2. Select any key
 3. Assign `switch_clipboard` to a swipe direction
 

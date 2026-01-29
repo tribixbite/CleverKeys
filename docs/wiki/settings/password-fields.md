@@ -53,4 +53,4 @@ Password mode activates automatically for:
 
 ## Related Settings
 
-Password mode is automatic and cannot be disabled. This ensures your passwords are always protected when using CleverKeys.
+Password mode is automatic. Swipe typing is disabled in password fields by default but can be enabled via **Settings > Neural Prediction > Swipe on Password Fields**.

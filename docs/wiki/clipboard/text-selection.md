@@ -38,8 +38,8 @@ See [Selection Delete](../gestures/selection-delete.md) for details.
 
 For precise cursor positioning:
 
-1. **Long swipe** from spacebar (any direction)
-2. **Hold** to enter TrackPoint mode
+1. **Long-press the nav key** (between spacebar and enter)
+2. Wait for haptic activation
 3. **Move finger** to position cursor
 4. Hold **Shift** while moving to select
 5. Release to exit mode
