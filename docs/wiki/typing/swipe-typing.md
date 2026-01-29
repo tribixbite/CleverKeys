@@ -62,13 +62,7 @@ If the wrong word appears:
 
 ## Prediction Bar
 
-After swiping, predictions appear:
-
-| Position | Meaning |
-|----------|---------|
-| **Center** | Best match (auto-inserted) |
-| **Left** | Second best match |
-| **Right** | Third best match |
+After swiping, predictions appear in a horizontal row ordered by confidence (best match on the left). The first suggestion is auto-inserted and highlighted. Up to 6 alternatives may appear depending on beam width.
 
 Tap any prediction to use it instead.
 
@@ -81,7 +75,7 @@ Tune swipe typing in Settings > Neural Prediction:
 | **Swipe Typing** | Enable/disable swipe input |
 | **Beam Width** | More candidates = more accurate but slower (default: 6, max: 20) |
 | **Confidence Threshold** | Minimum confidence for predictions |
-| **Max Sequence Length** | Maximum swipe sample points |
+| **Max Word Length** | Maximum predicted word length in characters (default: 20) |
 
 ## When Swipe Typing Doesn't Work
 

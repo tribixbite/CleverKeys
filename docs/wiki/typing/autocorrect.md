@@ -40,7 +40,7 @@ If autocorrect changes a word you didn't want changed:
 ### Method 2: Backspace and Retype
 1. Press backspace to delete the corrected word
 2. Retype your intended word
-3. Press space again (it won't be corrected twice)
+3. Add it to your dictionary to prevent future corrections
 
 ## Adding Words to Dictionary
 
@@ -84,7 +84,7 @@ Customize autocorrect behavior in the **Word Prediction** section of Settings:
 
 - **Proper nouns**: Add names and places to prevent miscorrection
 - **Technical terms**: Add jargon and abbreviations to your dictionary
-- **Disable for a word**: Tap a prediction twice to never autocorrect it
+- **Disable a word**: Add it to the Disabled list in Dictionary Manager to prevent autocorrect
 - **Language-specific**: Each language has its own dictionary
 
 ## Common Questions

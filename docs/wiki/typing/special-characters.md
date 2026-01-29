@@ -15,45 +15,29 @@ Access symbols, accented letters, diacritics, and currency symbols through long-
 | What | Description |
 |------|-------------|
 | **Purpose** | Type characters not on main keyboard |
-| **Access** | Long-press or short swipe on keys |
+| **Access** | Short swipe on keys or symbol keyboard |
 | **Types** | Symbols, accents, currency, punctuation |
 
 ## Methods to Access Special Characters
 
-### Method 1: Long-Press
+### Method 1: Short Swipe (Primary)
 
-Hold any key to see available special characters:
-
-1. **Touch and hold** a key for ~600ms
-2. A popup appears showing available characters
-3. **Slide to select** the character you want
-4. **Release** to type it
-
-Common long-press characters:
-
-| Key | Long-Press Options |
-|-----|-------------------|
-| **a** | à á â ã ä å æ ā |
-| **e** | è é ê ë ē ė ę |
-| **o** | ò ó ô õ ö ø ō œ |
-| **n** | ñ ń |
-| **s** | ß ś š |
-| **c** | ç ć č |
-
-### Method 2: Short Swipe
-
-Faster access via quick flick gestures:
+Quick flick gestures on keys to access subkeys:
 
 1. **Touch** the key
 2. **Flick** in the direction of the subkey
 3. The character types immediately
 
-Example on 'e' key:
-- **Swipe North**: Number (3)
-- **Swipe South**: é (common accent)
-- **Swipe East/West**: Other variations
+Each key has up to 8 subkey positions (N, NE, E, SE, S, SW, W, NW). The available subkeys depend on the keyboard layout (QWERTY, AZERTY, etc.) and are defined in the layout XML files.
 
-### Method 3: Symbol Keyboard
+Example on 'e' key (QWERTY):
+- **Swipe NE**: Number (3)
+- **Swipe S/SW/SE**: Accented variants (é, è, ê, etc.)
+
+> [!NOTE]
+> CleverKeys does not use long-press popups for special characters. Long-press triggers key repeat instead. All special characters are accessed via short swipes.
+
+### Method 2: Symbol Keyboard
 
 For extensive symbols:
 
@@ -67,29 +51,29 @@ For extensive symbols:
 
 | Character | How to Type |
 |-----------|-------------|
-| **"** (curly quotes) | Long-press " key |
-| **—** (em dash) | Long-press - key |
-| **–** (en dash) | Long-press - key |
-| **…** (ellipsis) | Long-press . key |
-| **¿** | Long-press ? key |
-| **¡** | Long-press ! key |
+| **"** (curly quotes) | Subkey on " key |
+| **—** (em dash) | Subkey on - key |
+| **–** (en dash) | Subkey on - key |
+| **…** (ellipsis) | Subkey on . key |
+| **¿** | Subkey on ? key |
+| **¡** | Subkey on ! key |
 
 ### Currency Symbols
 
 | Character | Location |
 |-----------|----------|
 | **$** | Main symbol keyboard |
-| **€** | Long-press $ or symbol keyboard |
-| **£** | Long-press $ or symbol keyboard |
-| **¥** | Long-press $ or symbol keyboard |
+| **€** | Subkey on $ or symbol keyboard |
+| **£** | Subkey on $ or symbol keyboard |
+| **¥** | Subkey on $ or symbol keyboard |
 | **₹** | Symbol keyboard |
 
 ### Mathematical Symbols
 
 | Character | Location |
 |-----------|----------|
-| **×** | Long-press * |
-| **÷** | Long-press / |
+| **×** | Subkey on * |
+| **÷** | Subkey on / |
 | **±** | Symbol keyboard |
 | **≠** | Symbol keyboard |
 | **≤ ≥** | Symbol keyboard |
@@ -99,18 +83,15 @@ For extensive symbols:
 For languages requiring diacritics:
 
 ### Acute Accent (é)
-- Long-press the base letter
-- Select from popup
+- Short swipe on the base letter in the appropriate direction
 
 ### Grave Accent (è)
-- Long-press the base letter
-- Select from popup
+- Short swipe on the base letter in the appropriate direction
 
 ### Circumflex (ê, î, ô, û, â)
 
-**Method 1 - Long-press (all layouts):**
-- Long-press the base letter (e, i, o, u, a)
-- Select the circumflex variant from popup
+**Method 1 - Subkey (all layouts):**
+- Short swipe on the base letter (e, i, o, u, a) in the direction of the circumflex variant
 
 **Method 2 - Dead key (AZERTY):**
 - Swipe north on **j** key to access circumflex dead key (^)
@@ -118,16 +99,13 @@ For languages requiring diacritics:
 - The combined character appears (ê, î, ô, û, â)
 
 ### Umlaut/Diaeresis (ë)
-- Long-press the base letter
-- Select from popup
+- Short swipe on the base letter in the appropriate direction
 
 ### Tilde (ñ)
-- Long-press n or a/o
-- Select from popup
+- Short swipe on n or a/o
 
 ### Cedilla (ç)
-- Long-press c
-- Select from popup
+- Short swipe on c
 
 ## Tips and Tricks
 
@@ -145,7 +123,7 @@ For languages requiring diacritics:
 
 | Setting | Location | Description |
 |---------|----------|-------------|
-| **Long-Press Timeout** | Input Behavior | Time before popup appears |
+| **Long-Press Timeout** | Input Behavior | Time before key repeat starts (default: 600ms) |
 | **Short Swipe Distance** | Gesture Tuning | Sensitivity for flick gestures |
 
 ## Related Features
