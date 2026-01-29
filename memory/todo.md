@@ -1,13 +1,20 @@
 # CleverKeys TODO
 
 ## Completed (2026-01-29)
+- ✅ Settings UI: moved Batch Processing, Greedy Search, ONNX Threads from main settings to NeuralSettingsActivity
+- ✅ Settings UI: replaced Advanced Neural Settings expander with "Full Neural Settings" button
+- ✅ Settings UI: replaced Reset Defaults with Cancel button in NeuralSettingsActivity
+- ✅ Wiki audit: completed full pass of ALL ~35 wiki pages against source code
 - ✅ Wiki audit: fixed ALL 39 HTML bottom nav buttons (broken relative paths)
 - ✅ Wiki audit: fixed installation page (minSdk 21 not 26, ~25MB not 65MB, correct permissions)
 - ✅ Wiki audit: added Obtainium and F-Droid installation instructions
 - ✅ Wiki audit: fixed first-time-setup default height (30%/40% not 100%)
 - ✅ Wiki audit: fixed neural-settings (ONNX threads default 2 not "auto", max length 20 not "varies")
 - ✅ Wiki audit: fixed common-issues (removed nonexistent "Export Debug Info", removed "Android 16")
-- ✅ Wiki audit: verified all remaining pages against source code (typing, gestures, customization, settings, clipboard, troubleshooting, layouts)
+- ✅ Wiki audit: fixed basic-typing (suggestion bar best-match-on-left, removed nonexistent long-press)
+- ✅ Wiki audit: fixed smart-punctuation (double-space location → Gesture Tuning)
+- ✅ Wiki audit: updated neural-settings page for removed Advanced section → Full Neural Settings button
+- ✅ Wiki audit: verified all remaining pages against source code (typing, gestures, customization, settings, clipboard, troubleshooting, layouts, FAQ)
 - ✅ Spec files: created neural-settings-spec.md with source references
 - ✅ Spec files: updated installation-spec, setup-spec, haptics-spec, appearance-spec with source location tables
 - ✅ Deep line-by-line wiki audit (batches 7-10, 35+ pages re-verified):
