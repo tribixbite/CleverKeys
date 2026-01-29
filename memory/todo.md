@@ -1,5 +1,16 @@
 # CleverKeys TODO
 
+## Completed (2026-01-29)
+- ✅ Wiki audit: fixed ALL 39 HTML bottom nav buttons (broken relative paths)
+- ✅ Wiki audit: fixed installation page (minSdk 21 not 26, ~25MB not 65MB, correct permissions)
+- ✅ Wiki audit: added Obtainium and F-Droid installation instructions
+- ✅ Wiki audit: fixed first-time-setup default height (30%/40% not 100%)
+- ✅ Wiki audit: fixed neural-settings (ONNX threads default 2 not "auto", max length 20 not "varies")
+- ✅ Wiki audit: fixed common-issues (removed nonexistent "Export Debug Info", removed "Android 16")
+- ✅ Wiki audit: verified all remaining pages against source code (typing, gestures, customization, settings, clipboard, troubleshooting, layouts)
+- ✅ Spec files: created neural-settings-spec.md with source references
+- ✅ Spec files: updated installation-spec, setup-spec, haptics-spec, appearance-spec with source location tables
+
 ## Completed (2026-01-22)
 - ✅ Emoji long-press tooltip (PopupWindow, positioned above pressed emoji)
 - ✅ Emoji name lookup with Unicode fallback for unmapped emojis
