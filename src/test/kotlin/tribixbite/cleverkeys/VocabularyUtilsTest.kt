@@ -244,6 +244,13 @@ class VocabularyUtilsTest {
     }
 
     @Test
+    fun `match quality empty strings`() {
+        // Both empty — perfect match (distance=0, both empty)
+        val quality = VocabularyUtils.calculateMatchQuality("", "", useEditDistance = true)
+        assertThat(quality).isWithin(0.001f).of(1.0f)
+    }
+
+    @Test
     fun `match quality different lengths without edit distance`() {
         // Position matching uses dictWord length as denominator
         // "cat" vs "cats": c-c, a-a, t-t = 3/3 = 1.0

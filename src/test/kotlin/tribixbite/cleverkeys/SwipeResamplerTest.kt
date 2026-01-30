@@ -157,6 +157,29 @@ class SwipeResamplerTest {
     }
 
     // =========================================================================
+    // Edge cases
+    // =========================================================================
+
+    @Test
+    fun `resample single point input returns original`() {
+        val data = createTrajectory(1, 2)
+        val result = SwipeResampler.resample(data, 10, SwipeResampler.ResamplingMode.DISCARD)
+        // Single point is shorter than target, should return original
+        assertThat(result).isEqualTo(data)
+    }
+
+    @Test
+    fun `discard mode target near input length`() {
+        // 11 points down to 10 — minimal reduction
+        val data = createSequentialTrajectory(11, 2)
+        val result = SwipeResampler.resample(data, 10, SwipeResampler.ResamplingMode.DISCARD)
+        assertThat(result).hasLength(10)
+        // First and last preserved
+        assertThat(result!![0][0]).isEqualTo(0f)
+        assertThat(result[9][0]).isEqualTo(10f)
+    }
+
+    // =========================================================================
     // parseMode tests
     // =========================================================================
 

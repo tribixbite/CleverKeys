@@ -40,6 +40,9 @@ PURE_TESTS=(
     "tribixbite.cleverkeys.onnx.MemoryPoolTest"
     "tribixbite.cleverkeys.VocabularyUtilsTest"
     "tribixbite.cleverkeys.BeamSearchModelsTest"
+    "tribixbite.cleverkeys.ConfigDefaultsTest"
+    "tribixbite.cleverkeys.ContractionFrequencyTest"
+    "tribixbite.cleverkeys.PipelineBenchmarkTest"
 )
 
 # If specific test given, use that

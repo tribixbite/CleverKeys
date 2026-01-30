@@ -89,39 +89,11 @@ class ContractionFrequencyTest {
     }
 
     // =========================================================================
-    // Frequency conversion from rank
-    // =========================================================================
-
-    @Test
-    fun `frequency rank 0 converts to frequency 1_0`() {
-        // Rank 0 = most common word, should have frequency 1.0
-        val rank = 0
-        val frequency = 1.0f - (rank / 255.0f)
-        assertThat(frequency).isWithin(0.001f).of(1.0f)
-    }
-
-    @Test
-    fun `frequency rank 255 converts to near zero frequency`() {
-        // Rank 255 = rarest tracked word
-        val rank = 255
-        val frequency = 1.0f - (rank / 255.0f)
-        assertThat(frequency).isWithin(0.001f).of(0.0f)
-    }
-
-    @Test
-    fun `frequency rank 127 converts to mid frequency`() {
-        // Rank 127 = middle of the range
-        val rank = 127
-        val frequency = 1.0f - (rank / 255.0f)
-        assertThat(frequency).isWithin(0.01f).of(0.5f)
-    }
-
-    // =========================================================================
     // Realistic French contraction scenarios
     // =========================================================================
 
     @Test
-    fun `quest_vs_quest_scenario`() {
+    fun `quest vs quest apostrophe scenario`() {
         // In French, "qu'est" (what is) is more common than English "quest"
         // Simulated dictionary ranks:
         // - "qu'est" rank ~20 (very common in French)

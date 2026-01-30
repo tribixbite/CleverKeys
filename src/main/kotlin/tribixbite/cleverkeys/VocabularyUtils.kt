@@ -106,6 +106,7 @@ object VocabularyUtils {
         if (useEditDistance) {
             val distance = calculateLevenshteinDistance(dictWord, beamWord)
             val maxDistance = max(dictWord.length, beamWord.length)
+            if (maxDistance == 0) return 1.0f // both empty = perfect match
             return 1.0f - (distance.toFloat() / maxDistance)
         } else {
             var matches = 0
