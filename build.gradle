@@ -318,6 +318,48 @@ if (isArm64) {
   }
 }
 
+// Pure JVM test runner — works on ARM64 where standard Test tasks are disabled.
+// Runs JUnitCore directly via JavaExec, no proot or shell script needed.
+// Usage: ./gradlew runPureTests [-PtestClass=BeamSearchEngineTest]
+tasks.register('runPureTests', JavaExec) {
+  dependsOn 'compileDebugUnitTestKotlin'
+  group = 'verification'
+  description = 'Run pure JVM tests via JUnitCore (works on ARM64)'
+
+  def pureTestClasses = [
+    'tribixbite.cleverkeys.AccentNormalizerTest',
+    'tribixbite.cleverkeys.VocabularyTrieTest',
+    'tribixbite.cleverkeys.DictionaryWordTest',
+    'tribixbite.cleverkeys.SwipeResamplerTest',
+    'tribixbite.cleverkeys.onnx.MemoryPoolTest',
+    'tribixbite.cleverkeys.VocabularyUtilsTest',
+    'tribixbite.cleverkeys.BeamSearchModelsTest',
+    'tribixbite.cleverkeys.ConfigDefaultsTest',
+    'tribixbite.cleverkeys.ContractionFrequencyTest',
+    'tribixbite.cleverkeys.PipelineBenchmarkTest',
+    'tribixbite.cleverkeys.BeamSearchEngineTest',
+    'tribixbite.cleverkeys.PipelineIntegrationTest',
+  ]
+
+  mainClass = 'org.junit.runner.JUnitCore'
+
+  // Build classpath from test + main compiled classes + all dependencies
+  classpath = files(
+    "${buildDir}/intermediates/javac/debugUnitTest/classes",
+    "${buildDir}/tmp/kotlin-classes/debugUnitTest",
+    "${buildDir}/intermediates/javac/debug/classes",
+    "${buildDir}/tmp/kotlin-classes/debug",
+  ) + configurations.debugUnitTestRuntimeClasspath + configurations.debugRuntimeClasspath
+
+  // Allow single test via -PtestClass=ClassName
+  if (project.hasProperty('testClass')) {
+    def cls = project.property('testClass')
+    args = ["tribixbite.cleverkeys.${cls}"]
+  } else {
+    args = pureTestClasses
+  }
+}
+
 tasks.register('buildKeyboardFont') {
   def fontFile = file("assets/special_font.ttf")
   if (fontFile.exists()) return
