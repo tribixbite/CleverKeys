@@ -1,16 +1,9 @@
 package tribixbite.cleverkeys.onnx
 
-import ai.onnxruntime.OnnxTensor
-import ai.onnxruntime.OrtEnvironment
-import ai.onnxruntime.OrtSession
-import android.util.Log
 import tribixbite.cleverkeys.VocabularyTrie
 import tribixbite.cleverkeys.SwipeTokenizer
 import java.util.ArrayList
-import java.util.Collections
-import java.util.HashMap
 import java.util.PriorityQueue
-import java.util.Comparator
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.min
@@ -20,6 +13,9 @@ import kotlin.math.pow
  * Core beam search implementation for neural swipe decoding.
  * Extracted from OnnxSwipePredictor.java for modularity and testability.
  *
+ * Uses [DecoderSessionInterface] to abstract ONNX runtime dependency,
+ * allowing the beam search logic to be tested with fake decoders.
+ *
  * Features:
  * - Batched and sequential beam search
  * - Trie-guided decoding (logit masking)
@@ -28,8 +24,7 @@ import kotlin.math.pow
  * - Diversity promotion
  */
 class BeamSearchEngine(
-    private val decoderSession: OrtSession,
-    private val ortEnvironment: OrtEnvironment,
+    private val decoderSession: DecoderSessionInterface,
     private val tokenizer: SwipeTokenizer,
     private val vocabTrie: VocabularyTrie?,
     private val beamWidth: Int,
@@ -72,11 +67,6 @@ class BeamSearchEngine(
         private const val DIVERSITY_LAMBDA = 0.5f // Penalty weight for similar beams
     }
 
-    // Cached actualSrcLength tensor (recreated only when length changes)
-    // Saves ~15 OnnxTensor creations per prediction (one per step -> one per search)
-    private var cachedSrcLength: Int = -1
-    private var cachedSrcLengthTensor: OnnxTensor? = null
-
     data class BeamSearchCandidate(val word: String, val confidence: Float, val score: Float)
 
     private data class BeamState(
@@ -109,7 +99,7 @@ class BeamSearchEngine(
     /**
      * Run beam search decoding.
      */
-    fun search(memory: OnnxTensor, actualSrcLength: Int, useBatched: Boolean = false): List<BeamSearchCandidate> {
+    fun search(actualSrcLength: Int, useBatched: Boolean = false): List<BeamSearchCandidate> {
         val beams = ArrayList<BeamState>()
         beams.add(BeamState(SOS_IDX, 0.0f))
 
@@ -140,9 +130,9 @@ class BeamSearchEngine(
                     // Batched mode makes a single decoder call for all beams per step (5x fewer calls)
                     // Sequential mode is more robust but slower
                     val nextBeams = if (useBatched && activeBeams.size > 1) {
-                        processBatched(activeBeams, memory, actualSrcLength, step)
+                        processBatched(activeBeams, actualSrcLength, step)
                     } else {
-                        processSequential(activeBeams, memory, actualSrcLength, step)
+                        processSequential(activeBeams, actualSrcLength, step)
                     }
                 candidates.addAll(nextBeams)
 
@@ -165,7 +155,7 @@ class BeamSearchEngine(
                 totalInferenceTime += (System.nanoTime() - startInf) / 1_000_000
                 
             } catch (e: Exception) {
-                Log.e(TAG, "Beam search error at step $step", e)
+                debugLogger?.invoke("Beam search error at step $step: ${e.message}")
                 break
             }
             
@@ -246,114 +236,29 @@ class BeamSearchEngine(
     
     private fun processSequential(
         activeBeams: List<BeamState>,
-        memory: OnnxTensor,
         actualSrcLength: Int,
-        step: Int // Used for tensor shape in future
+        step: Int
     ): List<BeamState> {
         val newCandidates = ArrayList<BeamState>()
 
-        // OPTIMIZATION: Reuse actualSrcLengthTensor if length unchanged
-        if (actualSrcLength != cachedSrcLength) {
-            cachedSrcLengthTensor?.close()
-            cachedSrcLengthTensor = OnnxTensor.createTensor(ortEnvironment, intArrayOf(actualSrcLength))
-            cachedSrcLength = actualSrcLength
-        }
-        val actualSrcLengthTensor = cachedSrcLengthTensor!!
-
-        // NOTE: Don't close actualSrcLengthTensor in finally - it's cached for reuse
-
         for (beam in activeBeams) {
-            // Prepare target tokens - simple allocation (JVM optimized for small arrays)
+            // Prepare target tokens
             val tgtTokens = IntArray(DECODER_SEQ_LEN) { PAD_IDX }
             val len = min(beam.tokens.size, DECODER_SEQ_LEN)
             for (i in 0 until len) {
                 tgtTokens[i] = beam.tokens[i].toInt()
             }
 
-            val targetTokensTensor = OnnxTensor.createTensor(
-                ortEnvironment,
-                java.nio.IntBuffer.wrap(tgtTokens),
-                longArrayOf(1, DECODER_SEQ_LEN.toLong())
-            )
+            // Run decoder via interface — handles tensor creation/cleanup internally
+            val logits3D = decoderSession.runSequential(tgtTokens, actualSrcLength, DECODER_SEQ_LEN)
 
-            try {
-                val inputs = mapOf(
-                    "memory" to memory,
-                    "actual_src_length" to actualSrcLengthTensor,
-                    "target_tokens" to targetTokensTensor
-                )
+            // Get logits for current position
+            val currentPos = beam.tokens.size - 1
+            if (currentPos in 0 until DECODER_SEQ_LEN) {
+                val logits = logits3D[0][currentPos]
 
-                val result = decoderSession.run(inputs)
-                val logitsTensor = result.get(0) as OnnxTensor
-                val logits3D = logitsTensor.value as Array<Array<FloatArray>>
-
-                // Get logits for current position
-                val currentPos = beam.tokens.size - 1
-                if (currentPos in 0 until DECODER_SEQ_LEN) {
-                    val logits = logits3D[0][currentPos]
-
-                    // Apply Trie Masking
-                    applyTrieMasking(beam, logits)
-
-                    // Apply Language-Specific Prefix Boosts (before softmax)
-                    // This boosts prefixes common in target language but rare in English
-                    // Returns array of applied boosts for cumulative tracking
-                    val appliedBoosts = applyPrefixBoosts(beam, logits)
-
-                    // FIX: Log-Softmax for numerical stability and correct scoring
-                    val logProbs = logSoftmax(logits)
-
-                    // Get Top K
-                    val topIndices = getTopKIndices(logProbs, beamWidth)
-
-                    for (idx in topIndices) {
-                        // FIX: SOS and PAD should never be selected - skip entirely
-                        // (Trie masking sets them to -inf, but be safe if trie is disabled)
-                        if (idx == SOS_IDX || idx == PAD_IDX) {
-                            continue
-                        }
-
-                        // EOS marks end of word - create finished beam
-                        if (idx == EOS_IDX) {
-                            val newBeam = BeamState(beam)
-                            newBeam.tokens.add(idx.toLong())
-                            // FIX #1: Add NEGATIVE log prob (since logProbs are negative)
-                            // score += -logP
-                            newBeam.score += -logProbs[idx]
-                            newBeam.finished = true
-                            // boostState stays the same (EOS doesn't advance trie)
-                            // cumulativeBoost stays the same (no boost for EOS)
-                            newCandidates.add(newBeam)
-                            continue
-                        }
-
-                        // Regular character tokens
-                        val newBeam = BeamState(beam)
-                        newBeam.tokens.add(idx.toLong())
-                        newBeam.score += -logProbs[idx]
-                        newBeam.finished = false
-
-                        // Track cumulative boost for this path (for capping)
-                        newBeam.cumulativeBoost = beam.cumulativeBoost + appliedBoosts[idx]
-
-                        // Advance the Aho-Corasick trie state for prefix boost lookups
-                        // This is O(1) amortized and handles failure links automatically
-                        if (prefixBoostTrie != null && prefixBoostTrie.hasBoosts()) {
-                            val c = tokenizer.indexToChar(idx)
-                            if (c in 'a'..'z') {
-                                newBeam.boostState = prefixBoostTrie.getNextState(beam.boostState, c)
-                            }
-                            // Non-letter characters reset to root (state 0) via trie's getNextState
-                        }
-
-                        newCandidates.add(newBeam)
-                    }
-                }
-
-                // Only close result - it closes all child tensors including logitsTensor
-                result.close()
-            } finally {
-                targetTokensTensor.close()
+                // Process logits into beam candidates
+                processLogitsForBeam(beam, logits, newCandidates)
             }
         }
 
@@ -372,14 +277,13 @@ class BeamSearchEngine(
      */
     private fun processBatched(
         activeBeams: List<BeamState>,
-        memory: OnnxTensor,
         actualSrcLength: Int,
         step: Int
     ): List<BeamState> {
         val newCandidates = ArrayList<BeamState>()
         val numBeams = activeBeams.size
 
-        // 1. Prepare batched input tensor [numBeams, DECODER_SEQ_LEN]
+        // Prepare flattened batched input [numBeams * DECODER_SEQ_LEN]
         val batchedTokens = IntArray(numBeams * DECODER_SEQ_LEN)
         for (b in activeBeams.indices) {
             val beam = activeBeams[b]
@@ -387,106 +291,78 @@ class BeamSearchEngine(
             for (i in 0 until len) {
                 batchedTokens[b * DECODER_SEQ_LEN + i] = beam.tokens[i].toInt()
             }
-            // Rest is already PAD_IDX (0) from array initialization
         }
 
-        val batchedShape = longArrayOf(numBeams.toLong(), DECODER_SEQ_LEN.toLong())
-        val batchedTokensTensor = OnnxTensor.createTensor(
-            ortEnvironment,
-            java.nio.IntBuffer.wrap(batchedTokens),
-            batchedShape
-        )
+        // Single decoder call for ALL beams via interface
+        val logits3D = decoderSession.runBatched(batchedTokens, numBeams, actualSrcLength, DECODER_SEQ_LEN)
 
-        // 2. OPTIMIZATION: Reuse cachedSrcLengthTensor if length unchanged (same as processSequential)
-        if (actualSrcLength != cachedSrcLength) {
-            cachedSrcLengthTensor?.close()
-            cachedSrcLengthTensor = OnnxTensor.createTensor(ortEnvironment, intArrayOf(actualSrcLength))
-            cachedSrcLength = actualSrcLength
-        }
-        val srcLengthTensor = cachedSrcLengthTensor!!
+        // Process each beam's logits
+        for (b in activeBeams.indices) {
+            val beam = activeBeams[b]
+            val currentPos = beam.tokens.size - 1
 
-        try {
-            // 3. Single decoder call for ALL beams
-            val inputs = mapOf(
-                "memory" to memory,
-                "actual_src_length" to srcLengthTensor,
-                "target_tokens" to batchedTokensTensor
-            )
-
-            val result = decoderSession.run(inputs)
-            val logitsTensor = result.get(0) as OnnxTensor
-
-            // 4. Extract logits [numBeams, DECODER_SEQ_LEN, vocabSize]
-            @Suppress("UNCHECKED_CAST")
-            val logits3D = logitsTensor.value as Array<Array<FloatArray>>
-
-            // 5. Process each beam's logits
-            for (b in activeBeams.indices) {
-                val beam = activeBeams[b]
-                val currentPos = beam.tokens.size - 1
-
-                if (currentPos in 0 until DECODER_SEQ_LEN) {
-                    // Get this beam's logits at current position
-                    val logits = logits3D[b][currentPos].copyOf() // Copy to avoid modifying cached tensor
-
-                    // Apply Trie Masking
-                    applyTrieMasking(beam, logits)
-
-                    // Apply Language-Specific Prefix Boosts (before softmax)
-                    val appliedBoosts = applyPrefixBoosts(beam, logits)
-
-                    // Log-Softmax for numerical stability
-                    val logProbs = logSoftmax(logits)
-
-                    // Get Top K
-                    val topIndices = getTopKIndices(logProbs, beamWidth)
-
-                    for (idx in topIndices) {
-                        // Skip SOS and PAD tokens
-                        if (idx == SOS_IDX || idx == PAD_IDX) {
-                            continue
-                        }
-
-                        // EOS marks end of word
-                        if (idx == EOS_IDX) {
-                            val newBeam = BeamState(beam)
-                            newBeam.tokens.add(idx.toLong())
-                            newBeam.score += -logProbs[idx]
-                            newBeam.finished = true
-                            newCandidates.add(newBeam)
-                            continue
-                        }
-
-                        // Regular character tokens
-                        val newBeam = BeamState(beam)
-                        newBeam.tokens.add(idx.toLong())
-                        newBeam.score += -logProbs[idx]
-                        newBeam.finished = false
-
-                        // Track cumulative boost for this path
-                        newBeam.cumulativeBoost = beam.cumulativeBoost + appliedBoosts[idx]
-
-                        // Advance the Aho-Corasick trie state for prefix boost lookups
-                        if (prefixBoostTrie != null && prefixBoostTrie.hasBoosts()) {
-                            val c = tokenizer.indexToChar(idx)
-                            if (c in 'a'..'z') {
-                                newBeam.boostState = prefixBoostTrie.getNextState(beam.boostState, c)
-                            }
-                        }
-
-                        newCandidates.add(newBeam)
-                    }
-                }
+            if (currentPos in 0 until DECODER_SEQ_LEN) {
+                val logits = logits3D[b][currentPos].copyOf()
+                processLogitsForBeam(beam, logits, newCandidates)
             }
-
-            result.close()
-
-        } finally {
-            batchedTokensTensor.close()
-            // NOTE: Don't close srcLengthTensor - it's cached for reuse across steps
         }
 
         return newCandidates
+    }
+
+    /**
+     * Shared logit processing: trie masking → prefix boosts → log-softmax → top-K → beam expansion.
+     * Used by both processSequential and processBatched to avoid duplication.
+     */
+    private fun processLogitsForBeam(
+        beam: BeamState,
+        logits: FloatArray,
+        candidates: MutableList<BeamState>
+    ) {
+        // Apply Trie Masking
+        applyTrieMasking(beam, logits)
+
+        // Apply Language-Specific Prefix Boosts (before softmax)
+        val appliedBoosts = applyPrefixBoosts(beam, logits)
+
+        // Log-Softmax for numerical stability and correct scoring
+        val logProbs = logSoftmax(logits)
+
+        // Get Top K
+        val topIndices = getTopKIndices(logProbs, beamWidth)
+
+        for (idx in topIndices) {
+            // SOS and PAD should never be selected
+            if (idx == SOS_IDX || idx == PAD_IDX) continue
+
+            if (idx == EOS_IDX) {
+                val newBeam = BeamState(beam)
+                newBeam.tokens.add(idx.toLong())
+                newBeam.score += -logProbs[idx]
+                newBeam.finished = true
+                candidates.add(newBeam)
+                continue
+            }
+
+            // Regular character tokens
+            val newBeam = BeamState(beam)
+            newBeam.tokens.add(idx.toLong())
+            newBeam.score += -logProbs[idx]
+            newBeam.finished = false
+
+            // Track cumulative boost for this path (for capping)
+            newBeam.cumulativeBoost = beam.cumulativeBoost + appliedBoosts[idx]
+
+            // Advance the Aho-Corasick trie state for prefix boost lookups
+            if (prefixBoostTrie != null && prefixBoostTrie.hasBoosts()) {
+                val c = tokenizer.indexToChar(idx)
+                if (c in 'a'..'z') {
+                    newBeam.boostState = prefixBoostTrie.getNextState(beam.boostState, c)
+                }
+            }
+
+            candidates.add(newBeam)
+        }
     }
 
     // Track if we've logged trie status for this search (only when debug enabled)
@@ -496,7 +372,7 @@ class BeamSearchEngine(
         if (vocabTrie == null) {
             // Only log once per session when debug is enabled
             if (!trieStatusLogged && debugLogger != null) {
-                Log.w(TAG, "🚨 TRIE IS NULL - No masking applied! Beam search is UNCONSTRAINED")
+                debugLogger?.invoke("TRIE IS NULL - No masking applied! Beam search is UNCONSTRAINED")
                 trieStatusLogged = true
             }
             return
@@ -713,11 +589,9 @@ class BeamSearchEngine(
      */
     fun cleanup() {
         try {
-            cachedSrcLengthTensor?.close()
-            cachedSrcLengthTensor = null
-            cachedSrcLength = -1
+            decoderSession.cleanup()
         } catch (e: Exception) {
-            Log.w(TAG, "Error during cleanup: ${e.message}")
+            debugLogger?.invoke("Error during cleanup: ${e.message}")
         }
     }
 }

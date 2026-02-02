@@ -399,8 +399,11 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
             } else {
                 // DIAGNOSTIC: Log trie info on every prediction
                 val trie = vocabulary.getVocabularyTrie()
+                // Wrap raw ONNX session in the decoder interface adapter
+                val decoderAdapter = OrtDecoderSession(decoderSession!!, ortEnvironment)
+                decoderAdapter.setMemory(memory)
                 val engine = BeamSearchEngine(
-                    decoderSession!!, ortEnvironment, tokenizer,
+                    decoderAdapter, tokenizer,
                     trie, beamWidth, maxLength,
                     confidenceThreshold, beamAlpha, beamPruneConfidence, beamScoreGap,
                     adaptiveWidthStep, scoreGapStep, temperature, activeLogger,
@@ -413,7 +416,7 @@ class SwipePredictorOrchestrator private constructor(private val context: Contex
                     strictStartChar = strictStartChar,
                     firstDetectedKey = firstDetectedKey
                 )
-                val results = engine.search(memory, features.actualLength, batchBeams)
+                val results = engine.search(features.actualLength, batchBeams)
                 results.map { PredictionPostProcessor.Candidate(it.word, it.confidence) }
             }
 

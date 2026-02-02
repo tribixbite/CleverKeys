@@ -43,6 +43,7 @@ PURE_TESTS=(
     "tribixbite.cleverkeys.ConfigDefaultsTest"
     "tribixbite.cleverkeys.ContractionFrequencyTest"
     "tribixbite.cleverkeys.PipelineBenchmarkTest"
+    "tribixbite.cleverkeys.BeamSearchEngineTest"
 )
 
 # If specific test given, use that

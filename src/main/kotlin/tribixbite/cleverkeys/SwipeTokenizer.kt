@@ -109,7 +109,7 @@ class SwipeTokenizer {
         return isLoadedFlag
     }
 
-    private fun addMapping(idx: Int, ch: Char) {
+    internal fun addMapping(idx: Int, ch: Char) {
         charToIdx[ch] = idx
         idxToChar[idx] = ch
     }
