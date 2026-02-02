@@ -44,6 +44,7 @@ PURE_TESTS=(
     "tribixbite.cleverkeys.ContractionFrequencyTest"
     "tribixbite.cleverkeys.PipelineBenchmarkTest"
     "tribixbite.cleverkeys.BeamSearchEngineTest"
+    "tribixbite.cleverkeys.PipelineIntegrationTest"
 )
 
 # If specific test given, use that
