@@ -1,5 +1,20 @@
 # CleverKeys TODO
 
+## Completed (2026-02-02)
+- ✅ **BeamSearchEngine testability refactor**: extracted DecoderSessionInterface, OrtDecoderSession adapter
+  - BeamSearchEngine now fully ONNX-free (all tensor ops behind interface)
+  - Shared processLogitsForBeam() eliminates seq/batch duplication
+  - Replaced android.util.Log with debugLogger callback
+  - 12 beam search tests: scoring, trie masking, batched parity, temperature, dedup
+- ✅ **calculateMatchQuality fix**: non-edit-distance mode now uses maxLen denominator
+  - "cat" vs "caterpillar" was 1.0 (wrong), now 3/11 ≈ 0.27 (correct)
+- ✅ **selectMiddleIndices exposed**: internal visibility + 5 weighted distribution tests
+- ✅ **Pipeline integration tests**: 7 tests chaining SwipeResampler → BeamSearchEngine → VocabularyTrie → VocabularyUtils → AccentNormalizer
+- ✅ **Gradle runPureTests task**: JavaExec-based JVM test runner, no proot needed
+  - Usage: `./gradlew runPureTests [-PtestClass=ClassName]`
+- ✅ **ONNX Runtime aarch64 native libs**: tested, blocked by glibc dependency (libdl.so.2 not available on Termux/bionic). Real inference benchmarks require Android instrumented tests.
+- ✅ Test suite: 357 tests across 12 classes, all passing
+
 ## Completed (2026-01-29)
 - ✅ Settings UI: moved Batch Processing, Greedy Search, ONNX Threads from main settings to NeuralSettingsActivity
 - ✅ Settings UI: replaced Advanced Neural Settings expander with "Full Neural Settings" button
@@ -266,7 +281,11 @@ ew-cli --app build/outputs/apk/debug/CleverKeys-v1.2.5-x86_64.apk \
        --test build/outputs/apk/androidTest/debug/CleverKeys-debug-androidTest.apk \
        --device model=Pixel7,version=35 --use-orchestrator --clear-package-data
 
-# Local JVM
+# Local JVM (Gradle — preferred)
+./gradlew runPureTests                           # all 357 tests
+./gradlew runPureTests -PtestClass=ClassName     # single class
+
+# Local JVM (proot — legacy)
 ./scripts/run-pure-tests.sh
 ```
 
