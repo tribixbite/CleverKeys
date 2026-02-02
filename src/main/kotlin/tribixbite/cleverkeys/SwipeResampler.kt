@@ -107,7 +107,7 @@ object SwipeResampler {
     /**
      * Select middle indices with weighted preference for start and end
      */
-    private fun selectMiddleIndices(originalLength: Int, numMiddle: Int): List<Int> {
+    internal fun selectMiddleIndices(originalLength: Int, numMiddle: Int): List<Int> {
         val indices = mutableListOf<Int>()
 
         // Available indices (excluding first and last)

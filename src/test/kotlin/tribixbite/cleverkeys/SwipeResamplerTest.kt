@@ -233,6 +233,53 @@ class SwipeResamplerTest {
     }
 
     // =========================================================================
+    // selectMiddleIndices weighted distribution tests
+    // =========================================================================
+
+    @Test
+    fun `selectMiddleIndices returns all when fewer available than requested`() {
+        // originalLength=5 means indices 1,2,3 available (3 middle), request 10
+        val indices = SwipeResampler.selectMiddleIndices(5, 10)
+        assertThat(indices).containsExactly(1, 2, 3)
+    }
+
+    @Test
+    fun `selectMiddleIndices returns correct count`() {
+        val indices = SwipeResampler.selectMiddleIndices(100, 10)
+        assertThat(indices).hasSize(10)
+    }
+
+    @Test
+    fun `selectMiddleIndices all within valid range`() {
+        val indices = SwipeResampler.selectMiddleIndices(50, 8)
+        for (idx in indices) {
+            assertThat(idx).isAtLeast(1)
+            assertThat(idx).isAtMost(48) // originalLength - 2
+        }
+    }
+
+    @Test
+    fun `selectMiddleIndices weighted toward edges`() {
+        // With 100 points and selecting 12, start/end zones should have more density
+        val indices = SwipeResampler.selectMiddleIndices(100, 12)
+        // 35% of 12 = 4 points in start zone (indices ~1..30)
+        // 35% of 12 = 4 points in end zone (indices ~70..98)
+        val startCount = indices.count { it <= 30 }
+        val endCount = indices.count { it >= 70 }
+        val middleCount = indices.count { it in 31..69 }
+        // Start and end combined should have more points than middle
+        assertThat(startCount + endCount).isAtLeast(middleCount)
+    }
+
+    @Test
+    fun `selectMiddleIndices are sorted ascending`() {
+        val indices = SwipeResampler.selectMiddleIndices(80, 15)
+        for (i in 1 until indices.size) {
+            assertThat(indices[i]).isAtLeast(indices[i - 1])
+        }
+    }
+
+    // =========================================================================
     // Helper functions
     // =========================================================================
 

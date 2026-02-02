@@ -109,6 +109,10 @@ object VocabularyUtils {
             if (maxDistance == 0) return 1.0f // both empty = perfect match
             return 1.0f - (distance.toFloat() / maxDistance)
         } else {
+            if (dictWord.isEmpty() && beamWord.isEmpty()) return 1.0f
+            val maxLen = max(dictWord.length, beamWord.length)
+            if (maxLen == 0) return 1.0f
+
             var matches = 0
             val minLen = min(dictWord.length, beamWord.length)
 
@@ -118,7 +122,9 @@ object VocabularyUtils {
                 }
             }
 
-            return matches.toFloat() / dictWord.length
+            // Divide by maxLen to penalize length mismatch
+            // e.g. "cat" vs "caterpillar" = 3/11, not 3/3
+            return matches.toFloat() / maxLen
         }
     }
     

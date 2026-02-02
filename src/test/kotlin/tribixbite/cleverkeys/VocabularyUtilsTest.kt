@@ -252,9 +252,28 @@ class VocabularyUtilsTest {
 
     @Test
     fun `match quality different lengths without edit distance`() {
-        // Position matching uses dictWord length as denominator
-        // "cat" vs "cats": c-c, a-a, t-t = 3/3 = 1.0
+        // Position matching uses maxLen as denominator to penalize length mismatch
+        // "cat" vs "cats": c-c, a-a, t-t = 3 matches / max(3,4) = 3/4 = 0.75
         val quality = VocabularyUtils.calculateMatchQuality("cat", "cats", useEditDistance = false)
+        assertThat(quality).isWithin(0.001f).of(0.75f)
+    }
+
+    @Test
+    fun `non-edit-distance penalizes substring match`() {
+        // "cat" vs "caterpillar": 3 matches / max(3,11) = 3/11 ≈ 0.273
+        val quality = VocabularyUtils.calculateMatchQuality("cat", "caterpillar", useEditDistance = false)
+        assertThat(quality).isWithin(0.001f).of(3f / 11f)
+    }
+
+    @Test
+    fun `non-edit-distance exact match returns 1`() {
+        val quality = VocabularyUtils.calculateMatchQuality("hello", "hello", useEditDistance = false)
+        assertThat(quality).isWithin(0.001f).of(1.0f)
+    }
+
+    @Test
+    fun `non-edit-distance empty strings`() {
+        val quality = VocabularyUtils.calculateMatchQuality("", "", useEditDistance = false)
         assertThat(quality).isWithin(0.001f).of(1.0f)
     }
 }
