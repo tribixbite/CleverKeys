@@ -55,11 +55,13 @@ fun CommandPaletteDialog(
 ) {
     var searchQuery by remember { mutableStateOf(initialSearchQuery) }
     var showTextInput by remember { mutableStateOf(false) }
+    var showIntentEditor by remember { mutableStateOf(false) }
     var customText by remember { mutableStateOf("") }
 
     // State for label confirmation dialog
     var pendingCommand by remember { mutableStateOf<CommandRegistry.Command?>(null) }
     var pendingText by remember { mutableStateOf<String?>(null) }
+    var pendingIntentDef by remember { mutableStateOf<IntentDefinition?>(null) }
     var customLabel by remember { mutableStateOf("") }
 
     // Get filtered commands
@@ -72,7 +74,7 @@ fun CommandPaletteDialog(
     }
 
     // Show label confirmation dialog when pending selection exists
-    if (pendingCommand != null || pendingText != null) {
+    if (pendingCommand != null || pendingText != null || pendingIntentDef != null) {
         // Get display info for commands (includes icon and font flag)
         val commandDisplayInfo = pendingCommand?.let {
             CommandRegistry.getDisplayInfo(it.name)
@@ -85,11 +87,13 @@ fun CommandPaletteDialog(
             defaultLabel = when {
                 pendingCommand != null -> commandDisplayInfo?.displayText ?: pendingCommand!!.displayName.take(4)
                 pendingText != null -> pendingText!!.take(4)
+                pendingIntentDef != null -> pendingIntentDef!!.name.take(4)
                 else -> ""
             },
             actionDescription = when {
                 pendingCommand != null -> "Command: ${pendingCommand!!.displayName}"
                 pendingText != null -> "Text: \"${pendingText!!.take(30)}${if (pendingText!!.length > 30) "..." else ""}\""
+                pendingIntentDef != null -> "Intent: ${pendingIntentDef!!.name}"
                 else -> ""
             },
             currentLabel = customLabel,
@@ -101,6 +105,7 @@ fun CommandPaletteDialog(
                     when {
                         pendingCommand != null -> commandDisplayInfo?.displayText ?: pendingCommand!!.displayName.take(4)
                         pendingText != null -> pendingText!!.take(4)
+                        pendingIntentDef != null -> pendingIntentDef!!.name.take(4)
                         else -> "?"
                     }
                 }
@@ -125,6 +130,12 @@ fun CommandPaletteDialog(
                             actionValue = pendingText!!,
                             useKeyFont = false  // Text input never uses icon font
                         )
+                        pendingIntentDef != null -> MappingSelection(
+                            displayLabel = label,
+                            actionType = ActionType.INTENT,
+                            actionValue = com.google.gson.Gson().toJson(pendingIntentDef),
+                            useKeyFont = false
+                        )
                         else -> null
                     }
                     selection?.let { onMappingSelected(it) }
@@ -136,12 +147,25 @@ fun CommandPaletteDialog(
 
                 pendingCommand = null
                 pendingText = null
+                pendingIntentDef = null
                 customLabel = ""
             },
             onCancel = {
                 pendingCommand = null
                 pendingText = null
+                pendingIntentDef = null
                 customLabel = ""
+            }
+        )
+    }
+
+    if (showIntentEditor) {
+        IntentEditorDialog(
+            onDismiss = { showIntentEditor = false },
+            onConfirm = { intentDef ->
+                showIntentEditor = false
+                pendingIntentDef = intentDef
+                customLabel = intentDef.name.take(4)
             }
         )
     }
@@ -214,7 +238,8 @@ fun CommandPaletteDialog(
                             pendingCommand = command
                             customLabel = command.displayName.take(4)
                         },
-                        onShowTextInput = { showTextInput = true }
+                        onShowTextInput = { showTextInput = true },
+                        onShowIntentEditor = { showIntentEditor = true }
                     )
                 }
             }
@@ -384,7 +409,8 @@ private fun CommandSearchSection(
     onSearchChange: (String) -> Unit,
     filteredCommands: Map<CommandRegistry.Category, List<CommandRegistry.Command>>,
     onCommandSelected: (CommandRegistry.Command) -> Unit,
-    onShowTextInput: () -> Unit
+    onShowTextInput: () -> Unit,
+    onShowIntentEditor: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         // Search bar
@@ -450,6 +476,48 @@ private fun CommandSearchSection(
                     Icons.Filled.KeyboardArrowRight,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        }
+
+        // Quick action: Send Intent
+        Card(
+            onClick = onShowIntentEditor,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Filled.Share, // Using Share icon as a proxy for Intent/Sending
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Send Intent",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                    Text(
+                        "Create advanced Android intent (activity, service, broadcast)",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+                Icon(
+                    Icons.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
         }

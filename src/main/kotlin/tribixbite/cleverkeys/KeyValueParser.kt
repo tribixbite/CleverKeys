@@ -14,6 +14,7 @@ Parse a key definition. The syntax for a key definition is:
 - ['Arbitrary string']
 - [(key_action),(key_action),...]
 - [keyevent:(code)]
+- [intent:'json']
 - [(key_name)]
 
 For the different kinds and attributes, see doc/Possible-key-values.md.
@@ -66,7 +67,7 @@ object KeyValueParser {
     private fun init() {
         if (::KEYDEF_TOKEN.isInitialized) return
 
-        KEYDEF_TOKEN = Pattern.compile("'|,|keyevent:|timestamp:|(?:[^\\\\',]+|\\\\.)+")
+        KEYDEF_TOKEN = Pattern.compile("'|,|keyevent:|timestamp:|intent:|(?:[^\\\\',]+|\\\\.)+")
         QUOTED_PAT = Pattern.compile("((?:[^'\\\\]+|\\\\')*)'")
         WORD_PAT = Pattern.compile("[a-zA-Z0-9_]+|.")
     }
@@ -88,6 +89,7 @@ object KeyValueParser {
             }
             "keyevent:" -> parseKeyeventKeydef(m)
             "timestamp:" -> parseTimestampKeydef(m)
+            "intent:" -> parseIntentKeydef(m)
             else -> keyByNameOrStr(removeEscaping(token))
         }
     }
@@ -124,6 +126,21 @@ object KeyValueParser {
         }
         val pattern = m.group(1).replace("\\'", "'")
         return KeyValue.makeTimestampKey("📅", pattern, 0)
+    }
+
+    /**
+     * Parse an intent key definition.
+     * Syntax: intent:'json_payload'
+     * Example: intent:'{"name":"Open Browser","targetType":"ACTIVITY","action":"android.intent.action.VIEW"}'
+     * The JSON is stored as a string key and executed by CustomShortSwipeExecutor.
+     */
+    private fun parseIntentKeydef(m: Matcher): KeyValue {
+        if (!match(m, QUOTED_PAT)) {
+            parseError("Expected quoted JSON for intent, e.g. intent:'{\"name\":\"...\",\"action\":\"...\"}'", m)
+        }
+        val json = m.group(1).replace("\\'", "'")
+        // Store as a string key with a special prefix that CustomShortSwipeExecutor recognizes
+        return KeyValue.makeStringKey("__intent__:$json", 0)
     }
 
     /** Returns [true] if the next token is a comma, [false] if it is the end of the input. Throws an error otherwise. */

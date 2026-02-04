@@ -330,6 +330,14 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                             ActionType.COMMAND -> "command: ${selection.actionValue}"
                             ActionType.TEXT -> "text: \"${selection.actionValue.take(20)}${if (selection.actionValue.length > 20) "..." else ""}\""
                             ActionType.KEY_EVENT -> "key event: ${selection.actionValue}"
+                            ActionType.INTENT -> {
+                                try {
+                                    val def = com.google.gson.Gson().fromJson(selection.actionValue, IntentDefinition::class.java)
+                                    "intent: ${def.name}"
+                                } catch (e: Exception) {
+                                    "intent"
+                                }
+                            }
                         }
                         Toast.makeText(
                             context,
@@ -578,8 +586,21 @@ private fun MappingListItem(
                         fontSize = 13.sp
                     )
                 }
+                val actionDesc = when (mapping.actionType) {
+                    ActionType.COMMAND -> "Command: ${mapping.actionValue}"
+                    ActionType.TEXT -> "Text: \"${mapping.actionValue.take(20)}${if (mapping.actionValue.length > 20) "..." else ""}\""
+                    ActionType.KEY_EVENT -> "Key Event: ${mapping.actionValue}"
+                    ActionType.INTENT -> {
+                        try {
+                            val def = com.google.gson.Gson().fromJson(mapping.actionValue, IntentDefinition::class.java)
+                            "Intent: ${def.name}"
+                        } catch (e: Exception) {
+                            "Intent (invalid)"
+                        }
+                    }
+                }
                 Text(
-                    text = "${mapping.actionType.displayName}: ${mapping.actionValue.take(30)}${if (mapping.actionValue.length > 30) "..." else ""}",
+                    text = actionDesc,
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

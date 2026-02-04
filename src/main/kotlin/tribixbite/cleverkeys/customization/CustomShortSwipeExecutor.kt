@@ -35,6 +35,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
             ActionType.TEXT -> executeTextInput(mapping.actionValue, inputConnection)
             ActionType.COMMAND -> executeCommandByName(mapping.actionValue, inputConnection, editorInfo)
             ActionType.KEY_EVENT -> executeKeyEvent(mapping.getKeyEventCode(), inputConnection)
+            ActionType.INTENT -> executeIntent(mapping.actionValue)
         }
     }
 
@@ -61,6 +62,108 @@ class CustomShortSwipeExecutor(private val context: Context) {
 
         Log.w(TAG, "Unknown command: $commandName")
         return false
+    }
+
+    /**
+     * Execute an intent action.
+     */
+    private fun executeIntent(intentJson: String): Boolean {
+        return try {
+            val intentDef = com.google.gson.Gson().fromJson(intentJson, IntentDefinition::class.java)
+
+            // Validate intent before execution
+            val validationError = validateIntent(intentDef)
+            if (validationError != null) {
+                Log.w(TAG, "Intent validation failed: $validationError")
+                return false
+            }
+
+            val intent = android.content.Intent()
+
+            // Set basic fields
+            if (!intentDef.action.isNullOrBlank()) intent.action = intentDef.action
+            if (!intentDef.data.isNullOrBlank()) intent.data = android.net.Uri.parse(intentDef.data)
+            if (!intentDef.type.isNullOrBlank()) intent.type = intentDef.type
+            if (!intentDef.packageName.isNullOrBlank()) intent.`package` = intentDef.packageName
+
+            // Set component if both package and class are provided
+            if (!intentDef.packageName.isNullOrBlank() && !intentDef.className.isNullOrBlank()) {
+                intent.component = android.content.ComponentName(intentDef.packageName, intentDef.className)
+            }
+
+            // Set extras
+            intentDef.extras?.forEach { (key, value) ->
+                intent.putExtra(key, value)
+            }
+
+            // Add flags
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+
+            when (intentDef.targetType) {
+                IntentTargetType.ACTIVITY -> {
+                    // Check if activity can be resolved before starting
+                    if (intent.resolveActivity(context.packageManager) == null && intentDef.className.isNullOrBlank()) {
+                        Log.w(TAG, "No activity found to handle intent: ${intentDef.name}")
+                        return false
+                    }
+                    context.startActivity(intent)
+                }
+                IntentTargetType.SERVICE -> context.startService(intent)
+                IntentTargetType.BROADCAST -> context.sendBroadcast(intent)
+            }
+
+            Log.d(TAG, "Executed INTENT action: ${intentDef.name}")
+            true
+        } catch (e: android.content.ActivityNotFoundException) {
+            Log.e(TAG, "Activity not found for intent", e)
+            false
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Permission denied for intent", e)
+            false
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to execute INTENT action", e)
+            false
+        }
+    }
+
+    /**
+     * Validate an IntentDefinition before execution.
+     * @return Error message if invalid, null if valid.
+     */
+    private fun validateIntent(intentDef: IntentDefinition): String? {
+        // Must have either action or package+class
+        if (intentDef.action.isNullOrBlank() && intentDef.packageName.isNullOrBlank()) {
+            return "Intent must have either an action or a package name"
+        }
+
+        // If package specified, check it exists (for activities)
+        if (!intentDef.packageName.isNullOrBlank() && intentDef.targetType == IntentTargetType.ACTIVITY) {
+            try {
+                context.packageManager.getPackageInfo(intentDef.packageName, 0)
+            } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+                return "Package not installed: ${intentDef.packageName}"
+            }
+        }
+
+        // Validate URI format if data is provided
+        if (!intentDef.data.isNullOrBlank()) {
+            try {
+                android.net.Uri.parse(intentDef.data)
+            } catch (e: Exception) {
+                return "Invalid URI: ${intentDef.data}"
+            }
+        }
+
+        return null
+    }
+
+    /**
+     * Check if an intent is valid and can be executed.
+     * Useful for UI validation before saving.
+     */
+    fun canExecuteIntent(intentDef: IntentDefinition): Pair<Boolean, String?> {
+        val error = validateIntent(intentDef)
+        return Pair(error == null, error)
     }
 
     /**

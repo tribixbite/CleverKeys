@@ -43,6 +43,12 @@ object XmlAttributeMapper {
                 // Use keyevent syntax
                 "keyevent:${mapping.actionValue}"
             }
+            ActionType.INTENT -> {
+                // Export intent JSON with quoted syntax for KeyValueParser compatibility
+                // Escape single quotes in JSON and wrap in single quotes
+                val escapedJson = mapping.actionValue.replace("'", "\\'")
+                "intent:'$escapedJson'"
+            }
         }
     }
 

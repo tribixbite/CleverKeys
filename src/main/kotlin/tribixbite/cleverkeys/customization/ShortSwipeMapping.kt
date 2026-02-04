@@ -36,8 +36,8 @@ data class ShortSwipeMapping(
         /** Maximum characters for display text on key sub-label */
         const val MAX_DISPLAY_LENGTH = 4
 
-        /** Maximum characters for action value (text input) */
-        const val MAX_ACTION_LENGTH = 100
+        /** Maximum characters for action value (text input or serialized intent) */
+        const val MAX_ACTION_LENGTH = 4096
 
         /**
          * Create a text input mapping.
@@ -92,6 +92,24 @@ data class ShortSwipeMapping(
             actionValue = keyEventCode.toString(),
             useKeyFont = useKeyFont
         )
+
+        /**
+         * Create an intent mapping.
+         */
+        fun intent(
+            keyCode: String,
+            direction: SwipeDirection,
+            displayText: String,
+            intentJson: String,
+            useKeyFont: Boolean = false
+        ): ShortSwipeMapping = ShortSwipeMapping(
+            keyCode = keyCode.lowercase(),
+            direction = direction,
+            displayText = displayText.take(MAX_DISPLAY_LENGTH),
+            actionType = ActionType.INTENT,
+            actionValue = intentJson.take(MAX_ACTION_LENGTH),
+            useKeyFont = useKeyFont
+        )
     }
 
     /**
@@ -109,6 +127,20 @@ data class ShortSwipeMapping(
     fun getKeyEventCode(): Int? {
         return if (actionType == ActionType.KEY_EVENT) {
             actionValue.toIntOrNull()
+        } else null
+    }
+
+    /**
+     * Get the IntentDefinition if this is an INTENT type mapping.
+     * @return Parsed IntentDefinition or null if parsing fails or wrong type.
+     */
+    fun getIntentDefinition(): IntentDefinition? {
+        return if (actionType == ActionType.INTENT) {
+            try {
+                com.google.gson.Gson().fromJson(actionValue, IntentDefinition::class.java)
+            } catch (e: Exception) {
+                null
+            }
         } else null
     }
 
@@ -174,8 +206,8 @@ data class ShortSwipeCustomizations(
 /**
  * JSON-friendly model for a single direction mapping.
  * @property displayText The text/icon to display
- * @property actionType The action type (TEXT, COMMAND, KEY_EVENT)
- * @property actionValue The action value
+ * @property actionType The action type (TEXT, COMMAND, KEY_EVENT, INTENT)
+ * @property actionValue The action value (text, command name, keycode, or JSON intent)
  * @property useKeyFont Whether to use the special keyboard icon font for displayText
  */
 data class DirectionMapping(

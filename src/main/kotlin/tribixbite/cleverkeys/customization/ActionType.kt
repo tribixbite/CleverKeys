@@ -34,6 +34,15 @@ enum class ActionType(
     KEY_EVENT(
         displayName = "Key Event",
         description = "Send raw key event (advanced)"
+    ),
+
+    /**
+     * Send an Android Intent (start activity, service, or broadcast).
+     * The actionValue contains the JSON-serialized IntentDefinition.
+     */
+    INTENT(
+        displayName = "Send Intent",
+        description = "Send Android Intent (advanced)"
     );
 
     companion object {
