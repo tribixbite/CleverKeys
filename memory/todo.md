@@ -1,5 +1,17 @@
 # CleverKeys TODO
 
+## Completed (2026-02-04)
+- ✅ **Intent action type for short swipe customization**: complete feature implementation
+  - Added ActionType.INTENT enum with full serialization support
+  - IntentDefinition data class with 11 common presets (browser, share, dial, email, settings, camera, maps, search, termux command)
+  - IntentEditorDialog with edit mode, preset selection via FlowRow chips
+  - KeyValueParser intent: syntax for XML import/export round-trip
+  - Intent validation: package existence check, URI validation, activity resolution
+  - canExecuteIntent() for UI validation before saving
+  - getIntentDefinition() helper on ShortSwipeMapping
+  - XmlAttributeMapper uses quoted JSON: intent:'json'
+  - All 357 tests pass
+
 ## Completed (2026-02-02)
 - ✅ **BeamSearchEngine testability refactor**: extracted DecoderSessionInterface, OrtDecoderSession adapter
   - BeamSearchEngine now fully ONNX-free (all tensor ops behind interface)
