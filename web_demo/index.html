@@ -49,11 +49,11 @@
                 <img src="https://raw.githubusercontent.com/tribixbite/CleverKeys/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="CleverKeys" class="w-10 h-10 rounded-lg">
                 <span class="font-bold text-xl">CleverKeys</span>
             </div>
-            <div class="flex gap-4">
-                <a href="wiki/" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors font-medium">Wiki</a>
-                <a href="specs/" class="px-4 py-2 bg-ck-surface hover:bg-ck-card rounded-lg transition-colors">Docs</a>
-                <a href="demo/" class="px-4 py-2 bg-ck-purple hover:bg-ck-purple-dark rounded-lg transition-colors font-medium">Try Demo</a>
-                <a href="https://github.com/tribixbite/CleverKeys" class="px-4 py-2 border border-gray-600 hover:border-ck-purple rounded-lg transition-colors">GitHub</a>
+            <div class="flex gap-4" role="navigation" aria-label="Main navigation">
+                <a href="wiki/" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors font-medium" aria-label="User Guide Wiki">Wiki</a>
+                <a href="specs/" class="px-4 py-2 bg-ck-surface hover:bg-ck-card rounded-lg transition-colors" aria-label="Technical Documentation">Docs</a>
+                <a href="demo/" class="px-4 py-2 bg-ck-purple hover:bg-ck-purple-dark rounded-lg transition-colors font-medium" aria-label="Try Web Demo">Try Demo</a>
+                <a href="https://github.com/tribixbite/CleverKeys" class="px-4 py-2 border border-gray-600 hover:border-ck-purple rounded-lg transition-colors" aria-label="View source code on GitHub">GitHub</a>
             </div>
         </nav>
 
@@ -90,8 +90,8 @@
     </header>
 
     <!-- Features Grid -->
-    <section class="container mx-auto px-6 py-20">
-        <h2 class="text-3xl font-bold text-center mb-4">Why CleverKeys?</h2>
+    <section class="container mx-auto px-6 py-20" aria-labelledby="features-heading">
+        <h2 id="features-heading" class="text-3xl font-bold text-center mb-4">Why CleverKeys?</h2>
         <p class="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
             The only open-source keyboard with a public ML training pipeline,
             sub-200ms neural predictions, and 208 customizable swipe gestures.
@@ -167,9 +167,9 @@
     </section>
 
     <!-- Language Support -->
-    <section class="bg-ck-surface/50 py-20">
+    <section class="bg-ck-surface/50 py-20" aria-labelledby="languages-heading">
         <div class="container mx-auto px-6">
-            <h2 class="text-3xl font-bold text-center mb-4">Multi-Language Swipe Typing</h2>
+            <h2 id="languages-heading" class="text-3xl font-bold text-center mb-4">Multi-Language Swipe Typing</h2>
             <p class="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
                 11 languages supported with intelligent primary + secondary language detection.
             </p>
@@ -201,8 +201,8 @@
     </section>
 
     <!-- Demo CTA -->
-    <section class="container mx-auto px-6 py-20 text-center">
-        <h2 class="text-3xl font-bold mb-4">Try the Neural Swipe Demo</h2>
+    <section class="container mx-auto px-6 py-20 text-center" aria-labelledby="demo-heading">
+        <h2 id="demo-heading" class="text-3xl font-bold mb-4">Try the Neural Swipe Demo</h2>
         <p class="text-gray-400 mb-8 max-w-xl mx-auto">
             Experience the same transformer neural network that powers CleverKeys, running directly in your browser via WebAssembly.
         </p>
@@ -215,7 +215,7 @@
     </section>
 
     <!-- Links Section -->
-    <section class="bg-ck-surface/50 py-16">
+    <section class="bg-ck-surface/50 py-16" aria-label="Quick links">
         <div class="container mx-auto px-6">
             <div class="grid md:grid-cols-5 gap-8 text-center">
                 <a href="specs/" class="group">
@@ -259,7 +259,9 @@
 
     <!-- Footer -->
     <footer class="container mx-auto px-6 py-8 text-center text-gray-500 text-sm">
-        <p>CleverKeys is open source software licensed under GPL-3.0</p>
+        <p>CleverKeys - Neural Gesture Keyboard for Android</p>
+        <p class="mt-1">Copyright © 2024-2026 tribixbite</p>
+        <p class="mt-2">Open source software licensed under <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" class="text-ck-purple hover:underline">GPL-3.0</a></p>
         <p class="mt-2">Based on <a href="https://github.com/Julow/Unexpected-Keyboard" class="text-ck-purple hover:underline">Unexpected Keyboard</a> by Julow</p>
     </footer>
 </body>

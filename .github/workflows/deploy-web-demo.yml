@@ -63,19 +63,35 @@ jobs:
             if [ -d "web_demo/wiki" ]; then
               mkdir -p deploy/wiki
               cp -r web_demo/wiki/* deploy/wiki/
-              echo "✅ Wiki user guide ready"
+              echo "✅ Wiki user guide ready (includes search-index.json)"
             fi
 
             # Copy demo supporting files (for when demo is restored)
-            cp web_demo/*.onnx deploy/demo/ 2>/dev/null || echo "No ONNX models"
-            cp web_demo/*.js deploy/demo/ 2>/dev/null || echo "No JS files"
+            echo "📁 Copying demo assets..."
+            cp web_demo/*.onnx deploy/demo/ 2>/dev/null || echo "ℹ️  No ONNX models"
+            cp web_demo/*.js deploy/demo/ 2>/dev/null || echo "ℹ️  No JS files"
+            cp web_demo/*.json deploy/demo/ 2>/dev/null || echo "ℹ️  No JSON config files"
+            cp web_demo/*.css deploy/demo/ 2>/dev/null || echo "ℹ️  No CSS files"
+
+            # Copy any font files
+            cp web_demo/*.ttf deploy/demo/ 2>/dev/null || echo "ℹ️  No TTF fonts"
+            cp web_demo/*.woff deploy/demo/ 2>/dev/null || echo "ℹ️  No WOFF fonts"
+            cp web_demo/*.woff2 deploy/demo/ 2>/dev/null || echo "ℹ️  No WOFF2 fonts"
+
+            # Copy any image files
+            cp web_demo/*.png deploy/demo/ 2>/dev/null || echo "ℹ️  No PNG images"
+            cp web_demo/*.jpg deploy/demo/ 2>/dev/null || echo "ℹ️  No JPG images"
+            cp web_demo/*.svg deploy/demo/ 2>/dev/null || echo "ℹ️  No SVG images"
           fi
 
+          echo ""
           echo "✅ Website structure prepared:"
           echo "   / - Homepage"
           echo "   /demo/ - Demo (under construction)"
           echo "   /specs/ - Technical specifications"
-          echo "   /wiki/ - User guide wiki"
+          echo "   /wiki/ - User guide wiki (with search-index.json)"
+          echo ""
+          echo "📊 Deployed files:"
           ls -laR deploy/
 
       - name: Configure Pages
