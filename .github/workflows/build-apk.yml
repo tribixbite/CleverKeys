@@ -1,3 +1,11 @@
+# Development Build Workflow
+# Purpose: Generate debug APKs and create dev releases
+# - Handles keystore management
+# - Generates app icons
+# - Creates dev releases on main branch pushes
+# - Renames APKs with commit SHA
+# For CI testing only, see build.yml
+
 name: Build CleverKeys APK
 
 on:

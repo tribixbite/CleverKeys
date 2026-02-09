@@ -1,3 +1,10 @@
+# CI Workflow - Build and Test
+# Purpose: Continuous integration for pull requests and commits
+# - Builds debug APK for validation
+# - Runs unit tests and lint checks
+# - Performs size analysis
+# - Does NOT create releases (see build-apk.yml for dev releases)
+
 name: Build APK
 
 on:
@@ -8,7 +15,8 @@ on:
   pull_request:
     branches: [ main ]
 
-# No special permissions needed - just build and test
+permissions:
+  contents: read
 
 jobs:
   build:
