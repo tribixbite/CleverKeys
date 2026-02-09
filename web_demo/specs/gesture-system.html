@@ -70,467 +70,233 @@
     <!-- Content -->
     <main class="container mx-auto px-6 pb-20">
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
-            <h1 class="text-3xl font-bold mb-6 gradient-text">Gesture Recognition System Specification</h1>
+            <h1 class="text-3xl font-bold mb-6 gradient-text">Gesture Recognition System</h1>
 
-<p class="mb-4 text-gray-300"><strong>Status</strong>: Implemented</p>
-<p class="mb-4 text-gray-300"><strong>Last Updated</strong>: 2025-12-12</p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
 
-<hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300">CleverKeys implements a multi-layered gesture recognition system that handles four gesture types: short swipes (directional swipes within a key for sublabels), long swipes (gestures across keys for neural word prediction), circle/rotation gestures (for double letters), and slider gestures (continuous value adjustment). The <code class="bg-ck-dark px-1 rounded">hasLeftStartingKey</code> flag is the central decision point that routes touches to the appropriate handler.</p>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">1. Overview</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Key Files</h2>
 
-<p class="mb-4 text-gray-300">CleverKeys implements a multi-layered gesture recognition system that handles:</p>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">File</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Class/Function</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Purpose</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Pointers.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">Pointers</code></td><td class="px-4 py-2 text-gray-300">Touch event handling, gesture pipeline routing (~1100 lines)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/GestureClassifier.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">GestureClassifier</code></td><td class="px-4 py-2 text-gray-300">TAP vs SWIPE classification (65 lines)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Gesture.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">Gesture</code></td><td class="px-4 py-2 text-gray-300">Circle/rotation state machine (141 lines)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Config.kt</code></td><td class="px-4 py-2 text-gray-300">Gesture settings</td><td class="px-4 py-2 text-gray-300">Configuration thresholds</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Keyboard2View.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">getKeyHypotenuse()</code></td><td class="px-4 py-2 text-gray-300">Key dimension calculation</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Architecture</h2>
 
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>Short Gestures</strong>: Directional swipes within/near a key that trigger sublabel actions</li>
-<li class="ml-4">2. <strong>Long Swipes (Swipe Typing)</strong>: Gestures across multiple keys that trigger neural word prediction</li>
-<li class="ml-4">3. <strong>Circle/Rotation Gestures</strong>: Clockwise or counterclockwise rotation patterns</li>
-<li class="ml-4">4. <strong>Slider Gestures</strong>: Continuous value adjustment (brightness, volume, etc.)</li>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">Touch Events (Keyboard2View.onTouchEvent)
+           │
+           ▼
+      Pointers.kt
+           │
+     ┌─────┴─────┐
+     │           │
+  onTouchMove  onTouchUp
+     │           │
+     ▼           ▼
+┌─────────┐  ┌──────────────────┐
+│ Track   │  │ GestureClassifier │
+│ hasLeft │  │    .classify()    │
+│ Starting│  └────────┬─────────┘
+│ Key     │           │
+└─────────┘    ┌──────┴──────┐
+               │             │
+          SWIPE           TAP
+               │             │
+               ▼             ▼
+        Neural Predictor  Short Gesture
+        (onSwipeEnd)      Handler</code></pre>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Data Flow</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Touch Tracking</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4">1. <code class="bg-ck-dark px-1 rounded">onTouchDown</code>: Record start position, identify starting key</li>
+<li class="ml-4">2. <code class="bg-ck-dark px-1 rounded">onTouchMove</code>: Update position, check if left starting key</li>
+<li class="ml-4">3. <code class="bg-ck-dark px-1 rounded">onTouchUp</code>: Classify gesture, trigger appropriate handler</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Core Files</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">The <code class="bg-ck-dark px-1 rounded">hasLeftStartingKey</code> Gatekeeper</h3>
 
-<p class="mb-4 text-gray-300">| File | Lines | Purpose |</p>
-<p class="mb-4 text-gray-300">|------|-------|---------|</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">Pointers.kt</code> | ~1100 | Touch event handling, gesture pipeline routing |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">GestureClassifier.kt</code> | 65 | TAP vs SWIPE classification |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">Gesture.kt</code> | 141 | Circle/rotation state machine |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">Config.kt</code> | — | Gesture configuration options |</p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">2. Gesture Pipeline Architecture</h2>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">Touch Events (Keyboard2View)
-<p class="mb-4 text-gray-300">           │</p>
-<p class="mb-4 text-gray-300">           ▼</p>
-<p class="mb-4 text-gray-300">      Pointers.kt</p>
-<p class="mb-4 text-gray-300">           │</p>
-<p class="mb-4 text-gray-300">     ┌─────┴─────┐</p>
-<p class="mb-4 text-gray-300">     │           │</p>
-<p class="mb-4 text-gray-300">  onTouchMove  onTouchUp</p>
-<p class="mb-4 text-gray-300">     │           │</p>
-<p class="mb-4 text-gray-300">     ▼           ▼</p>
-<p class="mb-4 text-gray-300">┌─────────┐  ┌──────────────────┐</p>
-<p class="mb-4 text-gray-300">│ Track   │  │ GestureClassifier │</p>
-<p class="mb-4 text-gray-300">│ hasLeft │  │    .classify()    │</p>
-<p class="mb-4 text-gray-300">│ Starting│  └────────┬─────────┘</p>
-<p class="mb-4 text-gray-300">│ Key     │           │</p>
-<p class="mb-4 text-gray-300">└─────────┘    ┌──────┴──────┐</p>
-<p class="mb-4 text-gray-300">               │             │</p>
-<p class="mb-4 text-gray-300">          SWIPE           TAP</p>
-<p class="mb-4 text-gray-300">               │             │</p>
-<p class="mb-4 text-gray-300">               ▼             ▼</p>
-<p class="mb-4 text-gray-300">        Neural Predictor  Short Gesture</p>
-<p class="mb-4 text-gray-300">        (onSwipeEnd)      Handler</code></pre></p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">3. The <code class="bg-ck-dark px-1 rounded">hasLeftStartingKey</code> Gatekeeper</h2>
-
-<p class="mb-4 text-gray-300">The <code class="bg-ck-dark px-1 rounded">hasLeftStartingKey</code> boolean flag is the <strong>single decision point</strong> that determines whether a gesture becomes a long swipe (neural prediction) or remains eligible for short gesture handling.</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Setting the Flag (During MOVE)</h3>
+<p class="mb-4 text-gray-300">This boolean flag is the single decision point determining gesture type:</p>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Pointers.kt, onTouchMove handler
-<p class="mb-4 text-gray-300">if (ptr.key != null &amp;&amp; !ptr.hasLeftStartingKey) {</p>
-<p class="mb-4 text-gray-300">    val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)</p>
-<p class="mb-4 text-gray-300">    val maxAllowedDistance = keyHypotenuse <em> (_config.short_gesture_max_distance / 100.0f)</p>
-<p class="mb-4 text-gray-300">    val distanceFromStart = sqrt((x - ptr.downX)² + (y - ptr.downY)²)</p>
+if (ptr.key != null &amp;&amp; !ptr.hasLeftStartingKey) {
+    val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)
+    val maxAllowedDistance = keyHypotenuse * (config.short_gesture_max_distance / 100.0f)
+    val distanceFromStart = sqrt((x - ptr.downX).pow(2) + (y - ptr.downY).pow(2))
 
-<p class="mb-4 text-gray-300">    if (distanceFromStart &gt; maxAllowedDistance) {</p>
-<p class="mb-4 text-gray-300">        ptr.hasLeftStartingKey = true  // Permanently set for this touch</p>
-<p class="mb-4 text-gray-300">    }</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
+    if (distanceFromStart &gt; maxAllowedDistance) {
+        ptr.hasLeftStartingKey = true  // Permanently set for this touch
+    }
+}</code></pre>
 
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Configuration</h2>
+
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Key</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Type</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Default</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Description</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">short_gesture_min_distance</code></td><td class="px-4 py-2 text-gray-300">Int</td><td class="px-4 py-2 text-gray-300">15</td><td class="px-4 py-2 text-gray-300">Min pixels for short swipe detection</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">short_gesture_max_distance</code></td><td class="px-4 py-2 text-gray-300">Int</td><td class="px-4 py-2 text-gray-300">50</td><td class="px-4 py-2 text-gray-300">Max % of key hypotenuse for short swipe (above = long swipe)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">tap_duration_threshold</code></td><td class="px-4 py-2 text-gray-300">Long</td><td class="px-4 py-2 text-gray-300">200</td><td class="px-4 py-2 text-gray-300">Max ms for tap vs swipe distinction</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">swipe_speed_threshold</code></td><td class="px-4 py-2 text-gray-300">Float</td><td class="px-4 py-2 text-gray-300">0.4</td><td class="px-4 py-2 text-gray-300">Min speed for swipe typing activation</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">circle_gesture_enabled</code></td><td class="px-4 py-2 text-gray-300">Boolean</td><td class="px-4 py-2 text-gray-300">true</td><td class="px-4 py-2 text-gray-300">Enable circle gestures for double letters</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Public API</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">GestureClassifier</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">class GestureClassifier(private val context: Context) {
+
+    enum class GestureType { TAP, SWIPE }
+
+    data class GestureData(
+        val hasLeftStartingKey: Boolean,
+        val totalDistance: Float,
+        val timeElapsed: Long,
+        val keyWidth: Float
+    )
+
+    fun classify(gesture: GestureData): GestureType {
+        val minSwipeDistance = gesture.keyWidth / 2.0f
+
+        return if (gesture.hasLeftStartingKey &amp;&amp;
+                   (gesture.totalDistance &gt;= minSwipeDistance ||
+                    gesture.timeElapsed &gt; maxTapDurationMs)) {
+            GestureType.SWIPE
+        } else {
+            GestureType.TAP
+        }
+    }
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Pointers Touch Handlers</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">class Pointers(
+    private val handler: Handler,
+    private val config: Config
+) {
+    // Called from Keyboard2View.onTouchEvent
+    fun onTouchEvent(event: MotionEvent): Boolean
+
+    // Internal handlers
+    private fun onTouchDown(ptr: Pointer, x: Float, y: Float)
+    private fun onTouchMove(ptr: Pointer, x: Float, y: Float)
+    private fun onTouchUp(ptr: Pointer)
+
+    // Gesture routing
+    private fun handleShortGesture(ptr: Pointer, direction: SwipeDirection)
+    private fun handleSwipeTyping(ptr: Pointer)
+}</code></pre>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Details</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Gesture Classification Logic</h3>
+
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">hasLeftStartingKey</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Distance</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Time</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Result</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">FALSE</td><td class="px-4 py-2 text-gray-300">any</td><td class="px-4 py-2 text-gray-300">any</td><td class="px-4 py-2 text-gray-300">TAP</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">TRUE</td><td class="px-4 py-2 text-gray-300">< keyWidth/2</td><td class="px-4 py-2 text-gray-300"><= tap_duration</td><td class="px-4 py-2 text-gray-300">TAP</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">TRUE</td><td class="px-4 py-2 text-gray-300">>= keyWidth/2</td><td class="px-4 py-2 text-gray-300">any</td><td class="px-4 py-2 text-gray-300">SWIPE</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">TRUE</td><td class="px-4 py-2 text-gray-300">any</td><td class="px-4 py-2 text-gray-300">> tap_duration</td><td class="px-4 py-2 text-gray-300">SWIPE</td></tr></tbody></table>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Key Dimension Calculation</h3>
 
 <p class="mb-4 text-gray-300">All thresholds use actual device pixels computed at runtime:</p>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Keyboard2View.kt
-<p class="mb-4 text-gray-300">override fun getKeyHypotenuse(key: KeyboardData.Key): Float {</p>
-<p class="mb-4 text-gray-300">    val tc = _tc ?: return 0f  // Theme.Computed with device-specific scaling</p>
+override fun getKeyHypotenuse(key: KeyboardData.Key): Float {
+    val tc = themeComputed ?: return 0f
+
+    // Find row height from layout
+    var normalizedRowHeight = 0f
+    for (row in keyboard.rows) {
+        for (k in row.keys) {
+            if (k == key) {
+                normalizedRowHeight = row.height
+                break
+            }
+        }
+    }
+
+    // Convert to actual pixels
+    val keyHeightPx = normalizedRowHeight * tc.row_height
+    val keyWidthPx = key.width * keyWidth
+
+    return sqrt(keyWidthPx.pow(2) + keyHeightPx.pow(2))  // Diagonal in pixels
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Short Swipe Direction Detection</h3>
+
+<p class="mb-4 text-gray-300">Direction calculated from delta between start and end positions:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">private fun calculateSwipeDirection(dx: Float, dy: Float): SwipeDirection {
+    val angle = atan2(-dy.toDouble(), dx.toDouble())  // Negative Y because screen coords
+    val degrees = Math.toDegrees(angle)
+
+    return when {
+        degrees in -22.5..22.5 -&gt; SwipeDirection.E
+        degrees in 22.5..67.5 -&gt; SwipeDirection.NE
+        degrees in 67.5..112.5 -&gt; SwipeDirection.N
+        degrees in 112.5..157.5 -&gt; SwipeDirection.NW
+        degrees &gt; 157.5 || degrees &lt; -157.5 -&gt; SwipeDirection.W
+        degrees in -157.5..-112.5 -&gt; SwipeDirection.SW
+        degrees in -112.5..-67.5 -&gt; SwipeDirection.S
+        degrees in -67.5..-22.5 -&gt; SwipeDirection.SE
+        else -&gt; SwipeDirection.E
+    }
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Circle Gesture Detection</h3>
+
+<p class="mb-4 text-gray-300">Circle gestures detected via rotation accumulation:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">class Gesture {
+    private var totalRotation: Float = 0f
+    private var lastAngle: Float = 0f
+
+    fun addPoint(x: Float, y: Float, centerX: Float, centerY: Float) {
+        val currentAngle = atan2(y - centerY, x - centerX)
+        val delta = normalizeAngle(currentAngle - lastAngle)
+        totalRotation += delta
+        lastAngle = currentAngle
+    }
+
+    fun isCircleComplete(): Boolean {
+        return abs(totalRotation) &gt;= 2 * PI  // Full circle (360 degrees)
+    }
+
+    fun getDirection(): CircleDirection {
+        return if (totalRotation &gt; 0) CircleDirection.CLOCKWISE
+               else CircleDirection.COUNTER_CLOCKWISE
+    }
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Swipe Typing Activation</h3>
+
+<p class="mb-4 text-gray-300">Long swipes trigger neural prediction when finger leaves starting key:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">private fun onTouchUp(ptr: Pointer) {
+    val gestureType = gestureClassifier.classify(GestureData(
+        hasLeftStartingKey = ptr.hasLeftStartingKey,
+        totalDistance = ptr.totalDistance,
+        timeElapsed = ptr.timeElapsed,
+        keyWidth = getKeyWidth(ptr.key)
+    ))
+
+    when (gestureType) {
+        GestureType.SWIPE -&gt; {
+            if (ptr.hasLeftStartingKey) {
+                // Long swipe - neural prediction
+                onSwipeEnd(ptr.swipePath)
+            } else {
+                // Short swipe - sublabel action
+                val direction = calculateSwipeDirection(ptr.dx, ptr.dy)
+                handleShortGesture(ptr, direction)
+            }
+        }
+        GestureType.TAP -&gt; {
+            handleTap(ptr.key)
+        }
+    }
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Pointer State</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">data class Pointer(
+    var key: KeyboardData.Key?,       // Starting key
+    var downX: Float,                  // Initial touch X
+    var downY: Float,                  // Initial touch Y
+    var currentX: Float,               // Current X
+    var currentY: Float,               // Current Y
+    var downTime: Long,                // Touch start time
+    var hasLeftStartingKey: Boolean,   // The gatekeeper flag
+    var swipePath: MutableList&lt;Point&gt;, // Path for neural prediction
+    var flags: Int                     // State flags (trackpoint, selection-delete, etc.)
+)</code></pre>
 
-<p class="mb-4 text-gray-300">    // Find row height (normalized value from layout XML)</p>
-<p class="mb-4 text-gray-300">    var normalizedRowHeight = 0f</p>
-<p class="mb-4 text-gray-300">    for (row in keyboard.rows) {</p>
-<p class="mb-4 text-gray-300">        for (k in row.keys) {</p>
-<p class="mb-4 text-gray-300">            if (k == key) {</p>
-<p class="mb-4 text-gray-300">                normalizedRowHeight = row.height</p>
-<p class="mb-4 text-gray-300">                break</p>
-<p class="mb-4 text-gray-300">            }</p>
-<p class="mb-4 text-gray-300">        }</p>
-<p class="mb-4 text-gray-300">    }</p>
-
-<p class="mb-4 text-gray-300">    // Convert to actual pixels</p>
-<p class="mb-4 text-gray-300">    val keyHeightPx = normalizedRowHeight </em> tc.row_height  // Device-specific</p>
-<p class="mb-4 text-gray-300">    val keyWidthPx = key.width <em> _keyWidth                 // Screen width / keys</p>
-
-<p class="mb-4 text-gray-300">    return sqrt(keyWidthPx² + keyHeightPx²)  // Diagonal in pixels</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
-
-<p class="mb-4 text-gray-300">Where:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">tc.row_height</code> = computed from device screen height and user's keyboard height percentage setting</li>
-<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">_keyWidth</code> = <code class="bg-ck-dark px-1 rounded">(screenWidth - margins) / keyboard.keysWidth</code></li>
-</ul>
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">4. GestureClassifier (TAP vs SWIPE)</h2>
-
-<p class="mb-4 text-gray-300">The <code class="bg-ck-dark px-1 rounded">GestureClassifier</code> provides unified classification on touch UP:</p>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// GestureClassifier.kt
-<p class="mb-4 text-gray-300">class GestureClassifier(private val context: Context) {</p>
-
-<p class="mb-4 text-gray-300">    private val maxTapDurationMs: Long</p>
-<p class="mb-4 text-gray-300">        get() = Config.globalConfig().tap_duration_threshold</p>
-
-<p class="mb-4 text-gray-300">    enum class GestureType { TAP, SWIPE }</p>
-
-<p class="mb-4 text-gray-300">    data class GestureData(</p>
-<p class="mb-4 text-gray-300">        val hasLeftStartingKey: Boolean,</p>
-<p class="mb-4 text-gray-300">        val totalDistance: Float,</p>
-<p class="mb-4 text-gray-300">        val timeElapsed: Long,</p>
-<p class="mb-4 text-gray-300">        val keyWidth: Float</p>
-<p class="mb-4 text-gray-300">    )</p>
-
-<p class="mb-4 text-gray-300">    fun classify(gesture: GestureData): GestureType {</p>
-<p class="mb-4 text-gray-300">        val minSwipeDistance = gesture.keyWidth / 2.0f</p>
-
-<p class="mb-4 text-gray-300">        return if (gesture.hasLeftStartingKey &amp;&amp;</p>
-<p class="mb-4 text-gray-300">                   (gesture.totalDistance &gt;= minSwipeDistance ||</p>
-<p class="mb-4 text-gray-300">                    gesture.timeElapsed &gt; maxTapDurationMs)) {</p>
-<p class="mb-4 text-gray-300">            GestureType.SWIPE</p>
-<p class="mb-4 text-gray-300">        } else {</p>
-<p class="mb-4 text-gray-300">            GestureType.TAP</p>
-<p class="mb-4 text-gray-300">        }</p>
-<p class="mb-4 text-gray-300">    }</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Classification Logic</h3>
-
-<p class="mb-4 text-gray-300">| hasLeftStartingKey | Distance | Time | Result |</p>
-<p class="mb-4 text-gray-300">|--------------------|----------|------|--------|</p>
-<p class="mb-4 text-gray-300">| FALSE | any | any | TAP |</p>
-<p class="mb-4 text-gray-300">| TRUE | < keyWidth/2 | <= tap_duration | TAP |</p>
-<p class="mb-4 text-gray-300">| TRUE | >= keyWidth/2 | any | SWIPE |</p>
-<p class="mb-4 text-gray-300">| TRUE | any | > tap_duration | SWIPE |</p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">5. Short Gesture Detection</h2>
-
-<p class="mb-4 text-gray-300">When classified as TAP, short gesture detection checks if the movement qualifies as a directional swipe within the key.</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">5.1 Dual Threshold System: SHORT_GESTURE_MIN_DISTANCE vs SWIPE_DIST</h3>
-
-<p class="mb-4 text-gray-300">CleverKeys uses <strong>two complementary thresholds</strong> to determine the minimum distance required for a short gesture. This dual system ensures wide keys (like Backspace, Space) don't require massive swipes while small keys don't trigger accidentally.</p>
-
-<p class="mb-4 text-gray-300">#### The Two Threshold Types</p>
-
-<p class="mb-4 text-gray-300">| Setting | Type | Default | Storage | Purpose |</p>
-<p class="mb-4 text-gray-300">|---------|------|---------|---------|---------|</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">short_gesture_min_distance</code> | <strong>Relative</strong> (% of key diagonal) | 37% | Int in prefs | Scales with key size |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">swipe_dist</code> → <code class="bg-ck-dark px-1 rounded">swipe_dist_px</code> | <strong>Absolute</strong> (screen-scaled pixels) | 23 | String in prefs | Fixed pixel cap |</p>
-
-<p class="mb-4 text-gray-300">#### How They Work Together (Pointers.kt:287-299)</p>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// 1. PERCENTAGE-BASED threshold: % of key's diagonal (hypotenuse)
-<p class="mb-4 text-gray-300">val percentMinThreshold = keyHypotenuse </em> (_config.short_gesture_min_distance / 100.0f)</p>
-
-<p class="mb-4 text-gray-300">// 2. ABSOLUTE threshold: swipe_dist converted to device-specific pixels</p>
-<p class="mb-4 text-gray-300">val absoluteThreshold = _config.swipe_dist_px.toFloat()</p>
-
-<p class="mb-4 text-gray-300">// 3. Relaxation factor (0.8x) for Manhattan→Euclidean conversion</p>
-<p class="mb-4 text-gray-300">// Manhattan distance is ~1.4x Euclidean for diagonals</p>
-<p class="mb-4 text-gray-300">val effectiveAbsolute = if (absoluteThreshold &gt; 0) absoluteThreshold <em> 0.8f else Float.MAX_VALUE</p>
-
-<p class="mb-4 text-gray-300">// 4. USE THE SMALLER (easier to trigger) THRESHOLD</p>
-<p class="mb-4 text-gray-300">val minDistance = min(percentMinThreshold, effectiveAbsolute)</code></pre></p>
-
-<p class="mb-4 text-gray-300">#### Why MIN() Instead of MAX()?</p>
-
-<p class="mb-4 text-gray-300"><strong>Problem</strong>: Different key sizes need different thresholds.</p>
-
-<p class="mb-4 text-gray-300">| Key Type | Typical Width | Hypotenuse | 37% of Hypotenuse |</p>
-<p class="mb-4 text-gray-300">|----------|---------------|------------|-------------------|</p>
-<p class="mb-4 text-gray-300">| Letter (Q,W,E...) | ~90px | ~127px | <strong>~47px</strong> |</p>
-<p class="mb-4 text-gray-300">| Backspace | ~180px | ~254px | <strong>~94px</strong> |</p>
-<p class="mb-4 text-gray-300">| Space bar | ~400px | ~410px | <strong>~152px</strong> |</p>
-
-<p class="mb-4 text-gray-300">Without the absolute threshold cap, you'd need to swipe <strong>152 pixels</strong> on the space bar just to trigger a short gesture — far too much!</p>
-
-<p class="mb-4 text-gray-300"><strong>Solution</strong>: Take the <strong>minimum</strong> of:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>Percentage-based</strong> (prevents accidental triggers on small keys)</li>
-<li class="ml-4">2. <strong>Absolute</strong> (caps the maximum for wide keys)</li>
-</ul>
-<p class="mb-4 text-gray-300">#### Practical Examples</p>
-
-<p class="mb-4 text-gray-300"><strong>Backspace key</strong> (180px wide, ~254px diagonal):</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Percentage threshold: 254 × 0.37 = <strong>94px</strong></li>
-<li class="ml-4">&#8226; Absolute threshold: ~70px (after DPI scaling and 0.8 factor)</li>
-<li class="ml-4">&#8226; <strong>Effective threshold</strong>: <code class="bg-ck-dark px-1 rounded">min(94, 70)</code> = <strong>70px</strong> ← absolute wins</li>
-</ul>
-<p class="mb-4 text-gray-300"><strong>Small letter key</strong> (90px wide, ~127px diagonal):</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Percentage threshold: 127 × 0.37 = <strong>47px</strong></li>
-<li class="ml-4">&#8226; Absolute threshold: ~70px</li>
-<li class="ml-4">&#8226; <strong>Effective threshold</strong>: <code class="bg-ck-dark px-1 rounded">min(47, 70)</code> = <strong>47px</strong> ← percentage wins</li>
-</ul>
-<p class="mb-4 text-gray-300">#### swipe_dist_px Calculation (Config.kt:353-356)</p>
-
-<p class="mb-4 text-gray-300">The raw <code class="bg-ck-dark px-1 rounded">swipe_dist</code> preference value (stored as string "23") is converted to device-specific pixels:</p>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// DPI ratio accounts for non-square pixels
-<p class="mb-4 text-gray-300">val dpi_ratio = maxOf(dm.xdpi, dm.ydpi) / minOf(dm.xdpi, dm.ydpi)</p>
-
-<p class="mb-4 text-gray-300">// Base scaling from screen dimensions</p>
-<p class="mb-4 text-gray-300">val swipe_scaling = minOf(dm.widthPixels, dm.heightPixels) / 10f </em> dpi_ratio</p>
-
-<p class="mb-4 text-gray-300">// Convert preference value (0-100 scale) to pixels</p>
-<p class="mb-4 text-gray-300">val swipe_dist_value = safeGetString(_prefs, "swipe_dist", "23").toFloatOrNull() ?: 23f</p>
-<p class="mb-4 text-gray-300">swipe_dist_px = swipe_dist_value / 25f <em> swipe_scaling</code></pre></p>
-
-<p class="mb-4 text-gray-300">This normalization produces approximately:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ~70-100px on a 1080p phone (5-6" screen)</li>
-<li class="ml-4">&#8226; ~100-140px on a 1440p phone/tablet</li>
-</ul>
-<p class="mb-4 text-gray-300">#### Tuning Guidelines</p>
-
-<p class="mb-4 text-gray-300">| Symptom | Adjust |</p>
-<p class="mb-4 text-gray-300">|---------|--------|</p>
-<p class="mb-4 text-gray-300">| Accidental triggers on small letter keys | <strong>Increase</strong> <code class="bg-ck-dark px-1 rounded">short_gesture_min_distance</code> (e.g., 37 → 45%) |</p>
-<p class="mb-4 text-gray-300">| Hard to trigger on small keys | <strong>Decrease</strong> <code class="bg-ck-dark px-1 rounded">short_gesture_min_distance</code> (e.g., 37 → 30%) |</p>
-<p class="mb-4 text-gray-300">| Accidental triggers on wide keys (Space, Backspace) | <strong>Increase</strong> <code class="bg-ck-dark px-1 rounded">swipe_dist</code> (e.g., 23 → 30) |</p>
-<p class="mb-4 text-gray-300">| Hard to trigger on wide keys | <strong>Decrease</strong> <code class="bg-ck-dark px-1 rounded">swipe_dist</code> (e.g., 23 → 18) |</p>
-
-<p class="mb-4 text-gray-300">#### Related Settings</p>
-
-<p class="mb-4 text-gray-300">| Setting | Default | Effect |</p>
-<p class="mb-4 text-gray-300">|---------|---------|--------|</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">short_gesture_max_distance</code> | 141% | Maximum travel before becoming a long swipe (exits key boundary) |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">short_gestures_enabled</code> | true | Master toggle for short gesture detection |</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">5.2 Short Gesture Detection Flow</h3>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Pointers.kt, onTouchUp handler
-<p class="mb-4 text-gray-300">if (_config.short_gestures_enabled &amp;&amp; !ptr.hasLeftStartingKey) {</p>
-<p class="mb-4 text-gray-300">    val dx = ptr.lastX - ptr.downX</p>
-<p class="mb-4 text-gray-300">    val dy = ptr.lastY - ptr.downY</p>
-<p class="mb-4 text-gray-300">    val distance = sqrt(dx </em> dx + dy <em> dy)</p>
-
-<p class="mb-4 text-gray-300">    // Calculate dual threshold (see Section 5.1)</p>
-<p class="mb-4 text-gray-300">    val keyHypotenuse = _handler.getKeyHypotenuse(ptr.key)</p>
-<p class="mb-4 text-gray-300">    val percentMinThreshold = keyHypotenuse </em> (_config.short_gesture_min_distance / 100.0f)</p>
-<p class="mb-4 text-gray-300">    val absoluteThreshold = _config.swipe_dist_px.toFloat()</p>
-<p class="mb-4 text-gray-300">    val effectiveAbsolute = if (absoluteThreshold &gt; 0) absoluteThreshold <em> 0.8f else Float.MAX_VALUE</p>
-<p class="mb-4 text-gray-300">    val minDistance = min(percentMinThreshold, effectiveAbsolute)</p>
-
-<p class="mb-4 text-gray-300">    if (distance &gt;= minDistance) {</p>
-<p class="mb-4 text-gray-300">        // Calculate 16-direction (0-15)</p>
-<p class="mb-4 text-gray-300">        val angle = atan2(dy, dx) + Math.PI</p>
-<p class="mb-4 text-gray-300">        val direction = ((angle </em> 8 / Math.PI).toInt() + 12) % 16</p>
-
-<p class="mb-4 text-gray-300">        // Map to 8-direction for sublabel lookup</p>
-<p class="mb-4 text-gray-300">        val gestureValue = getNearestKeyAtDirection(ptr, direction)</p>
-<p class="mb-4 text-gray-300">        if (gestureValue != null) {</p>
-<p class="mb-4 text-gray-300">            _handler.onPointerDown(gestureValue, false)</p>
-<p class="mb-4 text-gray-300">            _handler.onPointerUp(gestureValue, ptr.modifiers)</p>
-<p class="mb-4 text-gray-300">            return  // Exit - gesture handled</p>
-<p class="mb-4 text-gray-300">        }</p>
-<p class="mb-4 text-gray-300">    }</p>
-<p class="mb-4 text-gray-300">}</p>
-<p class="mb-4 text-gray-300">// Fall through to regular TAP handling</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Direction Mapping</h3>
-
-<p class="mb-4 text-gray-300">16-direction to key position mapping:</p>
-
-<p class="mb-4 text-gray-300">| Direction | Angle Range | Key Position |</p>
-<p class="mb-4 text-gray-300">|-----------|-------------|--------------|</p>
-<p class="mb-4 text-gray-300">| 0 | 348.75° - 11.25° | East (E) |</p>
-<p class="mb-4 text-gray-300">| 2 | 33.75° - 56.25° | Southeast (SE) |</p>
-<p class="mb-4 text-gray-300">| 4 | 78.75° - 101.25° | South (S) |</p>
-<p class="mb-4 text-gray-300">| 6 | 123.75° - 146.25° | Southwest (SW) |</p>
-<p class="mb-4 text-gray-300">| 8 | 168.75° - 191.25° | West (W) |</p>
-<p class="mb-4 text-gray-300">| 10 | 213.75° - 236.25° | Northwest (NW) |</p>
-<p class="mb-4 text-gray-300">| 12 | 258.75° - 281.25° | North (N) |</p>
-<p class="mb-4 text-gray-300">| 14 | 303.75° - 326.25° | Northeast (NE) |</p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">6. Circle/Rotation Gesture State Machine</h2>
-
-<p class="mb-4 text-gray-300">The <code class="bg-ck-dark px-1 rounded">Gesture.kt</code> class implements a state machine for detecting rotation patterns, primarily used for Slider activation:</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">States</h3>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">enum class State {
-<p class="mb-4 text-gray-300">    Cancelled,              // Gesture was cancelled (rotation reversed)</p>
-<p class="mb-4 text-gray-300">    Swiped,                 // Initial swipe, no rotation detected yet</p>
-<p class="mb-4 text-gray-300">    Rotating_clockwise,     // Clockwise rotation in progress</p>
-<p class="mb-4 text-gray-300">    Rotating_anticlockwise, // Counter-clockwise rotation in progress</p>
-<p class="mb-4 text-gray-300">    Ended_swipe,            // Simple swipe completed</p>
-<p class="mb-4 text-gray-300">    Ended_center,           // Roundtrip (swipe out and back)</p>
-<p class="mb-4 text-gray-300">    Ended_clockwise,        // Clockwise circle completed</p>
-<p class="mb-4 text-gray-300">    Ended_anticlockwise     // Counter-clockwise circle completed</p>
-<p class="mb-4 text-gray-300">}</p>
-
-<p class="mb-4 text-gray-300">enum class Name {</p>
-<p class="mb-4 text-gray-300">    None,        // Cancelled</p>
-<p class="mb-4 text-gray-300">    Swipe,       // Simple directional swipe</p>
-<p class="mb-4 text-gray-300">    Roundtrip,   // Swipe out and return to center</p>
-<p class="mb-4 text-gray-300">    Circle,      // Clockwise rotation</p>
-<p class="mb-4 text-gray-300">    Anticircle   // Counter-clockwise rotation</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Direction Difference Algorithm</h3>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Find shortest path between two directions on 16-point circle
-<p class="mb-4 text-gray-300">fun dirDiff(d1: Int, d2: Int): Int {</p>
-<p class="mb-4 text-gray-300">    val n = 16</p>
-<p class="mb-4 text-gray-300">    if (d1 == d2) return 0</p>
-<p class="mb-4 text-gray-300">    val left = (d1 - d2 + n) % n</p>
-<p class="mb-4 text-gray-300">    val right = (d2 - d1 + n) % n</p>
-<p class="mb-4 text-gray-300">    return if (left &lt; right) -left else right</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
-
-<p class="mb-4 text-gray-300">Key insight: Uses modular arithmetic for circular distance:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Direction 1 → 15: diff = +2 (wraps around, not -14)</li>
-<li class="ml-4">&#8226; Direction 15 → 1: diff = -2 (wraps around, not +14)</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">State Transitions</h3>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">Touch Down (direction D)
-<p class="mb-4 text-gray-300">        │</p>
-<p class="mb-4 text-gray-300">        ▼</p>
-<p class="mb-4 text-gray-300">   [Swiped, dir=D]</p>
-<p class="mb-4 text-gray-300">        │</p>
-<p class="mb-4 text-gray-300">Direction change detected?</p>
-<p class="mb-4 text-gray-300">(|dirDiff| &gt;= circle_sensitivity)</p>
-<p class="mb-4 text-gray-300">        │</p>
-<p class="mb-4 text-gray-300">   ┌────┴────┐</p>
-<p class="mb-4 text-gray-300">   NO        YES</p>
-<p class="mb-4 text-gray-300">   │         │</p>
-<p class="mb-4 text-gray-300">   │    ┌────┴────┐</p>
-<p class="mb-4 text-gray-300">   │    CW       CCW</p>
-<p class="mb-4 text-gray-300">   │    │         │</p>
-<p class="mb-4 text-gray-300">   │    ▼         ▼</p>
-<p class="mb-4 text-gray-300">   │ [Rotating   [Rotating</p>
-<p class="mb-4 text-gray-300">   │  _clockwise] _anticlockwise]</p>
-<p class="mb-4 text-gray-300">   │    │         │</p>
-<p class="mb-4 text-gray-300">   │    └────┬────┘</p>
-<p class="mb-4 text-gray-300">   │         │</p>
-<p class="mb-4 text-gray-300">   │    Rotation reversed?</p>
-<p class="mb-4 text-gray-300">   │    ┌────┴────┐</p>
-<p class="mb-4 text-gray-300">   │    YES       NO</p>
-<p class="mb-4 text-gray-300">   │    │         │</p>
-<p class="mb-4 text-gray-300">   │    ▼         │</p>
-<p class="mb-4 text-gray-300">   │ [Cancelled]  │</p>
-<p class="mb-4 text-gray-300">   │              │</p>
-<p class="mb-4 text-gray-300">   └──────┬──────┘</p>
-<p class="mb-4 text-gray-300">          │</p>
-<p class="mb-4 text-gray-300">     Touch Up</p>
-<p class="mb-4 text-gray-300">          │</p>
-<p class="mb-4 text-gray-300">   Return to center?</p>
-<p class="mb-4 text-gray-300">   ┌──────┴──────┐</p>
-<p class="mb-4 text-gray-300">   YES           NO</p>
-<p class="mb-4 text-gray-300">   │             │</p>
-<p class="mb-4 text-gray-300">   ▼             ▼</p>
-<p class="mb-4 text-gray-300">[Ended_center] [Ended_* based on state]</p>
-<p class="mb-4 text-gray-300">   │             │</p>
-<p class="mb-4 text-gray-300">   ▼             ▼</p>
-<p class="mb-4 text-gray-300">Roundtrip    Swipe/Circle/Anticircle</code></pre></p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">7. Configuration Options</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Config.kt Settings</h3>
-
-<p class="mb-4 text-gray-300">| Setting | Type | Default | Range | Description |</p>
-<p class="mb-4 text-gray-300">|---------|------|---------|-------|-------------|</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">short_gestures_enabled</code> | Boolean | true | — | Enable short gesture detection |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">short_gesture_min_distance</code> | Int | 37 | 10-95% | Minimum travel to trigger (% of key diagonal) |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">short_gesture_max_distance</code> | Int | 141 | 50-200% | Maximum travel before becoming long swipe |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">swipe_dist</code> | String | "23" | 0-100 | Absolute threshold base (see Section 5.1) |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">swipe_dist_px</code> | Float | varies | — | Computed from swipe_dist + screen DPI |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">tap_duration_threshold</code> | Long | 150 | 50-500ms | Maximum duration for TAP classification |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">swipe_typing_enabled</code> | Boolean | true | — | Enable neural swipe prediction |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">circle_sensitivity</code> | Int | 2 | 1-8 | Minimum direction change for rotation detection |</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Threshold Behavior</h3>
-
-<p class="mb-4 text-gray-300">| max_distance | Effect |</p>
-<p class="mb-4 text-gray-300">|--------------|--------|</p>
-<p class="mb-4 text-gray-300">| 50% | Very strict - must stay within half key diagonal |</p>
-<p class="mb-4 text-gray-300">| 100% | Standard - can travel one full key diagonal |</p>
-<p class="mb-4 text-gray-300">| 150% | Lenient - 1.5× key diagonal allowed |</p>
-<p class="mb-4 text-gray-300">| 200% | Effectively disabled - very permissive |</p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">8. Pipeline Mutual Exclusivity</h2>
-
-<p class="mb-4 text-gray-300">The gesture pipelines are mutually exclusive by design:</p>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">hasLeftStartingKey = TRUE
-<p class="mb-4 text-gray-300">    → GestureClassifier returns SWIPE (if conditions met)</p>
-<p class="mb-4 text-gray-300">    → onSwipeEnd() called</p>
-<p class="mb-4 text-gray-300">    → return (exit early)</p>
-<p class="mb-4 text-gray-300">    → Short gesture code NEVER executes</p>
-
-<p class="mb-4 text-gray-300">hasLeftStartingKey = FALSE</p>
-<p class="mb-4 text-gray-300">    → GestureClassifier returns TAP</p>
-<p class="mb-4 text-gray-300">    → Short gesture check runs</p>
-<p class="mb-4 text-gray-300">    → Requires !ptr.hasLeftStartingKey (satisfied)</p>
-<p class="mb-4 text-gray-300">    → Short gesture may trigger OR fall through to regular TAP</code></pre></p>
-
-<p class="mb-4 text-gray-300"><strong>Guarantee</strong>: Both pipelines cannot trigger for the same touch event because <code class="bg-ck-dark px-1 rounded">hasLeftStartingKey</code> is a single boolean that gates both paths.</p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">9. Integration Points</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Keyboard2View.kt</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Captures raw touch events</li>
-<li class="ml-4">&#8226; Calls <code class="bg-ck-dark px-1 rounded">Pointers.onTouchDown/Move/Up</code></li>
-<li class="ml-4">&#8226; Implements <code class="bg-ck-dark px-1 rounded">getKeyHypotenuse()</code> for threshold calculation</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">KeyEventHandler.kt</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Receives gesture results via <code class="bg-ck-dark px-1 rounded">onPointerDown/Up</code></li>
-<li class="ml-4">&#8226; Executes key actions based on gesture direction</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">IPointerEventHandler Interface</h3>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">interface IPointerEventHandler {
-<p class="mb-4 text-gray-300">    fun onPointerDown(value: KeyValue, isSwipe: Boolean)</p>
-<p class="mb-4 text-gray-300">    fun onPointerUp(value: KeyValue, mods: Modifiers)</p>
-<p class="mb-4 text-gray-300">    fun onSwipeMove(x: Float, y: Float, recognizer: SwipeRecognizer)</p>
-<p class="mb-4 text-gray-300">    fun onSwipeEnd(recognizer: SwipeRecognizer)</p>
-<p class="mb-4 text-gray-300">    fun getKeyHypotenuse(key: KeyboardData.Key): Float</p>
-<p class="mb-4 text-gray-300">    fun getKeyWidth(key: KeyboardData.Key): Float</p>
-<p class="mb-4 text-gray-300">    // ...</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">10. Performance Characteristics</h2>
-
-<p class="mb-4 text-gray-300">| Operation | Complexity | Latency |</p>
-<p class="mb-4 text-gray-300">|-----------|------------|---------|</p>
-<p class="mb-4 text-gray-300">| Direction calculation | O(1) | < 0.1ms |</p>
-<p class="mb-4 text-gray-300">| GestureClassifier.classify() | O(1) | < 0.1ms |</p>
-<p class="mb-4 text-gray-300">| hasLeftStartingKey check | O(1) | < 0.1ms |</p>
-<p class="mb-4 text-gray-300">| Short gesture direction lookup | O(n) | < 1ms |</p>
-<p class="mb-4 text-gray-300">| State machine transition | O(1) | < 0.1ms |</p>
-
-<p class="mb-4 text-gray-300">All operations avoid heap allocations in the hot path.</p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">11. Related Specifications</h2>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <a href="short-swipe-customization.md" class="text-ck-purple hover:underline">Short Swipe Customization</a> - User-defined gesture mappings</li>
-<li class="ml-4">&#8226; <a href="neural-prediction.md" class="text-ck-purple hover:underline">Neural Prediction</a> - Swipe typing word prediction</li>
-<li class="ml-4">&#8226; <a href="settings-system.md" class="text-ck-purple hover:underline">Settings System</a> - Configuration UI</li>
-</ul>
         </div>
     </main>
 

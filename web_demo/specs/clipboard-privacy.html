@@ -70,128 +70,120 @@
     <!-- Content -->
     <main class="container mx-auto px-6 pb-20">
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
-            <h1 class="text-3xl font-bold mb-6 gradient-text">Clipboard Privacy Specification</h1>
-
-<p class="mb-4 text-gray-300"><strong>Status</strong>: Implemented</p>
-<p class="mb-4 text-gray-300"><strong>Version</strong>: 1.2.8</p>
-<p class="mb-4 text-gray-300"><strong>Last Updated</strong>: 2026-01-15</p>
+            <h1 class="text-3xl font-bold mb-6 gradient-text">Clipboard Privacy</h1>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
 
-<p class="mb-4 text-gray-300">CleverKeys includes privacy features for the clipboard history system. The primary feature is automatic exclusion of clipboard entries from password managers, preventing sensitive credentials from being stored in clipboard history.</p>
+<p class="mb-4 text-gray-300">CleverKeys includes privacy features for the clipboard history system, primarily automatic exclusion of clipboard entries from password managers. When enabled, CleverKeys detects when the foreground app is a password manager and skips storing clipboard content, preventing sensitive credentials from appearing in clipboard history.</p>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Password Manager Exclusion</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Key Files</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Feature Description</h3>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">File</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Class/Function</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Purpose</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Config.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">PASSWORD_MANAGER_PACKAGES</code></td><td class="px-4 py-2 text-gray-300">Set of excluded package names</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/ClipboardHistoryService.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">getForegroundAppPackage()</code></td><td class="px-4 py-2 text-gray-300">Detects current foreground app</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/ClipboardHistoryService.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">isPasswordManagerApp()</code></td><td class="px-4 py-2 text-gray-300">Checks if package is excluded</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/ClipboardHistoryService.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">addCurrentClip()</code></td><td class="px-4 py-2 text-gray-300">Skips storage if excluded app</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt</code></td><td class="px-4 py-2 text-gray-300">Clipboard section</td><td class="px-4 py-2 text-gray-300">UI toggle for feature</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Architecture</h2>
 
-<p class="mb-4 text-gray-300">When enabled, CleverKeys automatically detects when the foreground app is a password manager and skips storing clipboard content from those apps. This prevents passwords, usernames, and other sensitive data from appearing in clipboard history.</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">Clipboard Change Event
+       |
+       v
++----------------------+
+| ClipboardHistory     | -- System notifies of clipboard change
+| Service              |
++----------------------+
+       |
+       v
++----------------------+
+| getForegroundApp     | -- Detect which app copied
+| Package()            |
++----------------------+
+       |
+       v
++----------------------+
+| isPasswordManager    | -- Check against exclusion list
+| App()                |
++----------------------+
+       |
+       v (if NOT excluded)
++----------------------+
+| Store to clipboard   | -- Save to history database
+| history              |
++----------------------+</code></pre>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Configuration</h2>
+
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Key</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Type</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Default</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Description</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">clipboard_exclude_password_managers</code></td><td class="px-4 py-2 text-gray-300">Boolean</td><td class="px-4 py-2 text-gray-300">true</td><td class="px-4 py-2 text-gray-300">Skip clipboard from password managers</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Details</h2>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Supported Password Managers</h3>
 
-<p class="mb-4 text-gray-300">The following package names are recognized (defined in <code class="bg-ck-dark px-1 rounded">Config.kt</code>):</p>
+<p class="mb-4 text-gray-300">Package names recognized (defined in <code class="bg-ck-dark px-1 rounded">Config.kt</code>):</p>
 
-<p class="mb-4 text-gray-300">| App | Package Name |</p>
-<p class="mb-4 text-gray-300">|-----|--------------|</p>
-<p class="mb-4 text-gray-300">| Bitwarden | <code class="bg-ck-dark px-1 rounded">com.x8bit.bitwarden</code> |</p>
-<p class="mb-4 text-gray-300">| 1Password | <code class="bg-ck-dark px-1 rounded">com.onepassword.android</code>, <code class="bg-ck-dark px-1 rounded">com.agilebits.onepassword</code> |</p>
-<p class="mb-4 text-gray-300">| LastPass | <code class="bg-ck-dark px-1 rounded">com.lastpass.lpandroid</code> |</p>
-<p class="mb-4 text-gray-300">| Dashlane | <code class="bg-ck-dark px-1 rounded">com.dashlane</code> |</p>
-<p class="mb-4 text-gray-300">| KeePass2Android | <code class="bg-ck-dark px-1 rounded">keepass2android.keepass2android</code>, <code class="bg-ck-dark px-1 rounded">keepass2android.keepass2android_nonet</code> |</p>
-<p class="mb-4 text-gray-300">| KeePassDX | <code class="bg-ck-dark px-1 rounded">com.kunzisoft.keepass.free</code>, <code class="bg-ck-dark px-1 rounded">com.kunzisoft.keepass.pro</code> |</p>
-<p class="mb-4 text-gray-300">| OpenKeePass | <code class="bg-ck-dark px-1 rounded">de.slackspace.openkeepass</code> |</p>
-<p class="mb-4 text-gray-300">| Enpass | <code class="bg-ck-dark px-1 rounded">io.enpass.app</code> |</p>
-<p class="mb-4 text-gray-300">| NordPass | <code class="bg-ck-dark px-1 rounded">com.nordpass.android.app.password.manager</code> |</p>
-<p class="mb-4 text-gray-300">| RoboForm | <code class="bg-ck-dark px-1 rounded">com.siber.roboform</code> |</p>
-<p class="mb-4 text-gray-300">| Keeper | <code class="bg-ck-dark px-1 rounded">com.callpod.android_apps.keeper</code> |</p>
-<p class="mb-4 text-gray-300">| Proton Pass | <code class="bg-ck-dark px-1 rounded">proton.android.pass</code> |</p>
-<p class="mb-4 text-gray-300">| SafeInCloud | <code class="bg-ck-dark px-1 rounded">com.safeincloud</code> |</p>
-<p class="mb-4 text-gray-300">| mSecure | <code class="bg-ck-dark px-1 rounded">com.msecure</code> |</p>
-<p class="mb-4 text-gray-300">| Zoho Vault | <code class="bg-ck-dark px-1 rounded">com.zoho.vault</code> |</p>
-<p class="mb-4 text-gray-300">| Sticky Password | <code class="bg-ck-dark px-1 rounded">com.stickypassword.android</code> |</p>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">App</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Package Name</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Bitwarden</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">com.x8bit.bitwarden</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">1Password</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">com.onepassword.android</code>, <code class="bg-ck-dark px-1 rounded">com.agilebits.onepassword</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">LastPass</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">com.lastpass.lpandroid</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Dashlane</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">com.dashlane</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">KeePass2Android</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">keepass2android.keepass2android</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">KeePassDX</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">com.kunzisoft.keepass.free</code>, <code class="bg-ck-dark px-1 rounded">com.kunzisoft.keepass.pro</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Enpass</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">io.enpass.app</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">NordPass</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">com.nordpass.android.app.password.manager</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">RoboForm</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">com.siber.roboform</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Keeper</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">com.callpod.android_apps.keeper</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Proton Pass</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">proton.android.pass</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">SafeInCloud</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">com.safeincloud</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">mSecure</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">com.msecure</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Zoho Vault</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">com.zoho.vault</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Sticky Password</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">com.stickypassword.android</code></td></tr></tbody></table>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Foreground App Detection</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Implementation</h3>
+<p class="mb-4 text-gray-300">Primary method uses <code class="bg-ck-dark px-1 rounded">UsageStatsManager</code> (Android 5.1+):</p>
 
-<p class="mb-4 text-gray-300">#### Config.kt</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">private fun getForegroundAppPackage(): String? {
+    val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE)
+        as UsageStatsManager
+    val endTime = System.currentTimeMillis()
+    val startTime = endTime - 1000 * 60  // Last minute
 
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Default setting
-<p class="mb-4 text-gray-300">const val CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS = true</p>
+    val usageStats = usageStatsManager.queryUsageStats(
+        UsageStatsManager.INTERVAL_DAILY, startTime, endTime
+    )
+    return usageStats.maxByOrNull { it.lastTimeUsed }?.packageName
+}</code></pre>
 
-<p class="mb-4 text-gray-300">// Package name list</p>
-<p class="mb-4 text-gray-300">val PASSWORD_MANAGER_PACKAGES = setOf(</p>
-<p class="mb-4 text-gray-300">    "com.x8bit.bitwarden",</p>
-<p class="mb-4 text-gray-300">    "com.onepassword.android",</p>
-<p class="mb-4 text-gray-300">    // ... (20+ packages)</p>
-<p class="mb-4 text-gray-300">)</code></pre></p>
+<p class="mb-4 text-gray-300">Fallback uses <code class="bg-ck-dark px-1 rounded">ActivityManager</code> (deprecated but still works):</p>
 
-<p class="mb-4 text-gray-300">#### ClipboardHistoryService.kt</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">private fun getForegroundAppPackageFallback(): String? {
+    val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE)
+        as ActivityManager
+    val runningTasks = activityManager.getRunningTasks(1)
+    return runningTasks.firstOrNull()?.topActivity?.packageName
+}</code></pre>
 
-<p class="mb-4 text-gray-300">Key methods:</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Exclusion Check</h3>
 
-<p class="mb-4 text-gray-300">| Method | Purpose |</p>
-<p class="mb-4 text-gray-300">|--------|---------|</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">getForegroundAppPackage()</code> | Detects current foreground app |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">isPasswordManagerApp(packageName)</code> | Checks if package is in exclusion list |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">addCurrentClip()</code> | Skips storage if password manager detected |</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">private fun isPasswordManagerApp(packageName: String?): Boolean {
+    if (packageName == null) return false
+    return PASSWORD_MANAGER_PACKAGES.contains(packageName)
+}
 
-<p class="mb-4 text-gray-300"><strong>Foreground App Detection:</strong></p>
+private fun addCurrentClip() {
+    if (config.clipboardExcludePasswordManagers) {
+        val foregroundApp = getForegroundAppPackage()
+        if (isPasswordManagerApp(foregroundApp)) {
+            return  // Skip storage
+        }
+    }
+    // Proceed with normal storage
+    saveToHistory(clipboardManager.primaryClip)
+}</code></pre>
 
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Primary: UsageStatsManager (Android 5.1+)
-<p class="mb-4 text-gray-300">val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE)</p>
-<p class="mb-4 text-gray-300">val usageStats = usageStatsManager.queryUsageStats(INTERVAL_DAILY, startTime, endTime)</p>
-<p class="mb-4 text-gray-300">val recentApp = usageStats.maxByOrNull { it.lastTimeUsed }</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Settings UI</h3>
 
-<p class="mb-4 text-gray-300">// Fallback: ActivityManager (deprecated but works)</p>
-<p class="mb-4 text-gray-300">val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE)</p>
-<p class="mb-4 text-gray-300">val runningTasks = activityManager.getRunningTasks(1)</p>
-<p class="mb-4 text-gray-300">return runningTasks[0].topActivity?.packageName</code></pre></p>
-
-<p class="mb-4 text-gray-300">#### SettingsActivity.kt</p>
-
-<p class="mb-4 text-gray-300">UI toggle in Clipboard section:</p>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">SettingsToggle(
-<p class="mb-4 text-gray-300">    title = "Exclude Password Managers",</p>
-<p class="mb-4 text-gray-300">    description = "Don't store clipboard from Bitwarden, 1Password, LastPass, KeePass, etc.",</p>
-<p class="mb-4 text-gray-300">    checked = clipboardExcludePasswordManagers,</p>
-<p class="mb-4 text-gray-300">    onCheckedChange = { saveSetting("clipboard_exclude_password_managers", it) }</p>
-<p class="mb-4 text-gray-300">)</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Settings</h3>
-
-<p class="mb-4 text-gray-300">| Setting | Key | Default | Description |</p>
-<p class="mb-4 text-gray-300">|---------|-----|---------|-------------|</p>
-<p class="mb-4 text-gray-300">| Exclude Password Managers | <code class="bg-ck-dark px-1 rounded">clipboard_exclude_password_managers</code> | <code class="bg-ck-dark px-1 rounded">true</code> | Skip clipboard from password managers |</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">SettingsSwitch(
+    title = "Exclude Password Managers",
+    description = "Don't store clipboard from Bitwarden, 1Password, LastPass, KeePass, etc.",
+    checked = clipboardExcludePasswordManagers,
+    onCheckedChange = {
+        clipboardExcludePasswordManagers = it
+        saveSetting("clipboard_exclude_password_managers", it)
+    }
+)</code></pre>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Security Considerations</h3>
 
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>Detection Timing</strong>: Foreground app is checked at the moment clipboard changes</li>
-<li class="ml-4">2. <strong>False Positives</strong>: Very low - package names are specific</li>
-<li class="ml-4">3. <strong>False Negatives</strong>: Apps not in list won't be excluded (users can request additions)</li>
-<li class="ml-4">4. <strong>No Internet</strong>: Detection is purely local, no data leaves device</li>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Detection Timing</strong>: Foreground app checked at moment clipboard changes</li>
+<li class="ml-4">&#8226; <strong>False Positives</strong>: Very low - package names are specific</li>
+<li class="ml-4">&#8226; <strong>False Negatives</strong>: Apps not in list won't be excluded</li>
+<li class="ml-4">&#8226; <strong>Privacy</strong>: Detection is purely local, no data leaves device</li>
 </ul>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Limitations</h3>
 
-<ul class="mb-4 space-y-1"><li class="ml-4">1. Requires UsageStats permission on some devices (optional, falls back to ActivityManager)</li>
-<li class="ml-4">2. New password managers must be added to the package list manually</li>
-<li class="ml-4">3. Does not detect clipboard content - only checks source app</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Future Enhancements</h2>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; User-configurable package exclusion list</li>
-<li class="ml-4">&#8226; Regex-based package name matching</li>
-<li class="ml-4">&#8226; Clipboard content analysis (detect password patterns)</li>
-<li class="ml-4">&#8226; Temporary clipboard mode (auto-clear after paste)</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Related Files</h2>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">Config.kt</code> - Default settings and package list</li>
-<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">ClipboardHistoryService.kt</code> - Detection and filtering logic</li>
-<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">SettingsActivity.kt</code> - UI toggle</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">References</h2>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <a href="https://developer.android.com/reference/android/app/usage/UsageStatsManager" class="text-ck-purple hover:underline">Android UsageStatsManager</a></li>
-<li class="ml-4">&#8226; Feature inspired by common password manager security best practices</li>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Requires UsageStats permission on some devices (optional, falls back to ActivityManager)</li>
+<li class="ml-4">&#8226; New password managers must be added to the package list manually</li>
+<li class="ml-4">&#8226; Does not analyze clipboard content - only checks source app</li>
 </ul>
         </div>
     </main>

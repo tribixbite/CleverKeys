@@ -70,402 +70,196 @@
     <!-- Content -->
     <main class="container mx-auto px-6 pb-20">
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
-            <h1 class="text-3xl font-bold mb-6 gradient-text">Dictionary and Multi-Language System Specification</h1>
+            <h1 class="text-3xl font-bold mb-6 gradient-text">Dictionary and Multi-Language System</h1>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Feature Overview</h2>
-<p class="mb-4 text-gray-300"><strong>Feature Name</strong>: Dictionary and Multi-Language System</p>
-<p class="mb-4 text-gray-300"><strong>Priority</strong>: P1 (High)</p>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: Architecture Finalized (2026-01-04)</p>
-<p class="mb-4 text-gray-300"><strong>Target Version</strong>: v1.2.0</p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Summary</h3>
-<p class="mb-4 text-gray-300">This specification defines the architecture for managing dictionaries, handling multiple languages, and supporting dynamic language switching in CleverKeys. It unifies static dictionaries, user-defined words, and neural prediction models into a cohesive "Language Pack" system.</p>
+<p class="mb-4 text-gray-300">The dictionary system manages word lookup, frequency ranking, and multi-language support through a tiered architecture. It combines static dictionaries, user-defined words, and neural prediction models into a "Language Pack" system with automatic language detection for bilingual typing.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Motivation</h3>
-<p class="mb-4 text-gray-300">To support a global user base, CleverKeys must seamlessly handle multiple languages. The current system relies on assets baked into the APK. A more flexible system is needed to allow users to install, manage, and switch between languages without requiring app updates.</p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Key Files</h2>
 
-<hr class="border-gray-700 my-6">
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">File</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Class/Function</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Purpose</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/OptimizedVocabularyImpl.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">OptimizedVocabulary</code></td><td class="px-4 py-2 text-gray-300">Dictionary lookup and filtering</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/data/LanguageDetector.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">LanguageDetector</code></td><td class="px-4 py-2 text-gray-300">Word-based language detection</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/WordPredictor.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">WordPredictor</code></td><td class="px-4 py-2 text-gray-300">Unified prediction pipeline</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">assets/dictionaries/{lang}_enhanced.bin</code></td><td class="px-4 py-2 text-gray-300">Binary dictionaries</td><td class="px-4 py-2 text-gray-300">Trie-based word storage</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Architecture</h2>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">1. System Architecture</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Language Pack Structure</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">1.1 The Language Pack Concept</h3>
-<p class="mb-4 text-gray-300">A "Language Pack" is a self-contained unit that provides support for a specific language locale (e.g., <code class="bg-ck-dark px-1 rounded">en</code>, <code class="bg-ck-dark px-1 rounded">fr</code>, <code class="bg-ck-dark px-1 rounded">es-rMX</code>).</p>
+<p class="mb-4 text-gray-300">Each language pack is a self-contained unit:</p>
 
-<p class="mb-4 text-gray-300"><strong>Components of a Language Pack:</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4">1.  <strong>Main Dictionary (<code class="bg-ck-dark px-1 rounded">.bin</code>)</strong>: Trie-based vocabulary with frequencies and accent mappings.</li>
-</ul><p class="mb-4 text-gray-300">    <em>   </em>Path<em>: <code class="bg-ck-dark px-1 rounded">dictionaries/{lang}_enhanced.bin</code></p>
-<ul class="mb-4 space-y-1"><li class="ml-4">2.  <strong>Unigram Frequency List</strong>: Top 1000 words for language detection.</li>
-</ul><p class="mb-4 text-gray-300">    </em>   <em>Path</em>: <code class="bg-ck-dark px-1 rounded">dictionaries/{lang}_unigrams.bin</code></p>
-<ul class="mb-4 space-y-1"><li class="ml-4">3.  <strong>Neural Models (<code class="bg-ck-dark px-1 rounded">.onnx</code>)</strong>: Models for swipe prediction (Encoder + Decoder).</li>
-</ul><p class="mb-4 text-gray-300">    <em>   </em>Path<em>: <code class="bg-ck-dark px-1 rounded">models/swipe_encoder_{lang}.onnx</code> & <code class="bg-ck-dark px-1 rounded">models/swipe_decoder_{lang}.onnx</code></p>
-<p class="mb-4 text-gray-300">    </em>   <em>Note</em>: Initial release reuses English model for all Latin-script languages</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">4.  <strong>Keyboard Layouts (<code class="bg-ck-dark px-1 rounded">.xml</code>)</strong>: Standard layouts for the language (e.g., QWERTY, AZERTY).</li>
-</ul><p class="mb-4 text-gray-300">    <em>   </em>Path<em>: <code class="bg-ck-dark px-1 rounded">layouts/{lang}_</em>.xml</code></p>
-<ul class="mb-4 space-y-1"><li class="ml-4">5.  <strong>Metadata (<code class="bg-ck-dark px-1 rounded">.json</code>)</strong>: Pack version, name, author, license attribution.</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">1.2 Dictionary Layers</h3>
-<p class="mb-4 text-gray-300">The prediction engine utilizes a tiered dictionary system to resolve word candidates.</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">Language Pack ({lang})
+├── dictionaries/{lang}_enhanced.bin    # Trie-based vocabulary
+├── dictionaries/{lang}_unigrams.bin    # Top 1000 words for detection
+├── models/swipe_encoder_{lang}.onnx    # Neural encoder
+├── models/swipe_decoder_{lang}.onnx    # Neural decoder
+├── layouts/{lang}_*.xml                # Keyboard layouts
+└── metadata.json                       # Version, license info</code></pre>
 
-<p class="mb-4 text-gray-300"><em>   <strong>Layer 1: Main Dictionary (Read-Only)</strong></p>
-<p class="mb-4 text-gray-300">    </em>   Source: Language Pack asset.</p>
-<p class="mb-4 text-gray-300">    <em>   Content: tens of thousands of common words with frequency data.</p>
-<p class="mb-4 text-gray-300">    </em>   Management: Loaded via <code class="bg-ck-dark px-1 rounded">MainDictionarySource</code>.</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Dictionary Layers</h3>
 
-<p class="mb-4 text-gray-300"><em>   <strong>Layer 2: User Dictionary (Read-Write)</strong></p>
-<p class="mb-4 text-gray-300">    </em>   Source: Android System <code class="bg-ck-dark px-1 rounded">UserDictionary</code> content provider.</p>
-<p class="mb-4 text-gray-300">    <em>   Content: Words learned by other apps or added globally by the user.</p>
-<p class="mb-4 text-gray-300">    </em>   Management: Loaded via <code class="bg-ck-dark px-1 rounded">UserDictionarySource</code>.</p>
-
-<p class="mb-4 text-gray-300"><em>   <strong>Layer 3: Custom Dictionary (Read-Write)</strong></p>
-<p class="mb-4 text-gray-300">    </em>   Source: App-internal <code class="bg-ck-dark px-1 rounded">SharedPreferences</code> (<code class="bg-ck-dark px-1 rounded">user_dictionary</code>).</p>
-<p class="mb-4 text-gray-300">    <em>   Content: Words explicitly added by the user within CleverKeys or learned from typing.</p>
-<p class="mb-4 text-gray-300">    </em>   Management: Loaded via <code class="bg-ck-dark px-1 rounded">CustomDictionarySource</code>.</p>
-
-<p class="mb-4 text-gray-300"><em>   <strong>Layer 4: Disabled Words (Read-Write)</strong></p>
-<p class="mb-4 text-gray-300">    </em>   Source: App-internal <code class="bg-ck-dark px-1 rounded">SharedPreferences</code>.</p>
-<p class="mb-4 text-gray-300">    <em>   Content: Words from the Main Dictionary that the user has explicitly blocked (e.g., offensive words or annoying auto-corrects).</p>
-<p class="mb-4 text-gray-300">    </em>   Management: Loaded via <code class="bg-ck-dark px-1 rounded">DisabledDictionarySource</code>.</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">┌─────────────────────────────────────────────────────────────┐
+│                     SuggestionRanker                         │
+│  Merges candidates from all layers with unified scoring      │
+└─────────────────────────────────────────────────────────────┘
+                            │
+       ┌────────────────────┼────────────────────┐
+       │                    │                    │
+       ▼                    ▼                    ▼
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│   Layer 1    │    │   Layer 2    │    │   Layer 3    │
+│ Main Dict    │    │ User Dict    │    │ Custom Dict  │
+│ (Read-Only)  │    │ (System)     │    │ (App-Local)  │
+│              │    │              │    │              │
+│ Language     │    │ Android      │    │ SharedPrefs  │
+│ Pack Asset   │    │ UserDictionary│   │ user_dict    │
+└──────────────┘    └──────────────┘    └──────────────┘
+       │                    │                    │
+       └────────────────────┼────────────────────┘
+                            │
+                            ▼
+                   ┌──────────────┐
+                   │   Layer 4    │
+                   │ Disabled     │
+                   │ Words Filter │
+                   └──────────────┘</code></pre>
 
 <p class="mb-4 text-gray-300"><strong>Resolution Logic:</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4">1.  Candidates are gathered from Layers 1, 2, and 3.</li>
-<li class="ml-4">2.  Any candidate present in Layer 4 is filtered out.</li>
-<li class="ml-4">3.  Candidates are scored based on frequency, source priority (Custom > User > Main), and neural probability.</li>
+<ul class="mb-4 space-y-1"><li class="ml-4">1. Gather candidates from Layers 1, 2, 3</li>
+<li class="ml-4">2. Filter out words in Layer 4 (disabled)</li>
+<li class="ml-4">3. Score by frequency, source priority (Custom > User > Main), neural confidence</li>
 </ul>
-<hr class="border-gray-700 my-6">
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Details</h2>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">2. Accent Handling Architecture</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Accent Handling</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">2.1 The Core Constraint</h3>
-<p class="mb-4 text-gray-300">The neural swipe model has a 26-letter vocabulary (a-z only). It cannot distinguish between <code class="bg-ck-dark px-1 rounded">café</code> and <code class="bg-ck-dark px-1 rounded">cafe</code> - both produce the identical swipe trajectory.</p>
+<p class="mb-4 text-gray-300">The neural model uses a 26-letter vocabulary (a-z only). Accented words are handled through normalization:</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">2.2 Normalization Strategy</h3>
-<p class="mb-4 text-gray-300"><strong>One-way normalization at dictionary build time:</strong></p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Accent mapping: normalized → canonical forms
+data class AccentMapping(
+    val normalized: String,         // "cafe"
+    val canonicalForms: List&lt;String&gt;, // ["café"]
+    val frequencies: List&lt;Int&gt;
+)
 
-<ul class="mb-4 space-y-1"><li class="ml-4">1.  For each canonical word (e.g., <code class="bg-ck-dark px-1 rounded">café</code>), generate normalized form (<code class="bg-ck-dark px-1 rounded">cafe</code>)</li>
-<li class="ml-4">2.  Dictionary stores canonical form as the display word</li>
-<li class="ml-4">3.  Lookup/matching uses normalized form as key</li>
-<li class="ml-4">4.  NN output (<code class="bg-ck-dark px-1 rounded">cafe</code>) maps to canonical display (<code class="bg-ck-dark px-1 rounded">café</code>)</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">2.3 Data Structures</h3>
+// Lookup flow:
+// 1. User swipes "café" → trajectory matches "cafe" pattern
+// 2. Prefix lookup: "caf" → finds normalized candidates
+// 3. Each candidate maps to its accented canonical form</code></pre>
 
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Accent mapping: normalized → list of canonical forms
-<p class="mb-4 text-gray-300">// Example: "cafe" → ["café"], "schon" → ["schon", "schön"]</p>
-<p class="mb-4 text-gray-300">data class AccentMapping(</p>
-<p class="mb-4 text-gray-300">    val normalized: String,</p>
-<p class="mb-4 text-gray-300">    val canonicalForms: List&lt;String&gt;,</p>
-<p class="mb-4 text-gray-300">    val frequencies: List&lt;Int&gt;  // Parallel to canonicalForms</p>
-<p class="mb-4 text-gray-300">)</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">2.4 Prefix Index Strategy</h3>
-<p class="mb-4 text-gray-300">The prefix index is built on <strong>normalized</strong> words:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; User swipes "café" → trajectory matches "cafe" pattern</li>
-<li class="ml-4">&#8226; Prefix lookup: <code class="bg-ck-dark px-1 rounded">caf</code> → finds normalized candidates</li>
-<li class="ml-4">&#8226; Each candidate maps to its accented canonical form</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">2.5 Touch Typing vs Swipe Typing</h3>
-<p class="mb-4 text-gray-300">| Mode | Input | Lookup Key | Display |</p>
-<p class="mb-4 text-gray-300">|------|-------|------------|---------|</p>
-<p class="mb-4 text-gray-300">| Swipe | trajectory | normalized | canonical (accented) |</p>
-<p class="mb-4 text-gray-300">| Touch | typed chars | as-typed or normalized | canonical if match found |</p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">3. Binary Dictionary Format (v2)</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">3.1 Format Overview</h3>
-<p class="mb-4 text-gray-300">Move from HashMap to <strong>Trie-based</strong> format for:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; O(L) prefix lookups (L = key length)</li>
-<li class="ml-4">&#8226; Memory efficiency for shared prefixes</li>
-<li class="ml-4">&#8226; Natural prefix search without separate index</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">3.2 Binary Structure</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Binary Dictionary Format (v2)</h3>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">┌────────────────────────────────────────┐
-<p class="mb-4 text-gray-300">│ HEADER (32 bytes)                      │</p>
-<p class="mb-4 text-gray-300">│  - Magic: "CKDICT" (6 bytes)           │</p>
-<p class="mb-4 text-gray-300">│  - Version: 2 (2 bytes)                │</p>
-<p class="mb-4 text-gray-300">│  - Language: "es" (4 bytes)            │</p>
-<p class="mb-4 text-gray-300">│  - Word Count (4 bytes)                │</p>
-<p class="mb-4 text-gray-300">│  - Trie Offset (4 bytes)               │</p>
-<p class="mb-4 text-gray-300">│  - Metadata Offset (4 bytes)           │</p>
-<p class="mb-4 text-gray-300">│  - Accent Map Offset (4 bytes)         │</p>
-<p class="mb-4 text-gray-300">│  - Reserved (4 bytes)                  │</p>
-<p class="mb-4 text-gray-300">├────────────────────────────────────────┤</p>
-<p class="mb-4 text-gray-300">│ TRIE DATA BLOCK                        │</p>
-<p class="mb-4 text-gray-300">│  - Compact trie of NORMALIZED words    │</p>
-<p class="mb-4 text-gray-300">│  - Terminal nodes store word_id        │</p>
-<p class="mb-4 text-gray-300">├────────────────────────────────────────┤</p>
-<p class="mb-4 text-gray-300">│ WORD METADATA BLOCK                    │</p>
-<p class="mb-4 text-gray-300">│  - Array indexed by word_id:           │</p>
-<p class="mb-4 text-gray-300">│    - Canonical string (UTF-8, varint)  │</p>
-<p class="mb-4 text-gray-300">│    - Frequency rank (UInt8, 0-255)     │</p>
-<p class="mb-4 text-gray-300">├────────────────────────────────────────┤</p>
-<p class="mb-4 text-gray-300">│ ACCENT MAP BLOCK (optional)            │</p>
-<p class="mb-4 text-gray-300">│  - normalized_word → [canonical_ids]   │</p>
-<p class="mb-4 text-gray-300">│  - Only for words with accent variants │</p>
-<p class="mb-4 text-gray-300">└────────────────────────────────────────┘</code></pre></p>
+│ HEADER (32 bytes)                      │
+│  - Magic: "CKDICT" (6 bytes)           │
+│  - Version: 2 (2 bytes)                │
+│  - Language: "es" (4 bytes)            │
+│  - Word Count (4 bytes)                │
+│  - Trie Offset (4 bytes)               │
+│  - Metadata Offset (4 bytes)           │
+│  - Accent Map Offset (4 bytes)         │
+├────────────────────────────────────────┤
+│ TRIE DATA BLOCK                        │
+│  - Compact trie of NORMALIZED words    │
+│  - Terminal nodes store word_id        │
+├────────────────────────────────────────┤
+│ WORD METADATA BLOCK                    │
+│  - Array indexed by word_id:           │
+│    - Canonical string (UTF-8, varint)  │
+│    - Frequency rank (UInt8, 0-255)     │
+├────────────────────────────────────────┤
+│ ACCENT MAP BLOCK (optional)            │
+│  - normalized_word → [canonical_ids]   │
+└────────────────────────────────────────┘</code></pre>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">3.3 Frequency Ranking</h3>
-<p class="mb-4 text-gray-300">Store <strong>rank</strong> (0-255) instead of raw frequency:</p>
+<p class="mb-4 text-gray-300"><strong>Frequency Ranking:</strong></p>
 <ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Rank 0 = most frequent word</li>
 <li class="ml-4">&#8226; Rank 255 = least frequent</li>
 <li class="ml-4">&#8226; Log-scaled quantization preserves relative ordering</li>
-<li class="ml-4">&#8226; Saves 3 bytes per word vs 32-bit frequency</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">3.4 Build Pipeline</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Language Detection</h3>
 
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-<p class="mb-4 text-gray-300">│ AOSP Word List  │────▶│ Frequency       │────▶│ Binary Dict     │</p>
-<p class="mb-4 text-gray-300">│ (CC BY 4.0)     │     │ Enrichment      │     │ Generator       │</p>
-<p class="mb-4 text-gray-300">└─────────────────┘     │ (wordfreq)      │     └─────────────────┘</p>
-<p class="mb-4 text-gray-300">                        └─────────────────┘              │</p>
-<p class="mb-4 text-gray-300">                                                         ▼</p>
-<p class="mb-4 text-gray-300">                                                 {lang}_enhanced.bin</code></pre></p>
+<p class="mb-4 text-gray-300">Word-based unigram frequency model:</p>
 
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">4. Multi-Language Switching</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">4.1 Manual Switching</h3>
-<p class="mb-4 text-gray-300"><em>   <strong>Trigger</strong>: User taps the "Globe" key or long-presses Spacebar.</p>
-<p class="mb-4 text-gray-300"></em>   <strong>Action</strong>: Cycles through the list of <em>Active Languages</em> enabled in Settings.</p>
-<p class="mb-4 text-gray-300"><em>   <strong>Outcome</strong>:</p>
-<p class="mb-4 text-gray-300">    </em>   The <code class="bg-ck-dark px-1 rounded">MainDictionarySource</code> is hot-swapped to the new language.</p>
-<p class="mb-4 text-gray-300">    <em>   The <code class="bg-ck-dark px-1 rounded">MultiLanguageManager</code> loads the corresponding ONNX models.</p>
-<p class="mb-4 text-gray-300">    </em>   The keyboard layout is updated (if a specific layout is linked to the language).</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">4.2 Auto-Switching (Polyglot Mode)</h3>
-
-<p class="mb-4 text-gray-300">#### 4.2.1 Detection Algorithm</p>
-<p class="mb-4 text-gray-300"><strong>Word-based unigram frequency model</strong> (not character patterns):</p>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">1.  Each language pack ships top 1000 unigrams</li>
-<li class="ml-4">2.  Maintain sliding window of last 5 committed words</li>
-<li class="ml-4">3.  Score each word against active language unigram lists</li>
-<li class="ml-4">4.  Track running score per language (exponentially decaying average)</li>
-</ul>
-<p class="mb-4 text-gray-300">#### 4.2.2 Switching Logic</p>
-<p class="mb-4 text-gray-300">Conservative threshold to prevent jitter:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Switch only when dominant language score > 2x other language</li>
-<li class="ml-4">&#8226; Require 2-3 consecutive words favoring new language</li>
-<li class="ml-4">&#8226; Brief UI feedback on spacebar: <code class="bg-ck-dark px-1 rounded">EN → ES</code></li>
-</ul>
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">data class LanguageScore(
-<p class="mb-4 text-gray-300">    val language: String,</p>
-<p class="mb-4 text-gray-300">    var score: Float = 0f,</p>
-<p class="mb-4 text-gray-300">    var consecutiveHits: Int = 0</p>
-<p class="mb-4 text-gray-300">)</p>
+    val language: String,
+    var score: Float = 0f,
+    var consecutiveHits: Int = 0
+)
 
-<p class="mb-4 text-gray-300">fun shouldSwitch(primary: LanguageScore, candidate: LanguageScore): Boolean {</p>
-<p class="mb-4 text-gray-300">    return candidate.score &gt; primary.score <em> 2.0f &amp;&amp;</p>
-<p class="mb-4 text-gray-300">           candidate.consecutiveHits &gt;= 2</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
+// Detection algorithm:
+// 1. Each language pack ships top 1000 unigrams
+// 2. Maintain sliding window of last 5 committed words
+// 3. Score each word against active language unigram lists
+// 4. Track running score per language (exponentially decaying)
 
-<hr class="border-gray-700 my-6">
+fun shouldSwitch(primary: LanguageScore, candidate: LanguageScore): Boolean {
+    // Conservative threshold to prevent jitter
+    return candidate.score &gt; primary.score * 2.0f &amp;&amp;
+           candidate.consecutiveHits &gt;= 2
+}</code></pre>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">5. Dual-Dictionary Mode (Secondary Language)</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Dual-Dictionary Mode</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">5.1 Use Case</h3>
-<p class="mb-4 text-gray-300">Bilingual typing (e.g., English + Spanish) on single QWERTY layout without manual switching.</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">5.2 Architecture</h3>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">┌─────────────────────────────────────────────────────┐
-<p class="mb-4 text-gray-300">│                  SuggestionRanker                   │</p>
-<p class="mb-4 text-gray-300">│  ┌─────────────┐    ┌─────────────┐                │</p>
-<p class="mb-4 text-gray-300">│  │ Primary     │    │ Secondary   │                │</p>
-<p class="mb-4 text-gray-300">│  │ Dictionary  │    │ Dictionary  │                │</p>
-<p class="mb-4 text-gray-300">│  │ (English)   │    │ (Spanish)   │                │</p>
-<p class="mb-4 text-gray-300">│  └──────┬──────┘    └──────┬──────┘                │</p>
-<p class="mb-4 text-gray-300">│         │                  │                        │</p>
-<p class="mb-4 text-gray-300">│         ▼                  ▼                        │</p>
-<p class="mb-4 text-gray-300">│  ┌────────────────────────────────────────────┐    │</p>
-<p class="mb-4 text-gray-300">│  │         Unified Scoring Pipeline           │    │</p>
-<p class="mb-4 text-gray-300">│  │  score = nn_conf × dict_rank × lang_ctx    │    │</p>
-<p class="mb-4 text-gray-300">│  └────────────────────────────────────────────┘    │</p>
-<p class="mb-4 text-gray-300">└─────────────────────────────────────────────────────┘</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">5.3 Scoring Formula</h3>
+<p class="mb-4 text-gray-300">For bilingual typing (e.g., English + Spanish) without manual switching:</p>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">fun calculateUnifiedScore(
-<p class="mb-4 text-gray-300">    word: String,</p>
-<p class="mb-4 text-gray-300">    nnConfidence: Float,      // From ONNX model</p>
-<p class="mb-4 text-gray-300">    dictionaryRank: Int,      // 0-255, lower = more common</p>
-<p class="mb-4 text-gray-300">    languageContext: Float,   // 0.0-1.0, from detector</p>
-<p class="mb-4 text-gray-300">    isPrimaryLang: Boolean</p>
-<p class="mb-4 text-gray-300">): Float {</p>
-<p class="mb-4 text-gray-300">    val rankScore = 1.0f - (dictionaryRank / 255f)</p>
-<p class="mb-4 text-gray-300">    val langMultiplier = if (isPrimaryLang) 1.0f else languageContext</p>
-<p class="mb-4 text-gray-300">    val secondaryPenalty = if (isPrimaryLang) 1.0f else 0.9f  // Configurable</p>
+    word: String,
+    nnConfidence: Float,      // From ONNX model
+    dictionaryRank: Int,      // 0-255, lower = more common
+    languageContext: Float,   // 0.0-1.0, from detector
+    isPrimaryLang: Boolean
+): Float {
+    val rankScore = 1.0f - (dictionaryRank / 255f)
+    val langMultiplier = if (isPrimaryLang) 1.0f else languageContext
+    val secondaryPenalty = if (isPrimaryLang) 1.0f else 0.9f
 
-<p class="mb-4 text-gray-300">    return nnConfidence </em> rankScore <em> langMultiplier </em> secondaryPenalty</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
+    return nnConfidence * rankScore * langMultiplier * secondaryPenalty
+}</code></pre>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">5.4 Deduplication</h3>
-<p class="mb-4 text-gray-300">When word exists in both dictionaries (e.g., "son"):</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Present only the entry with higher final score</li>
-<li class="ml-4">&#8226; Language context score naturally favors the contextually appropriate language</li>
-</ul>
-<hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300"><strong>Deduplication:</strong> When word exists in both dictionaries, present only entry with higher final score.</p>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">6. Dictionary Sources and Licensing</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Manual Language Switching</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">6.1 Source Strategy</h3>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Triggered by Globe key or long-press Spacebar
+fun switchLanguage(newLang: String) {
+    // 1. Hot-swap MainDictionarySource
+    dictionaryManager.loadMainDictionary(newLang)
 
-<p class="mb-4 text-gray-300">| Source | Use | License | Notes |</p>
-<p class="mb-4 text-gray-300">|--------|-----|---------|-------|</p>
-<p class="mb-4 text-gray-300">| AOSP Dictionaries | Word lists | CC BY 4.0 | 200+ languages |</p>
-<p class="mb-4 text-gray-300">| wordfreq | Frequency data | Apache 2.0 (code), CC BY-SA 4.0 (data) | Snapshot through 2021 |</p>
-<p class="mb-4 text-gray-300">| FrequencyWords | Alt frequency | MIT (code), CC BY-SA 4.0 (data) | From OpenSubtitles |</p>
+    // 2. Load corresponding ONNX models
+    multiLanguageManager.loadModels(newLang)
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">6.2 Licensing Compliance</h3>
+    // 3. Update keyboard layout if linked
+    keyboardManager.switchLayout(newLang)
+}</code></pre>
 
-<p class="mb-4 text-gray-300"><strong>CC BY-SA 4.0 for dictionary assets is acceptable:</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; CleverKeys code remains Apache 2.0</li>
-<li class="ml-4">&#8226; Dictionary <code class="bg-ck-dark px-1 rounded">.bin</code> files are separate assets under CC BY-SA 4.0</li>
-<li class="ml-4">&#8226; Proper attribution in <code class="bg-ck-dark px-1 rounded">LICENSES.md</code> and pack metadata</li>
-<li class="ml-4">&#8226; Attribution visible in Settings → About → Licenses</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">6.3 Build Pipeline</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Data Structures</h3>
 
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-python"># scripts/build_dictionary.py
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">data class DictionaryWord(
+    val canonical: String,      // Display form with accents
+    val normalized: String,     // Lookup key without accents
+    val frequencyRank: Int,     // 0-255, lower = more common
+    val source: WordSource,     // MAIN, USER, CUSTOM, SECONDARY
+    var enabled: Boolean = true
+)
 
-<p class="mb-4 text-gray-300">def build_language_pack(lang: str):</p>
-<p class="mb-4 text-gray-300">    # 1. Load AOSP word list</p>
-<p class="mb-4 text-gray-300">    words = load_aosp_wordlist(f"aosp/{lang}.txt")</p>
+enum class WordSource {
+    MAIN,       // Primary language pack
+    SECONDARY,  // Secondary language pack
+    USER,       // Android UserDictionary
+    CUSTOM      // App SharedPreferences
+}
 
-<p class="mb-4 text-gray-300">    # 2. Enrich with frequency data</p>
-<p class="mb-4 text-gray-300">    for word in words:</p>
-<p class="mb-4 text-gray-300">        freq = wordfreq.word_frequency(word, lang)</p>
-<p class="mb-4 text-gray-300">        word.frequency = freq or DEFAULT_LOW_FREQ</p>
+data class LanguageState(
+    val primary: String,
+    val secondary: String?,
+    val detectedContext: String,
+    val confidence: Float
+)</code></pre>
 
-<p class="mb-4 text-gray-300">    # 3. Normalize for accent mapping</p>
-<p class="mb-4 text-gray-300">    normalized = {}</p>
-<p class="mb-4 text-gray-300">    for word in words:</p>
-<p class="mb-4 text-gray-300">        norm = normalize_accents(word.text)</p>
-<p class="mb-4 text-gray-300">        normalized.setdefault(norm, []).append(word)</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Key Classes</h3>
 
-<p class="mb-4 text-gray-300">    # 4. Build trie on normalized keys</p>
-<p class="mb-4 text-gray-300">    trie = build_compact_trie(normalized.keys())</p>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Class</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Purpose</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">DictionaryManager</code></td><td class="px-4 py-2 text-gray-300">Singleton holding active WordPredictor instances, handles language lifecycle</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">MultiLanguageManager</code></td><td class="px-4 py-2 text-gray-300">Manages ONNX sessions, handles auto-detection logic</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SuggestionRanker</code></td><td class="px-4 py-2 text-gray-300">Merges candidates from multiple dictionaries with unified scoring</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">UnigramLanguageDetector</code></td><td class="px-4 py-2 text-gray-300">Word-based language detection using frequency lists</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">AccentNormalizer</code></td><td class="px-4 py-2 text-gray-300">Unicode normalization (NFD) + accent stripping</td></tr></tbody></table>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Performance Considerations</h3>
 
-<p class="mb-4 text-gray-300">    # 5. Generate binary format</p>
-<p class="mb-4 text-gray-300">    write_binary_dict(lang, trie, words, normalized)</code></pre></p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">7. Implementation Plan</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 1: Foundation (v1.2.0)</h3>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Implement accent normalization in WordPredictor</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Create <code class="bg-ck-dark px-1 rounded">NormalizedPrefixIndex</code> that maps normalized → canonical</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Update <code class="bg-ck-dark px-1 rounded">BinaryDictionaryLoader</code> for v2 format</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Build script: <code class="bg-ck-dark px-1 rounded">scripts/build_dictionary.py</code></li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 2: Multi-Dictionary (v1.2.1)</h3>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Implement <code class="bg-ck-dark px-1 rounded">SuggestionRanker</code> for unified scoring</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Add secondary dictionary slot in <code class="bg-ck-dark px-1 rounded">DictionaryManager</code></li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> UI: Settings → Languages → Secondary Language import</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 3: Language Detection (v1.2.2)</h3>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Implement word-based <code class="bg-ck-dark px-1 rounded">UnigramLanguageDetector</code></li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Ship unigram lists for bundled languages</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Auto-switching with configurable sensitivity</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 4: Language Packs (v1.3.0)</h3>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Language Pack ZIP format spec</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Download manager for on-demand languages</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> UI: Language Store in Settings</li>
-</ul>
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">8. Import and Management Workflows</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">8.1 Installing New Languages</h3>
-<p class="mb-4 text-gray-300"><em>   <strong>Mechanism</strong>: "Language Store" in Settings.</p>
-<p class="mb-4 text-gray-300"></em>   <strong>Source</strong>:</p>
-<p class="mb-4 text-gray-300">    <em>   </em>Bundled<em>: Common languages included in APK assets.</p>
-<p class="mb-4 text-gray-300">    </em>   <em>Downloadable</em>: Hosted on GitHub Releases or a dedicated CDN.</p>
-<p class="mb-4 text-gray-300"><em>   <strong>Process</strong>:</p>
-<p class="mb-4 text-gray-300">    1.  User selects language.</p>
-<p class="mb-4 text-gray-300">    2.  App downloads ZIP bundle.</p>
-<p class="mb-4 text-gray-300">    3.  Files are extracted to app-private storage (<code class="bg-ck-dark px-1 rounded">files/languages/{lang}/</code>).</p>
-<p class="mb-4 text-gray-300">    4.  <code class="bg-ck-dark px-1 rounded">DictionaryManager</code> registers the new language availability.</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">8.2 Dictionary Import/Export</h3>
-<p class="mb-4 text-gray-300"></em>   <strong>Scope</strong>: Custom Dictionary (Layer 3) and Disabled Words (Layer 4).</p>
-<p class="mb-4 text-gray-300"><em>   <strong>Format</strong>: JSON.</p>
-<p class="mb-4 text-gray-300"></em>   <strong>Import Logic</strong>:</p>
-<p class="mb-4 text-gray-300">    <em>   Read JSON.</p>
-<p class="mb-4 text-gray-300">    </em>   For each word: Check against existing Custom Dictionary.</p>
-<p class="mb-4 text-gray-300">    <em>   If new, add to <code class="bg-ck-dark px-1 rounded">SharedPreferences</code>.</p>
-<p class="mb-4 text-gray-300">    </em>   <em>Crucial</em>: Do NOT write to Android System <code class="bg-ck-dark px-1 rounded">UserDictionary</code> during bulk import to avoid pollution and permission issues.</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">8.3 Custom Word Management</h3>
-<p class="mb-4 text-gray-300"><em>   <strong>UI</strong>: <code class="bg-ck-dark px-1 rounded">DictionaryManagerActivity</code> (Jetpack Compose).</p>
-<p class="mb-4 text-gray-300"></em>   <strong>Tabs</strong>:</p>
-<p class="mb-4 text-gray-300">    <em>   </em>Custom<em>: View/Edit/Delete words in Layer 3.</p>
-<p class="mb-4 text-gray-300">    </em>   <em>User</em>: View words in Layer 2 (Read-only or System Intent to edit).</p>
-<p class="mb-4 text-gray-300">    <em>   </em>Disabled<em>: View/Re-enable words in Layer 4.</p>
-<p class="mb-4 text-gray-300">    </em>   <em>Secondary</em>: View/manage secondary language dictionary.</p>
-<p class="mb-4 text-gray-300"><em>   <strong>Interaction</strong>: Swipe-to-delete, Undo support, Search filter.</p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">9. Data Structures</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">9.1 Core Classes</h3>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Representation of a word in the aggregation pipeline
-<p class="mb-4 text-gray-300">data class DictionaryWord(</p>
-<p class="mb-4 text-gray-300">    val canonical: String,      // Display form with accents</p>
-<p class="mb-4 text-gray-300">    val normalized: String,     // Lookup key without accents</p>
-<p class="mb-4 text-gray-300">    val frequencyRank: Int,     // 0-255, lower = more common</p>
-<p class="mb-4 text-gray-300">    val source: WordSource,     // MAIN, USER, CUSTOM, SECONDARY</p>
-<p class="mb-4 text-gray-300">    var enabled: Boolean = true</p>
-<p class="mb-4 text-gray-300">)</p>
-
-<p class="mb-4 text-gray-300">enum class WordSource {</p>
-<p class="mb-4 text-gray-300">    MAIN,       // Primary language pack</p>
-<p class="mb-4 text-gray-300">    SECONDARY,  // Secondary language pack</p>
-<p class="mb-4 text-gray-300">    USER,       // Android UserDictionary</p>
-<p class="mb-4 text-gray-300">    CUSTOM      // App SharedPreferences</p>
-<p class="mb-4 text-gray-300">}</p>
-
-<p class="mb-4 text-gray-300">// Language detection state</p>
-<p class="mb-4 text-gray-300">data class LanguageState(</p>
-<p class="mb-4 text-gray-300">    val primary: String,</p>
-<p class="mb-4 text-gray-300">    val secondary: String?,</p>
-<p class="mb-4 text-gray-300">    val detectedContext: String,</p>
-<p class="mb-4 text-gray-300">    val confidence: Float</p>
-<p class="mb-4 text-gray-300">)</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">9.2 Key Classes</h3>
-<p class="mb-4 text-gray-300"></em>   <strong><code class="bg-ck-dark px-1 rounded">DictionaryManager</code></strong>: Singleton. Holds references to active <code class="bg-ck-dark px-1 rounded">WordPredictor</code> instances. Handles language lifecycle.</p>
-<p class="mb-4 text-gray-300"><em>   <strong><code class="bg-ck-dark px-1 rounded">MultiLanguageManager</code></strong>: Manages ONNX sessions. Handles auto-detection logic.</p>
-<p class="mb-4 text-gray-300"></em>   <strong><code class="bg-ck-dark px-1 rounded">SuggestionRanker</code></strong>: Merges candidates from multiple dictionaries with unified scoring.</p>
-<p class="mb-4 text-gray-300"><em>   <strong><code class="bg-ck-dark px-1 rounded">UnigramLanguageDetector</code></strong>: Word-based language detection using frequency lists.</p>
-<p class="mb-4 text-gray-300"></em>   <strong><code class="bg-ck-dark px-1 rounded">AccentNormalizer</code></strong>: Unicode normalization (NFD) + accent stripping.</p>
-<p class="mb-4 text-gray-300"><em>   <strong><code class="bg-ck-dark px-1 rounded">BackupRestoreManager</code></strong>: Handles JSON serialization for Import/Export.</p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">10. Performance Considerations</h2>
-
-<p class="mb-4 text-gray-300"></em>   <strong>Binary Dictionaries</strong>: Trie-based <code class="bg-ck-dark px-1 rounded">.bin</code> format for O(L) lookups (<5ms for any word).</p>
-<p class="mb-4 text-gray-300"><em>   <strong>Memory-Mapped I/O</strong>: Use <code class="bg-ck-dark px-1 rounded">MappedByteBuffer</code> for large dictionaries to avoid heap pressure.</p>
-<p class="mb-4 text-gray-300"></em>   <strong>Async Loading</strong>: Language switching happens on <code class="bg-ck-dark px-1 rounded">Dispatchers.IO</code>.</p>
-<p class="mb-4 text-gray-300"><em>   <strong>Lazy Initialization</strong>: Secondary dictionary loaded only when feature enabled.</p>
-<p class="mb-4 text-gray-300"></em>   <strong>Memory Management</strong>: Inactive language models (ONNX sessions) unloaded after 60s timeout.</p>
-<p class="mb-4 text-gray-300"><em>   <strong>Unigram Cache</strong>: Language detection unigram lists kept in memory (~100KB per language).</p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">11. Future Roadmap</h2>
-<p class="mb-4 text-gray-300"></em>   <strong>v1.3</strong>: Cloud sync for Custom Dictionaries.</p>
-<p class="mb-4 text-gray-300"><em>   <strong>v1.4</strong>: Language-specific neural models (fine-tuned on each language).</p>
-<p class="mb-4 text-gray-300"></em>   <strong>v1.5</strong>: User-generated Language Packs tool.</p>
-<p class="mb-4 text-gray-300">*   <strong>v2.0</strong>: Multi-script support (Cyrillic, Arabic, CJK).</p>
-
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Aspect</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Strategy</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Trie lookups</td><td class="px-4 py-2 text-gray-300">O(L) where L = key length, <5ms</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Memory mapping</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">MappedByteBuffer</code> for large dictionaries</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Async loading</td><td class="px-4 py-2 text-gray-300">Language switching on <code class="bg-ck-dark px-1 rounded">Dispatchers.IO</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Lazy init</td><td class="px-4 py-2 text-gray-300">Secondary dictionary loaded only when enabled</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Memory cleanup</td><td class="px-4 py-2 text-gray-300">Inactive ONNX sessions unloaded after 60s</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Unigram cache</td><td class="px-4 py-2 text-gray-300">~100KB per language kept in memory</td></tr></tbody></table>
         </div>
     </main>
 

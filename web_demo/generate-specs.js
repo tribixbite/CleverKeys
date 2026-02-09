@@ -11,10 +11,32 @@ const path = require('path');
 
 // Simple markdown to HTML converter (handles common patterns)
 function markdownToHtml(markdown) {
+    // Store code blocks to protect them from further processing
+    const codeBlocks = [];
     let html = markdown
-        // Code blocks (must be before inline code)
-        .replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) =>
-            `<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-${lang || 'text'}">${escapeHtml(code.trim())}</code></pre>`)
+        // Code blocks (must be before inline code) - store with placeholder
+        .replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+            const placeholder = `__CODEBLOCK_${codeBlocks.length}__`;
+            codeBlocks.push(`<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-${lang || 'text'}">${escapeHtml(code.trim())}</code></pre>`);
+            return placeholder;
+        })
+        // Tables (must be before inline code and paragraphs)
+        .replace(/^\|(.+)\|\n\|[-:\s|]+\|\n((?:\|.+\|\n?)+)/gm, (match, header, rows) => {
+            const headerCells = header.split('|').map(c => c.trim()).filter(c => c);
+            const headerHtml = '<thead class="border-b border-gray-700"><tr>' +
+                headerCells.map(cell => `<th class="px-4 py-2 text-left font-semibold text-ck-purple-light">${cell}</th>`).join('') +
+                '</tr></thead>';
+
+            const rowLines = rows.trim().split('\n');
+            const bodyHtml = '<tbody>' + rowLines.map(row => {
+                const cells = row.split('|').map(c => c.trim()).filter(c => c);
+                return '<tr class="border-b border-gray-800">' +
+                    cells.map(cell => `<td class="px-4 py-2 text-gray-300">${cell}</td>`).join('') +
+                    '</tr>';
+            }).join('') + '</tbody>';
+
+            return `<table class="w-full mb-4 border-collapse">${headerHtml}${bodyHtml}</table>`;
+        })
         // Inline code
         .replace(/`([^`]+)`/g, '<code class="bg-ck-dark px-1 rounded">$1</code>')
         // Headers
@@ -34,10 +56,15 @@ function markdownToHtml(markdown) {
         // Links
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-ck-purple hover:underline">$1</a>')
         // Paragraphs (simple approach - wrap non-tagged lines)
-        .replace(/^(?!<[h123lp]|<pre|<hr|<ul|<ol)(.+)$/gm, '<p class="mb-4 text-gray-300">$1</p>');
+        .replace(/^(?!<[h123lpt]|<pre|<hr|<ul|<ol|__CODEBLOCK)(.+)$/gm, '<p class="mb-4 text-gray-300">$1</p>');
 
     // Wrap consecutive list items in ul
     html = html.replace(/(<li[^>]*>.*?<\/li>\n?)+/g, '<ul class="mb-4 space-y-1">$&</ul>');
+
+    // Restore code blocks
+    codeBlocks.forEach((block, i) => {
+        html = html.replace(`__CODEBLOCK_${i}__`, block);
+    });
 
     return html;
 }

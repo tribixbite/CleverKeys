@@ -70,605 +70,213 @@
     <!-- Content -->
     <main class="container mx-auto px-6 pb-20">
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
-            <h1 class="text-3xl font-bold mb-6 gradient-text">Neural Swipe Prediction System Specification</h1>
+            <h1 class="text-3xl font-bold mb-6 gradient-text">Neural Swipe Prediction System</h1>
 
-<p class="mb-4 text-gray-300"><strong>Feature</strong>: ONNX Transformer-Based Swipe-to-Text Prediction</p>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: 🟢 IMPLEMENTED (P0 bugs resolved, P1-P2 remaining)</p>
-<p class="mb-4 text-gray-300"><strong>Priority</strong>: P0 (Core functionality)</p>
-<p class="mb-4 text-gray-300"><strong>Assignee</strong>: N/A</p>
-<p class="mb-4 text-gray-300"><strong>Date Created</strong>: 2025-10-20</p>
-<p class="mb-4 text-gray-300"><strong>Last Updated</strong>: 2025-12-04</p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
 
-<hr class="border-gray-700 my-6">
+<p class="mb-4 text-gray-300">Pure ONNX neural transformer architecture for converting swipe gestures into ranked word predictions. This replaces legacy template-matching (CGR) with deep learning inference: trajectory → encoder → beam search decoder → vocabulary filter → predictions.</p>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">TODOs</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Key Files</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">✅ RESOLVED - Critical Systems (P0)</h3>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">File</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Class/Function</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Purpose</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/OnnxSwipePredictorImpl.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">OnnxSwipePredictorImpl</code></td><td class="px-4 py-2 text-gray-300">Core prediction pipeline (~1500 lines)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/SwipeTrajectoryProcessor.kt</code></td><td class="px-4 py-2 text-gray-300">Feature extraction</td><td class="px-4 py-2 text-gray-300">Smoothing, velocity, normalization</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/OptimizedVocabularyImpl.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">OptimizedVocabulary</code></td><td class="px-4 py-2 text-gray-300">Dictionary filtering</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/data/LanguageDetector.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">LanguageDetector</code></td><td class="px-4 py-2 text-gray-300">Multi-language detection</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">assets/models/swipe_model_character_quant.onnx</code></td><td class="px-4 py-2 text-gray-300">Encoder model</td><td class="px-4 py-2 text-gray-300">~4MB quantized</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">assets/models/swipe_decoder_character_quant.onnx</code></td><td class="px-4 py-2 text-gray-300">Decoder model</td><td class="px-4 py-2 text-gray-300">~4MB quantized</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Architecture</h2>
 
-<p class="mb-4 text-gray-300">All critical systems are fully implemented and verified as of 2025-12-04:</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">┌─────────────────────────────────────────────────────────────┐
+│                    SwipeInput (Touch Events)                 │
+│  coordinates: List&lt;PointF&gt;, timestamps: List&lt;Long&gt;          │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│           SwipeTrajectoryProcessor (Feature Extraction)      │
+│  - smoothTrajectory() (moving average, window=3)            │
+│  - calculateVelocities() (first derivative)                 │
+│  - calculateAccelerations() (second derivative)             │
+│  - normalizeCoordinates() [0,1]                             │
+│  - detectNearestKeys() (character indices)                  │
+│  - padOrTruncate(150 points)                                │
+│                                                              │
+│  Output: trajectory_features [1, 150, 6]                    │
+│          nearest_keys [1, 150]                              │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│              runEncoder() (Transformer Inference)            │
+│  Input:  trajectory_features [1, 150, 6]                    │
+│          nearest_keys [1, 150]                              │
+│          src_mask [1, 150]                                  │
+│  Output: memory [1, 150, 256]                               │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│              runBeamSearch() (Character Decoding)            │
+│  - Batched decoder inference (beam_width=8)                 │
+│  - Expand hypotheses, track log-probabilities               │
+│  - Terminate on EOS or max_length=20                        │
+│  Output: List&lt;Beam(tokens, score)&gt;                          │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│              SwipeTokenizer (Token ↔ Character)              │
+│  decode([2,8,5,12,12,15,3]) → "hello"                       │
+│  Special tokens: SOS=2, EOS=3, PAD=0, UNK=1                 │
+│  Vocabulary: a-z (4-29), space (30), ' (31), - (32)         │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│           OptimizedVocabulary (Dictionary Filter)            │
+│  - Filter OOV predictions                                   │
+│  - Rank by frequency + neural confidence                    │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     PredictionResult                         │
+│  words: List&lt;String&gt;, scores: List&lt;Int&gt;, confidences        │
+└─────────────────────────────────────────────────────────────┘</code></pre>
 
-<p class="mb-4 text-gray-300">| Bug # | Issue | Resolution | Status |</p>
-<p class="mb-4 text-gray-300">|-------|-------|------------|--------|</p>
-<p class="mb-4 text-gray-300">| #257 | LanguageDetector missing | Implemented in <code class="bg-ck-dark px-1 rounded">data/LanguageDetector.kt</code> (313 lines) | ✅ FIXED |</p>
-<p class="mb-4 text-gray-300">| #259 | NgramModel missing | Implemented in <code class="bg-ck-dark px-1 rounded">NgramModel.kt</code> (350 lines) | ✅ FIXED |</p>
-<p class="mb-4 text-gray-300">| #262 | WordPredictor missing | Implemented in <code class="bg-ck-dark px-1 rounded">WordPredictor.kt</code> (782 lines) | ✅ FIXED |</p>
-<p class="mb-4 text-gray-300">| #263 | UserAdaptationManager missing | Implemented in <code class="bg-ck-dark px-1 rounded">data/UserAdaptationManager.kt</code> (291 lines) | ✅ FIXED |</p>
-<p class="mb-4 text-gray-300">| #273 | Training data lost on close | SQLite database implementation | ✅ FIXED |</p>
-<p class="mb-4 text-gray-300">| #274 | ML training system | External pipeline by design (ADR-003) | ✅ ARCHITECTURAL |</p>
-<p class="mb-4 text-gray-300">| #275 | Async prediction | Kotlin coroutines (ADR-004) | ✅ ARCHITECTURAL |</p>
-<p class="mb-4 text-gray-300">| #276 | Advanced gesture analysis | Neural network auto-learns features (ADR-005) | ✅ ARCHITECTURAL |</p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Configuration</h2>
 
-<p class="mb-4 text-gray-300"><strong>Initialization Order Bug</strong> (2025-11-14): Fixed race condition in CleverKeysService.kt where WordPredictor was initialized before its dependencies.</p>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Key</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Type</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Default</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Description</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">neural_beam_width</code></td><td class="px-4 py-2 text-gray-300">Int</td><td class="px-4 py-2 text-gray-300">6</td><td class="px-4 py-2 text-gray-300">Beam search width (more = better quality, slower)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">neural_max_length</code></td><td class="px-4 py-2 text-gray-300">Int</td><td class="px-4 py-2 text-gray-300">20</td><td class="px-4 py-2 text-gray-300">Maximum word length in characters</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">neural_confidence_threshold</code></td><td class="px-4 py-2 text-gray-300">Float</td><td class="px-4 py-2 text-gray-300">0.3</td><td class="px-4 py-2 text-gray-300">Minimum confidence to show prediction</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Details</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">⚠️ Outstanding Issues (P1-P2)</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Feature Extraction Pipeline</h3>
 
-<p class="mb-4 text-gray-300">| Bug # | Issue | File | Impact | Est. Time |</p>
-<p class="mb-4 text-gray-300">|-------|-------|------|--------|-----------|</p>
-<p class="mb-4 text-gray-300">| #270 | Time delta calculation | SwipeMLData.kt | Training timestamps may be wrong | 1 hour |</p>
-<p class="mb-4 text-gray-300">| #271 | Consecutive duplicate filtering | SwipeMLData.kt | Noisy training data | 1 hour |</p>
-<p class="mb-4 text-gray-300">| #277 | Multi-language expansion | OptimizedVocabularyImpl.kt | Only English fully tested | 8-12 hours/language |</p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">1. Feature Overview</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Purpose</h3>
-<p class="mb-4 text-gray-300">Pure ONNX neural transformer architecture for converting swipe gestures into ranked word predictions. This is a <strong>complete architectural replacement</strong> of the original CGR (Continuous Gesture Recognition) system.</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Key Advantages Over Legacy CGR</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Modern ML</strong>: Transformer encoder-decoder vs. template matching</li>
-<li class="ml-4">&#8226; <strong>Automatic Learning</strong>: Neural networks learn features from data</li>
-<li class="ml-4">&#8226; <strong>Better Accuracy</strong>: Deep learning vs. statistical heuristics</li>
-<li class="ml-4">&#8226; <strong>Scalability</strong>: Can improve with more training data</li>
-<li class="ml-4">&#8226; <strong>Simplicity</strong>: 2000+ lines of Java CGR code replaced with ONNX inference</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Architecture Comparison</h3>
-
-<p class="mb-4 text-gray-300"><strong>Original (Java - CGR System)</strong>:</p>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">Swipe → Manual Feature Engineering (40+ features) →
-<p class="mb-4 text-gray-300">Template Matching → Dictionary Lookup →</p>
-<p class="mb-4 text-gray-300">Statistical Scoring → Predictions</code></pre></p>
-
-<p class="mb-4 text-gray-300"><strong>Modern (Kotlin - ONNX System)</strong>:</p>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">Swipe → Feature Extraction (6 features) →
-<p class="mb-4 text-gray-300">Transformer Encoder → Beam Search Decoder →</p>
-<p class="mb-4 text-gray-300">Vocabulary Filter → Predictions</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Current Status (Updated: 2025-11-14)</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Core Pipeline</strong>: ✅ COMPLETE (encoder + decoder + beam search)</li>
-<li class="ml-4">&#8226; <strong>Feature Extraction</strong>: ✅ COMPLETE (smoothing, velocity, acceleration)</li>
-<li class="ml-4">&#8226; <strong>Tokenization</strong>: ✅ COMPLETE (character-level)</li>
-<li class="ml-4">&#8226; <strong>WordPredictor System</strong>: ✅ COMPLETE (dictionary, bigram, language detection, user adaptation)</li>
-<li class="ml-4">&#8226; <strong>Vocabulary</strong>: ⚠️ PARTIAL (English only, framework ready for multi-language)</li>
-<li class="ml-4">&#8226; <strong>Training Data</strong>: ✅ COMPLETE (SQLite persistence - Bug #273 FIXED)</li>
-<li class="ml-4">&#8226; <strong>Multi-Language</strong>: ⚠️ FRAMEWORK READY (LanguageDetector implemented, assets needed)</li>
-<li class="ml-4">&#8226; <strong>User Adaptation</strong>: ✅ COMPLETE (SharedPreferences-based learning)</li>
-</ul>
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">2. Requirements</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Functional Requirements</h3>
-
-<p class="mb-4 text-gray-300"><strong>FR-1: Swipe Input Processing</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ✅ Capture touch coordinates (x, y) and timestamps</li>
-<li class="ml-4">&#8226; ✅ Smooth trajectory (moving average, window=3)</li>
-<li class="ml-4">&#8226; ✅ Calculate velocity (first derivative)</li>
-<li class="ml-4">&#8226; ✅ Calculate acceleration (second derivative)</li>
-<li class="ml-4">&#8226; ✅ Normalize coordinates [0,1] (device-independent)</li>
-<li class="ml-4">&#8226; ✅ Detect nearest keys (real positions or QWERTY grid)</li>
-<li class="ml-4">&#8226; ✅ Pad/truncate to 150 points (fixed sequence length)</li>
-</ul>
-<p class="mb-4 text-gray-300"><strong>FR-2: ONNX Encoder Inference</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ✅ Input: trajectory_features [1, 150, 6], nearest_keys [1, 150]</li>
-<li class="ml-4">&#8226; ✅ Model: swipe_model_character_quant.onnx (quantized)</li>
-<li class="ml-4">&#8226; ✅ Output: memory tensor [1, 150, 256] (encoder representation)</li>
-<li class="ml-4">&#8226; ✅ Transformer architecture with self-attention</li>
-</ul>
-<p class="mb-4 text-gray-300"><strong>FR-3: Beam Search Decoder</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ✅ Batched inference (50-70% speedup vs sequential)</li>
-<li class="ml-4">&#8226; ✅ Beam width: 8 (configurable)</li>
-<li class="ml-4">&#8226; ✅ Max length: 20 characters</li>
-<li class="ml-4">&#8226; ✅ SOS/EOS token handling</li>
-<li class="ml-4">&#8226; ✅ Score tracking (log probabilities)</li>
-<li class="ml-4">&#8226; ✅ Early termination on EOS</li>
-</ul>
-<p class="mb-4 text-gray-300"><strong>FR-4: Post-Processing</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ✅ Token-to-character decoding</li>
-<li class="ml-4">&#8226; ✅ Vocabulary filtering (dictionary lookup)</li>
-<li class="ml-4">&#8226; ✅ Confidence score conversion (0-1000 scale)</li>
-<li class="ml-4">&#8226; ✅ Ranking by score (descending)</li>
-</ul>
-<p class="mb-4 text-gray-300"><strong>FR-5: Training Data Collection</strong> (COMPLETE)</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ✅ Persistent storage via SQLite (Bug #273 - FIXED)</li>
-<li class="ml-4">&#8226; ⚠️ Time delta calculation needs verification (Bug #270)</li>
-<li class="ml-4">&#8226; ⚠️ Consecutive duplicates filtering needs verification (Bug #271)</li>
-</ul>
-<p class="mb-4 text-gray-300"><strong>FR-6: Multi-Language Support</strong> (FRAMEWORK READY)</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ✅ Language detection implemented (Bug #257 - FIXED)</li>
-<li class="ml-4">&#8226; ⚠️ Per-language models need assets (Bug #277)</li>
-<li class="ml-4">&#8226; ⚠️ User dictionaries framework ready, assets needed</li>
-</ul>
-<p class="mb-4 text-gray-300"><strong>FR-7: User Adaptation</strong> (COMPLETE)</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ✅ Personalization manager implemented (Bug #263 - FIXED)</li>
-<li class="ml-4">&#8226; ✅ Frequency tracking via SharedPreferences</li>
-<li class="ml-4">&#8226; ✅ User-specific corrections supported</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Non-Functional Requirements</h3>
-
-<p class="mb-4 text-gray-300"><strong>NFR-1: Performance</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ✅ Encoder inference: < 30ms (achieved with quantization)</li>
-<li class="ml-4">&#8226; ✅ Decoder inference: < 50ms (batched beam search)</li>
-<li class="ml-4">&#8226; ✅ Total latency: < 100ms (end-to-end)</li>
-<li class="ml-4">&#8226; ✅ Memory pooling (OptimizedTensorPool)</li>
-<li class="ml-4">&#8226; ✅ GPU batching (BatchedMemoryOptimizer)</li>
-</ul>
-<p class="mb-4 text-gray-300"><strong>NFR-2: Accuracy</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ⚠️ Top-1 accuracy: 65-75% (can improve with more training data)</li>
-<li class="ml-4">&#8226; ⚠️ Top-3 accuracy: 85-90% (needs vocabulary improvement)</li>
-<li class="ml-4">&#8226; ⚠️ Multi-language: Framework ready, needs asset files</li>
-</ul>
-<p class="mb-4 text-gray-300"><strong>NFR-3: Resource Usage</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ✅ Model size: ~8MB (quantized from ~30MB)</li>
-<li class="ml-4">&#8226; ✅ Memory pooling prevents leaks</li>
-<li class="ml-4">&#8226; ✅ Training data persisted to SQLite (Bug #273 FIXED)</li>
-</ul>
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">3. Technical Design</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">System Architecture</h3>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">┌───────────────────────────────────────────────────────────┐
-<p class="mb-4 text-gray-300">│                    USER INTERACTION                        │</p>
-<p class="mb-4 text-gray-300">└───────────────────────────────────────────────────────────┘</p>
-<p class="mb-4 text-gray-300">                            │</p>
-<p class="mb-4 text-gray-300">                            ▼</p>
-<p class="mb-4 text-gray-300">┌───────────────────────────────────────────────────────────┐</p>
-<p class="mb-4 text-gray-300">│              SwipeDetector.kt (Touch Events)               │</p>
-<p class="mb-4 text-gray-300">│  - ACTION_DOWN: Start gesture                             │</p>
-<p class="mb-4 text-gray-300">│  - ACTION_MOVE: Collect points                            │</p>
-<p class="mb-4 text-gray-300">│  - ACTION_UP: Trigger prediction                          │</p>
-<p class="mb-4 text-gray-300">└───────────────────────────────────────────────────────────┘</p>
-<p class="mb-4 text-gray-300">                            │</p>
-<p class="mb-4 text-gray-300">                            ▼</p>
-<p class="mb-4 text-gray-300">┌───────────────────────────────────────────────────────────┐</p>
-<p class="mb-4 text-gray-300">│         SwipeInput.kt (Data Encapsulation)                 │</p>
-<p class="mb-4 text-gray-300">│  data class SwipeInput(                                    │</p>
-<p class="mb-4 text-gray-300">│    coordinates: List&lt;PointF&gt;,                              │</p>
-<p class="mb-4 text-gray-300">│    timestamps: List&lt;Long&gt;,                                 │</p>
-<p class="mb-4 text-gray-300">│    touchedKeys: List&lt;Key&gt;                                  │</p>
-<p class="mb-4 text-gray-300">│  )                                                         │</p>
-<p class="mb-4 text-gray-300">└───────────────────────────────────────────────────────────┘</p>
-<p class="mb-4 text-gray-300">                            │</p>
-<p class="mb-4 text-gray-300">                            ▼</p>
-<p class="mb-4 text-gray-300">┌───────────────────────────────────────────────────────────┐</p>
-<p class="mb-4 text-gray-300">│      OnnxSwipePredictorImpl.kt (Core Pipeline)             │</p>
-<p class="mb-4 text-gray-300">│  ┌─────────────────────────────────────────────────┐      │</p>
-<p class="mb-4 text-gray-300">│  │ SwipeTrajectoryProcessor (Feature Extraction)   │      │</p>
-<p class="mb-4 text-gray-300">│  │  - smoothTrajectory()                           │      │</p>
-<p class="mb-4 text-gray-300">│  │  - calculateVelocities()                        │      │</p>
-<p class="mb-4 text-gray-300">│  │  - calculateAccelerations()                     │      │</p>
-<p class="mb-4 text-gray-300">│  │  - normalizeCoordinates()                       │      │</p>
-<p class="mb-4 text-gray-300">│  │  - detectNearestKeys()                          │      │</p>
-<p class="mb-4 text-gray-300">│  │  - padOrTruncate(150 points)                    │      │</p>
-<p class="mb-4 text-gray-300">│  └─────────────────────────────────────────────────┘      │</p>
-<p class="mb-4 text-gray-300">│                         │                                  │</p>
-<p class="mb-4 text-gray-300">│                         ▼                                  │</p>
-<p class="mb-4 text-gray-300">│  ┌─────────────────────────────────────────────────┐      │</p>
-<p class="mb-4 text-gray-300">│  │ runEncoder() (Transformer Inference)            │      │</p>
-<p class="mb-4 text-gray-300">│  │  - Create input tensors [1,150,6], [1,150]     │      │</p>
-<p class="mb-4 text-gray-300">│  │  - Run ONNX encoder model                       │      │</p>
-<p class="mb-4 text-gray-300">│  │  - Output: memory [1,150,256]                   │      │</p>
-<p class="mb-4 text-gray-300">│  └─────────────────────────────────────────────────┘      │</p>
-<p class="mb-4 text-gray-300">│                         │                                  │</p>
-<p class="mb-4 text-gray-300">│                         ▼                                  │</p>
-<p class="mb-4 text-gray-300">│  ┌─────────────────────────────────────────────────┐      │</p>
-<p class="mb-4 text-gray-300">│  │ runBeamSearch() (Character Decoding)            │      │</p>
-<p class="mb-4 text-gray-300">│  │  - Initialize beams with SOS token              │      │</p>
-<p class="mb-4 text-gray-300">│  │  - BATCHED decoder inference (beam_width=8)     │      │</p>
-<p class="mb-4 text-gray-300">│  │  - Expand hypotheses, track scores              │      │</p>
-<p class="mb-4 text-gray-300">│  │  - Terminate on EOS or max_length               │      │</p>
-<p class="mb-4 text-gray-300">│  │  - Return top N candidates                      │      │</p>
-<p class="mb-4 text-gray-300">│  └─────────────────────────────────────────────────┘      │</p>
-<p class="mb-4 text-gray-300">│                         │                                  │</p>
-<p class="mb-4 text-gray-300">│                         ▼                                  │</p>
-<p class="mb-4 text-gray-300">│  ┌─────────────────────────────────────────────────┐      │</p>
-<p class="mb-4 text-gray-300">│  │ SwipeTokenizer (Token ↔ Character)              │      │</p>
-<p class="mb-4 text-gray-300">│  │  - decode([2,5,8,12,3]) → "hello"              │      │</p>
-<p class="mb-4 text-gray-300">│  │  - Special tokens: SOS=2, EOS=3, PAD=0, UNK=1   │      │</p>
-<p class="mb-4 text-gray-300">│  └─────────────────────────────────────────────────┘      │</p>
-<p class="mb-4 text-gray-300">└───────────────────────────────────────────────────────────┘</p>
-<p class="mb-4 text-gray-300">                            │</p>
-<p class="mb-4 text-gray-300">                            ▼</p>
-<p class="mb-4 text-gray-300">┌───────────────────────────────────────────────────────────┐</p>
-<p class="mb-4 text-gray-300">│    OptimizedVocabularyImpl.kt (Dictionary Filter)         │</p>
-<p class="mb-4 text-gray-300">│  - Check words against dictionary (English only)          │</p>
-<p class="mb-4 text-gray-300">│  - Filter OOV (out-of-vocabulary) predictions             │</p>
-<p class="mb-4 text-gray-300">│  - Bug #277: Multi-language support missing               │</p>
-<p class="mb-4 text-gray-300">└───────────────────────────────────────────────────────────┘</p>
-<p class="mb-4 text-gray-300">                            │</p>
-<p class="mb-4 text-gray-300">                            ▼</p>
-<p class="mb-4 text-gray-300">┌───────────────────────────────────────────────────────────┐</p>
-<p class="mb-4 text-gray-300">│         PredictionResult.kt (Output Format)                │</p>
-<p class="mb-4 text-gray-300">│  data class PredictionResult(                              │</p>
-<p class="mb-4 text-gray-300">│    words: List&lt;String&gt;,        // ["hello", "hallo"]      │</p>
-<p class="mb-4 text-gray-300">│    scores: List&lt;Int&gt;,          // [950, 850]              │</p>
-<p class="mb-4 text-gray-300">│    confidences: List&lt;Float&gt;    // [0.95, 0.85]            │</p>
-<p class="mb-4 text-gray-300">│  )                                                         │</p>
-<p class="mb-4 text-gray-300">└───────────────────────────────────────────────────────────┘</p>
-<p class="mb-4 text-gray-300">                            │</p>
-<p class="mb-4 text-gray-300">                            ▼</p>
-<p class="mb-4 text-gray-300">┌───────────────────────────────────────────────────────────┐</p>
-<p class="mb-4 text-gray-300">│            SuggestionBar.kt (UI Display)                   │</p>
-<p class="mb-4 text-gray-300">│  - Show top 3 predictions                                 │</p>
-<p class="mb-4 text-gray-300">│  - Highlight by confidence color                          │</p>
-<p class="mb-4 text-gray-300">│  - Handle user selection                                  │</p>
-<p class="mb-4 text-gray-300">└───────────────────────────────────────────────────────────┘</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Critical Data Flows</h3>
-
-<p class="mb-4 text-gray-300"><strong>1. Feature Extraction Pipeline</strong>:</p>
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Input: SwipeInput
-<p class="mb-4 text-gray-300">val rawCoords = swipeInput.coordinates          // [(100,250), (102,251), ...]</p>
-<p class="mb-4 text-gray-300">val timestamps = swipeInput.timestamps          // [1728567890123, 1728567890140, ...]</p>
+val rawCoords = swipeInput.coordinates      // [(100,250), (102,251), ...]
+val timestamps = swipeInput.timestamps      // [1728567890123, 1728567890140, ...]
 
-<p class="mb-4 text-gray-300">// Step 1: Smoothing (moving average, window=3)</p>
-<p class="mb-4 text-gray-300">val smoothed = smoothTrajectory(rawCoords)      // Reduce noise</p>
+// Step 1: Smoothing (moving average, window=3)
+val smoothed = smoothTrajectory(rawCoords)
 
-<p class="mb-4 text-gray-300">// Step 2: Velocity (first derivative)</p>
-<p class="mb-4 text-gray-300">val velocities = calculateVelocities(smoothed, timestamps)</p>
-<p class="mb-4 text-gray-300">// Formula: velocity = distance / time_delta (pixels/sec)</p>
+// Step 2: Velocity (first derivative)
+val velocities = calculateVelocities(smoothed, timestamps)
+// Formula: velocity = distance / time_delta (pixels/sec)
 
-<p class="mb-4 text-gray-300">// Step 3: Acceleration (second derivative)</p>
-<p class="mb-4 text-gray-300">val accelerations = calculateAccelerations(velocities, timestamps)</p>
-<p class="mb-4 text-gray-300">// Formula: accel = velocity_delta / time_delta (pixels/sec²)</p>
+// Step 3: Acceleration (second derivative)
+val accelerations = calculateAccelerations(velocities, timestamps)
 
-<p class="mb-4 text-gray-300">// Step 4: Normalization [0,1]</p>
-<p class="mb-4 text-gray-300">val normalized = normalizeCoordinates(smoothed)</p>
-<p class="mb-4 text-gray-300">// normalized_x = x / keyboardWidth, normalized_y = y / keyboardHeight</p>
+// Step 4: Normalization [0,1]
+val normalized = normalizeCoordinates(smoothed)
+// normalized_x = x / keyboardWidth, normalized_y = y / keyboardHeight
 
-<p class="mb-4 text-gray-300">// Step 5: Nearest key detection</p>
-<p class="mb-4 text-gray-300">val nearestKeys = detectNearestKeys(normalized)</p>
-<p class="mb-4 text-gray-300">// Returns character indices: a=4, b=5, ..., z=29</p>
+// Step 5: Nearest key detection
+val nearestKeys = detectNearestKeys(normalized)
+// Returns character indices: a=4, b=5, ..., z=29
 
-<p class="mb-4 text-gray-300">// Step 6: Padding to 150 points</p>
-<p class="mb-4 text-gray-300">val (features, keys, mask) = padOrTruncate(</p>
-<p class="mb-4 text-gray-300">    normalized, velocities, accelerations, nearestKeys, 150</p>
-<p class="mb-4 text-gray-300">)</p>
+// Step 6: Padding to 150 points
+val (features, keys, mask) = padOrTruncate(
+    normalized, velocities, accelerations, nearestKeys, 150
+)
 
-<p class="mb-4 text-gray-300">// Output tensors:</p>
-<p class="mb-4 text-gray-300">// trajectory_features: [1, 150, 6] (x, y, vx, vy, ax, ay)</p>
-<p class="mb-4 text-gray-300">// nearest_keys: [1, 150] (character indices)</p>
-<p class="mb-4 text-gray-300">// src_mask: [1, 150] (attention mask - 1=real, 0=padding)</code></pre></p>
+// Output tensors:
+// trajectory_features: [1, 150, 6] (x, y, vx, vy, ax, ay)
+// nearest_keys: [1, 150] (character indices)
+// src_mask: [1, 150] (attention mask - 1=real, 0=padding)</code></pre>
 
-<p class="mb-4 text-gray-300"><strong>2. Beam Search Algorithm</strong>:</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Beam Search Algorithm</h3>
+
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Initialize beams with SOS token
-<p class="mb-4 text-gray-300">var beams = listOf(Beam(tokens=[SOS], score=0.0))</p>
+var beams = listOf(Beam(tokens=[SOS], score=0.0))
 
-<p class="mb-4 text-gray-300">for (step in 0 until max_length) {</p>
-<p class="mb-4 text-gray-300">    // BATCHED inference: all beams in single model call</p>
-<p class="mb-4 text-gray-300">    val batchSize = beams.size</p>
-<p class="mb-4 text-gray-300">    val inputIds = beams.map { it.tokens }.toBatchTensor()  // [batch, seq_len]</p>
+for (step in 0 until max_length) {
+    // BATCHED inference: all beams in single model call
+    val batchSize = beams.size
+    val inputIds = beams.map { it.tokens }.toBatchTensor()  // [batch, seq_len]
 
-<p class="mb-4 text-gray-300">    // Run decoder model</p>
-<p class="mb-4 text-gray-300">    val logits = runDecoder(memory, inputIds)  // [batch, vocab_size]</p>
+    // Run decoder model
+    val logits = runDecoder(memory, inputIds)  // [batch, vocab_size]
 
-<p class="mb-4 text-gray-300">    // Expand each beam</p>
-<p class="mb-4 text-gray-300">    val newBeams = mutableListOf&lt;Beam&gt;()</p>
-<p class="mb-4 text-gray-300">    for ((beamIdx, beam) in beams.withIndex()) {</p>
-<p class="mb-4 text-gray-300">        val topK = logits[beamIdx].topK(beam_width)  // Get top K tokens</p>
+    // Expand each beam
+    val newBeams = mutableListOf&lt;Beam&gt;()
+    for ((beamIdx, beam) in beams.withIndex()) {
+        val topK = logits[beamIdx].topK(beam_width)
 
-<p class="mb-4 text-gray-300">        for ((tokenIdx, logProb) in topK) {</p>
-<p class="mb-4 text-gray-300">            if (tokenIdx == EOS) {</p>
-<p class="mb-4 text-gray-300">                finishedBeams.add(beam.copy(score = beam.score + logProb))</p>
-<p class="mb-4 text-gray-300">            } else {</p>
-<p class="mb-4 text-gray-300">                newBeams.add(Beam(</p>
-<p class="mb-4 text-gray-300">                    tokens = beam.tokens + tokenIdx,</p>
-<p class="mb-4 text-gray-300">                    score = beam.score + logProb</p>
-<p class="mb-4 text-gray-300">                ))</p>
-<p class="mb-4 text-gray-300">            }</p>
-<p class="mb-4 text-gray-300">        }</p>
-<p class="mb-4 text-gray-300">    }</p>
+        for ((tokenIdx, logProb) in topK) {
+            if (tokenIdx == EOS) {
+                finishedBeams.add(beam.copy(score = beam.score + logProb))
+            } else {
+                newBeams.add(Beam(
+                    tokens = beam.tokens + tokenIdx,
+                    score = beam.score + logProb
+                ))
+            }
+        }
+    }
 
-<p class="mb-4 text-gray-300">    // Keep top beam_width beams by score</p>
-<p class="mb-4 text-gray-300">    beams = newBeams.sortedByDescending { it.score }.take(beam_width)</p>
+    // Keep top beam_width beams by score
+    beams = newBeams.sortedByDescending { it.score }.take(beam_width)
 
-<p class="mb-4 text-gray-300">    // Early termination if all beams finished</p>
-<p class="mb-4 text-gray-300">    if (beams.isEmpty()) break</p>
-<p class="mb-4 text-gray-300">}</p>
+    if (beams.isEmpty()) break
+}
 
-<p class="mb-4 text-gray-300">// Return best finished beams</p>
-<p class="mb-4 text-gray-300">return finishedBeams.sortedByDescending { it.score }</code></pre></p>
+return finishedBeams.sortedByDescending { it.score }</code></pre>
 
-<p class="mb-4 text-gray-300"><strong>3. Token-to-Character Decoding</strong>:</p>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Token indices → Characters
-<p class="mb-4 text-gray-300">val CHAR_MAP = mapOf(</p>
-<p class="mb-4 text-gray-300">    4 to 'a', 5 to 'b', 6 to 'c', ..., 29 to 'z',</p>
-<p class="mb-4 text-gray-300">    30 to ' ', 31 to '\'', 32 to '-'</p>
-<p class="mb-4 text-gray-300">)</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Token Mapping</h3>
 
-<p class="mb-4 text-gray-300">fun decode(tokens: List&lt;Int&gt;): String {</p>
-<p class="mb-4 text-gray-300">    return tokens</p>
-<p class="mb-4 text-gray-300">        .filter { it !in listOf(SOS, EOS, PAD, UNK) }</p>
-<p class="mb-4 text-gray-300">        .mapNotNull { CHAR_MAP[it] }</p>
-<p class="mb-4 text-gray-300">        .joinToString("")</p>
-<p class="mb-4 text-gray-300">}</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">val CHAR_MAP = mapOf(
+    4 to 'a', 5 to 'b', 6 to 'c', 7 to 'd', 8 to 'e',
+    9 to 'f', 10 to 'g', 11 to 'h', 12 to 'i', 13 to 'j',
+    14 to 'k', 15 to 'l', 16 to 'm', 17 to 'n', 18 to 'o',
+    19 to 'p', 20 to 'q', 21 to 'r', 22 to 's', 23 to 't',
+    24 to 'u', 25 to 'v', 26 to 'w', 27 to 'x', 28 to 'y',
+    29 to 'z', 30 to ' ', 31 to '\'', 32 to '-'
+)
 
-<p class="mb-4 text-gray-300">// Example:</p>
-<p class="mb-4 text-gray-300">// tokens: [2, 8, 5, 12, 12, 15, 3]  (SOS, h, e, l, l, o, EOS)</p>
-<p class="mb-4 text-gray-300">// decoded: "hello"</code></pre></p>
+// Special tokens
+const val PAD = 0
+const val UNK = 1
+const val SOS = 2
+const val EOS = 3
+
+fun decode(tokens: List&lt;Int&gt;): String {
+    return tokens
+        .filter { it !in listOf(SOS, EOS, PAD, UNK) }
+        .mapNotNull { CHAR_MAP[it] }
+        .joinToString("")
+}
+
+// Example:
+// tokens: [2, 8, 5, 12, 12, 15, 3]  (SOS, h, e, l, l, o, EOS)
+// decoded: "hello"</code></pre>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Model Architecture</h3>
 
 <p class="mb-4 text-gray-300"><strong>Encoder Model</strong> (<code class="bg-ck-dark px-1 rounded">swipe_model_character_quant.onnx</code>):</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Type</strong>: Transformer encoder</li>
-<li class="ml-4">&#8226; <strong>Input 1</strong>: <code class="bg-ck-dark px-1 rounded">trajectory_features</code> [batch, 150, 6]</li>
-</ul><p class="mb-4 text-gray-300">  - Features: (x, y, velocity_x, velocity_y, accel_x, accel_y)</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Input 2</strong>: <code class="bg-ck-dark px-1 rounded">nearest_keys</code> [batch, 150]</li>
-</ul><p class="mb-4 text-gray-300">  - Character indices detected under each point</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Input 3</strong>: <code class="bg-ck-dark px-1 rounded">src_mask</code> [batch, 150]</li>
-</ul><p class="mb-4 text-gray-300">  - Attention mask (1=real point, 0=padding)</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Output</strong>: <code class="bg-ck-dark px-1 rounded">memory</code> [batch, 150, 256]</li>
-</ul><p class="mb-4 text-gray-300">  - Encoded representation of swipe trajectory</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Size</strong>: ~4MB (quantized INT8)</li>
-<li class="ml-4">&#8226; <strong>Layers</strong>: 6 transformer encoder layers</li>
-<li class="ml-4">&#8226; <strong>Attention</strong>: Multi-head self-attention (8 heads)</li>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Type: Transformer encoder (6 layers, 8 attention heads)</li>
+<li class="ml-4">&#8226; Input 1: <code class="bg-ck-dark px-1 rounded">trajectory_features</code> [batch, 150, 6]</li>
+<li class="ml-4">&#8226; Input 2: <code class="bg-ck-dark px-1 rounded">nearest_keys</code> [batch, 150]</li>
+<li class="ml-4">&#8226; Input 3: <code class="bg-ck-dark px-1 rounded">src_mask</code> [batch, 150]</li>
+<li class="ml-4">&#8226; Output: <code class="bg-ck-dark px-1 rounded">memory</code> [batch, 150, 256]</li>
+<li class="ml-4">&#8226; Size: ~4MB (INT8 quantized)</li>
 </ul>
 <p class="mb-4 text-gray-300"><strong>Decoder Model</strong> (<code class="bg-ck-dark px-1 rounded">swipe_decoder_character_quant.onnx</code>):</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Type</strong>: Transformer decoder (character-level)</li>
-<li class="ml-4">&#8226; <strong>Input 1</strong>: <code class="bg-ck-dark px-1 rounded">memory</code> [batch, 150, 256] (from encoder)</li>
-<li class="ml-4">&#8226; <strong>Input 2</strong>: <code class="bg-ck-dark px-1 rounded">tgt_input_ids</code> [batch, seq_len] (partial sequence)</li>
-<li class="ml-4">&#8226; <strong>Output</strong>: <code class="bg-ck-dark px-1 rounded">logits</code> [batch, seq_len, vocab_size=35]</li>
-</ul><p class="mb-4 text-gray-300">  - Next character probabilities</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Size</strong>: ~4MB (quantized INT8)</li>
-<li class="ml-4">&#8226; <strong>Vocabulary</strong>: 35 tokens (SOS, EOS, PAD, UNK, a-z, space, ', -)</li>
-<li class="ml-4">&#8226; <strong>Max Length</strong>: 20 characters</li>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Type: Transformer decoder (character-level)</li>
+<li class="ml-4">&#8226; Input 1: <code class="bg-ck-dark px-1 rounded">memory</code> [batch, 150, 256]</li>
+<li class="ml-4">&#8226; Input 2: <code class="bg-ck-dark px-1 rounded">tgt_input_ids</code> [batch, seq_len]</li>
+<li class="ml-4">&#8226; Output: <code class="bg-ck-dark px-1 rounded">logits</code> [batch, seq_len, 35]</li>
+<li class="ml-4">&#8226; Vocabulary: 35 tokens (special + a-z + punctuation)</li>
+<li class="ml-4">&#8226; Size: ~4MB (INT8 quantized)</li>
 </ul>
-<hr class="border-gray-700 my-6">
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Performance Characteristics</h3>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">4. Implementation Plan</h2>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Operation</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Target</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Method</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Encoder inference</td><td class="px-4 py-2 text-gray-300">< 30ms</td><td class="px-4 py-2 text-gray-300">INT8 quantization</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Decoder inference</td><td class="px-4 py-2 text-gray-300">< 50ms</td><td class="px-4 py-2 text-gray-300">Batched beam search</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Total latency</td><td class="px-4 py-2 text-gray-300">< 100ms</td><td class="px-4 py-2 text-gray-300">Memory pooling</td></tr></tbody></table>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Memory Optimization</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 1: Critical Bug Fixes (2-3 days)</h3>
-<p class="mb-4 text-gray-300"><strong>Priority: P0 - Fix data loss and training bugs</strong></p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// OptimizedTensorPool prevents allocation during inference
+class OptimizedTensorPool {
+    private val featureBuffer = FloatArray(150 * 6)
+    private val keyBuffer = LongArray(150)
+    private val maskBuffer = FloatArray(150)
 
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>Bug #273: Persistent Training Data</strong></li>
-</ul><p class="mb-4 text-gray-300">   - Create SQLite database schema</p>
-<p class="mb-4 text-gray-300">   - Migrate SwipeMLDataStore to use Room/SQLite</p>
-<p class="mb-4 text-gray-300">   - Implement batch insert for performance</p>
-<p class="mb-4 text-gray-300">   - Add data export/import functionality</p>
-<p class="mb-4 text-gray-300">   - Time: 4-6 hours</p>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">2. <strong>Bug #270: Time Delta Calculation</strong></li>
-</ul><p class="mb-4 text-gray-300">   - Fix addRawPoint() timestamp logic</p>
-<p class="mb-4 text-gray-300">   - Use proper millisecond differences</p>
-<p class="mb-4 text-gray-300">   - Time: 1 hour</p>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">3. <strong>Bug #271: Consecutive Duplicate Filtering</strong></li>
-</ul><p class="mb-4 text-gray-300">   - Add logic to skip duplicate keys in sequence</p>
-<p class="mb-4 text-gray-300">   - Preserve only direction changes</p>
-<p class="mb-4 text-gray-300">   - Time: 1 hour</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 2: Multi-Language Support (1-2 weeks)</h3>
-<p class="mb-4 text-gray-300"><strong>Priority: P1 - Enable multiple languages</strong></p>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>Bug #277: Multi-Language Infrastructure</strong></li>
-</ul><p class="mb-4 text-gray-300">   - Add language detection (Bug #257 - 313 lines to port)</p>
-<p class="mb-4 text-gray-300">   - Per-language ONNX models</p>
-<p class="mb-4 text-gray-300">   - Per-language vocabularies</p>
-<p class="mb-4 text-gray-300">   - User dictionary support</p>
-<p class="mb-4 text-gray-300">   - Language switcher UI</p>
-<p class="mb-4 text-gray-300">   - Time: 8-12 hours implementation + model training</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 3: User Adaptation (2-3 weeks)</h3>
-<p class="mb-4 text-gray-300"><strong>Priority: P1 - Personalization</strong></p>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>Bug #263: UserAdaptationManager</strong></li>
-</ul><p class="mb-4 text-gray-300">   - Port UserAdaptationManager.java (291 lines)</p>
-<p class="mb-4 text-gray-300">   - Frequency tracking</p>
-<p class="mb-4 text-gray-300">   - User-specific corrections</p>
-<p class="mb-4 text-gray-300">   - Personalized scoring adjustments</p>
-<p class="mb-4 text-gray-300">   - Time: 12-16 hours</p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 4: Training Infrastructure (4-6 weeks - External)</h3>
-<p class="mb-4 text-gray-300"><strong>Priority: P0 - Enable model improvements</strong></p>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>Bug #274: ML Training System (External)</strong></li>
-</ul><p class="mb-4 text-gray-300">   - Python/PyTorch training pipeline</p>
-<p class="mb-4 text-gray-300">   - Data preprocessing scripts</p>
-<p class="mb-4 text-gray-300">   - Model architecture definition</p>
-<p class="mb-4 text-gray-300">   - Training loop with validation</p>
-<p class="mb-4 text-gray-300">   - ONNX export scripts</p>
-<p class="mb-4 text-gray-300">   - Time: 2-3 weeks (full infrastructure)</p>
-<p class="mb-4 text-gray-300">   - Note: This is INTENTIONAL external training (ADR-003)</p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">5. Testing Strategy</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Unit Tests</h3>
-
-<p class="mb-4 text-gray-300"><strong>Feature Extraction Tests</strong>:</p>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">@Test
-<p class="mb-4 text-gray-300">fun <code class="bg-ck-dark px-1 rounded">smoothTrajectory reduces noise</code>() {</p>
-<p class="mb-4 text-gray-300">    val noisy = listOf(</p>
-<p class="mb-4 text-gray-300">        PointF(100f, 100f),</p>
-<p class="mb-4 text-gray-300">        PointF(105f, 102f),  // Noise spike</p>
-<p class="mb-4 text-gray-300">        PointF(102f, 101f)</p>
-<p class="mb-4 text-gray-300">    )</p>
-<p class="mb-4 text-gray-300">    val smoothed = smoothTrajectory(noisy)</p>
-<p class="mb-4 text-gray-300">    assertTrue(smoothed[1].x &lt; noisy[1].x)  // Spike reduced</p>
-<p class="mb-4 text-gray-300">}</p>
-
-<p class="mb-4 text-gray-300">@Test</p>
-<p class="mb-4 text-gray-300">fun <code class="bg-ck-dark px-1 rounded">velocity calculation is correct</code>() {</p>
-<p class="mb-4 text-gray-300">    val coords = listOf(PointF(0f, 0f), PointF(100f, 0f))</p>
-<p class="mb-4 text-gray-300">    val timestamps = listOf(0L, 1000L)  // 1 second apart</p>
-<p class="mb-4 text-gray-300">    val velocities = calculateVelocities(coords, timestamps)</p>
-<p class="mb-4 text-gray-300">    assertEquals(100f, velocities[0], 0.1f)  // 100 pixels/sec</p>
-<p class="mb-4 text-gray-300">}</p>
-
-<p class="mb-4 text-gray-300">@Test</p>
-<p class="mb-4 text-gray-300">fun <code class="bg-ck-dark px-1 rounded">padding extends to 150 points</code>() {</p>
-<p class="mb-4 text-gray-300">    val coords = List(50) { PointF(it.toFloat(), 0f) }</p>
-<p class="mb-4 text-gray-300">    val (features, _, mask) = padOrTruncate(coords, ..., 150)</p>
-<p class="mb-4 text-gray-300">    assertEquals(150, features.size)</p>
-<p class="mb-4 text-gray-300">    assertEquals(50, mask.count { it == 1 })  // 50 real, 100 padded</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
-
-<p class="mb-4 text-gray-300"><strong>Beam Search Tests</strong>:</p>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">@Test
-<p class="mb-4 text-gray-300">fun <code class="bg-ck-dark px-1 rounded">beam search returns top N candidates</code>() {</p>
-<p class="mb-4 text-gray-300">    val memory = createMockMemory()</p>
-<p class="mb-4 text-gray-300">    val beams = runBeamSearch(memory, beamWidth=8, maxLength=10)</p>
-<p class="mb-4 text-gray-300">    assertTrue(beams.size &lt;= 8)</p>
-<p class="mb-4 text-gray-300">    assertTrue(beams[0].score &gt;= beams[1].score)  // Sorted by score</p>
-<p class="mb-4 text-gray-300">}</p>
-
-<p class="mb-4 text-gray-300">@Test</p>
-<p class="mb-4 text-gray-300">fun <code class="bg-ck-dark px-1 rounded">beam search terminates on EOS</code>() {</p>
-<p class="mb-4 text-gray-300">    val memory = createMockMemory()</p>
-<p class="mb-4 text-gray-300">    val beams = runBeamSearch(memory, beamWidth=1, maxLength=20)</p>
-<p class="mb-4 text-gray-300">    assertTrue(beams[0].tokens.last() == EOS || beams[0].tokens.size == 20)</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
-
-<p class="mb-4 text-gray-300"><strong>Tokenization Tests</strong>:</p>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">@Test
-<p class="mb-4 text-gray-300">fun <code class="bg-ck-dark px-1 rounded">decode converts tokens to string</code>() {</p>
-<p class="mb-4 text-gray-300">    val tokens = listOf(SOS, 8, 5, 12, 12, 15, EOS)  // "hello"</p>
-<p class="mb-4 text-gray-300">    val decoded = SwipeTokenizer.decode(tokens)</p>
-<p class="mb-4 text-gray-300">    assertEquals("hello", decoded)</p>
-<p class="mb-4 text-gray-300">}</p>
-
-<p class="mb-4 text-gray-300">@Test</p>
-<p class="mb-4 text-gray-300">fun <code class="bg-ck-dark px-1 rounded">decode filters special tokens</code>() {</p>
-<p class="mb-4 text-gray-300">    val tokens = listOf(SOS, PAD, 8, UNK, EOS)</p>
-<p class="mb-4 text-gray-300">    val decoded = SwipeTokenizer.decode(tokens)</p>
-<p class="mb-4 text-gray-300">    assertEquals("h", decoded)  // Only 'h' remains</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Integration Tests</h3>
-
-<p class="mb-4 text-gray-300"><strong>End-to-End Pipeline</strong>:</p>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">@Test
-<p class="mb-4 text-gray-300">fun <code class="bg-ck-dark px-1 rounded">full pipeline produces predictions</code>() {</p>
-<p class="mb-4 text-gray-300">    val swipeInput = SwipeInput(</p>
-<p class="mb-4 text-gray-300">        coordinates = createMockSwipe(),  // Simulate "hello" swipe</p>
-<p class="mb-4 text-gray-300">        timestamps = createMockTimestamps(),</p>
-<p class="mb-4 text-gray-300">        touchedKeys = emptyList()</p>
-<p class="mb-4 text-gray-300">    )</p>
-
-<p class="mb-4 text-gray-300">    val predictions = onnxPredictor.predict(swipeInput)</p>
-
-<p class="mb-4 text-gray-300">    assertTrue(predictions.words.isNotEmpty())</p>
-<p class="mb-4 text-gray-300">    assertTrue(predictions.words[0] in listOf("hello", "hallo", "hell"))</p>
-<p class="mb-4 text-gray-300">    assertTrue(predictions.scores[0] &gt; predictions.scores[1])</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Manual Testing Checklist</h3>
-
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Swipe "hello" → predicts "hello" in top 3</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Swipe with noise → smoothing reduces jitter</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Very short swipe (< 10 points) → pads correctly</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Very long swipe (> 200 points) → truncates to 150</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Fast swipe → velocity/acceleration calculated</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Slow swipe → low velocity values</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Multi-language model (if implemented) → correct language detected</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> User dictionary (if implemented) → custom words appear</li>
-</ul>
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">6. Success Criteria</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Functional Success</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ✅ Encoder inference < 30ms</li>
-<li class="ml-4">&#8226; ✅ Decoder inference < 50ms (batched)</li>
-<li class="ml-4">&#8226; ✅ Total latency < 100ms</li>
-<li class="ml-4">&#8226; ✅ Training data persists across sessions (Bug #273 FIXED - SQLite)</li>
-<li class="ml-4">&#8226; ⚠️ Multi-language support (Bug #277 - framework ready, assets needed)</li>
-<li class="ml-4">&#8226; ✅ User adaptation (Bug #263 FIXED)</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Technical Success</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ✅ ONNX models load and run</li>
-<li class="ml-4">&#8226; ✅ Beam search produces ranked candidates</li>
-<li class="ml-4">&#8226; ✅ Vocabulary filtering works</li>
-<li class="ml-4">&#8226; ✅ Memory pooling prevents leaks</li>
-<li class="ml-4">&#8226; ⚠️ Top-3 accuracy ≥ 85% (can improve with more training data)</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">User Experience Success</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ✅ Predictions appear quickly (< 100ms)</li>
-<li class="ml-4">&#8226; ⚠️ Top prediction usually correct (65-75% currently)</li>
-<li class="ml-4">&#8226; ✅ Learns from user corrections (UserAdaptationManager implemented)</li>
-<li class="ml-4">&#8226; ⚠️ Multi-language switching (framework ready, needs assets)</li>
-</ul>
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">7. References</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Documentation</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Technical Reference</strong>: <code class="bg-ck-dark px-1 rounded">docs/ONNX_DECODE_PIPELINE.md</code> (28,319 bytes)</li>
-<li class="ml-4">&#8226; <strong>Architectural Decisions</strong>: <code class="bg-ck-dark px-1 rounded">docs/specs/architectural-decisions.md</code> (ADR-001 to ADR-006)</li>
-<li class="ml-4">&#8226; <strong>Review Status</strong>: <code class="bg-ck-dark px-1 rounded">docs/COMPLETE_REVIEW_STATUS.md</code> (Files 41-50, 57-100)</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Source Files</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Core Pipeline</strong>: <code class="bg-ck-dark px-1 rounded">OnnxSwipePredictorImpl.kt</code> (~1500 lines)</li>
-<li class="ml-4">&#8226; <strong>Feature Extraction</strong>: SwipeTrajectoryProcessor (embedded)</li>
-<li class="ml-4">&#8226; <strong>Beam Search</strong>: runBeamSearch() method</li>
-<li class="ml-4">&#8226; <strong>Tokenization</strong>: SwipeTokenizer (embedded)</li>
-<li class="ml-4">&#8226; <strong>Vocabulary</strong>: <code class="bg-ck-dark px-1 rounded">OptimizedVocabularyImpl.kt</code></li>
-<li class="ml-4">&#8226; <strong>Training Data</strong>: <code class="bg-ck-dark px-1 rounded">SwipeMLData.kt</code>, <code class="bg-ck-dark px-1 rounded">SwipeMLDataStore.kt</code></li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Models</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Encoder</strong>: <code class="bg-ck-dark px-1 rounded">assets/models/swipe_model_character_quant.onnx</code> (~4MB)</li>
-<li class="ml-4">&#8226; <strong>Decoder</strong>: <code class="bg-ck-dark px-1 rounded">assets/models/swipe_decoder_character_quant.onnx</code> (~4MB)</li>
-<li class="ml-4">&#8226; <strong>Vocabulary</strong>: <code class="bg-ck-dark px-1 rounded">assets/models/vocabulary.txt</code> (English words)</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Bug Reports</h3>
-
-<p class="mb-4 text-gray-300">| Bug # | Description | Status |</p>
-<p class="mb-4 text-gray-300">|-------|-------------|--------|</p>
-<p class="mb-4 text-gray-300">| #257 | LanguageDetector missing | ✅ FIXED |</p>
-<p class="mb-4 text-gray-300">| #259 | NgramModel missing | ✅ FIXED |</p>
-<p class="mb-4 text-gray-300">| #262 | WordPredictor integration | ✅ ARCHITECTURAL (works alongside ONNX) |</p>
-<p class="mb-4 text-gray-300">| #263 | UserAdaptationManager missing | ✅ FIXED |</p>
-<p class="mb-4 text-gray-300">| #270 | Time delta calculation | ⚠️ Needs verification |</p>
-<p class="mb-4 text-gray-300">| #271 | Consecutive duplicates filter | ⚠️ Needs verification |</p>
-<p class="mb-4 text-gray-300">| #273 | Training data persistence | ✅ FIXED (SQLite) |</p>
-<p class="mb-4 text-gray-300">| #274 | ML training external | ✅ ARCHITECTURAL (by design) |</p>
-<p class="mb-4 text-gray-300">| #275 | Async prediction | ✅ ARCHITECTURAL (coroutines) |</p>
-<p class="mb-4 text-gray-300">| #276 | Trace analyzer | ✅ ARCHITECTURAL (neural features) |</p>
-<p class="mb-4 text-gray-300">| #277 | Multi-language expansion | ⚠️ Framework ready, needs assets |</p>
-
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">8. Notes</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Why ONNX Over CGR</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>ADR-001</strong>: Pure ONNX neural prediction (intentional replacement)</li>
-<li class="ml-4">&#8226; <strong>ADR-002</strong>: Template generation → neural training</li>
-<li class="ml-4">&#8226; <strong>ADR-003</strong>: External ML training (Python/PyTorch)</li>
-<li class="ml-4">&#8226; <strong>ADR-004</strong>: Coroutines over HandlerThread</li>
-<li class="ml-4">&#8226; <strong>ADR-005</strong>: Neural feature learning (40+ features → 6 features)</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Implementation Complexity</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Core Pipeline</strong>: ✅ COMPLETE (high complexity, well-implemented)</li>
-<li class="ml-4">&#8226; <strong>Data Persistence</strong>: ✅ COMPLETE (SQLite implementation)</li>
-<li class="ml-4">&#8226; <strong>Multi-Language</strong>: ⚠️ FRAMEWORK READY (needs asset files for each language)</li>
-<li class="ml-4">&#8226; <strong>User Adaptation</strong>: ✅ COMPLETE (SharedPreferences-based learning)</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Future Enhancements</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">1. On-device fine-tuning (federated learning)</li>
-<li class="ml-4">2. Multilingual single model (instead of per-language)</li>
-<li class="ml-4">3. Subword tokenization (BPE) for better vocabulary coverage</li>
-<li class="ml-4">4. Contextual predictions (previous words)</li>
-<li class="ml-4">5. Emoji/symbol prediction</li>
-<li class="ml-4">6. Voice-to-swipe hybrid input</li>
-</ul>
-<hr class="border-gray-700 my-6">
-
-<p class="mb-4 text-gray-300"><strong>Last Updated</strong>: 2025-12-04</p>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: ✅ Core complete, all P0 bugs resolved</p>
-<p class="mb-4 text-gray-300"><strong>Priority</strong>: P1-P2 remaining (time delta calculation, duplicate filtering, multi-language expansion)</p>
+    fun getFeatureTensor(): OnnxTensor {
+        return OnnxTensor.createTensor(env, featureBuffer, shape)
+    }
+}</code></pre>
 
         </div>
     </main>

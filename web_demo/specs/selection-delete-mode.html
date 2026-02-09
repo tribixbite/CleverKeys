@@ -70,176 +70,167 @@
     <!-- Content -->
     <main class="container mx-auto px-6 pb-20">
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
-            <h1 class="text-3xl font-bold mb-6 gradient-text">Selection-Delete Mode Specification</h1>
+            <h1 class="text-3xl font-bold mb-6 gradient-text">Selection-Delete Mode</h1>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Feature Overview</h2>
-<p class="mb-4 text-gray-300"><strong>Feature Name</strong>: Selection-Delete Mode</p>
-<p class="mb-4 text-gray-300"><strong>Priority</strong>: P1</p>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: Complete</p>
-<p class="mb-4 text-gray-300"><strong>Target Version</strong>: v1.2.4</p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Summary</h3>
-<p class="mb-4 text-gray-300">A gesture mode that enables text selection via swipe-hold on the backspace key, with automatic deletion on release.</p>
+<p class="mb-4 text-gray-300">Selection-Delete Mode is a gesture that enables text selection by swiping and holding on the backspace key. When activated, horizontal finger movement selects characters (left/right), vertical movement selects lines (up/down), and releasing the finger deletes all selected text. This provides a single fluid gesture for rapid text correction.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Motivation</h3>
-<p class="mb-4 text-gray-300">Traditional text selection on mobile keyboards is cumbersome, requiring switching to cursor mode or long-pressing. This feature enables rapid text selection and deletion with a single fluid gesture on the backspace key.</p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Key Files</h2>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Requirements</h2>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">File</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Class/Function</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Purpose</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Pointers.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">handleSelectionDeleteRepeat()</code></td><td class="px-4 py-2 text-gray-300">Main selection logic, repeat handler</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Pointers.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">FLAG_P_SELECTION_DELETE_MODE</code></td><td class="px-4 py-2 text-gray-300">Mode state flag (value: 128)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Config.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">selection_delete_vertical_threshold</code></td><td class="px-4 py-2 text-gray-300">Vertical activation threshold</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Config.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">selection_delete_vertical_speed</code></td><td class="px-4 py-2 text-gray-300">Vertical speed multiplier</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt</code></td><td class="px-4 py-2 text-gray-300">Settings UI</td><td class="px-4 py-2 text-gray-300">Threshold and speed sliders</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Architecture</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Functional Requirements</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>FR-1</strong>: Short swipe + hold on backspace key activates selection-delete mode</li>
-<li class="ml-4">2. <strong>FR-2</strong>: Horizontal finger movement selects characters (left/right)</li>
-<li class="ml-4">3. <strong>FR-3</strong>: Vertical finger movement selects lines (up/down)</li>
-<li class="ml-4">4. <strong>FR-4</strong>: Releasing finger deletes all selected text</li>
-<li class="ml-4">5. <strong>FR-5</strong>: Short swipe + immediate release performs normal subkey action (delete_last_word)</li>
-<li class="ml-4">6. <strong>FR-6</strong>: Regular hold without movement triggers normal key repeat</li>
-<li class="ml-4">7. <strong>FR-7</strong>: Bidirectional movement - direction changes dynamically with finger position</li>
-<li class="ml-4">8. <strong>FR-8</strong>: Diagonal movement supported (X and Y axes fire independently)</li>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">User Input (backspace key short swipe + hold)
+       |
+       v
++------------------+
+| onTouchDown()    | -- Defers backspace for gesture detection
++------------------+
+       |
+       v
++------------------+
+| Short Swipe      | -- Detects initial swipe direction
+| Detection        |
++------------------+
+       |
+       v (if hold detected after swipe)
++------------------+
+| FLAG_P_SELECTION | -- Sets mode flag, records activation center
+| _DELETE_MODE     |
++------------------+
+       |
+       v
++------------------+
+| handleSelection  | -- Timer-based repeat, sends Shift+Arrow keys
+| DeleteRepeat()   |
++------------------+
+       |
+       v (on finger release)
++------------------+
+| Delete selected  | -- Sends DEL key to remove selection
+| text             |
++------------------+</code></pre>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Data Flow</h2>
+
+<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>Activation</strong>: Short swipe on backspace key, then hold (don't lift finger)</li>
+<li class="ml-4">2. <strong>Selection</strong>: Finger movement from activation center determines direction</li>
+</ul><p class="mb-4 text-gray-300">   - Horizontal (dx): Shift+Left or Shift+Right for character selection</p>
+<p class="mb-4 text-gray-300">   - Vertical (dy): Shift+Up or Shift+Down for line selection (if threshold met)</p>
+<ul class="mb-4 space-y-1"><li class="ml-4">3. <strong>Speed Scaling</strong>: Further from center = faster selection rate</li>
+<li class="ml-4">4. <strong>Release</strong>: Sends DEL key to delete all selected text</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Non-Functional Requirements</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>NFR-1</strong>: Performance - Selection speed proportional to finger distance from activation center</li>
-<li class="ml-4">2. <strong>NFR-2</strong>: Usability - Configurable vertical threshold and speed via Settings</li>
-<li class="ml-4">3. <strong>NFR-3</strong>: Reliability - Must not interfere with normal backspace operations</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">User Stories</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>As a</strong> power user, <strong>I want</strong> to select and delete multiple words quickly, <strong>so that</strong> I can correct mistakes efficiently</li>
-<li class="ml-4">&#8226; <strong>As a</strong> user, <strong>I want</strong> to select entire lines, <strong>so that</strong> I can delete paragraphs without switching modes</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Technical Design</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Configuration</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Architecture</h3>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">User Input (backspace key)
-<p class="mb-4 text-gray-300">       |</p>
-<p class="mb-4 text-gray-300">       v</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">| onTouchDown()    | -- Defers backspace handling for gesture detection</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">       |</p>
-<p class="mb-4 text-gray-300">       v</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">| Short Swipe      | -- Detects initial swipe direction</p>
-<p class="mb-4 text-gray-300">| Detection        |</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">       |</p>
-<p class="mb-4 text-gray-300">       v (if hold detected)</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">| FLAG_P_SELECTION | -- Activates selection-delete mode</p>
-<p class="mb-4 text-gray-300">| _DELETE_MODE     |</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">       |</p>
-<p class="mb-4 text-gray-300">       v</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">| handleSelection  | -- Repeating handler for continuous selection</p>
-<p class="mb-4 text-gray-300">| DeleteRepeat()   |</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">       |</p>
-<p class="mb-4 text-gray-300">       v (on release)</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">| Delete selected  | -- Sends DEL key to remove selection</p>
-<p class="mb-4 text-gray-300">| text             |</p>
-<p class="mb-4 text-gray-300">+------------------+</code></pre></p>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Key</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Type</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Default</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Range</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Description</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">selection_delete_vertical_threshold</code></td><td class="px-4 py-2 text-gray-300">Int</td><td class="px-4 py-2 text-gray-300">40</td><td class="px-4 py-2 text-gray-300">20-80</td><td class="px-4 py-2 text-gray-300">% of horizontal distance required for vertical selection</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">selection_delete_vertical_speed</code></td><td class="px-4 py-2 text-gray-300">Float</td><td class="px-4 py-2 text-gray-300">0.4</td><td class="px-4 py-2 text-gray-300">0.1-1.0</td><td class="px-4 py-2 text-gray-300">Speed multiplier for vertical selection</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Public API</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Component Breakdown</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>Pointers.kt</strong>: Handles touch input, gesture detection, and selection state</li>
-<li class="ml-4">2. <strong>Config.kt</strong>: Stores vertical threshold and speed settings</li>
-<li class="ml-4">3. <strong>SettingsActivity.kt</strong>: UI for configuring threshold and speed</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Data Structures</h3>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// State flag for mode tracking
-<p class="mb-4 text-gray-300">private const val FLAG_P_SELECTION_DELETE_MODE = 128</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Pointers.kt</h3>
 
-<p class="mb-4 text-gray-300">// Timer identifier</p>
-<p class="mb-4 text-gray-300">private val selectionDeleteWhat = Any()</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// State flag constant
+private const val FLAG_P_SELECTION_DELETE_MODE = 128
 
-<p class="mb-4 text-gray-300">// Configuration settings</p>
-<p class="mb-4 text-gray-300">selection_delete_vertical_threshold: Int  // 20-80%, default 40%</p>
-<p class="mb-4 text-gray-300">selection_delete_vertical_speed: Float    // 0.1x-1.0x, default 0.4x</code></pre></p>
+// Timer identifier for repeat handler
+private val selectionDeleteWhat = Any()
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">API/Interface Design</h3>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Selection handling in Pointers.kt
-<p class="mb-4 text-gray-300">private fun handleSelectionDeleteRepeat(ptr: Pointer) {</p>
-<p class="mb-4 text-gray-300">    // Track X/Y axes independently</p>
-<p class="mb-4 text-gray-300">    val dx = ptr.currentX - ptr.selectionCenterX</p>
-<p class="mb-4 text-gray-300">    val dy = ptr.currentY - ptr.selectionCenterY</p>
+// Main selection handler - called repeatedly while mode active
+private fun handleSelectionDeleteRepeat(ptr: Pointer) {
+    val dx = ptr.currentX - ptr.selectionCenterX
+    val dy = ptr.currentY - ptr.selectionCenterY
 
-<p class="mb-4 text-gray-300">    // Horizontal: Shift+Left or Shift+Right</p>
-<p class="mb-4 text-gray-300">    // Vertical: Shift+Up or Shift+Down (with threshold)</p>
-<p class="mb-4 text-gray-300">}</p>
+    // Horizontal selection (character by character)
+    if (abs(dx) &gt; threshold) {
+        val key = if (dx &gt; 0) DPAD_RIGHT else DPAD_LEFT
+        sendShiftArrow(key)
+    }
 
-<p class="mb-4 text-gray-300">// Shift state management</p>
-<p class="mb-4 text-gray-300">private fun makeInternalModifier(mod: Modifier): KeyValue</p>
-<p class="mb-4 text-gray-300">private fun with_extra_mod(value: KeyValue, extra: Modifier): KeyValue</code></pre></p>
+    // Vertical selection (line by line) with configurable threshold
+    if (abs(dy) &gt; verticalThreshold) {
+        val key = if (dy &gt; 0) DPAD_DOWN else DPAD_UP
+        sendShiftArrow(key, speedMultiplier = verticalSpeed)
+    }
+}
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">State Management</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">FLAG_P_SELECTION_DELETE_MODE</code> flag tracks active state</li>
-<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">selectionCenterX/Y</code> stores activation point for distance calculation</li>
-<li class="ml-4">&#8226; Timer-based repeat with speed scaling based on finger distance</li>
-<li class="ml-4">&#8226; Shift modifier held during selection via <code class="bg-ck-dark px-1 rounded">with_extra_mod()</code></li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Plan</h2>
+// Helper to send Shift+Arrow for selection
+private fun sendShiftArrow(keyCode: Int, speedMultiplier: Float = 1.0f)
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 1: Core Selection Mode</h3>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: Complete</p>
-<p class="mb-4 text-gray-300"><strong>Deliverables</strong>:</p>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Short swipe + hold detection on backspace</li>
-<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Horizontal selection (character-by-character)</li>
-<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Release-to-delete functionality</li>
-<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Bidirectional movement support</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 2: Vertical Selection & Configuration</h3>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: Complete</p>
-<p class="mb-4 text-gray-300"><strong>Deliverables</strong>:</p>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Vertical line selection (up/down)</li>
-<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Configurable vertical threshold setting</li>
-<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Configurable vertical speed multiplier</li>
-<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Settings UI integration</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Testing Strategy</h2>
+// Helper to add Shift modifier to key
+private fun with_extra_mod(value: KeyValue, extra: Modifier): KeyValue</code></pre>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Unit Tests</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Test case 1: Short swipe triggers subkey action, not selection mode</li>
-<li class="ml-4">&#8226; Test case 2: Hold without movement triggers key repeat</li>
-<li class="ml-4">&#8226; Test case 3: Selection mode activates after threshold time</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Integration Tests</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Test case 1: Text selection works across app boundaries</li>
-<li class="ml-4">&#8226; Test case 2: Shift state properly maintained during selection</li>
-<li class="ml-4">&#8226; Test case 3: Settings changes take effect immediately</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">UI/UX Tests</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Test case 1: Vertical threshold slider responds correctly</li>
-<li class="ml-4">&#8226; Test case 2: Speed setting affects selection rate proportionally</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Dependencies</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Details</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Internal Dependencies</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">Pointers.kt</code> touch handling system</li>
-<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">Config.kt</code> settings storage</li>
-<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">KeyValue</code> and <code class="bg-ck-dark px-1 rounded">Modifier</code> from layout system</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">External Dependencies</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Android InputConnection for selection manipulation</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Breaking Changes</h3>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> This feature introduces breaking changes</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Error Handling</h2>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Invalid threshold values: Clamped to valid range (20-80%)</li>
-<li class="ml-4">&#8226; Invalid speed values: Clamped to valid range (0.1-1.0)</li>
-<li class="ml-4">&#8226; No text to select: Mode still activates, selection commands sent harmlessly</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Success Metrics</h2>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Metric 1: Users can select and delete multiple words in <2 seconds</li>
-<li class="ml-4">&#8226; Metric 2: Vertical selection triggers reliably within threshold</li>
-<li class="ml-4">&#8226; Acceptance criteria: All test cases pass, no reported regressions</li>
-</ul>
-<hr class="border-gray-700 my-6">
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Activation Sequence</h3>
 
-<p class="mb-4 text-gray-300"><strong>Created</strong>: 2026-01-14</p>
-<p class="mb-4 text-gray-300"><strong>Last Updated</strong>: 2026-01-14</p>
-<p class="mb-4 text-gray-300"><strong>Owner</strong>: CleverKeys Development</p>
-<p class="mb-4 text-gray-300"><strong>Reviewers</strong>: tribixbite</p>
+<ul class="mb-4 space-y-1"><li class="ml-4">1. User touches backspace key</li>
+<li class="ml-4">2. User performs short swipe (any direction except center)</li>
+<li class="ml-4">3. User holds finger without lifting</li>
+<li class="ml-4">4. After <code class="bg-ck-dark px-1 rounded">LONGPRESS_TIMEOUT</code> (600ms default), mode activates</li>
+<li class="ml-4">5. <code class="bg-ck-dark px-1 rounded">FLAG_P_SELECTION_DELETE_MODE</code> flag set on pointer</li>
+<li class="ml-4">6. <code class="bg-ck-dark px-1 rounded">selectionCenterX/Y</code> records activation point</li>
+<li class="ml-4">7. Repeat timer starts calling <code class="bg-ck-dark px-1 rounded">handleSelectionDeleteRepeat()</code></li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Bidirectional Movement</h3>
 
+<p class="mb-4 text-gray-300">Selection direction changes dynamically based on current finger position relative to activation center:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Direction determined each repeat cycle
+val direction = when {
+    dx &gt; 0 -&gt; DPAD_RIGHT  // Finger right of center
+    dx &lt; 0 -&gt; DPAD_LEFT   // Finger left of center
+    else -&gt; null
+}</code></pre>
+
+<p class="mb-4 text-gray-300">This means:</p>
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Move finger left → select backwards</li>
+<li class="ml-4">&#8226; Move finger right → select forwards</li>
+<li class="ml-4">&#8226; Return to center and go opposite direction → select opposite direction</li>
+</ul>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Independent Axis Handling</h3>
+
+<p class="mb-4 text-gray-300">X and Y axes fire independently, allowing diagonal selection:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Both axes checked independently each repeat
+if (abs(dx) &gt; horizontalThreshold) {
+    sendShiftArrow(horizontalKey)
+}
+if (abs(dy) &gt; verticalThreshold) {
+    sendShiftArrow(verticalKey)
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Shift State Management</h3>
+
+<p class="mb-4 text-gray-300">Selection requires holding Shift while sending arrow keys:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">private fun sendShiftArrow(keyCode: Int) {
+    // Create internal Shift modifier
+    val shift = makeInternalModifier(Modifier.SHIFT)
+
+    // Apply Shift to arrow key
+    val arrowKey = KeyValue.getKeyByCode(keyCode)
+    val shiftedArrow = with_extra_mod(arrowKey, Modifier.SHIFT)
+
+    // Send the combined key event
+    sendKeyEvent(shiftedArrow)
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Vertical Threshold Calculation</h3>
+
+<p class="mb-4 text-gray-300">Vertical movement requires meeting a threshold relative to horizontal movement:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">val verticalThreshold = config.selectionDeleteVerticalThreshold / 100f
+val horizontalDistance = abs(dx)
+val verticalDistance = abs(dy)
+
+// Vertical only fires if it exceeds threshold percentage of horizontal
+val shouldFireVertical = verticalDistance &gt; (horizontalDistance * verticalThreshold)</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Error Handling</h3>
+
+<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Invalid threshold values: Clamped to 20-80%</li>
+<li class="ml-4">&#8226; Invalid speed values: Clamped to 0.1-1.0</li>
+<li class="ml-4">&#8226; No text to select: Selection commands sent but have no effect (harmless)</li>
+</ul>
         </div>
     </main>
 

@@ -70,71 +70,117 @@
     <!-- Content -->
     <main class="container mx-auto px-6 pb-20">
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
-            <h1 class="text-3xl font-bold mb-6 gradient-text">Timestamp Keys Specification</h1>
-
-<p class="mb-4 text-gray-300"><strong>Status</strong>: Implemented</p>
-<p class="mb-4 text-gray-300"><strong>Version</strong>: 1.2.9</p>
-<p class="mb-4 text-gray-300"><strong>Last Updated</strong>: 2026-01-15</p>
-<p class="mb-4 text-gray-300"><strong>GitHub Issue</strong>: #1103</p>
+            <h1 class="text-3xl font-bold mb-6 gradient-text">Timestamp Keys</h1>
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
 
 <p class="mb-4 text-gray-300">Timestamp keys insert the current date and/or time formatted according to a user-specified pattern when pressed. This allows users to quickly insert dates, times, or combined datetime strings without typing them manually.</p>
 
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Key Files</h2>
+
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">File</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Class/Function</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Purpose</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/KeyValue.kt:126</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">Kind.Timestamp</code></td><td class="px-4 py-2 text-gray-300">Enum value for timestamp keys</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/KeyValue.kt:162-173</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">TimestampFormat</code></td><td class="px-4 py-2 text-gray-300">Data class holding pattern and symbol</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/KeyValue.kt:460-466</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">makeTimestampKey()</code></td><td class="px-4 py-2 text-gray-300">Factory method to create keys</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/KeyValueParser.kt:121-127</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">parseTimestampKeydef()</code></td><td class="px-4 py-2 text-gray-300">Parser for short syntax</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt:377-401</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">handleTimestampKey()</code></td><td class="px-4 py-2 text-gray-300">Formats and inserts time</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Architecture</h2>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">Key Press (timestamp key)
+       |
+       v
++----------------------+
+| KeyEventHandler      | -- Receives timestamp KeyValue
+| handleKeyPress()     |
++----------------------+
+       |
+       v
++----------------------+
+| handleTimestampKey() | -- Extract pattern from KeyValue.timestampFormat
++----------------------+
+       |
+       v
++----------------------+
+| DateTimeFormatter    | -- Format current time with pattern
+| or SimpleDateFormat  |
++----------------------+
+       |
+       v
++----------------------+
+| InputConnection      | -- Commit formatted text
+| commitText()         |
++----------------------+</code></pre>
+
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Syntax</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Short Syntax (New Style)</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Short Syntax</h3>
 
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">timestamp:'pattern'</code></pre>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">symbol:timestamp:'pattern'</code></pre>
 
-<p class="mb-4 text-gray-300">Example: <code class="bg-ck-dark px-1 rounded">Date:timestamp:'yyyy-MM-dd'</code> displays "Date" and inserts "2026-01-15"</p>
+<p class="mb-4 text-gray-300">Example: <code class="bg-ck-dark px-1 rounded">📅:timestamp:'yyyy-MM-dd'</code> displays "📅" and inserts "2026-01-15"</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Long Syntax (Legacy Style)</h3>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Long Syntax (Legacy)</h3>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">:timestamp symbol='symbol':'pattern'</code></pre>
 
 <p class="mb-4 text-gray-300">Example: <code class="bg-ck-dark px-1 rounded">:timestamp symbol='📅':'yyyy-MM-dd HH:mm'</code></p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Pattern Format</h3>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Pattern Format</h2>
 
 <p class="mb-4 text-gray-300">Uses Java DateTimeFormatter patterns:</p>
 
-<p class="mb-4 text-gray-300">| Pattern | Description | Example |</p>
-<p class="mb-4 text-gray-300">|---------|-------------|---------|</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">yyyy</code> | 4-digit year | 2026 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">yy</code> | 2-digit year | 26 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">MM</code> | Month (01-12) | 01 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">MMM</code> | Month abbrev | Jan |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">dd</code> | Day (01-31) | 15 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">HH</code> | Hour 24h (00-23) | 14 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">hh</code> | Hour 12h (01-12) | 02 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">mm</code> | Minute (00-59) | 30 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">ss</code> | Second (00-59) | 45 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">a</code> | AM/PM | PM |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">E</code> | Day of week | Wed |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">EEEE</code> | Full day name | Wednesday |</p>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Pattern</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Description</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Example</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">yyyy</code></td><td class="px-4 py-2 text-gray-300">4-digit year</td><td class="px-4 py-2 text-gray-300">2026</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">yy</code></td><td class="px-4 py-2 text-gray-300">2-digit year</td><td class="px-4 py-2 text-gray-300">26</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">MM</code></td><td class="px-4 py-2 text-gray-300">Month (01-12)</td><td class="px-4 py-2 text-gray-300">01</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">MMM</code></td><td class="px-4 py-2 text-gray-300">Month abbrev</td><td class="px-4 py-2 text-gray-300">Jan</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">dd</code></td><td class="px-4 py-2 text-gray-300">Day (01-31)</td><td class="px-4 py-2 text-gray-300">15</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">HH</code></td><td class="px-4 py-2 text-gray-300">Hour 24h (00-23)</td><td class="px-4 py-2 text-gray-300">14</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">hh</code></td><td class="px-4 py-2 text-gray-300">Hour 12h (01-12)</td><td class="px-4 py-2 text-gray-300">02</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">mm</code></td><td class="px-4 py-2 text-gray-300">Minute (00-59)</td><td class="px-4 py-2 text-gray-300">30</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">ss</code></td><td class="px-4 py-2 text-gray-300">Second (00-59)</td><td class="px-4 py-2 text-gray-300">45</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">a</code></td><td class="px-4 py-2 text-gray-300">AM/PM</td><td class="px-4 py-2 text-gray-300">PM</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">E</code></td><td class="px-4 py-2 text-gray-300">Day of week</td><td class="px-4 py-2 text-gray-300">Wed</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">EEEE</code></td><td class="px-4 py-2 text-gray-300">Full day name</td><td class="px-4 py-2 text-gray-300">Wednesday</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Pre-defined Timestamp Keys</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Common Examples</h3>
+<p class="mb-4 text-gray-300">Available without specifying patterns:</p>
 
-<p class="mb-4 text-gray-300">| Key Definition | Display | Output Example |</p>
-<p class="mb-4 text-gray-300">|---------------|---------|----------------|</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">📅:timestamp:'yyyy-MM-dd'</code> | 📅 | 2026-01-15 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">🕐:timestamp:'HH:mm'</code> | 🕐 | 14:30 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">📆:timestamp:'yyyy-MM-dd HH:mm:ss'</code> | 📆 | 2026-01-15 14:30:45 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">🗓:timestamp:'EEEE, MMMM d, yyyy'</code> | 🗓 | Wednesday, January 15, 2026 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">⏰:timestamp:'h:mm a'</code> | ⏰ | 2:30 PM |</p>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Key Name</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Symbol</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Pattern</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Output Example</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">timestamp_date</code></td><td class="px-4 py-2 text-gray-300">📅</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">yyyy-MM-dd</code></td><td class="px-4 py-2 text-gray-300">2026-01-15</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">timestamp_time</code></td><td class="px-4 py-2 text-gray-300">🕐</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">HH:mm</code></td><td class="px-4 py-2 text-gray-300">14:30</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">timestamp_datetime</code></td><td class="px-4 py-2 text-gray-300">📆</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">yyyy-MM-dd HH:mm</code></td><td class="px-4 py-2 text-gray-300">2026-01-15 14:30</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">timestamp_time_seconds</code></td><td class="px-4 py-2 text-gray-300">⏱</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">HH:mm:ss</code></td><td class="px-4 py-2 text-gray-300">14:30:45</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">timestamp_date_short</code></td><td class="px-4 py-2 text-gray-300">📅</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">MM/dd/yy</code></td><td class="px-4 py-2 text-gray-300">01/15/26</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">timestamp_date_long</code></td><td class="px-4 py-2 text-gray-300">🗓</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">EEEE, MMMM d, yyyy</code></td><td class="px-4 py-2 text-gray-300">Wednesday, January 15, 2026</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">timestamp_time_12h</code></td><td class="px-4 py-2 text-gray-300">🕐</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">h:mm a</code></td><td class="px-4 py-2 text-gray-300">2:30 PM</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">timestamp_iso</code></td><td class="px-4 py-2 text-gray-300">📋</td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">yyyy-MM-dd'T'HH:mm:ss</code></td><td class="px-4 py-2 text-gray-300">2026-01-15T14:30:45</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Details</h2>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Data Class</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Key Components</h3>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">data class TimestampFormat(
+    val pattern: String,
+    val symbol: String
+)</code></pre>
 
-<p class="mb-4 text-gray-300">| Component | File | Purpose |</p>
-<p class="mb-4 text-gray-300">|-----------|------|---------|</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">Kind.Timestamp</code> | <code class="bg-ck-dark px-1 rounded">KeyValue.kt:126</code> | Enum value for timestamp keys |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">TimestampFormat</code> | <code class="bg-ck-dark px-1 rounded">KeyValue.kt:162-173</code> | Data class holding pattern and symbol |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">makeTimestampKey()</code> | <code class="bg-ck-dark px-1 rounded">KeyValue.kt:460-466</code> | Factory method to create timestamp keys |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">parseTimestampKeydef()</code> | <code class="bg-ck-dark px-1 rounded">KeyValueParser.kt:121-127</code> | Parser for short syntax |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">handleTimestampKey()</code> | <code class="bg-ck-dark px-1 rounded">KeyEventHandler.kt:377-401</code> | Handler that formats and inserts time |</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Factory Method</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">fun makeTimestampKey(pattern: String, symbol: String): KeyValue {
+    return KeyValue(
+        kind = Kind.Timestamp,
+        char = '\u0000',
+        timestampFormat = TimestampFormat(pattern, symbol)
+    )
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Handler Implementation</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">private fun handleTimestampKey(key: KeyValue) {
+    val format = key.timestampFormat ?: return
+    val formattedTime = try {
+        if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.O) {
+            // API 26+: Use java.time
+            val formatter = DateTimeFormatter.ofPattern(format.pattern)
+            LocalDateTime.now().format(formatter)
+        } else {
+            // API &lt; 26: Use SimpleDateFormat
+            val formatter = SimpleDateFormat(format.pattern, Locale.getDefault())
+            formatter.format(Date())
+        }
+    } catch (e: Exception) {
+        Log.w(TAG, "Invalid timestamp format: ${format.pattern}")
+        format.pattern  // Fallback: insert pattern itself
+    }
+    inputConnection.commitText(formattedTime, 1)
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Parser Implementation</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">fun parseTimestampKeydef(keydef: String): KeyValue? {
+    // Short syntax: symbol:timestamp:'pattern'
+    val shortMatch = """(.+):timestamp:'(.+)'""".toRegex().matchEntire(keydef)
+    if (shortMatch != null) {
+        val (symbol, pattern) = shortMatch.destructured
+        return makeTimestampKey(pattern, symbol)
+    }
+    return null
+}</code></pre>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">API Compatibility</h3>
 
@@ -144,51 +190,8 @@
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Error Handling</h3>
 
 <p class="mb-4 text-gray-300">If the pattern is invalid:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">1. Logs a warning: <code class="bg-ck-dark px-1 rounded">"Invalid timestamp format: [pattern]"</code></li>
+<ul class="mb-4 space-y-1"><li class="ml-4">1. Logs warning: <code class="bg-ck-dark px-1 rounded">"Invalid timestamp format: [pattern]"</code></li>
 <li class="ml-4">2. Falls back to inserting the pattern string itself</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Pre-defined Timestamp Keys</h2>
-
-<p class="mb-4 text-gray-300">For convenience, these named keys are available without specifying patterns:</p>
-
-<p class="mb-4 text-gray-300">| Key Name | Symbol | Output Example |</p>
-<p class="mb-4 text-gray-300">|----------|--------|----------------|</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_date</code> | 📅 | 2026-01-15 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_time</code> | 🕐 | 14:30 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_datetime</code> | 📆 | 2026-01-15 14:30 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_time_seconds</code> | ⏱ | 14:30:45 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_date_short</code> | 📅 | 01/15/26 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_date_long</code> | 🗓 | Wednesday, January 15, 2026 |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_time_12h</code> | 🕐 | 2:30 PM |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">timestamp_iso</code> | 📋 | 2026-01-15T14:30:45 |</p>
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Usage in Custom Layouts</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Using Pre-defined Keys</h3>
-
-<p class="mb-4 text-gray-300">Add to <code class="bg-ck-dark px-1 rounded">custom_extra_keys</code> setting or custom layout XML:</p>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">timestamp_date</code></pre>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Using Custom Patterns</h3>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">timestamp:'yyyy-MM-dd'</code></pre>
-
-<p class="mb-4 text-gray-300">Or with custom symbol:</p>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">📅:timestamp:'yyyy-MM-dd'</code></pre>
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Testing</h2>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">1. Add timestamp key to extra keys</li>
-<li class="ml-4">2. Press key - should insert current formatted time</li>
-<li class="ml-4">3. Test various patterns (date-only, time-only, combined)</li>
-<li class="ml-4">4. Test on API < 26 device for fallback behavior</li>
-<li class="ml-4">5. Test invalid pattern handling</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Related</h2>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <a href="./short-swipe-customization.md" class="text-ck-purple hover:underline">Short Swipe Customization</a> - For adding timestamp to key gestures</li>
-<li class="ml-4">&#8226; <a href="./layout-system.md" class="text-ck-purple hover:underline">Custom Layouts</a> - For adding to custom layouts</li>
-<li class="ml-4">&#8226; <a href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html" class="text-ck-purple hover:underline">Java DateTimeFormatter</a></li>
 </ul>
         </div>
     </main>

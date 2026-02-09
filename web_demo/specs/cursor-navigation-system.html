@@ -74,24 +74,24 @@
 
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
 
-<p class="mb-4 text-gray-300">CleverKeys provides two distinct cursor navigation mechanisms:</p>
+<p class="mb-4 text-gray-300">CleverKeys provides two distinct cursor navigation mechanisms: slider-based cursor (spacebar) for continuous movement scaled by distance and speed, and arrow key navigation (dedicated nav key) for discrete single-character movement. Both are accessed via swipe gestures on bottom row keys.</p>
 
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>Slider-based cursor</strong> (spacebar) - Continuous movement scaled by distance and speed</li>
-<li class="ml-4">2. <strong>Arrow key navigation</strong> (dedicated nav key) - Discrete single-character movement</li>
-</ul>
-<p class="mb-4 text-gray-300">Both are accessed via swipe gestures on bottom row keys.</p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Key Files</h2>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Layout Configuration</h2>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">File</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Class/Function</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Purpose</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Pointers.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">Sliding</code> inner class</td><td class="px-4 py-2 text-gray-300">Touch tracking and movement calculation</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/KeyValue.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">Slider</code> enum</td><td class="px-4 py-2 text-gray-300">Cursor key definitions</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">handleSlider()</code>, <code class="bg-ck-dark px-1 rounded">moveCursor()</code></td><td class="px-4 py-2 text-gray-300">Cursor movement execution</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Config.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">swipe_scaling</code>, <code class="bg-ck-dark px-1 rounded">slide_step_px</code></td><td class="px-4 py-2 text-gray-300">Configuration and scaling</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">res/xml/bottom_row.xml</code></td><td class="px-4 py-2 text-gray-300">Key layout</td><td class="px-4 py-2 text-gray-300">Swipe direction mappings</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Architecture</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Layout Configuration</h3>
 
 <p class="mb-4 text-gray-300">From <code class="bg-ck-dark px-1 rounded">res/xml/bottom_row.xml</code>:</p>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-xml">&lt;!-- Spacebar: Slider-based cursor (continuous) --&gt;
-<p class="mb-4 text-gray-300">&lt;key width="4.4" key0="space" key5="cursor_left" key6="cursor_right"</p>
-<p class="mb-4 text-gray-300">     key7="switch_forward" key8="switch_backward"/&gt;</p>
+&lt;key width="4.4" key0="space" key5="cursor_left" key6="cursor_right"
+     key7="switch_forward" key8="switch_backward"/&gt;
 
-<p class="mb-4 text-gray-300">&lt;!-- Navigation key: Arrow keys (discrete) --&gt;</p>
-<p class="mb-4 text-gray-300">&lt;key key0="loc compose" key5="left" key6="right" key7="up" key8="down"</p>
-<p class="mb-4 text-gray-300">     key1="loc home" key2="loc page_up" key3="loc end" key4="loc page_down"/&gt;</code></pre></p>
+&lt;!-- Navigation key: Arrow keys (discrete) --&gt;
+&lt;key key0="loc compose" key5="left" key6="right" key7="up" key8="down"
+     key1="loc home" key2="loc page_up" key3="loc end" key4="loc page_down"/&gt;</code></pre>
 
 <p class="mb-4 text-gray-300"><strong>Swipe direction mapping:</strong></p>
 <ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">key5</code> = West (left swipe)</li>
@@ -99,202 +99,122 @@
 <li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">key7</code> = North (up swipe)</li>
 <li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">key8</code> = South (down swipe)</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Slider System (Spacebar Cursor)</h2>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Configuration</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Key Types</h3>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Key</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Type</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Default</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Description</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">slider_sensitivity</code></td><td class="px-4 py-2 text-gray-300">Int</td><td class="px-4 py-2 text-gray-300">30</td><td class="px-4 py-2 text-gray-300">% - Pixels per cursor movement (lower = more sensitive)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">slider_speed_smoothing</code></td><td class="px-4 py-2 text-gray-300">Float</td><td class="px-4 py-2 text-gray-300">0.6</td><td class="px-4 py-2 text-gray-300">Exponential smoothing factor (0.0-1.0)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">slider_speed_max</code></td><td class="px-4 py-2 text-gray-300">Float</td><td class="px-4 py-2 text-gray-300">6.0</td><td class="px-4 py-2 text-gray-300">Maximum speed multiplier</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SLIDING_SPEED_VERTICAL_MULT</code></td><td class="px-4 py-2 text-gray-300">Float</td><td class="px-4 py-2 text-gray-300">0.5</td><td class="px-4 py-2 text-gray-300">Vertical movement reduction factor</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Details</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Slider Key Types</h3>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// KeyValue.kt
-<p class="mb-4 text-gray-300">enum class Slider(val symbol: String) {</p>
-<p class="mb-4 text-gray-300">    Cursor_left("\uE008"),</p>
-<p class="mb-4 text-gray-300">    Cursor_right("\uE006"),</p>
-<p class="mb-4 text-gray-300">    Cursor_up("\uE005"),</p>
-<p class="mb-4 text-gray-300">    Cursor_down("\uE007"),</p>
-<p class="mb-4 text-gray-300">    Selection_cursor_left("\uE008"),   // Extends selection leftward</p>
-<p class="mb-4 text-gray-300">    Selection_cursor_right("\uE006");  // Extends selection rightward</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Configuration Parameters</h3>
-
-<p class="mb-4 text-gray-300">| Parameter | Default | Description |</p>
-<p class="mb-4 text-gray-300">|-----------|---------|-------------|</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">slider_sensitivity</code> | 30% | Pixels per cursor movement (lower = more sensitive) |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">slider_speed_smoothing</code> | 0.6 | Exponential smoothing factor (0.0-1.0) |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">slider_speed_max</code> | 6.0 | Maximum speed multiplier |</p>
-<p class="mb-4 text-gray-300">| <code class="bg-ck-dark px-1 rounded">SLIDING_SPEED_VERTICAL_MULT</code> | 0.5 | Vertical movement reduction factor |</p>
+enum class Slider(val symbol: String) {
+    Cursor_left("\uE008"),
+    Cursor_right("\uE006"),
+    Cursor_up("\uE005"),
+    Cursor_down("\uE007"),
+    Selection_cursor_left("\uE008"),   // Extends selection leftward
+    Selection_cursor_right("\uE006");  // Extends selection rightward
+}</code></pre>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">The <code class="bg-ck-dark px-1 rounded">swipe_scaling</code> Calculation</h3>
 
-<p class="mb-4 text-gray-300">The slider system uses device-adaptive scaling to ensure consistent behavior across different screen sizes and DPIs.</p>
+<p class="mb-4 text-gray-300">Device-adaptive scaling ensures consistent behavior across different screen sizes:</p>
 
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Config.kt lines 353-359
-<p class="mb-4 text-gray-300">val dpi_ratio = maxOf(dm.xdpi, dm.ydpi) / minOf(dm.xdpi, dm.ydpi)</p>
-<p class="mb-4 text-gray-300">val swipe_scaling = minOf(dm.widthPixels, dm.heightPixels) / 10f <em> dpi_ratio</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Config.kt
+val dpi_ratio = maxOf(dm.xdpi, dm.ydpi) / minOf(dm.xdpi, dm.ydpi)
+val swipe_scaling = minOf(dm.widthPixels, dm.heightPixels) / 10f * dpi_ratio
 
-<p class="mb-4 text-gray-300">val slider_sensitivity = (prefs.getString("slider_sensitivity", "30").toFloat()) / 100f</p>
-<p class="mb-4 text-gray-300">slide_step_px = slider_sensitivity </em> swipe_scaling</code></pre></p>
-
-<p class="mb-4 text-gray-300"><strong>Breakdown:</strong></p>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong><code class="bg-ck-dark px-1 rounded">dpi_ratio</code></strong>: Compensates for non-square pixels</li>
-</ul><p class="mb-4 text-gray-300">   - Square pixels: <code class="bg-ck-dark px-1 rounded">dpi_ratio = 1.0</code></p>
-<p class="mb-4 text-gray-300">   - Non-square (e.g., 440x400 DPI): <code class="bg-ck-dark px-1 rounded">dpi_ratio = 1.1</code></p>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">2. <strong><code class="bg-ck-dark px-1 rounded">swipe_scaling</code></strong>: Base scaling from screen size</li>
-</ul><p class="mb-4 text-gray-300">   - Uses smaller dimension (usually width in portrait)</p>
-<p class="mb-4 text-gray-300">   - Divides by 10 to get a reasonable base unit</p>
-<p class="mb-4 text-gray-300">   - Example: 1080px width → <code class="bg-ck-dark px-1 rounded">swipe_scaling = 108</code></p>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">3. <strong><code class="bg-ck-dark px-1 rounded">slide_step_px</code></strong>: Final pixels-per-cursor-movement</li>
-</ul><p class="mb-4 text-gray-300">   - Multiplies sensitivity (0.0-1.0) by swipe_scaling</p>
-<p class="mb-4 text-gray-300">   - 30% sensitivity on 1080px screen: <code class="bg-ck-dark px-1 rounded">0.30 <em> 108 = 32.4px</code></p>
+val slider_sensitivity = prefs.getString("slider_sensitivity", "30").toFloat() / 100f
+slide_step_px = slider_sensitivity * swipe_scaling</code></pre>
 
 <p class="mb-4 text-gray-300"><strong>Example calculations by device:</strong></p>
 
-<p class="mb-4 text-gray-300">| Device | Width | DPI Ratio | swipe_scaling | slide_step_px (30%) |</p>
-<p class="mb-4 text-gray-300">|--------|-------|-----------|---------------|---------------------|</p>
-<p class="mb-4 text-gray-300">| 1080p phone | 1080px | 1.0 | 108 | 32.4px |</p>
-<p class="mb-4 text-gray-300">| 1440p phone | 1440px | 1.0 | 144 | 43.2px |</p>
-<p class="mb-4 text-gray-300">| 720p phone | 720px | 1.0 | 72 | 21.6px |</p>
-<p class="mb-4 text-gray-300">| Tablet 800px | 800px | 1.0 | 80 | 24.0px |</p>
-
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Device</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Width</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">DPI Ratio</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">swipe_scaling</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">slide_step_px (30%)</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">1080p phone</td><td class="px-4 py-2 text-gray-300">1080px</td><td class="px-4 py-2 text-gray-300">1.0</td><td class="px-4 py-2 text-gray-300">108</td><td class="px-4 py-2 text-gray-300">32.4px</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">1440p phone</td><td class="px-4 py-2 text-gray-300">1440px</td><td class="px-4 py-2 text-gray-300">1.0</td><td class="px-4 py-2 text-gray-300">144</td><td class="px-4 py-2 text-gray-300">43.2px</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">720p phone</td><td class="px-4 py-2 text-gray-300">720px</td><td class="px-4 py-2 text-gray-300">1.0</td><td class="px-4 py-2 text-gray-300">72</td><td class="px-4 py-2 text-gray-300">21.6px</td></tr></tbody></table>
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Sliding Algorithm</h3>
 
-<p class="mb-4 text-gray-300">Located in <code class="bg-ck-dark px-1 rounded">Pointers.kt</code>, the <code class="bg-ck-dark px-1 rounded">Sliding</code> inner class:</p>
+<p class="mb-4 text-gray-300">Located in <code class="bg-ck-dark px-1 rounded">Pointers.kt</code>:</p>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">inner class Sliding(
-<p class="mb-4 text-gray-300">    x: Float, y: Float,</p>
-<p class="mb-4 text-gray-300">    val direction_x: Int,  // ±1 based on initial swipe direction</p>
-<p class="mb-4 text-gray-300">    val direction_y: Int,</p>
-<p class="mb-4 text-gray-300">    val slider: KeyValue.Slider</p>
-<p class="mb-4 text-gray-300">) {</p>
-<p class="mb-4 text-gray-300">    var d = 0f              // Accumulated fractional cursor movements</p>
-<p class="mb-4 text-gray-300">    var speed = 0.5f        // Current speed multiplier (0.5 - max)</p>
-<p class="mb-4 text-gray-300">    var last_move_ms: Long  // Timestamp for speed calculation</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
+    x: Float, y: Float,
+    val direction_x: Int,  // ±1 based on initial swipe direction
+    val direction_y: Int,
+    val slider: KeyValue.Slider
+) {
+    var d = 0f              // Accumulated fractional cursor movements
+    var speed = 0.5f        // Current speed multiplier (0.5 - max)
+    var last_move_ms: Long  // Timestamp for speed calculation
+}
 
-<p class="mb-4 text-gray-300"><strong>Movement calculation:</strong></p>
+fun onTouchMove(ptr: Pointer, x: Float, y: Float) {
+    val travelled = abs(x - last_x) + abs(y - last_y)
 
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">fun onTouchMove(ptr: Pointer, x: Float, y: Float) {
-<p class="mb-4 text-gray-300">    val travelled = abs(x - last_x) + abs(y - last_y)</p>
+    // Accumulate distance with speed multiplier
+    d += ((x - last_x) * speed * direction_x +
+          (y - last_y) * speed * SLIDING_SPEED_VERTICAL_MULT * direction_y) /
+         _config.slide_step_px
 
-<p class="mb-4 text-gray-300">    // Accumulate distance with speed multiplier</p>
-<p class="mb-4 text-gray-300">    d += ((x - last_x) </em> speed <em> direction_x +</p>
-<p class="mb-4 text-gray-300">          (y - last_y) </em> speed <em> SLIDING_SPEED_VERTICAL_MULT </em> direction_y) /</p>
-<p class="mb-4 text-gray-300">         _config.slide_step_px</p>
+    // Send cursor event for each whole unit accumulated
+    val d_ = d.toInt()
+    if (d_ != 0) {
+        d -= d_
+        _handler.onPointerHold(KeyValue.sliderKey(slider, d_), ptr.modifiers)
+    }
 
-<p class="mb-4 text-gray-300">    // Send cursor event for each whole unit accumulated</p>
-<p class="mb-4 text-gray-300">    val d_ = d.toInt()</p>
-<p class="mb-4 text-gray-300">    if (d_ != 0) {</p>
-<p class="mb-4 text-gray-300">        d -= d_</p>
-<p class="mb-4 text-gray-300">        _handler.onPointerHold(KeyValue.sliderKey(slider, d_), ptr.modifiers)</p>
-<p class="mb-4 text-gray-300">    }</p>
+    update_speed(travelled, x, y)
+}
 
-<p class="mb-4 text-gray-300">    update_speed(travelled, x, y)</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
-
-<p class="mb-4 text-gray-300"><strong>Speed calculation:</strong></p>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">fun update_speed(travelled: Float, x: Float, y: Float) {
-<p class="mb-4 text-gray-300">    val now = System.currentTimeMillis()</p>
-<p class="mb-4 text-gray-300">    val instant_speed = min(slider_speed_max, travelled / (now - last_move_ms) + 1f)</p>
-<p class="mb-4 text-gray-300">    speed = speed + (instant_speed - speed) <em> slider_speed_smoothing</p>
-<p class="mb-4 text-gray-300">    last_move_ms = now</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
+fun update_speed(travelled: Float, x: Float, y: Float) {
+    val now = System.currentTimeMillis()
+    val instant_speed = min(slider_speed_max, travelled / (now - last_move_ms) + 1f)
+    speed = speed + (instant_speed - speed) * slider_speed_smoothing
+    last_move_ms = now
+}</code></pre>
 
 <h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Swipe Behavior Examples</h3>
 
-<p class="mb-4 text-gray-300"><strong>Short, slow swipe</strong> (50px in 200ms):</p>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">instant_speed = min(6.0, 50/200 + 1) = 1.25
-<p class="mb-4 text-gray-300">speed ≈ 1.0 (starts at 0.5, smoothed toward 1.25)</p>
-<p class="mb-4 text-gray-300">cursor_moves = 50 </em> 1.0 / 32.4 ≈ 1-2 positions</code></pre></p>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Swipe Type</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Distance</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Time</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Speed</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Cursor Moves</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Short, slow</td><td class="px-4 py-2 text-gray-300">50px</td><td class="px-4 py-2 text-gray-300">200ms</td><td class="px-4 py-2 text-gray-300">~1.0</td><td class="px-4 py-2 text-gray-300">1-2 positions</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Long, slow</td><td class="px-4 py-2 text-gray-300">200px</td><td class="px-4 py-2 text-gray-300">800ms</td><td class="px-4 py-2 text-gray-300">~1.2</td><td class="px-4 py-2 text-gray-300">7-8 positions</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Fast</td><td class="px-4 py-2 text-gray-300">150px</td><td class="px-4 py-2 text-gray-300">75ms</td><td class="px-4 py-2 text-gray-300">~2.5</td><td class="px-4 py-2 text-gray-300">11-12 positions</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Very fast</td><td class="px-4 py-2 text-gray-300">200px</td><td class="px-4 py-2 text-gray-300">40ms</td><td class="px-4 py-2 text-gray-300">~4.5 (capped at 6)</td><td class="px-4 py-2 text-gray-300">27-28 positions</td></tr></tbody></table>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Arrow Key Navigation</h3>
 
-<p class="mb-4 text-gray-300"><strong>Long, slow swipe</strong> (200px in 800ms):</p>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">instant_speed = min(6.0, 200/800 + 1) = 1.25
-<p class="mb-4 text-gray-300">speed ≈ 1.2 (smoothed)</p>
-<p class="mb-4 text-gray-300">cursor_moves = 200 <em> 1.2 / 32.4 ≈ 7-8 positions</code></pre></p>
+<p class="mb-4 text-gray-300">Discrete movement via DPAD key events:</p>
 
-<p class="mb-4 text-gray-300"><strong>Fast swipe</strong> (150px in 75ms):</p>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">instant_speed = min(6.0, 150/75 + 1) = 3.0
-<p class="mb-4 text-gray-300">speed ≈ 2.5 (smoothed from previous)</p>
-<p class="mb-4 text-gray-300">cursor_moves = 150 </em> 2.5 / 32.4 ≈ 11-12 positions</code></pre></p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// KeyValue.kt
+"up" -&gt; keyeventKey(0xE005, KeyEvent.KEYCODE_DPAD_UP, 0)
+"right" -&gt; keyeventKey(0xE006, KeyEvent.KEYCODE_DPAD_RIGHT, FLAG_SMALLER_FONT)
+"down" -&gt; keyeventKey(0xE007, KeyEvent.KEYCODE_DPAD_DOWN, 0)
+"left" -&gt; keyeventKey(0xE008, KeyEvent.KEYCODE_DPAD_LEFT, FLAG_SMALLER_FONT)</code></pre>
 
-<p class="mb-4 text-gray-300"><strong>Very fast swipe</strong> (200px in 40ms):</p>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">instant_speed = min(6.0, 200/40 + 1) = 6.0 (capped)
-<p class="mb-4 text-gray-300">speed ≈ 4.5 (smoothed)</p>
-<p class="mb-4 text-gray-300">cursor_moves = 200 <em> 4.5 / 32.4 ≈ 27-28 positions</code></pre></p>
+<p class="mb-4 text-gray-300">Each swipe triggers exactly ONE key event - no distance or speed scaling.</p>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Arrow Key Navigation (Dedicated Nav Key)</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Comparison Table</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Key Types</h3>
-
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// KeyValue.kt - creates DPAD key events
-<p class="mb-4 text-gray-300">"up" -&gt; keyeventKey(0xE005, KeyEvent.KEYCODE_DPAD_UP, 0)</p>
-<p class="mb-4 text-gray-300">"right" -&gt; keyeventKey(0xE006, KeyEvent.KEYCODE_DPAD_RIGHT, FLAG_SMALLER_FONT)</p>
-<p class="mb-4 text-gray-300">"down" -&gt; keyeventKey(0xE007, KeyEvent.KEYCODE_DPAD_DOWN, 0)</p>
-<p class="mb-4 text-gray-300">"left" -&gt; keyeventKey(0xE008, KeyEvent.KEYCODE_DPAD_LEFT, FLAG_SMALLER_FONT)</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Behavior</h3>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Each swipe triggers exactly <strong>ONE</strong> key event</li>
-<li class="ml-4">&#8226; No distance or speed scaling</li>
-<li class="ml-4">&#8226; Consistent, predictable movement</li>
-<li class="ml-4">&#8226; Works in all text fields and apps</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Comparison Table</h2>
-
-<p class="mb-4 text-gray-300">| Feature | Spacebar Slider | Nav Key Arrows |</p>
-<p class="mb-4 text-gray-300">|---------|-----------------|----------------|</p>
-<p class="mb-4 text-gray-300">| <strong>Key values</strong> | <code class="bg-ck-dark px-1 rounded">cursor_left</code>, <code class="bg-ck-dark px-1 rounded">cursor_right</code> | <code class="bg-ck-dark px-1 rounded">left</code>, <code class="bg-ck-dark px-1 rounded">right</code>, <code class="bg-ck-dark px-1 rounded">up</code>, <code class="bg-ck-dark px-1 rounded">down</code> |</p>
-<p class="mb-4 text-gray-300">| <strong>Movement type</strong> | Continuous (fractional accumulation) | Discrete (one per swipe) |</p>
-<p class="mb-4 text-gray-300">| <strong>Speed-sensitive</strong> | Yes (1x to 6x multiplier) | No |</p>
-<p class="mb-4 text-gray-300">| <strong>Distance-sensitive</strong> | Yes (proportional) | No |</p>
-<p class="mb-4 text-gray-300">| <strong>Output method</strong> | <code class="bg-ck-dark px-1 rounded">InputConnection.setSelection()</code> | <code class="bg-ck-dark px-1 rounded">KeyEvent.KEYCODE_DPAD_</em></code> |</p>
-<p class="mb-4 text-gray-300">| <strong>Use case</strong> | Quick navigation through text | Precise single-char movement |</p>
-<p class="mb-4 text-gray-300">| <strong>Selection support</strong> | Yes (<code class="bg-ck-dark px-1 rounded">selection_cursor_*</code> variants) | With Shift modifier |</p>
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Cursor Movement Execution</h2>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Feature</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Spacebar Slider</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Nav Key Arrows</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><strong>Key values</strong></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">cursor_left</code>, <code class="bg-ck-dark px-1 rounded">cursor_right</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">left</code>, <code class="bg-ck-dark px-1 rounded">right</code>, <code class="bg-ck-dark px-1 rounded">up</code>, <code class="bg-ck-dark px-1 rounded">down</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><strong>Movement type</strong></td><td class="px-4 py-2 text-gray-300">Continuous (fractional accumulation)</td><td class="px-4 py-2 text-gray-300">Discrete (one per swipe)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><strong>Speed-sensitive</strong></td><td class="px-4 py-2 text-gray-300">Yes (1x to 6x multiplier)</td><td class="px-4 py-2 text-gray-300">No</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><strong>Distance-sensitive</strong></td><td class="px-4 py-2 text-gray-300">Yes (proportional)</td><td class="px-4 py-2 text-gray-300">No</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><strong>Output method</strong></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">InputConnection.setSelection()</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">KeyEvent.KEYCODE_DPAD_*</code></td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><strong>Use case</strong></td><td class="px-4 py-2 text-gray-300">Quick navigation through text</td><td class="px-4 py-2 text-gray-300">Precise single-char movement</td></tr></tbody></table>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Cursor Movement Execution</h3>
 
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// KeyEventHandler.kt
-<p class="mb-4 text-gray-300">private fun handleSlider(s: KeyValue.Slider, r: Int, keyDown: Boolean) {</p>
-<p class="mb-4 text-gray-300">    when (s) {</p>
-<p class="mb-4 text-gray-300">        KeyValue.Slider.Cursor_left -&gt; moveCursor(-r)</p>
-<p class="mb-4 text-gray-300">        KeyValue.Slider.Cursor_right -&gt; moveCursor(r)</p>
-<p class="mb-4 text-gray-300">        KeyValue.Slider.Cursor_up -&gt; moveCursorVertical(-r)</p>
-<p class="mb-4 text-gray-300">        KeyValue.Slider.Cursor_down -&gt; moveCursorVertical(r)</p>
-<p class="mb-4 text-gray-300">        KeyValue.Slider.Selection_cursor_left -&gt; moveCursorSel(r, true, keyDown)</p>
-<p class="mb-4 text-gray-300">        KeyValue.Slider.Selection_cursor_right -&gt; moveCursorSel(r, false, keyDown)</p>
-<p class="mb-4 text-gray-300">    }</p>
-<p class="mb-4 text-gray-300">}</p>
+private fun handleSlider(s: KeyValue.Slider, r: Int, keyDown: Boolean) {
+    when (s) {
+        Slider.Cursor_left -&gt; moveCursor(-r)
+        Slider.Cursor_right -&gt; moveCursor(r)
+        Slider.Cursor_up -&gt; moveCursorVertical(-r)
+        Slider.Cursor_down -&gt; moveCursorVertical(r)
+        Slider.Selection_cursor_left -&gt; moveCursorSel(r, true, keyDown)
+        Slider.Selection_cursor_right -&gt; moveCursorSel(r, false, keyDown)
+    }
+}
 
-<p class="mb-4 text-gray-300">private fun moveCursor(d: Int) {</p>
-<p class="mb-4 text-gray-300">    val conn = recv.getCurrentInputConnection() ?: return</p>
-<p class="mb-4 text-gray-300">    val et = getCursorPos(conn)</p>
+private fun moveCursor(d: Int) {
+    val conn = recv.getCurrentInputConnection() ?: return
+    val et = getCursorPos(conn)
 
-<p class="mb-4 text-gray-300">    if (et != null &amp;&amp; canSetSelection(conn)) {</p>
-<p class="mb-4 text-gray-300">        var selEnd = et.selectionEnd + d</p>
-<p class="mb-4 text-gray-300">        var selStart = if ((metaState and KeyEvent.META_SHIFT_ON) == 0) selEnd else et.selectionStart</p>
-<p class="mb-4 text-gray-300">        conn.setSelection(selStart, selEnd)</p>
-<p class="mb-4 text-gray-300">    } else {</p>
-<p class="mb-4 text-gray-300">        moveCursorFallback(d)  // Send arrow key events</p>
-<p class="mb-4 text-gray-300">    }</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
+    if (et != null &amp;&amp; canSetSelection(conn)) {
+        var selEnd = et.selectionEnd + d
+        var selStart = if ((metaState and KeyEvent.META_SHIFT_ON) == 0) selEnd else et.selectionStart
+        conn.setSelection(selStart, selEnd)
+    } else {
+        moveCursorFallback(d)  // Send arrow key events
+    }
+}</code></pre>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Settings UI</h2>
-
-<p class="mb-4 text-gray-300">Users can configure slider behavior via Settings → Gestures:</p>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>Slider Sensitivity</strong> (1-100%): Lower = more cursor movement per pixel</li>
-<li class="ml-4">&#8226; <strong>Speed Smoothing</strong> (0.1-0.95): Higher = smoother but less responsive</li>
-<li class="ml-4">&#8226; <strong>Maximum Speed</strong> (1.0-10.0): Cap on speed multiplier</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Files</h2>
-
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">Pointers.kt</code> - Sliding class and touch handling</li>
-<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">KeyValue.kt</code> - Slider enum and key definitions</li>
-<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">KeyEventHandler.kt</code> - Cursor movement execution</li>
-<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">Config.kt</code> - Configuration and swipe_scaling calculation</li>
-<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">res/xml/bottom_row.xml</code> - Key layout definitions</li>
-</ul>
         </div>
     </main>
 

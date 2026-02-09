@@ -70,193 +70,211 @@
     <!-- Content -->
     <main class="container mx-auto px-6 pb-20">
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
-            <h1 class="text-3xl font-bold mb-6 gradient-text">TrackPoint Navigation Mode Specification</h1>
+            <h1 class="text-3xl font-bold mb-6 gradient-text">TrackPoint Navigation Mode</h1>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Feature Overview</h2>
-<p class="mb-4 text-gray-300"><strong>Feature Name</strong>: TrackPoint Navigation Mode</p>
-<p class="mb-4 text-gray-300"><strong>Priority</strong>: P1</p>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: Complete</p>
-<p class="mb-4 text-gray-300"><strong>Target Version</strong>: v1.2.4</p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Summary</h3>
-<p class="mb-4 text-gray-300">A joystick-style cursor control mode activated by holding navigation keys (arrow keys), enabling proportional multi-directional cursor movement.</p>
+<p class="mb-4 text-gray-300">TrackPoint Navigation Mode provides joystick-style cursor control by holding arrow keys (without initial swipe movement). When activated, finger movement in any direction moves the cursor proportionally, with speed scaling based on distance from the activation point. Supports all 8 directions including diagonals for fluid text navigation.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Motivation</h3>
-<p class="mb-4 text-gray-300">Traditional arrow key navigation requires repeated taps to move multiple positions. TrackPoint mode allows fluid, continuous cursor movement in any direction by holding a nav key and moving the finger, similar to a ThinkPad TrackPoint.</p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Key Files</h2>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Requirements</h2>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">File</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Class/Function</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Purpose</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Pointers.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">handleTrackPointRepeat()</code></td><td class="px-4 py-2 text-gray-300">Main cursor movement logic</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Pointers.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">FLAG_P_TRACKPOINT_MODE</code></td><td class="px-4 py-2 text-gray-300">Mode state flag (value: 64)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/VibratorCompat.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">CLOCK_TICK</code> pattern</td><td class="px-4 py-2 text-gray-300">Distinct haptic on activation</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Config.kt</code></td><td class="px-4 py-2 text-gray-300">Haptic toggle</td><td class="px-4 py-2 text-gray-300">TrackPoint haptic setting</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Architecture</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Functional Requirements</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>FR-1</strong>: Touch and hold arrow key (without initial movement) enters TrackPoint mode</li>
-<li class="ml-4">2. <strong>FR-2</strong>: Finger movement in any direction moves cursor proportionally</li>
-<li class="ml-4">3. <strong>FR-3</strong>: Diagonal movement supported (NE moves up+right simultaneously)</li>
-<li class="ml-4">4. <strong>FR-4</strong>: Speed scales with distance from activation center</li>
-<li class="ml-4">5. <strong>FR-5</strong>: Distinct haptic feedback on mode activation</li>
-<li class="ml-4">6. <strong>FR-6</strong>: Short swipe on nav key still performs single cursor movement</li>
-<li class="ml-4">7. <strong>FR-7</strong>: Nav keys excluded from short gesture path collection</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Non-Functional Requirements</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>NFR-1</strong>: Performance - Smooth cursor movement with <16ms response</li>
-<li class="ml-4">2. <strong>NFR-2</strong>: Usability - Clear haptic distinction from normal key press</li>
-<li class="ml-4">3. <strong>NFR-3</strong>: Reliability - No interference with short swipe gestures</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">User Stories</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>As a</strong> developer, <strong>I want</strong> to navigate code quickly, <strong>so that</strong> I can edit precisely without lifting my finger</li>
-<li class="ml-4">&#8226; <strong>As a</strong> user, <strong>I want</strong> continuous cursor movement, <strong>so that</strong> I can position cursor efficiently in long documents</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Technical Design</h2>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">User Input (arrow key touch + hold without movement)
+       |
+       v
++------------------+
+| onTouchDown()    | -- Records initial touch position
++------------------+
+       |
+       v (no initial movement + hold time exceeded)
++------------------+
+| TrackPoint Mode  | -- FLAG_P_TRACKPOINT_MODE activated
+| Activation       | -- CLOCK_TICK haptic feedback
++------------------+
+       |
+       v
++------------------+
+| handleTrackPoint | -- Repeating handler tracks position
+| Repeat()         | -- Calculates direction and distance
++------------------+
+       |
+       v
++------------------+
+| Cursor Movement  | -- Sends DPAD_* key events
+| Handler          | -- Supports all 8 directions
++------------------+</code></pre>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Architecture</h3>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">User Input (arrow key)
-<p class="mb-4 text-gray-300">       |</p>
-<p class="mb-4 text-gray-300">       v</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">| onTouchDown()    | -- Records initial touch position</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">       |</p>
-<p class="mb-4 text-gray-300">       v (no initial movement + hold)</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">| TrackPoint Mode  | -- FLAG_P_TRACKPOINT_MODE activated</p>
-<p class="mb-4 text-gray-300">| Activation       | -- CLOCK_TICK haptic feedback</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">       |</p>
-<p class="mb-4 text-gray-300">       v</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">| Continuous       | -- Repeating handler tracks finger position</p>
-<p class="mb-4 text-gray-300">| Position Track   | -- Calculates direction and distance</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">       |</p>
-<p class="mb-4 text-gray-300">       v</p>
-<p class="mb-4 text-gray-300">+------------------+</p>
-<p class="mb-4 text-gray-300">| Cursor Movement  | -- Sends arrow key events proportionally</p>
-<p class="mb-4 text-gray-300">| Handler          | -- Supports all 8 directions</p>
-<p class="mb-4 text-gray-300">+------------------+</code></pre></p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Data Flow</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Component Breakdown</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>Pointers.kt</strong>: Handles touch input, mode activation, and cursor movement</li>
-<li class="ml-4">2. <strong>VibratorCompat.kt</strong>: Provides distinct haptic feedback (CLOCK_TICK pattern)</li>
-<li class="ml-4">3. <strong>Config.kt</strong>: TrackPoint haptic toggle setting</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Data Structures</h3>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// State flag for mode tracking
-<p class="mb-4 text-gray-300">private const val FLAG_P_TRACKPOINT_MODE = 64</p>
-
-<p class="mb-4 text-gray-300">// Timer identifier</p>
-<p class="mb-4 text-gray-300">private val trackpointWhat = Any()</p>
-
-<p class="mb-4 text-gray-300">// Direction constants</p>
-<p class="mb-4 text-gray-300">enum class TrackPointDirection {</p>
-<p class="mb-4 text-gray-300">    NORTH, NORTHEAST, EAST, SOUTHEAST,</p>
-<p class="mb-4 text-gray-300">    SOUTH, SOUTHWEST, WEST, NORTHWEST</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">API/Interface Design</h3>
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// TrackPoint handling in Pointers.kt
-<p class="mb-4 text-gray-300">private fun handleTrackPointRepeat(ptr: Pointer) {</p>
-<p class="mb-4 text-gray-300">    val dx = ptr.currentX - ptr.activationX</p>
-<p class="mb-4 text-gray-300">    val dy = ptr.currentY - ptr.activationY</p>
-
-<p class="mb-4 text-gray-300">    // Calculate direction from delta</p>
-<p class="mb-4 text-gray-300">    val direction = getTrackPointDirection(dx, dy)</p>
-
-<p class="mb-4 text-gray-300">    // Send cursor movement based on direction</p>
-<p class="mb-4 text-gray-300">    when (direction) {</p>
-<p class="mb-4 text-gray-300">        NORTH -&gt; sendArrowKey(KeyEvent.KEYCODE_DPAD_UP)</p>
-<p class="mb-4 text-gray-300">        NORTHEAST -&gt; {</p>
-<p class="mb-4 text-gray-300">            sendArrowKey(KeyEvent.KEYCODE_DPAD_UP)</p>
-<p class="mb-4 text-gray-300">            sendArrowKey(KeyEvent.KEYCODE_DPAD_RIGHT)</p>
-<p class="mb-4 text-gray-300">        }</p>
-<p class="mb-4 text-gray-300">        // ... other directions</p>
-<p class="mb-4 text-gray-300">    }</p>
-<p class="mb-4 text-gray-300">}</p>
-
-<p class="mb-4 text-gray-300">// Haptic feedback on activation</p>
-<p class="mb-4 text-gray-300">private fun triggerTrackPointHaptic() {</p>
-<p class="mb-4 text-gray-300">    VibratorCompat.vibrate(HapticEvent.TRACKPOINT_ACTIVATE)</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">State Management</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">FLAG_P_TRACKPOINT_MODE</code> flag tracks active state</li>
-<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">activationX/Y</code> stores initial touch point</li>
-<li class="ml-4">&#8226; Movement tolerance: 30px before short swipe detection (increased from 15px for nav keys)</li>
-<li class="ml-4">&#8226; Timer-based repeat with speed based on finger distance</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Plan</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 1: Core TrackPoint Mode</h3>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: Complete</p>
-<p class="mb-4 text-gray-300"><strong>Deliverables</strong>:</p>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Hold detection on arrow keys</li>
-<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> 8-direction cursor movement</li>
-<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Speed scaling based on distance</li>
-<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Diagonal movement support</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 2: Integration & Polish</h3>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: Complete</p>
-<p class="mb-4 text-gray-300"><strong>Deliverables</strong>:</p>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Distinct haptic feedback (CLOCK_TICK)</li>
-<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Exclusion from short gesture collection</li>
-<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Increased movement tolerance for nav keys</li>
-<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Per-event haptic settings toggle</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Testing Strategy</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Unit Tests</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Test case 1: Short swipe triggers single cursor movement</li>
-<li class="ml-4">&#8226; Test case 2: Hold activates TrackPoint mode</li>
-<li class="ml-4">&#8226; Test case 3: Distance scaling affects movement speed correctly</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Integration Tests</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Test case 1: Cursor moves correctly in text editors</li>
-<li class="ml-4">&#8226; Test case 2: Diagonal movement produces expected results</li>
-<li class="ml-4">&#8226; Test case 3: Mode doesn't interfere with other gestures</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">UI/UX Tests</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Test case 1: Haptic feedback is distinctly recognizable</li>
-<li class="ml-4">&#8226; Test case 2: TrackPoint haptic toggle works correctly</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Dependencies</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Internal Dependencies</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">Pointers.kt</code> touch handling system</li>
-<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">VibratorCompat.kt</code> haptic feedback system</li>
-<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">Config.kt</code> haptic settings storage</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">External Dependencies</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Android KeyEvent for cursor key codes</li>
-<li class="ml-4">&#8226; Android Vibrator API for haptics</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Breaking Changes</h3>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> This feature introduces breaking changes</li>
+<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>Activation</strong>: Hold arrow key without initial swipe movement</li>
+<li class="ml-4">2. <strong>Detection</strong>: After <code class="bg-ck-dark px-1 rounded">LONGPRESS_TIMEOUT</code> with <30px movement, mode activates</li>
+<li class="ml-4">3. <strong>Tracking</strong>: Repeat handler reads current finger position</li>
+<li class="ml-4">4. <strong>Direction</strong>: Calculate angle from activation point to current position</li>
+<li class="ml-4">5. <strong>Speed</strong>: Distance from center determines repeat rate</li>
+<li class="ml-4">6. <strong>Output</strong>: Appropriate DPAD_* key events sent to input connection</li>
 </ul>
 <h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Configuration</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Haptic Settings</h3>
-<p class="mb-4 text-gray-300">The TrackPoint activation haptic can be toggled in Settings > Accessibility > Haptic Feedback:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>TrackPoint Mode</strong>: Enable/disable CLOCK_TICK pattern on activation</li>
-<li class="ml-4">&#8226; Default: Enabled</li>
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Key</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Type</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Default</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Description</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">trackpoint_haptic_enabled</code></td><td class="px-4 py-2 text-gray-300">Boolean</td><td class="px-4 py-2 text-gray-300">true</td><td class="px-4 py-2 text-gray-300">Enable CLOCK_TICK on mode activation</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">short_gesture_min_distance</code></td><td class="px-4 py-2 text-gray-300">Int</td><td class="px-4 py-2 text-gray-300">15</td><td class="px-4 py-2 text-gray-300">Pixels before short swipe detection (30px for nav keys)</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Public API</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Pointers.kt</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// State flag constant
+private const val FLAG_P_TRACKPOINT_MODE = 64
+
+// Timer identifier for repeat handler
+private val trackpointWhat = Any()
+
+// Main TrackPoint handler - called repeatedly while mode active
+private fun handleTrackPointRepeat(ptr: Pointer) {
+    val dx = ptr.currentX - ptr.activationX
+    val dy = ptr.currentY - ptr.activationY
+
+    // Calculate 8-direction from delta
+    val direction = getTrackPointDirection(dx, dy)
+
+    // Send cursor movement(s)
+    sendCursorMovement(direction)
+}
+
+// Get direction enum from delta coordinates
+private fun getTrackPointDirection(dx: Float, dy: Float): TrackPointDirection
+
+// Send arrow key event(s) for direction
+private fun sendCursorMovement(direction: TrackPointDirection)
+
+// Trigger activation haptic
+private fun triggerTrackPointHaptic()</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Direction Enumeration</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">enum class TrackPointDirection {
+    NORTH,      // Up only
+    NORTHEAST,  // Up + Right
+    EAST,       // Right only
+    SOUTHEAST,  // Down + Right
+    SOUTH,      // Down only
+    SOUTHWEST,  // Down + Left
+    WEST,       // Left only
+    NORTHWEST   // Up + Left
+}</code></pre>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Details</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Activation vs Short Swipe</h3>
+
+<p class="mb-4 text-gray-300">TrackPoint mode activates when:</p>
+<ul class="mb-4 space-y-1"><li class="ml-4">1. Arrow key touched</li>
+<li class="ml-4">2. Finger moved <30px from initial position (nav keys use 30px, others use 15px)</li>
+<li class="ml-4">3. Hold time exceeds <code class="bg-ck-dark px-1 rounded">LONGPRESS_TIMEOUT</code> (600ms)</li>
 </ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Related Settings</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Short Gesture Min Distance: Affects how quickly TrackPoint activates</li>
-<li class="ml-4">&#8226; Short Gesture Max Distance: Must be less than TrackPoint activation threshold</li>
-</ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Error Handling</h2>
+<p class="mb-4 text-gray-300">If finger moves >30px before timeout, it's a short swipe (single cursor move).</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Nav keys have increased tolerance to allow hold activation
+val isNavKey = key.kind in listOf(Kind.Arrow_Up, Kind.Arrow_Down, Kind.Arrow_Left, Kind.Arrow_Right)
+val movementThreshold = if (isNavKey) 30 else 15
+
+if (distance &lt; movementThreshold &amp;&amp; holdTime &gt; LONGPRESS_TIMEOUT) {
+    activateTrackPointMode(ptr)
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Direction Calculation</h3>
+
+<p class="mb-4 text-gray-300">Direction determined by angle from activation point:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">private fun getTrackPointDirection(dx: Float, dy: Float): TrackPointDirection {
+    val angle = atan2(dy.toDouble(), dx.toDouble())
+    val degrees = Math.toDegrees(angle)
+
+    // Map angle to 8 sectors (45 degrees each)
+    return when {
+        degrees in -22.5..22.5 -&gt; EAST
+        degrees in 22.5..67.5 -&gt; SOUTHEAST
+        degrees in 67.5..112.5 -&gt; SOUTH
+        degrees in 112.5..157.5 -&gt; SOUTHWEST
+        degrees &gt; 157.5 || degrees &lt; -157.5 -&gt; WEST
+        degrees in -157.5..-112.5 -&gt; NORTHWEST
+        degrees in -112.5..-67.5 -&gt; NORTH
+        degrees in -67.5..-22.5 -&gt; NORTHEAST
+        else -&gt; EAST // fallback
+    }
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Diagonal Movement</h3>
+
+<p class="mb-4 text-gray-300">Diagonal directions send two key events:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">private fun sendCursorMovement(direction: TrackPointDirection) {
+    when (direction) {
+        NORTH -&gt; sendArrowKey(KEYCODE_DPAD_UP)
+        NORTHEAST -&gt; {
+            sendArrowKey(KEYCODE_DPAD_UP)
+            sendArrowKey(KEYCODE_DPAD_RIGHT)
+        }
+        EAST -&gt; sendArrowKey(KEYCODE_DPAD_RIGHT)
+        SOUTHEAST -&gt; {
+            sendArrowKey(KEYCODE_DPAD_DOWN)
+            sendArrowKey(KEYCODE_DPAD_RIGHT)
+        }
+        SOUTH -&gt; sendArrowKey(KEYCODE_DPAD_DOWN)
+        SOUTHWEST -&gt; {
+            sendArrowKey(KEYCODE_DPAD_DOWN)
+            sendArrowKey(KEYCODE_DPAD_LEFT)
+        }
+        WEST -&gt; sendArrowKey(KEYCODE_DPAD_LEFT)
+        NORTHWEST -&gt; {
+            sendArrowKey(KEYCODE_DPAD_UP)
+            sendArrowKey(KEYCODE_DPAD_LEFT)
+        }
+    }
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Speed Scaling</h3>
+
+<p class="mb-4 text-gray-300">Cursor movement speed scales with finger distance from activation center:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">val distance = sqrt(dx * dx + dy * dy)
+val repeatDelay = when {
+    distance &lt; 50 -&gt; 200   // Slow (5 moves/sec)
+    distance &lt; 100 -&gt; 100  // Medium (10 moves/sec)
+    distance &lt; 150 -&gt; 50   // Fast (20 moves/sec)
+    else -&gt; 25             // Very fast (40 moves/sec)
+}
+handler.postDelayed(trackpointRunnable, repeatDelay)</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Haptic Feedback</h3>
+
+<p class="mb-4 text-gray-300">Distinct CLOCK_TICK pattern on activation:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">private fun triggerTrackPointHaptic() {
+    if (config.trackpointHapticEnabled) {
+        VibratorCompat.vibrate(HapticEvent.CLOCK_TICK)
+    }
+}</code></pre>
+
+<p class="mb-4 text-gray-300">CLOCK_TICK provides a subtle, distinct feel different from normal key press vibration.</p>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Nav Key Exclusion from Gesture Collection</h3>
+
+<p class="mb-4 text-gray-300">Arrow keys are excluded from short gesture path collection to prevent accidental gesture triggering:</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">private fun shouldCollectGesturePath(key: KeyValue): Boolean {
+    // Nav keys excluded - they have TrackPoint mode instead
+    if (key.kind in listOf(Kind.Arrow_Up, Kind.Arrow_Down, Kind.Arrow_Left, Kind.Arrow_Right)) {
+        return false
+    }
+    return true
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Error Handling</h3>
+
 <ul class="mb-4 space-y-1"><li class="ml-4">&#8226; No navigation target: Cursor movement commands sent but have no effect</li>
-<li class="ml-4">&#8226; Haptic unavailable: Graceful degradation, mode still functions</li>
-<li class="ml-4">&#8226; Rapid re-activation: Debounced to prevent haptic spam</li>
+<li class="ml-4">&#8226; Haptic unavailable: Mode still functions, just without feedback</li>
+<li class="ml-4">&#8226; Rapid re-activation: Debounced to prevent haptic spam (min 200ms between activations)</li>
 </ul>
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Success Metrics</h2>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Metric 1: Users can position cursor in long documents 3x faster than tap-tap-tap</li>
-<li class="ml-4">&#8226; Metric 2: Diagonal movement feels natural and responsive</li>
-<li class="ml-4">&#8226; Acceptance criteria: All test cases pass, user feedback positive</li>
-</ul>
-<hr class="border-gray-700 my-6">
-
-<p class="mb-4 text-gray-300"><strong>Created</strong>: 2026-01-14</p>
-<p class="mb-4 text-gray-300"><strong>Last Updated</strong>: 2026-01-14</p>
-<p class="mb-4 text-gray-300"><strong>Owner</strong>: CleverKeys Development</p>
-<p class="mb-4 text-gray-300"><strong>Reviewers</strong>: tribixbite</p>
-
         </div>
     </main>
 

@@ -70,313 +70,273 @@
     <!-- Content -->
     <main class="container mx-auto px-6 pb-20">
         <div class="bg-ck-surface rounded-2xl p-8 max-w-4xl">
-            <h1 class="text-3xl font-bold mb-6 gradient-text">Settings System Specification</h1>
+            <h1 class="text-3xl font-bold mb-6 gradient-text">Settings System</h1>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Feature Overview</h2>
-<p class="mb-4 text-gray-300"><strong>Feature Name</strong>: Settings & Preferences System</p>
-<p class="mb-4 text-gray-300"><strong>Priority</strong>: P1 (High)</p>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: Maintenance & Enhancement</p>
-<p class="mb-4 text-gray-300"><strong>Target Version</strong>: v1.0.0</p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Overview</h2>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Summary</h3>
-<p class="mb-4 text-gray-300">The settings system manages user preferences, storage permissions, configuration persistence, and settings UI. It provides a modern Material 3 interface for configuring keyboard behavior.</p>
+<p class="mb-4 text-gray-300">The settings system manages user preferences through SharedPreferences, provides a Material 3 Compose UI for configuration, and applies settings at runtime via the Config singleton. All default values are centralized in the <code class="bg-ck-dark px-1 rounded">Defaults</code> object within Config.kt to prevent mismatches between UI display and actual behavior.</p>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Motivation</h3>
-<p class="mb-4 text-gray-300">Users need a comprehensive, intuitive settings system to customize keyboard behavior. The system must handle Android 11+ storage changes, persist preferences reliably, and expose all configurable options.</p>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Key Files</h2>
 
-<hr class="border-gray-700 my-6">
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">File</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Class/Function</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Purpose</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/Config.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">Config</code>, <code class="bg-ck-dark px-1 rounded">Defaults</code></td><td class="px-4 py-2 text-gray-300">Global configuration singleton, centralized defaults</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/SettingsActivity.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">SettingsActivity</code></td><td class="px-4 py-2 text-gray-300">Material 3 Compose settings UI (~3000 lines)</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/ConfigurationManager.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">ConfigurationManager</code></td><td class="px-4 py-2 text-gray-300">Runtime configuration application</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/cleverkeys/theme/KeyboardTheme.kt</code></td><td class="px-4 py-2 text-gray-300"><code class="bg-ck-dark px-1 rounded">KeyboardTheme</code></td><td class="px-4 py-2 text-gray-300">Theme data and application</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Architecture</h2>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">📋 Feature Parity Status (2025-11-16)</h2>
-
-<p class="mb-4 text-gray-300"><strong>For complete analysis of missing settings compared to original Unexpected-Keyboard, see:</strong></p>
-<p class="mb-4 text-gray-300"><strong><a href="../../SETTINGS_COMPARISON_MISSING_ITEMS.md" class="text-ck-purple hover:underline">SETTINGS_COMPARISON_MISSING_ITEMS.md</a></strong></p>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Current Status Summary:</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>CleverKeys Implementation</strong>: ~20 settings across 7 sections (50% parity)</li>
-<li class="ml-4">&#8226; <strong>Original Unexpected-Keyboard</strong>: 40+ settings across 4 categories</li>
-<li class="ml-4">&#8226; <strong>Missing Settings</strong>: ~25 settings requiring implementation</li>
-<li class="ml-4">&#8226; <strong>Estimated Implementation Time</strong>: 17-24 hours for 100% parity</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Priority Breakdown:</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <strong>P1 - CRITICAL</strong> (7-10 hours): Layout Manager UI, Extra Keys Configuration, Adaptive Layout Settings</li>
-<li class="ml-4">&#8226; <strong>P2 - HIGH</strong> (7-9 hours): Gesture Sensitivity, Long Press Config, Visual Customization, Spacing Controls</li>
-<li class="ml-4">&#8226; <strong>P3 - MEDIUM</strong> (3-5 hours): Number Row, NumPad, Borders, Pin Entry</li>
-<li class="ml-4">&#8226; <strong>P4 - LOW</strong> (30 min): Double Tap Shift for Caps Lock</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">CleverKeys Exclusive Features (Not in Original):</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; ✅ Neural Prediction Configuration (4 settings) - ONNX beam width, max length, confidence</li>
-<li class="ml-4">&#8226; ✅ Accessibility Enhancements (3 settings) - Sticky keys, voice guidance</li>
-<li class="ml-4">&#8226; ✅ Dictionary Manager UI - User dictionary management</li>
-<li class="ml-4">&#8226; ✅ Advanced Features - Debug mode, neural calibration</li>
-<li class="ml-4">&#8226; ✅ Material 3 Compose UI - Modern reactive settings interface</li>
-</ul>
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">⚠️ KNOWN ISSUES (From Historical Review)</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">CRITICAL Issues (Fixed)</h3>
-
-<p class="mb-4 text-gray-300">#### ✅ Issue #5: Termux Mode Setting Missing from UI</p>
-<p class="mb-4 text-gray-300"><strong>File:</strong> <code class="bg-ck-dark px-1 rounded">res/xml/settings.xml</code></p>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: ⚠️ NEEDS VERIFICATION</p>
-<p class="mb-4 text-gray-300"><strong>Original Problem</strong>: <code class="bg-ck-dark px-1 rounded">termux_mode_enabled</code> checkbox not present in neural settings screen</p>
-<p class="mb-4 text-gray-300"><strong>Impact</strong>: Users cannot enable Termux-compatible prediction insertion</p>
-<p class="mb-4 text-gray-300"><strong>Current State</strong>: Variable exists in Config.kt but may not be exposed in settings XML</p>
-<p class="mb-4 text-gray-300"><strong>Action Required</strong>:</p>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Check res/xml/settings.xml for <code class="bg-ck-dark px-1 rounded">termux_mode_enabled</code> preference</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> If missing, add checkbox after <code class="bg-ck-dark px-1 rounded">neural_prediction_enabled</code></li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Verify Config.kt reads this preference correctly</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Test Termux mode functionality</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Document Termux mode behavior in user guide</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">HIGH PRIORITY Issues (Fixed)</h3>
-
-<p class="mb-4 text-gray-300">#### ✅ Issue #9: External Storage Permissions (Android 11+) - VERIFIED FIXED</p>
-<p class="mb-4 text-gray-300"><strong>File:</strong> <code class="bg-ck-dark px-1 rounded">AndroidManifest.xml:11-15</code></p>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: ✅ VERIFIED (2025-10-21)</p>
-<p class="mb-4 text-gray-300"><strong>Original Problem</strong>: READ/WRITE_EXTERNAL_STORAGE deprecated on Android 11+ (API 30+)</p>
-<p class="mb-4 text-gray-300"><strong>Impact</strong>: Would cause file access failures on modern Android versions</p>
-<p class="mb-4 text-gray-300"><strong>Verification Result</strong>: <strong>PROPERLY CONFIGURED</strong> ✅</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; AndroidManifest.xml:11 - <code class="bg-ck-dark px-1 rounded">WRITE_EXTERNAL_STORAGE</code> with <code class="bg-ck-dark px-1 rounded">maxSdkVersion="29"</code> ✅</li>
-<li class="ml-4">&#8226; AndroidManifest.xml:12 - <code class="bg-ck-dark px-1 rounded">READ_EXTERNAL_STORAGE</code> with <code class="bg-ck-dark px-1 rounded">maxSdkVersion="29"</code> ✅</li>
-<li class="ml-4">&#8226; Lines 9-15 have proper comments explaining scoped storage for Android 11+</li>
-<li class="ml-4">&#8226; Comment confirms: "For Android 11+, use scoped storage via MediaStore or SAF"</li>
-</ul>
-<p class="mb-4 text-gray-300"><strong>Action Required</strong> (Testing):</p>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Review AndroidManifest.xml permissions ✅</li>
-<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Verify <code class="bg-ck-dark px-1 rounded">maxSdkVersion="29"</code> is set for READ/WRITE_EXTERNAL_STORAGE ✅</li>
-<li class="flex items-center gap-2"><span class="text-green-400">&#10003;</span> Comments document scoped storage strategy ✅</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Test file access on Android 11+ devices (verify scoped storage works)</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Test file access on Android 10 and below (verify legacy permissions work)</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Verify app-specific directories (getExternalFilesDir()) work without permissions</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">MEDIUM PRIORITY Issues (Fixed)</h3>
-
-<p class="mb-4 text-gray-300">#### ✅ Issue #15: Theme Propagation Incomplete</p>
-<p class="mb-4 text-gray-300"><strong>File:</strong> <code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/keyboard2/CleverKeysService.kt:654</code></p>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: ⚠️ NEEDS VERIFICATION</p>
-<p class="mb-4 text-gray-300"><strong>Original Problem</strong>: <code class="bg-ck-dark px-1 rounded">// TODO: Propagate theme changes to active UI components</code></p>
-<p class="mb-4 text-gray-300"><strong>Impact</strong>: Theme changes may not apply until restart</p>
-<p class="mb-4 text-gray-300"><strong>Action Required</strong>:</p>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Review CleverKeysService.kt:654</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Implement theme update notification system</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Test theme switching without restart</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Verify all UI components update correctly</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Document theme propagation mechanism</li>
-</ul>
-<p class="mb-4 text-gray-300">#### ✅ Issue #17: Emoji Preferences Not Loaded</p>
-<p class="mb-4 text-gray-300"><strong>File:</strong> <code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/keyboard2/Emoji.kt:102</code></p>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: ⚠️ NEEDS VERIFICATION</p>
-<p class="mb-4 text-gray-300"><strong>Original Problem</strong>: <code class="bg-ck-dark px-1 rounded">// TODO: Load from preferences</code></p>
-<p class="mb-4 text-gray-300"><strong>Impact</strong>: Emoji preferences don't persist (recent/favorite emoji)</p>
-<p class="mb-4 text-gray-300"><strong>Action Required</strong>:</p>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Review Emoji.kt:102</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Implement SharedPreferences loading for emoji data</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Persist recent emoji list</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Persist favorite emoji list</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Test emoji persistence across app restarts</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Limit recent emoji list size (e.g., 30 items)</li>
-</ul>
-<p class="mb-4 text-gray-300">#### ✅ Issue #18: ConfigurationManager Theme Application</p>
-<p class="mb-4 text-gray-300"><strong>File:</strong> <code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/keyboard2/ConfigurationManager.kt:306</code></p>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: ⚠️ NEEDS VERIFICATION</p>
-<p class="mb-4 text-gray-300"><strong>Original Problem</strong>: <code class="bg-ck-dark px-1 rounded">// TODO: Fix Theme.initialize(context).applyThemeToView(view, theme)</code></p>
-<p class="mb-4 text-gray-300"><strong>Impact</strong>: Theme not fully applied to all UI components</p>
-<p class="mb-4 text-gray-300"><strong>Action Required</strong>:</p>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Review ConfigurationManager.kt:306</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Fix theme application to all views</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Verify Material 3 theming works correctly</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Test with KeyboardTheme integration</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Document theme application flow</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">LOW PRIORITY Issues</h3>
-
-<p class="mb-4 text-gray-300">#### Issue #23: Deprecated API Suppressions</p>
-<p class="mb-4 text-gray-300"><strong>Files:</strong></p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">ClipboardHistoryService.kt:165</code></li>
-<li class="ml-4">&#8226; <code class="bg-ck-dark px-1 rounded">VibratorCompat.kt:20,38</code></li>
-</ul><p class="mb-4 text-gray-300"><strong>Status</strong>: FUTURE WORK</p>
-<p class="mb-4 text-gray-300"><strong>Problem</strong>: Using deprecated Android APIs with @Suppress annotations</p>
-<p class="mb-4 text-gray-300"><strong>Action Required</strong> (Future):</p>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Migrate ClipboardHistoryService to modern ClipboardManager API</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Migrate VibratorCompat to VibrationEffect (API 26+)</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Remove @Suppress annotations</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Test on various Android versions</li>
-</ul>
-<p class="mb-4 text-gray-300">#### Issue #24: Hardcoded Strings</p>
-<p class="mb-4 text-gray-300"><strong>File:</strong> <code class="bg-ck-dark px-1 rounded">src/main/kotlin/tribixbite/keyboard2/CustomLayoutEditDialog.kt:46,54</code></p>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: FUTURE WORK</p>
-<p class="mb-4 text-gray-300"><strong>Problem</strong>: Hardcoded "Custom layout" and "Remove layout" strings</p>
-<p class="mb-4 text-gray-300"><strong>Action Required</strong> (Future):</p>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Create string resources in res/values/strings.xml</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Replace hardcoded strings with R.string references</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Prepare for i18n/localization</li>
-</ul>
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Requirements</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Functional Requirements</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>FR-1</strong>: All keyboard settings must be accessible from settings UI</li>
-<li class="ml-4">2. <strong>FR-2</strong>: Settings must persist correctly using SharedPreferences</li>
-<li class="ml-4">3. <strong>FR-3</strong>: Storage access must work on Android 11+ (scoped storage)</li>
-<li class="ml-4">4. <strong>FR-4</strong>: Theme changes must apply immediately without restart</li>
-<li class="ml-4">5. <strong>FR-5</strong>: Emoji preferences (recent/favorites) must persist</li>
-<li class="ml-4">6. <strong>FR-6</strong>: Termux mode must be configurable from UI</li>
-<li class="ml-4">7. <strong>FR-7</strong>: Settings UI must use Material 3 design</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Non-Functional Requirements</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>NFR-1</strong>: Performance - Settings load in <100ms</li>
-<li class="ml-4">2. <strong>NFR-2</strong>: Usability - Settings organized logically, searchable</li>
-<li class="ml-4">3. <strong>NFR-3</strong>: Reliability - No data loss on crashes</li>
-</ul>
-<hr class="border-gray-700 my-6">
-
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Technical Design</h2>
-
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Architecture</h3>
 <pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-text">SettingsActivity (Material 3 Compose)
-<p class="mb-4 text-gray-300">    ├── PreferenceScreen</p>
-<p class="mb-4 text-gray-300">    │   ├── Neural Prediction Settings</p>
-<p class="mb-4 text-gray-300">    │   ├── Layout Settings</p>
-<p class="mb-4 text-gray-300">    │   ├── Theme Settings</p>
-<p class="mb-4 text-gray-300">    │   └── Advanced Settings</p>
-<p class="mb-4 text-gray-300">    ├── Config (reads SharedPreferences)</p>
-<p class="mb-4 text-gray-300">    └── ConfigurationManager (applies settings)</p>
+    ├── PreferenceScreen
+    │   ├── Appearance Section
+    │   ├── Input Behavior Section
+    │   ├── Neural Prediction Section
+    │   ├── Gestures Section
+    │   ├── Layout Section
+    │   ├── Clipboard Section
+    │   └── Advanced Section
+    ├── Config (reads SharedPreferences)
+    └── ConfigurationManager (applies settings)
 
-<p class="mb-4 text-gray-300">Defaults Architecture (added 2025-12-10):</p>
-<p class="mb-4 text-gray-300">    └── Defaults object (Config.kt)</p>
-<p class="mb-4 text-gray-300">        ├── Single source of truth for all ~100 default values</p>
-<p class="mb-4 text-gray-300">        ├── Referenced by Config.kt refresh()</p>
-<p class="mb-4 text-gray-300">        ├── Referenced by SettingsActivity.kt loadCurrentSettings()</p>
-<p class="mb-4 text-gray-300">        └── Referenced by onSharedPreferenceChanged()</p>
+Defaults Architecture:
+    └── Defaults object (Config.kt)
+        ├── Single source of truth for all ~100 default values
+        ├── Referenced by Config.kt refresh()
+        ├── Referenced by SettingsActivity.kt loadCurrentSettings()
+        └── Referenced by onSharedPreferenceChanged()
 
-<p class="mb-4 text-gray-300">Storage Strategy:</p>
-<p class="mb-4 text-gray-300">    ├── SharedPreferences (settings data)</p>
-<p class="mb-4 text-gray-300">    ├── DirectBootAwarePreferences (device-protected storage)</p>
-<p class="mb-4 text-gray-300">    ├── App-specific storage (getExternalFilesDir)</p>
-<p class="mb-4 text-gray-300">    └── Scoped storage (Android 11+)</code></pre></p>
+Storage Strategy:
+    ├── SharedPreferences (settings data)
+    ├── DirectBootAwarePreferences (device-protected storage)
+    ├── App-specific storage (getExternalFilesDir)
+    └── Scoped storage (Android 11+)</code></pre>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Defaults Object (Config.kt)</h3>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Configuration</h2>
 
-<p class="mb-4 text-gray-300"><strong>Added</strong>: 2025-12-10 (commit f85a2a33)</p>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Defaults Object</h3>
 
-<p class="mb-4 text-gray-300">The <code class="bg-ck-dark px-1 rounded">Defaults</code> object centralizes all app default values to prevent mismatches between different code paths:</p>
+<p class="mb-4 text-gray-300">The <code class="bg-ck-dark px-1 rounded">Defaults</code> object centralizes all app default values:</p>
 
-<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">object Defaults {
-<p class="mb-4 text-gray-300">    // Appearance</p>
-<p class="mb-4 text-gray-300">    const val THEME = "cleverkeysdark"</p>
-<p class="mb-4 text-gray-300">    const val KEYBOARD_HEIGHT_PORTRAIT = 28</p>
-<p class="mb-4 text-gray-300">    const val KEYBOARD_HEIGHT_LANDSCAPE = 50</p>
-<p class="mb-4 text-gray-300">    // ... ~100 constants organized by category</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// Config.kt
+object Defaults {
+    // Appearance
+    const val THEME = "cleverkeysdark"
+    const val KEYBOARD_HEIGHT_PORTRAIT = 28
+    const val KEYBOARD_HEIGHT_LANDSCAPE = 50
+    const val KEY_OPACITY = 1.0f
+    const val KEY_BORDER_ENABLED = false
 
-<p class="mb-4 text-gray-300">    // Neural prediction</p>
-<p class="mb-4 text-gray-300">    const val NEURAL_BEAM_WIDTH = 6</p>
-<p class="mb-4 text-gray-300">    const val NEURAL_MAX_LENGTH = 20</p>
-<p class="mb-4 text-gray-300">    // ...</p>
-<p class="mb-4 text-gray-300">}</code></pre></p>
+    // Input Behavior
+    const val LONGPRESS_TIMEOUT = 600
+    const val KEY_REPEAT_DELAY = 50
+    const val VIBRATION_ENABLED = true
+    const val VIBRATION_STRENGTH = 10
 
-<p class="mb-4 text-gray-300"><strong>Why this matters</strong>: Previously, Config.kt and SettingsActivity.kt had separate hardcoded defaults. If they disagreed, new users would see one value in the settings UI but the keyboard would use a different value. Now both files reference <code class="bg-ck-dark px-1 rounded">Defaults.X</code>.</p>
+    // Neural Prediction
+    const val NEURAL_BEAM_WIDTH = 6
+    const val NEURAL_MAX_LENGTH = 20
+    const val NEURAL_CONFIDENCE_THRESHOLD = 0.3f
+    const val SWIPE_ENABLED = true
 
-<p class="mb-4 text-gray-300"><strong>Categories</strong>:</p>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Appearance (theme, opacity, sizing)</li>
-<li class="ml-4">&#8226; Layout (margins, numpad, number row)</li>
-<li class="ml-4">&#8226; Input behavior (vibration, long press, key repeat)</li>
-<li class="ml-4">&#8226; Gesture settings (swipe distance, tap threshold)</li>
-<li class="ml-4">&#8226; Short gestures</li>
-<li class="ml-4">&#8226; Swipe trail appearance</li>
-<li class="ml-4">&#8226; Neural prediction</li>
-<li class="ml-4">&#8226; Word prediction</li>
-<li class="ml-4">&#8226; Autocorrect</li>
-<li class="ml-4">&#8226; Clipboard</li>
-<li class="ml-4">&#8226; Multi-language</li>
-<li class="ml-4">&#8226; Debug</li>
-<li class="ml-4">&#8226; Privacy</li>
-<li class="ml-4">&#8226; Accessibility</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Component Breakdown</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">1. <strong>SettingsActivity</strong>: Material 3 Compose UI for settings</li>
-<li class="ml-4">2. <strong>NeuralSettingsActivity</strong>: Neural prediction-specific settings</li>
-<li class="ml-4">3. <strong>Config</strong>: Global configuration singleton</li>
-<li class="ml-4">4. <strong>ConfigurationManager</strong>: Runtime configuration application</li>
-<li class="ml-4">5. <strong>Theme System</strong>: KeyboardTheme, MaterialThemeManager</li>
-</ul>
-<hr class="border-gray-700 my-6">
+    // Gestures
+    const val SHORT_GESTURE_MIN_DISTANCE = 15
+    const val SHORT_GESTURE_MAX_DISTANCE = 50
+    const val SLIDER_SENSITIVITY = 30
+    const val TAP_DURATION_THRESHOLD = 200L
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">TODO: Verification & Implementation Tasks</h2>
+    // Clipboard
+    const val CLIPBOARD_HISTORY_ENABLED = true
+    const val CLIPBOARD_HISTORY_SIZE = 25
+    const val CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS = true
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 1: Critical Settings Issues (P0)</h3>
-<p class="mb-4 text-gray-300"><strong>Duration</strong>: 2-3 hours</p>
-<p class="mb-4 text-gray-300"><strong>Tasks</strong>:</p>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Add Termux mode checkbox to settings.xml</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Verify Config.kt reads termux_mode_enabled</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Test Termux mode functionality</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Review and fix Android 11+ storage permissions</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 2: Medium Priority Settings (P1)</h3>
-<p class="mb-4 text-gray-300"><strong>Duration</strong>: 3-4 hours</p>
-<p class="mb-4 text-gray-300"><strong>Tasks</strong>:</p>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Implement theme propagation without restart</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Implement emoji preferences persistence</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Fix ConfigurationManager theme application</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Test all settings apply correctly</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Phase 3: Low Priority Polish (P2)</h3>
-<p class="mb-4 text-gray-300"><strong>Duration</strong>: 1-2 hours</p>
-<p class="mb-4 text-gray-300"><strong>Tasks</strong>:</p>
-<ul class="mb-4 space-y-1"><li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Plan migration from deprecated APIs</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Extract hardcoded strings to resources</li>
-<li class="flex items-center gap-2"><span class="text-gray-500">&#9633;</span> Prepare i18n structure</li>
-</ul>
-<hr class="border-gray-700 my-6">
+    // ... ~100 constants organized by category
+}</code></pre>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Testing Strategy</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Settings Categories</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Unit Tests</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Test case 1: SharedPreferences read/write</li>
-<li class="ml-4">&#8226; Test case 2: Config initialization</li>
-<li class="ml-4">&#8226; Test case 3: Theme propagation</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Integration Tests</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Test case 1: Settings UI → Config → Runtime application</li>
-<li class="ml-4">&#8226; Test case 2: Storage permissions on Android 11+</li>
-<li class="ml-4">&#8226; Test case 3: Theme switching without restart</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Manual Tests</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; Test case 1: All settings save and load correctly</li>
-<li class="ml-4">&#8226; Test case 2: Termux mode works as expected</li>
-<li class="ml-4">&#8226; Test case 3: Emoji recent/favorites persist</li>
-<li class="ml-4">&#8226; Test case 4: Theme changes apply immediately</li>
-</ul>
-<hr class="border-gray-700 my-6">
+<table class="w-full mb-4 border-collapse"><thead class="border-b border-gray-700"><tr><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Category</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Settings Count</th><th class="px-4 py-2 text-left font-semibold text-ck-purple-light">Key Settings</th></tr></thead><tbody><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Appearance</td><td class="px-4 py-2 text-gray-300">~15</td><td class="px-4 py-2 text-gray-300">theme, keyboard_height, opacity, borders</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Input Behavior</td><td class="px-4 py-2 text-gray-300">~10</td><td class="px-4 py-2 text-gray-300">longpress_timeout, vibration, key_repeat</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Neural</td><td class="px-4 py-2 text-gray-300">~8</td><td class="px-4 py-2 text-gray-300">beam_width, confidence, swipe_enabled</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Gestures</td><td class="px-4 py-2 text-gray-300">~12</td><td class="px-4 py-2 text-gray-300">short_swipe distances, slider sensitivity</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Layout</td><td class="px-4 py-2 text-gray-300">~8</td><td class="px-4 py-2 text-gray-300">margins, number_row, extra_keys</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Clipboard</td><td class="px-4 py-2 text-gray-300">~5</td><td class="px-4 py-2 text-gray-300">history_enabled, history_size, exclusions</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Accessibility</td><td class="px-4 py-2 text-gray-300">~6</td><td class="px-4 py-2 text-gray-300">sticky_keys, voice_guidance</td></tr><tr class="border-b border-gray-800"><td class="px-4 py-2 text-gray-300">Debug</td><td class="px-4 py-2 text-gray-300">~4</td><td class="px-4 py-2 text-gray-300">debug_mode, logging</td></tr></tbody></table>
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Public API</h2>
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Dependencies</h2>
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Config Singleton</h3>
 
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Internal Dependencies</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; theme/KeyboardTheme.kt</li>
-<li class="ml-4">&#8226; config/Config.kt</li>
-<li class="ml-4">&#8226; config/ConfigurationManager.kt</li>
-</ul>
-<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">External Dependencies</h3>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; AndroidX Preference library</li>
-<li class="ml-4">&#8226; Material 3 Compose</li>
-<li class="ml-4">&#8226; SharedPreferences API</li>
-</ul>
-<hr class="border-gray-700 my-6">
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">class Config private constructor(context: Context) {
+    companion object {
+        private var instance: Config? = null
 
-<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Success Metrics</h2>
-<ul class="mb-4 space-y-1"><li class="ml-4">&#8226; All settings accessible from UI</li>
-<li class="ml-4">&#8226; 100% preference persistence rate</li>
-<li class="ml-4">&#8226; Theme changes apply in <200ms</li>
-<li class="ml-4">&#8226; Zero storage permission errors on Android 11+</li>
-<li class="ml-4">&#8226; All emoji preferences persist correctly</li>
-</ul>
-<hr class="border-gray-700 my-6">
+        fun globalConfig(): Config = instance
+            ?: throw IllegalStateException("Config not initialized")
 
-<p class="mb-4 text-gray-300"><strong>Created</strong>: 2025-10-21</p>
-<p class="mb-4 text-gray-300"><strong>Last Updated</strong>: 2025-12-10</p>
-<p class="mb-4 text-gray-300"><strong>Owner</strong>: CleverKeys Development Team</p>
-<p class="mb-4 text-gray-300"><strong>Status</strong>: Defaults object added to centralize default values (f85a2a33)</p>
+        fun initialize(context: Context) {
+            instance = Config(context)
+        }
+    }
+
+    // Refresh from SharedPreferences
+    fun refresh() {
+        val prefs = context.getSharedPreferences("cleverkeys_prefs", MODE_PRIVATE)
+        theme = prefs.getString("theme", Defaults.THEME)!!
+        keyboardHeightPortrait = prefs.getInt("keyboard_height_portrait", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
+        neuralBeamWidth = prefs.getInt("neural_beam_width", Defaults.NEURAL_BEAM_WIDTH)
+        // ... all other settings
+    }
+
+    // Save individual setting
+    fun saveSetting(key: String, value: Any) {
+        val prefs = context.getSharedPreferences("cleverkeys_prefs", MODE_PRIVATE)
+        prefs.edit().apply {
+            when (value) {
+                is String -&gt; putString(key, value)
+                is Int -&gt; putInt(key, value)
+                is Boolean -&gt; putBoolean(key, value)
+                is Float -&gt; putFloat(key, value)
+            }
+            apply()
+        }
+        refresh()
+    }
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">SettingsActivity</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">class SettingsActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            CleverKeysSettingsTheme {
+                SettingsScreen(
+                    onNavigateBack = { finish() }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SettingsScreen(onNavigateBack: () -&gt; Unit) {
+    // Collapsible sections for each category
+    var appearanceExpanded by remember { mutableStateOf(false) }
+    var inputExpanded by remember { mutableStateOf(false) }
+    // ...
+
+    LazyColumn {
+        item { SettingsSection("Appearance", appearanceExpanded, { appearanceExpanded = it }) {
+            ThemePicker()
+            HeightSlider()
+            OpacitySlider()
+        }}
+        item { SettingsSection("Input Behavior", inputExpanded, { inputExpanded = it }) {
+            VibrationToggle()
+            LongpressSlider()
+        }}
+        // ... other sections
+    }
+}</code></pre>
+
+<h2 class="text-2xl font-bold mt-8 mb-4 text-ck-purple">Implementation Details</h2>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Settings UI Components</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">@Composable
+fun SettingsSwitch(
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -&gt; Unit
+) {
+    Row(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(description, style = MaterialTheme.typography.bodySmall)
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+@Composable
+fun SettingsSlider(
+    title: String,
+    value: Float,
+    range: ClosedFloatingPointRange&lt;Float&gt;,
+    onValueChange: (Float) -&gt; Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Text(title, style = MaterialTheme.typography.bodyLarge)
+        Slider(value = value, valueRange = range, onValueChange = onValueChange)
+    }
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Storage Permissions (Android 11+)</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-xml">&lt;!-- AndroidManifest.xml --&gt;
+&lt;!-- Legacy permissions for Android 10 and below --&gt;
+&lt;uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    android:maxSdkVersion="29" /&gt;
+&lt;uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+    android:maxSdkVersion="29" /&gt;
+
+&lt;!-- For Android 11+, use scoped storage via MediaStore or SAF --&gt;</code></pre>
+
+<p class="mb-4 text-gray-300">App-specific storage doesn't require permissions:</p>
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">val appDir = context.getExternalFilesDir(null)  // No permission needed</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Theme Application</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">// ConfigurationManager.kt
+fun applyTheme(themeName: String) {
+    val theme = KeyboardTheme.loadTheme(context, themeName)
+    KeyboardTheme.current = theme
+
+    // Notify keyboard view to redraw
+    CleverKeysService.getInstance()?.requestKeyboardRedraw()
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Settings Change Listener</h3>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">class Config(context: Context) : SharedPreferences.OnSharedPreferenceChangeListener {
+    init {
+        prefs.registerOnSharedPreferenceChangeListener(this)
+    }
+
+    override fun onSharedPreferenceChanged(prefs: SharedPreferences, key: String?) {
+        when (key) {
+            "theme" -&gt; {
+                theme = prefs.getString("theme", Defaults.THEME)!!
+                ConfigurationManager.applyTheme(theme)
+            }
+            "keyboard_height_portrait" -&gt; {
+                keyboardHeightPortrait = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_PORTRAIT)
+                CleverKeysService.getInstance()?.requestKeyboardResize()
+            }
+            // ... handle other settings
+        }
+    }
+}</code></pre>
+
+<h3 class="text-xl font-semibold mt-6 mb-3 text-ck-purple-light">Collapsible Sections Pattern</h3>
+
+<p class="mb-4 text-gray-300">Settings UI uses collapsible sections (not hierarchical navigation):</p>
+
+<pre class="bg-ck-dark p-4 rounded-lg overflow-x-auto"><code class="language-kotlin">@Composable
+fun CollapsibleSection(
+    title: String,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -&gt; Unit,
+    content: @Composable ColumnScope.() -&gt; Unit
+) {
+    Column {
+        Row(
+            modifier = Modifier.clickable { onExpandedChange(!expanded) }
+                .fillMaxWidth().padding(16.dp)
+        ) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.weight(1f))
+            Icon(
+                if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = null
+            )
+        }
+        AnimatedVisibility(visible = expanded) {
+            Column(content = content)
+        }
+    }
+}</code></pre>
+
+<p class="mb-4 text-gray-300">This pattern means settings paths are "Settings > [expand section] > [setting]" rather than hierarchical navigation like "Settings > Appearance > Theme".</p>
 
         </div>
     </main>
