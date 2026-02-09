@@ -1,5 +1,19 @@
 # CleverKeys TODO
 
+## Completed (2026-02-09)
+- ✅ **Intent action type review fixes**: addressed 13 issues from 3-agent code review
+  - CRITICAL: Fixed setData/setType mutual clearing → setDataAndType()
+  - CRITICAL: Fixed executeCommand always returning true (discarded when result)
+  - Added null-safe Gson deserialization (IntentDefinition.parseFromGson) for Unsafe bypass
+  - Added INTENT_PREFIX constant to IntentDefinition (DRY with KeyValueParser)
+  - Fixed URI validation: scheme check instead of useless try/catch on Uri.parse()
+  - Extended package validation to SERVICE and BROADCAST targets
+  - Fixed single-quote escaping in XmlAttributeMapper TEXT round-trip
+  - Fixed CommandPaletteDialog label max (hardcoded 8 → MAX_DISPLAY_LENGTH=4)
+  - IntentEditorDialog: removed unused imports, .values()→.entries, variable shadowing fix,
+    added contentDescription for accessibility, deduplicate extras before add
+  - Compilation verified on ARM64 Termux (1186 classes, 0 errors)
+
 ## Completed (2026-02-04)
 - ✅ **Intent action type for short swipe customization**: complete feature implementation
   - Added ActionType.INTENT enum with full serialization support
