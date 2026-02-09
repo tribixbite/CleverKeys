@@ -1,6 +1,18 @@
 # CleverKeys TODO
 
 ## Completed (2026-02-09)
+- ✅ **Website, Wiki & CI review and fixes**: 3-agent review + 4-agent fix team
+  - Wiki: Added 6 missing pages to wiki-config.json (FAQ, quick-settings, password-fields,
+    smart-punctuation, user-dictionary, profiles)
+  - Wiki: Created docs/wiki/layouts/profiles.md from orphaned HTML (was missing source)
+  - Wiki: Regenerated all 42 wiki HTML pages + updated search-index.json (was 36, now 42)
+  - Workflows: Deleted redundant setup-pages.yml (conflicted with deploy-web-demo.yml)
+  - Workflows: Pinned aquasecurity/trivy-action@0.28.0 (was @master, security risk)
+  - Workflows: Added permissions blocks to build.yml and build-apk.yml
+  - Specs: Fixed generate-specs.js template (meta viewport, table rendering, code blocks)
+  - Specs: Regenerated all 12 spec HTML pages with improved quality
+  - Homepage: Synced content with README.md, improved demo placeholder
+  - Deploy: Updated workflow to copy search-index.json and all wiki assets
 - ✅ **Intent action type review fixes**: addressed 13 issues from 3-agent code review
   - CRITICAL: Fixed setData/setType mutual clearing → setDataAndType()
   - CRITICAL: Fixed executeCommand always returning true (discarded when result)
